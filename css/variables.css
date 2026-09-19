@@ -1,0 +1,217 @@
+/* ═══════════════════════════════════════════════════════════════
+   Design Tokens — Fanout.sh-inspired System Design Platform
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Typography ──────────────────────────────────────────── */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-heading: var(--font-sans);
+
+  /* Font weights */
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Font sizes */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.8125rem;  /* 13px */
+  --text-base: 0.875rem; /* 14px */
+  --text-md: 0.9375rem;  /* 15px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
+  --text-4xl: 2.25rem;   /* 36px */
+
+  /* Line heights */
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* Letter spacing */
+  --tracking-tighter: -0.03em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+
+  /* ── Spacing ─────────────────────────────────────────────── */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+
+  /* ── Border Radius ───────────────────────────────────────── */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
+  --r-xl: 12px;
+  --r-2xl: 16px;
+  --r-full: 999px;
+
+  /* ── Layout ──────────────────────────────────────────────── */
+  --topbar-h: 52px;
+  --sidebar-w: 280px;
+  --content-max: 760px;
+  --reading-max: 680px;
+
+  /* ── Transitions ─────────────────────────────────────────── */
+  --dur-fast: 120ms;
+  --dur-normal: 200ms;
+  --dur-slow: 350ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Shadows ─────────────────────────────────────────────── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+
+  /* ── Z-Index Scale ───────────────────────────────────────── */
+  --z-sidebar: 20;
+  --z-topbar: 30;
+  --z-dropdown: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+}
+
+/* ── Dark Theme (Default) ──────────────────────────────────── */
+[data-theme="dark"], :root {
+  /* Fanout.sh Slate / Charcoal System Palette */
+  --bg: #111213;
+  --bg-alt: #0d0e0f;
+  --surface: #191a1c;
+  --surface-hover: #242527;
+  --surface-active: #2c2d30;
+  --sidebar-bg: #151617;
+  --topbar-bg: rgba(17, 18, 19, 0.88);
+  --topbar-glass: rgba(17, 18, 19, 0.82);
+  --panel-glass: rgba(25, 26, 28, 0.94);
+
+  /* Borders & Dividers */
+  --border: #2a2b2e;
+  --border-strong: #36373b;
+  --border-focus: #4c4e54;
+  --divider: #202123;
+
+  /* Typography Palette */
+  --fg: #f2f4f7;
+  --fg-prose: #d0d6de;
+  --fg-muted: #a9b0ba;
+  --fg-faint: #747d89;
+  --fg-inv: #111315;
+
+  /* Engineered Accent Blue */
+  --accent: #3e7bfa;
+  --accent-hover: #2b6bf2;
+  --accent-muted: rgba(62, 123, 250, 0.12);
+  --accent-border: rgba(62, 123, 250, 0.32);
+
+  /* Status Colors */
+  --success: #4ed08a;
+  --success-muted: rgba(78, 208, 138, 0.12);
+  --warning: #f0a45b;
+  --warning-muted: rgba(240, 164, 91, 0.12);
+  --error: #f87171;
+  --error-muted: rgba(248, 113, 113, 0.12);
+  --info: #6ea2ff;
+  --info-muted: rgba(110, 162, 255, 0.12);
+
+  /* Interactive Elements */
+  --chip-bg: #202123;
+  --chip-border: #2e3034;
+  --chip-fg: #a9b0ba;
+  --hover-bg: #242527;
+  --active-bg: #2c2d30;
+  --selected-bg: rgba(62, 123, 250, 0.09);
+
+  /* Code & Syntax */
+  --code-bg: #141517;
+  --code-border: #26272b;
+  --code-fg: #e6edf3;
+
+  /* Callouts */
+  --callout-bg: #161719;
+  --callout-border: #2a2b2e;
+  --callout-note: #3e7bfa;
+  --callout-tip: #4ed08a;
+  --callout-warn: #f0a45b;
+  --callout-danger: #f87171;
+
+  /* Progress */
+  --progress-track: #242527;
+  --progress-fill: #4ed08a;
+
+  /* Fanout.sh Precision Hairline Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+
+  color-scheme: dark;
+}
+
+/* ── Light Theme ───────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg: #fbfbfb;
+  --bg-alt: #f5f5f5;
+  --surface: #ffffff;
+  --surface-hover: #f8f8f8;
+  --surface-active: #f0f0f0;
+  --sidebar-bg: #f7f7f7;
+  --topbar-bg: rgba(251, 251, 251, 0.88);
+
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --divider: #eef0f2;
+
+  --fg: #1f2937;
+  --fg-muted: #6b7280;
+  --fg-faint: #9ca3af;
+  --fg-inv: #ffffff;
+
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-muted: rgba(37, 99, 235, 0.1);
+
+  --success: #059669;
+  --success-muted: rgba(5, 150, 105, 0.1);
+  --warning: #d97706;
+  --warning-muted: rgba(217, 119, 6, 0.1);
+  --error: #dc2626;
+  --error-muted: rgba(220, 38, 38, 0.1);
+
+  --chip-bg: #f3f4f6;
+  --chip-fg: #4b5563;
+  --hover-bg: #f3f4f6;
+  --active-bg: #e5e7eb;
+  --selected-bg: rgba(37, 99, 235, 0.06);
+
+  --code-bg: #f8f9fa;
+  --code-border: #e5e7eb;
+  --code-fg: #1f2937;
+
+  --callout-bg: #f8f9fa;
+  --callout-border: #e5e7eb;
+
+  --progress-track: #e5e7eb;
+  --progress-fill: #2563eb;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  color-scheme: light;
+}

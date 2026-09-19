@@ -1,0 +1,508 @@
+/* ═══════════════════════════════════════════════════════════════
+   Renderer — Content rendering for lessons, builds, and overview
+   ═══════════════════════════════════════════════════════════════ */
+
+window.Renderer = (() => {
+  // SVG Icons
+  const icons = {
+    check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    circle: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg>',
+    dot: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>',
+    play: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+    link: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+    clock: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    book: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+    code: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+    chevronRight: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>',
+    chevronDown: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>'
+  };
+
+  /**
+   * Render the Course Overview (home page)
+   */
+  function renderOverview() {
+    const data = window.CURRICULUM_DATA;
+    if (!data) return '<p>Loading curriculum data...</p>';
+
+    const stats = data.stats;
+    const pct = window.Progress.getPercentage();
+
+    let html = `
+      <div class="hero">
+        <div class="hero__eyebrow">System Design Course</div>
+        <h1 class="hero__title">System Design In Depth</h1>
+        <p class="hero__subtitle">Deep notes, case studies, YouTube tutorials, and from-scratch implementations for senior engineering practice.</p>
+        <div class="hero__stats">
+          <div><div class="hero__stat-value">${stats.modules}</div><div class="hero__stat-label">Modules</div></div>
+          <div><div class="hero__stat-value">${stats.units}</div><div class="hero__stat-label">Topics</div></div>
+          <div><div class="hero__stat-value">${stats.builds}</div><div class="hero__stat-label">Builds</div></div>
+          <div><div class="hero__stat-value">${pct}%</div><div class="hero__stat-label">Complete</div></div>
+        </div>
+      </div>`;
+
+    // Render each part
+    for (const part of data.parts) {
+      html += `
+        <div class="part-header">
+          <div class="part-header__label">Part ${part.number}</div>
+          <h2 class="part-header__title">${part.title}</h2>
+          <p class="part-header__summary">${part.summary}</p>
+        </div>
+        <div class="module-grid">`;
+
+      for (const mod of part.modules) {
+        const prog = window.Progress.getModuleProgress(mod.id);
+        const progPct = prog.total > 0 ? Math.round((prog.completed / prog.total) * 100) : 0;
+        html += `
+          <div class="module-card" data-module="${mod.id}" onclick="App.navigateToModule('${mod.id}')">
+            <div class="module-card__header">
+              <span class="module-card__number">${mod.number}</span>
+              <div class="module-card__info">
+                <div class="module-card__title">${mod.title}</div>
+                <div class="module-card__meta">
+                  <span>${mod.units.length} units</span>
+                  <span>·</span>
+                  <span>${prog.completed}/${prog.total} done</span>
+                </div>
+              </div>
+            </div>
+            <p class="module-card__summary">${mod.summary || ''}</p>
+            <div class="module-card__progress">
+              <div class="module-card__progress-fill" style="width:${progPct}%"></div>
+            </div>
+          </div>`;
+      }
+      html += '</div>';
+
+      // Add section divider between parts
+      if (part.number < data.parts.length) {
+        html += '<div class="section-divider"><span class="section-divider__line"></span><span class="section-divider__text">Next Part</span><span class="section-divider__line"></span></div>';
+      }
+    }
+
+    return html;
+  }
+
+  /**
+   * Render a Lesson View
+   */
+  function renderLesson(slug) {
+    const data = window.CURRICULUM_DATA;
+    if (!data) return '<p>Loading...</p>';
+
+    // Find unit
+    let unit = null, mod = null, part = null;
+    for (const p of data.parts) {
+      for (const m of p.modules) {
+        for (const u of m.units) {
+          if (u.slug === slug) {
+            unit = u; mod = m; part = p;
+            break;
+          }
+        }
+        if (unit) break;
+      }
+      if (unit) break;
+    }
+
+    if (!unit) return '<p>Topic not found.</p>';
+
+    const isCompleted = window.Progress.isCompleted(slug);
+    const kindClass = unit.kind === 'system' ? 'system' : 'lesson';
+
+    // Get module content if loaded
+    const moduleContent = window.MODULE_CONTENT?.[mod.id]?.[slug];
+    const archiveContent = unit.archive?.content;
+
+    // Build header
+    let html = `
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep">${icons.chevronRight}</span>
+        <a href="#" data-nav="module" data-module="${mod.id}">Module ${mod.number}</a>
+        <span class="breadcrumbs__sep">${icons.chevronRight}</span>
+        <span class="breadcrumbs__current">${unit.title}</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--${kindClass}">${unit.kind}</span>
+          ${unit.archive?.tags?.map(t => '<span class="tag">' + t + '</span>').join('') || ''}
+        </div>
+        <h1 class="lesson-header__title">${unit.title}</h1>
+        <div class="lesson-header__meta">
+          ${unit.archive?.wordCount ? '<span class="lesson-header__meta-item">' + icons.clock + ' ' + Math.ceil(unit.archive.wordCount / 200) + ' min read</span>' : ''}
+          <span class="lesson-header__meta-item">${icons.book} Module ${mod.number}: ${mod.title}</span>
+        </div>
+        <div class="lesson-header__actions">
+          <button class="completion-toggle${isCompleted ? ' completed' : ''}" onclick="App.toggleComplete('${slug}')">
+            ${isCompleted ? icons.check + ' Completed' : icons.circle + ' Mark Complete'}
+          </button>
+        </div>
+      </div>`;
+
+    // Video embed (from module content)
+    if (moduleContent?.video?.youtubeId) {
+      html += renderVideoEmbed(moduleContent.video);
+    }
+
+    // Content
+    html += '<article class="prose">';
+
+    if (archiveContent && archiveContent.trim().length > 100) {
+      // Use authentic markdown from curriculum
+      html += convertMarkdownToHTML(archiveContent);
+      // If module content has complementary details (e.g. diagrams or breakdown), augment smoothly
+      if (moduleContent?.content && !archiveContent.includes('Real-World Usage')) {
+        html += '<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);">';
+        html += '<div class="lesson-deep-dive">' + moduleContent.content + '</div>';
+      }
+    } else if (moduleContent?.content) {
+      // Use comprehensive generated module content
+      html += moduleContent.content;
+    } else {
+      // Fallback
+      html += renderFallbackContent(unit, mod);
+    }
+
+    html += '</article>';
+
+    // Interactive Visual Simulator (if applicable for unit)
+    if (window.Simulators && window.Simulators.getSimulatorForUnit) {
+      html += window.Simulators.getSimulatorForUnit(slug);
+    }
+
+    // Interactive Practice / Challenge Exercise
+    if (window.Exercises && window.Exercises.renderExercise) {
+      html += window.Exercises.renderExercise(slug, unit.title);
+    }
+
+    // Key takeaways
+    if (moduleContent?.keyTakeaways?.length) {
+      html += `
+        <div class="takeaways">
+          <h3 class="takeaways__title">Key Takeaways</h3>
+          <div class="takeaways__list">
+            ${moduleContent.keyTakeaways.map(t => '<div class="takeaways__item">' + t + '</div>').join('')}
+          </div>
+        </div>`;
+    }
+
+    // Further reading
+    if (moduleContent?.furtherReading?.length) {
+      html += `
+        <div class="further-reading">
+          <h3 class="further-reading__title">Further Reading</h3>
+          <div class="further-reading__list">
+            ${moduleContent.furtherReading.map(r => '<a class="further-reading__link" href="' + r.url + '" target="_blank" rel="noopener">' + icons.link + ' ' + r.title + '</a>').join('')}
+          </div>
+        </div>`;
+    } else if (unit.archive?.sources?.length) {
+      html += `
+        <div class="further-reading">
+          <h3 class="further-reading__title">Sources</h3>
+          <div class="further-reading__list">
+            ${unit.archive.sources.filter(s => s.startsWith('http')).map(s => '<a class="further-reading__link" href="' + s + '" target="_blank" rel="noopener">' + icons.link + ' ' + s.replace(/https?:\/\//, '').split('/').slice(0, 2).join('/') + '</a>').join('')}
+          </div>
+        </div>`;
+    }
+
+    // Prev/Next navigation
+    html += renderLessonNav(slug, mod, part);
+
+    return html;
+  }
+
+  /**
+   * Render a Build (Implementation) View
+   */
+  function renderBuild(buildId) {
+    const impls = window.IMPLEMENTATIONS_DATA;
+    if (!impls || !impls[buildId]) return '<p>Build not found.</p>';
+
+    const build = impls[buildId];
+    const files = build.files || {};
+
+    let html = `
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep">${icons.chevronRight}</span>
+        <span class="breadcrumbs__current">${build.title || buildId}</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build">${icons.code} Build</span>
+        </div>
+        <h1 class="lesson-header__title">${build.title || buildId.replace(/-/g, ' ')}</h1>
+      </div>`;
+
+    // Render each file
+    for (const [filename, content] of Object.entries(files)) {
+      const lang = filename.endsWith('.js') ? 'javascript' : filename.endsWith('.md') ? 'markdown' : 'text';
+
+      if (filename.endsWith('.md')) {
+        html += '<article class="prose">' + convertMarkdownToHTML(content) + '</article>';
+      } else {
+        html += `
+          <div class="code-block">
+            <div class="code-block__header">
+              <span class="code-block__lang">${filename}</span>
+              <button class="code-block__copy" onclick="copyCode(this)">📋 Copy</button>
+            </div>
+            <pre><code>${escapeHtml(content)}</code></pre>
+          </div>`;
+      }
+    }
+
+    return html;
+  }
+
+  /**
+   * Render YouTube video embed (lazy-loaded)
+   */
+  function renderVideoEmbed(video) {
+    if (!video?.youtubeId) return '';
+    return `
+      <div class="video-embed" id="video-${video.youtubeId}">
+        <div class="video-embed__placeholder" onclick="loadYouTubeVideo('${video.youtubeId}', this.parentElement)">
+          <img src="https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg"
+               alt="${escapeHtml(video.title || '')}"
+               loading="lazy"
+               onerror="this.src='https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg'">
+          <div class="video-embed__play-btn">${icons.play}</div>
+        </div>
+      </div>
+      ${video.title ? `<div class="video-embed__info">
+        <span class="video-embed__channel">📺 ${escapeHtml(video.channel || 'YouTube')}</span>
+        <span class="video-embed__title">${escapeHtml(video.title)}</span>
+      </div>` : ''}`;
+  }
+
+  /**
+   * Convert basic markdown to HTML
+   */
+  function convertMarkdownToHTML(md) {
+    if (!md) return '';
+
+    let html = md
+      // Mermaid blocks MUST be replaced before generic code blocks
+      .replace(/```mermaid\s*\n([\s\S]*?)```/g, (_, diagram) => {
+        return '<div class="mermaid">' + diagram.trim() + '</div>';
+      })
+      // Code blocks (``` blocks)
+      .replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+        return '<pre><code class="language-' + (lang || 'text') + '">' + escapeHtml(code.trim()) + '</code></pre>';
+      })
+      // GitHub alerts / blockquote callouts
+      .replace(/^>\s*\[!NOTE\]\s*(.*)$/gm, '<div class="callout callout--note"><div class="callout__title">ℹ️ Note</div><p>$1</p></div>')
+      .replace(/^>\s*\[!TIP\]\s*(.*)$/gm, '<div class="callout callout--tip"><div class="callout__title">💡 Tip</div><p>$1</p></div>')
+      .replace(/^>\s*\[!WARNING\]\s*(.*)$/gm, '<div class="callout callout--warn"><div class="callout__title">⚠️ Warning</div><p>$1</p></div>')
+      .replace(/^>\s*\[!IMPORTANT\]\s*(.*)$/gm, '<div class="callout callout--danger"><div class="callout__title">❗ Important</div><p>$1</p></div>')
+      .replace(/^>\s*(.*)$/gm, '<blockquote><p>$1</p></blockquote>')
+      // Headers
+      .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.+)$/gm, '<h2>$1</h2>')
+      // Bold
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      // Inline code
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      // Links (standard and wiki-style)
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+      .replace(/\[\[wiki\/([^\]|]+)\|([^\]]+)\]\]/g, '<a href="#" data-nav="topic" data-slug="$1">$2</a>')
+      .replace(/\[\[wiki\/([^\]]+)\]\]/g, (_, slug) => '<a href="#" data-nav="topic" data-slug="' + slug + '">' + slug.replace(/-/g, ' ') + '</a>')
+      // Horizontal rules
+      .replace(/^---$/gm, '<hr>')
+      // Tables
+      .replace(/^\|(.+)\|\s*\n\|[-| :]+\|\s*\n((?:\|.+\|\s*\n?)*)/gm, (_, header, body) => {
+        const ths = header.split('|').map(h => h.trim()).filter(Boolean).map(h => '<th>' + h + '</th>').join('');
+        const rows = body.trim().split('\n').map(row => {
+          const tds = row.split('|').map(c => c.trim()).filter(Boolean).map(c => '<td>' + c + '</td>').join('');
+          return '<tr>' + tds + '</tr>';
+        }).join('');
+        return '<table><thead><tr>' + ths + '</tr></thead><tbody>' + rows + '</tbody></table>';
+      });
+
+    // Process paragraphs and lists
+    const lines = html.split('\n');
+    const processed = [];
+    let inList = false;
+    let listType = '';
+    let inPre = false;
+    let inMermaid = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Track pre blocks
+      if (line.includes('<pre>')) inPre = true;
+      if (line.includes('</pre>')) { inPre = false; processed.push(line); continue; }
+      if (inPre) { processed.push(line); continue; }
+
+      // Track mermaid blocks
+      if (line.includes('<div class="mermaid">')) inMermaid = true;
+      if (inMermaid) {
+        if (line.includes('</div>')) inMermaid = false;
+        processed.push(line);
+        continue;
+      }
+
+      // Skip already-processed HTML tags
+      if (line.match(/^<(h[1-6]|table|thead|tbody|tr|th|td|div|pre|hr|ul|ol|li|blockquote)/)) {
+        if (inList) { processed.push('</' + listType + '>'); inList = false; }
+        processed.push(line);
+        continue;
+      }
+
+      // Unordered list
+      if (line.match(/^[-*] /)) {
+        if (!inList || listType !== 'ul') {
+          if (inList) processed.push('</' + listType + '>');
+          processed.push('<ul>');
+          inList = true; listType = 'ul';
+        }
+        processed.push('<li>' + line.replace(/^[-*] /, '') + '</li>');
+        continue;
+      }
+
+      // Ordered list
+      if (line.match(/^\d+\. /)) {
+        if (!inList || listType !== 'ol') {
+          if (inList) processed.push('</' + listType + '>');
+          processed.push('<ol>');
+          inList = true; listType = 'ol';
+        }
+        processed.push('<li>' + line.replace(/^\d+\. /, '') + '</li>');
+        continue;
+      }
+
+      // End list
+      if (inList && line.trim() === '') {
+        processed.push('</' + listType + '>');
+        inList = false;
+        continue;
+      }
+
+      // Paragraph
+      if (line.trim() && !line.match(/^</) && !inList) {
+        processed.push('<p>' + line + '</p>');
+      } else {
+        processed.push(line);
+      }
+    }
+
+    if (inList) processed.push('</' + listType + '>');
+
+    return processed.join('\n');
+  }
+
+  /**
+   * Render fallback content when no detailed content is available
+   */
+  function renderFallbackContent(unit, mod) {
+    const excerpt = unit.archive?.excerpt || '';
+    let html = '';
+
+    if (excerpt) {
+      html += '<p>' + excerpt + '</p>';
+    }
+
+    html += `
+      <div class="callout callout--note">
+        <div class="callout__title">📚 Content Loading</div>
+        <p>Detailed content for this topic is being prepared. In the meantime, explore the module overview and related topics in Module ${mod.number}: ${mod.title}.</p>
+      </div>`;
+
+    return html;
+  }
+
+  /**
+   * Render prev/next lesson navigation
+   */
+  function renderLessonNav(currentSlug, currentMod, currentPart) {
+    const data = window.CURRICULUM_DATA;
+    if (!data) return '';
+
+    // Build flat list of all slugs
+    const allUnits = [];
+    for (const p of data.parts) {
+      for (const m of p.modules) {
+        for (const u of m.units) {
+          allUnits.push({ slug: u.slug, title: u.title, modTitle: m.title });
+        }
+      }
+    }
+
+    const idx = allUnits.findIndex(u => u.slug === currentSlug);
+    if (idx < 0) return '';
+
+    const prev = idx > 0 ? allUnits[idx - 1] : null;
+    const next = idx < allUnits.length - 1 ? allUnits[idx + 1] : null;
+
+    let html = '<div class="lesson-nav">';
+
+    if (prev) {
+      html += `<a class="lesson-nav__link" href="#" data-nav="topic" data-slug="${prev.slug}">
+        <span class="lesson-nav__label">← Previous</span>
+        <span class="lesson-nav__title">${prev.title}</span>
+      </a>`;
+    } else {
+      html += '<div></div>';
+    }
+
+    if (next) {
+      html += `<a class="lesson-nav__link lesson-nav__link--next" href="#" data-nav="topic" data-slug="${next.slug}">
+        <span class="lesson-nav__label">Next →</span>
+        <span class="lesson-nav__title">${next.title}</span>
+      </a>`;
+    } else {
+      html += '<div></div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  /**
+   * Escape HTML
+   */
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // Global helper for video loading
+  window.loadYouTubeVideo = function(videoId, container) {
+    container.innerHTML = '<iframe src="https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
+  };
+
+  // Global helper for code copy
+  window.copyCode = function(btn) {
+    const code = btn.closest('.code-block')?.querySelector('code');
+    if (code) {
+      navigator.clipboard.writeText(code.textContent).then(() => {
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy', 2000);
+      });
+    }
+  };
+
+  return {
+    renderOverview,
+    renderLesson,
+    renderBuild,
+    renderVideoEmbed,
+    convertMarkdownToHTML,
+    escapeHtml,
+    icons
+  };
+})();
