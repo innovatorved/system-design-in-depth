@@ -341,8 +341,8 @@ window.App = (() => {
     const sunIcon = document.querySelector('.icon-sun');
     const moonIcon = document.querySelector('.icon-moon');
     if (sunIcon && moonIcon) {
-      sunIcon.style.display = next === 'dark' ? '' : 'none';
-      moonIcon.style.display = next === 'dark' ? 'none' : '';
+      sunIcon.style.display = next === 'light' ? '' : 'none';
+      moonIcon.style.display = next === 'dark' ? '' : 'none';
     }
 
     // Update theme-color meta
