@@ -146,6 +146,35 @@ window.Renderer = (() => {
       html += renderVideoEmbed(moduleContent.video);
     }
 
+    // Audio player
+    html += `
+      <div class="audio-player" id="audio-player-${slug}">
+        <div class="audio-player__main">
+          <button class="audio-player__play-btn" id="audio-btn-${slug}" onclick="toggleAudio('${slug}')" aria-label="Play audio narration" title="Play lesson audio">
+            <svg id="audio-play-icon-${slug}" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <svg id="audio-pause-icon-${slug}" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+            </svg>
+          </button>
+          <div class="audio-player__info">
+            <div class="audio-player__meta">
+              <span class="audio-player__label">Audio Narration</span>
+              <span class="audio-player__badge">Neural Voice</span>
+              <span class="audio-player__time" id="audio-time-${slug}">0:00 / --:--</span>
+            </div>
+            <div class="audio-player__track" onclick="seekAudio('${slug}', event)" id="audio-track-${slug}">
+              <div class="audio-player__progress" id="audio-bar-${slug}" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="audio-player__controls">
+            <button class="audio-player__speed-btn" onclick="cycleAudioSpeed('${slug}')" id="audio-speed-${slug}" title="Playback speed">1x</button>
+          </div>
+        </div>
+        <audio id="audio-${slug}" src="audio/${slug}.mp3" preload="metadata" onloadedmetadata="setupAudioListeners('${slug}')"></audio>
+      </div>`;
+
     // Content
     html += '<article class="prose">';
 
@@ -483,6 +512,110 @@ window.Renderer = (() => {
   // Global helper for video loading
   window.loadYouTubeVideo = function(videoId, container) {
     container.innerHTML = '<iframe src="https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
+  };
+
+  // Global helpers for audio player
+  window.toggleAudio = function(slug) {
+    const audio = document.getElementById('audio-' + slug);
+    const playIcon = document.getElementById('audio-play-icon-' + slug);
+    const pauseIcon = document.getElementById('audio-pause-icon-' + slug);
+    if (!audio) return;
+
+    if (audio.paused) {
+      // Pause all other audio players
+      document.querySelectorAll('audio').forEach(a => {
+        if (a !== audio && !a.paused) {
+          a.pause();
+          const otherSlug = a.id.replace('audio-', '');
+          const otherPlay = document.getElementById('audio-play-icon-' + otherSlug);
+          const otherPause = document.getElementById('audio-pause-icon-' + otherSlug);
+          if (otherPlay) otherPlay.style.display = 'block';
+          if (otherPause) otherPause.style.display = 'none';
+        }
+      });
+      window.setupAudioListeners(slug);
+      audio.play().then(() => {
+        if (playIcon) playIcon.style.display = 'none';
+        if (pauseIcon) pauseIcon.style.display = 'block';
+      }).catch(err => {
+        console.warn('Audio playback error:', err);
+      });
+    } else {
+      audio.pause();
+      if (playIcon) playIcon.style.display = 'block';
+      if (pauseIcon) pauseIcon.style.display = 'none';
+    }
+  };
+
+  window.seekAudio = function(slug, event) {
+    const audio = document.getElementById('audio-' + slug);
+    const track = document.getElementById('audio-track-' + slug);
+    if (!audio || !track || !audio.duration) return;
+
+    const rect = track.getBoundingClientRect();
+    const clickX = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+    const percent = clickX / rect.width;
+    audio.currentTime = percent * audio.duration;
+  };
+
+  window.cycleAudioSpeed = function(slug) {
+    const audio = document.getElementById('audio-' + slug);
+    const btn = document.getElementById('audio-speed-' + slug);
+    if (!audio || !btn) return;
+
+    const speeds = [1, 1.25, 1.5, 1.75, 2, 0.75];
+    const currentSpeed = audio.playbackRate || 1;
+    const nextIndex = (speeds.indexOf(currentSpeed) + 1) % speeds.length;
+    const newSpeed = speeds[nextIndex];
+
+    audio.playbackRate = newSpeed;
+    btn.textContent = newSpeed + 'x';
+  };
+
+  window.setupAudioListeners = function(slug) {
+    const audio = document.getElementById('audio-' + slug);
+    if (!audio || audio._listenersAttached) return;
+    audio._listenersAttached = true;
+
+    const bar = document.getElementById('audio-bar-' + slug);
+    const timeDisplay = document.getElementById('audio-time-' + slug);
+    const playIcon = document.getElementById('audio-play-icon-' + slug);
+    const pauseIcon = document.getElementById('audio-pause-icon-' + slug);
+
+    function formatTime(secs) {
+      if (isNaN(secs) || !isFinite(secs)) return '0:00';
+      const m = Math.floor(secs / 60);
+      const s = Math.floor(secs % 60);
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    if (audio.duration && timeDisplay) {
+      timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+    }
+
+    audio.addEventListener('loadedmetadata', () => {
+      if (timeDisplay && audio.duration) {
+        timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+      }
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      if (!audio.duration) return;
+      const pct = (audio.currentTime / audio.duration) * 100;
+      if (bar) bar.style.width = pct + '%';
+      if (timeDisplay) {
+        timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+      }
+    });
+
+    audio.addEventListener('ended', () => {
+      if (playIcon) playIcon.style.display = 'block';
+      if (pauseIcon) pauseIcon.style.display = 'none';
+      if (bar) bar.style.width = '0%';
+      if (timeDisplay) {
+        timeDisplay.textContent = '0:00 / ' + formatTime(audio.duration);
+      }
+    });
   };
 
   // Global helper for code copy

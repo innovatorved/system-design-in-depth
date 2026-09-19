@@ -115,6 +115,9 @@ window.App = (() => {
     const reader = document.getElementById('reader');
     if (!reader) return;
 
+    // Pause any active audio from previous view
+    document.querySelectorAll('audio').forEach(a => a.pause());
+
     switch (currentView) {
       case 'home':
         reader.innerHTML = window.Renderer.renderOverview();
@@ -122,6 +125,9 @@ window.App = (() => {
       case 'topic':
         reader.innerHTML = window.Renderer.renderLesson(currentSlug);
         initMermaid();
+        if (window.setupAudioListeners) {
+          window.setupAudioListeners(currentSlug);
+        }
         break;
       case 'build':
         reader.innerHTML = window.Renderer.renderBuild(currentSlug);
