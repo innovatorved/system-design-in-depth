@@ -146,11 +146,6 @@ window.Renderer = (() => {
       html += renderVideoEmbed(moduleContent.video);
     }
 
-    // TTS Audio Player
-    if (window.TTS && window.TTS.isSupported()) {
-      html += window.TTS.renderPlayer('', unit.title);
-    }
-
     // Content
     html += '<article class="prose">';
 
