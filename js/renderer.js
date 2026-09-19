@@ -149,29 +149,19 @@ window.Renderer = (() => {
     // Audio player
     html += `
       <div class="audio-player" id="audio-player-${slug}">
-        <div class="audio-player__main">
-          <button class="audio-player__play-btn" id="audio-btn-${slug}" onclick="toggleAudio('${slug}')" aria-label="Play audio narration" title="Play lesson audio">
-            <svg id="audio-play-icon-${slug}" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-            <svg id="audio-pause-icon-${slug}" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-            </svg>
-          </button>
-          <div class="audio-player__info">
-            <div class="audio-player__meta">
-              <span class="audio-player__label">Audio Narration</span>
-              <span class="audio-player__badge">Neural Voice</span>
-              <span class="audio-player__time" id="audio-time-${slug}">0:00 / --:--</span>
-            </div>
-            <div class="audio-player__track" onclick="seekAudio('${slug}', event)" id="audio-track-${slug}">
-              <div class="audio-player__progress" id="audio-bar-${slug}" style="width: 0%;"></div>
-            </div>
-          </div>
-          <div class="audio-player__controls">
-            <button class="audio-player__speed-btn" onclick="cycleAudioSpeed('${slug}')" id="audio-speed-${slug}" title="Playback speed">1x</button>
-          </div>
+        <button class="audio-player__play-btn" id="audio-btn-${slug}" onclick="toggleAudio('${slug}')" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-${slug}" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-${slug}" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-${slug}">0:00 / --:--</span>
+        <div class="audio-player__track" onclick="seekAudio('${slug}', event)" id="audio-track-${slug}">
+          <div class="audio-player__progress" id="audio-bar-${slug}" style="width: 0%;"></div>
         </div>
+        <button class="audio-player__speed-btn" onclick="cycleAudioSpeed('${slug}')" id="audio-speed-${slug}" title="Playback speed">1x</button>
         <audio id="audio-${slug}" src="audio/${slug}.mp3" preload="metadata" onloadedmetadata="setupAudioListeners('${slug}')"></audio>
       </div>`;
 
