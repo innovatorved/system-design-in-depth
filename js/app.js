@@ -435,31 +435,84 @@ window.App = (() => {
   function openDiagramLightbox(mermaidEl) {
     const modal = document.getElementById('diagram-lightbox');
     const stage = document.getElementById('diagram-lightbox-stage');
+    const body = document.getElementById('diagram-lightbox-body');
     if (!modal || !stage) return;
 
     const svg = mermaidEl.querySelector('svg');
     if (!svg) return;
 
-    // Clone the rendered SVG cleanly
-    const clonedSvg = svg.cloneNode(true);
-    clonedSvg.removeAttribute('id');
-    clonedSvg.style.maxWidth = 'none';
-    clonedSvg.style.width = '100%';
-    clonedSvg.style.height = 'auto';
+    // Show modal first so container dimensions can be accurately measured
+    modal.classList.add('open');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
 
-    stage.innerHTML = '';
-    stage.appendChild(clonedSvg);
-
-    // Reset view state
+    // Reset view transform state
     lightboxState.isOpen = true;
     lightboxState.scale = 1.0;
     lightboxState.translateX = 0;
     lightboxState.translateY = 0;
     updateLightboxTransform();
 
-    modal.classList.add('open');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    // Preserve scoped styles by replacing original ID with a unique lightbox ID.
+    // Calling removeAttribute('id') broke all internal <style> selectors (#mermaid-xxx ...)
+    // which caused edges (.edgePath .path) to lose stroke and nodes to lose styles.
+    const originalId = svg.getAttribute('id');
+    const newId = originalId ? (originalId + '-lightbox') : ('mermaid-lb-' + Date.now());
+
+    let svgHtml = svg.outerHTML;
+    if (originalId) {
+      svgHtml = svgHtml.replaceAll(originalId, newId);
+    }
+
+    stage.innerHTML = svgHtml;
+
+    const lbSvg = stage.querySelector('svg');
+    if (lbSvg) {
+      // Remove restrictive inline max-width from original element
+      lbSvg.removeAttribute('style');
+
+      // Extract viewBox dimensions
+      let vbW = 0, vbH = 0;
+      const vb = lbSvg.getAttribute('viewBox');
+      if (vb) {
+        const parts = vb.trim().split(/[\s,]+/).map(Number);
+        if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+          vbW = parts[2];
+          vbH = parts[3];
+        }
+      }
+
+      // If no viewBox, fallback to client dimensions
+      if (!vbW || !vbH) {
+        const rect = svg.getBoundingClientRect();
+        vbW = rect.width || 800;
+        vbH = rect.height || 500;
+      }
+
+      // Compute available space in the modal body
+      const bodyW = (body && body.clientWidth) || (body ? body.getBoundingClientRect().width : 0) || (window.innerWidth * 0.92);
+      const bodyH = (body && body.clientHeight) || (body ? body.getBoundingClientRect().height : 0) || (window.innerHeight * 0.82);
+      const availW = Math.max(320, bodyW - 48);
+      const availH = Math.max(240, bodyH - 48);
+
+      // Determine scale to make diagram comfortably big while fitting inside modal
+      const scaleX = availW / vbW;
+      const scaleY = availH / vbH;
+      let fitScale = Math.min(scaleX, scaleY);
+      if (fitScale > 1.8) fitScale = 1.8;
+      if (fitScale < 0.2) fitScale = 0.2;
+
+      const renderW = Math.round(vbW * fitScale);
+      const renderH = Math.round(vbH * fitScale);
+
+      lbSvg.setAttribute('width', renderW);
+      lbSvg.setAttribute('height', renderH);
+      lbSvg.style.width = renderW + 'px';
+      lbSvg.style.height = renderH + 'px';
+      lbSvg.style.maxWidth = 'none';
+      lbSvg.style.maxHeight = 'none';
+      lbSvg.style.display = 'block';
+    }
   }
 
   function closeDiagramLightbox() {
