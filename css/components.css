@@ -1249,3 +1249,204 @@
     font-size: 11px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Mermaid Diagram Lightbox & Zoom
+   ═══════════════════════════════════════════════════════════════ */
+
+.mermaid-expand-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: var(--weight-medium);
+  background: var(--bg-alt);
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--dur-fast) var(--ease-out);
+  opacity: 0.85;
+}
+
+.prose .mermaid:hover .mermaid-expand-btn,
+.mermaid-expand-btn:hover {
+  opacity: 1;
+  color: var(--fg);
+  border-color: var(--border-strong);
+  background: var(--bg-card);
+}
+
+.diagram-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: diagramFadeIn 0.15s ease-out;
+}
+
+@keyframes diagramFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.diagram-lightbox.open {
+  display: flex;
+}
+
+.diagram-lightbox__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.diagram-lightbox__dialog {
+  position: relative;
+  z-index: 1;
+  width: 95vw;
+  max-width: 1200px;
+  height: 88vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-xl);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.diagram-lightbox__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-alt);
+}
+
+.diagram-lightbox__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--fg);
+}
+
+.diagram-lightbox__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.diagram-lightbox__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+
+.diagram-lightbox__btn:hover {
+  color: var(--fg);
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.diagram-lightbox__btn--text {
+  width: auto;
+  min-width: 52px;
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.diagram-lightbox__divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.diagram-lightbox__close {
+  color: var(--fg-muted);
+}
+
+.diagram-lightbox__close:hover {
+  color: var(--error, #ef4444);
+  background: var(--error-muted, rgba(239, 68, 68, 0.1));
+  border-color: var(--error, #ef4444);
+}
+
+.diagram-lightbox__body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg);
+  cursor: grab;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diagram-lightbox__body.panning {
+  cursor: grabbing;
+}
+
+.diagram-lightbox__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  padding: var(--space-6);
+  min-width: 100%;
+  min-height: 100%;
+}
+
+.diagram-lightbox__stage svg {
+  max-width: none !important;
+  max-height: none !important;
+  width: auto !important;
+  height: auto !important;
+  display: block;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.2));
+}
+
+.diagram-lightbox__footer {
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--border);
+  background: var(--bg-alt);
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.diagram-lightbox__footer kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 10px;
+  border-radius: var(--r-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--fg);
+}

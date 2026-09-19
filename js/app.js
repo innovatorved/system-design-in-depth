@@ -387,7 +387,10 @@ window.App = (() => {
   // ── Mermaid ───────────────────────────────────────────────
   function initMermaid() {
     const diagrams = document.querySelectorAll('.mermaid:not([data-processed])');
-    if (diagrams.length === 0) return;
+    if (diagrams.length === 0) {
+      attachMermaidZoomControls();
+      return;
+    }
 
     window.loadMermaid().then(() => {
       // Store original source on each element before rendering
@@ -397,11 +400,208 @@ window.App = (() => {
         }
       });
       // Call mermaid.run directly on the nodes (mermaid manages data-processed internally)
-      window.mermaid.run({ nodes: Array.from(diagrams) }).catch(err => {
+      window.mermaid.run({ nodes: Array.from(diagrams) }).then(() => {
+        attachMermaidZoomControls();
+      }).catch(err => {
         console.warn('Mermaid render warning:', err);
+        attachMermaidZoomControls();
       });
     }).catch(err => {
       console.warn('Failed to load Mermaid:', err);
+    });
+  }
+
+  // ── Diagram Lightbox & Zoom ───────────────────────────────
+  let lightboxState = {
+    isOpen: false,
+    scale: 1,
+    translateX: 0,
+    translateY: 0,
+    isDragging: false,
+    startX: 0,
+    startY: 0
+  };
+
+  function updateLightboxTransform() {
+    const stage = document.getElementById('diagram-lightbox-stage');
+    const zoomLevel = document.getElementById('diagram-zoom-level');
+    if (!stage) return;
+    stage.style.transform = `translate(${lightboxState.translateX}px, ${lightboxState.translateY}px) scale(${lightboxState.scale})`;
+    if (zoomLevel) {
+      zoomLevel.textContent = Math.round(lightboxState.scale * 100) + '%';
+    }
+  }
+
+  function openDiagramLightbox(mermaidEl) {
+    const modal = document.getElementById('diagram-lightbox');
+    const stage = document.getElementById('diagram-lightbox-stage');
+    if (!modal || !stage) return;
+
+    const svg = mermaidEl.querySelector('svg');
+    if (!svg) return;
+
+    // Clone the rendered SVG cleanly
+    const clonedSvg = svg.cloneNode(true);
+    clonedSvg.removeAttribute('id');
+    clonedSvg.style.maxWidth = 'none';
+    clonedSvg.style.width = '100%';
+    clonedSvg.style.height = 'auto';
+
+    stage.innerHTML = '';
+    stage.appendChild(clonedSvg);
+
+    // Reset view state
+    lightboxState.isOpen = true;
+    lightboxState.scale = 1.0;
+    lightboxState.translateX = 0;
+    lightboxState.translateY = 0;
+    updateLightboxTransform();
+
+    modal.classList.add('open');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDiagramLightbox() {
+    const modal = document.getElementById('diagram-lightbox');
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    lightboxState.isOpen = false;
+  }
+
+  function attachMermaidZoomControls() {
+    const diagrams = document.querySelectorAll('.mermaid');
+    diagrams.forEach(el => {
+      const svg = el.querySelector('svg');
+      if (!svg) return;
+
+      // Avoid double-attaching button
+      if (!el.querySelector('.mermaid-expand-btn')) {
+        const btn = document.createElement('button');
+        btn.className = 'mermaid-expand-btn';
+        btn.setAttribute('type', 'button');
+        btn.setAttribute('title', 'View diagram full size');
+        btn.setAttribute('aria-label', 'Expand diagram');
+        btn.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+          <span>Expand</span>
+        `;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openDiagramLightbox(el);
+        });
+        el.appendChild(btn);
+      }
+
+      if (!el._zoomClickAttached) {
+        el._zoomClickAttached = true;
+        el.addEventListener('click', () => {
+          openDiagramLightbox(el);
+        });
+      }
+    });
+  }
+
+  function setupDiagramLightboxEvents() {
+    const modal = document.getElementById('diagram-lightbox');
+    const backdrop = document.getElementById('diagram-lightbox-backdrop');
+    const closeBtn = document.getElementById('diagram-lightbox-close');
+    const zoomInBtn = document.getElementById('diagram-zoom-in');
+    const zoomOutBtn = document.getElementById('diagram-zoom-out');
+    const zoomResetBtn = document.getElementById('diagram-zoom-reset');
+    const body = document.getElementById('diagram-lightbox-body');
+
+    if (!modal) return;
+
+    if (backdrop) backdrop.addEventListener('click', closeDiagramLightbox);
+    if (closeBtn) closeBtn.addEventListener('click', closeDiagramLightbox);
+
+    if (zoomInBtn) {
+      zoomInBtn.addEventListener('click', () => {
+        lightboxState.scale = Math.min(lightboxState.scale * 1.25, 4.0);
+        updateLightboxTransform();
+      });
+    }
+
+    if (zoomOutBtn) {
+      zoomOutBtn.addEventListener('click', () => {
+        lightboxState.scale = Math.max(lightboxState.scale / 1.25, 0.35);
+        updateLightboxTransform();
+      });
+    }
+
+    if (zoomResetBtn) {
+      zoomResetBtn.addEventListener('click', () => {
+        lightboxState.scale = 1.0;
+        lightboxState.translateX = 0;
+        lightboxState.translateY = 0;
+        updateLightboxTransform();
+      });
+    }
+
+    if (body) {
+      // Mouse wheel zoom
+      body.addEventListener('wheel', (e) => {
+        if (!lightboxState.isOpen) return;
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.15 : 0.85;
+        lightboxState.scale = Math.max(0.35, Math.min(4.0, lightboxState.scale * factor));
+        updateLightboxTransform();
+      }, { passive: false });
+
+      // Click and drag panning
+      body.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.diagram-lightbox__actions')) return;
+        lightboxState.isDragging = true;
+        lightboxState.startX = e.clientX - lightboxState.translateX;
+        lightboxState.startY = e.clientY - lightboxState.translateY;
+        body.classList.add('panning');
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!lightboxState.isDragging || !lightboxState.isOpen) return;
+        lightboxState.translateX = e.clientX - lightboxState.startX;
+        lightboxState.translateY = e.clientY - lightboxState.startY;
+        updateLightboxTransform();
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (lightboxState.isDragging) {
+          lightboxState.isDragging = false;
+          body.classList.remove('panning');
+        }
+      });
+
+      // Touch panning for mobile
+      let touchStartX = 0, touchStartY = 0;
+      body.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          touchStartX = e.touches[0].clientX - lightboxState.translateX;
+          touchStartY = e.touches[0].clientY - lightboxState.translateY;
+        }
+      }, { passive: true });
+
+      body.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1 && lightboxState.isOpen) {
+          lightboxState.translateX = e.touches[0].clientX - touchStartX;
+          lightboxState.translateY = e.touches[0].clientY - touchStartY;
+          updateLightboxTransform();
+        }
+      }, { passive: true });
+    }
+
+    // Keyboard shortcut (Escape to close)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lightboxState.isOpen) {
+        closeDiagramLightbox();
+      }
     });
   }
 
@@ -414,6 +614,9 @@ window.App = (() => {
 
   // ── Event Listeners ───────────────────────────────────────
   function setupEventListeners() {
+    // Diagram Lightbox
+    setupDiagramLightboxEvents();
+
     // Theme toggle
     const themeBtn = document.getElementById('theme-toggle');
     if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
@@ -502,6 +705,9 @@ window.App = (() => {
   // ── Boot ──────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', init);
 
+  window.openDiagramLightbox = openDiagramLightbox;
+  window.closeDiagramLightbox = closeDiagramLightbox;
+
   return {
     navigateTo,
     navigateToBuild,
@@ -511,6 +717,8 @@ window.App = (() => {
     toggleComplete,
     toggleTheme,
     renderCurrentView,
-    renderSidebar
+    renderSidebar,
+    openDiagramLightbox,
+    closeDiagramLightbox
   };
 })();
