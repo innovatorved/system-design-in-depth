@@ -171,16 +171,20 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       "title": "SLO vs SLI vs SLA vs Error Budget | Google SRE in Plain English",
       "channel": "Google Cloud"
     },
-    "content": "<div class=\"lesson-content\">\n      <h2>Regulatory Compliance & The Distributed Deletion Problem</h2>\n      <p>Regulations like GDPR (Right to Be Forgotten) and CCPA require organizations to permanently delete user data upon request across all systems, including cold storage and distributed databases.</p>\n\n      <h2>Tombstones in Distributed Storage</h2>\n      <p>In LSM-tree and distributed wide-column databases (Cassandra, Bigtable, RocksDB), deletes are not executed as in-place overwrites. Instead, the system writes a special marker called a <strong>Tombstone</strong>. If tombstones are purged prematurely before all replicas receive them, old deleted data can resurrect during subsequent replica repair operations.</p>\n    </div>",
+    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: The Distributed Deletion Challenge</h2>\n      <p>Deleting data in a single SQL table with <code>DELETE FROM users WHERE id = ?</code> is trivial; deleting user data across a distributed system with dozens of microservices, read replicas, search clusters, message queues, and append-only backups is one of the hardest operational challenges in software engineering. Regulatory mandates like GDPR (Right to Erasure) and CCPA require verified permanent erasure within strict legal windows (typically 30 days).</p>\n\n      <h2>Distributed Deletion Orchestration Pipeline</h2>\n      <div class=\"mermaid\">\nsequenceDiagram\n    autonumber\n    actor User as Data Subject\n    participant API as Privacy API Gateway\n    participant Orch as Deletion Orchestrator\n    participant DB as User Database (Primary)\n    participant Kafka as Event Bus ('user.erased')\n    participant Search as Elasticsearch Cluster\n    participant S3 as Cold Storage / Data Lake\n\n    User->>API: POST /v1/privacy/erasure-request\n    API->>Orch: Schedule Async Erasure Workflow\n    Orch->>DB: Soft-Delete + Anonymize PII (Immediate Lock)\n    Orch->>Kafka: Publish 'user.erased' Event\n    Kafka->>Search: Purge Documents by user_id\n    Kafka->>S3: Cryptographic Shredding (Destroy KMS Key)\n    Orch->>User: 202 Accepted (Audit Receipt Generated)\n      </div>\n\n      <h2>Core Production Deletion Mechanics</h2>\n      <h3>1. Tombstones and the Data Resurrection Hazard</h3>\n      <p>In distributed LSM-tree and wide-column databases (Cassandra, Bigtable, RocksDB), deletes are not in-place physical overwrites. Instead, the storage engine writes a special marker record called a <strong>Tombstone</strong>. If a node is down during deletion and repairs after the tombstone's Garbage Collection Grace Period (<code>gc_grace_seconds</code>) expires, the resurrected old data is propagated back to healthy nodes as valid state. Production systems strictly coordinate repair intervals to occur well within tombstone expiration limits.</p>\n\n      <h3>2. Cryptographic Shredding for Immutable Backups</h3>\n      <p>Modifying historical immutable WAL archives or Glacier cold backups to erase a single user is physically impossible without re-writing entire multi-terabyte snapshot files. Production architectures solve this via <strong>Cryptographic Shredding</strong>: each user's sensitive PII is encrypted with a distinct per-user Data Encryption Key (DEK) managed in KMS. When an erasure request arrives, the orchestrator securely destroys the user's specific DEK. The encrypted ciphertext in cold backups becomes instantaneously and provably unrecoverable random noise without rewriting historical media.</p>\n\n      <h3>3. Automated TTL Lifecycle Reapers</h3>\n      <p>Data that is not retained cannot be breached. Production systems configure strict Time-To-Live (TTL) policies at the database layer (PostgreSQL partitioned table dropping, DynamoDB TTL attributes, Redis key expirations) to automatically purge ephemeral audit logs, session records, and abandoned shopping carts without manual batch scripts.</p>\n    </div>",
     "keyTakeaways": [
-      "In distributed storage, deletes write Tombstones; premature tombstone cleanup causes data resurrection.",
-      "Enforce automated TTL expiration policies to purge aged logs and sensitive customer records.",
-      "Maintain centralized user deletion orchestration pipelines across primary databases, search indexes, and backups."
+      "In distributed wide-column and LSM storage, deletes write Tombstones; premature tombstone cleanup causes catastrophic data resurrection.",
+      "Use Cryptographic Shredding (destroying per-user KMS encryption keys) to achieve instant GDPR erasure across immutable cold backups.",
+      "Partition time-series audit tables by month or day so aging data can be dropped instantly via DROP TABLE instead of heavy DELETE scans."
     ],
     "furtherReading": [
       {
-        "title": "Cassandra Tombstone Mechanics",
-        "url": "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlHowDataDeleted.html"
+        "title": "Apache Cassandra: Distributed Deletes and Tombstones Deep Dive",
+        "url": "https://cassandra.apache.org/doc/latest/cassandra/operating/bloom_filters.html"
+      },
+      {
+        "title": "NIST SP 800-88: Guidelines for Media Sanitization (Cryptographic Erase)",
+        "url": "https://csrc.nist.gov/publications/detail/sp/800-88/rev-1/final"
       }
     ]
   },
@@ -191,15 +195,19 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       "title": "Rate Limiter System Design: Token Bucket, Leaky Bucket, Scaling",
       "channel": "ByteByteGo"
     },
-    "content": "<div class=\"lesson-content\">\n      <h2>Defense-in-Depth Architecture</h2>\n      <p>Security is never achieved through a single gatekeeper. Defense-in-depth establishes overlapping protective layers: DDoS mitigation at the edge (Cloudflare/AWS Shield), Web Application Firewalls (WAF) inspecting for SQLi/XSS, mutual TLS (mTLS) between internal microservices, and least-privilege IAM policies.</p>\n\n      <h2>Credential Stuffing & Bot Mitigation</h2>\n      <p>Automated bot attacks target login endpoints using leaked credential lists. Modern defenses use fingerprinting (IP reputation, TLS JA3 fingerprints, behavioral CAPTCHAs like Cloudflare Turnstile) combined with global anomaly detection pipelines.</p>\n    </div>",
+    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Defense-in-Depth Architecture</h2>\n      <p>Modern system design operates under the <strong>Zero Trust</strong> security paradigm: assume the perimeter is already breached, network transport is inherently hostile, and every request must be authenticated, authorized, and continuously validated. Relying on a single firewall or border proxy creates a catastrophic single point of failure.</p>\n\n      <h2>Layered Defense Perimeter</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    Internet[\"Public Internet Traffic\"] --> Cloudflare[\"1. Edge CDN & DDoS Mitigation (Anycast BGP Scrubbing)\"]\n    Cloudflare --> WAF[\"2. Web Application Firewall (SQLi, XSS, OWASP Top 10)\"]\n    WAF --> BotMit[\"3. Bot & Abuse Detection (JA3 Fingerprinting, Turnstile)\"]\n    BotMit --> Gateway[\"4. API Gateway (OAuth2 / JWT Token Validation, Rate Limiting)\"]\n    Gateway --> Mesh[\"5. Internal Service Mesh (Mutual TLS 1.3 with SPIFFE / SPIRE)\"]\n    Mesh --> ServiceA[\"Microservice A (Least Privilege IAM)\"]\n    ServiceA --> DB[(\"Encrypted Datastore (Envelope Encryption with AWS KMS / HashiCorp Vault)\")]\n      </div>\n\n      <h2>Production Abuse Mitigation Vectors</h2>\n      <h3>1. Credential Stuffing & Automated Bot Mitigation</h3>\n      <p>Malicious actors weaponize billions of leaked password dumps to execute automated distributed brute-force attempts against login and authentication endpoints. Defenses include TLS Client Hello (JA3/JA4) fingerprinting to identify headless HTTP client scripts, IP reputation lookups, and progressive behavioral challenges (invisible CAPTCHA) triggered when request anomalies exceed threshold limits.</p>\n\n      <h3>2. Mutual TLS (mTLS) & Workload Identity</h3>\n      <p>Inside the cloud datacenter, plain unencrypted HTTP between microservices is unacceptable. Service meshes (Istio, Linkerd) enforce <strong>Mutual TLS (mTLS)</strong> with short-lived cryptographic x509 certificates rotated hourly by SPIRE. Every service verifies the exact cryptographic identity of the calling service before granting RPC access.</p>\n\n      <h3>3. Envelope Encryption at Rest</h3>\n      <p>Data written to persistent storage is secured using <strong>Envelope Encryption</strong>: a unique local Data Encryption Key (DEK) encrypts the file or database row, and the DEK itself is encrypted by a root Key Encryption Key (KEK) locked inside a Hardware Security Module (HSM / AWS KMS). The plaintext DEK exists only in volatile memory during active encryption/decryption.</p>\n    </div>",
     "keyTakeaways": [
-      "Implement defense-in-depth: Edge DDoS protection, WAF rules, mTLS internal transport, and strict IAM boundaries.",
-      "Defend authentication endpoints with behavioral bot detection and rate limits keyed on multiple attributes.",
-      "Encrypt data both in transit (TLS 1.3) and at rest (envelope encryption with KMS)."
+      "Zero Trust architecture requires authenticating and encrypting every hop; never trust internal datacenter network traffic.",
+      "Protect authentication endpoints using behavioral fingerprinting (JA3 TLS signatures) and composite rate limiting.",
+      "Enforce Envelope Encryption with KMS-backed Hardware Security Modules to protect customer data at rest."
     ],
     "furtherReading": [
       {
-        "title": "OWASP Top Ten Security Risks",
+        "title": "Google Cloud: BeyondCorp Zero Trust Security Framework",
+        "url": "https://cloud.google.com/beyondcorp"
+      },
+      {
+        "title": "OWASP Top Ten Web Application Security Risks",
         "url": "https://owasp.org/www-project-top-ten/"
       }
     ]
@@ -231,16 +239,20 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       "title": "Rate Limiter System Design: Token Bucket, Leaky Bucket, Scaling",
       "channel": "ByteByteGo"
     },
-    "content": "<div class=\"lesson-content\">\n      <h2>Algorithm Implementation: Sliding Window Counter</h2>\n      <p>The sliding window counter algorithm calculates the rate by blending request counts from the previous window with the current window based on the current timestamp's percentage offset:</p>\n\n      <pre><code>Current Count = Previous Window Count * (1 - (Current Time - Window Start) / Window Duration) + Current Window Count</code></pre>\n\n      <p>If this interpolated estimate exceeds the threshold, the request is rejected with HTTP 429. The weighted counter smooths the sharp reset of a fixed window with constant state per key, but it approximates a true rolling window and can admit or reject differently from an exact timestamp log near a boundary.</p>\n    </div>",
+    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Eliminating the Boundary Burst Flaw</h2>\n      <p>Rate limiting algorithms prevent system overload by bounding request frequency over time. Naive <strong>Fixed Window Counters</strong> suffer from the 2x burst vulnerability: if a limit allows 100 requests/minute, an attacker can dispatch 100 requests at 00:59 and another 100 requests at 01:00, forcing 200 requests within a 2-second window without triggering any rate limit violation.</p>\n\n      <h2>Rate Limiting Algorithms Compared</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    Algo{\"Algorithm Choice\"}\n    Algo -->|\"Exact precision, High memory footprint\"| SWL[\"Sliding Window Log: Redis Sorted Set with Unix Timestamps\"]\n    Algo -->|\"O(1) memory, Smooth boundary interpolation\"| SWC[\"Sliding Window Counter: Weighted Past + Current Window\"]\n    Algo -->|\"Smooth traffic shaping, Queue buffer\"| LB[\"Leaky Bucket: Constant Outflow Rate\"]\n    Algo -->|\"Bursty traffic allowance\"| TB[\"Token Bucket: Refill Rate + Max Bucket Burst\"]\n      </div>\n\n      <h2>Sliding Window Counter Mathematics & Implementation</h2>\n      <p>The <strong>Sliding Window Counter</strong> combines the memory efficiency of fixed windows with the smoothness of a continuous sliding window. It tracks request counts across only two keys (the current window and the previous window) and calculates an interpolated estimate:</p>\n\n      <pre><code>Estimated Count = (Previous Window Count * (1 - Current Offset Ratio)) + Current Window Count\nWhere Current Offset Ratio = (Current Timestamp - Window Start) / Window Duration</code></pre>\n\n      <h3>Concrete Numeric Example:</h3>\n      <p>Suppose the limit is 100 requests per 60-second window. The previous window recorded 80 requests. We are currently 15 seconds into the new window (25% through), and have registered 30 requests so far:</p>\n      <pre><code>Estimated Count = (80 * (1 - 0.25)) + 30 = (80 * 0.75) + 30 = 60 + 30 = 90 requests (Allowed, 90 < 100)</code></pre>\n\n      <h2>Atomic Redis Execution with Lua</h2>\n      <p>Because multiple concurrent application servers query the rate limiter simultaneously, checking and incrementing counters across network hops introduces race conditions. Production architectures wrap the lookup and increment logic inside an atomic <strong>Redis Lua Script</strong>, guaranteeing single-threaded atomic execution with zero distributed lock contention.</p>\n    </div>",
     "keyTakeaways": [
-      "Sliding window counter blends previous and current window counts with minimal memory usage.",
-      "Reduces the fixed-window boundary spike, while remaining an approximation rather than an exact rolling-window count.",
-      "Execute rate limit checks atomically using Redis Lua scripts."
+      "Fixed window limiters allow 2x traffic bursts across window boundaries; sliding window counter smooths this boundary.",
+      "Sliding window counter uses only 2 integer keys per client, achieving O(1) memory vs O(N) memory in sliding window logs.",
+      "Execute rate limit checks atomically using Redis Lua scripts to eliminate race conditions between concurrent requests."
     ],
     "furtherReading": [
       {
-        "title": "Cloudflare: How we built rate limiting",
+        "title": "Cloudflare Engineering: How We Built Rate Limiting at Global Scale",
         "url": "https://blog.cloudflare.com/counting-things-a-lot-of-different-things/"
+      },
+      {
+        "title": "Figma: An Alternative Approach to Rate Limiting",
+        "url": "https://www.figma.com/blog/an-alternative-approach-to-rate-limiting/"
       }
     ]
   },

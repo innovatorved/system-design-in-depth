@@ -172,7 +172,8 @@ window.Renderer = (() => {
       // Use authentic markdown from curriculum
       html += convertMarkdownToHTML(archiveContent);
       // If module content has complementary details (e.g. diagrams or breakdown), augment smoothly
-      if (moduleContent?.content && !archiveContent.includes('Real-World Usage')) {
+      const isPlaceholder = moduleContent?.content?.includes('This topic is covered in depth in the curriculum archive');
+      if (moduleContent?.content && !isPlaceholder && !archiveContent.includes('Real-World Usage')) {
         html += '<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);">';
         html += '<div class="lesson-deep-dive">' + moduleContent.content + '</div>';
       }
