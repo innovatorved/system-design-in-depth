@@ -165,19 +165,20 @@
         const s = document.createElement('script');
         s.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
         s.onload = () => {
+          const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
           mermaid.initialize({
             startOnLoad: false,
             securityLevel: 'loose',
-            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+            theme: isDark ? 'dark' : 'default',
             themeVariables: {
-              darkMode: document.documentElement.getAttribute('data-theme') === 'dark',
-              background: '#141517',
-              primaryColor: '#191a1c',
-              primaryTextColor: '#f2f4f7',
-              primaryBorderColor: '#36373b',
-              lineColor: '#747d89',
-              secondaryColor: '#151617',
-              tertiaryColor: '#202123',
+              darkMode: isDark,
+              background: isDark ? '#141517' : '#ffffff',
+              primaryColor: isDark ? '#191a1c' : '#f8f9fa',
+              primaryTextColor: isDark ? '#f2f4f7' : '#1f2937',
+              primaryBorderColor: isDark ? '#36373b' : '#e5e7eb',
+              lineColor: isDark ? '#747d89' : '#9ca3af',
+              secondaryColor: isDark ? '#151617' : '#f3f4f6',
+              tertiaryColor: isDark ? '#202123' : '#e5e7eb',
               fontFamily: '"Inter", -apple-system, sans-serif',
               fontSize: '13px'
             }
