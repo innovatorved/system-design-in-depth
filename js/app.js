@@ -122,6 +122,10 @@ window.App = (() => {
       case 'topic':
         reader.innerHTML = window.Renderer.renderLesson(currentSlug);
         initMermaid();
+        // Initialize TTS player
+        if (window.TTS) {
+          window.TTS.initPlayer();
+        }
         break;
       case 'build':
         reader.innerHTML = window.Renderer.renderBuild(currentSlug);
