@@ -45,14 +45,6 @@ window.Renderer = (() => {
           <div><div class="hero__stat-value">${stats.builds}</div><div class="hero__stat-label">Builds</div></div>
           <div><div class="hero__stat-value">${pct}%</div><div class="hero__stat-label">Complete</div></div>
         </div>
-        <div class="hero__credit-row">
-          <div class="hero__credit">
-            <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" data-repo-placement="hero">★ Star on GitHub · innovatorved/system-design-in-depth ↗</a>
-          </div>
-          <div class="hero__credit">
-            <a href="/projects" data-nav="projects">★ View more projects by @innovatorved ↗</a>
-          </div>
-        </div>
       </div>`;
 
     // Render each part
@@ -746,19 +738,10 @@ window.Renderer = (() => {
       <div class="lesson-header">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--build">${icons.code} Open Source</span>
-          <span class="tag">1,500+ Stars</span>
-          <span class="tag">${projects.length} Featured Repos</span>
+          <span class="tag">${projects.length} Repos</span>
         </div>
-        <h1 class="lesson-header__title">Featured Projects by Ved Gupta</h1>
-        <div class="lesson-header__meta">
-          <span class="lesson-header__meta-item">Open-source speech transcription APIs, local voice dictation for Mac, and developer tools built by <a href="https://github.com/innovatorved" target="_blank" rel="noopener noreferrer" class="author-highlight">@innovatorved</a>.</span>
-        </div>
+        <h1 class="lesson-header__title">Projects</h1>
         <div class="lesson-header__actions" style="margin-top: var(--space-3); display: flex; gap: var(--space-3); flex-wrap: wrap;">
-          <a href="https://github.com/innovatorved?tab=repositories" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--primary" data-repo-placement="projects_follow">
-            ${icons.github}
-            <span>Follow @innovatorved on GitHub</span>
-            ${icons.external}
-          </a>
           <a href="/" data-nav="home" class="btn btn--sm btn--secondary">
             <span>← Back to Curriculum</span>
           </a>

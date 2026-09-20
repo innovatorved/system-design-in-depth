@@ -450,13 +450,8 @@ window.App = (() => {
     }
 
     let html = `
-      <div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;display:flex;justify-content:space-between;align-items:center;">
-        <span>Pinned & Top Projects</span>
-        <a href="https://github.com/innovatorved" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--accent);text-decoration:none;">@innovatorved ↗</a>
-      </div>
-      <div class="sidebar-all-projects-btn" onclick="App.navigateToProject()" style="margin:6px 12px 10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:12px;font-weight:500;">
-        <span style="color:var(--fg);">All Featured Projects</span>
-        <span style="color:var(--accent);font-size:11px;">Browse →</span>
+      <div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">
+        <span>Projects</span>
       </div>
     `;
 
