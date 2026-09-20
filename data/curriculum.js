@@ -1,4 +1,3 @@
-// Auto-generated from Fanout System Design Curriculum
 window.CURRICULUM_DATA = {
   "stats": {
     "parts": 3,
@@ -21,8 +20,6 @@ window.CURRICULUM_DATA = {
           "number": "01",
           "title": "Foundations",
           "summary": "Clarify requirements, estimate capacity, and decide which complexity the system needs.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "requirements-clarification",
@@ -49,9 +46,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "Requirements clarification turns a broad request into a design problem you can reason about. Before choosing a database or drawing services, establish who uses the system, what they need to accomplish, and which promises must survive load and failures.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 635,
                 "mermaidCount": 0,
                 "content": "# Requirements clarification\n\nRequirements clarification turns a broad request into a design problem you can reason about. Before choosing a database or drawing services, establish who uses the system, what they need to accomplish, and which promises must survive load and failures.\n\nWe will turn “design a URL shortener” into a small brief. The same questions apply to a feed, file store, or payment service; the answers will change.\n\n## Start with the people and the operation\n\nA link creator submits a destination and receives a short address. A reader opens that address and expects to reach the destination. An administrator may need to disable an abusive link. These are three roles with different permissions, even if one person sometimes fills all three.\n\nNow follow the main operation. Can the creator choose the short name? Can its destination change? Must readers sign in? Each answer changes something the implementation must enforce.\n\nFor this course's shortener, assume approved callers can create links, names are generated, destinations stay fixed, and anyone can follow a link. Custom aliases and destination editing are outside the first version. Abuse handling still needs an owner; leaving out editing does not make unsafe destinations harmless.\n\nWrite these choices down as assumptions to confirm with the product owner. A plausible answer becomes a requirement only when the people responsible for the product agree to it.\n\n## Ask what must remain true\n\nA generated name must not silently replace somebody else's mapping. A saved link must keep its destination through the promised retention period. These are **invariants**: conditions the implementation must preserve, including when requests overlap or are retried.\n\nAlso identify the authoritative data. The stored mapping decides where a link goes. A cached copy can speed up reading it, but does not become a separate authority that may choose a different destination.\n\nFreshness needs its own question. If an administrator disables a link, how long may a cached copy still redirect readers? An acceptable delay of a minute permits different choices from a requirement to stop every new redirect immediately. Do not leave that promise hidden inside “we will cache it.”\n\n## Separate work that must finish now from work that can wait\n\n“Record clicks” is ambiguous. Our server can record a redirect request; it cannot infer a distinct person or prove that the destination page loaded.\n\nThe shortener exercise requires each accepted redirect request to have a stored event before the response. Reports may be calculated later. If storing the event fails, this version returns an error. That is a deliberate product tradeoff: event retention takes priority over redirect availability during that failure.\n\nAnother product could choose to redirect anyway and tolerate missing events. The important question is which promise the design is supposed to keep. Moving report calculation into the background does not answer whether losing its input is acceptable.\n\n## Put numbers and boundaries in the brief\n\nKeep these questions nearby when the conversation moves beyond the ordinary request:\n\n| Area | Question to settle |\n|---|---|\n| Scale | How many reads and writes arrive, how bursty are they, and in which regions? |\n| Retention | How long must records remain, and what growth should we plan for? |\n| Reliability | Which operations may degrade, and how quickly must service and data recover? |\n| Privacy | Who can read each record, and which sensitive fields are actually needed? |\n| Scope | Which workflows are required now, and which are explicitly deferred? |\n\nFor the course exercise, use 100 million redirects and 1 million new links per day, with mappings retained for at least five years. These are planning assumptions, not measured traffic. [[wiki/back-of-the-envelope-capacity-planning|Capacity planning]] turns them into rates and storage estimates.\n\nBefore handing off the brief, check one failure: the analytics report is unavailable, but event storage works. Should redirects continue? Yes, under our chosen contract. Now make event storage unavailable. The answer changes. Being able to explain that difference means the requirements are specific enough to guide a design.\n\nTargets such as “fast” and “highly available” still need a measurement and a time window. [[wiki/non-functional-requirements|Non-functional requirements]] makes those promises testable.\n"
               }
@@ -80,9 +74,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "Logical system design decides where application rules live and how modules work together. It helps answer a practical question: when a product rule or external provider changes, which code should need to change with it?",
-                "access": "free",
-                "locked": false,
-                "wordCount": 615,
                 "mermaidCount": 1,
                 "content": "# Logical system design\n\nLogical system design decides where application rules live and how modules work together. It helps answer a practical question: when a product rule or external provider changes, which code should need to change with it?\n\nWe will separate the shortener's HTTP handling, link rules, and storage work, then check whether those boundaries make a change easier to test.\n\n## Give each responsibility an owner\n\nA route handler can parse a request, run SQL, check whether a link is disabled, record a click, and format the redirect. For a small operation, that can be readable. Trouble starts when an import job needs the same rules, or every handler begins interpreting database rows differently.\n\nSeparate the work when those responsibilities need to vary independently:\n\n| Responsibility | What it owns |\n|---|---|\n| HTTP adapter | Parse the request and translate the result into an HTTP response |\n| Link operation | Apply the product's rules for creating or opening a link |\n| Storage adapter | Execute queries and map stored records into the application's result types |\n\nA **boundary** is the agreement between these parts. It can be an ordinary function call inside one process. Drawing separate boxes does not require separate servers or deployments.\n\n```mermaid\nflowchart TB\n  accTitle: Two callers share the same link rules\n  accDescr: HTTP handling and an import job call link operations, which use a storage adapter. These are application responsibilities, not separate machines.\n  HTTP[HTTP handling] --> Rules[Link operations]\n  Import[Import job] --> Rules\n  Rules --> Storage[Storage adapter]\n  Storage --> DB[(Database)]\n```\n\nThe HTTP path creates one link; the import job may create many. Both must enforce the same rule that a generated code cannot replace an existing mapping. The database's uniqueness constraint enforces the collision rule atomically; the application decides whether to retry with another candidate or return an error.\n\n## Make the agreement useful to its caller\n\nConsider `resolve(code)`. “Returns a URL” leaves several cases unstated. The link might be absent, disabled, or temporarily impossible to look up.\n\n| Result | Meaning | HTTP caller's action |\n|---|---|---|\n| Found | The operation permits this link and supplies its destination | Continue the redirect path |\n| Missing | The lookup succeeded, but no mapping exists | Return not found |\n| Disabled | The mapping exists but cannot be used | Refuse the redirect |\n| Unavailable | The operation could not establish an answer | Return a service error |\n\nKeep unavailable distinct from missing. Translating a connection failure into “no such link” gives the caller a false answer. Likewise, the storage adapter should not leak a vendor-specific exception into every route and job that uses it.\n\nFor the shortener's agreed contract, a successful redirect also waits for its request event to be stored. That sequencing belongs to the link operation. HTTP formatting does not decide whether losing a click is acceptable.\n\n## Test the rule through the boundary\n\nTo test “disabled links never redirect,” supply a small in-memory storage implementation that returns a disabled record. Exercise the link operation directly. The test should not need a browser, a live database, or knowledge of SQL syntax to check that product rule.\n\nThat test does not establish that the real database query works. Test the storage adapter against the database separately, including missing rows, uniqueness conflicts, and failures. Keeping these tests distinct helps identify whether a failure comes from a rule or its persistence implementation.\n\nThe same approach applies to a payment or notification provider: expose the operation the application needs, then translate it to the provider's API in one place. A replacement provider may have different guarantees, so an interface reduces the places to inspect; it does not make providers automatically interchangeable.\n\n## Stop before the boundary becomes ceremony\n\nA function that forwards unchanged arguments through three layers is not necessarily protecting anything. Introduce a boundary around a repeated rule, a dependency that changes, or a decision worth testing independently.\n\nReview a likely change: add an import job, replace a notification provider, or introduce link expiry. If each requires edits across unrelated route handlers, the rule probably has no clear owner. If one focused operation owns the change and its tests, the logical design is doing useful work.\n\nThe [[wiki/repository-pattern|repository pattern]] develops the storage boundary further. [[wiki/monolith-vs-microservices|Monoliths and microservices]] asks a separate question: which of these responsibilities need independent deployment?\n"
               }
@@ -112,9 +103,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "Non-functional requirements describe the conditions a system must meet while doing its job: latency, throughput, availability, durability, consistency, security, cost, and operability. “The API works” is incomplete if it becomes unusably slow under the expected load.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 670,
                 "mermaidCount": 0,
                 "content": "# Non-functional requirements\n\nNon-functional requirements describe the conditions a system must meet while doing its job: latency, throughput, availability, durability, consistency, security, cost, and operability. “The API works” is incomplete if it becomes unusably slow under the expected load.\n\nThe useful habit is to turn each vague expectation into something a test or production measurement can check. We will write a latency target, separate availability from recovery, and see how those targets affect the design.\n\n## Say what you measure\n\n“The API should be fast” leaves several questions open. Which operation? How much traffic? How many slow requests are acceptable? Are we timing the database, the server, or the user's browser?\n\nThese are example targets to negotiate, not universal defaults:\n\n| Expectation | A more useful target |\n|---|---|\n| Fast reads | At least 95% of eligible reads return the correct result within 50 ms at the server boundary under the stated peak load |\n| High throughput | Sustain 10,000 writes per second; handle a 50,000-per-second burst lasting five minutes |\n| Available API | 99.9% of eligible requests succeed over a stated monthly window |\n| Recoverable data | After the specified disaster, lose no more than five minutes of writes and restore service within 30 minutes |\n| Fresh search | 99% of committed documents become searchable within 30 seconds |\n\nThe numbers do not finish the requirement. Define eligible requests, the observation window, and the failure conditions. A traffic test also needs realistic request sizes and a read/write mix; tiny requests at an idle database cannot establish performance for a busy product.\n\nOur shortener exercise uses a different provisional latency limit: one second for at least 95% of eligible redirects at the app boundary, including its required event write. Keep that exercise assumption separate from the 50 ms example above.\n\n## Count slow and failed requests honestly\n\nThe 95th percentile, or p95, describes the point below which 95% of the measured response times fall. It says nothing about how bad the slowest 5% can be. A fast average can hide that tail.\n\nFor a user-facing target, count requests that produce the correct answer within the deadline. Failed or timed-out eligible attempts are misses, even if the server returned an error quickly. Otherwise, a failing service can appear to improve its latency.\n\nChoose the measurement boundary deliberately. Server logs help explain application work, but omit a request that cannot reach the server. Browser measurements include more of the user's experience and also depend on network conditions. Keep the two measurements labeled; a database timing is not a page-load promise.\n\n## Separate availability, data loss, and recovery time\n\nAvailability asks whether an operation is usable. Durability asks whether acknowledged data survives. A service can answer requests while having lost yesterday's records, or retain every record while temporarily unable to serve them.\n\nRecovery targets make a failure scenario concrete. The **recovery point objective**, RPO, limits the acceptable gap in recovered data, expressed in time. The **recovery time objective**, RTO, limits how long restoring service may take. Name the scenario and when the clock starts: a process restart, a lost disk, and a lost region require different recovery plans.\n\nAvailability percentages also need a denominator. In a simplified time-based model where a service is either fully up or fully down, 99.9% availability over 30 days permits:\n\n```text\n30 × 24 × 60 minutes × 0.001 = 43.2 minutes down\n```\n\nA request-based target instead counts successful attempts. An outage during the busiest minute can affect far more requests than one during a quiet minute, so the two percentages are not interchangeable.\n\n## Let the target change the design\n\nStricter freshness can rule out serving an old replica on a critical path. A shorter recovery target may require a ready replacement instead of rebuilding after failure. Both choices add work and cost that should follow an agreed product need.\n\nInclude the other operating constraints too: tenant access rules, which data may be logged, a spending limit, and the signals an on-call engineer needs to diagnose failure. A design that meets latency while leaking another tenant's records has not met its requirements.\n\nBefore accepting a target, ask how you will verify it. A recovery drill can test restoration; a realistic load test can test a throughput condition; neither proves a month of production availability. [[wiki/availability-durability-consistency-cost|Availability, durability, consistency, and cost]] examines how these promises interact.\n"
               }
@@ -144,9 +132,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "A design tradeoff is a choice between useful properties that the available options cannot all provide equally well. A cache may reduce read work while serving older data. A separate service may allow independent releases while adding network failures to handle.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 618,
                 "mermaidCount": 0,
                 "content": "# System design tradeoffs\n\nA design tradeoff is a choice between useful properties that the available options cannot all provide equally well. A cache may reduce read work while serving older data. A separate service may allow independent releases while adding network failures to handle.\n\nThe useful explanation names the benefit, the cost, and the requirement that makes the choice reasonable. We will work through one cache decision, then use the same method on other common choices.\n\n## Compare two answers to the same requirement\n\nSuppose a product page repeatedly loads a seller's display name. Reading the database each time keeps the path simple. Caching the name can avoid repeated database work, but an edit may take time to appear wherever the cached value is used.\n\nFirst ask whether that delay is acceptable. If the product allows a briefly outdated display name, an expiry or invalidation policy can be part of the design. If the requirement says every read must reflect a completed edit, a cache that can serve an old value does not meet it.\n\nNow change the field from display name to “this seller may accept payments.” A stale answer can permit an operation that should have been stopped. Similar data shapes do not imply similar correctness requirements.\n\nWrite the decision in a form another engineer can challenge:\n\n> Cache seller display names to reduce repeated reads. Accept the agreed update delay, and check current payment eligibility separately before accepting an order.\n\nThe explanation makes two boundaries visible: which field may be stale and which operation needs a stronger check. “Use a cache for speed” leaves both unresolved.\n\n## Follow the cost to the place it appears\n\nMany costs appear outside the component being optimized:\n\n| Choice | What it can improve | What the design must also handle |\n|---|---|---|\n| Cache a read result | Repeated lookup work and latency | Freshness, invalidation, memory and cache misses |\n| Move work to a queue | Absorb bursts and schedule workers separately | User-visible delay, backlog, retries and duplicate work |\n| Coordinate reads or writes across replicas | Stronger visibility or ordering guarantees | Network waits; some operations may stop when required participants cannot communicate |\n| Store a derived copy of data | Simpler or faster reads | Extra writes and keeping the copies in agreement |\n| Split a service | Independent ownership, scaling or deployment | Remote-call failure, observability and additional operations work |\n| Add detailed metric labels | More ways to isolate a problem | More time series to store and query |\n\nA queue does not create processing capacity. If workers cannot keep up, the waiting time grows. Similarly, adding a metric label containing every user ID can make a small set of measurements expand with the user population. The cost follows the behavior, not the number of boxes in the drawing.\n\nThese are possibilities to investigate, not universal verdicts. A cache with few hits may add work. Services with shared release dependencies may still have to deploy together. Test whether the proposed change actually buys the property being claimed.\n\n## Record when to reconsider\n\nA useful decision also names the evidence that would change it. Revisit the display-name cache if stale names create support problems, if its hit rate is too low to justify it, or if an indexed database read already meets the target cheaply.\n\nKeep the rejected alternative in the design note. The next engineer should be able to tell why a direct read was insufficient, what freshness delay was accepted, and how that assumption was checked.\n\nNot every improvement requires a sacrifice. Removing an unnecessary query can reduce latency, cost, and failure exposure together. Look for such fixes before negotiating away a product promise.\n\nFor your next design choice, name the alternative and trace one failure. If the cost is still only “more complexity,” say which retry, migration, stale result, or on-call task creates that complexity. [[wiki/when-not-to-add-infrastructure|When not to add infrastructure]] applies this test before introducing another service to operate.\n"
               }
@@ -177,9 +162,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "A service can keep answering requests while losing saved data. It can also preserve every record while being temporarily unreachable. Availability, durability, consistency, and cost describe different properties; saying a system is “reliable” does not tell us which of them it provides.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 634,
                 "mermaidCount": 0,
                 "content": "# Availability, durability, consistency, cost\n\nA service can keep answering requests while losing saved data. It can also preserve every record while being temporarily unreachable. Availability, durability, consistency, and cost describe different properties; saying a system is “reliable” does not tell us which of them it provides.\n\nWe will follow a newly created short link through three failures, then account for the work needed to prevent or recover from each one.\n\n## Can the reader use the link now?\n\nSuppose the shortener's database is stopped. Its files are intact, but the application cannot look up a destination. The redirect path is unavailable even though the mapping has not been lost.\n\nAvailability belongs to a particular operation. The reporting page can be down while redirects work, or creation can fail while existing links still resolve. Measure the paths that matter to users instead of treating an answering process as proof that the whole product works.\n\nDependencies affect this promise. Our shortener requires an accepted redirect event to be stored before returning success. If the mapping can be read but that event cannot be stored, this design returns an error. Letting the redirect continue would improve availability during that failure, but would change the agreed event-retention requirement.\n\n## Will an acknowledged mapping survive?\n\nThe creator receives a successful response, then the application process crashes. The saved mapping must remain after restart. **Durability** concerns whether acknowledged data survives the failures the system claims to tolerate.\n\nThe application must wait for the database's commit acknowledgement before promising that creation succeeded. That acknowledgement still depends on the database configuration and storage honoring durable writes. Data left only in volatile memory cannot survive losing that memory.\n\nA process restart with intact storage is different from destruction of the only disk. Surviving disk loss requires a recoverable copy elsewhere. A replica can help, but may also copy an accidental deletion; a backup and a tested restore procedure address a different recovery need.\n\nName the failure you tested. “The record survived a restart” is useful evidence. It does not establish recovery from a lost region or from an operator deleting the record.\n\n## What may the next read observe?\n\nNow creation succeeds, but the creator immediately follows the short link through a replica that has not received the new mapping. It returns “unknown code.” The data may be durable on the writer, yet the read violates the user's expectation.\n\n**Consistency** describes the rules relating reads and writes, including their visibility and ordering. For this path, the concrete requirement is that a read started after successful creation can find the valid mapping. An immutable destination does not remove this first-read problem.\n\nA straightforward initial choice is to read from the database that accepted the creation. In PostgreSQL's default Read Committed isolation, a new ordinary query sees rows committed before that query began. A lagging replica or an older transaction snapshot needs separate consideration.\n\nA report can have a looser freshness requirement. It may omit recent events while the calculation catches up, even though those events are safely stored. [[wiki/consistency-models|Consistency models]] develops these guarantees without treating every operation as having the same needs.\n\n## What does keeping those promises cost?\n\nWaiting for commits adds work to the request path. Extra copies consume storage and network capacity. Failover and restoration need tests, monitoring, and people who can operate them.\n\nUse four questions when reviewing a proposed saving:\n\n| Property | Question |\n|---|---|\n| Availability | Which operations can continue during the specified failure? |\n| Durability | Which acknowledged records can be lost? |\n| Consistency | Which old, missing, or conflicting results may a reader observe? |\n| Cost | What resources and operating work does the design require? |\n\nRemoving the shortener's event write makes a redirect cheaper by dropping a promise. Moving report calculation out of that request removes work that never had to finish synchronously. These are different kinds of saving.\n\nA higher uptime percentage cannot compensate for losing records the product must retain. Choose the required behavior first, then use [[wiki/cost-aware-architecture|cost-aware architecture]] to compare ways of providing it.\n"
               }
@@ -208,9 +190,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "Capacity planning turns product assumptions into approximate request rates, storage, bandwidth, and operating cost. The estimate should expose likely bottlenecks and help choose what to measure next. Extra decimal places do not make uncertain inputs more reliable.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 703,
                 "mermaidCount": 0,
                 "content": "# Back-of-the-envelope capacity planning\n\nCapacity planning turns product assumptions into approximate request rates, storage, bandwidth, and operating cost. The estimate should expose likely bottlenecks and help choose what to measure next. Extra decimal places do not make uncertain inputs more reliable.\n\nWe will estimate a feed's read traffic, account for work hidden behind each request, and compare the shortener's storage allowance with a historical measurement.\n\n## Turn user activity into a rate\n\nStart with active users and actions per user, not the total number of registered accounts. Suppose a feed has 10 million daily active users, each making 20 feed requests per day.\n\n| Step | Calculation | Result |\n|---|---|---|\n| Daily reads | 10 million × 20 | 200 million requests |\n| Average rate | 200 million ÷ 86,400 seconds | About 2,300 requests per second |\n| Assumed busy period | Average × 10 | About 23,000 requests per second |\n\nThe tenfold peak is an assumption to replace with traffic evidence. If plausible peaks range from 20,000 to 50,000 requests per second, compare designs across that range. A design that works only at the rounded midpoint has little margin for uncertainty.\n\nRecord where the traffic arrives, how long bursts last, and whether one tenant or popular item concentrates the load. A global daily total does not describe the busiest region or partition. Revisit the estimate for growth, launches, and seasonal demand.\n\n## Count the work behind one request\n\nA feed request might return 20 items. Fetching each item with a separate database query would produce roughly 460,000 lookups per second at the assumed peak, before retries or cache misses. That estimate is a reason to inspect batching and query shape; it does not by itself prove that any particular database cannot cope.\n\nSeparate reads, writes, background jobs, and fanout. One new post can cause many feed updates. One redirect in our shortener also writes an event, so a product with many more reads than creations is not necessarily read-heavy at the database.\n\nBandwidth needs bytes as well as requests. At an illustrative 20 kB response payload, 23,000 feed responses per second carry about 460 MB/s, or 3.7 Gbit/s, before protocol overhead. These decimal units describe payload leaving that serving boundary; compression, caches, and network placement change what each link carries.\n\nKeep the latency target beside the rate. “Handles 23,000 requests per second” is not sufficient if the queue grows throughout the test and users wait longer each minute.\n\n## Build storage from retention and representation\n\nFor a steady write rate, start with:\n\n**Retained records = records per day × retention days.**\n\nMultiply by the stored bytes per record, then account for indexes, replicas, derived data, backups, write logs, and temporary space. Do not add an index allowance twice if your measured record size already includes it.\n\nThe shortener exercise assumes 1 million new links per day, retained for five 365-day years. That gives 1.825 billion links. An initial allowance of 500 bytes per link, including indexes, projects 0.9125 decimal TB for that one copy of the link data.\n\nClick history is separate and may dominate. At 100 million redirects per day, the shortener records 100 times as many redirect events as new links. The event size and retention period need their own estimate.\n\n## Replace the assumptions that matter most\n\nA local PostgreSQL 16.10 capture on 11 September 2026 measured a million-row shortener fixture. Its link table's main data fork occupied 93,085,696 bytes and its indexes 44,974,080 bytes: about 138.1 bytes per link together. That measure excludes auxiliary storage and the rest of the database.\n\nUsing the rounded 138.1 bytes in the same projection gives about 0.252 TB, roughly 3.6 times smaller than the initial link allowance. It remains a projection: longer URLs, extra indexes, growth, and deleted-row space can change the future representation. It is not the total disk requirement or a predicted invoice.\n\nThe same historical test completed 231,377 warm indexed lookups in 20 seconds at a target arrival rate of about 11,574 per second. None failed, were skipped, or exceeded its chosen one-second limit. It used a local socket and excluded the application and required event insert. It supports testing the simple design further; it does not establish capacity for the complete five-year service.\n\nFinish the estimate by naming the next limiting resource: CPU, database writes, cache memory, queue processing, bandwidth, or a provider quota. Measure that path with representative data and failures. [[wiki/cost-aware-architecture|Cost-aware architecture]] then connects those quantities to the bill and the work of operating the system.\n"
               }
@@ -239,9 +218,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "Concurrency lets several tasks make progress during overlapping periods. Parallelism means computations run at the same time on different execution resources. A server can handle many waiting requests concurrently while only one CPU core executes its application code.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 624,
                 "mermaidCount": 0,
                 "content": "# How a server handles many requests\n\nConcurrency lets several tasks make progress during overlapping periods. Parallelism means computations run at the same time on different execution resources. A server can handle many waiting requests concurrently while only one CPU core executes its application code.\n\nThe distinction helps you choose between overlapping waits, adding compute capacity, and limiting the amount of work in flight. We will separate those choices using a small request timeline.\n\n## Separate computing from waiting\n\nAssume each request needs 5 ms of CPU work, waits 40 ms for a database result, then needs another 1 ms of CPU work to respond. These are teaching values, not measurements of a real endpoint.\n\nA server that finishes each request before starting the next spends 46 ms per request. Sixteen requests arriving together take 16 × 46 = 736 ms to finish. Its CPU does only 96 ms of application work during that period; the rest is waiting.\n\nAnother request could use the CPU while the first waits. Overlapping those waits reduces the time needed to finish the batch without making any individual database operation faster.\n\n:::interactive name=\"ServerConcurrency\"\nStart with 16 requests and compare the three handling models. Watch both the request timelines and the CPU row. Then increase the burst to 64 requests.\n:::\n\n## Two ways to overlap the waits\n\nA **thread pool** gives several requests their own execution context. When one thread blocks on I/O, another can run. A cap bounds the number of requests holding worker slots; requests beyond that cap must wait or be refused.\n\nAn **event loop** starts a non-blocking operation and resumes the request when its result is ready. A request waiting on network I/O does not need to occupy a separate application thread for the entire wait. The loop can work on another ready request meanwhile.\n\nIn this model, the eight-worker pool finishes 16 requests in 134 ms; the event-loop model finishes them in 121 ms. The difference comes from the model's admission cap and scheduling, not a universal speed advantage of event loops. Both still perform 96 ms of CPU work on one core.\n\nA long CPU computation on the event-loop thread prevents its other callbacks from running. Declaring a function `async` does not move that computation to another processor. In Node.js, some platform operations use a worker pool; application CPU work still needs an explicit strategy such as worker threads, separate processes, or small chunks that yield.\n\n## Add parallelism when computing is the limit\n\nFor 64 requests, the model needs 64 × 6 = 384 ms of CPU work. Its event-loop result reaches that floor: the single core is continuously busy. Adding more waiting requests cannot make that core execute the same instructions sooner.\n\nTo reduce the computing time, reduce the work or spread independent work across additional cores. Shared state, coordination, and uneven task sizes can limit the gain, so twice as many workers does not promise twice the throughput.\n\nRuntime details matter. In a conventional CPython build with the global interpreter lock enabled, Python bytecode does not execute in parallel across its threads. Threads can still overlap I/O; processes, native code that releases the lock, and optional free-threaded builds have different behavior. “Threads never run in parallel” is not a general rule.\n\n## Bound the work your dependencies receive\n\nOverlapping waits is useful only while the dependency can support the resulting load. More requests in flight can increase database contention, hold more connections, consume memory, and make every request wait longer.\n\nBudget concurrency across application instances. If each of ten instances may hold eight database connections, that is up to 80 connections before counting background workers and administrative access. A per-process cap is not a system-wide cap.\n\nThe model above holds database wait time fixed. Real dependencies often slow down as load rises, so its numbers illustrate scheduling rather than predict production throughput. Use measurements to choose limits, and use [[wiki/backpressure|backpressure]] or [[wiki/load-shedding|load shedding]] when incoming work exceeds them.\n"
               }
@@ -269,9 +245,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 581,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -305,9 +278,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 561,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -341,9 +311,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 530,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -377,9 +344,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 601,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -413,9 +377,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 589,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -449,9 +410,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "Every new running component needs configuration, capacity, monitoring, upgrades, and a plan for failure. Add it when those obligations buy a property the product needs: capacity, latency, availability, isolation, or easier operation.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 628,
                 "mermaidCount": 0,
                 "content": "# When not to add infrastructure\n\nEvery new running component needs configuration, capacity, monitoring, upgrades, and a plan for failure. Add it when those obligations buy a property the product needs: capacity, latency, availability, isolation, or easier operation.\n\nThe useful question is what the current design cannot do, and whether this component fixes that limitation.\n\n## Name the missing property\n\n“The database will get large” does not establish a need for a cache. “Repeated destination lookups dominate a measured latency problem” is a more useful starting point. It identifies both the work to remove and a result to compare afterward.\n\nPerformance is only one reason to change the design. A service may meet its traffic target but fail the requirement to survive losing a host. You do not need to wait for a production outage to act on an explicit recovery requirement.\n\nFor our shortener, the historical warm lookup measurement supports investigating a simple indexed database path. It excludes the application and required event write. It cannot establish complete-service capacity or recovery behavior.\n\n## Try the smaller change first\n\n| Proposed addition | Simpler candidate to examine | What could justify the addition |\n|---|---|---|\n| Redis for every read | Fix query shape, indexes and connection reuse | Repeated hot reads still miss the agreed target |\n| A streaming platform for every background task | A task queue or database outbox | Replay, multiple independent consumers, or measured throughput needs |\n| Microservices to divide ownership | Clear modules and internal interfaces | Independent releases, resources, permissions or failure boundaries |\n| Kubernetes for a small application | A managed platform or simpler deployment | Concrete scheduling or operating needs that justify the platform |\n| Writes accepted in several regions | A single writer, with replicas where useful | A product requirement for regional write availability or latency |\n\nThese are starting comparisons, not bans. A managed platform or task queue still has costs and limits. Likewise, read replicas do not remove the single writer's failure or latency constraints.\n\nIf the product requirement is still changing, avoid committing to a difficult-to-reverse arrangement before the boundary is understood. Preserve a straightforward path to introduce it later.\n\n## Trace the new failure path\n\nA cache can reduce database reads while creating a second place that serves an old answer. For short links, ask how quickly a disabled unsafe destination stops being returned. Also ask whether the database can handle the traffic when the cache is cold or unavailable.\n\nA queue can move report calculation out of a redirect's wait. It still needs durable acceptance if the event must survive a crash. Returning success after an unawaited in-memory enqueue weakens that promise.\n\nThe first shortener design can record an event in the existing database and calculate reports later. A separate queue becomes worth considering when the shared database path or processing arrangement no longer meets the requirement. Measure the combined path; the lookup-only benchmark did not test it.\n\n![One engineer proposes adding a cache box. A colleague holding a pager asks who will get paged when it fails.](/course-assets/system-design/illustrations/infrastructure-owner.webp)\n\n## Decide who can operate it\n\nAn additional service needs someone who can recognize failure, find the relevant evidence, and recover or disable it safely. Include that work in the comparison even when the vendor offers a free tier.\n\nBefore adopting the component, establish its owner, its failure signal, and the first recovery action. If nobody can investigate it during an incident, simplify the design or build that operating capability before relying on it.\n\nDeferring a component should leave a useful decision record. Save the current workload, the required behavior, the rejected alternative, and the condition for reopening the choice. “Revisit caching if repeated lookups still dominate the missed latency target after query fixes” gives the next engineer something to test.\n\nThe aim is a system whose parts have a clear job and an understood cost. A small design that misses the recovery promise is insufficient; a larger design full of unused mechanisms is harder to maintain. Keep the components that earn their place.\n"
               }
@@ -463,8 +421,6 @@ window.CURRICULUM_DATA = {
           "number": "02",
           "title": "APIs, services and protocols",
           "summary": "Choose service boundaries and communication patterns, then handle retries and overload.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "api-design-contracts",
@@ -492,9 +448,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 675,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -533,9 +486,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 702,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -576,9 +526,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 656,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -616,9 +563,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "TCP and UDP are transport protocols: rules for moving data between applications over an IP network. They differ in how the receiving program gets that data and what happens when some of it goes missing.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 1016,
                 "mermaidCount": 0,
                 "content": "# TCP vs UDP\n\nTCP and UDP are transport protocols: rules for moving data between applications over an IP network. They differ in how the receiving program gets that data and what happens when some of it goes missing.\n\nTCP provides an ordered stream of bytes and retransmits missing data. UDP sends separate messages, called datagrams, without adding delivery or ordering guarantees.\n\n![TCP can deliver writes cat and nap as reads ca and tnap. UDP retains separate cat and nap datagrams when both arrive.](/course-assets/system-design/research-pilot/style-comparison/tcp-editorial.webp)\n\n| Behavior | TCP | UDP |\n|---|---|---|\n| Connection setup | Establishes a connection before the usual data transfer. | No transport handshake. |\n| What the app reads | A byte stream; reads can split or combine messages. | Separate datagrams that arrive. |\n| Missing data | Retransmits; later bytes wait behind a gap. | No automatic retransmission. |\n\nIP, the Internet Protocol, routes packets: chunks of data with addressing information. Packets can be lost, duplicated or delivered out of order. The transport protocol determines how much of that the app has to handle.\n\n## TCP message boundaries\n\nTCP keeps bytes in order, but it doesn't preserve the boundaries between the sender's writes. This matters when your program needs to recognize a complete message.\n\nFor example, a server writes `cat` and then `nap`. TCP carries the six bytes `catnap`. The client could read them as `cat` and `nap`, as `ca` and `tnap`, or all at once.\n\nThe application protocol needs a rule for finding the end of each message. This is called **framing**. A simple text protocol could put a newline after each word.\n\nThe receiver collects bytes until it reaches that newline, then processes the completed word. Another protocol might put a message length before the message contents.\n\nHTTP libraries handle their protocol's framing for you. If you work directly with TCP, a single read is not proof that the whole message has arrived.\n\nUDP preserves the boundary of each datagram. Sending `cat` in one and `nap` in another gives the receiver two distinguishable messages if both arrive. Their arrival order can differ from their send order.\n\n## TCP loss recovery\n\nTCP numbers bytes and uses acknowledgements, or ACKs, to track what has arrived. An ACK identifies the next byte the receiver expects after the continuous sequence it has already received.\n\nThe sender keeps unacknowledged data. It can resend that data when acknowledgements or a timeout indicate possible loss.\n\nConsider `catnap` again. Number the bytes from 1 to 6 for this example, and split them into packets carrying `ca`, `tn` and `ap`. The packet containing `tn` is lost.\n\n| Event | Bytes available to the app so far | Next expected byte |\n|---|---|---|\n| `ca` arrives | `ca` | 3 |\n| `ap` arrives, but `tn` is missing | `ca` | 3 |\n| Retransmitted `tn` arrives | `catnap` | 7 |\n\nThe receiver holds `ap` until the gap is filled. This is **head-of-line blocking**: missing earlier bytes prevent later bytes from being delivered to the application.\n\nThe byte positions are illustrative; the connection is already open. ACK 7 means all six bytes have arrived. The receiving program can still read them in smaller chunks.\n\nRetransmission doesn't promise a deadline. If the connection fails before recovery, the transfer remains incomplete.\n\nAn ACK also doesn't prove that the server program processed the data. The server's TCP implementation can acknowledge a request before the application reads it.\n\nFor a save operation, the client needs an application response confirming the save. If that response is lost, the client can still be unsure whether the save succeeded.\n\n![A TCP acknowledgment confirms receipt of bytes. In this example the bytes are in the server buffer and the application has not saved them yet.](/course-assets/system-design/research-pilot/style-comparison/tcp-sketch.webp)\n\n## Connection setup and traffic control\n\nA usual new TCP connection starts with three messages: SYN, SYN-ACK and ACK. The two ends establish their starting sequence numbers and connection settings during this handshake.\n\nThe client normally waits one round trip before sending application data. Reusing an open connection avoids repeating this setup. Packet travel time and waiting in network queues still apply to either protocol.\n\nTCP also limits how much data is in flight. **Flow control** respects the receiver's available buffer space. **Congestion control** adjusts sending to conditions on the network path.\n\nThey address different bottlenecks. A receiving machine can have plenty of memory while the network link leading to it is overloaded.\n\n## When skipping a message is acceptable\n\nA game might send a player's complete position in updates numbered 501, 502 and 503. If 502 is lost, the game can use 503 without waiting. If 502 arrives later, the game can discard it.\n\nThe update numbers and the rule for ignoring older positions belong to the game protocol. UDP doesn't supply them.\n\nThis only works if each update contains enough information on its own. If 503 describes movement since 502, losing 502 leaves the receiver without the position needed to apply that change.\n\nA voice call has a similar timing constraint: a sound fragment arriving after its playback time may no longer be useful. A protocol over UDP can skip it and continue.\n\nOther traffic in the same product may need reliable delivery. A chat message or purchase can't be treated like an outdated position update.\n\nUDP applications also need traffic control. Retrying every lost message immediately can overload a link that is already dropping packets.\n\n## HTTP/3 and QUIC\n\nUsing UDP doesn't necessarily mean giving up reliability. QUIC implements encrypted connections, congestion control and reliable byte streams over UDP. HTTP/3 uses QUIC.\n\nQUIC orders bytes separately in each stream. With HTTP/2 over one TCP connection, a gap in the shared TCP stream can delay both an image and a stylesheet.\n\nWith HTTP/3, received stylesheet bytes can continue along their stream while missing image bytes are recovered. If a lost packet contains data for both streams, both can be affected. They also share congestion control.\n\nFor an ordinary web API, use HTTPS and let its transport implementation handle these details. The [[wiki/http-rest-grpc|HTTP lesson]] explains the protocol versions further.\n\nDatabase clients also commonly use TCP. DNS uses both UDP and TCP, including retrying a truncated UDP answer over TCP. A familiar application name does not always imply one transport.\n\nBuilding directly on UDP makes sense when you need control over which messages can be skipped or recovered. You also take responsibility for the delivery behavior and traffic control your application requires.\n"
               }
@@ -648,9 +592,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 682,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -686,9 +627,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 892,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -724,9 +662,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 678,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -762,9 +697,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 686,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -801,9 +733,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 725,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -838,9 +767,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 595,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -875,9 +801,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 624,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -913,9 +836,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 690,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -952,9 +872,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 586,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -971,8 +888,6 @@ window.CURRICULUM_DATA = {
           "number": "03",
           "title": "Data modeling and SQL",
           "summary": "Study data modeling and SQL.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "relational-database-design",
@@ -999,9 +914,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 703,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -1039,9 +951,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 942,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -1078,9 +987,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 785,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1114,9 +1020,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 650,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -1152,9 +1055,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 750,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1189,9 +1089,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 783,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1225,9 +1122,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 649,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -1262,9 +1156,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 677,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -1298,9 +1189,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "A database ticket server allocates unique IDs for other parts of an application. It returns a number; the application uses that number when it stores a record in its own database.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 1032,
                 "mermaidCount": 0,
                 "content": "# Database ticket servers\n\nA database ticket server allocates unique IDs for other parts of an application. It returns a number; the application uses that number when it stores a record in its own database.\n\nThis is useful when data is spread across several databases and their records need unique numeric IDs across all of them. Each database's local auto-increment counter cannot provide that guarantee on its own.\n\nWe'll work through three parts:\n\n- Why Flickr needed an ID allocator and how its MySQL table issued IDs.\n- How reserving several IDs per database call works, with a small SQLite exercise.\n- What happens to unused IDs after a crash, and how that affects range size.\n\n![A shared allocator supplies ID 42 to one application and ID 43 to another. The applications store the photos separately.](/course-assets/system-design/research-pilot/style-comparison/ticket-editorial.webp)\n\n## Why a separate ID allocator?\n\nIn Flickr's 2010 system, photos were spread across many databases. The company needed to move them between databases without primary-key collisions.\n\nTwo independent databases can both assign photo ID 42. Each ID is unique within its own table, but combining or moving those records creates a collision.\n\nA ticket server moves ID generation into a shared service. The application asks for an ID before storing the photo. The allocator keeps track of IDs it has issued; it doesn't store the photo itself.\n\n[[wiki/uuid-objectid-and-snowflake|UUIDs]] and [[wiki/snowflake-id-design|Snowflake IDs]] are alternatives. A ticket server is useful when you want numeric IDs allocated through a database you already know how to operate.\n\nThe IDs only need to be unique within the chosen scope. Photos can share one sequence and accounts another. Photo 42 and account 42 are different records, identified by both their type and their number.\n\n## How Flickr's ticket table worked\n\nIn Flickr's implementation, asking for an ID meant updating a small MySQL table. It had an auto-incrementing ID and a unique marker column called `stub`. Each allocation supplied the same marker.\n\nMySQL's `REPLACE` operation removed the row with that marker and inserted a replacement with a new ID. The table held one row while the counter advanced.\n\nThe application then called `LAST_INSERT_ID()` on the same database connection to retrieve that ID. Connection pools matter here: both statements must use the same connection because the value is connection-local.\n\nTo avoid relying on one ticket server, Flickr used two. One allocated odd IDs and the other even IDs. They couldn't issue the same ID, even if one server allocated more than the other.\n\nA replacement server must preserve its counter position as well as its odd/even role. Restarting the odd sequence at 1 would reuse old IDs. Restoring an old backup can cause the same problem.\n\n## Allocating several IDs at once\n\nSo far, every new record needs a network call to the allocator. Reserving several IDs in one call reduces that traffic: a worker can issue IDs locally until its range runs out.\n\nMeituan's 2017 Leaf-segment design does this with a shared counter. The database records the highest reserved ID; each worker tracks the next unused ID in its own range.\n\nWith a range size of three, starting from zero:\n\n| Reservation | IDs the worker receives | Highest reserved ID |\n|---|---|---|\n| Worker A | 1, 2, 3 | 3 |\n| Worker B | 4, 5, 6 | 6 |\n| Next reservation | 7, 8, 9 | 9 |\n\nReading the old boundary and advancing it must be one protected transaction. Otherwise, two workers could both read zero and claim 1 through 3.\n\nThe reservation must commit before the worker issues any of its IDs. This is where [[wiki/database-locking-and-isolation|locking and isolation]] apply to the allocator.\n\nTo try the reservation yourself, run this small SQLite example. It reserves two ranges of three IDs, just like the first two rows in the table.\n\nIt uses a counter row rather than MySQL's auto-increment mechanism. The database exists only in memory and is discarded when the command exits.\n\n```bash title=\"terminal\"\nsqlite3 -header :memory: <<'SQL'\nCREATE TABLE tickets (name TEXT PRIMARY KEY, high INTEGER NOT NULL);\nINSERT INTO tickets VALUES ('photos', 0);\nBEGIN IMMEDIATE;\nUPDATE tickets SET high = high + 3 WHERE name = 'photos'\n  RETURNING high - 2 AS first_id, high AS last_id;\nCOMMIT;\nBEGIN IMMEDIATE;\nUPDATE tickets SET high = high + 3 WHERE name = 'photos'\n  RETURNING high - 2 AS first_id, high AS last_id;\nCOMMIT;\nSQL\n```\n```output\nfirst_id|last_id\n1|3\nfirst_id|last_id\n4|6\n```\n\nThis output was captured with SQLite 3.51.0 on 2026-09-15. The `RETURNING` clause requires SQLite 3.35 or newer.\n\n`BEGIN IMMEDIATE` starts a write transaction. Another writer to the same database must wait or receive a busy error. This example uses one connection to show the reservation arithmetic.\n\nThe SQL client prints `RETURNING` values before `COMMIT`. A real allocator must wait until the commit succeeds before returning the range to its caller.\n\n## Unused IDs after a crash\n\nReserving a range and using it happen separately. A worker can stop after the reservation commits, leaving some IDs unused.\n\n**A reserves 1 through 3, uses 1 and crashes. B owns 4 through 6 and hasn't used any yet. Which ID should B use next? Can A's replacement reuse 2?**\n\nB uses 4, the first ID in its range. A's replacement reserves a fresh range starting at 7. It discards 2 and 3 because it cannot safely assume that A never issued them before crashing.\n\nGaps are expected. The counter records reservations, so it can advance even when no corresponding photo is stored.\n\nID order also doesn't give creation order. A worker holding ID 1 can pause while another worker stores a photo with ID 4, even when both obtained their ranges from the same allocator.\n\n![Photo 4 is saved first while the worker with ID 1 pauses. Photo 1 is saved later, so numeric ID order does not establish creation order.](/course-assets/system-design/research-pilot/style-comparison/ticket-sketch.webp)\n\nA lost allocator reply has a similar result: the caller can request another range and abandon the uncertain one. It uses more numbers but avoids reissuing them.\n\nThis doesn't prevent duplicate uploads. Retrying the same photo upload may obtain a new ID and store a second photo. That requires separate [[wiki/retries-timeouts-idempotency|idempotency handling]].\n\n## Choosing a range size\n\nLarger ranges can leave more unused IDs when a worker stops. In return, workers call the database less often and can continue through an allocator outage until their ranges run out.\n\nLeaf also fetches the next range before the current one is exhausted. This reduces the chance that a request has to wait for a refill.\n\nIf one database already generates all your IDs, a ticket service adds another dependency without solving a current collision problem. Consider it when independent writers need a shared numeric ID space.\n\nMonitor allocation failures and remaining integer space. Sequential IDs also require normal authorization checks: guessing another record's number must not grant access to it.\n\nFor a larger exercise, the [Python allocation replay](/course-assets/system-design/m09-ticket-allocator.py) extends the SQLite example with two worker processes and a deliberately lost reply.\n"
               }
@@ -1331,9 +1219,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 774,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1367,9 +1252,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 537,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -1406,9 +1288,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 687,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1442,9 +1321,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 622,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1461,8 +1337,6 @@ window.CURRICULUM_DATA = {
           "number": "04",
           "title": "NoSQL, partitioning and IDs",
           "summary": "Study noSQL, partitioning and IDs.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "nosql-decision-boundaries",
@@ -1489,9 +1363,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 730,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1526,9 +1397,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 738,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1563,9 +1431,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 690,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1599,9 +1464,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 678,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -1635,9 +1497,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 699,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -1672,9 +1531,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 715,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1708,9 +1564,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 701,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -1745,9 +1598,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 698,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1781,9 +1631,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 658,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1818,9 +1665,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 675,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1856,9 +1700,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "A time-bearing ID records a clock reading used during generation. Sorting those IDs can help browsing, but it does not establish the order of events across machines.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 634,
                 "mermaidCount": 1,
                 "content": "# Clock skew and ID ordering\n\nA time-bearing ID records a clock reading used during generation. Sorting those IDs can help browsing, but it does not establish the order of events across machines.\n\nTwo machines may disagree about the current time. Even when their readings match, worker fields and local counters break ties according to the format rather than the events' relationship.\n\n## Skew and rollback are different problems\n\nA wall clock reports calendar time, such as Unix milliseconds. The offset between machines' readings at the same instant is commonly called clock skew. Drift and clock corrections can change that offset.\n\nRollback is a clock moving behind its own earlier reading. The course Snowflake generator detects this locally. It cannot detect that another machine is twenty milliseconds ahead, and ordinary clock synchronization does not by itself establish a strict event-order guarantee.\n\nA process pause adds another complication: a process can generate an ID, wait, then store or send its record. Generation time, receipt time and commit time describe different events even without a backward clock adjustment.\n\n## Follow a request and its reply\n\nChoose the following exchange. A generates the request's ID at elapsed time 1030; B generates the reply's ID at 1005; A records receipt at 1031. These are chosen readings relative to the course epoch, not measured network times.\n\n```mermaid\nsequenceDiagram\n    accTitle: A reply whose clock value is earlier\n    accDescr: A sends at local time plus 1030, B replies at plus 1005, and A receives at plus 1031. The message dependency orders the request before the reply even though sorting their timestamp-bearing IDs reverses them.\n    participant A as Instance A\n    participant B as Instance B\n    A->>B: Request, A clock +1030\n    B-->>A: Reply, B clock +1005\n    Note over A: Receipt recorded at +1031\n```\n\nB's reply depends on A's request, so the request came first in this exchange. Its smaller clock reading cannot reverse that dependency. Lamport's happened-before relation formalizes this using process order and actual message exchanges, without requiring matching wall clocks.\n\nThe [Snowflake replay](/course-assets/system-design/m09-snowflake-replay.mjs) calls two generators in this order and retains explicit `causedBy` references. Its ordering mode also compares equal timestamps and two elapsed-time calculations. Node 24.11.0 reproduced the output on September 17.\n\n```bash title=\"terminal\"\nnode m09-snowflake-replay.mjs ordering\n```\n```output\nobserved sequence: A sends -> B replies -> A receives\nA sends: local_ms=+1030, id=4320202752\nB replies: local_ms=+1005, id=4215287808\nA receives: local_ms=+1031, id=4324397056\nnumeric ID order: B replies -> A sends -> A receives\nsame timestamp: worker 17 emitted first, smaller ID belongs to worker 3\nchosen wall-clock difference: -100\nchosen monotonic-clock difference: 10\n```\n\nBoth generators follow their local rules and use distinct worker identities. There is no duplicate: the failure is the interpretation of their numeric order. At an equal timestamp, worker 3 sorts before worker 17 even when worker 17 emitted first, because the worker field precedes the sequence field.\n\n## Ask which order the product needs\n\n| Requirement | Information or mechanism to use |\n|---|---|\n| Stable page traversal | A complete ordering tuple and defined visibility rules |\n| Show which request produced a reply | The retained request/reply relationship |\n| Reject an update based on stale state | A checked record version or suitable transaction |\n| Agree on a replicated operation sequence | The system's agreed log order |\n| Reject a superseded owner's write | A fencing token compared with the latest accepted token |\n\nThese mechanisms answer different questions. A log position orders entries in that log; it does not automatically order every real-world event. A unique ID can break a query tie without proving causality. Logical clocks preserve specified dependencies, but comparing two scalar clock values does not prove one event caused the other.\n\nLikewise, a database sequence allocates values before the caller's work finishes. A transaction holding a smaller ID can commit later. If commit order matters, use the database's explicit supported ordering contract instead of treating its primary key as that contract.\n\n## Measure a local timeout with elapsed time\n\nThe replay chooses wall-clock readings of 1000 then 900 milliseconds, yielding a negative difference. Separate increasing readings of 5000 then 5010 yield ten milliseconds. This demonstrates arithmetic under supplied inputs; it does not change the operating system clock.\n\nUse a monotonic clock for a local timeout budget. Python's `time.monotonic()` cannot go backward and is unaffected by system-clock updates. Its origin is unspecified: differences are useful, while treating the value as a calendar timestamp is unsupported.\n\nThat clock does not give independently booted machines a shared epoch or restore lost allocator history. Keep local elapsed measurement separate from a timestamp intended for storage or interchange.\n\nFor a mutable record, choosing the update with the largest time-bearing ID makes clock offset part of the conflict policy. A fast clock can make an earlier update defeat a later correction. Use the version or transaction rule the product actually needs, and keep the ID's job limited to identifying the record.\n"
               }
@@ -1889,9 +1730,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 635,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1925,9 +1763,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 699,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -1963,9 +1798,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 688,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -1982,8 +1814,6 @@ window.CURRICULUM_DATA = {
           "number": "05",
           "title": "Caching and fast reads",
           "summary": "Place caches, keep their contents useful, and plan for misses and failures.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "caching-layers",
@@ -2010,9 +1840,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "A cache keeps an answer so the next request can avoid some work: reading a database row, calling another service, resizing an image or recomputing a report. The useful question is which work a hit removes. That determines where the copy belongs.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 746,
                 "mermaidCount": 1,
                 "content": "# Caching layers\n\nA cache keeps an answer so the next request can avoid some work: reading a database row, calling another service, resizing an image or recomputing a report. The useful question is which work a hit removes. That determines where the copy belongs.\n\nWe’ll compare the places a cache can live, follow a read that fills one, and distinguish a database’s page cache from a disposable SQL table.\n\n## Keep the source separate\n\nSuppose a catalog service copies product `p7` into a cache. Finding a usable copy is a **hit**; finding none is a **miss**. The product database remains the source of truth. Losing the cached copy should leave somewhere to recover the answer.\n\n![A source ledger retains product p7 while an arrow labeled copy points to a separate cache card held by a reader.](/course-assets/system-design/illustrations/cache-copy.webp)\n\nThat makes the copy replaceable, but does not make its contents permanently correct. If the product changes, the old copy needs a rule for when readers must stop using it. Name the allowed staleness before choosing a cache lifetime.\n\nThe key must distinguish answers that are different. A public product description might use its product ID and locale. An account’s private report also needs its account boundary; a report-name-only key could expose one customer’s data to another.\n\n## Choose the work to avoid\n\nThese layers are alternatives you can combine when each earns its place. They are not a checklist of infrastructure every request should traverse.\n\n| Placement | A hit can avoid | What needs care |\n| --- | --- | --- |\n| Client | Fetching or recomputing local data | Stale state and switching accounts |\n| CDN | Sending a reusable public response from the origin | Invalidation and personalized responses |\n| Gateway or reverse proxy | Running the application for a reusable response | Authorization and correct request matching |\n| API process memory | A repeated lookup or computation | Separate copies and fills in every instance |\n| API disk | Regenerating a larger artifact | Space limits and cleanup across deployments |\n| Redis or Memcached | Repeated source lookups across instances | Network delay, outages and invalidation |\n| Database buffer pool | Reading database pages from storage | Engine-specific memory management |\n| Materialized view | Repeating a join or aggregation | Refresh cost and out-of-date results |\n\nA buffer-pool hit still leaves the database executing the query. A cached query result can avoid that execution. A reusable HTTP response can skip the application entirely. Each moves the boundary of work saved, and therefore the behavior being skipped.\n\nFor example, our [[wiki/url-shortener-system-design|shortener design]] records every accepted redirect reaching the application. Caching its destination lookup preserves that write. Reusing a whole redirect before it reaches the application would bypass it.\n\nAn HTTP cache also needs the response’s reuse rules, not just a URL lookup. A response that varies by a request header needs matching variants; private and public answers must not become interchangeable.\n\n## Follow a cache-aside read\n\nWith **cache-aside**, the application checks the cache, reads the source on a miss and saves the result for another request. This diagram follows a successful lookup of an existing product. It omits authorization and error handling to isolate the fill.\n\n```mermaid\nsequenceDiagram\n    accTitle: Filling a product cache on a miss\n    accDescr: The application misses in the cache, reads product p7 from the database, and stores a copy. The database remains the source of truth.\n    participant A as Application\n    participant C as Cache\n    participant D as Product database\n    A->>C: Get p7\n    C-->>A: Miss\n    A->>D: Read p7\n    D-->>A: Product\n    A->>C: Store product copy\n    C-->>A: Stored\n```\n\nA process-local map avoids a network exchange. A shared cache lets different application instances reuse the same fill and can outlive an application restart. Shared ownership adds a dependency, so choose it when that reuse is worth the cost.\n\nFor changing data, you might delete a copy after a source update, give it a time limit, or update it through the write path. Writing both stores does not by itself make them atomic: a failure or concurrent fill can leave them disagreeing. The concurrency lesson follows that race.\n\n## A SQL-shaped cache\n\nMySQL’s `MEMORY` engine offers a transient table with SQL access. It can suit a disposable derived dataset when retaining an existing schema and query shape simplifies the application. The [MEMORY engine recording](/system/archive/caching-layers?recording=sd-60) explores this option.\n\nIn MySQL 8.4, the rows disappear on server restart while the table definition survives. This differs from InnoDB’s buffer pool, which holds pages belonging to durable tables. A materialized view is different again: it stores a query’s results until refreshed.\n\n`MEMORY` lacks transactions, uses table-level locks and cannot store `TEXT` or `BLOB` columns. Even `VARCHAR` occupies a fixed-length row representation. Table size is bounded by configured memory limits; extra rows do not automatically spill to disk.\n\nSQL reuse can be convenient, but these restrictions may cost more than they save. Compare the actual queries and schema with InnoDB or direct key access before assuming an in-memory table will be faster.\n\nFor any placement, measure the avoided operation, miss cost and total response time. A high hit ratio helps only if it removes meaningful work and the answers remain usable.\n"
               }
@@ -2043,9 +1870,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 822,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2079,9 +1903,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 812,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -2115,9 +1936,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 726,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -2153,9 +1971,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 768,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2192,9 +2007,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 774,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2211,8 +2023,6 @@ window.CURRICULUM_DATA = {
           "number": "06",
           "title": "Distributed coordination",
           "summary": "Reason about replication, agreement, locks, clocks, and consistency.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "distributed-systems-foundations",
@@ -2238,9 +2048,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 669,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2277,9 +2084,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 856,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -2315,9 +2119,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 698,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2351,9 +2152,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 714,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -2388,9 +2186,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 661,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2424,9 +2219,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 889,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2461,9 +2253,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 910,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -2499,9 +2288,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 950,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -2534,9 +2320,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 795,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2572,9 +2355,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 758,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2610,9 +2390,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-17",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 724,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2649,9 +2426,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 768,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2686,9 +2460,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 719,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2705,8 +2476,6 @@ window.CURRICULUM_DATA = {
           "number": "07",
           "title": "Storage engines",
           "summary": "Follow how databases and object stores organize, persist, and retrieve bytes.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "storage-engine-design-constraints",
@@ -2734,9 +2503,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 765,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -2771,9 +2537,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 709,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -2808,9 +2571,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "Suppose we need an API that returns a word's meaning. Definitions change in a weekly batch, reads dominate, and the exercise excludes a database. The data file may be large, but the words and their locations can fit in memory.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 765,
                 "mermaidCount": 1,
                 "content": "# A file-backed dictionary\n\nSuppose we need an API that returns a word's meaning. Definitions change in a weekly batch, reads dominate, and the exercise excludes a database. The data file may be large, but the words and their locations can fit in memory.\n\nWe'll build the read path around that difference, then work through publishing an update. Several API servers should be able to read the same completed dictionary without each holding every definition in RAM.\n\n## What belongs on each server?\n\nThe workload leaves us several choices:\n\n| Arrangement | Cost or limitation for this dictionary |\n| --- | --- |\n| Load the complete dictionary | Simple lookups, but every server needs RAM for all values |\n| One file or object per word | Independent updates, but many artifacts to publish and manage |\n| Scan one large file per lookup | Simple format, but search work grows with the file |\n| Mutable B-tree | Supports ordered updates; more machinery than a weekly rebuild needs |\n| Memory index and immutable data file | Small lookup structure, with an extra read for the value |\n\nChoose the last option while the full index fits memory and batch rebuilds are affordable. Keep the data file locally if replicated disk space and distribution are acceptable; object storage can instead hold a shared copy and serve selected byte ranges.\n\n## A word points to bytes\n\nBuild the file and index together. As the builder writes each UTF-8 meaning, it records the starting byte offset and encoded length. This tiny uncompressed example packs two meanings without separators:\n\n```text\nindex for dictionary-v1:\n  apple  -> offset 0, length 5\n  banana -> offset 5, length 12\n\ndata bytes: fruityellow fruit\n```\n\nThe lengths separate `fruit` from `yellow fruit`. A server loads this version's index at startup. For banana it finds `(5, 12)`, then reads those bytes from dictionary-v1. If the key is absent from the complete index, it returns absence without reading the data file.\n\n```mermaid\nsequenceDiagram\n  accTitle: A lookup in dictionary v1\n  accDescr: The API uses its loaded v1 index to locate banana, then reads the matching byte range from the immutable v1 object and returns the meaning.\n  participant User\n  participant API\n  participant Index as Loaded v1 index\n  participant Data as Dictionary v1 object\n  User->>API: Meaning of banana\n  API->>Index: Find banana\n  Index-->>API: Offset 5, length 12\n  API->>Data: Range bytes 5-16\n  Data-->>API: yellow fruit, 12 bytes\n  API-->>User: yellow fruit\n```\n\nThat successful uncached lookup uses one memory lookup and one value request, after loading the index. It is not a promise of one physical disk read or fixed latency. Validate the returned version, range and length; [[wiki/byte-range-indexed-object-storage|the byte-range lesson]] handles the HTTP details.\n\nBudget the index from key bytes, offsets, lengths and the map's own overhead. At an assumed 40 bytes per complete in-memory entry, 500,000 words would need 20 MB. Measure the actual representation: object headers and spare hash-table capacity can make a compact serialized index much larger after loading. Replicating that index across API servers is the cost of keeping lookup local.\n\n## Rebuild from the weekly changes\n\nSort the old dictionary and the week's changes by the same key ordering. Resolve multiple changes to one word before the merge, using an explicit update order. Then walk both sorted inputs:\n\n- An old-only word keeps its definition.\n- A changed word uses the new definition, or is omitted if the change deletes it.\n- A new-only word is inserted.\n\nWrite dictionary-v2 and its index during this pass. New offsets come from the bytes actually emitted; changing apple's length moves later definitions. A streaming merge avoids loading all values together, though producing sorted inputs may itself require external sorting.\n\nValidate the completed pair, then publish a version selector naming both. Readers load the new index and switch the file identity with it. Retain v1 while any reader still uses its index. Replacing v1's bytes beneath those offsets could return another word's text without causing a parse error.\n\n## Practice publishing a complete candidate\n\nBefore implementing the remote design, the [storage-engine download](/course-assets/system-design/m12-storage-engine.py) exercises a smaller local snapshot. It stores the whole two-word map as JSON, so this version loads values into memory and has no offset index.\n\nIts helper writes a candidate in the same directory, flushes Python's buffer, calls `os.fsync`, replaces the published filename with `os.replace`, then synchronizes the directory. A successful same-filesystem rename provides an atomic name change; durable publication also depends on the synchronization succeeding and the filesystem's guarantees. Errors propagate.\n\nSnapshot mode writes an intentionally truncated candidate before publishing a complete replacement:\n\n```bash title=\"terminal\"\npython3 m12-storage-engine.py snapshot\n```\n\n```output\nsnapshot bytes: 41\nreopened: {\"apple\":\"fruit\",\"banana\":\"yellow fruit\"}\ntruncated candidate rejected; published apple: fruit\nreplacement bytes: 45 ; reopened apple: red fruit\n```\n\nThe old published dictionary survives rejection of the incomplete candidate. The complete replacement adds four encoded bytes. These sizes count compact JSON punctuation too; they are unrelated to the 17-byte raw value pack above.\n\nThe helper writes generated JSON. An importer also needs to validate the expected string-map shape and input limits before publication. A valid JSON array is not a dictionary. A malformed published file is a storage error, not an empty dictionary or a missing word.\n\nA reader already holding the old map can keep answering from it while a new reader loads the replacement. Our weekly publication allows that overlap; instant visibility on every server would need a stronger refresh contract. This local truncation-and-reopen experiment does not test object storage or power loss.\n\nThe [[wiki/custom-binary-file-format|next lesson]] puts explicit boundaries into the stored bytes. [[wiki/immutable-versioned-data-files|Versioned files]] then keep those bytes and their readers together during replacement and cleanup.\n"
               }
@@ -2838,9 +2598,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 786,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -2874,9 +2631,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "A byte-range read retrieves part of an object. Add an index from logical keys to byte locations, and a large dictionary or catalog can answer a point lookup without transferring its entire data file.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 703,
                 "mermaidCount": 0,
                 "content": "# Byte-range indexed object storage\n\nA byte-range read retrieves part of an object. Add an index from logical keys to byte locations, and a large dictionary or catalog can answer a point lookup without transferring its entire data file.\n\nThe application supplies the lookup logic; object storage supplies bytes. We'll translate an index entry into a range, verify a local read, then handle response validation, compression and access control.\n\n## Name the object as well as the position\n\nThe [[wiki/file-backed-dictionary-storage-engine|dictionary design]] needs an entry shaped like this:\n\n```text\nkey -> object identity, start byte, length\n```\n\nObject identity must select the version used to build the index. An unchanged offset in a replaced object can return a different value with a perfectly valid length. Use immutable object names or an explicit retained version; [[wiki/immutable-versioned-data-files|the next lesson]] covers publication and cleanup.\n\nOur exercise uses a separate color pack: `red\\n`, `green\\n`, then `purple\\n`. The newline is one byte, making the values four, six and seven bytes long. This is not the previous lesson's word-meaning file.\n\n| Key | Half-open byte slice and length |\n| --- | --- |\n| apple | `[0:4]`: 4 bytes |\n| pear | `[4:10]`: 6 bytes |\n| plum | `[10:17]`: 7 bytes |\n\nA program slice excludes its right endpoint. HTTP byte ranges include it, so pear's six bytes become `Range: bytes=4-9`. For a nonempty indexed value, the last byte is `start + length - 1`. An empty value needs no body read; do not turn zero length into an invalid reversed range.\n\n## Exercise the boundary\n\nThe [object-storage download](/course-assets/system-design/m13-object-store.py) writes this 17-byte pack in a private temporary directory. It compares a full read with a seek to pear's offset, then tries invalid metadata and an actually shortened source file.\n\n```bash title=\"terminal\"\npython3 m13-object-store.py ranges\n```\n\n```output\npack bytes: 17 ; index: {\"apple\":[0,4],\"pear\":[4,6],\"plum\":[10,7]}\nfull: b'red\\ngreen\\npurple\\n'\npear slice [4:10] -> b'green\\n'\nHTTP range spelling: bytes=4-9; returned length=6\nindex (-1,1): invalid indexed boundary\nindex (10,8): invalid indexed boundary\nshortened source: truncated source\n```\n\nThe helper rejects a negative offset or an interval beyond the recorded complete length. It also checks the returned byte count. A valid-looking index cannot make a shortened source return all its promised bytes.\n\nThis mode performs local file reads. Its HTTP line is calculated syntax, not a network response or an S3 measurement. Returned bytes also do not tell us the number of physical disk reads.\n\n## Check what the server actually returned\n\nA served single HTTP range uses `206 Partial Content` and a `Content-Range` describing the interval. An unsatisfiable range can produce `416`. A server may also ignore Range and send the full representation, so sending the header does not guarantee a partial response.\n\nFor our six-byte lookup, require the expected interval and body length before decoding. Handle a full response explicitly within a bounded fallback policy, rather than passing its first bytes off as the requested value. A short body, wrong version or unexpected encoding is a failed read.\n\nS3's GetObject supports one selected range per request, and `versionId` can select a retained version where versioning is supported. The server still does not know which logical dictionary key the interval represents. Our index makes that connection.\n\n## Keep compression and caching aligned\n\nAs in [[wiki/custom-binary-file-format|the format lesson]], HTTP offsets refer to the encoded representation. Offsets measured before whole-file compression cannot generally locate independently decodable values afterward. Keep data uncompressed, compress each record independently, or index compressed blocks and decode the containing block locally.\n\nA block can contain several values, so requesting one key may still fetch its neighbors. Verify the appropriate block or record checksum against trusted metadata before using it. Matching length alone misses same-length substitutions; fetching the whole object for every checksum would defeat a small-range read.\n\nCache frequently requested values near the API. Include the object generation and logical key in the cache identity so an update cannot reuse the old answer accidentally. Fetching nearby entries together may reduce request overhead; measure the extra bytes against the saved requests.\n\nThis pattern also suits indexed file sections and selected media chunks. It is less attractive when every request needs most of the object, or values require frequent independent updates. Separate objects give each value its own lifecycle; a pack trades that independence for one published collection.\n\n## Authorize the key before deriving the range\n\nAccept a logical key at the API, check the caller's permission, then look up its trusted location. Allowing arbitrary object paths and byte offsets would let a caller reach neighboring data outside that key's policy.\n\nBound the range length, total returned bytes, retries and request rate. Check the expected content type and encoding. Storage failures remain errors; they must not become “key missing” or a cached partial value. With those boundaries in place, the index provides precise access without turning the byte store into a database.\n"
               }
@@ -2907,9 +2661,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 679,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -2944,9 +2695,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 721,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -2980,9 +2728,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 697,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3017,9 +2762,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 718,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -3056,9 +2798,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 688,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3091,9 +2830,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 711,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3127,9 +2863,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 748,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -3162,9 +2895,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 578,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -3197,9 +2927,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 870,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -3231,9 +2958,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 647,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -3266,9 +2990,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "A partition map tells the frontend where to send an object request. When ownership changes, that answer must stay connected to two facts: the new owner has the accepted data, and the former owner can no longer change it.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 737,
                 "mermaidCount": 1,
                 "content": "# Partition manager and map table\n\nA partition map tells the frontend where to send an object request. When ownership changes, that answer must stay connected to two facts: the new owner has the accepted data, and the former owner can no longer change it.\n\nWe'll separate the manager's responsibilities from normal request routing, then follow one planned transfer through its final write and a stale-client retry.\n\n## Who maintains the assignment?\n\n| Component | Responsibility |\n|---|---|\n| Partition map | Durably record each key range, its serving owner and ownership generation. |\n| Partition manager | Assign and move ranges, split busy ranges, merge cold neighbors, and arrange recovery after failures. |\n| Partition server | Serve its assigned ranges; one server can own several. |\n| Coordination authority | Serialize manager decisions and establish valid ownership. |\n\nThe frontend caches map entries and sends requests directly to the partition server. The manager stays off this ordinary request path. It examines load and health to decide when assignments should change.\n\nAn assignment carries an **epoch**, a generation that changes on handoff. The receiver must enforce that authority where a write takes effect. A cached address is only a routing hint; publishing a new map cannot stop an old process by itself.\n\nFor this design, a range has **at most one active write owner**. A transfer may briefly leave it with none. Allowing an unavailable interval is safer than accepting independent changes at two owners without a reconciliation protocol.\n\n## A planned move\n\nA owns epoch 1. Its append-only file contains r1: `first` and a newline, six bytes. We copy those bytes to B while A remains active. Then A accepts r2: `second` and a newline, another seven bytes.\n\nB is now behind. Before switching owners, pause new writes at A, wait for any admitted effects to finish, copy the missing tail, and verify the destination. Only then activate B at epoch 2.\n\n```mermaid\nsequenceDiagram\n    accTitle: Copying the accepted writes before cutover\n    accDescr: A first copies r1 to B, then accepts r2. The manager pauses A, copies the r2 tail and verifies equality before activating B at epoch 2.\n    participant A as Owner A\n    participant M as Manager\n    participant B as Owner B\n    A->>B: Copy r1: 6 bytes\n    Note over A: Accept r2: 7 bytes\n    M->>A: Pause and drain writes\n    A->>B: Copy r2 tail\n    M->>M: Verify complete files match\n    M->>B: Activate epoch 2\n    Note over A: Epoch 1 can no longer write\n```\n\nIn the [object-storage example](/course-assets/system-design/m13-object-store.py), the append and cutover use the same Python lock. A request cannot pass its authority check, wait through cutover, and then append with stale permission. The check and effect occur inside one guarded section.\n\n```bash title=\"terminal\"\npython3 m13-object-store.py transfer\n```\n\n```output\ncopy snapshot: 6 bytes; A epoch=1 remains owner\nr2 during transfer: accepted\npause, copy tail: 7 bytes; equal=True; publish B epoch=2\ndelayed r3 at A epoch=1: stale or paused\nrefreshed r3 at B epoch=2: accepted\naccepted: [\"r1\",\"r2\",\"r3\"] ; B bytes: b'first\\nsecond\\nthird\\n'\nauthority and cutover lock are in memory; files are real\n```\n\nThe delayed r3 attempt adds nothing at A. Retrying against B with epoch 2 appends the third record, bringing B to 19 bytes. If the copied files differ before cutover, the example raises an error and leaves the assignment paused.\n\nThis runs a chosen sequence of calls, not concurrent threads. The files are real, but authority and accepted-operation history live in memory. It has no durable transfer journal or power-loss recovery protocol.\n\n## How much must we pause?\n\nPausing for the whole transfer is simpler: finish earlier writes, copy a fixed source, verify it, then switch. The cost is an unavailable write interval covering the entire copy.\n\nCopying while writes continue needs a snapshot boundary and a retained change history. Our append-only file uses a byte offset; a mutable database needs an equivalent agreement between snapshot and log. The final pause accounts for everything accepted after the snapshot. Measure that pause rather than assuming a small example proves acceptable downtime.\n\nNot every assignment change requires copying object bytes. With a separate durable storage layer, a new partition server can load the existing checkpoint and replay its log. The requirement is still to recover the accepted state and establish exclusive authority before serving writes.\n\n## Failure is different from a planned move\n\nA failed health check means the owner is suspected, not that its writes are impossible. The manager must prevent the old authority from taking effect even if that process resumes. [[wiki/distributed-locks-and-leases|Fencing]] supplies this boundary only when the resource receiving the writes enforces it.\n\nThe replacement also needs recoverable state outside the failed server. If A held the only copy, changing the map to B cannot recover its data. When replicas or shared storage exist, recover from them and the retained log before making B active.\n\nPersist transfer progress and assignments through the coordination authority. After a manager restart, it must determine whether B already accepted writes before deciding to resume or abandon a move. Reopening A's older file after B became active would discard accepted history. Electing one manager helps serialize decisions; it does not replace durable state or write enforcement.\n\n## Handling an old map\n\nReturn an explicit stale-assignment response so the frontend can refresh and retry within its original deadline. Keep the operation identity. If the first attempt succeeded but its reply was lost, the new owner needs the corresponding receipt or another deduplication rule; the rejected-r3 example does not cover that case.\n\nThose receipts belong with the transferred metadata. The next lesson makes the [[wiki/metadata-db-for-object-storage|object metadata and operation results]] persistent together.\n"
               }
@@ -3296,9 +3017,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 768,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -3331,9 +3049,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 763,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3368,9 +3083,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 796,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -3403,9 +3115,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 698,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3422,8 +3131,6 @@ window.CURRICULUM_DATA = {
           "number": "08",
           "title": "Async work and streams",
           "summary": "Separate background work from requests and handle retries, ordering, and contention.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "delegation-and-async-work",
@@ -3449,9 +3156,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 702,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3486,9 +3190,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 696,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3523,9 +3224,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 923,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3561,9 +3259,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 914,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -3599,9 +3294,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 985,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3636,9 +3328,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 944,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3675,9 +3364,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1217,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3713,9 +3399,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "An order arrives, and the product wants some orders reviewed before fulfillment. The condition can change while old events remain available for replay. A rule engine must preserve why an action was selected, or the same recorded order can quietly acquire a different history each time a worker sees it.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 1225,
                 "mermaidCount": 1,
                 "content": "# Rule engine and trigger framework\n\nAn order arrives, and the product wants some orders reviewed before fulfillment. The condition can change while old events remain available for replay. A rule engine must preserve why an action was selected, or the same recorded order can quietly acquire a different history each time a worker sees it.\n\nThe same pattern can issue a rider incentive after delivery, a coupon after cart abandonment or a workflow after document approval. We'll define the event-to-action path, resolve overlapping rules, then replay an order under a changed policy.\n\n## A decision before an effect\n\n[[wiki/dag-workflow-orchestration|The workflow lesson]] started with an agreed set of steps. Here the first decision is whether that workflow should exist at all. An incoming event supplies facts; a versioned rule tests those facts and chooses an action obligation, such as creating a review task.\n\nKeep evaluating the rule separate from carrying out the action. Evaluation should produce the same decision from the same recorded input and rule version. That is a pure evaluation: it does not charge a card, send a message or ask a changing external database what the order looks like now. Effect workers use the identity and recovery agreements already established in Module 08.\n\nIf the rule needs additional facts, record those facts as inputs with their source versions or timestamps before evaluating. Otherwise a historical order can match differently because its customer's profile changed, even though the rule stayed fixed. Sometimes “use the current profile” is the intended product policy, but that evaluation must record which profile it actually used.\n\nNormalize the incoming event into a validated, typed input before matching. The rule store supplies an immutable policy version; matching produces a decision and an action obligation. In this proposed architecture, a dispatcher carries out the obligation later and records the outcome.\n\n```mermaid\nflowchart TD\n    accTitle: Match first, dispatch from a retained decision\n    accDescr: An event is validated and normalized before matching against a versioned rule store. The matcher commits a decision and action obligation together. A dispatcher executes the allowed action and records its outcome.\n    E[\"Event\"] --> N[\"Validate + normalize\"]\n    N --> M[\"Rule matcher\"]\n    R[\"Versioned rule store\"] --> M\n    M -->|One transaction| D[\"Decision + action obligation\"]\n    D --> W[\"Dispatcher\"]\n    W --> A[\"Allowed action\"]\n    A --> L[\"Execution outcome\"]\n```\n\nThe decision explains why work was requested; the execution outcome explains what happened. Preserve both. An audit log written after an external effect cannot repair a lost decision by itself.\n\n## The matching policy\n\nOur chosen event is `order-A`, with type `order.submitted`, schema version one and a quantity of 150 units. The units describe a synthetic order size, not a measured production threshold. Rule `review-large` matches at or above 100 units in rule set version one; `review-all` matches at or above zero.\n\nBoth rules can therefore match the same event. We choose a policy where the lower priority number wins, with rule identifier as a deterministic tie-breaker. They select the same action category, review, so matching both must still create only one review obligation. Another product could permit several independent actions, but it would need an identity for each action and a defined conflict policy.\n\nRead the table as the chosen rule data. The two version columns make the change visible without changing the recorded order.\n\n| Rule | Priority | Version one minimum | Version two minimum |\n|---|---|---|---|\n| `review-large` | 10 | 100 units | 200 units |\n| `review-all` | 20 | 0 units | 0 units |\n\n*Changing the threshold changes the selected rule; the retained order stays the same.*\n\nRule-set version and event-schema version answer different questions. The schema version says how to interpret the event fields, as [[wiki/event-contracts|the event contract lesson]] established. The rule-set version says which policy evaluates those fields. Store both with the evaluation, together with the matched rules and selected action, so an explanation does not depend on today's configuration.\n\n## A versioned replay\n\nThe [workflow replay](/course-assets/system-design/m15-workflows.py) stores evaluations and action obligations in a private temporary database; it creates no real review tasks or customer messages.\n\nThe evaluation key is event identity plus rule-set version, and the saved canonical input must agree on repeat delivery. `dispatch` records the first action obligation. `audit` records a new evaluation for comparison without issuing another action. A change of rule set on an ordinary repeat delivery is refused until someone explicitly requests that audit replay.\n\n```bash title=\"terminal\"\npython3 m15-workflows.py rules\n```\n```output\nv1: matches=review-large,review-all winner=review-large mode=dispatch\nsame input: duplicate\nchanged input: payload-conflict\nv2 ordinary delivery: requires-explicit-replay\nv2 explicit replay: matches=review-all winner=review-all mode=audit\naction feedback: ignored-type-or-schema\nevaluations=2 action obligations=1\n```\n\nThe two evaluations explain different policy decisions about the same order. They leave one business action because the original action identity, `order-A/review`, survives the rule edit. The changed-input probe submits 151 units under the original event identity and receives a conflict. That prevents an event producer from rewriting the explanation of an already accepted decision.\n\n## The rule representation\n\nOrdinary code is the simplest representation when developers own a small policy and deploy it with the application. Reviewers can use the existing code tools, and conditions can use the language's type checks. Its cost appears when a product operator needs to adjust a threshold independently or compare many historical policy versions.\n\nA restricted data representation makes those versions explicit. For example, this proposed JSON format describes the first review rule:\n\n```json\n{\n  \"rule_id\": \"review-large\",\n  \"event_type\": \"order.submitted\",\n  \"version\": 1,\n  \"priority\": 10,\n  \"condition\": {\n    \"field\": \"units\",\n    \"operator\": \"gte\",\n    \"value\": 100\n  },\n  \"action\": { \"type\": \"create_review\" }\n}\n```\n\nThis is our schema, not JsonLogic or a format parsed by the replay. A larger schema could compose allowed predicates with `and` and `or`. Define missing-field and type behavior explicitly: a numeric quantity and a string containing digits should not acquire accidental equivalence through an interpreter's coercion rules.\n\nStart with allowed fields, typed operators and named actions, and reject unknown combinations before publication. The fixture is narrower still: trusted tuples supply integer thresholds and fixed action names. It never evaluates arbitrary expression text, and it exposes no user scripting interface.\n\nUser-authored scripts can express more complex conditions but add execution limits, isolation and authorization requirements. Choose that capability only when a restricted language demonstrably cannot express the needed decisions. Moving an `if` statement into a string creates those obligations without making the policy more understandable.\n\nIndex candidate rules by event type, tenant, region, product or active time window when those fields exclude unrelated policies. Keep priority as a conflict-resolution rule, not permission to discard a lower-priority match needed for audit. The selector must preserve the result of evaluating the applicable rule set. Measure candidate counts and compare outcomes before introducing a cache of active rules. A worker that uses a stale rule version must reveal that version in its receipt.\n\n## Publication and feedback\n\nTreat a new rule set as immutable data that can be reviewed and exercised on saved examples before activation. Pin the selected version when accepting evaluation work so a later deployment does not change a queued event's policy silently. Compare its matches in audit mode first, then publish a version that future events can select. Returning to an older version changes future decisions; it does not revoke actions already accepted under the intervening version.\n\nThe [[wiki/event-bus-for-product-events|transactional outbox]] supplies the next boundary. Commit the evaluation and its action obligation together, then let a worker deliver it. The local replay retains that obligation but does not run a dispatcher. Calling the action while evaluating and recording the decision afterward leaves a crash window where the effect exists without its explanation.\n\nAn action may emit another event, creating a possible feedback loop. The fixture accepts only the originating `order.submitted` type and ignores a `review.created` event. Broader systems should define which event types can trigger which action types, retain causal identifiers, and bound repeated transitions. Deduplicating the same event does not stop a loop that generates a fresh event identity every time.\n\nFor this review policy, use immutable versions, one winning review action and audit-only historical re-evaluation. Change to action-producing replay only when the product explicitly owes new work and supplies new identities for it. The next lesson, [[wiki/fanout-patterns|fanout patterns]], follows actions owed to several recipients. Later, [[wiki/flash-sale-inventory-locking|inventory reservations]] put a harder limit on an action: matching a rule can request a unit, but only the stock owner can grant it. The booking and payment designs will carry that distinction across separate services.\n"
               }
@@ -3746,9 +3429,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1361,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -3786,9 +3466,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1316,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3805,8 +3482,6 @@ window.CURRICULUM_DATA = {
           "number": "09",
           "title": "Search and retrieval",
           "summary": "Build indexes, process queries, and retrieve useful results.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "information-retrieval-system-design",
@@ -3831,9 +3506,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1337,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3868,9 +3540,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1170,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -3904,9 +3573,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "A reader searches for cache index, and none of our documents contains both words. Returning nothing is defensible if both words are requirements. Returning separate cache and index lessons is defensible if the reader is exploring a topic. The service needs to choose that behavior explicitly before a score decides which document looks best.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 1349,
                 "mermaidCount": 0,
                 "content": "# Boolean and tiered search\n\nA reader searches for `cache index`, and none of our documents contains both words. Returning nothing is defensible if both words are requirements. Returning separate cache and index lessons is defensible if the reader is exploring a topic. The service needs to choose that behavior explicitly before a score decides which document looks best.\n\nWe'll keep required filters fixed, group strict and partial matches, and use term coverage or proximity when two groups are too coarse.\n\n## Requirements and preferences\n\n[[wiki/inverted-index-and-posting-lists|The posting-list lesson]] gave you posting lists and two ways to combine them. Requiring every query term uses their intersection, commonly expressed as AND. Accepting any query term uses their union, expressed as OR. These operators describe a matching condition; they do not measure how useful the resulting documents are.\n\nAn unknown token makes an AND intersection empty because its posting list is empty. An OR union can still contain documents matching the remaining tokens. That difference is often hidden behind a search box, but it changes what a successful response means. The user who typed a precise part number may be poorly served by a result that matches only its accompanying description.\n\nA condition supplied as a structured filter deserves separate treatment. An allowed-document set represents which documents may be exposed in this exercise. It is chosen test input, not an authentication implementation. Every retrieval tier intersects its candidates with that same set, so relevance fallback cannot turn an excluded document into a permitted one.\n\n### Which conditions may relax?\n\nTreat permissions and explicitly required filters as hard constraints. Treat an exploratory free-text query as a possible source of soft preferences when the interface says broader matches may appear. For a caller using an explicit “all words” search, keep AND semantics unless they request a broader search. A quiet fallback would make the response disagree with the request.\n\nThe alternatives are to return only strict matches, present broad matches separately, or mix all matches under one score. The last option is convenient, but a high score could put a partial match above a complete match unless the ranker also enforces the requirement. Choose separate ordered groups here because the behavior stays inspectable before we introduce numerical ranking.\n\n## Ordered fallback groups\n\nA group that runs under a particular matching rule is a tier. Our chosen policy first collects all permitted AND matches as tier zero. It then collects permitted OR matches that have not already appeared as tier one. The displayed response always appends the second tier, even when the first is nonempty; this differs from a policy that broadens only after an empty strict result.\n\nWithin each tier, identifiers sort ascending. A document appears once, under the earliest rule it satisfies. Later scoring may change order within a tier, but it may not move a tier-one document ahead of a tier-zero document under this contract. If the product wants that movement, it has chosen a different contract and should evaluate it as such.\n\nChoose the default from what the caller asked for:\n\n| Caller situation | Default | Reason |\n|---|---|---|\n| Every submitted word is required | AND only | Preserve the requested condition |\n| Exploring with useful partial matches | AND tier, then labeled OR tier | Keep complete matches first |\n| Any term is independently sufficient | OR with ranking | No complete-match priority promised |\n\n\n## One policy against several queries\n\nThe allowed set contains `d1`, `d2`, `d4`, `d5` and `d8`. Documents `d3`, `d6` and `d7` remain in the corpus but are excluded from this response. The exclusion is deliberately visible so you can follow a broadening attempt without confusing candidate generation with access permission.\n\nThe [shared Python replay](/course-assets/system-design/m16-search.py) executes the rules directly against the [eight chosen documents](/course-assets/system-design/m16-corpus.json). In the capture, each tuple pairs a document identifier with its tier number. Empty input has an explicit empty-result rule, so it does not turn into a request for every permitted document.\n\n```bash title=\"terminal\"\npython3 public/course-assets/system-design/m16-search.py boolean\n```\n\n```output\n'cache stores': AND=['d1'] OR=['d1', 'd2', 'd4'] tiers=[('d1', 0), ('d2', 1), ('d4', 1)]\n'cache index': AND=[] OR=['d1', 'd4', 'd5', 'd8'] tiers=[('d1', 1), ('d4', 1), ('d5', 1), ('d8', 1)]\n'queue cache': AND=[] OR=['d1', 'd4'] tiers=[('d1', 1), ('d4', 1)]\n'': AND=[] OR=[] tiers=[]\nall tiers retain allowed ids: ['d1', 'd2', 'd4', 'd5', 'd8']\n```\n\nFor `cache stores`, `d1` belongs to both raw sets but appears only in tier zero. The second group contains `d2` and `d4`; retaining `d1` again would make a later limit or evaluation count the same document twice. Deduplication belongs before the response is bounded or measured.\n\nFor `cache index`, the strict group is empty, so every result is a broader match. The response still carries tier one on each identifier. A UI can label that group “Matches some words” instead of presenting it as if every word had matched. The backend has already retained enough information for that explanation.\n\nFor `queue cache`, broader search still cannot expose the queue documents. Both are outside the allowed set. An empty strict result does not distinguish an absent document from an excluded one, and the public response should not reveal hidden document text to explain the difference. A diagnostic view needs its own access boundary.\n\n## Work limits and missing answers\n\nTaking the first few candidates before deduplication can fill the response with repeats. Taking a global score sort after grouping can erase tier priority. The two-tier replay retains the complete small result and therefore avoids both interactions. If you add a limit, apply it to the final deduplicated ordered sequence and document whether a nonempty strict tier may leave space for broader results.\n\nChoose strict retrieval for explicit requirements, and ordered broader groups for this exploratory course search. Revisit that choice when [[wiki/search-evaluation-metrics|search evaluation]] supplies judgments showing which returned documents actually answer the intended question. A larger candidate set can recover a useful document and can also add irrelevant ones; result count alone cannot choose between those effects.\n\n## More than two tiers\n\nFor a longer query, OR groups very different matches together. A four-term query can use four coverage levels: all four, any three, any two, then any one. Each document belongs to its highest satisfied level and appears once. Repeated query words do not create extra requirements in this chosen policy.\n\nFor `database index maps rows`, `d5` contains all four terms. No document contains exactly three. `d2` contains `database` and `rows`, while `d8` contains only `index`. The replay's additional coverage example returns the best two documents from those ordered groups:\n\n```bash title=\"terminal\"\npython3 public/course-assets/system-design/m16-search.py coverage\n```\n```output\nquery='database index maps rows' distinct terms=4\nall coverage tiers: [('d5', 4), ('d2', 2), ('d8', 1)]\nlimit 2: [('d5', 4), ('d2', 2)]\n```\n\nHere the number is matched-term count, not the earlier zero/one tier label. A real ranker can use BM25 within each coverage level while keeping the level as the primary ordering key. A boost alone does not guarantee that ordering.\n\nA production query can require a minimum number of optional clauses. For example, Elasticsearch's `minimum_should_match` controls eligibility; it does not automatically implement this sequence of ranked groups. When combining text clauses with a required filter, set that minimum explicitly if text must match. A bool query with a filter otherwise defaults to zero required `should` clauses.\n\nChoose whether to fetch every group or only broaden until the page is full. The replay counts all eligible candidates, sorts and then limits; it does not save retrieval work through early stopping. A staged implementation can reuse postings, exclude seen IDs and stop once enough results are retained. Keep query, filters and ordering stable across pagination so broadening does not introduce repeats or skip earlier groups.\n\n## Presence, proximity and fields\n\nMatching all the words does not mean matching their relationship. `cache stores` is adjacent in `d1`; `cache copies` occurs there with `stores` between them. Both pass AND. Only the first passes a zero-gap phrase condition. A positional check can require adjacency or allow a defined window, with ordered and unordered windows answering different questions.\n\nUse phrase or proximity evidence within a tier when nearby words better express the intent. Requiring a phrase is stricter than giving it a ranking preference. Preserve that distinction when broadening: quoted words should not silently become unrelated words anywhere in a document.\n\nFields matter too. Requiring all terms in a title differs from allowing one in the title and another in the body. In Elasticsearch, `multi_match` with `best_fields` applies AND inside each field. A term-centric query such as `combined_fields` can match terms spread across compatible fields. Choose the intended rule before tuning title boosts.\n\nAn empty strict result can signal a typo, missing synonym, absent source item, unavailable inventory or indexing lag. Record enough internal diagnostics to distinguish them. Increasing breadth is useful only when the extra documents answer the need. The [[wiki/query-understanding-pipeline|query-understanding lesson]] changes which terms are searched; [[wiki/tf-idf-relevance-scoring|the next lesson]] orders equally eligible documents with a specified numerical baseline.\n"
               }
@@ -3933,9 +3599,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1123,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -3967,9 +3630,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1241,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -4001,9 +3661,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "A scoring function cannot rescue a document that was removed before scoring began. We can reduce search work by omitting common words or retaining only selected candidates for each term, but each shortcut discards information. The useful question is which queries lose an answer when that information disappears.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 1094,
                 "mermaidCount": 1,
                 "content": "# Stop words and champion lists\n\nA scoring function cannot rescue a document that was removed before scoring began. We can reduce search work by omitting common words or retaining only selected candidates for each term, but each shortcut discards information. The useful question is which queries lose an answer when that information disappears.\n\nWe'll compare removing words with capping candidates, then follow how each changes the results.\n\n## Removing words from the representation\n\n[[wiki/bm25-production-ranking|The BM25 lesson]] kept every analyzed token and let document frequency influence its weight. Another approach removes selected words entirely. A configured list of words to omit is a stop-word list. Commonness may motivate the choice, but the actual removal is a product and language policy rather than a consequence of the score formula.\n\nOur experiment chooses exactly `a`, `and` and `to`. They are test inputs, not a recommended English stop list. The unchanged corpus retains them; the replay creates a separate pruned copy so later lessons continue to use the same source texts and statistics.\n\nDeleting tokens can change more than whether a term is searchable. If the remaining tokens are packed together, their positions change. The original `d5` text includes `keys to rows`. A packed pruned representation contains `keys rows`, so a request for that exact adjacent phrase can match even though the original document did not contain it.\n\nThe posting-list lesson's phrase helper checks adjacent analyzed tokens. In this experiment the stop policy is applied to both document and query text. That lets `keys to rows` continue to match after both sides lose `to`, while the distinct literal request `keys rows` also becomes a match. Preserving the original position gaps would avoid that particular adjacency error, though queries requiring a removed word would still need a representation that retained it.\n\n## Which common words are expendable?\n\nInspect both how widely a term occurs (`df / N`) and how often it repeats. Define the averaging population: total occurrences divided by all documents differs from the average among matching documents. These are diagnostics, not a universal rule for deleting terms.\n\nIn a database-only catalog, `database` may occur almost everywhere yet still matter in an exact title. A required word, negation or direction can be essential even when it has little ranking weight. Review representative title and phrase queries before choosing a stop list. Lower weighting retains evidence that deletion removes.\n\nA configured language list is only a starting policy. Elasticsearch's stop filter allows explicit words, language lists and case handling. Its trailing-token option also matters for completion: removing the word currently being typed can change the offered suggestions. Our experiment does not emulate that analyzer; it deliberately repacks tokens to expose the phrase error.\n\n## Keeping selected candidates\n\nThere is another way to reduce work without deleting a word: retain a small preselected list of documents for it. Such a retained subset is called a champion list. The subset is chosen before the full query is known. It can be built for any term, not only common words; list sizes can differ by term.\n\nOur chosen cap is one document per term. Build each list by scoring that single term with our BM25 variant and retaining the highest result, using identifier order for ties. At query time, take the union of the retained lists, then apply the full requested matching condition to those candidates. This is a candidate restriction, not a complete implementation of arbitrary top-result search.\n\nFor `database`, the equal-length single-term tie retains `d2` ahead of `d5`. For `index`, the shorter document `d8` wins over `d5`. The combined query `database index` therefore begins with only `d2` and `d8` available, even though `d5` contains both terms. A document that is second for each individual term can be the best combined answer.\n\nThe two retained single-term winners contain different words. Requiring both after the cap cannot recover `d5`:\n\n```mermaid\nflowchart TD\n    accTitle: A per-term cap loses the combined match\n    accDescr: Database retains d2 and index retains d8. Their union contains d2 and d8; requiring both terms returns no document. A separate full posting-list path retains d5, which contains both query terms.\n    Q[\"database index\"] --> C[\"One champion per term\"]\n    C --> U[\"Candidates: d2, d8\"]\n    U --> A[\"Require both terms\"]\n    A --> E[\"No result\"]\n    Q --> F[\"Complete posting lists\"]\n    F --> D[\"Require both: d5\"]\n```\n\n## The losses in one capture\n\nThe [Python replay](/course-assets/system-design/m16-search.py) performs both transformations from the [original corpus](/course-assets/system-design/m16-corpus.json). `original` and `pruned` label separately analyzed document sets. The champion portion prints complete either-term candidates, retained candidates and the result after requiring both query terms.\n\n```bash title=\"terminal\"\npython3 public/course-assets/system-design/m16-search.py pruning\n```\n\n```output\nstop words: ['a', 'and', 'to']\ntoken occurrences: 50 -> 43\nphrase keys to rows: original= ['d5'] pruned= ['d5']\nphrase keys rows: original= [] pruned= ['d5']\nchampions database/index: {'database': ['d2'], 'index': ['d8']}\nfull OR candidates: ['d2', 'd5', 'd8'] capped candidates: ['d2', 'd8']\nfull AND: ['d5'] capped then AND: [] missed: ['d5']\n```\n\nFifty token occurrences become forty-three under the selected stop policy. That is a count of retained occurrences, not measured index bytes or a latency improvement. The byte layout of a real posting list could include dictionaries, offsets, positions and compression, each with its own cost.\n\nThe champion restriction removes `d5`, so the required-term check returns nothing. Running the scorer over the retained documents cannot repair that result because the missing identifier never reaches it. Keeping a complete index behind the shortcut would allow a fallback, but that means the complete representation and its maintenance cost still exist.\n\n## The policy boundary\n\nFor this corpus, retain every token and the complete posting lists. Their counts are small, and the counterexamples give a concrete cost for removing information. If a measured workload later makes common-term traversal expensive, first consider a query-specific policy that preserves required phrases and filters. That lets a broad browsing request accept a shortcut without silently changing exact phrase semantics.\n\nChoose the shortcut from the kind of answer the caller expects:\n\n| Query contract | Default | Reason |\n|---|---|---|\n| Required words or exact phrase | Complete retained representation | Omitted evidence can change eligibility |\n| Broad exploration with complete fallback | Try bounded candidates, then complete search | Recover misses at additional work |\n| Explicitly approximate suggestions | Evaluated candidate cap | The product accepts evaluated coverage loss |\n\n\n\nChampion selection can also incorporate a quality or freshness score, but that still chooses candidates before the complete query. Keeping a full fallback costs storage and maintenance; omitting it accepts a loss that must be evaluated.\n\nChoosing query-specific pruning adds branches that need tests. A rule that ignores `to` in a broad topic query must not also erase it from an exact title request. Keeping a separate phrase-capable representation is another option, with the cost of another field or index. Choose that complexity only when the query contract and measurements justify it.\n\n## Evidence before an approximation\n\nThe missed `d5` is an exact matching failure, which requires no user judgment to detect. Whether dropping a broader result harms the reader is a different question. [[wiki/search-evaluation-metrics|Search evaluation]] will label documents against particular information needs and compare what the result list preserves.\n\nChampion lists also need a publication boundary. Recomputing them after documents change can alter who survives the cap; an outdated champion entry may refer to a removed or now-inaccessible document. [[wiki/search-index-synchronization|Index synchronization]] owns that version and deletion work. A preselected list never replaces the access check before exposure.\n\nThe next lesson changes another part of the path: it interprets the caller's words before retrieval. [[wiki/query-understanding-pipeline|Query understanding]] makes those transformations visible so that a broader answer can be traced to a chosen rule rather than mistaken for a match to the original request.\n"
               }
@@ -4030,9 +3687,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1195,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4064,9 +3718,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1309,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -4099,9 +3750,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1372,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -4137,9 +3785,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1353,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4176,9 +3821,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1255,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4214,9 +3856,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1288,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4253,9 +3892,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1520,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4292,9 +3928,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1509,
                 "mermaidCount": 3,
                 "content": "",
                 "preview": {
@@ -4333,9 +3966,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2180,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4373,9 +4003,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2088,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4414,9 +4041,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2467,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -4433,8 +4057,6 @@ window.CURRICULUM_DATA = {
           "number": "10",
           "title": "Analytics and sketches",
           "summary": "Aggregate events and use compact data structures when exact answers cost too much.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "counting-at-scale",
@@ -4462,9 +4084,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1099,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4501,9 +4120,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1131,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4540,9 +4156,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1185,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4575,9 +4188,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1275,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -4612,9 +4222,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "A mergeable summary lets workers combine retained state without sending every original event to one reader. Regions, shards and time buckets can each produce a summary, then supply it to a larger report.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 1347,
                 "mermaidCount": 1,
                 "content": "# Mergeable sketches for analytics\n\nA mergeable summary lets workers combine retained state without sending every original event to one reader. Regions, shards and time buckets can each produce a summary, then supply it to a larger report.\n\nWe'll choose a summary by its query, compare a merged build with one pass over the input, and see what happens when a partition arrives twice.\n\n## Start with the query\n\n| Required answer | Candidate | Detail it must preserve |\n|---|---|---|\n| Approximate distinct IDs | HLL | Compatible identity and hash observations |\n| Estimated frequency of a supplied key | Count-Min Sketch | Counter mass and matching row hashes |\n| Frequent items | A frequent-items sketch | Candidate identities and its frequency guarantees |\n| Latency percentiles | A suitable quantile sketch | Distribution evidence and observation weights |\n| Exact integer-set operations | Roaring bitmap | Exact integer membership |\n\nRoaring is a compressed exact set representation, not an approximate count. HLL supports union, while other distinct-count families, such as Theta, support additional set operations. These choices are not interchangeable simply because all can combine stored state.\n\nLocal summaries reduce transport and allow precomputed rollups or “last N buckets” queries. They can also rebuild a larger rollup from retained smaller summaries. A new metric or dimension may still require raw events: a summary cannot restore information it never kept.\n\n## Compatible evidence\n\nWe split the twelve document-ID occurrences used in the HLL lesson into a left partition containing the first six and a right partition containing the remaining six. Their arrival occurrences are disjoint, although some document IDs appear in both. Processing their union gives twelve occurrences and nine distinct IDs under the same string-identity rule.\n\nFor Bloom filters, merge corresponding bits with logical OR. If either input has set a position, the combined filter sets it. For HLL, merge corresponding registers by maximum. Each combined register then holds the strongest observation seen by either partition.\n\nFor a count-min sketch, add corresponding counters. Each counter receives the sum of the contributions assigned to it by both partitions. That operation represents combined event mass only when each contribution belongs in the intended population with the multiplicity being added.\n\nThese rules require compatible layouts. The Bloom filter needs the same array length, probe count, hash scheme, and input encoding. HLL needs the same precision, hash width, and register interpretation. Count-min needs matching matrix dimensions and row hashes. Matching payload size alone does not establish compatibility.\n\n## The local merge path\n\nOur [replay](/course-assets/system-design/m18-sketches.py) builds each summary separately for the two partitions, merges them, and compares their retained states against a single pass over the whole stream. It also attempts incompatible merges, which its wrappers explicitly reject. No network transport or distributed coordination is implemented here.\n\nThe diagram separates the observed partition summaries from the external contribution receipts used later in the replay. A receipt identifies a partition already included in a total; it is application state, with a different role from hash registers or shared counters.\n\n```mermaid\nflowchart TD\n    accTitle: Merge summaries over a declared population\n    accDescr: Left and right partitions produce compatible summaries. The merger combines their state and compares it with a single pass over the whole input. Contribution receipts are separate application state for additive summaries.\n    left[First six arrivals] --> ls[Left summary]\n    right[Last six arrivals] --> rs[Right summary]\n    ls --> merge[Compatible merge]\n    rs --> merge\n    receipts[Contribution receipts] -.->|For additive summaries| merge\n    merge --> result[Combined state]\n    whole[Single pass over all arrivals] --> check[Compare retained states]\n    result --> check\n```\n\n\n## Unequal reservoirs\n\nA reservoir holds a fixed-size uniform sample of arrivals. Combining samples needs the original population sizes as well as the retained items.\n\nConsider a capacity-one reservoir from a left partition with one original item and another from a right partition with three original items. The left sample always contains its sole item. The right sample chooses each of its originals with probability one third.\n\nIf we concatenate those two samples and choose either stored item uniformly, the left original wins with probability one half. Each right original wins with probability one third times one half, or one sixth. A uniform sample from all four originals would give each probability one quarter.\n\nThe replay enumerates the possible sample-and-selection paths using exact fractions and prints those probabilities. It demonstrates why equal treatment of retained samples loses the populations they represent. A correct distributed sampling algorithm needs appropriate population accounting and a defined merge procedure; concatenation alone supplies neither.\n\nThe capture compares the partition summaries and prints the unequal-reservoir probabilities. Save the replay as `m18-sketches.py` and run its standard-library mode. It uses the same implementations as the individual sketch lessons; the count-min details follow later in this module.\n\n```bash title=\"terminal\"\npython3 m18-sketches.py merge\n```\n\n```output\nleft_events=6 right_events=6 total=12 exact_distinct=9\nBloom merged matches single: True\nHLL merged matches single: True\nCMS merged matches single: True\nduplicate HLL partition changes registers: False\nduplicate CMS partition row sums: [18, 18, 18]\nBloom incompatible merge: rejected\nCMS incompatible merge: rejected\nHLL incompatible merge: rejected\nwith external partition receipts row sums: [12, 12, 12]\nunequal reservoir enumerated probabilities: {'L': '1/2', 'R1': '1/6', 'R2': '1/6', 'R3': '1/6'}\nuniform target per original item: 1/4\n```\n\nAll three merged states match their corresponding single-pass states for the correctly split population. That equality says the merge operation preserves this representation on these contributions. It does not establish that a real ingestion service delivered each original event exactly once.\n\n## A repeated partition\n\nMerging the right HLL partition again leaves its registers unchanged because taking a maximum with the same observation is idempotent. Bloom OR has the same duplicate-state property. Repeating the same bits or register observations leaves their state unchanged.\n\nAdding the right count-min partition again raises each row sum from twelve to eighteen. The repeated six-occurrence contribution has been counted twice. This is the correct result for counter addition on the delivered inputs, and the wrong population if the application intended each partition to contribute once.\n\nThe replay then uses an external set of partition receipts while processing left, right, and right again. It skips the repeated receipt and recovers row sums of twelve. This is a sequential in-memory illustration; it does not implement a durable atomic transaction between checking a receipt and recording the merged result.\n\nIf a worker crashes between those actions, a real service needs to decide whether to retry or skip without losing or doubling contributions. A merge function cannot settle that question because the failure occurs around its invocation. The event-processing module owns those identity and recovery boundaries.\n\n## Distribution summaries\n\nA t-digest retains weighted groups of numerical observations, called centroids, for percentile queries. The [[wiki/tdigest-quantile-sketch|later t-digest lesson]] examines the algorithm and this package's limitations. Here the narrower question is whether partition merging preserves the intended weight.\n\nOur chosen population contains 360 values: 0 through 89 three times each, followed by 100 through 990 in steps of ten. Split it into two disjoint 180-observation partitions. Compare a single build, both merge orders and a repeated right partition.\n\nFor this optional package replay, save [the t-digest script](/course-assets/system-design/m18-tdigest.py) and [its pinned requirements](/course-assets/system-design/m18-tdigest-requirements.txt) beside each other. Use Python 3.12 and a new virtual environment:\n\n```bash title=\"terminal\"\npython3.12 -m venv .venv-sketch-merge\n.venv-sketch-merge/bin/python -m pip install -r m18-tdigest-requirements.txt\n```\n\nThe wrapper checks `tdigest==0.5.2.2` and its dependency versions, fixes the random seed, and rejects a chosen incompatible parameter pair before calling the package merge.\n\n```bash title=\"terminal\"\n.venv-sketch-merge/bin/python m18-tdigest.py merge\n```\n\n```output\ndisjoint value partitions: left=180 right=180 total=360\nsingle: weight=360 centroids=102 p50=59.500000 p99=959.000000\nL+R: weight=360 centroids=84 p50=59.500000 p99=959.000000\nR+L: weight=360 centroids=83 p50=59.500000 p99=959.000000\nL+R+R: weight=540 centroids=81 p50=74.557143 p99=968.000000\nwrapper incompatible delta: rejected before package merge\nexact nearest-rank p50=59 p99=960 for original360\n```\n\nThe correctly merged digests retain total weight three hundred sixty and match the printed single-build percentile estimates on this fixture. Their centroid counts differ, including between the two merge orders. Equal queried values here therefore do not imply identical retained state or universal order independence.\n\nThe repeated right partition raises total weight to five hundred forty and changes the median and ninety-ninth-percentile estimates. The summary has faithfully accepted extra weight, even though the original population remains unchanged. Keeping contribution identities outside the digest is necessary when that duplicate is unintended.\n\n| Summary | Compatible merge | Repeating identical contribution |\n|---|---|---|\n| Bloom filter | Bitwise OR | Bits unchanged |\n| HLL | Register maxima | Registers unchanged |\n| Count-min | Counter sums | Counts increase |\n| This t-digest | Weighted centroid merge | Weight increases; estimates may change |\n\n## Store enough to interpret the bytes\n\nA stored summary needs its algorithm/version, parameters, encoding and identity rule. Its envelope also needs the metric, bucket boundaries, source partition/range and contribution identity. Test serialized compatibility across the actual producer and consumer library versions; a common algorithm name or payload size is insufficient.\n\nThe replay checks a few wrapper fields and compares in-memory arrays. It does not implement cross-language serialization or durable receipts. DataSketches and Roaring publish compatibility mechanisms for their own representations; those do not make our Python arrays directly interchangeable with them.\n\nFor additive summaries, a contribution ID must name immutable content. If a worker sends a revised cumulative partition under a new ID, adding it to the earlier version counts the overlap again. Replace that partition's retained version and recompute the union, or publish disjoint deltas with their own receipt protocol.\n\nPersist the receipt with the aggregate change, or use a recoverable publication scheme that makes a retry unambiguous. Also verify that all expected partitions are present. Duplicate-safe merging alone cannot distinguish an empty partition from a lost one.\n\nChoose exact aggregation while the population fits and exact answers are needed. When summaries are justified, retain controls for their error and a fallback for unsupported queries or broken versions. The [[wiki/bucketed-time-window-aggregation|next lesson]] assigns events to buckets and defines when their published answers may stop changing.\n"
               }
@@ -4644,9 +4251,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1409,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4681,9 +4285,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 996,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4716,9 +4317,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1182,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -4751,9 +4349,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1308,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4785,9 +4380,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 982,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -4821,9 +4413,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "A service can have a comfortable p50 latency and an unpleasant p99. The median describes the middle request; the high percentile exposes slower requests that an average can hide. To query those percentiles across many hosts, we need more information than one average or p99 per host.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 975,
                 "mermaidCount": 0,
                 "content": "# T-digest quantile sketches\n\nA service can have a comfortable p50 latency and an unpleasant p99. The median describes the middle request; the high percentile exposes slower requests that an average can hide. To query those percentiles across many hosts, we need more information than one average or p99 per host.\n\nA t-digest keeps a compact, approximate description of a numerical distribution. We will look at what it stores, how local digests combine, and why a plausible percentile still needs an accuracy check.\n\n## Store weighted groups\n\nFor an exact reference, choose the nearest-rank convention: sort N observations and take the one-based position `ceil(q × N)`, where q is the requested fraction. At q = 0.99, that gives p99. Retaining and sorting every observation becomes costly for large streams and many dashboard queries. Exact frequency counts are another option when the value domain is small enough.\n\nA t-digest compresses observations into **centroids**. Each stores a mean and a weight: the number of observations it represents. For example, grouping 10, 11 and 12 yields mean 11 and weight 3. That record preserves the group's mass and mean, but not its individual values.\n\nThe distinctive choice is where to spend detail. T-digest limits centroid weights more tightly near the distribution's ends and allows larger groups near the middle. This helps preserve tail resolution without retaining every observation. The scale function, insertion order and interpolation rules still affect the result.\n\nEach host can build a local digest. A backend combines compatible weighted centroids, recompresses them and queries the combined distribution. The weights prevent a quiet host from receiving the same influence as a busy one. This merge does not recognize duplicated observations or overlapping uploads; [[wiki/mergeable-sketches-for-analytics|the merge lesson]] covers that accounting separately.\n\n## What a query returns\n\nA percentile query uses the ordered centroids and their cumulative weights, often interpolating between them. Its answer can lie between values that actually occurred. That is different from our nearest-rank reference, which always returns an observed value.\n\nCheck two kinds of error:\n\n- **Value difference:** how far the estimate is from the exact reference, in the measurement's units.\n- **Rank distance:** how far the estimate lies from the requested fraction of the population.\n\nFor ties, use a rank interval: the fraction strictly below the estimate through the fraction at or below it. The rank distance is zero if q lies inside that interval; otherwise it is the distance to the closer endpoint. This lets an observed value represent a whole block of equal observations.\n\nA small rank error can mean a large latency error in a sparse tail. A small latency difference can also cross a large repeated mass. Neither measure substitutes for the other.\n\n## Run one pinned implementation\n\nThe example uses Cam Davidson-Pilon's Python `tdigest` package, version 0.5.2.2. It is a reproducible implementation study, not a claim that every package called t-digest has the same behavior.\n\nThis package uses an admission threshold `4 × N × delta × q_c × (1 − q_c)`, where q_c is a centroid's midpoint rank and N is total weight. It permits smaller centroid weights toward the ends. Here delta is a compression parameter, not a failure probability. We use delta 0.05 and K 25; the package triggers compression when its centroid count exceeds `K / delta`.\n\nDownload the [quantile example](/course-assets/system-design/m18-tdigest.py) and [pinned requirements](/course-assets/system-design/m18-tdigest-requirements.txt) into one directory, keeping their filenames. The [package license](/course-assets/system-design/m18-tdigest-license.txt) accompanies the dependency. The setup below requires Python 3.12.\n\nThe chosen input has 360 dimensionless observations: 0 through 89 repeated three times each, then 100 through 990 in steps of 10. These are constructed values, not measured service latencies. The example processes forward, reverse and shuffled orders, resetting the package's random seed to 23 for each build.\n\nIn the output, `m` is centroid mean and `c` is its weight. Centroid count measures stored entries, not complete memory allocation.\n\n```bash title=\"terminal\"\npython3.12 -m venv .venv-quantiles\n.venv-quantiles/bin/python -m pip install -r m18-tdigest-requirements.txt\n.venv-quantiles/bin/python m18-tdigest.py quantiles\n```\n\n```output\ntdigest=0.5.2.2 accumulation-tree=0.6.4 pyudorandom=1.0.0\nvalues=360; 0..89 each repeated3, then 100..990 step10; delta=0.05 K=25 seed=23\nforward: centroids=102 total_weight=360 first={'m': 0.0, 'c': 3.0} last={'m': 990.0, 'c': 1.0}\n  q=0.50 nearest_rank=59 estimate=59.500000 value_difference=0.500000 rank_distance=0.000000\n  q=0.90 nearest_rank=630 estimate=635.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.95 nearest_rank=810 estimate=815.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.99 nearest_rank=960 estimate=959.000000 value_difference=-1.000000 rank_distance=0.001111\nreverse: centroids=102 total_weight=360 first={'m': 0.0, 'c': 3.0} last={'m': 990.0, 'c': 1.0}\n  q=0.50 nearest_rank=59 estimate=59.500000 value_difference=0.500000 rank_distance=0.000000\n  q=0.90 nearest_rank=630 estimate=635.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.95 nearest_rank=810 estimate=815.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.99 nearest_rank=960 estimate=959.000000 value_difference=-1.000000 rank_distance=0.001111\nshuffle: centroids=69 total_weight=360 first={'m': 0.0, 'c': 3.0} last={'m': 990.0, 'c': 1.0}\n  q=0.50 nearest_rank=59 estimate=59.527273 value_difference=0.527273 rank_distance=0.000000\n  q=0.90 nearest_rank=630 estimate=635.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.95 nearest_rank=810 estimate=815.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.99 nearest_rank=960 estimate=959.000000 value_difference=-1.000000 rank_distance=0.001111\nrepeated-zero control: n=1000 exact_median=0 estimate=0.110988 empirical_rank_interval=[0.90,0.90] rank_distance=0.40\n```\n\nThe forward and reverse runs retain 102 centroids; shuffled order retains 69. All preserve total weight 360. At p99, each estimates 959 against nearest-rank 960. At the median, interpolation returns roughly 59.5 instead of 59, with zero rank distance under our stated measure.\n\nThose results look useful, but the final line tests a different shape.\n\n## A small value error can hide a bad median\n\nThe control contains 900 zeros, the integers 1 through 90, and ten values of 1,000. There are 1,000 observations. The nearest-rank median is zero, and zero occupies the empirical rank interval [0, 0.90].\n\nThe pinned package returns about 0.110988. All 900 zeros lie below that answer and every positive observation lies above it. Its rank interval is therefore [0.90, 0.90], which is 0.40 away from the requested median rank 0.50.\n\nThe estimate is numerically close to zero but badly misplaced in rank. This package's interpolation does not handle this repeated mass acceptably for a median-rank requirement. Other t-digest implementations have different interpolation and repeated-value handling; test the one you will actually deploy.\n\n:::note\nWould reducing the compression parameter alone prove that this median is fixed?\n:::\n\nNo. More retained detail may help some inputs, but the query's treatment of repeated values still matters. Rerun the control and check the actual result.\n\n## Choose around the required error\n\nT-digest is useful when you want compact, mergeable quantile estimates and can validate its behavior on representative distributions. Check repeated values, sorted and shuffled input, sparse tails and the same merge tree your backend will use. A local digest passing a test does not establish the error after repeated merges.\n\nIf the requirement is a relative error in the returned value, investigate a sketch designed for that measure, such as DDSketch. For a positive exact value of 200 ms, a 2% value-error target means 196–204 ms; it says nothing by itself about the rank interval. DDSketch uses logarithmic value buckets, while t-digest uses weighted centroids. Datadog's published distribution-metrics design describes DDSketch.\n\nKeep exact reference populations small enough to inspect. For the repeated-zero population above, this pinned package fails our median-rank check, even though its other examples look good. The [[wiki/streaming-percentile-analytics|streaming percentile pipeline]] adds the next requirements: windows, compatible summaries and exactly which contributions reached a report.\n"
               }
@@ -4853,9 +4442,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1108,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4893,9 +4479,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1714,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -4912,8 +4495,6 @@ window.CURRICULUM_DATA = {
           "number": "11",
           "title": "Realtime, social and feeds",
           "summary": "Deliver live updates, messages, and feeds under changing load.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "realtime-database-and-websocket-scaling",
@@ -4942,9 +4523,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1057,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -4981,9 +4559,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 724,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5019,9 +4594,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1026,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5057,9 +4629,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "Ada follows Bo. Opening Ada's following list asks for edges leaving Ada; publishing Bo's post asks for edges entering Bo. The relationship is the same, but the two reads need different access paths.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 938,
                 "mermaidCount": 1,
                 "content": "# Social graph follows and FlockDB\n\nAda follows Bo. Opening Ada's following list asks for edges leaving Ada; publishing Bo's post asks for edges entering Bo. The relationship is the same, but the two reads need different access paths.\n\nMost follow-graph work is shallow: test one relationship, list neighbors, page through followers, or count them. Start with those operations. A graph-shaped data model does not automatically require arbitrary graph traversal.\n\n## Store the direction, then the relationship rule\n\nThe [[wiki/social-network-database-modeling|previous model]] uses `(follower, followee)` as a unique pair. A mutual friendship would need a different acceptance rule or two confirmed directions. A reverse lookup for Ada following Bo is not a second friendship and does not mean Bo follows Ada.\n\nA broader `relations(source, type, target, state, position)` model can support follows, blocks or mutes when their storage needs are shared. Include the type in relationship identity. Keep each type's permissions and state transitions explicit: a pending follow request and an active block are not interchangeable just because both connect accounts.\n\nA sort position supports ordered listing. State can distinguish active, removed or archived edges. Extra metadata belongs to the relationship it describes; it should not turn every pair into an unvalidated bag of unrelated values.\n\n## Why the reverse lookup changes after sharding\n\nOn one database, a forward index on `(follower, followee)` and a reverse index on `(followee, follower)` can serve both reads. The database maintains the indexes when a row changes.\n\nNow partition the rows by follower. Ada's outgoing list stays on Ada's partition. Bo's followers can be spread across all the other users' partitions. A local index on `followee` helps inside each partition, but does not tell the router which partitions contain Bo's incoming edges.\n\nA separately placed reverse list solves that routing problem. The forward entry is grouped by Ada, and its reverse entry is grouped by Bo.\n\n```mermaid\nflowchart TB\n    accTitle: One follow has two access paths\n    accDescr: Ada following Bo creates a forward entry grouped by Ada and a reverse entry grouped by Bo. Both entries describe the same directed relationship.\n    E[Ada follows Bo] --> F[Grouped by Ada]\n    E --> R[Grouped by Bo]\n    F --> A[Following list<br/>contains Bo]\n    R --> B[Follower list<br/>contains Ada]\n```\n\nIf Bo also follows Ada, that is a second logical relationship with its own forward and reverse entries: four entries for two follows. The cost is two logical entries per relationship before indexes and replication, plus the work of keeping them consistent. It is not a universal two-times storage estimate.\n\n## What FlockDB chose\n\nTwitter's 2010 FlockDB design used MySQL-backed adjacency lists, indexed and partitioned in both directions. It targeted large neighbor lists, ordered pagination and set operations rather than multi-hop graph walks. Its position field supported ordered reads; removed and archived states let it retain edges without exposing them as active follows.\n\nThat design also accepted retried and out-of-order writes using operation ordering. It did not make an arbitrary pair of remote database writes into a single SQLite transaction. The archived repository is no longer maintained; this is a historical design to understand, not a current package recommendation.\n\nThe useful distinction survives the implementation: listing direct followers is different work from finding paths, communities or recommendations across many hops. Choose an online adjacency service and an offline graph-analysis pipeline according to the queries each must answer.\n\n## Keep the two representations consistent\n\nOur [social example](/course-assets/system-design/m22-social.py), with its [shared helpers](/course-assets/system-design/m22-common.py), deliberately stores two tables in one SQLite database. One transaction writes the forward row, reverse row and operation receipt. An exception between the row writes rolls everything back. This exposes the maintenance obligation without pretending to implement distributed FlockDB.\n\nThe six-account graph starts with Ada and Dee following Bo and Cy, plus Eli and Fay following Cy. The replay interrupts Eli's new follow of Bo, retries it, and then unfollows. A delayed retry of the old follow returns its historical receipt without restoring the edge.\n\n```bash title=\"terminal\"\npython3 m22-social.py graph\n```\n```output\nAda follows: Bo,Cy\nCy followers: Ada,Dee,Eli,Fay\ninterrupted Eli->Bo: forward=False reverse=False\nretry committed: {\"accepted_state\":true,\"duplicate\":true}\ndelayed old follow: current=False\nabsent unfollow: {\"accepted_state\":false,\"duplicate\":false}\nchanged operation: 409\ncommitted forward/reverse pairs: 6 6\n```\n\nThe successful retry is repeated before printing, hence `duplicate:true`. Reusing its operation identity with different input returns conflict. The receipt describes an accepted operation; the current adjacency list describes the relationship now. The final check compares complete forward and reverse pair sets, not just equal counts.\n\nAcross independent stores, choose a consistency and recovery contract. A reverse projection updated asynchronously needs retained changes, duplicate handling, an applied position and repair. If it drives delivery, lag can omit recipients. A cached follower count cannot reconstruct who is missing.\n\n## Page by a stable boundary\n\nOffset pagination repeatedly skips earlier rows. An indexed cursor can seek to the last returned ordering key instead. Include a tie-breaker: several follows can share one timestamp.\n\nFor a relational extension with non-null `created_at` and a unique `(followee, follower)` pair, use an index beginning with `(followee, created_at DESC, follower DESC)`. After returning the row at `(100, 'Eli')`, the next-page query is:\n\n```sql title=\"Follower page after a cursor\"\nSELECT follower, created_at\nFROM follows_by_time\nWHERE followee = :author\n  AND (created_at, follower) < (:last_time, :last_id)\nORDER BY created_at DESC, follower DESC\nLIMIT :page_size;\n```\n\nThis is a proposed time-ordered table, separate from the example's alphabetically sorted lists. If Cy's followers sort as `Fay@100, Eli@100, Dee@99, Ada@99`, a two-row first page ends at `(100, 'Eli')`; the next page returns Dee and Ada. A one-row page ending at `(100, 'Fay')` still reaches Eli because the ID breaks the timestamp tie.\n\nKeyset pagination avoids deep offset scans when an appropriate index is used. It does not freeze a changing graph. If an edge is removed or its sort position changes between requests, define whether the caller accepts a live list or needs a versioned snapshot. The cursor must also belong to the requested account and relationship type.\n\n## Handle a very large follower list deliberately\n\nA single popular account can dominate one reverse partition. Isolating it protects other accounts, but does not divide its own workload. Bucketing that list spreads storage and writes; reads now need to merge ordered bucket pages and carry enough cursor state to resume them.\n\nCache frequently read first pages when their freshness policy permits it. Separate an approximate public count from exact edge membership, and batch recipient enumeration for downstream delivery. Preserve current access rules when a cached list is used for a protected action.\n\nOnce outgoing and incoming relationships have clear meanings, the [[wiki/feed-generation-push-pull-hybrid|feed-generation comparison]] can decide whether to write feed references when a post appears or collect posts when a reader opens the page.\n"
               }
@@ -5090,9 +4659,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1176,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5128,9 +4694,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "A newly-unread badge tells someone how much new activity has arrived since they last opened an overview. It can clear when they open that screen even though they have not read every conversation. That makes it a separate feature from message read receipts.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 1728,
                 "mermaidCount": 2,
                 "content": "# Design: a newly-unread inbox indicator\n\nA newly-unread badge tells someone how much new activity has arrived since they last opened an overview. It can clear when they open that screen even though they have not read every conversation. That makes it a separate feature from message read receipts.\n\nWe'll design a badge that counts distinct senders, preserve arrivals that race with opening the inbox, and keep reads correct while a background worker is behind. The example is our own small inbox service, not a claim about Slack's or another messenger's internals.\n\n## Decide what the number means\n\nBo sends Ada two messages and Cy sends one. Our badge shows **2**, because two sender accounts contributed new activity. It does not show three messages, two humans, or a count of unread conversations.\n\n| State | What it means |\n|---|---|\n| Newly-unread badge | Distinct eligible senders after Ada's last inbox acknowledgement |\n| Thread unread | A conversation contains messages beyond its own read position |\n| Message read receipt | The client reported a particular message or position as read |\n\nOpening the overview advances only the first state. The [[wiki/chat-and-messaging-system-design|chat design]] deals with delivery and thread-read reports separately. None of these reports proves that a person understood the text.\n\nRepeated delivery of one send must not create another message. But two intentional sends with identical text are still two messages. Give each send an operation ID; use sender identity only when collapsing messages into the badge count.\n\nFor this design, only the recipient may view or acknowledge the inbox. Senders and recipients must be active accounts, and inactive senders disappear from badge reads. Blocking, group conversations and message deletion need additional rules; they are outside the executable example.\n\n## Clear what the screen observed\n\nDeleting the whole badge set when Ada opens the inbox looks simple. It fails if a new message arrives after the server prepared her response but before the acknowledgement reaches the server. The deletion clears activity she never had a chance to see.\n\nGive each accepted message a position within its recipient's inbox. Ada's first three messages occupy positions 1, 2 and 3. The response records that it observed through 3. Dee's later message receives position 4.\n\n```mermaid\nsequenceDiagram\n  accTitle: Acknowledge the observed inbox\n  accDescr: Ada receives an inbox snapshot through position 3. Dee's message commits at position 4 before Ada acknowledges the older snapshot. Position 4 remains newly unread.\n  participant A as Ada\n  participant S as Inbox service\n  A->>S: Open inbox\n  S-->>A: Snapshot through 3\n  Note over S: Dee's message commits at 4\n  A->>S: Acknowledge snapshot 3\n  S-->>A: One new sender remains\n```\n\nStore an acknowledged-through position **A**. A sender counts when their latest eligible message position is strictly greater than A. After acknowledging 3, Bo and Cy stop contributing, while Dee at 4 remains.\n\nPositions describe acceptance order for one recipient. They are not wall-clock timestamps or a global order across all users. Equal timestamps cannot tell us which of two arrivals belonged to an earlier inbox response.\n\nThe server stores an issued snapshot containing its recipient and observed boundary. Ada acknowledges the snapshot ID, not an arbitrary position supplied by her client. The server checks ownership and updates A to the greater of its current value and the snapshot boundary.\n\nThat maximum handles multiple devices. If device B has already acknowledged through 4, device A's delayed acknowledgement through 3 leaves A at 4. A retry with the same operation ID returns its original receipt; that historical reply must not make the client lower a newer local boundary.\n\nThe product decides when to send the acknowledgement: for example, after the overview loads successfully. Issuing a snapshot only proves which response the server prepared, not that Ada saw it. An acknowledgement should not be sent just because navigation began and the request might still fail.\n\n## Store the source and the prepared count separately\n\nAccepted messages are the source. A projection keeps each sender's greatest processed position so a badge read need not rescan the entire message history. Let **H** be the accepted head and **P** the position through which the projection is complete.\n\nOur local service puts these records in one SQLite database:\n\n| Record and key | Relevant fields |\n|---|---|\n| Message: recipient, position | Sender and text |\n| Inbox head: recipient | H, A and P |\n| Sender summary: recipient, sender | Greatest processed position |\n| Issued snapshot: snapshot ID | Recipient and observed-through position |\n| Operation receipt: actor, operation ID | Original input and accepted result |\n\nSeparate thread-read rows exist to demonstrate that inbox acknowledgements leave them unchanged. A real thread-reading API is outside this service.\n\n```mermaid\nflowchart TD\n  accTitle: The badge combines a prefix and a tail\n  accDescr: A badge read merges sender maxima processed through P with source messages after P, then counts active senders whose latest position is above acknowledgement A. All records are read from one SQLite snapshot.\n  P[Sender maxima through P] --> M[Merge latest positions]\n  T[Messages after P] --> M\n  M --> C[Count active senders<br/>above A]\n```\n\nA read uses one database snapshot for the heads, projection, tail and account eligibility. Otherwise, it could combine a new P with an old projection and miss messages. The count is exact for that snapshot; an arrival after it begins can appear on the next read.\n\nThis is a deliberate cost choice. With P=0 and H=4, the read examines four tail messages. Once the worker reaches P=4, the tail is empty, though this implementation still reads the sender summaries and checks account eligibility.\n\n## Follow a send, a read and an acknowledgement\n\nThe HTTP handler binds its demonstration credential to an account. Source methods then enforce ownership. The routes keep the three operations distinct:\n\n| Route | Input or result |\n|---|---|\n| POST `/messages` | Send an operation ID, recipient and text; receive an accepted position |\n| GET `/inbox/Ada` | Receive eligible messages, snapshot ID and observed-through position |\n| GET `/badge/Ada` | Receive the count and diagnostic H, A, P and tail-row fields |\n| POST `/inbox/Ada/ack` | Send an operation ID and issued snapshot ID; receive acknowledged-through |\n\nBo's send transaction checks his operation receipt, validates the recipient, advances Ada's head, inserts the message and saves the result. Commit precedes the 201 response. The same operation and input return 200 with the original position; changed input under that ID returns 409.\n\nOpening Ada's inbox reads its head and eligible message history, then stores the snapshot in the same transaction. The example returns the entire retained history. Pagination would require a product decision: does opening page one acknowledge the overview, or only messages actually fetched? Do not extend the current token to pages without answering that.\n\nAcknowledgement verifies the path's account and the snapshot's owner independently. A predictable snapshot ID is not permission to use it. A guessed snapshot belonging to Ada is refused when Bo submits it through his own route.\n\nSQLite serializes the example's write transactions. Dee's arrival may commit before or after Ada acknowledges the older snapshot; either way, the final state is H=4 and A=3. The acknowledgement never replaces its issued boundary with the current head.\n\n## Keep projection lag from changing the answer\n\nThe background worker reads messages after P in order. It updates each sender's maximum and advances P in the same transaction. An interrupted transaction leaves both unchanged, so retrying starts from the last committed position.\n\nA badge read merges those processed maxima with every message in the unprocessed tail, taking the greater position per sender. It then counts active senders above A. Delayed work from Bo cannot undo Ada's acknowledgement or turn an older message into new activity.\n\nThis retains the original goal of preparing cheap reads, while making the fallback cost visible. Measure tail length, worker progress and badge-read latency. If a tail becomes too large, catch the worker up, bound recovery with an explicit failure, or choose a documented stale-count experience. Returning an old projection as an exact current count is not the same contract.\n\nA live notification can tell an online client to refetch. A disconnected client reconciles on its next badge read, as in the [[wiki/realtime-database-and-websocket-scaling|realtime recovery lesson]]. This particular example sends no WebSocket notifications; it tests the source and reconciliation path.\n\n## Run the arrival race\n\nSave the standard-library [inbox service](/course-assets/system-design/m22-inbox.py) and [shared helpers](/course-assets/system-design/m22-common.py) together. They use a private temporary SQLite file and an actual loopback HTTP server with fake account-bound credentials.\n\nBo sends twice and Cy once. Device A fetches through 3, then two threads race Dee's fourth message against acknowledgement of that snapshot. A later device acknowledges through 4 before the first device submits its older snapshot again.\n\n```bash title=\"terminal\"\npython3 m22-inbox.py\n```\n```output\noffline arrivals: events=3 distinct senders=2\nduplicate message: 200\nchanged message: 409\ndevice A observes through: 3\narrival races ACK3: {\"accepted_through\":4,\"acknowledged_through\":3,\"count\":1,\"projected_through\":0,\"senders\":[\"Dee\"],\"tail_rows\":4}\nclear-all control: would drop new sender Dee; boundary ACK retains her\nprojection interruption/reopen: projected=0\ndelayed projection after ACK: {\"accepted_through\":4,\"acknowledged_through\":3,\"count\":1,\"projected_through\":4,\"senders\":[\"Dee\"],\"tail_rows\":0}\ndevice B ACK4 then old device ACK3: 4\nwrong-user acknowledgement: 403\nwrong snapshot owner: 403\nmalformed framing: [[\"empty transfer encoding\",400],[\"ambiguous length\",400],[\"huge numeric length\",400],[\"unpaired surrogate\",400],[\"short body\",400]]\nthread read positions: [0, 0, 0]\nretained events=4 serialized message bytes=245\nunavailable authority: 503\nHTTP requests: application=15 malformed=5\n```\n\nThe badge finds Dee both before projection and after it. Only `tail_rows` changes from four to zero. The thread-read positions stay at zero, confirming that the overview acknowledgement did not mark conversations read.\n\nThe interruption is an exception before commit followed by reopening the database, not an operating-system crash. The replay also checks retry identity, ownership and malformed HTTP requests. Its 245-byte count covers only compact message JSON, not database size or network overhead.\n\nThose protocol probes exercise this small server's rules: one bounded Content-Length, no Transfer-Encoding, complete bodies and valid JSON Unicode. They are not a production authentication or load test. An unavailable source returns 503, so the client should retain a clearly stale display or show unavailability rather than invent zero.\n\n## Where a Redis sorted set fits\n\nA sorted set is useful for the prepared sender summary: the recipient identifies the key, the sender ID is the unique member, and the latest accepted position is its score. Updating Bo changes his score without creating another member. Resolve display names separately so a rename does not change identity.\n\nFor small exact integer positions, the core operations look like this:\n\n```text\nZADD newly_unread:Ada GT 2 Bo\nZADD newly_unread:Ada GT 3 Cy\nZADD newly_unread:Ada GT 4 Dee\nZCOUNT newly_unread:Ada (3 +inf\n```\n\n`GT` prevents an older delivery from lowering an existing score. The exclusive bound `(3` counts only positions above acknowledgement 3. The result is one sender. This sketch assumes A=3 is already known; it does not implement cross-store acknowledgement or projection recovery.\n\n`ZCARD` is sufficient only if every retained member is newly unread. Once old entries remain, use the acknowledgement boundary. Deleting scores through A can reclaim space, but a late event can reinsert an old sender; counting above A still excludes that activity.\n\nThe [Redis control](/course-assets/system-design/m22-redis-badge.py) starts a private process with TCP disabled and demonstrates the unsafe alternatives:\n\n```bash title=\"terminal\"\npython3 m22-redis-badge.py\n```\n```output\nRedis server v=8.4.0\nsnapshot through3: distinct senders=2\narrival4 then clear-all: count=0\nremove through3: senders=Dee\ndelayed older update: ZCARD=2; ZCOUNT above ACK3=1\nequal timestamp100: remove-through100 removes both senders\n```\n\nRedis scores are floating-point numbers. Integers through 2^53 are exact, but arbitrary 64-bit source positions are not. Choose a representation that preserves the actual position range before using scores as acknowledgement boundaries.\n\nA separate Redis deployment also adds a consistency boundary. Preserve message acceptance in the source, use replayable work to maintain the projection, and keep acknowledgement authoritative during cache loss. A cache miss means “state unavailable or not yet built,” not necessarily “no new messages.”\n\n## Retain enough to recover\n\nThe local database retains all messages, snapshots and operation receipts for its temporary lifetime. Production retention cannot discard them under one guessed expiry: messages support reconstruction, snapshots authorize acknowledgements, and receipts suppress repeated operations.\n\nA clean projection rebuild resets sender maxima and P together, then replays retained messages. The badge path checks that its unprocessed tail reaches H without gaps; missing source positions produce a conflict instead of an incomplete count.\n\nIf history must be trimmed, retain a sufficient checkpoint and define a floor below which replay is unavailable. Account erasure and message deletion must also update the eligibility and summary rules. A surviving sender maximum alone does not prove that its supporting message still exists.\n\nThe essential boundary is simple: clearing the overview covers the inbox the server returned. New work beyond that boundary remains visible, regardless of device timing or background-worker progress.\n"
               }
@@ -5162,9 +4725,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1063,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5201,9 +4761,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1220,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -5238,9 +4795,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "A photo tag associates an account with a place in an image. That place should stay attached to its subject when a laptop-sized photo becomes a phone thumbnail. Storing the click's screen coordinates cannot provide that guarantee: the next display may have a different size, margins or crop.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 1402,
                 "mermaidCount": 2,
                 "content": "# Design: photo tags that survive resizing\n\nA photo tag associates an account with a place in an image. That place should stay attached to its subject when a laptop-sized photo becomes a phone thumbnail. Storing the click's screen coordinates cannot provide that guarantee: the next display may have a different size, margins or crop.\n\nWe'll work through source coordinates, map a point into a square card, and extend the model to boxes and crop edits. Then we'll follow a tag through placement, approval and image replacement in a small executable service.\n\n## Store a place in the source image\n\nChoose a coordinate convention before choosing a database. Here the origin is the upper-left corner, horizontal coordinates increase rightward, and vertical coordinates increase downward. Each tag belongs to one immutable image version with known dimensions and orientation.\n\nFor our 800 by 600 source, a point at (200,150) is one quarter of the way across and down. Store those fractions as `u=0.25` and `v=0.25`. In a simple 400 by 300 resize, the same point becomes (100,75).\n\n```text\nu = source_x / source_width\nv = source_y / source_height\n\nrendered_x = u * rendered_image_width\nrendered_y = v * rendered_image_height\n```\n\nSource pixels would also work if every consumer knew which source dimensions they referred to. The mistake is storing pixels from an unspecified display. Ratios make the convention convenient; the image version keeps their meaning stable.\n\nKeep full precision in storage. For example, rounding a 600/1024 ratio to 0.586 before multiplying it by 512 yields 300.032 instead of 300. Round only when presenting a value or placing a raster pixel.\n\nOur point domain includes 0 and 1. The point (1,1) denotes the lower-right boundary of the image extent, not an indexed raster pixel. Whether the marker's label extends beyond that boundary is a separate layout choice.\n\n## Account for the display box\n\nThe rendered image and its surrounding box are not always the same size. With `contain`, the entire image fits and unused space becomes margins. With `cover`, the image fills the box and some source content may be cropped. Both preserve aspect ratio.\n\nFor a centered image in a box of width W and height H, choose a scale and then an offset:\n\n```text\ncontain: s = min(W / 800, H / 600)\ncover:   s = max(W / 800, H / 600)\n\nox = (W - 800*s) / 2\noy = (H - 600*s) / 2\nX = ox + 800*s*u\nY = oy + 600*s*v\n```\n\nThese are CSS-pixel positions within the box, independent of the display's physical pixel density. The formulas assume centered positioning and no border, padding or CSS rotation. A different `object-position` needs different offsets.\n\n| In a 500 by 500 box | Result for the quarter-width, quarter-height point |\n| --- | --- |\n| Contain: image is 500 by 375, with 62.5-pixel top and bottom margins | (125,156.25) |\n| Cover: image is about 666.67 by 500, with 83.33 pixels cropped from each side | About (83.33,125) |\n\nMultiplying both fractions by 500 misses the contain margin. It gives (125,125), which is a valid place in the square but the wrong place on the photo.\n\nThe generated preview below puts the marker over the source's upper-left circle. Its raster rounds the 62.5-pixel top offset to an integer row; the calculation above retains the fractional position.\n\n![Contained square preview with the chosen marker over the upper-left circle and blank margins above and below the image](/course-assets/system-design/m22-photo-overlay.png)\n\nFor editing, invert the transform: subtract the offsets, then divide by the scaled source dimensions. Reject a click in a contain margin. For viewing, hide a point outside a cover crop instead of moving it to the edge, where it would label a different place.\n\nThe example checks exact display-space membership first and clips only floating-point quotient roundoff at 0 and 1. It does not use clamping to turn an invalid click into a valid tag.\n\n## Boxes and crop edits\n\nA point is enough for a small name marker. To identify an area, store a rectangle using either normalized corners `(u1,v1,u2,v2)` or normalized origin and size `(u,v,width,height)`.\n\nFor corners, require finite values with `0 <= u1 < u2 <= 1` and `0 <= v1 < v2 <= 1`. For origin and size, require positive dimensions and an extent that stays inside the source. Keep the representation explicit; a point with a decorative label is not automatically a bounding box.\n\nRender both corners through the same transform. A partially cropped box can be clipped for display while retaining its original source bounds. This box extension is a design choice; the executable below accepts only points.\n\nA crop creates another coordinate space. Suppose an 800 by 600 source is cropped to the rectangle starting at (100,50), with width 400 and height 300. The original point (200,150) becomes (100,100) inside that crop, or fractions (0.25,1/3).\n\n```text\ncropped_u = (source_u * 800 - crop_left) / crop_width\ncropped_v = (source_v * 600 - crop_top) / crop_height\n```\n\nA point outside the crop is hidden, not reassigned to its nearest edge. Store the crop transform with the derived variant so the client can recover this relationship. A rotation needs its own transform and orientation convention too.\n\nAn unrelated replacement has no such relationship. Even another 800 by 600 image may contain something different at the same fractions. Give it a new version and require explicit retagging. The [[wiki/image-cdn-and-resizing|image pipeline]] should normalize orientation before establishing the canonical coordinate space.\n\n## Separate the tag from the image bytes\n\nOur service starts with a generated upright geometric image. Ada owns it and selects Bo as the target of a point tag. This records a person's account selection; it performs no face recognition.\n\nThe image bytes stay immutable. A database stores version metadata and tag relationships. The client reads the image through the media path, while the tagging API handles coordinates and permission.\n\n```mermaid\nflowchart TB\n  accTitle: Coordinates refer to an image version\n  accDescr: The client reads immutable image bytes through the media path and sends coordinates or consent to the tag API. The API checks image version and permission in the tag database.\n  C[Image client] -->|point or consent| A[Tag API]\n  A --> D[(Versions and tags)]\n  C -->|media path| I[Immutable image bytes]\n```\n\nThe fixture has three main records:\n\n| Record | Meaning |\n| --- | --- |\n| Image | Owner, current version, visibility and placement revision |\n| Immutable version | Image/version key, digest, dimensions and orientation |\n| Tag | Tag ID, image/version, target account, u, v and approval state |\n\nAn extended box schema would replace the point fields with one declared rectangle representation. Record the creator and creation time explicitly if other accounts may propose tags; this fixture restricts all placement to the image owner.\n\nDecide the product rules early. Unregistered names need a separate label identity rather than a fabricated account ID. Machine-suggested boxes need an explicit confirmation state. A per-image tag limit, bounded reads and marker clustering keep hundreds of tags from turning into an unreadable overlay. Those extensions are not implemented here.\n\n## Place, approve and read\n\nAda sends `POST /images/photo-1/tags` with an operation ID, image version, base placement revision, target and point. The server binds Ada from her credential, validates the numbers and verifies ownership. It never accepts a caller-supplied owner as authority.\n\nThe new tag begins pending. In one transaction the service inserts it, advances the placement revision and saves the operation receipt. Repeating the identical request returns the receipt; reusing its identity with changed coordinates conflicts.\n\nBo can approve or withdraw through `POST /tags/1/consent`. Reads expose only approved tags for the current version, with active owner and target accounts and current permission to view the image. Placement and approval answer different questions: Ada can suggest an association, while Bo controls whether this design displays it.\n\n```mermaid\nsequenceDiagram\n  accTitle: A proposed tag becomes visible after approval\n  accDescr: Ada places a pending tag. A reader sees no tag until Bo approves it. A later withdrawal hides it from subsequent reads.\n  participant A as Ada\n  participant S as Tag service\n  participant B as Bo\n  A->>S: Place tag, v1\n  S-->>A: Pending tag 1\n  B->>S: Approve tag 1\n  Note over S: Approved: visible\n  B->>S: Withdraw approval\n  Note over S: Withdrawn: hidden\n```\n\nTwo placements based on revision 1 cannot both advance this editor to revision 2. One succeeds; the other refetches. This whole-image precondition is a deliberate editing policy. Independent annotations could instead use per-tag revisions or a declared merge rule.\n\nConsent does not advance the placement revision. The fixture serializes new consent writes in arrival order, so a production interface with multiple active editing devices would need a separate consent revision if it must reject stale new intentions.\n\nAn identical old approval retry only returns its historical receipt; it does not undo a later withdrawal. As in [[wiki/reaction-modeling|reaction modeling]], the client must distinguish an operation result from current state.\n\n## Run the geometry and HTTP example\n\nSave the [tagging service](/course-assets/system-design/m22-tagging.py), [shared helpers](/course-assets/system-design/m22-common.py) and [pinned image dependency](/course-assets/system-design/m22-image-requirements.txt) together. Use an isolated Python environment with the pinned Pillow version. The program generates geometric images, owns a temporary SQLite database and serves requests only on loopback.\n\n```bash title=\"setup\"\npython3 -m venv /tmp/fanout-m22\nuv pip install --python /tmp/fanout-m22/bin/python -r m22-image-requirements.txt\n```\n\nBefore running it, predict two outcomes: whether a top-margin click is accepted, and whether an editor holding image version 1 can place a tag after the source is replaced by version 2.\n\n```bash title=\"terminal\"\n/tmp/fanout-m22/bin/python m22-tagging.py --images ./m22-images\n```\n```output\nPillow=12.1.0 source=800x600 orientation=1\nnormalized point: u=0.25 v=0.25; source=(200,150)\ncontain 500x500: (125.000000,156.250000) roundtrip_error=0.000000000000\ncover 500x500: (83.333333,125.000000) roundtrip_error=0.000000000000\nright/bottom equality: (1.0, 1.0)\nletterbox click: refused\ncover left-edge source point: None\nowner placement: 201 pending\nidentical retry: 200\nchanged retry: 409\nnon-owner placement: 403\nbefore consent visible tags: 0\nafter Bo consent visible tags: 1\nconcurrent revision1: [201, 409]\nconsent withdrawn visible tags: 0\nmalformed framing: [[\"empty transfer encoding\",400],[\"ambiguous length\",400],[\"huge numeric length\",400],[\"unpaired surrogate\",400],[\"short body\",400]]\nretained tags=2 coordinate pairs=2\nreplacement visible tags: 0\nold image placement: 409\nprivate image read: 404\n```\n\nThe inverse calculation is checked before its error is rounded for printing. The HTTP run exercises retries, permission, approval and concurrent placement. The five malformed framing probes are refused without adding tags. Either concurrent target may win; sorting the status codes makes the capture independent of that choice.\n\nTwo rows remain because the initial placement and one concurrent placement succeeded. Replacement retains those rows under version 1 but makes the current version's visible list empty. An old editor must reload the image and ask for confirmation; silently resending its fractions under version 2 defeats the version check.\n\nFinally, Bo's earlier approval does not grant access after Ada makes the image private. The fixture returns 404 for that read. A real private-media product must also authorize the image bytes and every variant: filtering tag metadata alone cannot protect a publicly served photo.\n"
               }
@@ -5273,9 +4827,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1762,
                 "mermaidCount": 3,
                 "content": "",
                 "preview": {
@@ -5292,8 +4843,6 @@ window.CURRICULUM_DATA = {
           "number": "12",
           "title": "Geo, matching and recs",
           "summary": "Find nearby candidates, match supply to demand, and rank recommendations.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "nearby-geospatial-search-system-design",
@@ -5321,9 +4870,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1594,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5358,9 +4904,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1454,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -5401,9 +4944,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1275,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -5440,9 +4980,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1352,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5476,9 +5013,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1253,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5513,9 +5047,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1248,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -5550,9 +5081,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1021,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5589,9 +5117,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1343,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5608,8 +5133,6 @@ window.CURRICULUM_DATA = {
           "number": "13",
           "title": "Media, files and CDN",
           "summary": "Study media, files and CDN.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "direct-to-object-storage-upload",
@@ -5637,9 +5160,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 952,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5676,9 +5196,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1103,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5712,9 +5229,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1094,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5749,9 +5263,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1129,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5787,9 +5298,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1021,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5824,9 +5332,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "Adaptive bitrate streaming lets a player choose among encoded representations as network and playback conditions change. A smaller next segment can help avoid a stall. It cannot undo time already spent waiting for an earlier segment.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 1200,
                 "mermaidCount": 1,
                 "content": "# Adaptive bitrate and CDN selection\n\nAdaptive bitrate streaming lets a player choose among encoded representations as network and playback conditions change. A smaller next segment can help avoid a stall. It cannot undo time already spent waiting for an earlier segment.\n\nThere are three related decisions: which rendition the viewer requests now, which renditions the service prepares, and where their bytes should be cached. We'll separate them, then use real segment sizes in a small simulation to see why reacting to the last transfer can be too late.\n\n## The player chooses from a prepared offer\n\nThe [[wiki/video-transcoding-pipeline|transcoding pipeline]] creates the representations. In HLS, a master playlist identifies available variants, and their media playlists identify ordered segments. The player chooses files that already exist; it does not ask the encoder to change an in-flight file's quality.\n\nThe ladder is the set of offered resolutions and bitrates. It must fit supported devices and codecs, with corresponding content aligned in time. A higher resolution is not automatically useful on a small display, and bitrate alone does not compare visual quality across different codecs or scenes.\n\nThree quantities guide playback:\n\n| Quantity | Meaning |\n|---|---|\n| Media bitrate | Encoded bits per second of media |\n| Download throughput | Received bits per second of transfer time |\n| Buffer | Seconds of media available ahead of playback |\n\nA rendition can have a modest average bitrate and still contain a large segment. The player needs enough buffer to survive that segment's actual transfer. A path's last observed throughput is evidence about the next request, not knowledge of its future capacity.\n\nProduction selectors may combine throughput estimates, buffer levels, device limits and switching history. For example, dash.js documents distinct throughput, buffer, dropped-frame and request-abandonment rules. Our rule below intentionally uses only the previous completed transfer so its delay is easy to see.\n\n## A three-request experiment\n\nThe [lab](/course-assets/system-design/m24-lab.py) and [media helper](/course-assets/system-design/m24-media.py) generate the same HLS files as the preceding lesson. Use its pinned Python environment and FFmpeg 8.1.2. File sizes are measured; download times and stalls are calculated under a chosen capacity schedule, with no real congested network.\n\nBoth policies start with one second buffered. Fixed-high always requests the larger rendition. Adaptive requests high if its previous observed capacity is at least 200,000 bits/s, otherwise low. Its initial observation is 400,000 bits/s; neither policy can see the next capacity before choosing.\n\n```bash title=\"terminal\"\n/tmp/fanout-m24/bin/python m24-lab.py abr\n```\n```output\n#EXTM3U\n#EXT-X-VERSION:6\n#EXT-X-STREAM-INF:BANDWIDTH=55648,RESOLUTION=160x90\nlow/index.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=188000,RESOLUTION=320x180\nhigh/index.m3u8\nchosen capacity bits/s=[400000, 40000, 400000] initial buffer=1.000s\nfixed-high download/buffer/stall: high:0.447s/1.553s/0.000s, high:4.474s/1.000s/2.922s, high:0.470s/1.530s/0.000s total_stall=2.922s\nadaptive download/buffer/stall: high:0.447s/1.553s/0.000s, high:4.474s/1.000s/2.922s, low:0.139s/1.861s/0.000s total_stall=2.922s\nsimulated origin observations: A age=4 refused; B age=1 selected=B\n```\n\nEach generated segment lasts one second. The largest high segment contains 23,500 bytes, giving the advertised peak of 188,000 bits/s. This calculation is valid for the fixture's equal one-second segments and one-second target duration; it is not a promise of network capacity.\n\nFor a segment of `S` bytes and a path capacity of `C` bits/s, ideal transfer time is `8*S/C`. If the player starts that request with `B` seconds buffered, the stall is `max(0, transfer time − B)`. Afterward, the buffer is `max(0, B − transfer time) + segment duration`.\n\nThe first high segment is 22,372 bytes. At 400,000 bits/s it takes 0.44744 seconds, leaving 1.55256 seconds buffered after adding the new second of media. The next high segment has the same size, but capacity drops to 40,000 bits/s.\n\nThat transfer takes 4.4744 seconds: 2.92184 seconds longer than the available buffer. Both policies stall by the displayed 2.922 seconds. Adaptive learns about the drop only after that transfer completes, then switches low just as capacity recovers.\n\n```mermaid\nflowchart TD\n    accTitle: A playback decision arrives late\n    accDescr: The first fast transfer makes the selector choose high again. The second transfer is slow and stalls. Only afterward does the selector choose low, when the path has already recovered.\n    A[\"Request 1: high<br/>Fast transfer\"] --> B[\"Request 2: high<br/>Capacity drops; stall\"]\n    B --> C[\"Observe slow transfer\"]\n    C --> D[\"Request 3: low<br/>Capacity has recovered\"]\n```\n\nThe last low segment's 6,956 bytes arrive quickly, but cannot recover time already stalled. On this schedule the adaptive rule does not improve the total-stall metric. The experiment omits round trips, protocol overhead, contention and decoder startup; it tests the consequence of delayed information, not a production ABR algorithm.\n\nA buffer-aware rule could become more cautious as playable time runs low. More startup buffer can absorb longer transfers, but makes the viewer wait before playback. Evaluate startup delay, rebuffering and quality changes together rather than choosing a universal threshold from this three-second clip.\n\n## Which renditions should exist?\n\nThe player cannot select a version the service has not prepared. Encoding every upload into every possible format spends compute and storage even on videos that nobody watches. Deferring everything makes the first viewer wait for processing.\n\n| Preparation policy | Useful when | Cost or delay |\n|---|---|---|\n| Eager ladder | The expected audience needs several representations immediately | Work is paid even if some renditions are never watched |\n| Baseline, then more on demand | A complete initial offer is enough for less-watched uploads | New representations take time to become available |\n| Prepare for predicted demand | A release or rising audience provides advance notice | A wrong prediction wastes work or misses demand |\n\nIn our proposed service, an on-demand miss queues a deduplicated job keyed by source and encoding recipe. The existing baseline remains playable while the new rendition is prepared. Add it to the advertised offer only after validation; a viewer request should not receive a playlist pointing at unfinished work.\n\nThis is independent of the request-by-request ABR rule. It changes what the rule will be able to choose later.\n\n## The CDN decider controls preparation and placement\n\n“CDN decider” is a name for our proposed policy service, not a standard CDN API. It combines recent view velocity, viewer geography, channel audience, content type, shares, trending signals and known release spikes to decide where extra work is justified.\n\nIts actions may include generating another rendition, warming selected ready objects in a region, retaining an origin copy or retiring an unused cache placement. The available controls depend on the delivery provider; ordinary CDN eviction is often automatic, not a per-object command the application owns.\n\nWarming transfers bytes before a viewer requests them. It can reduce a first miss while consuming fill bandwidth and cache space. Moving a source to colder storage is a separate retention choice and may increase retrieval delay. Keep encoding, cache placement and storage tiering as separate actions with explicit costs.\n\nNetflix's Open Connect fill documentation gives a concrete placement example: appliances hold portions of the catalog and primarily receive updates in off-peak windows. Popularity changes and new or re-encoded titles affect those updates. This is Netflix's documented delivery model, not a guarantee offered by every CDN.\n\nOur controller can consume [[wiki/event-bus-for-product-events|product events]] such as `video.published`, `video.viewed` and `video.trending`, and emit a request to prepare or cache a version. Treat `variant.generated` as evidence of a ready output, not merely a queued task. Repeated events should converge on one intended action.\n\nUse bounded budgets and a quiet period before reversing a placement decision. Otherwise noisy demand can repeatedly trigger expensive encodes or cache fills. Measure useful cache hits and avoided viewer delay against the work spent; traffic volume alone does not show that warming paid off.\n\n## Choosing a delivery location\n\nAfter selecting a ready object, a player or delivery service may still choose which CDN or origin serves it. This is a separate decision from choosing the rendition. Old latency samples can mislead either choice.\n\nThe final line of the replay compares two simulated origins transferring the same 1,000 bytes. A took 0.1 seconds at tick 1; B took 0.2 seconds at tick 4. At tick 5, a maximum age of two ticks excludes the faster but stale A sample, so B wins.\n\nThat toy rule only compares fresh equal-size observations. A real selector also needs failure rates, comparable workloads and a fallback when no candidate is eligible. Neither the example nor the label “CDN” establishes a global performance result.\n\nThe next [[wiki/signed-urls-drm-and-video-security|access lesson]] checks permission on every playlist and segment the player chooses.\n"
               }
@@ -5858,9 +5363,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1053,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5898,9 +5400,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1081,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5934,9 +5433,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1032,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -5971,9 +5467,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 816,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -6011,9 +5504,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "A blocklist records which pieces make up a file and in what order. An immutable revision preserves that recipe, while a mutable path pointer selects the version users currently see. Publishing the recipe must wait until its referenced bytes are ready to read.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 923,
                 "mermaidCount": 1,
                 "content": "# Blocklists and file revisions\n\nA blocklist records which pieces make up a file and in what order. An immutable revision preserves that recipe, while a mutable path pointer selects the version users currently see. Publishing the recipe must wait until its referenced bytes are ready to read.\n\nWe'll connect the blocklist to a namespace journal, follow the publication transaction, and test missing bytes, corruption and retries in the local sync service.\n\n## One file, several kinds of identity\n\nA path names a location within a namespace. A revision identifies an accepted publication. A digest identifies bytes. Two revisions can contain identical bytes, and two positions in one file can reference the same blob.\n\nOur sixteen-byte file still contains `AAAA`, `BBBB`, `CCCC`, `AAAA`. Its four ordered references need three stored blobs. Turning the blocklist into a set loses the final `AAAA`; sorting the references can produce a different file.\n\n| Record | Key | Relevant content |\n| --- | --- | --- |\n| Journal entry | Namespace and revision | Path, ordered blocks, size, digest, deletion state |\n| Current path | Namespace and path | Selected revision |\n| Operation receipt | Device and operation | Exact proposal and accepted result |\n| Blob | Content digest within allowed storage | Verified immutable bytes |\n\nA fuller file model may also retain timestamps, permissions and application metadata. Keep server acceptance order separate from client modification time. Dropbox's 2016 Magic Pocket account describes the same broad separation of mutable file history from immutable stored blocks; our SQLite schema is a teaching implementation, not its production database.\n\n## The cursor spans the namespace\n\nA journal cursor answers “which accepted changes have I learned about?” across the file tree. A file's base revision answers “which version of this path did I edit?” Those numbers can differ.\n\nFor example, suppose `notes.txt` is revision 14 and another file changes at revision 15. A device can read through cursor 15 while still proposing a new `notes.txt` version against base 14. Rejecting it merely because 14 is not the namespace head would create a conflict with an unrelated edit.\n\nThe proposed query has this shape:\n\n```sql title=\"changes.sql\"\nSELECT revision, path, blocks, digest, size, deleted\nFROM file_journal\nWHERE namespace_id = :namespace\n  AND revision > :after\nORDER BY revision\nLIMIT :page_size;\n```\n\nThe server derives the permitted namespace from authenticated access. A page returns a continuation position for the rows it actually supplies; a client must not skip straight to a later head while earlier pages remain unread. Receiving metadata also does not mean its files have been applied locally.\n\nOur fixture holds only Ada's namespace, so its tables omit a namespace column. It caps history and returns all later rows without pagination. Publication allocates revisions inside the transaction. Its restricted append/rollback path maintains contiguous history; SQLite `AUTOINCREMENT` alone does not promise gap-free IDs.\n\n## Prepare bytes before selecting the revision\n\nThe [[wiki/metadata-db-for-object-storage|object-metadata lesson]] separated stored bytes from published state. Apply the same ordering here:\n\n```mermaid\nflowchart TD\n  accTitle: Publishing a reconstructable revision\n  accDescr: For a new proposal, the local authority checks permission and base, verifies and synchronizes referenced blobs, then commits the journal entry, path pointer and receipt together before replying. Missing or corrupt bytes stop publication.\n  A[Check permission and base] --> B[Verify referenced blobs]\n  B --> C[Synchronize blob files]\n  C --> D[Commit metadata and receipt]\n  D --> E[Reply with revision]\n```\n\nA new blob is written to a temporary file, flushed and synchronized, then renamed to its final address and followed by directory synchronization. The lab repeats synchronization for an identical existing blob: a previous attempt may have left complete bytes but failed before reporting preparation success.\n\nPublication verifies each referenced length and digest and the assembled whole-file identity. One SQLite transaction then appends the revision, moves the path pointer and records the operation's result. A failure rolls back these metadata changes together.\n\nThe file writes occur outside SQLite's storage format; this is not one atomic transaction spanning arbitrary files and a database. The ordering allows unreferenced prepared blobs after a failed publication, which cleanup can handle. It avoids intentionally committing a reference before preparation succeeds.\n\nThe fixture serializes upload, publication and cleanup through SQLite write transactions, including verification and synchronization. That makes the boundary straightforward but holds the writer while doing file I/O. Preparing outside that lock in a larger service needs a pin or equivalent ownership rule so cleanup cannot remove bytes before commitment.\n\n## Run the publication boundary\n\nDownload [the publication example](/course-assets/system-design/m25-sync.py). The command uses temporary private files and SQLite. The corruption step alters only its own fixture and restores the original bytes before retrying.\n\n```bash title=\"terminal\"\nuv venv --quiet --allow-existing --python 3.12.12 /tmp/fanout-m25\n/tmp/fanout-m25/bin/python m25-sync.py publication\n```\n```output\nbefore blocks=409\nuploaded unique bytes=12; visible paths before commit=0\npublished=201; revision=1; ordered references=4\nreconstructed bytes=16; identical=True\nduplicate commit=200\ncorrupt referenced block=503\nrestored-byte retry=201\nstale base=409\nreopened revisions=2; first ordered digests=['63c1dd95', '4a8d8134', '90b4853e', '63c1dd95']\n```\n\nTwelve uploaded bytes initially expose zero paths. Publication selects four references, and the other device reconstructs all sixteen bytes. The last digest display repeats the first because the file repeats that block; storage uses full digests, not these eight-character labels.\n\nChanging stored `BBBB` to same-length `xxxx` defeats a size-only check but fails digest verification. No revision is published until the bytes are restored and synchronized again. The stale base still refuses afterward.\n\nThe database uses `synchronous=EXTRA`; files and directories have explicit synchronization calls. Reopening verifies retained records, but this experiment does not test power loss, disk-controller behavior or replicated durability.\n\n## Recover an operation without authorizing a new one\n\nA matching receipt must be checked before rejecting its now-old base: the original proposal may already have advanced the path. Current device permission still comes first. Reusing an operation ID with a different path, base or payload is a conflict.\n\nThat distinction lets a lost reply recover the original revision while a new stale proposal receives a conflict. Receipt device/operation fields are non-null and unique together; missing identity must not bypass the rule. The original payload is retained so equality can be checked.\n\nRevision history also creates lifecycle work. A deletion record, or tombstone, tells an offline client that absence is intentional. Renames need a defined identity model: this fixture atomically tombstones the old path and appends the destination; a stable file ID can instead preserve identity while its path changes.\n\nKeep blocks while any retained revision still needs them, including history retained after deletion. Then separately decide when history expires, how an old cursor recovers, and how privacy deletion reaches shared blobs and backups. Immutability makes old versions readable; it does not decide how long they should remain.\n\nThe [[wiki/file-sync-system-design|complete file-sync service]] exercises those rename, replay and cleanup paths. [[wiki/data-retention-and-deletion|Data retention and deletion]] develops the broader lifecycle policy.\n"
               }
@@ -6025,8 +5515,6 @@ window.CURRICULUM_DATA = {
           "number": "14",
           "title": "Reliability and operations",
           "summary": "Observe a running service, change it safely, and recover its data.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "observability-for-distributed-systems",
@@ -6054,9 +5542,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 997,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -6090,9 +5575,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1010,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -6128,9 +5610,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 941,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -6165,9 +5644,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 640,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -6206,9 +5682,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1064,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -6244,9 +5717,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "A legacy monolith can overload its primary database with reads simply because its default connection points there. Many of those queries may tolerate a replica's delay, but changing every old call site could take months. Moving a few suitable routes can buy time for that cleanup.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 996,
                 "mermaidCount": 1,
                 "content": "# Parallel monolith read drain\n\nA legacy monolith can overload its primary database with reads simply because its default connection points there. Many of those queries may tolerate a replica's delay, but changing every old call site could take months. Moving a few suitable routes can buy time for that cleanup.\n\nThe useful boundary is the running application: give a second copy a different database configuration, then control which requests reach it. First choose eligible routes, then measure whether moving them actually relieves the primary.\n\n## Same code, different default database\n\nKeep the existing fleet pointed at the primary. Run another fleet from the same application code with its default connection pointed at a replica. An API gateway sends selected read routes to the second fleet; writes and all other routes stay on the existing path.\n\n| Application fleet | Default database |\n|---|---|\n| Existing monolith | Primary |\n| Read-drain monolith | Replica, with read-only credentials |\n\nThis avoids editing individual queries only when they use that configurable default. Audit explicit connection overrides, startup migrations, background consumers and scheduled jobs. Disable work that should not run in the second fleet. A second HTTP deployment should not accidentally become a second job scheduler.\n\n```mermaid\nflowchart TB\n  accTitle: Route selected reads to a second monolith\n  accDescr: The gateway sends eligible reads to the replica-default monolith and all other routes to the primary-default monolith. The primary replicates changes to the replica.\n  G[API gateway] -->|Other routes| W[Primary-default<br/>monolith]\n  G -->|Eligible reads| R[Replica-default<br/>monolith]\n  W --> P[(Primary)]\n  R --> S[(Replica)]\n  P -. Replication .-> S\n```\n\nRoute by both path and method. Gateway support for `GET /catalog` does not imply that `POST /catalog` should reach the same backend. KrakenD, for example, lets endpoint definitions select a method and backend. That supplies a routing mechanism; it cannot tell you whether the application behind a route is safe to move.\n\n## Choose by behavior and freshness\n\n“GET” is not enough. A handler might update a last-seen timestamp, create a missing row, refresh a token or publish an external event. Read-only database credentials help reject accidental database writes, including after a replica is promoted. They do not prevent external side effects.\n\nA route also needs a freshness contract. An asynchronous replica can return a state from before an accepted write. Decide whether that is acceptable for the particular answer:\n\n| Possible candidates, after inspection | Keep on the primary unless stronger guarantees exist |\n|---|---|\n| Catalog descriptions with an accepted delay | Checkout confirmation immediately after payment |\n| Profile display where a delayed edit is acceptable | Balance or entitlement decisions requiring current state |\n| Dashboards that show their data freshness | Read-modify-write and idempotency endpoints |\n\nThese are starting points, not permanent labels. A catalog page that promises current inventory has a different requirement from one displaying descriptions. A profile response that includes current access permissions needs a separate authorization decision.\n\nFor read-after-write flows, retaining the primary route is often the simplest first choice. The [[wiki/replication|replication lesson]] examines other freshness strategies. Do not silently weaken the product's behavior merely to move more queries.\n\n## Move one route and watch both databases\n\nStart with primary read work attributable to the route: request volume, query volume and expensive queries. Establish enough replica capacity, then route a small population through the second fleet. Watch the primary's work, replica replay lag, endpoint errors and p95/p99 latency together.\n\nA replica can be healthy and still give users a poor answer. In PostgreSQL hot standby, long queries may conflict with WAL replay; letting them run can delay replay, while applying replay can require canceling them. A read drain therefore needs evidence about cancellations and freshness as well as CPU.\n\nShadow reads are an optional earlier step: keep serving the old answer while privately comparing the new one. They add work, so bound the sample. With separate databases, two requests do not automatically share a snapshot. Differences can mean expected lag, a query bug or an incompatible representation; classify them before deciding what blocks rollout.\n\nExpand the route list only when the expected primary work falls without violating those route contracts. Keep enough primary capacity to take the traffic back. Reverting a gateway rule can restore routing while the old path remains compatible; it cannot undo stale answers already delivered.\n\n## Try the serving decisions locally\n\nThe following experiment isolates comparison, cutover and fallback. It uses the [[wiki/database-migration-safety|migration lesson's]] three orders and two representations in **one SQLite database**. It runs real read/write HTTP listeners, but it does not deploy two monoliths, a gateway or a database replica.\n\nAda is selected for the new read path; Bo stays on the old one. The local router checks current source ownership, account activity, deletion state, version and a canonical-record fingerprint before serving a copied body. It therefore still queries the source on every request. This demonstrates a strict acceptance rule, not reduced primary load.\n\nThe example separates three target failures: missing means no copied record, stale means a different version, and mismatch means changed contents at the current version. Old-served shadow comparisons use one shared SQLite snapshot here, so they do not have the cross-database timing ambiguity described above.\n\nSave the [read-drain replay](/course-assets/system-design/m27-lab.py) and [shared implementation](/course-assets/system-design/m27-core.py) together. The original capture used Python 3.14.6 and SQLite 3.53.4 on 12 September 2026. Each run creates temporary state.\n\n```bash title=\"terminal\"\npython3 m27-lab.py drain\n```\n```output\nold served; shadow check: 200 equal\nmissing shadow: missing\nwrong-value shadow: mismatch\nAda cohort new read: 200\nstale target fallback: 200 paid stale\ncaught-up new read: 200\nmissing new fallback: 200\nfallback disabled: 503\nBo remains old cohort: 200\nBo reads Ada object: 404\ncurrent Ada revocation: 403\nwrite on read-only listener: 405\nrollback cohort: []\nroute work: {\"fallback\":2,\"new\":2,\"old\":4,\"refused\":1,\"shadow\":4}\nshadow log fields: classification only; no response bodies\nHTTP outcomes: {\"200\":8,\"201\":1,\"403\":1,\"404\":1,\"405\":1,\"503\":1}\n```\n\nAfter the new writer changes Ada's order, the target is stale. Fallback returns paid from the authoritative source. Disabling fallback makes an unusable target return 503. Bo cannot read Ada's order, a revoked Ada cannot read her own, and the read listener rejects writes.\n\nThe four shadow checks are additional comparisons attached to old reads, not four more user responses. The thirteen HTTP outcomes include the accepted write and permission/method refusals. Diagnostic logs retain comparison classes, not copied response bodies.\n\n## Decide what happens when the replica falls behind\n\nFallback trades freshness and availability for extra primary work. During a replica problem, unbounded fallback can send the entire drained workload back at once. Budget that capacity and cap retries; where capacity is insufficient, the route needs an explicit choice between refusal and an older answer that its product contract permits.\n\nA successful fallback should still count as a degraded new path. Otherwise a green response-success chart can hide a replica that serves almost nothing. Keep served-old, served-new, fallback and refusal counts separate.\n\nBefore adding another route, ask: if this replica pauses immediately after a write, what will the caller see, and can the primary absorb the return traffic? Answer those questions with the route owner. The [[wiki/zero-downtime-database-migration-case-study|complete migration design]] combines the local acceptance checks with copying, retirement and the point where the old fallback disappears.\n"
               }
@@ -6278,9 +5748,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 915,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -6317,9 +5784,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 977,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -6357,9 +5821,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1040,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -6398,9 +5859,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1049,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -6438,9 +5896,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1059,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -6477,9 +5932,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1051,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
@@ -6517,9 +5969,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1141,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -6545,8 +5994,6 @@ window.CURRICULUM_DATA = {
           "number": "15",
           "title": "Service and data designs",
           "summary": "Follow a complete system design, from requirements through failure behavior.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "url-shortener-system-design",
@@ -6577,9 +6024,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2473,
                 "mermaidCount": 3,
                 "content": "",
                 "preview": {
@@ -6623,9 +6067,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2012,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -6668,9 +6109,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2076,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -6715,9 +6153,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1887,
                 "mermaidCount": 3,
                 "content": "",
                 "preview": {
@@ -6771,9 +6206,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2289,
                 "mermaidCount": 3,
                 "content": "",
                 "preview": {
@@ -6816,9 +6248,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2299,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -6861,9 +6290,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2396,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -6880,8 +6306,6 @@ window.CURRICULUM_DATA = {
           "number": "16",
           "title": "Product designs",
           "summary": "Follow a complete system design, from requirements through failure behavior.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "notification-system-design",
@@ -6915,9 +6339,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "A notification service turns a product event into messages for particular people. When a report finishes, Ada might need an inbox item and an email. Those are two separate pieces of work: the inbox can appear while the email is still waiting at a provider.",
-                "access": "free",
-                "locked": false,
-                "wordCount": 2244,
                 "mermaidCount": 2,
                 "content": "# Design: a notification system\n\nA notification service turns a product event into messages for particular people. When a report finishes, Ada might need an inbox item and an email. Those are two separate pieces of work: the inbox can appear while the email is still waiting at a provider.\n\nWe'll follow that report from the product database to its recipients, then handle preference changes, lost send replies and a large announcement. The design starts with email and an in-app inbox. Push and SMS share the routing machinery, but need their own delivery rules.\n\n![An email provider's tray holds one envelope labeled Accepted. A person looking at an empty inbox says Still waiting. Provider acceptance does not establish arrival in the recipient's inbox.](/course-assets/system-design/illustrations/notification-accepted.webp)\n\n## Decide what the service promises\n\nAccepting work means retaining enough information to finish or explain it after a restart. It does not mean every selected channel has delivered a message. We call the retained decision for one recipient and channel an **intent**.\n\nFor our report product, the useful contract is:\n\n- A committed report event can be retried without creating another intent for the same recipient and channel.\n- Pending email work observes opt-outs before its dispatch decision. Once a send may be in flight, withdrawal requires a different recovery decision.\n- A provider outage leaves recoverable work and visible uncertainty. It does not prevent the report itself from finishing.\n- Support can distinguish suppression, local inbox visibility, provider acceptance and subsequent delivery evidence.\n\nProduct requirements should also specify how late a message may be. A report-ready message can remain useful after a short outage; an expired invitation cannot. Store an expiry time where needed and check it before starting a send. A queue retry budget should not outlive the message's usefulness.\n\nThe inbox is durable history, while a badge is a projection of what the user has acknowledged. Keep that distinction from [[wiki/newly-unread-indicator|the unread-indicator design]]. Opening the inbox need not assert that every email was read.\n\n## Separate routing from delivery\n\nThe product commits the report change and an outbox entry together. A relay publishes the event. This is the [[wiki/event-bus-for-product-events|transactional outbox]] boundary: losing a process after the report commits must leave the notification work discoverable.\n\nA router consumes the event, selects recipients and channels, and records their intents. Channel workers perform those intents later. The [[wiki/task-queue-vs-event-stream|event stream carries a fact; the work queue assigns an action]]. Rebuilding an analytics projection from old events should not silently resend old notifications.\n\n```mermaid\nflowchart TD\n    accTitle: From product fact to channel work\n    accDescr: Product state and an outbox commit together. A relay publishes to the router, which retains intents in the notification database. Dispatch workers read pending work. Inbox writes stay local; email goes through a provider. Verified provider events return through a receipt handler.\n    P[\"Product + outbox\"] -->|Relay event|R[\"Router\"]\n    R -->|Retain intents|D[\"Notification DB\"]\n    D -->|Pending work|W[\"Dispatch workers\"]\n    W -->|Commit inbox item|D\n    W -->|Send|E[\"Email provider\"]\n    E -->|Webhook|H[\"Receipt handler\"]\n    H -->|Verified evidence|D\n```\n\nThe database owns intents, preferences, inbox rows and delivery history. A queue can carry intent IDs to wake workers quickly, but a scan of pending work must recover a lost wake-up. Otherwise the gap between saving an intent and publishing its queue message can strand it forever.\n\nThese are responsibilities, not a demand for six independently deployed services. One application and database can provide the first version. Split workers and queues when a slow provider or bulk workload needs isolation.\n\nUber's historical RAMEN account makes a related separation between deciding when to generate an update, constructing its payload and delivering it. Its foreground app transport is a different system from our email adapter; the useful architectural idea is keeping product decisions separate from transport behavior.\n\n## Retain the decision, then record attempts\n\nUse `(tenant, event, recipient, channel)` as the intent's unique identity. The small single-tenant download omits tenant. A template version is an attribute, not part of that identity: deploying a new template must not turn a retry into a second notification.\n\nAn intent stores the chosen template version, locale and rendering inputs. Before its first external call, freeze the exact provider payload and destination. Re-reading a mutable display name or template during a retry can change the request even when its key stays the same.\n\n| Stored record | What it lets us answer |\n| --- | --- |\n| Event and routing progress | Did we retain this fact, and finish enumerating its audience? |\n| Recipient-channel intent | What message do we owe, when is it due, and may it expire? |\n| Attempt | Which provider call ran, under which preference decision, and what did it return? |\n| Provider message and evidence | Which external message do later callbacks describe? |\n| Inbox item | What can this account read locally? |\n\nStore the event receipt and a small event's intents in one transaction. Saving the receipt first and crashing halfway through routing would make the replay skip missing recipients. For a large audience, retain a fanout job and advance its progress only with the corresponding inserted intents.\n\nAn internal API might accept `POST /notification-events` with an event ID, event type, subject and audience reference. Authenticate the producing service and authorize that audience; callers should not acquire permission to email arbitrary users merely by knowing an ID. Return accepted only after the routing job is durable. Reuse with incompatible input is an error.\n\nFor readers, `GET /notifications?before=...` selects the authenticated account's inbox using a stable `(created_at, id)` cursor. Support lookup joins the event's intents and attempts. Index these two access paths rather than expecting one global delivery-status scan to serve both.\n\nAt larger volume, partition recipient state by tenant and user so an inbox read and its uniqueness check stay together. Routing spans those partitions: retain the fanout job separately and replay idempotent recipient inserts instead of assuming a cross-shard transaction. Keep an event-to-intent index for support lookups.\n\n## Apply preferences at a precise boundary\n\nRouting is too early to make the final email preference decision. Ada can disable email while a backlog is draining. For a pending intent, read her current settings and record the dispatch decision atomically with claiming that work. In our design, an opt-out committed before this decision suppresses it.\n\nDo not hold the transaction open during the provider call. It would occupy database resources without making the remote provider participate in the transaction. An opt-out committed after the local decision can still race with the send.\n\nRecord the preference version that authorized dispatch. That gives support a concrete explanation instead of a current settings screen that disagrees with yesterday's decision. Category and tenant policy need similarly explicit precedence; a report update should not inherit an unrelated marketing preference.\n\nQuiet hours introduce a due time, computed in the user's timezone, rather than a sleeping worker. A digest also needs membership: retain which events belong to which digest occurrence so rebuilding it cannot notify the same events again. The [[wiki/distributed-task-scheduler|scheduler]] supplies due-work recovery; it cannot decide those product rules for us.\n\n## Recover an uncertain send\n\nA successful provider reply gives us a message ID. A timeout may give us nothing, even if the provider already accepted the email. Generating a fresh ID on the next attempt risks a second message.\n\nInstead, generate a stable operation key from the intent and send the frozen payload under that key. The adapter must rely on a documented provider contract. Resend, for example, retains idempotency keys for 24 hours, returns the previous result for a repeated request and rejects a changed payload under the same key. Our retry window must fit that contract.\n\n```mermaid\nsequenceDiagram\n    accTitle: A lost reply does not require a second email\n    accDescr: The worker records its dispatch decision, sends a stable key and payload, then loses the provider reply after acceptance. It records uncertainty. Repeating the original request within the provider's idempotency window returns the same message ID.\n    participant D as Intent store\n    participant W as Worker\n    participant P as Provider\n    W->>D: Claim and record preference decision\n    W->>P: Send key K, frozen payload\n    P->>P: Retain acceptance for K\n    P--xW: Message ID · reply lost\n    W->>D: Record unknown outcome\n    W->>P: Retry K, same payload\n    P-->>W: Original message ID\n    W->>D: Record accepted message\n```\n\nThis is the external version of [[wiki/retries-timeouts-idempotency|retry identity]]. Our database can prevent duplicate intents; it cannot unilaterally prevent duplicate effects at another company's API.\n\nA worker can also disappear before it records `unknown`, leaving `sending` behind. Production workers need expiring claims and guarded completion. On reclaim, treat the prior call as uncertain, even if it might never have left the machine. A stale worker must not overwrite newer local evidence, and concurrent provider attempts must still use the same identity.\n\nIf the provider window expires, look up the original operation where supported or retain the unknown state for an explicit decision. A circuit breaker stops more calls during an outage; it does not explain earlier calls. Moving uncertain work from provider A to provider B also loses A's deduplication protection.\n\nThere is a preference consequence too. Retrying an unknown operation under its original decision may create its first acceptance after a later opt-out if the earlier call never arrived. Our fixture permits that. A stricter withdrawal policy needs lookup or cancellation support, or must leave the outcome unresolved rather than risk starting a send.\n\nDistinguish this uncertainty from a definite refusal. Invalid input should not retry unchanged. A documented throttle can schedule a later attempt with backoff and jitter. Bound retries by provider limits, message expiry and the acceptable duplicate-versus-miss policy.\n\n## Let evidence describe delivery\n\nThe inbox writer can insert the item and mark its intent visible in one database transaction. A unique event-recipient key makes repetition harmless. Reads still require current authorization; a link inside an old message must not grant continuing access to a report.\n\nEmail crosses another owner's boundary. Amazon SES distinguishes a successful send request from delivery to the recipient's mail server. Neither proves that the person read it. Name the status accordingly rather than showing one ambiguous green “sent” flag.\n\nProvider webhooks form another retried input stream. Resend documents duplicate and out-of-order delivery. Verify the signature over the raw request body, bind the provider account and message to our intent, then durably store the receipt before acknowledging it. Applying the evidence can happen in that transaction or through recoverable pending work.\n\nA delivery event might arrive before the send response has been saved. Keep that unmatched evidence for reconciliation; do not discard it because the intent currently lacks the message ID. Once delivery evidence exists, a delayed send response must not replace it with a weaker accepted-only status. Complaints and bounces are additional facts worth retaining, not merely numbers in one increasing status sequence.\n\nReceipt retention must cover the intended replay window. Removing all deduplication records while old events can still return may recreate messages. Retain minimal identities where possible and expire sensitive bodies according to the product's [[wiki/data-retention-and-deletion|retention policy]].\n\n### Add push without hiding its differences\n\nFCM returning a message ID means acceptance for delivery, not arrival at the device. Its message lifespan bounds how long unavailable-device work remains useful. An expired meeting invitation should not appear when a phone reconnects days later.\n\nA push collapse key can replace an older pending update with a newer one. That is useful for “refresh this report,” but it is not the same as deduplicating a particular send, nor does it preserve every distinct report event. Keep durable history in the inbox when each event matters.\n\nTrack device tokens separately from users, remove tokens on definitive invalid-token feedback, and preserve per-device outcomes. SMS would add its own provider error mapping, expiry, cost budget and delivery evidence. A shared adapter interface should expose these differences rather than promise universal exactly-once delivery.\n\n## Keep a large audience from blocking small work\n\nSuppose a chosen load has 40 report events per second, five recipients per event, and email plus inbox for each recipient. That creates 400 intents per second. If 25% of email intents are suppressed, the email lane receives 150 first attempts per second; the inbox still receives 200 writes per second. Retries add provider calls, not new intents.\n\nNow add an announcement with 120,000 eligible email recipients. At a hypothetical bulk allowance of 200 first attempts per second, the best-case drain time is ten minutes, before retries or throttling. These are planning assumptions, not measured throughput or a provider quota.\n\nA single FIFO queue can put report messages behind that announcement. Allocate a separate bulk budget and retain capacity for transactional work. Separate queues alone are insufficient if both workers exhaust the same provider account quota or database pool. [[wiki/rate-limiter-placement-and-keys|Rate-limit placement]] determines which shared resource is actually protected.\n\nEnumerate the announcement's audience in recoverable chunks, using a frozen audience version or an explicit membership cutoff. Advance the cursor with the chunk's durable intents; replay can then reuse their unique keys. Re-querying a changing audience without a membership rule can skip or unexpectedly add recipients. This is the [[wiki/fanout-patterns|fanout progress problem]] at notification scale.\n\nPer-user limits solve a different problem: protecting attention. A mention storm might create several durable inbox items but only one push or digest. Record that coalescing decision so a retry cannot consume another attention allowance or send another summary. Provider quotas alone cannot express it.\n\nA [[wiki/batching|batch adapter]] can reduce calls where the provider supports it, but must record each recipient's result. Retry the failed subset with the appropriate stable identities. Share template work only for identical locale and content; personalization must remain bound to the right recipient.\n\nMeasure oldest eligible intent age per lane, provider throttles, unknown-attempt age and suppression reasons. Count provider acceptance and delivery evidence separately. A provider's temporary outage can delay callbacks, so “no delivery event yet” is not a measured permanent failure.\n\n## Run the smaller recovery experiment\n\nThe [notification example](/course-assets/system-design/m14-notifications.py) isolates four intents in private SQLite files. Ada gets email and an inbox item. Bo starts with email disabled; Cy opts out after routing. A separate fake provider accepts Ada's email and deliberately loses the reply.\n\nIt makes local Python calls and sends no email. Its provider keys never expire. It implements neither a worker pool nor automatic recovery from abandoned `sending` claims; those remain production requirements described above.\n\nRun with Python 3. This capture was checked on 18 September 2026 with Python 3.14.6 and SQLite 3.53.4, including optimized Python:\n\n```bash title=\"terminal\"\npython3 m14-notifications.py\n```\n\n```output\nroute new event: True\nroute duplicate: False\nretained intents: 4\nBo email: suppressed\nCy email: suppressed\nAda in-app: visible\nAda email: unknown\nfake state after timeout: accepted=1, delivered=0\nAda email after reopen: accepted\nprovider calls=2, accepted records=1\ndelivery callback: True\nduplicate callback: False\nchanged retry: changed provider payload\nuser | channel | final state | preference version\nAda | email | delivered | 1\nAda | in-app | visible | 1\nBo | email | suppressed | 1\nCy | email | suppressed | 2\n```\n\nAda's two provider calls leave one acceptance record. Reopening the files preserves that identity. Only the later trusted callback marks delivery; it is a direct function call, not a verified public webhook. Bo and Cy never reach the provider, and Cy's version-two preference explains why.\n\nTo test the subtle boundary, repeat the experiment with a provider that times out **before** accepting. Disable Ada's email, then retry the unknown intent. Under this fixture's stated rule, the retry still uses the original decision and can create the message. Compare that with Cy, whose still-pending intent is suppressed. Both outcomes follow from where the service recorded permission to begin sending.\n"
               }
@@ -6955,9 +6376,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2257,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -6999,9 +6417,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2359,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7041,9 +6456,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2327,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7083,9 +6495,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2700,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7128,9 +6537,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2602,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7177,9 +6583,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2594,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7219,9 +6622,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2517,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7238,8 +6638,6 @@ window.CURRICULUM_DATA = {
           "number": "17",
           "title": "Media and operations designs",
           "summary": "Follow a complete system design, from requirements through failure behavior.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "ride-matching-system-design",
@@ -7269,9 +6667,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2425,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7312,9 +6707,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2405,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7352,9 +6744,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2579,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7400,9 +6789,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2599,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7444,9 +6830,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-05-14",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2580,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7485,9 +6868,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 2424,
                 "mermaidCount": 2,
                 "content": "",
                 "preview": {
@@ -7513,8 +6893,6 @@ window.CURRICULUM_DATA = {
           "number": "18",
           "title": "Engineering case studies",
           "summary": "Study the systems and incidents described by their engineering teams.",
-          "redacted": false,
-          "locked": true,
           "units": [
             {
               "slug": "case-instagram-early-architecture",
@@ -7544,9 +6922,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1224,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -7585,9 +6960,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1118,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -7627,9 +6999,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1427,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -7671,9 +7040,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-18",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 1412,
                 "mermaidCount": 1,
                 "content": "",
                 "preview": {
@@ -7709,9 +7075,6 @@ window.CURRICULUM_DATA = {
                 "created": "2026-09-11",
                 "updated": "2026-09-17",
                 "excerpt": "",
-                "access": "pro",
-                "locked": true,
-                "wordCount": 689,
                 "mermaidCount": 0,
                 "content": "",
                 "preview": {
