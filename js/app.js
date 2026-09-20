@@ -51,10 +51,13 @@ window.App = (() => {
 
   // ── Routing ───────────────────────────────────────────────
   function parseRoute() {
+    const path = window.location.pathname.replace(/^\/|\/$/g, '');
     const hash = window.location.hash.slice(1);
-    if (!hash || hash === '/') {
-      currentView = 'home';
-      currentSlug = null;
+    if (path === 'projects' || hash === 'projects' || hash.startsWith('projects/') || hash.startsWith('project/')) {
+      currentView = 'projects';
+      currentSlug = hash.startsWith('project/') ? hash.slice(8) : null;
+      activeTab = 'curriculum';
+      syncSidebarTabs();
     } else if (hash.startsWith('build/')) {
       currentView = 'build';
       currentSlug = hash.slice(6);
@@ -93,6 +96,19 @@ window.App = (() => {
     window.location.hash = 'build/' + buildId;
     closeSidebar();
     window.scrollTo(0, 0);
+  }
+
+  function navigateToProject(projectId) {
+    window.location.hash = projectId ? ('project/' + projectId) : 'projects';
+    closeSidebar();
+    if (projectId) {
+      setTimeout(() => {
+        const el = document.getElementById('project-' + projectId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 80);
+    } else {
+      window.scrollTo(0, 0);
+    }
   }
 
   function navigateToModule(moduleId) {
@@ -165,6 +181,18 @@ window.App = (() => {
           });
         }
         break;
+      case 'projects':
+        reader.innerHTML = window.Renderer.renderProjects(currentSlug);
+        if (currentSlug) {
+          setTimeout(() => {
+            const el = document.getElementById('project-' + currentSlug);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 80);
+        }
+        if (window.Analytics) {
+          window.Analytics.trackPageView('Top Projects | @innovatorved', '/#projects', window.location.href);
+        }
+        break;
       case 'build':
         reader.innerHTML = window.Renderer.renderBuild(currentSlug);
         initMermaid();
@@ -184,6 +212,7 @@ window.App = (() => {
         e.preventDefault();
         const nav = el.dataset.nav;
         if (nav === 'home') navigateHome();
+        else if (nav === 'projects') navigateToProject(el.dataset.project);
         else if (nav === 'topic') navigateTo(el.dataset.slug);
         else if (nav === 'module') navigateToModule(el.dataset.module);
       });
@@ -278,6 +307,8 @@ window.App = (() => {
       renderCurriculumSidebar(container);
     } else if (activeTab === 'builds') {
       renderBuildsSidebar(container);
+    } else if (activeTab === 'projects') {
+      renderProjectsSidebar(container);
     }
 
     updateSidebarActive();
@@ -341,9 +372,54 @@ window.App = (() => {
     container.innerHTML = html;
   }
 
+  function renderProjectsSidebar(container) {
+    const projects = window.PROJECTS_DATA || [];
+    if (!projects.length) {
+      container.innerHTML = '<p style="padding:16px;color:var(--fg-muted)">Loading...</p>';
+      return;
+    }
+
+    let html = `
+      <div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;display:flex;justify-content:space-between;align-items:center;">
+        <span>Pinned & Top Projects</span>
+        <a href="https://github.com/innovatorved" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--accent);text-decoration:none;">@innovatorved ↗</a>
+      </div>
+      <div class="sidebar-all-projects-btn" onclick="App.navigateToProject()" style="margin:6px 12px 10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:12px;font-weight:500;">
+        <span style="color:var(--fg);">⭐ All Featured Projects</span>
+        <span style="color:var(--accent);font-size:11px;">Browse →</span>
+      </div>
+    `;
+
+    for (const project of projects) {
+      const active = (currentView === 'projects' && currentSlug === project.id);
+      const isPinned = project.pinned;
+      html += `
+        <div class="unit-item project-unit-item${active ? ' active' : ''}" data-project="${project.id}" onclick="App.navigateToProject('${project.id}')">
+          <span class="unit-item__status" style="color: ${isPinned ? 'var(--accent)' : 'var(--fg-muted)'}; display:flex; align-items:center;">
+            ${isPinned ? window.Renderer.icons.pin : window.Renderer.icons.code}
+          </span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg);">
+              ${project.name}
+            </div>
+            <div style="font-size:10px;color:var(--fg-muted);display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span style="display:inline-flex;align-items:center;gap:3px;">
+                <span style="width:6px;height:6px;border-radius:50%;background:${project.languageColor || 'var(--accent)'};display:inline-block;"></span>
+                ${project.language}
+              </span>
+              ${project.stars ? `<span>· ⭐ ${project.stars}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+  }
+
   function updateSidebarActive() {
     document.querySelectorAll('.unit-item').forEach(el => {
-      const slug = el.dataset.slug || el.dataset.build;
+      const slug = el.dataset.slug || el.dataset.build || el.dataset.project;
       const isActive = slug === currentSlug;
       el.classList.toggle('active', isActive);
       if (isActive) {
@@ -778,6 +854,15 @@ window.App = (() => {
       moonIcon.style.display = isDark ? 'none' : '';
     }
 
+    // Topbar projects link
+    const topbarProjectsLink = document.getElementById('topbar-projects-link');
+    if (topbarProjectsLink) {
+      topbarProjectsLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateToProject();
+      });
+    }
+
     // Sidebar tabs
     document.querySelectorAll('.sidebar__tab').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -792,6 +877,9 @@ window.App = (() => {
           window.Analytics.trackTabSwitch(activeTab);
         }
         renderSidebar();
+        if (activeTab === 'projects' && currentView !== 'projects') {
+          navigateToProject();
+        }
       });
     });
 
@@ -862,6 +950,7 @@ window.App = (() => {
   return {
     navigateTo,
     navigateToBuild,
+    navigateToProject,
     navigateToModule,
     navigateHome,
     toggleModule,
