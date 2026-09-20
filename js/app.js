@@ -14,6 +14,11 @@ window.App = (() => {
 
   // ── Initialization ────────────────────────────────────────
   function init() {
+    // Initialize Analytics
+    if (window.Analytics?.init) {
+      window.Analytics.init();
+    }
+
     // Parse hash route
     parseRoute();
 
@@ -121,6 +126,9 @@ window.App = (() => {
     switch (currentView) {
       case 'home':
         reader.innerHTML = window.Renderer.renderOverview();
+        if (window.Analytics) {
+          window.Analytics.trackPageView('System Design In Depth - Home', '/#/', window.location.href);
+        }
         break;
       case 'topic':
         reader.innerHTML = window.Renderer.renderLesson(currentSlug);
@@ -128,10 +136,45 @@ window.App = (() => {
         if (window.setupAudioListeners) {
           window.setupAudioListeners(currentSlug);
         }
+        if (window.Analytics) {
+          const data = window.CURRICULUM_DATA;
+          let foundUnit = null, foundMod = null, foundPart = null;
+          if (data) {
+            for (const p of data.parts) {
+              for (const m of p.modules) {
+                for (const u of m.units) {
+                  if (u.slug === currentSlug) {
+                    foundUnit = u; foundMod = m; foundPart = p;
+                    break;
+                  }
+                }
+                if (foundUnit) break;
+              }
+              if (foundUnit) break;
+            }
+          }
+          const title = foundUnit?.title || currentSlug;
+          window.Analytics.trackPageView(title + ' | System Design In Depth', '/#topic/' + currentSlug, window.location.href);
+          window.Analytics.trackTopicView({
+            slug: currentSlug,
+            title: title,
+            moduleTitle: foundMod?.title || '',
+            moduleNumber: foundMod?.number || '',
+            partNumber: foundPart?.number || '',
+            kind: foundUnit?.kind || 'lesson'
+          });
+        }
         break;
       case 'build':
         reader.innerHTML = window.Renderer.renderBuild(currentSlug);
         initMermaid();
+        if (window.Analytics) {
+          const impls = window.IMPLEMENTATIONS_DATA;
+          const build = impls?.[currentSlug];
+          const title = build?.title || currentSlug;
+          window.Analytics.trackPageView(title + ' (Build) | System Design In Depth', '/#build/' + currentSlug, window.location.href);
+          window.Analytics.trackBuildView({ buildId: currentSlug, title });
+        }
         break;
     }
 
@@ -317,6 +360,9 @@ window.App = (() => {
     }
     const group = document.querySelector(`.module-group[data-module="${moduleId}"]`);
     if (group) group.classList.toggle('collapsed');
+    if (window.Analytics) {
+      window.Analytics.trackModuleToggle(moduleId, !collapsedModules.has(moduleId));
+    }
   }
 
   // ── Mobile Sidebar ────────────────────────────────────────
@@ -382,6 +428,9 @@ window.App = (() => {
     }
 
     try { localStorage.setItem('sd-theme', next); } catch {}
+    if (window.Analytics?.trackThemeChange) {
+      window.Analytics.trackThemeChange(next);
+    }
   }
 
   // ── Mermaid ───────────────────────────────────────────────
@@ -437,6 +486,10 @@ window.App = (() => {
     const stage = document.getElementById('diagram-lightbox-stage');
     const body = document.getElementById('diagram-lightbox-body');
     if (!modal || !stage) return;
+
+    if (window.Analytics) {
+      window.Analytics.trackDiagramOpen();
+    }
 
     const svg = mermaidEl.querySelector('svg');
     if (!svg) return;
@@ -522,6 +575,9 @@ window.App = (() => {
     modal.style.display = 'none';
     document.body.style.overflow = '';
     lightboxState.isOpen = false;
+    if (window.Analytics) {
+      window.Analytics.trackDiagramClose();
+    }
   }
 
   function attachMermaidZoomControls() {
@@ -580,6 +636,9 @@ window.App = (() => {
       zoomInBtn.addEventListener('click', () => {
         lightboxState.scale = Math.min(lightboxState.scale * 1.25, 4.0);
         updateLightboxTransform();
+        if (window.Analytics) {
+          window.Analytics.trackDiagramZoom('zoom_in', lightboxState.scale);
+        }
       });
     }
 
@@ -587,6 +646,9 @@ window.App = (() => {
       zoomOutBtn.addEventListener('click', () => {
         lightboxState.scale = Math.max(lightboxState.scale / 1.25, 0.35);
         updateLightboxTransform();
+        if (window.Analytics) {
+          window.Analytics.trackDiagramZoom('zoom_out', lightboxState.scale);
+        }
       });
     }
 
@@ -596,6 +658,9 @@ window.App = (() => {
         lightboxState.translateX = 0;
         lightboxState.translateY = 0;
         updateLightboxTransform();
+        if (window.Analytics) {
+          window.Analytics.trackDiagramZoom('zoom_reset', lightboxState.scale);
+        }
       });
     }
 
@@ -663,6 +728,36 @@ window.App = (() => {
     const completed = window.Progress.toggleComplete(slug);
     renderCurrentView();
     renderSidebar();
+
+    if (window.Analytics) {
+      const data = window.CURRICULUM_DATA;
+      let title = slug;
+      if (data) {
+        for (const p of data.parts) {
+          for (const m of p.modules) {
+            for (const u of m.units) {
+              if (u.slug === slug) {
+                title = u.title;
+                break;
+              }
+            }
+          }
+        }
+      }
+      if (completed) {
+        window.Analytics.trackTopicComplete({
+          slug: slug,
+          title: title,
+          totalCompleted: window.Progress.getCompletedCount(),
+          percentage: window.Progress.getPercentage()
+        });
+      } else {
+        window.Analytics.trackTopicUncomplete({
+          slug: slug,
+          title: title
+        });
+      }
+    }
   }
 
   // ── Event Listeners ───────────────────────────────────────
@@ -693,6 +788,9 @@ window.App = (() => {
         tab.classList.add('active');
         tab.setAttribute('aria-selected', 'true');
         activeTab = tab.dataset.tab;
+        if (window.Analytics?.trackTabSwitch) {
+          window.Analytics.trackTabSwitch(activeTab);
+        }
         renderSidebar();
       });
     });

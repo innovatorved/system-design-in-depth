@@ -38,6 +38,9 @@ window.Renderer = (() => {
           <div><div class="hero__stat-value">${stats.builds}</div><div class="hero__stat-label">Builds</div></div>
           <div><div class="hero__stat-value">${pct}%</div><div class="hero__stat-label">Complete</div></div>
         </div>
+        <div class="hero__credit">
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" data-repo-placement="hero">★ Star on GitHub · innovatorved/system-design-in-depth ↗</a>
+        </div>
       </div>`;
 
     // Render each part
@@ -503,6 +506,10 @@ window.Renderer = (() => {
   // Global helper for video loading
   window.loadYouTubeVideo = function(videoId, container) {
     container.innerHTML = '<iframe src="https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
+    if (window.Analytics?.trackVideoPlay) {
+      const title = container.parentElement?.querySelector('.video-embed__title')?.textContent || '';
+      window.Analytics.trackVideoPlay(videoId, title);
+    }
   };
 
   // Global helpers for audio player
@@ -528,6 +535,9 @@ window.Renderer = (() => {
       audio.play().then(() => {
         if (playIcon) playIcon.style.display = 'none';
         if (pauseIcon) pauseIcon.style.display = 'block';
+        if (window.Analytics?.trackAudioPlay) {
+          window.Analytics.trackAudioPlay(slug, audio.currentTime);
+        }
       }).catch(err => {
         console.warn('Audio playback error:', err);
       });
@@ -535,6 +545,9 @@ window.Renderer = (() => {
       audio.pause();
       if (playIcon) playIcon.style.display = 'block';
       if (pauseIcon) pauseIcon.style.display = 'none';
+      if (window.Analytics?.trackAudioPause) {
+        window.Analytics.trackAudioPause(slug, audio.currentTime, audio.duration);
+      }
     }
   };
 
@@ -547,6 +560,9 @@ window.Renderer = (() => {
     const clickX = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
     const percent = clickX / rect.width;
     audio.currentTime = percent * audio.duration;
+    if (window.Analytics?.trackAudioSeek) {
+      window.Analytics.trackAudioSeek(slug, audio.currentTime);
+    }
   };
 
   window.cycleAudioSpeed = function(slug) {
@@ -561,6 +577,9 @@ window.Renderer = (() => {
 
     audio.playbackRate = newSpeed;
     btn.textContent = newSpeed + 'x';
+    if (window.Analytics?.trackAudioSpeedChange) {
+      window.Analytics.trackAudioSpeedChange(slug, newSpeed);
+    }
   };
 
   window.setupAudioListeners = function(slug) {
@@ -606,16 +625,24 @@ window.Renderer = (() => {
       if (timeDisplay) {
         timeDisplay.textContent = '0:00 / ' + formatTime(audio.duration);
       }
+      if (window.Analytics?.trackAudioComplete) {
+        window.Analytics.trackAudioComplete(slug, audio.duration);
+      }
     });
   };
 
   // Global helper for code copy
   window.copyCode = function(btn) {
-    const code = btn.closest('.code-block')?.querySelector('code');
+    const block = btn.closest('.code-block');
+    const code = block?.querySelector('code');
+    const filename = block?.querySelector('.code-block__lang')?.textContent || '';
     if (code) {
       navigator.clipboard.writeText(code.textContent).then(() => {
         btn.textContent = '✓ Copied!';
         setTimeout(() => btn.textContent = '📋 Copy', 2000);
+        if (window.Analytics?.trackCodeCopy) {
+          window.Analytics.trackCodeCopy(filename, '', code.textContent.length);
+        }
       });
     }
   };

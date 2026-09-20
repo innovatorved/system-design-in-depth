@@ -315,12 +315,18 @@ window.Exercises = (() => {
     });
 
     feedback.classList.add('show');
-    if (selectedIdx === correctIdx) {
+    const isCorrect = selectedIdx === correctIdx;
+    if (isCorrect) {
       feedback.classList.add('success');
       msgEl.innerHTML = '<strong>✓ Correct! Exceptional architectural intuition.</strong>';
     } else {
       feedback.classList.add('error');
       msgEl.innerHTML = '<strong>✗ Incorrect. Review the engineering tradeoff below:</strong>';
+    }
+
+    if (window.Analytics?.trackExerciseAttempt) {
+      const exerciseTitle = box?.querySelector('.exercise-box__title span')?.textContent || '';
+      window.Analytics.trackExerciseAttempt('', exerciseTitle, selectedIdx, isCorrect);
     }
   }
 

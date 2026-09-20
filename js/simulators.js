@@ -94,6 +94,14 @@ window.Simulators = (() => {
     if (elDaily) elDaily.textContent = dailyWriteTB + " TB";
     if (elAnnual) elAnnual.textContent = annualReplPB + " PB";
     if (elBandwidth) elBandwidth.textContent = bandwidthStr;
+
+    if (window.Analytics?.trackSimulatorInteraction) {
+      window.Analytics.trackSimulatorInteraction('capacity_estimator', 'recalc', {
+        dau: dau,
+        reads_per_user: reads,
+        writes_per_user: writes
+      });
+    }
   }
 
   /**
@@ -175,6 +183,9 @@ window.Simulators = (() => {
     hashNodes.push(name);
     logHash(`[ADD] ${name} joined ring. Only ~${Math.round(100 / hashNodes.length)}% of keys re-mapped.`);
     updateHashRingUI();
+    if (window.Analytics?.trackSimulatorInteraction) {
+      window.Analytics.trackSimulatorInteraction('consistent_hashing', 'add_node', { node_count: hashNodes.length });
+    }
   }
 
   function removeHashNode() {
@@ -182,6 +193,9 @@ window.Simulators = (() => {
     const popped = hashNodes.pop();
     logHash(`[REMOVE] ${popped} left ring. Its keys migrated to successor node.`);
     updateHashRingUI();
+    if (window.Analytics?.trackSimulatorInteraction) {
+      window.Analytics.trackSimulatorInteraction('consistent_hashing', 'remove_node', { node_count: hashNodes.length });
+    }
   }
 
   function routeRandomKey() {
@@ -189,6 +203,9 @@ window.Simulators = (() => {
     const targetIdx = Math.floor(Math.random() * hashNodes.length);
     const assigned = hashNodes[targetIdx];
     logHash(`[ROUTE] Key \"${key}\" -> hash = 0x${Math.floor(Math.random()*16777215).toString(16)} -> routed to ${assigned}`);
+    if (window.Analytics?.trackSimulatorInteraction) {
+      window.Analytics.trackSimulatorInteraction('consistent_hashing', 'route_key', { routed_to: assigned });
+    }
   }
 
   function logHash(msg) {
@@ -258,6 +275,9 @@ window.Simulators = (() => {
       }
     }
     updateRLBar();
+    if (window.Analytics?.trackSimulatorInteraction) {
+      window.Analytics.trackSimulatorInteraction('rate_limiter', 'send_request', { burst_count: count });
+    }
   }
 
   function updateRLBar() {

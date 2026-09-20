@@ -106,6 +106,20 @@ window.Search = (() => {
     container.querySelectorAll('.search-result').forEach(el => {
       el.addEventListener('click', () => {
         const slug = el.dataset.slug;
+        const input = document.getElementById('search-input');
+        const query = input ? input.value : '';
+        const title = el.querySelector('.search-result__title')?.textContent || slug;
+        const pos = parseInt(el.dataset.idx, 10) || 0;
+
+        if (window.Analytics?.trackSearchResultClick) {
+          window.Analytics.trackSearchResultClick({
+            query: query,
+            slug: slug,
+            title: title,
+            position: pos
+          });
+        }
+
         close();
         if (window.App && window.App.navigateTo) {
           window.App.navigateTo(slug);
@@ -125,6 +139,10 @@ window.Search = (() => {
     input.value = '';
     input.focus();
     renderResults(search(''), '');
+
+    if (window.Analytics?.trackSearchOpen) {
+      window.Analytics.trackSearchOpen();
+    }
   }
 
   function close() {
@@ -149,8 +167,22 @@ window.Search = (() => {
       updateFocus(results);
     } else if (e.key === 'Enter' && focusedIdx >= 0) {
       e.preventDefault();
-      const slug = results[focusedIdx]?.dataset.slug;
+      const el = results[focusedIdx];
+      const slug = el?.dataset.slug;
       if (slug) {
+        const input = document.getElementById('search-input');
+        const query = input ? input.value : '';
+        const title = el.querySelector('.search-result__title')?.textContent || slug;
+
+        if (window.Analytics?.trackSearchResultClick) {
+          window.Analytics.trackSearchResultClick({
+            query: query,
+            slug: slug,
+            title: title,
+            position: focusedIdx
+          });
+        }
+
         close();
         if (window.App && window.App.navigateTo) {
           window.App.navigateTo(slug);
@@ -183,7 +215,11 @@ window.Search = (() => {
       input.addEventListener('input', () => {
         focusedIdx = -1;
         const q = input.value;
-        renderResults(search(q), q);
+        const res = search(q);
+        renderResults(res, q);
+        if (window.Analytics?.trackSearchQuery) {
+          window.Analytics.trackSearchQuery(q, res.length);
+        }
       });
     }
 
