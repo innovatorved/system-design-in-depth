@@ -284,7 +284,7 @@ window.Renderer = (() => {
           <div class="code-block">
             <div class="code-block__header">
               <span class="code-block__lang">${filename}</span>
-              <button class="code-block__copy" onclick="copyCode(this)">📋 Copy</button>
+              <button class="code-block__copy" onclick="copyCode(this)">Copy</button>
             </div>
             <pre><code>${escapeHtml(content)}</code></pre>
           </div>`;
@@ -310,7 +310,7 @@ window.Renderer = (() => {
         </div>
       </div>
       ${video.title ? `<div class="video-embed__info">
-        <span class="video-embed__channel">📺 ${escapeHtml(video.channel || 'YouTube')}</span>
+        <span class="video-embed__channel">${escapeHtml(video.channel || 'YouTube')}</span>
         <span class="video-embed__title">${escapeHtml(video.title)}</span>
       </div>` : ''}`;
   }
@@ -664,7 +664,7 @@ window.Renderer = (() => {
     if (code) {
       navigator.clipboard.writeText(code.textContent).then(() => {
         btn.textContent = '✓ Copied!';
-        setTimeout(() => btn.textContent = '📋 Copy', 2000);
+        setTimeout(() => btn.textContent = 'Copy', 2000);
         if (window.Analytics?.trackCodeCopy) {
           window.Analytics.trackCodeCopy(filename, '', code.textContent.length);
         }
