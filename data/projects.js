@@ -67,27 +67,6 @@ window.PROJECTS_DATA = [
     ]
   },
   {
-    id: 'system-design-in-depth',
-    name: 'system-design-in-depth',
-    title: 'System Design In Depth',
-    description: 'Production-grade interactive System Design platform — 18 modules, 200 units, 118 architecture diagrams, from-scratch algorithm builds, and curated video walkthroughs.',
-    stars: 'Popular',
-    starsCount: 100,
-    forks: 12,
-    language: 'JavaScript',
-    languageColor: '#f1e05a',
-    pinned: true,
-    category: 'System Design',
-    githubUrl: 'https://github.com/innovatorved/system-design-in-depth',
-    liveUrl: 'https://system-design-in-depth.pages.dev/',
-    tags: ['System Design', 'Distributed Systems', 'Architecture', 'Engineering Practice'],
-    highlights: [
-      '200 in-depth topics & 118 interactive zoomable diagrams',
-      '12 runnable from-scratch distributed system algorithms',
-      'Curated video walkthroughs and real-world post-mortems'
-    ]
-  },
-  {
     id: 'resume-builder',
     name: 'resume-builder',
     title: 'LaTeX AI Resume Builder',
@@ -148,27 +127,6 @@ window.PROJECTS_DATA = [
       'Local OpenAI-compatible API server on localhost',
       'UNIX-pipe friendly speech transcription and synthesis',
       'Native Apple Silicon Metal acceleration'
-    ]
-  },
-  {
-    id: 'whisper-gradio',
-    name: 'whisper-openai-gradio-implementation',
-    title: 'Whisper Gradio WebUI',
-    description: 'Interactive Gradio web interface implementation for OpenAI Whisper models with multi-lingual audio transcription and translation support.',
-    stars: '75+',
-    starsCount: 75,
-    forks: 14,
-    language: 'Python',
-    languageColor: '#3572A5',
-    pinned: false,
-    category: 'AI & Speech',
-    githubUrl: 'https://github.com/innovatorved/whisper-openai-gradio-implementation',
-    liveUrl: null,
-    tags: ['Whisper', 'Gradio', 'Python', 'Audio UI'],
-    highlights: [
-      'One-click local audio recording and upload',
-      'Model parameter tweaking (temperature, beam size)',
-      'Export to SRT, TXT, and JSON formats'
     ]
   }
 ];

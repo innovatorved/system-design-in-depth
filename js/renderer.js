@@ -18,6 +18,7 @@ window.Renderer = (() => {
     star: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
     pin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.89A2 2 0 0 1 15 10.77V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5.77a2 2 0 0 1-1.11 1.79l-1.78.89A2 2 0 0 0 5 15.24Z"/></svg>',
     github: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>',
+    globe: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
     external: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
   };
 
@@ -44,8 +45,13 @@ window.Renderer = (() => {
           <div><div class="hero__stat-value">${stats.builds}</div><div class="hero__stat-label">Builds</div></div>
           <div><div class="hero__stat-value">${pct}%</div><div class="hero__stat-label">Complete</div></div>
         </div>
-        <div class="hero__credit">
-          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" data-repo-placement="hero">★ Star on GitHub · innovatorved/system-design-in-depth ↗</a>
+        <div class="hero__credit-row">
+          <div class="hero__credit">
+            <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" data-repo-placement="hero">★ Star on GitHub · innovatorved/system-design-in-depth ↗</a>
+          </div>
+          <div class="hero__credit">
+            <a href="/projects" data-nav="projects">★ View more projects by @innovatorved ↗</a>
+          </div>
         </div>
       </div>`;
 
@@ -660,25 +666,22 @@ window.Renderer = (() => {
   function renderProjectCard(project) {
     const isPinned = project.pinned;
     const hasLive = Boolean(project.liveUrl);
-
-    let highlightsHtml = '';
-    if (project.highlights && project.highlights.length) {
-      highlightsHtml = `
-        <ul class="project-card__highlights">
-          ${project.highlights.map(h => `<li>${escapeHtml(h)}</li>`).join('')}
-        </ul>
-      `;
-    }
-
-    const tagsHtml = (project.tags || []).map(t => `<span class="project-card__tag">${escapeHtml(t)}</span>`).join('');
+    const tagsHtml = (project.tags || []).slice(0, 5).map(t => `<span class="project-card__tag">${escapeHtml(t)}</span>`).join('');
 
     return `
       <div class="project-card" id="project-${project.id}" data-project-id="${project.id}">
         <div class="project-card__top">
-          <div class="project-card__lang">
-            <span class="project-card__lang-dot" style="background-color: ${project.languageColor || 'var(--accent)'}"></span>
-            <span class="project-card__lang-name">${escapeHtml(project.language || 'Code')}</span>
+          <div class="project-card__title-group">
+            <a href="${project.githubUrl}" target="_blank" rel="noopener noreferrer" class="project-card__title-link" data-repo-placement="card_title">
+              <h3 class="project-card__title">${escapeHtml(project.name)}</h3>
+            </a>
+            ${project.title ? `<span class="project-card__subtitle">· ${escapeHtml(project.title)}</span>` : ''}
+            <span class="project-card__lang">
+              <span class="project-card__lang-dot" style="background-color: ${project.languageColor || 'var(--accent)'}"></span>
+              <span class="project-card__lang-name">${escapeHtml(project.language || 'Code')}</span>
+            </span>
           </div>
+
           <div class="project-card__badges">
             ${project.featuredBadge ? `<span class="project-card__badge project-card__badge--hn">${project.featuredBadge}</span>` : ''}
             ${isPinned ? `<span class="project-card__badge project-card__badge--pinned">${icons.pin} Pinned</span>` : ''}
@@ -686,33 +689,27 @@ window.Renderer = (() => {
           </div>
         </div>
 
-        <div class="project-card__header">
-          <a href="${project.githubUrl}" target="_blank" rel="noopener noreferrer" class="project-card__title-link" data-repo-placement="card_title">
-            <h3 class="project-card__title">${escapeHtml(project.name)}</h3>
-          </a>
-          ${project.title ? `<div class="project-card__subtitle">${escapeHtml(project.title)}</div>` : ''}
-        </div>
-
         <p class="project-card__desc">${escapeHtml(project.description)}</p>
 
-        ${highlightsHtml}
-
-        <div class="project-card__tags">
-          ${tagsHtml}
-        </div>
-
         <div class="project-card__footer">
-          <a href="${project.githubUrl}" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--secondary project-card__btn" data-repo-placement="card_footer_github">
-            ${icons.github}
-            <span>GitHub</span>
-            ${icons.external}
-          </a>
-          ${hasLive ? `
-            <a href="${project.liveUrl}" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--primary project-card__btn" data-repo-placement="card_footer_demo">
-              <span>Live Demo</span>
+          <div class="project-card__tags">
+            ${tagsHtml}
+          </div>
+
+          <div class="project-card__actions">
+            <a href="${project.githubUrl}" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--secondary project-card__btn" data-repo-placement="card_footer_github">
+              ${icons.github}
+              <span>GitHub</span>
               ${icons.external}
             </a>
-          ` : ''}
+            ${hasLive ? `
+              <a href="${project.liveUrl}" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--primary project-card__btn" data-repo-placement="card_footer_demo">
+                ${icons.globe}
+                <span>Live Demo</span>
+                ${icons.external}
+              </a>
+            ` : ''}
+          </div>
         </div>
       </div>
     `;
@@ -727,90 +724,39 @@ window.Renderer = (() => {
       return '<div style="padding: 40px; text-align: center; color: var(--fg-muted);">Loading projects...</div>';
     }
 
-    const pinnedProjects = projects.filter(p => p.pinned);
-    const otherProjects = projects.filter(p => !p.pinned);
-
     let html = `
       <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="#" data-nav="home">Home</a>
+        <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep">${icons.chevronRight}</span>
-        <span class="breadcrumbs__current">Top Projects</span>
+        <span class="breadcrumbs__current">Projects</span>
       </nav>
 
-      <div class="projects-hero">
-        <div class="projects-hero__header">
-          <div class="projects-hero__badges">
-            <span class="badge badge--accent">${icons.code} Open Source Portfolio</span>
-          </div>
-          <h1 class="projects-hero__title">Top Projects by Ved Gupta</h1>
-          <p class="projects-hero__subtitle">
-            Open-source AI engines, speech transcription APIs, macOS native audio utilities, and distributed systems architecture built by <a href="https://github.com/innovatorved" target="_blank" rel="noopener noreferrer" class="author-highlight">@innovatorved</a>.
-          </p>
-
-          <div class="projects-hero__meta-bar">
-            <div class="projects-hero__stat">
-              <span class="projects-hero__stat-val">1,500+</span>
-              <span class="projects-hero__stat-lbl">GitHub Stars</span>
-            </div>
-            <div class="projects-hero__stat">
-              <span class="projects-hero__stat-val">${projects.length}</span>
-              <span class="projects-hero__stat-lbl">Featured Repos</span>
-            </div>
-            <div class="projects-hero__stat">
-              <span class="projects-hero__stat-val">MIT / Apache</span>
-              <span class="projects-hero__stat-lbl">Open Licenses</span>
-            </div>
-            <div class="projects-hero__stat">
-              <span class="projects-hero__stat-val">100%</span>
-              <span class="projects-hero__stat-lbl">Open Source</span>
-            </div>
-          </div>
-
-          <div class="projects-hero__cta-row">
-            <a href="https://github.com/innovatorved?tab=repositories" target="_blank" rel="noopener noreferrer" class="btn btn--primary" data-repo-placement="projects_hero_follow">
-              ${icons.github}
-              <span>Follow @innovatorved on GitHub</span>
-              ${icons.external}
-            </a>
-            <a href="#" data-nav="home" class="btn btn--secondary">
-              <span>← Back to System Design Curriculum</span>
-            </a>
-          </div>
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build">${icons.code} Open Source</span>
+          <span class="tag">1,500+ Stars</span>
+          <span class="tag">${projects.length} Featured Repos</span>
+        </div>
+        <h1 class="lesson-header__title">Featured Projects by Ved Gupta</h1>
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item">Open-source speech transcription APIs, local voice dictation for Mac, and developer tools built by <a href="https://github.com/innovatorved" target="_blank" rel="noopener noreferrer" class="author-highlight">@innovatorved</a>.</span>
+        </div>
+        <div class="lesson-header__actions" style="margin-top: var(--space-3); display: flex; gap: var(--space-3); flex-wrap: wrap;">
+          <a href="https://github.com/innovatorved?tab=repositories" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--primary" data-repo-placement="projects_follow">
+            ${icons.github}
+            <span>Follow @innovatorved on GitHub</span>
+            ${icons.external}
+          </a>
+          <a href="/" data-nav="home" class="btn btn--sm btn--secondary">
+            <span>← Back to Curriculum</span>
+          </a>
         </div>
       </div>
 
-      <div class="projects-showcase-section">
-        <div class="projects-section-header">
-          <div class="projects-section-header__title-wrap">
-            <span class="projects-section-header__icon">${icons.pin}</span>
-            <h2 class="projects-section-header__title">Pinned GitHub Repositories</h2>
-          </div>
-          <span class="projects-section-header__count">${pinnedProjects.length} pinned</span>
-        </div>
-
-        <div class="projects-grid">
-          ${pinnedProjects.map(p => renderProjectCard(p)).join('')}
-        </div>
+      <div class="projects-grid">
+        ${projects.map(p => renderProjectCard(p)).join('')}
       </div>
     `;
-
-    if (otherProjects.length > 0) {
-      html += `
-        <div class="projects-showcase-section" style="margin-top: var(--space-10);">
-          <div class="projects-section-header">
-            <div class="projects-section-header__title-wrap">
-              <span class="projects-section-header__icon">${icons.code}</span>
-              <h2 class="projects-section-header__title">More Open-Source Tools & Libraries</h2>
-            </div>
-            <span class="projects-section-header__count">${otherProjects.length} repos</span>
-          </div>
-
-          <div class="projects-grid">
-            ${otherProjects.map(p => renderProjectCard(p)).join('')}
-          </div>
-        </div>
-      `;
-    }
 
     return html;
   }

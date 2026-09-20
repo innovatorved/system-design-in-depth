@@ -45,7 +45,15 @@ window.App = (() => {
       parseRoute();
       renderCurrentView();
       updateSidebarActive();
-      if (currentSlug) loadModuleContent(currentSlug);
+      if (currentSlug && currentView === 'topic') loadModuleContent(currentSlug);
+    });
+
+    // Listen for history popstate (forward/back)
+    window.addEventListener('popstate', () => {
+      parseRoute();
+      renderCurrentView();
+      updateSidebarActive();
+      if (currentSlug && currentView === 'topic') loadModuleContent(currentSlug);
     });
   }
 
@@ -53,9 +61,26 @@ window.App = (() => {
   function parseRoute() {
     const path = window.location.pathname.replace(/^\/|\/$/g, '');
     const hash = window.location.hash.slice(1);
-    if (path === 'projects' || hash === 'projects' || hash.startsWith('projects/') || hash.startsWith('project/')) {
+
+    // Clean up legacy #projects hash to /projects
+    if (hash === 'projects' || hash.startsWith('projects/') || hash.startsWith('project/')) {
+      const slug = hash.startsWith('project/') ? hash.slice(8) : null;
+      history.replaceState(null, '', '/projects' + (slug ? ('#project-' + slug) : ''));
       currentView = 'projects';
-      currentSlug = hash.startsWith('project/') ? hash.slice(8) : null;
+      currentSlug = slug;
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+      return;
+    }
+
+    if (path === 'projects' || path.startsWith('projects/')) {
+      currentView = 'projects';
+      currentSlug = hash.startsWith('project-') ? hash.slice(8) : (hash.startsWith('project/') ? hash.slice(8) : null);
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+    } else if (!hash || hash === '/') {
+      currentView = 'home';
+      currentSlug = null;
       activeTab = 'curriculum';
       syncSidebarTabs();
     } else if (hash.startsWith('build/')) {
@@ -86,21 +111,39 @@ window.App = (() => {
   }
 
   function navigateTo(slug) {
-    window.location.hash = 'topic/' + slug;
+    if (window.location.pathname !== '/') {
+      history.pushState(null, '', '/#topic/' + slug);
+      parseRoute();
+      renderCurrentView();
+    } else {
+      window.location.hash = 'topic/' + slug;
+    }
     window.Progress.setLastVisited(slug);
     closeSidebar();
     window.scrollTo(0, 0);
   }
 
   function navigateToBuild(buildId) {
-    window.location.hash = 'build/' + buildId;
+    if (window.location.pathname !== '/') {
+      history.pushState(null, '', '/#build/' + buildId);
+      parseRoute();
+      renderCurrentView();
+    } else {
+      window.location.hash = 'build/' + buildId;
+    }
     closeSidebar();
     window.scrollTo(0, 0);
   }
 
   function navigateToProject(projectId) {
-    window.location.hash = projectId ? ('project/' + projectId) : 'projects';
+    const targetUrl = '/projects' + (projectId ? ('#project-' + projectId) : '');
+    if (window.location.pathname !== '/projects' || window.location.hash !== (projectId ? ('#project-' + projectId) : '')) {
+      history.pushState(null, '', targetUrl);
+    }
+    currentView = 'projects';
+    currentSlug = projectId || null;
     closeSidebar();
+    renderCurrentView();
     if (projectId) {
       setTimeout(() => {
         const el = document.getElementById('project-' + projectId);
@@ -126,8 +169,15 @@ window.App = (() => {
   }
 
   function navigateHome() {
-    window.location.hash = '/';
+    if (window.location.pathname !== '/' || window.location.hash) {
+      history.pushState(null, '', '/');
+    }
+    currentView = 'home';
+    currentSlug = null;
+    activeTab = 'curriculum';
+    syncSidebarTabs();
     closeSidebar();
+    renderCurrentView();
     window.scrollTo(0, 0);
   }
 
@@ -854,12 +904,12 @@ window.App = (() => {
       moonIcon.style.display = isDark ? 'none' : '';
     }
 
-    // Topbar projects link
-    const topbarProjectsLink = document.getElementById('topbar-projects-link');
-    if (topbarProjectsLink) {
-      topbarProjectsLink.addEventListener('click', (e) => {
+    // Brand logo click
+    const brand = document.querySelector('.topbar__brand');
+    if (brand) {
+      brand.addEventListener('click', (e) => {
         e.preventDefault();
-        navigateToProject();
+        navigateHome();
       });
     }
 
@@ -877,9 +927,6 @@ window.App = (() => {
           window.Analytics.trackTabSwitch(activeTab);
         }
         renderSidebar();
-        if (activeTab === 'projects' && currentView !== 'projects') {
-          navigateToProject();
-        }
       });
     });
 
