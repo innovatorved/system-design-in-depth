@@ -321,15 +321,24 @@ window.Renderer = (() => {
   function convertMarkdownToHTML(md) {
     if (!md) return '';
 
+    // Phase 1: Extract code blocks and mermaid diagrams to protect them from other regexes
+    const codeBlocks = [];
     let html = md
       // Mermaid blocks MUST be replaced before generic code blocks
       .replace(/```mermaid\s*\n([\s\S]*?)```/g, (_, diagram) => {
-        return '<div class="mermaid">' + diagram.trim() + '</div>';
+        const idx = codeBlocks.length;
+        codeBlocks.push('<div class="mermaid">' + diagram.trim() + '</div>');
+        return '\x00CODEBLOCK_' + idx + '\x00';
       })
-      // Code blocks (``` blocks)
-      .replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-        return '<pre><code class="language-' + (lang || 'text') + '">' + escapeHtml(code.trim()) + '</code></pre>';
-      })
+      // Code blocks (``` blocks) - handle info strings like title="terminal"
+      .replace(/```(\S+)?[^\n]*\n([\s\S]*?)```/g, (_, lang, code) => {
+        const idx = codeBlocks.length;
+        codeBlocks.push('<pre><code class="language-' + (lang || 'text') + '">' + escapeHtml(code.trim()) + '</code></pre>');
+        return '\x00CODEBLOCK_' + idx + '\x00';
+      });
+
+    // Phase 2: Process markdown syntax (code blocks are safely extracted)
+    html = html
       // GitHub alerts / blockquote callouts
       .replace(/^>\s*\[!NOTE\]\s*(.*)$/gm, '<div class="callout callout--note"><div class="callout__title">ℹ️ Note</div><p>$1</p></div>')
       .replace(/^>\s*\[!TIP\]\s*(.*)$/gm, '<div class="callout callout--tip"><div class="callout__title">💡 Tip</div><p>$1</p></div>')
@@ -345,7 +354,7 @@ window.Renderer = (() => {
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       // Italic
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      // Inline code
+      // Inline code (must come after bold/italic to avoid conflicts)
       .replace(/`([^`]+)`/g, '<code>$1</code>')
       // Links (standard and wiki-style)
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
@@ -362,6 +371,9 @@ window.Renderer = (() => {
         }).join('');
         return '<table><thead><tr>' + ths + '</tr></thead><tbody>' + rows + '</tbody></table>';
       });
+
+    // Phase 3: Restore code blocks
+    html = html.replace(/\x00CODEBLOCK_(\d+)\x00/g, (_, idx) => codeBlocks[parseInt(idx)]);
 
     // Process paragraphs and lists
     const lines = html.split('\n');

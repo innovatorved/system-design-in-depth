@@ -12,6 +12,20 @@ window.App = (() => {
   let sidebarOpen = false;
   const collapsedModules = new Set();
 
+  // Helper: find module ID for a given slug
+  function getModuleIdForSlug(slug) {
+    const data = window.CURRICULUM_DATA;
+    if (!data) return null;
+    for (const p of data.parts) {
+      for (const m of p.modules) {
+        for (const u of m.units) {
+          if (u.slug === slug) return m.id;
+        }
+      }
+    }
+    return null;
+  }
+
   // ── Initialization ────────────────────────────────────────
   function init() {
     // Initialize Analytics
@@ -197,10 +211,16 @@ window.App = (() => {
         }
         break;
       case 'topic':
-        reader.innerHTML = window.Renderer.renderLesson(currentSlug);
-        initMermaid();
-        if (window.setupAudioListeners) {
-          window.setupAudioListeners(currentSlug);
+        // Delay rendering until module content is loaded to avoid double-render flash
+        if (currentSlug && !window.MODULE_CONTENT[getModuleIdForSlug(currentSlug)]) {
+          reader.innerHTML = '<div class="loading-placeholder"><p>Loading content...</p></div>';
+          // Content will be loaded and renderCurrentView called when script loads
+        } else {
+          reader.innerHTML = window.Renderer.renderLesson(currentSlug);
+          initMermaid();
+          if (window.setupAudioListeners) {
+            window.setupAudioListeners(currentSlug);
+          }
         }
         if (window.Analytics) {
           const data = window.CURRICULUM_DATA;
