@@ -15,8 +15,16 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
     ],
     "furtherReading": [
       {
-        "title": "Manning, Raghavan, Sch\u00fctze: Introduction to Information Retrieval (Stanford)",
+        "title": "Manning, Raghavan, Schütze: Introduction to Information Retrieval (Stanford)",
         "url": "https://nlp.stanford.edu/IR-book/"
+      },
+      {
+        "title": "Croft, Metzler, Strohman: Search Engines: Information Retrieval in Practice (Addison-Wesley)",
+        "url": "https://www.search-engines-book.com/"
+      },
+      {
+        "title": "Zobel & Moffat: Inverted Files for Text Search Engines (ACM Computing Surveys)",
+        "url": "https://dl.acm.org/doi/10.1145/1132956.1132959"
       }
     ]
   },
@@ -37,6 +45,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Adrien Grand: Frame of Reference and Roaring Bitmaps in Lucene",
         "url": "https://www.elastic.co/blog/frame-of-reference-and-roaring-bitmaps"
+      },
+      {
+        "title": "Witten, Moffat, Bell: Managing Gigabytes: Compressing and Indexing Data and Documents (Van Nostrand Reinhold)",
+        "url": "https://www.cs.waikato.ac.nz/~ml/Students/WPC/gigabytes.pdf"
+      },
+      {
+        "title": "Manning et al.: Inverted Index Construction (Stanford IR Book)",
+        "url": "https://nlp.stanford.edu/IR-book/html/htmledition/the-inverted-index-1.html"
       }
     ]
   },
@@ -57,6 +73,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Manning et al.: Tiered Indexes and Champion Lists",
         "url": "https://nlp.stanford.edu/IR-book/html/htmledition/tiered-indexes-1.html"
+      },
+      {
+        "title": "Broder et al.: Approximating the Conjunction: A Survey (ACM SIGMOD)",
+        "url": "https://dl.acm.org/doi/10.1145/1164394.1164396"
+      },
+      {
+        "title": "Elasticsearch: Multi-term Queries (Official Documentation)",
+        "url": "https://www.elastic.co/guide/en/elasticsearch/reference/current/multi-term-queries.html"
       }
     ]
   },
@@ -77,6 +101,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Salton & Buckley: Term-Weighting Approaches in Automatic Text Retrieval",
         "url": "https://www.sciencedirect.com/science/article/pii/0306457388900210"
+      },
+      {
+        "title": "Manning et al.: TF-IDF and the Vector Space Model (Stanford IR Book)",
+        "url": "https://nlp.stanford.edu/IR-book/html/htmledition/tf-idf-weighting-1.html"
+      },
+      {
+        "title": "Liu: Introduction to Information Retrieval (Cambridge University Press)",
+        "url": "https://nlp.stanford.edu/IR-book/"
       }
     ]
   },
@@ -97,6 +129,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Stephen Robertson: The Probabilistic Relevance Framework: BM25 and Beyond",
         "url": "https://www.staff.city.ac.uk/~sb317/papers/foundations_bm25_review.pdf"
+      },
+      {
+        "title": "Robertson & Zaragoza: The Probabilistic Relevance Framework: BM25 and Beyond (Foundations and Trends in IR)",
+        "url": "https://www.nowpublishers.com/article/Details/MIR-03"
+      },
+      {
+        "title": "Elasticsearch: BM25 Reference (Official Documentation)",
+        "url": "https://www.elastic.co/guide/en/elasticsearch/reference/current/bm25.html"
       }
     ]
   },
@@ -117,6 +157,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Ding & Suel: Faster Top-k Document Retrieval Using Block-Max Indexes",
         "url": "https://dl.acm.org/doi/10.1145/2009916.2010048"
+      },
+      {
+        "title": "Manning et al.: Stop Words (Stanford IR Book)",
+        "url": "https://nlp.stanford.edu/IR-book/html/htmledition/common-words-stop-lists-1.html"
+      },
+      {
+        "title": "Cambazoglu et al.: Early Experiences with Search Engine Advertising (ACM SIGIR)",
+        "url": "https://dl.acm.org/doi/10.1145/1571941.1572128"
       }
     ]
   },
@@ -137,6 +185,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "eBay Engineering: Building a Query Understanding Engine",
         "url": "https://innovation.ebayinc.com/tech/engineering/"
+      },
+      {
+        "title": "Jones & Fain: Query Word Deletion and Search Query Reformulation (ACM TOIS)",
+        "url": "https://dl.acm.org/doi/10.1145/2422249.2422251"
+      },
+      {
+        "title": "Google Research: Query Understanding (Search Dev Guide)",
+        "url": "https://developers.google.com/search/docs/fundamentals/creating-helpful-content"
       }
     ]
   },
@@ -157,6 +213,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Burges: From RankNet to LambdaRank to LambdaMART (Microsoft Research)",
         "url": "https://www.microsoft.com/en-us/research/publication/from-ranknet-to-lambdarank-to-lambdamart-an-overview/"
+      },
+      {
+        "title": "Liu: Learning to Rank for Information Retrieval (Springer)",
+        "url": "https://www.nowpublishers.com/article/Details/MIR-01"
+      },
+      {
+        "title": "Radlinski & Joachims: Learning to Rank with A/B Testing (ACM SIGIR)",
+        "url": "https://dl.acm.org/doi/10.1145/1148170.1148275"
       }
     ]
   },
@@ -171,12 +235,20 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
     "keyTakeaways": [
       "NDCG (Normalized Discounted Cumulative Gain) is the gold standard metric for graded relevance rankings.",
       "Precision@K measures top-slot purity; Recall@K measures corpus coverage.",
-      "Interleaved A/B testing blends candidate rankings to detect statistically significant user preference with 100x fewer queries."
+      "Interleaved A/B testing blends candidate rankings to detect statistically significant user preference with far fewer queries than traditional A/B testing (see: Radlinski & Craswell, 'Comparing the Power of Interleaving and A/B Testing', SIGIR 2010)."
     ],
     "furtherReading": [
       {
         "title": "Chapelle et al.: Large-scale Validation and Analysis of Interleaved Search Evaluation",
         "url": "https://dl.acm.org/doi/10.1145/2168752.2168754"
+      },
+      {
+        "title": "Manning et al.: Evaluation of Information Retrieval Systems (Stanford IR Book)",
+        "url": "https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-unranked-retrieval-results-1.html"
+      },
+      {
+        "title": "Wikipedia: Normalized Discounted Cumulative Gain (NDCG)",
+        "url": "https://en.wikipedia.org/wiki/Discounted_cumulative_gain"
       }
     ]
   },
@@ -197,6 +269,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Elasticsearch Guide: Optimistic Concurrency Control",
         "url": "https://www.elastic.co/guide/en/elasticsearch/reference/current/optimistic-concurrency-control.html"
+      },
+      {
+        "title": "Kreps et al.: Kafka: a Distributed Messaging System for Log Processing (NetDB Workshop)",
+        "url": "https://notes.stephenholiday.com/Kafka.pdf"
+      },
+      {
+        "title": "Elasticsearch Guide: Near Real-Time Search (Official Documentation)",
+        "url": "https://www.elastic.co/guide/en/elasticsearch/reference/current/near-real-time.html"
       }
     ]
   },
@@ -217,6 +297,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Elasticsearch Internals: Scalable Search with Sharding",
         "url": "https://www.elastic.co/guide/en/elasticsearch/reference/current/scalability.html"
+      },
+      {
+        "title": "Elasticsearch Guide: Shards and Replicas (Official Documentation)",
+        "url": "https://www.elastic.co/guide/en/elasticsearch/reference/current/scalability.html"
+      },
+      {
+        "title": "Dean & Ghemawat: MapReduce: Simplified Data Processing on Large Clusters (ACM Queue)",
+        "url": "https://research.google/papers/mapreduce-simplified-data-processing-on-large-clusters.pdf"
       }
     ]
   },
@@ -237,6 +325,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Heydon & Najork: Mercator: A Scalable, Extensible Web Crawler",
         "url": "https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-166.pdf"
+      },
+      {
+        "title": "Olston & Najork: Web Crawling (Foundations and Trends in IR)",
+        "url": "https://www.nowpublishers.com/article/Details/MIR-03"
+      },
+      {
+        "title": "Manning et al.: Web Crawling and Indexes (Stanford IR Book)",
+        "url": "https://nlp.stanford.edu/IR-book/html/htmledition/crawling-and-indexes-1.html"
       }
     ]
   },
@@ -257,6 +353,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Malkov & Yashunin: Efficient and Robust Approximate Nearest Neighbor Search Using HNSW",
         "url": "https://arxiv.org/abs/1603.09320"
+      },
+      {
+        "title": "Johnson, Douze, Jégou: Billion-scale Similarity Search with GPUs (IEEE Big Data)",
+        "url": "https://arxiv.org/abs/1702.08734"
+      },
+      {
+        "title": "Elasticsearch: Approximate Nearest Neighbor Search (Official Documentation)",
+        "url": "https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html"
       }
     ]
   },
@@ -277,6 +381,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Google Research: Efficient Data Structures for Typeahead Autocomplete",
         "url": "https://research.google/pubs/pub37000/"
+      },
+      {
+        "title": "Bast & Weber: The Complete Dictionary Search (ACM SIGIR)",
+        "url": "https://dl.acm.org/doi/10.1145/1164597.1164723"
+      },
+      {
+        "title": "Bhatia & Mitra: Adopting Web Search Autocomplete (ACM TOIS)",
+        "url": "https://dl.acm.org/doi/10.1145/2168752.2168753"
       }
     ]
   },
@@ -287,7 +399,7 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       "title": "System Design: Autocomplete in 100 Milliseconds",
       "channel": "Learning Podcasts"
     },
-    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Real-Time Spelling Correction</h2>\n      <p>Approximately 10% to 15% of all web and e-commerce search queries contain typos (e.g. <code>\"appple iphone\"</code>, <code>\"teh lord of the rings\"</code>). When a query produces zero or poor results, the search engine must instantaneously evaluate edit distance candidates and suggest corrections.</p>\n\n      <h2>The SymSpell Algorithm (Symmetric Delete Spelling Correction)</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    Dict[\"Dictionary Word: 'apple'\"] --> Precompute[\"Precompute Deletes (Distance 1 & 2)\"]\n    Precompute --> HashLookup[\"In-Memory Hash Table: 'pple' -> 'apple', 'aple' -> 'apple'\"]\n    \n    UserTypo[\"User Input: 'appple'\"] --> GenDeletes[\"Generate Deletes of Input: 'apple', 'ppple'\"]\n    GenDeletes --> HashLookup\n    HashLookup --> Match[\"Instant O(1) Match: Correct to 'apple'!\"]\n      </div>\n\n      <h2>Under the Hood: SymSpell vs Traditional Levenshtein Distance</h2>\n      <ul>\n        <li><strong>Standard Levenshtein Distance:</strong> Calculating Levenshtein matrix distance between an input typo and every word in a 500,000-term dictionary requires billions of operations, taking seconds per query.</li>\n        <li><strong>SymSpell Breakthrough:</strong> Rather than testing insertions, deletions, substitutions, and transpositions against the entire vocabulary, SymSpell precomputes all $K$-distance <em>deletions</em> for dictionary words and stores them in a hash table. At query time, only deletions of the misspelled input are looked up in the hash table, achieving <strong>1,000x faster execution</strong> ($< 0.1\text{ms}$).</li>\n        <li><strong>The Noisy Channel Model:</strong> Scores candidate corrections using Bayesian probability: $P(Word | Typo) \\propto P(Typo | Word) \\cdot P(Word)$, balancing keyboard typo proximity with unigram/bigram word frequencies from search logs.</li>\n      </ul>\n    </div>",
+    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Real-Time Spelling Correction</h2>\n      <p>Approximately 10% to 15% of all web and e-commerce search queries contain typos (e.g. <code>\"appple iphone\"</code>, <code>\"teh lord of the rings\"</code>). When a query produces zero or poor results, the search engine must instantaneously evaluate edit distance candidates and suggest corrections.</p>\n\n      <h2>The SymSpell Algorithm (Symmetric Delete Spelling Correction)</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    Dict[\"Dictionary Word: 'apple'\"] --> Precompute[\"Precompute Deletes (Distance 1 & 2)\"]\n    Precompute --> HashLookup[\"In-Memory Hash Table: 'pple' -> 'apple', 'aple' -> 'apple'\"]\n    \n    UserTypo[\"User Input: 'appple'\"] --> GenDeletes[\"Generate Deletes of Input: 'apple', 'ppple'\"]\n    GenDeletes --> HashLookup\n    HashLookup --> Match[\"Instant O(1) Match: Correct to 'apple'!\"]\n      </div>\n\n      <h2>Under the Hood: SymSpell vs Traditional Levenshtein Distance</h2>\n      <ul>\n        <li><strong>Standard Levenshtein Distance:</strong> Calculating Levenshtein matrix distance between an input typo and every word in a 500,000-term dictionary requires billions of operations, taking seconds per query.</li>\n        <li><strong>SymSpell Breakthrough:</strong> Rather than testing insertions, deletions, substitutions, and transpositions against the entire vocabulary, SymSpell precomputes all $K$-distance <em>deletions</em> for dictionary words and stores them in a hash table. At query time, only deletions of the misspelled input are looked up in the hash table, achieving sub-millisecond execution. The original benchmark (Wolfgarbe, 2012) reports up to 1,000x speedup vs. standard Levenshtein on a 500K dictionary, but actual speedup depends on edit distance threshold and dictionary size.</li>\n        <li><strong>The Noisy Channel Model:</strong> Scores candidate corrections using Bayesian probability: $P(Word | Typo) \\propto P(Typo | Word) \\cdot P(Word)$, balancing keyboard typo proximity with unigram/bigram word frequencies from search logs.</li>\n      </ul>\n    </div>",
     "keyTakeaways": [
       "SymSpell achieves sub-millisecond spell correction by precomputing word deletions into an in-memory hash table.",
       "The Noisy Channel Model combines keyboard typo likelihood with language unigram frequency to pick the best correction.",
@@ -297,6 +409,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Wolfgarbe: SymSpell: 1000x Faster Spelling Correction Algorithm",
         "url": "https://github.com/wolfgarbe/SymSpell"
+      },
+      {
+        "title": "Church & Gale: A Spelling Correction Program Based on a Noisy Channel Model (ACL)",
+        "url": "https://aclanthology.org/P93-2058/"
+      },
+      {
+        "title": "Brill & Moore: An Improved Error Model for Noisy Channel Spelling Correction (ACL)",
+        "url": "https://aclanthology.org/P00-1034/"
       }
     ]
   },
@@ -317,6 +437,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Baeza-Yates et al.: Query Recommendation Using Query Logs in Search Engines",
         "url": "https://dl.acm.org/doi/10.1145/1052934.1052976"
+      },
+      {
+        "title": "Cui et al.: Beyond Keywords: Query Routing for Personalized Search (ACM KDD)",
+        "url": "https://dl.acm.org/doi/10.1145/1835804.1835886"
+      },
+      {
+        "title": "Manning et al.: Queries and Query Expansion (Stanford IR Book)",
+        "url": "https://nlp.stanford.edu/IR-book/html/htmledition/queries-and-documents-1.html"
       }
     ]
   },
@@ -337,6 +465,14 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       {
         "title": "Redis Documentation: Sorted Sets Explained",
         "url": "https://redis.io/docs/latest/develop/data-types/sorted-sets/"
+      },
+      {
+        "title": "Hartigan & Wong: Algorithm AS 136: A K-Means Clustering Algorithm (Journal of the Royal Statistical Society)",
+        "url": "https://www.jstor.org/stable/2346830"
+      },
+      {
+        "title": "GDPR: The Right to Erasure (Article 17) (EU Official Journal)",
+        "url": "https://gdpr-info.eu/art-17-gdpr/"
       }
     ]
   }

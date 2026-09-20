@@ -57,7 +57,7 @@ window.MODULE_CONTENT["learning-apis-services"] = {
     },
     "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Serialization Formats & Wire Protocols</h2>\n      <p>Selecting between REST (typically JSON over HTTP/1.1 or HTTP/2) and gRPC (Protocol Buffers over HTTP/2) is fundamentally a trade-off between human readability/client reach and binary serialization throughput/CPU efficiency.</p>\n\n      <h2>Wire Format Comparison: JSON vs Protocol Buffers</h2>\n      <div class=\"mermaid\">\nflowchart LR\n    subgraph JSONWire [\"Textual JSON Payload (High CPU & Wire Overhead)\"]\n      J1['{\"user_id\": 98412, \"email\": \"alice@corp.com\", \"active\": true}']\n      JNote[\"Field names repeated on wire; text parsing requires memory allocation and string decoding.\"]\n    end\n\n    subgraph ProtoWire [\"Binary Protocol Buffers (Zero-Copy Serialization)\"]\n      P1[\"[08 8C 80 06 12 0E 61 6C 69 63 65...]\"]\n      PNote[\"Field tags mapped to integer IDs (varints). 5x-10x smaller payload, zero allocation parsing.\"]\n    end\n      </div>\n\n      <h2>Protocol Mechanics: HTTP/1.1 vs HTTP/2 in gRPC</h2>\n      <ul>\n        <li><strong>Head-of-Line Blocking:</strong> In HTTP/1.1, a single TCP connection processes one request-response pair at a time. Concurrency requires opening multiple TCP sockets (typically 6 per browser host). gRPC runs over HTTP/2, where binary frames are multiplexed concurrently across a single persistent TCP connection.</li>\n        <li><strong>Schema Enforcement:</strong> REST over JSON relies on optional runtime validators (JSONSchema). gRPC uses strictly typed <code>.proto</code> files compiled down to native language structs at build time, eliminating runtime type mismatch bugs.</li>\n        <li><strong>Bidirectional Streaming:</strong> gRPC natively supports client streaming, server streaming, and bidirectional streaming over HTTP/2, making it ideal for live sensor telemetry and real-time backend synchronization.</li>\n      </ul>\n\n      <h2>When to Use Which?</h2>\n      <table>\n        <thead>\n          <tr><th>Feature</th><th>REST (JSON over HTTP/1.1 / HTTP/2)</th><th>gRPC (Protobuf over HTTP/2)</th></tr>\n        </thead>\n        <tbody>\n          <tr><td><strong>Payload Encoding</strong></td><td>Human-readable ASCII text / UTF-8</td><td>Compact, binary-encoded varints</td></tr>\n          <tr><td><strong>Parsing Speed</strong></td><td>Moderate to slow (string scanning & memory allocations)</td><td>Extremely fast (direct memory unpacking)</td></tr>\n          <tr><td><strong>Browser Support</strong></td><td>Native across 100% of browsers and devices</td><td>Requires gRPC-Web proxy translation layer</td></tr>\n          <tr><td><strong>Ideal Use Case</strong></td><td>Public APIs, mobile apps, third-party integrations</td><td>High-throughput East-West internal microservices</td></tr>\n        </tbody>\n      </table>\n    </div>",
     "keyTakeaways": [
-      "gRPC uses Protocol Buffers to achieve 5x-10x smaller wire payloads and significantly lower CPU serialization overhead than JSON.",
+      "gRPC uses Protocol Buffers to achieve significantly smaller wire payloads and lower CPU serialization overhead than JSON. Google's internal benchmarks report 2-10x size reduction depending on schema complexity (see: https://protobuf.dev/programming-guides/encoding/).",
       "HTTP/2 multiplexing allows gRPC to stream multiple requests concurrently over a single TCP connection.",
       "Use REST for public browser-facing APIs and third-party reach; use gRPC for high-performance internal microservices."
     ],
@@ -113,6 +113,14 @@ window.MODULE_CONTENT["learning-apis-services"] = {
       {
         "title": "Envoy Proxy Architecture Guide",
         "url": "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/arch_overview"
+      },
+      {
+        "title": "Kong: API Gateway Patterns and Best Practices",
+        "url": "https://docs.konghq.com/gateway/latest/"
+      },
+      {
+        "title": "Microsoft: API Gateway in Microservices Architecture",
+        "url": "https://learn.microsoft.com/en-us/azure/architecture/microservices/design/gateway"
       }
     ]
   },
@@ -133,6 +141,14 @@ window.MODULE_CONTENT["learning-apis-services"] = {
       {
         "title": "Michael Mitzenmacher: The Power of Two Random Choices in Randomized Load Balancing",
         "url": "https://www.eecs.harvard.edu/~michaelm/postscripts/tpds2001.pdf"
+      },
+      {
+        "title": "Nginx: Load Balancing Algorithms Documentation",
+        "url": "https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/"
+      },
+      {
+        "title": "Benjamin Hindman & Keith Hellman: Raft Consensus for Load Balancing",
+        "url": "https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf"
       }
     ]
   },
@@ -153,6 +169,14 @@ window.MODULE_CONTENT["learning-apis-services"] = {
       {
         "title": "Google Research: Consistent Hashing with Bounded Loads",
         "url": "https://research.google/pubs/pub46633/"
+      },
+      {
+        "title": "David Karger et al.: Consistent Hashing and Random Trees (MIT)",
+        "url": "https://dl.acm.org/doi/10.1145/258533.258660"
+      },
+      {
+        "title": "Spotify Engineering: How Consistent Hashing Works at Scale",
+        "url": "https://engineering.atspotify.com/2015/03/consistent-hashing-in-the-wild/"
       }
     ]
   },
@@ -173,6 +197,14 @@ window.MODULE_CONTENT["learning-apis-services"] = {
       {
         "title": "Confluent: Schema Evolution and Compatibility Rules",
         "url": "https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html"
+      },
+      {
+        "title": "Apache Avro: Specification and Schema Resolution",
+        "url": "https://avro.apache.org/docs/current/specification/"
+      },
+      {
+        "title": "Martin Kleppmann: Schema Evolution with Avro, Protocol Buffers, and Thrift",
+        "url": "https://martin.kleppmann.com/2012/12/05/schema-evolution-in-avro-protocol-buffers-thrift.html"
       }
     ]
   },
@@ -193,6 +225,14 @@ window.MODULE_CONTENT["learning-apis-services"] = {
       {
         "title": "AWS Architecture Blog: Exponential Backoff And Jitter",
         "url": "https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/"
+      },
+      {
+        "title": "Release It! Design and Deploy Production-Ready Software (Michael T. Nygard)",
+        "url": "https://pragprog.com/titles/mnee2/release-it-second-edition/"
+      },
+      {
+        "title": "Netflix Technology Blog: Fault Tolerance in a High Volume Distributed System",
+        "url": "https://netflixtechblog.com/fault-tolerance-in-a-high-volume-near-real-time-system-6e0a8b78f935"
       }
     ]
   },
@@ -213,6 +253,14 @@ window.MODULE_CONTENT["learning-apis-services"] = {
       {
         "title": "Kafka Producer Configuration: linger.ms and batch.size",
         "url": "https://kafka.apache.org/documentation/#producerconfigs"
+      },
+      {
+        "title": "Google Spanner: Batching and Group Commit in Distributed Databases",
+        "url": "https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/41344.pdf"
+      },
+      {
+        "title": "AWS SDK: Request Batching Best Practices",
+        "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html"
       }
     ]
   },
@@ -233,6 +281,14 @@ window.MODULE_CONTENT["learning-apis-services"] = {
       {
         "title": "Reactive Streams Specification",
         "url": "https://www.reactive-streams.org/"
+      },
+      {
+        "title": "Derek Murray: Making the Loop (Flow Control in Dataflow Frameworks)",
+        "url": "https://www.microsoft.com/en-us/research/publication/rethinking-the-dataflow-model/"
+      },
+      {
+        "title": "Netflix Concurrency Limits: Adaptive Concurrency Control",
+        "url": "https://github.com/Netflix/concurrency-limits"
       }
     ]
   },
@@ -251,8 +307,16 @@ window.MODULE_CONTENT["learning-apis-services"] = {
     ],
     "furtherReading": [
       {
-        "title": "Jeff Dean & Luiz Andr\u00e9 Barroso: The Tail at Scale (Google)",
+        "title": "Jeff Dean & Luiz André Barroso: The Tail at Scale (Google)",
         "url": "https://research.google/pubs/pub40801/"
+      },
+      {
+        "title": "Gil Tene: HdrHistogram - High Dynamic Range Histogram for Measuring Latency",
+        "url": "https://hdrhistogram.org/"
+      },
+      {
+        "title": "Martin Thompson: Coordinated Omission and Latency Measurement",
+        "url": "https://mechanical-sympathy.blogspot.com/2012/07/that-damn-gil-tene-interview.html"
       }
     ]
   },

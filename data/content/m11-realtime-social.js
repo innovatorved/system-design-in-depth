@@ -17,6 +17,14 @@ window.MODULE_CONTENT["learning-realtime-social"] = {
       {
         "title": "Designing a Chat System",
         "url": "https://bytebytego.com/"
+      },
+      {
+        "title": "The WebSocket Protocol (RFC 6455)",
+        "url": "https://datatracker.ietf.org/doc/html/rfc6455"
+      },
+      {
+        "title": "An Extensive Study of WebSocket Usage in the Wild",
+        "url": "https://dl.acm.org/doi/10.1145/3371318.3371350"
       }
     ]
   },
@@ -37,6 +45,14 @@ window.MODULE_CONTENT["learning-realtime-social"] = {
       {
         "title": "MDN WebSockets API",
         "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API"
+      },
+      {
+        "title": "Server-Sent Events: MDN Web Docs",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events"
+      },
+      {
+        "title": "HTTP/1.1 Persistent Connections (RFC 7230)",
+        "url": "https://datatracker.ietf.org/doc/html/rfc7230"
       }
     ]
   },
@@ -57,6 +73,14 @@ window.MODULE_CONTENT["learning-realtime-social"] = {
       {
         "title": "Data Modeling in Cassandra",
         "url": "https://cassandra.apache.org/doc/latest/cassandra/data_modeling/"
+      },
+      {
+        "title": "Cassandra: A Decentralized Structured Storage System",
+        "url": "https://www.cs.cornell.edu/~kepknke/papers/cassandra.pdf"
+      },
+      {
+        "title": "TAO: Facebook's Distributed Data Store for the Social Graph",
+        "url": "https://www.usenix.org/system/files/conference/atc13/atc13-bronson.pdf"
       }
     ]
   },
@@ -77,6 +101,14 @@ window.MODULE_CONTENT["learning-realtime-social"] = {
       {
         "title": "FlockDB Architecture",
         "url": "https://github.com/twitter-archive/flockdb"
+      },
+      {
+        "title": "FlockDB: Distributed Social Graph Storage at Twitter",
+        "url": "https://blog.twitter.com/engineering/en_us/a/2010/flockdb-twitter-s-distributed-graph-store.html"
+      },
+      {
+        "title": "The Graph Traversal Pattern (Pregel)",
+        "url": "https://kowshik.github.io/JPregel/pregel_paper.pdf"
       }
     ]
   },
@@ -97,6 +129,14 @@ window.MODULE_CONTENT["learning-realtime-social"] = {
       {
         "title": "Twitter Timeline Architecture",
         "url": "https://blog.x.com/engineering/en_us/topics/infrastructure/2015/building-the-chronological-timeline.html"
+      },
+      {
+        "title": "Megaphone: Server-Side State at Twitter Scale",
+        "url": "https://blog.twitter.com/engineering/en_us/a/2016/megaphone--server-side-state-at-twitter-scale.html"
+      },
+      {
+        "title": "News Feed Architecture at Facebook (Fan-Out on Write vs Read)",
+        "url": "https://engineering.fb.com/2015/03/10/production-engineering/production-tip-23-how-to-make-your-page-feel-faster/"
       }
     ]
   },
@@ -117,6 +157,14 @@ window.MODULE_CONTENT["learning-realtime-social"] = {
       {
         "title": "Facebook's Notification Architecture",
         "url": "https://engineering.fb.com/"
+      },
+      {
+        "title": "Dapper, a Large-Scale Distributed Systems Tracing Infrastructure",
+        "url": "https://research.google/pubs/pub36356/"
+      },
+      {
+        "title": "Google Cloud: Designing Notification Systems",
+        "url": "https://cloud.google.com/architecture/notification-system-pattern"
       }
     ]
   },
@@ -137,6 +185,14 @@ window.MODULE_CONTENT["learning-realtime-social"] = {
       {
         "title": "Elasticsearch Inverted Index",
         "url": "https://www.elastic.co/guide/en/elasticsearch/reference/current/documents-indices.html"
+      },
+      {
+        "title": "Twitter's Real-time Trend Detection (Storm at Scale)",
+        "url": "https://blog.twitter.com/engineering/en_us/a/2014/storm--hadoop-and-real-time-processing-of-twitter.html"
+      },
+      {
+        "title": "Count-Min Sketch: A Data Stream Algorithm for Frequency Estimation",
+        "url": "https://dl.acm.org/doi/10.1145/360354.3604062"
       }
     ]
   },
@@ -157,6 +213,14 @@ window.MODULE_CONTENT["learning-realtime-social"] = {
       {
         "title": "Scaling Likes on Facebook",
         "url": "https://engineering.fb.com/"
+      },
+      {
+        "title": "An Analysis of Facebook Photo Caching",
+        "url": "https://research.facebook.com/publications/an-analysis-of-facebook-photo-caching/"
+      },
+      {
+        "title": "Scaling Memcache at Facebook (NSDI 2013)",
+        "url": "https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf"
       }
     ]
   },
@@ -177,6 +241,14 @@ window.MODULE_CONTENT["learning-realtime-social"] = {
       {
         "title": "Understanding Image Coordinates",
         "url": "https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Drawing_shapes"
+      },
+      {
+        "title": "Image Coordinate Systems (OpenCV Documentation)",
+        "url": "https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html"
+      },
+      {
+        "title": "Computational Geometry: Algorithms and Applications (de Berg et al.)",
+        "url": "https://link.springer.com/book/10.1007/978-3-642-59171-6"
       }
     ]
   },
@@ -197,6 +269,14 @@ window.MODULE_CONTENT["learning-realtime-social"] = {
       {
         "title": "How Twitch Scales Chat",
         "url": "https://blog.twitch.tv/en/2015/12/18/replacing-irc-how-twitch-chat-reached-400-billion-messages-a-day-822eb1f48fa1/"
+      },
+      {
+        "title": "How Discord Stores Billions of Messages (Cassandra at Scale)",
+        "url": "https://blog.discord.com/how-discord-stores-billions-of-messages-7fa6ec7ee4c7"
+      },
+      {
+        "title": "Building Low-latency Online Games with Server-Side Prediction",
+        "url": "https://www.gdcvault.com/play/1012410/Advanced-Matchmaking-Inside-Fallout"
       }
     ]
   }

@@ -7,7 +7,7 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       "title": "ACID Properties in Databases With Examples",
       "channel": "ByteByteGo"
     },
-    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Relational Invariants and Normal Forms</h2>\n      <p>Relational database design is the discipline of structuring data into strongly typed tables governed by relational algebra. The core objective is eliminating data redundancy while enforcing integrity constraints directly at the storage engine level.</p>\n\n      <h2>Relational Normalization and Foreign Key Enforcement</h2>\n      <div class=\"mermaid\">\nerDiagram\n    CUSTOMER ||--o{ ORDER : places\n    ORDER ||--|{ ORDER_ITEM : contains\n    PRODUCT ||--o{ ORDER_ITEM : references\n    \n    CUSTOMER {\n        uuid id PK\n        varchar email UK\n        timestamp created_at\n    }\n    ORDER {\n        uuid id PK\n        uuid customer_id FK\n        numeric total_amount\n        varchar status\n    }\n    ORDER_ITEM {\n        uuid id PK\n        uuid order_id FK\n        uuid product_id FK\n        int quantity\n        numeric unit_price\n    }\n      </div>\n\n      <h2>Normalization vs. Selective Denormalization</h2>\n      <h3>1. The Three Normal Forms</h3>\n      <ul>\n        <li><strong>First Normal Form (1NF):</strong> Atomic values; zero repeating column groups or comma-separated lists.</li>\n        <li><strong>Second Normal Form (2NF):</strong> Must be in 1NF, and all non-key columns must depend on the <em>entire</em> primary key (eliminating partial functional dependencies in composite keys).</li>\n        <li><strong>Third Normal Form (3NF):</strong> Must be in 2NF, and zero non-key columns may depend on other non-key columns (eliminating transitive functional dependencies).</li>\n      </ul>\n\n      <h3>2. The Cost of Normalization: The Multi-Join Penalty</h3>\n      <p>While 3NF guarantees zero update anomalies, high-scale read queries (such as rendering an e-commerce order history page) require joining 6 or more tables. Each join traverses secondary B-Trees and random heap pages, consuming database memory buffers. High-throughput architectures use <strong>Selective Denormalization</strong> (e.g., storing a snapshot of product name and unit price directly on the <code>order_items</code> row) to turn multi-table joins into single-table lookups while preserving point-in-time order integrity.</p>\n    </div>",
+    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Relational Invariants and Normal Forms</h2>\n      <p>Relational database design is the discipline of structuring data into strongly typed tables governed by relational algebra. The core objective is eliminating data redundancy while enforcing integrity constraints directly at the storage engine level.</p>\n\n      <h2>Relational Algebra: The Formal Foundation</h2>\n      <p>Relational algebra is the mathematical framework behind every SQL query. When you write <code>SELECT</code>, <code>WHERE</code>, <code>JOIN</code>, or <code>UNION</code>, you are invoking operators defined by E.F. Codd (1970). Understanding these operators explains <em>why</em> certain query patterns are expensive and others are not.</p>\n      <table>\n        <thead>\n          <tr><th>Operator</th><th>Symbol</th><th>What It Does</th><th>SQL Equivalent</th><th>Cost Implication</th></tr>\n        </thead>\n        <tbody>\n          <tr><td><strong>Selection</strong></td><td>σ<sub>p</sub>(R)</td><td>Filters rows from relation R where predicate p is true.</td><td><code>WHERE</code> clause</td><td>O(N) full scan without index; O(log N) with B-Tree index.</td></tr>\n          <tr><td><strong>Projection</strong></td><td>π<sub>A,B</sub>(R)</td><td>Extracts only specified columns, discarding others.</td><td><code>SELECT A, B</code></td><td>Reduces I/O if columns are in a covering index; otherwise requires heap fetch.</td></tr>\n          <tr><td><strong>Cartesian Product</strong></td><td>R × S</td><td>Every row of R paired with every row of S. Produces |R| × |S| rows.</td><td><code>CROSS JOIN</code></td><td>Explosive row count: 1000 × 1000 = 1M rows. Almost always a bug in WHERE clause.</td></tr>\n          <tr><td><strong>Natural Join</strong></td><td>R ⋈ S</td><td>Combines rows where columns with matching names are equal; eliminates duplicate columns.</td><td><code>JOIN ... ON</code></td><td>Nested loop: O(N×M). Hash join: O(N+M). Merge join: O(N log N + M log M).</td></tr>\n          <tr><td><strong>Union</strong></td><td>R ∪ S</td><td>Combines all rows from R and S, removing duplicates.</td><td><code>UNION</code> (not <code>UNION ALL</code>)</td><td>Deduplication requires sorting or hashing, adding O(N log N) overhead.</td></tr>\n          <tr><td><strong>Set Difference</strong></td><td>R − S</td><td>Returns rows in R that are not in S.</td><td><code>EXCEPT</code> / <code>MINUS</code></td><td>Requires scanning both relations; anti-join optimization in some engines.</td></tr>\n          <tr><td><strong>Assignment</strong></td><td>R ← S</td><td>Stores result of an expression into a named relation (view or temp table).</td><td><code>CREATE VIEW</code> / CTE</td><td>Views are not pre-computed; CTE may be inlined or materialized by optimizer.</td></tr>\n        </tbody>\n      </table>\n      <p><strong>Key insight:</strong> SQL's declarative syntax hides these operators. When you write <code>SELECT name FROM orders JOIN customers ON orders.cust_id = customers.id WHERE status = 'active'</code>, the optimizer translates it to: π<sub>name</sub>(σ<sub>status='active'</sub>(orders ⋈<sub>cust_id=id</sub> customers)). The join algorithm (nested loop vs hash vs merge) determines physical performance; the algebra determines logical correctness.</p>\n\n      <h2>Relational Normalization and Foreign Key Enforcement</h2>\n      <div class=\"mermaid\">\nerDiagram\n    CUSTOMER ||--o{ ORDER : places\n    ORDER ||--|{ ORDER_ITEM : contains\n    PRODUCT ||--o{ ORDER_ITEM : references\n    \n    CUSTOMER {\n        uuid id PK\n        varchar email UK\n        timestamp created_at\n    }\n    ORDER {\n        uuid id PK\n        uuid customer_id FK\n        numeric total_amount\n        varchar status\n    }\n    ORDER_ITEM {\n        uuid id PK\n        uuid order_id FK\n        uuid product_id FK\n        int quantity\n        numeric unit_price\n    }\n      </div>\n\n      <h2>Normalization vs. Selective Denormalization</h2>\n      <h3>1. The Three Normal Forms</h3>\n      <ul>\n        <li><strong>First Normal Form (1NF):</strong> Atomic values; zero repeating column groups or comma-separated lists.</li>\n        <li><strong>Second Normal Form (2NF):</strong> Must be in 1NF, and all non-key columns must depend on the <em>entire</em> primary key (eliminating partial functional dependencies in composite keys).</li>\n        <li><strong>Third Normal Form (3NF):</strong> Must be in 2NF, and zero non-key columns may depend on other non-key columns (eliminating transitive functional dependencies).</li>\n      </ul>\n\n      <h3>2. The Cost of Normalization: The Multi-Join Penalty</h3>\n      <p>While 3NF guarantees zero update anomalies, high-scale read queries (such as rendering an e-commerce order history page) require joining 6 or more tables. Each join traverses secondary B-Trees and random heap pages, consuming database memory buffers. High-throughput architectures use <strong>Selective Denormalization</strong> (e.g., storing a snapshot of product name and unit price directly on the <code>order_items</code> row) to turn multi-table joins into single-table lookups while preserving point-in-time order integrity.</p>\n\n      <h2>Failure Modes and Edge Cases</h2>\n      <ul>\n        <li><strong>Accidental Cartesian Product:</strong> Forgetting a JOIN condition produces |R| × |S| rows. A 10K × 10K join silently returns 100M rows, exhausting memory and causing OOM kills. Always verify row counts in query plans.</li>\n        <li><strong>N+1 Query Problem:</strong> ORMs that lazy-load related entities inside a loop execute 1 query for the parent + N queries for children. For 10,000 orders with 3 items each, this becomes 10,001 queries. Fix with eager loading or batch joins.</li>\n        <li><strong>Foreign Key Without Index:</strong> A foreign key column without an index causes sequential scans on every DELETE of the parent row, creating table-wide locks. Always index foreign key columns.</li>\n        <li><strong>Over-Normalization in OLTP:</strong> A fully normalized schema with 15+ joins per query may be theoretically elegant but causes multi-second read latency. Measure actual query plans before denormalizing.</li>\n        <li><strong>NULL in UNIQUE Constraints:</strong> Most SQL engines allow multiple NULLs in a UNIQUE column (NULL ≠ NULL in SQL), which can cause unexpected duplicates in partial unique indexes.</li>\n      </ul>\n\n      <h2>Theoretical Framework: When to Normalize vs. Denormalize</h2>\n      <p>The <strong>Codd's relational model</strong> (1970) and <strong>C.J. Date's database design principles</strong> advocate 3NF as the default to prevent update, insertion, and deletion anomalies. In practice, the decision depends on workload:</p>\n      <ul>\n        <li><strong>Write-heavy OLTP (banking, inventory):</strong> Normalize to 3NF. Update anomalies are costly; joins are affordable at small row counts with proper indexes.</li>\n        <li><strong>Read-heavy OLAP (analytics, dashboards):</strong> Denormalize aggressively. Star schemas (Kimball methodology) trade write efficiency for query simplicity and scan performance.</li>\n        <li><strong>Mixed workloads (e-commerce):</strong> Normalize the transactional core; denormalize into materialized views or separate read-optimized stores (e.g., Elasticsearch for product search, Redis for session data).</li>\n      </ul>\n    </div>",
     "keyTakeaways": [
       "Relational design uses normalization (1NF, 2NF, 3NF) to eliminate update anomalies and enforce constraints.",
       "Selective denormalization optimizes read-heavy queries by embedding immutable point-in-time attributes.",
@@ -15,12 +15,24 @@ window.MODULE_CONTENT["learning-data-sql"] = {
     ],
     "furtherReading": [
       {
-        "title": "Codd: A Relational Model of Data for Large Shared Data Banks",
+        "title": "Codd: A Relational Model of Data for Large Shared Data Banks (1970)",
         "url": "https://dl.acm.org/doi/10.1145/362384.362685"
+      },
+      {
+        "title": "Date: An Introduction to Database Systems (8th Edition) — Relational Theory",
+        "url": "https://www.microsoft.com/en-us/research/publication/an-introduction-to-database-systems-8th-edition/"
       },
       {
         "title": "PostgreSQL Documentation: Constraints and Table Partitioning",
         "url": "https://www.postgresql.org/docs/current/ddl-constraints.html"
+      },
+      {
+        "title": "Kimball: The Data Warehouse Toolkit — Star Schema Design",
+        "url": "https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/dimensional-modeling-techniques/"
+      },
+      {
+        "title": "Abadi: The Architecture of a Database System (CMU, 2017)",
+        "url": "https://stratos.seas.harvard.edu/files/stratos/files/databasearch.pdf"
       }
     ]
   },
@@ -41,6 +53,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "GitLab Engineering: Key-Value Stores in PostgreSQL",
         "url": "https://about.gitlab.com/blog/2021/04/27/how-we-use-postgresql-as-a-queue/"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Ch. 7: Transactions)",
+        "url": "https://dataintensive.net/"
       }
     ]
   },
@@ -61,6 +77,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "Use The Index, Luke! A Guide to Database Performance",
         "url": "https://use-the-index-luke.com/"
+      },
+      {
+        "title": "Ramakrishnan & Gehrke: Database Management Systems (3rd Ed) — Query Processing",
+        "url": "https://pages.cs.wisc.edu/~dbbook/"
       }
     ]
   },
@@ -81,6 +101,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "Bayer & McCreight: Organization and Maintenance of Large Ordered Indexes (Original Paper)",
         "url": "https://link.springer.com/chapter/10.1007/978-3-642-61942-8_3"
+      },
+      {
+        "title": "Knuth: The Art of Computer Programming, Vol. 3: Searching and Sorting",
+        "url": "https://en.wikipedia.org/wiki/The_Art_of_Computer_Programming"
       }
     ]
   },
@@ -101,6 +125,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "PostgreSQL Documentation: Using EXPLAIN to Understand Query Plans",
         "url": "https://www.postgresql.org/docs/current/using-explain.html"
+      },
+      {
+        "title": "Graefe: Volcano — An Extensible and Parallel Query Evaluation System (1990)",
+        "url": "https://www.cs.cornell.edu/home/carbonell/papers/volcano.pdf"
       }
     ]
   },
@@ -121,6 +149,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "Berenson et al.: A Critique of ANSI SQL Isolation Levels",
         "url": "https://www.microsoft.com/en-us/research/publication/a-critique-of-ansi-sql-isolation-levels/"
+      },
+      {
+        "title": "Abadi: Consistency Tradeoffs in Modern Distributed Database Systems (CMU)",
+        "url": "https://db.cs.cmu.edu/papers//icde2018-consistency-tradeoffs.pdf"
       }
     ]
   },
@@ -141,6 +173,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "The Internals of PostgreSQL: Chapter 5 - Concurrency Control",
         "url": "https://www.interdb.jp/pg/pgsql05.html"
+      },
+      {
+        "title": "Berenson et al.: A Critique of ANSI SQL Isolation Levels (Microsoft Research)",
+        "url": "https://www.microsoft.com/en-us/research/publication/a-critique-of-ansi-sql-isolation-levels/"
       }
     ]
   },
@@ -161,6 +197,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "Mohan et al.: ARIES: A Transaction Recovery Method (IBM Research)",
         "url": "https://cs.stanford.edu/people/chrismre/cs345/rl/aries.pdf"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Ch. 7: Transactions)",
+        "url": "https://dataintensive.net/"
       }
     ]
   },
@@ -181,6 +221,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "Flickr Engineering: Ticket Servers: Distributed Unique Primary Keys on the Cheap",
         "url": "https://code.flickr.net/2010/02/08/ticket-servers-distributed-unique-primary-keys-on-the-cheap/"
+      },
+      {
+        "title": "Twitter: Snowflake — A Unique ID Generator for Distributed Systems",
+        "url": "https://blog.twitter.com/engineering/en_us/a/2010/announcing-snowflake"
       }
     ]
   },
@@ -201,6 +245,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "Vitess: Scaling MySQL for YouTube and Slack",
         "url": "https://vitess.io/docs/overview/what-is-vitess/"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Ch. 6: Partitioning)",
+        "url": "https://dataintensive.net/"
       }
     ]
   },
@@ -221,6 +269,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "PostgreSQL Documentation: Building Indexes Concurrently",
         "url": "https://www.postgresql.org/docs/current/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Ch. 5: Replication)",
+        "url": "https://dataintensive.net/"
       }
     ]
   },
@@ -241,6 +293,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "GitHub Engineering: gh-ost: GitHub's Online Schema Migration Tool for MySQL",
         "url": "https://github.blog/2016-08-01-gh-ost-github-s-online-schema-migrations-tool-for-mysql/"
+      },
+      {
+        "title": "Fowler: Evolutionary Database Design",
+        "url": "https://martinfowler.com/articles/evodb.html"
       }
     ]
   },
@@ -261,6 +317,10 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "Brandur Leach: Soft Deletion Probably Isn't What You Want",
         "url": "https://brandur.org/soft-deletion"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Ch. 7: Transactions)",
+        "url": "https://dataintensive.net/"
       }
     ]
   }

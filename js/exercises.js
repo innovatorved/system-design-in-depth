@@ -239,10 +239,27 @@ window.Exercises = (() => {
   };
 
   /**
+   * Fisher-Yates shuffle for array copy
+   */
+  function shuffleArray(arr) {
+    const shuffled = [...arr];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+
+  /**
    * Render an interactive exercise card for a unit
    */
   function renderExercise(slug, unitTitle) {
     const ex = exerciseBank[slug] || generateDynamicExercise(slug, unitTitle);
+
+    // Shuffle options so correct answer is not always in the same position
+    const correctAnswer = ex.options[ex.answer];
+    const shuffledOptions = shuffleArray(ex.options);
+    const newCorrectIdx = shuffledOptions.indexOf(correctAnswer);
 
     return `
       <div class="exercise-box" id="exercise-${slug}">
@@ -255,9 +272,9 @@ window.Exercises = (() => {
         ${ex.scenario ? `<div class="exercise-box__scenario"><strong>Context / Scenario:</strong> ${escapeHtml(ex.scenario)}</div>` : ''}
         <div class="exercise-box__prompt"><strong>Problem:</strong> ${escapeHtml(ex.prompt)}</div>
         
-        <div class="exercise-options" data-answer="${ex.answer}">
-          ${ex.options.map((opt, idx) => `
-            <div class="exercise-option" onclick="Exercises.checkAnswer(this, ${idx}, ${ex.answer})" data-idx="${idx}">
+        <div class="exercise-options" data-answer="${newCorrectIdx}">
+          ${shuffledOptions.map((opt, idx) => `
+            <div class="exercise-option" onclick="Exercises.checkAnswer(this, ${idx}, ${newCorrectIdx})" data-idx="${idx}">
               <span class="exercise-option__bullet">${String.fromCharCode(65 + idx)}</span>
               <span>${escapeHtml(opt)}</span>
             </div>
@@ -283,13 +300,13 @@ window.Exercises = (() => {
       prompt: `In an enterprise high-availability environment, what is the primary failure mode to guard against when scaling ${cleanTitle}?`,
       scenario: `Scale: Tier-1 production service handling 100,000 requests/sec with a 99.99% availability SLA.`,
       options: [
-        `Single point of failure (SPOF) and unhandled network partitions leading to cascading service collapse.`,
         `Prematurely enabling gzip compression on HTTP response headers.`,
+        `Single point of failure (SPOF) and unhandled network partitions leading to cascading service collapse.`,
         `Having too many read replicas handling read queries during off-peak hours.`,
         `Using UUID v4 primary keys instead of 32-bit integers in in-memory caches.`
       ],
-      answer: 0,
-      explanation: `When scaling ${cleanTitle}, eliminating single points of failure (SPOFs), setting explicit timeouts, and isolating failure blast radiuses with circuit breakers is critical to preventing cascading outages.`
+      answer: 1,
+      explanation: `When scaling ${cleanTitle}, eliminating single points of failure (SPOFs), setting explicit timeouts, and isolating failure blast radiuses with circuit breakers is critical to preventing cascading outages. The distractor options describe plausible-sounding but incorrect failure modes: gzip compression and UUID key format are rarely root causes of cascading outages, and read replicas during off-peak hours are actually beneficial.`
     };
   }
 

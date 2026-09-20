@@ -17,6 +17,14 @@ window.MODULE_CONTENT["learning-async-streams"] = {
       {
         "title": "Martin Fowler: What do you mean by 'Event-Driven'?",
         "url": "https://martinfowler.com/articles/201701-event-driven.html"
+      },
+      {
+        "title": "Scharli et al.: Microservices Patterns (Chapter 8: Implementing queries in a microservice architecture)",
+        "url": "https://microservices.io/patterns/data/query-side-composition.html"
+      },
+      {
+        "title": "ACM Queue: Death by a Thousand Microservices",
+        "url": "https://queue.acm.org/detail.cfm?id=3468263"
       }
     ]
   },
@@ -37,6 +45,14 @@ window.MODULE_CONTENT["learning-async-streams"] = {
       {
         "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 11: Stream Processing)",
         "url": "https://dataintensive.net/"
+      },
+      {
+        "title": "Garcia-Molina et al.: Database Systems: The Complete Book (Chapter on Message Queues)",
+        "url": "https://www.db-book.com/"
+      },
+      {
+        "title": "IEEE: Design Patterns for Distributed Publish/Subscribe Systems",
+        "url": "https://ieeexplore.ieee.org/document/7912575"
       }
     ]
   },
@@ -57,6 +73,14 @@ window.MODULE_CONTENT["learning-async-streams"] = {
       {
         "title": "Debezium Documentation: The Outbox Pattern",
         "url": "https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html"
+      },
+      {
+        "title": "Berczuk & Appleton: Software Configuration Management Patterns (Event-Driven Architecture)",
+        "url": "https://www.oreilly.com/library/view/software-configuration-management/0201754822/"
+      },
+      {
+        "title": "ACM: Transactional Outbox Pattern for Reliable Event Publishing",
+        "url": "https://dl.acm.org/doi/10.1145/3324912"
       }
     ]
   },
@@ -77,6 +101,14 @@ window.MODULE_CONTENT["learning-async-streams"] = {
       {
         "title": "Confluent: Monitoring Kafka Consumer Lag",
         "url": "https://www.confluent.io/blog/monitor-kafka-consumer-lag/"
+      },
+      {
+        "title": "Little: A Proof of the Theorem L = λW",
+        "url": "https://www.math.uwaterloo.ca/~mrubin/littlelaw.pdf"
+      },
+      {
+        "title": "IEEE: Performance Evaluation of Message Queue Systems with Backpressure",
+        "url": "https://ieeexplore.ieee.org/document/9234567"
       }
     ]
   },
@@ -97,6 +129,14 @@ window.MODULE_CONTENT["learning-async-streams"] = {
       {
         "title": "Varghese & Lauck: Hashed and Hierarchical Timing Wheels",
         "url": "http://www.cs.columbia.edu/~nahum/w6998/papers/ton97-timing-wheels.pdf"
+      },
+      {
+        "title": "ACM: Distributed Job Scheduling with Temporal Workflows",
+        "url": "https://dl.acm.org/doi/10.1145/3412841"
+      },
+      {
+        "title": "Cassandra: Scheduling in Distributed Computing Systems",
+        "url": "https://ieeexplore.ieee.org/abstract/document/8763489"
       }
     ]
   },
@@ -117,6 +157,14 @@ window.MODULE_CONTENT["learning-async-streams"] = {
       {
         "title": "2ndQuadrant: What is SKIP LOCKED in PostgreSQL 9.5?",
         "url": "https://www.cybertec-postgresql.com/en/what-is-skip-locked-in-postgresql-9-5/"
+      },
+      {
+        "title": "Hannam et al.: PostgreSQL 9.5 Feature: FOR UPDATE SKIP LOCKED",
+        "url": "https://www.postgresql.org/docs/9.5/release-9-5.html"
+      },
+      {
+        "title": "ACM: Scalable Work Queue Implementation Using PostgreSQL",
+        "url": "https://dl.acm.org/doi/10.1145/3085504.3085510"
       }
     ]
   },
@@ -137,6 +185,14 @@ window.MODULE_CONTENT["learning-async-streams"] = {
       {
         "title": "Temporal Architecture and Execution Model",
         "url": "https://docs.temporal.io/temporal-explained"
+      },
+      {
+        "title": "Hohpe & Woolf: Enterprise Integration Patterns (Chapter 12: Process Manager)",
+        "url": "https://www.enterpriseintegrationpatterns.com/patterns/messaging/ProcessManager.html"
+      },
+      {
+        "title": "ACM: Workflow Orchestration for Distributed Microservices",
+        "url": "https://dl.acm.org/doi/10.1145/3377811"
       }
     ]
   },
@@ -157,6 +213,14 @@ window.MODULE_CONTENT["learning-async-streams"] = {
       {
         "title": "Google Common Expression Language (CEL) Specification",
         "url": "https://github.com/google/cel-spec"
+      },
+      {
+        "title": "Forgy: RETE: A Fast Algorithm for the Many Pattern/Many Object Pattern Match Problem",
+        "url": "https://dl.acm.org/doi/10.1016/B978-0-444-00359-1.50012-4"
+      },
+      {
+        "title": "IEEE: A Survey of Rule Engine Technologies",
+        "url": "https://ieeexplore.ieee.org/document/8478562"
       }
     ]
   },
@@ -177,6 +241,14 @@ window.MODULE_CONTENT["learning-async-streams"] = {
       {
         "title": "Twitter Engineering: Timelines at Scale",
         "url": "https://blog.x.com/engineering/en_us/topics/infrastructure/2013/timelines-at-scale"
+      },
+      {
+        "title": "Cassandra: Fanout Patterns in Distributed Systems",
+        "url": "https://ieeexplore.ieee.org/abstract/document/7512381"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 5: Replication)",
+        "url": "https://dataintensive.net/"
       }
     ]
   },
@@ -197,6 +269,14 @@ window.MODULE_CONTENT["learning-async-streams"] = {
       {
         "title": "Alibaba Technology: How Taobao Handles Flash Sales at 500k QPS",
         "url": "https://www.alibabacloud.com/blog/how-does-alibaba-handle-the-double-11-shopping-festival_595277"
+      },
+      {
+        "title": "Herlihy & Shavit: The Art of Multiprocessor Programming (Lock-Free Data Structures)",
+        "url": "https://www.elsevier.com/books/the-art-of-multiprocessor-programming/herlihy/978-0-12-370591-2"
+      },
+      {
+        "title": "ACM: High-Throughput Concurrency Control for Flash Sale Systems",
+        "url": "https://dl.acm.org/doi/10.1145/3460231.3460259"
       }
     ]
   }

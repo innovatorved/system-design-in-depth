@@ -41,6 +41,14 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       {
         "title": "Google SRE Book: Service Level Objectives",
         "url": "https://sre.google/sre-book/service-level-objectives/"
+      },
+      {
+        "title": "Google SRE Workbook: Implementing SLOs",
+        "url": "https://sre.google/workbook/implementing-slos/"
+      },
+      {
+        "title": "The Art of SLOs: A Practical Guide to Service Level Objectives",
+        "url": "https://www.oreilly.com/library/view/the-art-of/9781492094012/"
       }
     ]
   },
@@ -61,6 +69,14 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       {
         "title": "PagerDuty Incident Response Playbook",
         "url": "https://response.pagerduty.com/"
+      },
+      {
+        "title": "Google SRE Book: Managing Incidents",
+        "url": "https://sre.google/sre-book/managing-incidents/"
+      },
+      {
+        "title": "Incident Management for Operations (O'Reilly)",
+        "url": "https://www.oreilly.com/library/view/incident-management-for/9781491917626/"
       }
     ]
   },
@@ -81,6 +97,14 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       {
         "title": "Martin Fowler: BlueGreenDeployment",
         "url": "https://martinfowler.com/bliki/BlueGreenDeployment.html"
+      },
+      {
+        "title": "Google SRE Book: Release Engineering",
+        "url": "https://sre.google/sre-book/release-engineering/"
+      },
+      {
+        "title": "Continuous Delivery: Reliable Software Releases (O'Reilly)",
+        "url": "https://www.oreilly.com/library/view/continuous-delivery/9780321601919/"
       }
     ]
   },
@@ -101,6 +125,14 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       {
         "title": "Stripe: Online Migrations at Scale",
         "url": "https://stripe.com/blog/online-migrations"
+      },
+      {
+        "title": "Google SRE Book: Data Integrity: Quality Control",
+        "url": "https://sre.google/sre-book/data-integrity-quality-control/"
+      },
+      {
+        "title": "Database Reliability Engineering (O'Reilly)",
+        "url": "https://www.oreilly.com/library/view/database-reliability-engineering/9781491933220/"
       }
     ]
   },
@@ -121,6 +153,14 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       {
         "title": "Martin Fowler: Strangler Fig Application",
         "url": "https://martinfowler.com/bliki/StranglerFigApplication.html"
+      },
+      {
+        "title": "Martin Fowler: Branch by Abstraction",
+        "url": "https://martinfowler.com/bliki/BranchByAbstraction.html"
+      },
+      {
+        "title": "Microservices Patterns (O'Reilly)",
+        "url": "https://www.oreilly.com/library/view/microservices-patterns/9781617294549/"
       }
     ]
   },
@@ -141,6 +181,14 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       {
         "title": "PostgreSQL Continuous Archiving and Point-in-Time Recovery",
         "url": "https://www.postgresql.org/docs/current/continuous-archiving.html"
+      },
+      {
+        "title": "AWS Whitepaper: Backup and Recovery Approaches on AWS",
+        "url": "https://docs.aws.amazon.com/whitepapers/latest/backup-and-disaster-recovery-strategies-and-best-practices-on-aws/backup-and-disaster-recovery-strategies-and-best-practices-on-aws.html"
+      },
+      {
+        "title": "MySQL Backup and Recovery",
+        "url": "https://dev.mysql.com/doc/refman/8.0/en/backup-and-recovery.html"
       }
     ]
   },
@@ -161,6 +209,14 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       {
         "title": "AWS Disaster Recovery Architecture Whitepaper",
         "url": "https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-workloads-on-aws.html"
+      },
+      {
+        "title": "NIST SP 800-34: Contingency Planning Guide for Federal Information Systems",
+        "url": "https://csrc.nist.gov/publications/detail/sp/800-34/rev-1/final"
+      },
+      {
+        "title": "ISO 22301: Business Continuity Management Systems",
+        "url": "https://www.iso.org/iso-22301-business-continuity.html"
       }
     ]
   },
@@ -229,6 +285,14 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       {
         "title": "Envoy Proxy: Global Rate Limiting Architecture",
         "url": "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/other_features/global_rate_limiting"
+      },
+      {
+        "title": "Microsoft Azure: Rate Limiting Patterns and Best Practices",
+        "url": "https://docs.microsoft.com/en-us/azure/architecture/patterns/rate-limiting-pattern"
+      },
+      {
+        "title": "IETF Draft: Rate Limiting for HTTP APIs",
+        "url": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/"
       }
     ]
   },
@@ -273,6 +337,14 @@ window.MODULE_CONTENT["learning-reliability-ops"] = {
       {
         "title": "AWS SaaS Architecture Fundamentals",
         "url": "https://docs.aws.amazon.com/wellarchitected/latest/saas-lens/architecture-patterns.html"
+      },
+      {
+        "title": "Google Cloud: Multi-Tenant Architecture Patterns",
+        "url": "https://cloud.google.com/architecture/multitenant-architecture-patterns"
+      },
+      {
+        "title": "Microsoft Azure: Multi-Tenant Architecture Patterns",
+        "url": "https://docs.microsoft.com/en-us/azure/architecture/guide/architecture-styles/multi-tenant"
       }
     ]
   }

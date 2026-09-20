@@ -71,6 +71,14 @@ window.MODULE_CONTENT["design-operations"] = {
       {
         "title": "Inside Dropbox's Sync Engine",
         "url": "https://dropbox.tech/infrastructure/-testing-our-new-sync-engine"
+      },
+      {
+        "title": "Git Internals - The Scalability of Git",
+        "url": "https://git-scm.com/book/en/v2/Git-Internals-Packing-Objects"
+      },
+      {
+        "title": "Google File System: Design and Implementation",
+        "url": "https://research.google/pubs/pub51943/"
       }
     ]
   },
@@ -93,6 +101,14 @@ window.MODULE_CONTENT["design-operations"] = {
       {
         "title": "Google SRE Book: Service Level Objectives",
         "url": "https://sre.google/sre-book/service-level-objectives/"
+      },
+      {
+        "title": "OpenTelemetry Documentation",
+        "url": "https://opentelemetry.io/docs/"
+      },
+      {
+        "title": "Prometheus: Monitoring System & Time Series Database",
+        "url": "https://prometheus.io/docs/"
       }
     ]
   },
@@ -115,6 +131,10 @@ window.MODULE_CONTENT["design-operations"] = {
       {
         "title": "Stripe: Online Migrations",
         "url": "https://stripe.com/blog/online-migrations"
+      },
+      {
+        "title": "gh-ost: GitHub's Online Schema Change Tool",
+        "url": "https://github.com/github/gh-ost"
       }
     ]
   },
@@ -137,6 +157,10 @@ window.MODULE_CONTENT["design-operations"] = {
       {
         "title": "Facebook: Needle in a haystack (Photo Storage)",
         "url": "https://engineering.fb.com/2009/04/30/core-infra/needle-in-a-haystack-efficient-storage-of-billions-of-photos/"
+      },
+      {
+        "title": "Instagram Engineering: How Instagram Scales Its Graph Database",
+        "url": "https://engineering.fb.com/2019/04/11/production-engineering/instagram-graphql-migration/"
       }
     ]
   }

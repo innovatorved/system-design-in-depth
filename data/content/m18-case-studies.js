@@ -18,6 +18,10 @@ window.MODULE_CONTENT["company-cases"] = {
       {
         "title": "Sharding & IDs at Instagram",
         "url": "https://instagram-engineering.tumblr.com/post/10853187575/sharding-ids-at-instagram"
+      },
+      {
+        "title": "Instagram Engineering: What Powers Instagram: Hundreds of Instances, Dozens of Technologies",
+        "url": "https://engineering.fb.com/2011/02/08/core-engineering/what-powers-instagram-hundreds-of-instances-dozens-of-technologies/"
       }
     ]
   },
@@ -40,6 +44,10 @@ window.MODULE_CONTENT["company-cases"] = {
       {
         "title": "Stripe Blog: Designing robust and predictable APIs with idempotency",
         "url": "https://stripe.com/blog/idempotency"
+      },
+      {
+        "title": "Stripe API Idempotency Documentation",
+        "url": "https://docs.stripe.com/api/idempotent_requests"
       }
     ]
   },
@@ -62,6 +70,10 @@ window.MODULE_CONTENT["company-cases"] = {
       {
         "title": "How Discord Stores Trillions of Messages",
         "url": "https://discord.com/blog/how-discord-stores-trillions-of-messages"
+      },
+      {
+        "title": "Apache Cassandra Data Model and Architecture",
+        "url": "https://cassandra.apache.org/doc/latest/architecture/"
       }
     ]
   },
@@ -84,6 +96,10 @@ window.MODULE_CONTENT["company-cases"] = {
       {
         "title": "Dynamo: Amazon's Highly Available Key-value Store",
         "url": "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf"
+      },
+      {
+        "title": "Werner Vogels: Dynamo, the Design Behind Amazon's Key-value Store",
+        "url": "https://www.allthingsdistributed.com/2007/10/amazons_dynamo.html"
       }
     ]
   },
@@ -106,6 +122,10 @@ window.MODULE_CONTENT["company-cases"] = {
       {
         "title": "GitLab Postmortem of database outage",
         "url": "https://about.gitlab.com/blog/postmortem-of-database-outage-of-january-31/"
+      },
+      {
+        "title": "How to Protect Yourself from Accidental Data Loss",
+        "url": "https://about.gitlab.com/blog/2017/02/01/gitlab-postmortem-database-outage/"
       }
     ]
   }

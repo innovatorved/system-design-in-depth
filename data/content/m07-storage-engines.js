@@ -41,6 +41,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "Athanassoulis et al.: Designing Access Methods: The RUM Conjecture",
         "url": "https://stratos.seas.harvard.edu/files/stratos/files/rum.pdf"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 3: Storage and Retrieval)",
+        "url": "https://dataintensive.net/"
+      },
+      {
+        "title": "Kohler et al.: LSM-based Storage Techniques: A Survey (The VLDB Journal)",
+        "url": "https://link.springer.com/article/10.1007/s00778-018-0515-2"
       }
     ]
   },
@@ -61,6 +69,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "Bitcask: A High Performance Key-Value Store",
         "url": "https://riak.com/assets/bitcask-intro.pdf"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 3: Storage and Retrieval)",
+        "url": "https://dataintensive.net/"
+      },
+      {
+        "title": "Riak Bitcask Documentation: Design and Internals",
+        "url": "https://docs.riak.com/riak/kv/latest/learn/storage/bitcask/"
       }
     ]
   },
@@ -81,6 +97,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "SQLite Database File Format Specification",
         "url": "https://www.sqlite.org/fileformat.html"
+      },
+      {
+        "title": "Google FlatBuffers: Efficient Cross-Platform Serialization Library",
+        "url": "https://google.github.io/flatbuffers/"
+      },
+      {
+        "title": "Amazon Aurora: Design Considerations for High Throughput Cloud-Native Relational Databases",
+        "url": "https://www.allthingsdistributed.com/files/p1041-verbitski.pdf"
       }
     ]
   },
@@ -101,6 +125,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "Facebook Engineering: Finding a Needle in Haystack (Photo Storage)",
         "url": "https://www.usenix.org/legacy/event/osdi10/tech/full_papers/Beaver.pdf"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 12: The Future of Data Systems)",
+        "url": "https://dataintensive.net/"
+      },
+      {
+        "title": "HTTP Range Requests (RFC 7233): Hypertext Transfer Protocol",
+        "url": "https://tools.ietf.org/html/rfc7233"
       }
     ]
   },
@@ -121,6 +153,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "Howard Chu: LMDB Architecture and Implementation",
         "url": "http://www.lmdb.tech/doc/"
+      },
+      {
+        "title": "Conway et al.: copy-on-write in the Linux kernel (Linux Plumbers Conference)",
+        "url": "https://lwn.net/Articles/689444/"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 7: Transactions)",
+        "url": "https://dataintensive.net/"
       }
     ]
   },
@@ -141,6 +181,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "Rosenblum & Ousterhout: The Design and Implementation of a Log-Structured File System",
         "url": "https://people.eecs.berkeley.edu/~brewer/cs262/LFS.pdf"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 3: Storage and Retrieval)",
+        "url": "https://dataintensive.net/"
+      },
+      {
+        "title": "Shetty et al.: Multi-Garbage Collection for LSM-based Key-Value Stores (USENIX ATC)",
+        "url": "https://www.usenix.org/conference/atc23/presentation/shetty"
       }
     ]
   },
@@ -161,6 +209,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "Basho: Bitcask Architecture Whitepaper",
         "url": "https://riak.com/assets/bitcask-intro.pdf"
+      },
+      {
+        "title": "Dayan et al.: Endure: Efficient Tolerance-Fault Tolerance for LSM-Tree Key-Value Stores (SIGMOD)",
+        "url": "https://dl.acm.org/doi/10.1145/3183713.3196917"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 3: Storage and Retrieval)",
+        "url": "https://dataintensive.net/"
       }
     ]
   },
@@ -181,6 +237,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "O'Neil et al.: The Log-Structured Merge-Tree (Original 1996 Paper)",
         "url": "https://www.cs.umb.edu/~poneil/lsmtree.pdf"
+      },
+      {
+        "title": "RocksDB Wiki: Wiki Start (LSM-Tree based storage engine)",
+        "url": "https://github.com/facebook/rocksdb/wiki"
+      },
+      {
+        "title": "Cao et al.: LSM-based Storage Techniques: A Survey (The VLDB Journal, 2018)",
+        "url": "https://link.springer.com/article/10.1007/s00778-018-0515-2"
       }
     ]
   },
@@ -201,6 +265,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "RocksDB Architecture Guide: Memtable and WAL",
         "url": "https://github.com/facebook/rocksdb/wiki/RocksDB-Basics"
+      },
+      {
+        "title": "Huang & Aiken: Write-Ahead Logging (CMU 15-721 Lecture Notes)",
+        "url": "https://15721.courses.cs.cmu.edu/spring2020/lectures/lecture02-wal.pdf"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 3: Storage and Retrieval)",
+        "url": "https://dataintensive.net/"
       }
     ]
   },
@@ -221,6 +293,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "Google Guava BloomFilter Implementation & Math",
         "url": "https://github.com/google/guava/wiki/HashingExplained"
+      },
+      {
+        "title": "Bloom: Space/Time Tradeoffs in Hash Coding with Allowable False Errors (Communications of the ACM, 1970)",
+        "url": "https://dl.acm.org/doi/10.1145/362686.362692"
+      },
+      {
+        "title": "Dayan & Idreos: Dostoevsky: Better Space-Time Trade-Offs for LSM-Tree Based Stores via Lazy Removal (SIGMOD, 2019)",
+        "url": "https://dl.acm.org/doi/10.1145/3299869.3300520"
       }
     ]
   },
@@ -241,6 +321,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "RocksDB Leveled Compaction Architecture",
         "url": "https://github.com/facebook/rocksdb/wiki/Leveled-Compaction"
+      },
+      {
+        "title": "Dayan et al.: On Encoding and Compaction Tradeoffs for LSM-based Storage (SIGMOD, 2018)",
+        "url": "https://dl.acm.org/doi/10.1145/3183713.3196917"
+      },
+      {
+        "title": "RocksDB Wiki: Universal Compaction",
+        "url": "https://github.com/facebook/rocksdb/wiki/Universal-Compaction"
       }
     ]
   },
@@ -261,6 +349,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "AWS S3 Documentation: Overview of Object Storage",
         "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 11: Streams and Event Processing)",
+        "url": "https://dataintensive.net/"
+      },
+      {
+        "title": "Rao et al.: Towards Accurate and Fast Evaluation of Multi-Stage Log-Structured Designs (USENIX FAST, 2020)",
+        "url": "https://www.usenix.org/conference/fast20/presentation/rao"
       }
     ]
   },
@@ -281,6 +377,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "Amazon Science: Using Lightweight Formal Methods to Validate S3 (ShardStore)",
         "url": "https://www.amazon.science/publications/using-lightweight-formal-methods-to-validate-a-key-value-storage-node-in-amazon-s3"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 12: The Future of Data Systems)",
+        "url": "https://dataintensive.net/"
+      },
+      {
+        "title": "S3 API Reference: Amazon Simple Storage Service (REST API)",
+        "url": "https://docs.aws.amazon.com/AmazonS3/latest/API/Welcome.html"
       }
     ]
   },
@@ -301,6 +405,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "Google Spanner: Becoming a Globally Distributed Database",
         "url": "https://research.google/pubs/pub39966/"
+      },
+      {
+        "title": "Karger et al.: Consistent Hashing and Random Trees: Distributed Caching Protocols for Relieving Hot Spots (STOC, 1997)",
+        "url": "https://dl.acm.org/doi/10.1145/258533.258660"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 5: Replication)",
+        "url": "https://dataintensive.net/"
       }
     ]
   },
@@ -321,6 +433,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "Chang et al.: Bigtable: A Distributed Storage System for Structured Data",
         "url": "https://research.google/pubs/pub27898/"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 6: Partitioning)",
+        "url": "https://dataintensive.net/"
+      },
+      {
+        "title": "Shute et al.: F1: A Distributed SQL Database That Scales (VLDB, 2013)",
+        "url": "https://www.vldb.org/pvldb/vol6/p1232-shute.pdf"
       }
     ]
   },
@@ -341,6 +461,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "FoundationDB Architecture and ACID Transactions",
         "url": "https://www.foundationdb.org/files/fdb-paper.pdf"
+      },
+      {
+        "title": "Cattell et al.: Scalable SQL and NoSQL Data Stores (ACM Computing Surveys, 2011)",
+        "url": "https://dl.acm.org/doi/10.1145/1961208.1961209"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 2: Data Models and Query Languages)",
+        "url": "https://dataintensive.net/"
       }
     ]
   },
@@ -361,6 +489,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "Calder et al.: Windows Azure Storage: A Highly Available Cloud Storage Service with Strong Consistency",
         "url": "https://sigops.org/s/conferences/sosp/2011/current/2011-Cascais/printable/11-calder.pdf"
+      },
+      {
+        "title": "Hunt et al.: ZooKeeper: Wait-free Coordination for Internet-scale Systems (USENIX ATC, 2010)",
+        "url": "https://www.usenix.org/legacy/events/atc10/tech/full_papers/Hunt.pdf"
+      },
+      {
+        "title": "Burrows et al.: Bigtable: A Distributed Storage System for Structured Data (OSDI, 2006)",
+        "url": "https://research.google/pubs/pub27898/"
       }
     ]
   },
@@ -381,6 +517,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "James Plank: A Tutorial on Reed-Solomon Coding for Fault-Tolerance in RAID-like Systems",
         "url": "http://web.eecs.utk.edu/~jplank/plank/papers/CS-96-332.html"
+      },
+      {
+        "title": "Weil et al.: Ceph: A Scalable, High-Performance Distributed File System (USENIX OSDI, 2006)",
+        "url": "https://www.usenix.org/legacy/events/osdi06/tech/weil.html"
+      },
+      {
+        "title": "Ford et al.: Azure Storage: A Highly Available Cloud Storage Service with Strong Consistency (SOSP, 2011)",
+        "url": "https://sigops.org/s/conferences/sosp/2011/current/2011-Cascais/printable/11-calder.pdf"
       }
     ]
   },
@@ -401,6 +545,14 @@ window.MODULE_CONTENT["learning-storage-engines"] = {
       {
         "title": "CERN Data Center: Silent Data Corruption in Large Scale Commodity Storage",
         "url": "https://indico.cern.ch/event/13797/contributions/1362288/attachments/115080/163419/chep07-silente-corruption.pdf"
+      },
+      {
+        "title": "Schroeder et al.: Disk Failures in the Real World (USENIX FAST, 2007)",
+        "url": "https://www.usenix.org/legacy/events/fast07/papers/schroeder.pdf"
+      },
+      {
+        "title": "Kleppmann: Designing Data-Intensive Applications (Chapter 11: Streams and Event Processing)",
+        "url": "https://dataintensive.net/"
       }
     ]
   }

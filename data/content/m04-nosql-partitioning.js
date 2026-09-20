@@ -59,7 +59,7 @@ window.MODULE_CONTENT["learning-nosql-partitioning"] = {
     "keyTakeaways": [
       "Wide-Column stores (Cassandra) are distributed OLTP databases storing rows contiguously in SSTables indexed by partition keys.",
       "Pure Columnar engines (ClickHouse) store each column in a dedicated compressed file, scanning only the necessary columns.",
-      "Columnar formats leverage Delta encoding, Dictionary compression, and SIMD CPU vectorization for 100x faster aggregations."
+      "Columnar formats leverage Delta encoding, Dictionary compression, and SIMD CPU vectorization for orders-of-magnitude faster aggregations compared to row-oriented storage (see: Abadi et al., 'Column-Stores vs. Row-Stores', SIGMOD 2008)."
     ],
     "furtherReading": [
       {

@@ -17,6 +17,10 @@ window.MODULE_CONTENT["learning-media-files"] = {
       {
         "title": "AWS S3: Uploading objects using pre-signed URLs",
         "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html"
+      },
+      {
+        "title": "Google Cloud: Signed URLs for Object Storage",
+        "url": "https://cloud.google.com/storage/docs/access-control/signed-urls"
       }
     ]
   },
@@ -37,6 +41,10 @@ window.MODULE_CONTENT["learning-media-files"] = {
       {
         "title": "Cloudflare Image Resizing at the Edge",
         "url": "https://developers.cloudflare.com/images/image-resizing/"
+      },
+      {
+        "title": "Akamai: Image and Video Manager",
+        "url": "https://www.akamai.com/products/image-manager"
       }
     ]
   },
@@ -57,6 +65,10 @@ window.MODULE_CONTENT["learning-media-files"] = {
       {
         "title": "Gravatar API Specification",
         "url": "https://en.gravatar.com/site/implement/"
+      },
+      {
+        "title": "AvatarKit: Hash-Based Identicon Generation",
+        "url": "https://github.com/williamfiset/Algorithms/tree/master/src/main/java/com/williamfiset/algorithms/crypto"
       }
     ]
   },
@@ -77,6 +89,10 @@ window.MODULE_CONTENT["learning-media-files"] = {
       {
         "title": "AWS S3 Multipart Upload Documentation",
         "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html"
+      },
+      {
+        "title": "Google Cloud Storage: Resumable Uploads",
+        "url": "https://cloud.google.com/storage/docs/resumable-uploads"
       }
     ]
   },
@@ -97,6 +113,10 @@ window.MODULE_CONTENT["learning-media-files"] = {
       {
         "title": "Netflix Tech Blog: High-Quality Video Encoding at Scale",
         "url": "https://netflixtechblog.com/"
+      },
+      {
+        "title": "YouTube: An Inside Look at VP9 Encoding",
+        "url": "https://developers.google.com/web/fundamentals/media/video"
       }
     ]
   },
@@ -117,6 +137,10 @@ window.MODULE_CONTENT["learning-media-files"] = {
       {
         "title": "Apple HLS Authoring Specification",
         "url": "https://developer.apple.com/streaming/"
+      },
+      {
+        "title": "DASH-IF: DASH Adaptive Streaming Specification",
+        "url": "https://dashif.org/docs/DASH-IF-IOP-v4.3.pdf"
       }
     ]
   },
@@ -137,6 +161,10 @@ window.MODULE_CONTENT["learning-media-files"] = {
       {
         "title": "Google Widevine DRM Architecture",
         "url": "https://developers.google.com/widevine"
+      },
+      {
+        "title": "Apple FairPlay Streaming Key Server",
+        "url": "https://developer.apple.com/streaming/fairplay/"
       }
     ]
   },
@@ -157,6 +185,10 @@ window.MODULE_CONTENT["learning-media-files"] = {
       {
         "title": "WebRTC Official Architecture Specification",
         "url": "https://webrtc.org/"
+      },
+      {
+        "title": "IETF: Real-Time Media over QUIC",
+        "url": "https://datatracker.ietf.org/doc/draft-ietf-moq-transport/"
       }
     ]
   },
@@ -177,6 +209,10 @@ window.MODULE_CONTENT["learning-media-files"] = {
       {
         "title": "Rsync Algorithm & Delta Encoding",
         "url": "https://rsync.samba.org/tech_report/"
+      },
+      {
+        "title": "Dropbox Engineering: Syncing a Terabyte",
+        "url": "https://dropbox.tech/infrastructure/examining-the-delta-sync-engine"
       }
     ]
   },
@@ -197,6 +233,10 @@ window.MODULE_CONTENT["learning-media-files"] = {
       {
         "title": "Content Addressable Storage Overview",
         "url": "https://en.wikipedia.org/wiki/Content-addressable_storage"
+      },
+      {
+        "title": "FastCDC: A Fast, Efficient Content-Defined Chunking Algorithm",
+        "url": "https://ieeexplore.ieee.org/document/9055082"
       }
     ]
   },
@@ -217,6 +257,10 @@ window.MODULE_CONTENT["learning-media-files"] = {
       {
         "title": "Git Internals: The Object Model",
         "url": "https://git-scm.com/book/en/v2/Git-Internals-Git-Objects"
+      },
+      {
+        "title": "Google Dapper: A Large-Scale Distributed Tracing Infrastructure",
+        "url": "https://research.google/pubs/pub36356/"
       }
     ]
   }

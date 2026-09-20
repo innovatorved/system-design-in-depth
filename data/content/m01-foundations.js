@@ -9,15 +9,18 @@ window.MODULE_CONTENT["learning-foundations"] = {
     },
     "content": "<div class=\"lesson-content\"><h2>Lesson Content</h2><p><em>This topic is covered in depth in the curriculum archive above. The video lesson provides additional visual explanation and real-world examples.</em></p></div>",
     "keyTakeaways": [
-      "Understand the core trade-offs involved in Requirements clarification.",
-      "Identify the right scenarios to use this pattern.",
-      "Consider the impact on system latency and scalability.",
-      "Measure and monitor to ensure the system behaves as expected."
+      "Distinguish functional requirements (what the system does) from non-functional requirements (how it performs under load).",
+      "Write assumptions down as a brief to confirm with the product owner before designing.",
+      "Identify invariants: conditions the implementation must preserve even when requests overlap or are retried."
     ],
     "furtherReading": [
       {
         "title": "System Design Primer - Requirements clarification",
         "url": "https://github.com/donnemartin/system-design-primer"
+      },
+      {
+        "title": "Bass, Clements, Kazman: Software Architecture in Practice (4th Edition)",
+        "url": "https://www.oreilly.com/library/view/software-architecture-in/9780136885979/"
       }
     ]
   },
@@ -30,15 +33,18 @@ window.MODULE_CONTENT["learning-foundations"] = {
     },
     "content": "<div class=\"lesson-content\"><h2>Lesson Content</h2><p><em>This topic is covered in depth in the curriculum archive above. The video lesson provides additional visual explanation and real-world examples.</em></p></div>",
     "keyTakeaways": [
-      "Understand the core trade-offs involved in Logical system design.",
-      "Identify the right scenarios to use this pattern.",
-      "Consider the impact on system latency and scalability.",
-      "Measure and monitor to ensure the system behaves as expected."
+      "Separate HTTP handling, business rules, and storage into distinct responsibilities with explicit boundaries.",
+      "Drawing separate boxes does not require separate servers; boundaries can be in-process function calls.",
+      "A boundary is tested by checking whether a change in one module forces changes in others."
     ],
     "furtherReading": [
       {
-        "title": "System Design Primer - Logical system design",
-        "url": "https://github.com/donnemartin/system-design-primer"
+        "title": "Cockburn: Hexagonal Architecture (Ports and Adapters)",
+        "url": "https://alistair.cockburn.us/hexagonal-architecture"
+      },
+      {
+        "title": "Fowler: Catalog of Patterns of Enterprise Application Architecture",
+        "url": "https://martinfowler.com/eaaCatalog/"
       }
     ]
   },
@@ -51,15 +57,18 @@ window.MODULE_CONTENT["learning-foundations"] = {
     },
     "content": "<div class=\"lesson-content\"><h2>Lesson Content</h2><p><em>This topic is covered in depth in the curriculum archive above. The video lesson provides additional visual explanation and real-world examples.</em></p></div>",
     "keyTakeaways": [
-      "Understand the core trade-offs involved in Non-functional requirements.",
-      "Identify the right scenarios to use this pattern.",
-      "Consider the impact on system latency and scalability.",
-      "Measure and monitor to ensure the system behaves as expected."
+      "SLIs measure actual service behavior; SLOs set internal targets; SLAs define contractual penalties.",
+      "A 100% availability target is usually impractical and can suppress useful change.",
+      "Error budgets balance feature velocity against reliability — excessive burn triggers release freezes."
     ],
     "furtherReading": [
       {
-        "title": "System Design Primer - Non-functional requirements",
-        "url": "https://github.com/donnemartin/system-design-primer"
+        "title": "Google SRE Book: Service Level Objectives",
+        "url": "https://sre.google/sre-book/service-level-objectives/"
+      },
+      {
+        "title": "Google SRE Workbook: Implementing SLOs",
+        "url": "https://sre.google/workbook/implementing-slos/"
       }
     ]
   },
@@ -72,15 +81,18 @@ window.MODULE_CONTENT["learning-foundations"] = {
     },
     "content": "<div class=\"lesson-content\"><h2>Lesson Content</h2><p><em>This topic is covered in depth in the curriculum archive above. The video lesson provides additional visual explanation and real-world examples.</em></p></div>",
     "keyTakeaways": [
-      "Understand the core trade-offs involved in System design tradeoffs.",
-      "Identify the right scenarios to use this pattern.",
-      "Consider the impact on system latency and scalability.",
-      "Measure and monitor to ensure the system behaves as expected."
+      "Every architectural decision trades one property for another (consistency vs. availability, latency vs. throughput).",
+      "Identify which constraints are hard (legal, physical) vs. soft (optimization targets) early in design.",
+      "Document tradeoff decisions with rationale so future engineers understand why alternatives were rejected."
     ],
     "furtherReading": [
       {
-        "title": "System Design Primer - System design tradeoffs",
-        "url": "https://github.com/donnemartin/system-design-primer"
+        "title": "Bass, Clements, Kazman: Software Architecture in Practice",
+        "url": "https://www.oreilly.com/library/view/software-architecture-in/9780136885979/"
+      },
+      {
+        "title": "Nygard: Release It! (2nd Edition) — Stability Patterns",
+        "url": "https://pragprog.com/titles/mnee2/release-it-second-edition/"
       }
     ]
   },
@@ -93,15 +105,18 @@ window.MODULE_CONTENT["learning-foundations"] = {
     },
     "content": "<div class=\"lesson-content\"><h2>Lesson Content</h2><p><em>This topic is covered in depth in the curriculum archive above. The video lesson provides additional visual explanation and real-world examples.</em></p></div>",
     "keyTakeaways": [
-      "Understand the core trade-offs involved in Availability, durability, consistency, cost.",
-      "Identify the right scenarios to use this pattern.",
-      "Consider the impact on system latency and scalability.",
-      "Measure and monitor to ensure the system behaves as expected."
+      "CAP theorem forces a choice between consistency and availability during network partitions; most systems choose AP and tune consistency per operation.",
+      "Durability (D in ACID) requires synchronous WAL fsync; skipping it trades safety for speed.",
+      "Cost is a constraint: 5 9s availability costs orders of magnitude more than 3 9s."
     ],
     "furtherReading": [
       {
-        "title": "System Design Primer - Availability, durability, consistency, cost",
-        "url": "https://github.com/donnemartin/system-design-primer"
+        "title": "Brewer: Towards Robust Distributed Systems (CAP, 2000)",
+        "url": "https://people.eecs.berkeley.edu/~brewer/cs262b-2004/PODC-keynote.pdf"
+      },
+      {
+        "title": "Abadi: Consistency Tradeoffs in Modern Distributed Database Systems",
+        "url": "https://db.cs.cmu.edu/papers//icde2018-consistency-tradeoffs.pdf"
       }
     ]
   },
@@ -114,15 +129,18 @@ window.MODULE_CONTENT["learning-foundations"] = {
     },
     "content": "<div class=\"lesson-content\"><h2>Lesson Content</h2><p><em>This topic is covered in depth in the curriculum archive above. The video lesson provides additional visual explanation and real-world examples.</em></p></div>",
     "keyTakeaways": [
-      "Understand the core trade-offs involved in Back-of-the-envelope capacity planning.",
-      "Identify the right scenarios to use this pattern.",
-      "Consider the impact on system latency and scalability.",
-      "Measure and monitor to ensure the system behaves as expected."
+      "Use powers of 10 for quick estimates: 1 ms = 1,000 QPS single-core; 1 GB = 10^9 bytes.",
+      "Always estimate with replication factor (3x) and growth buffer (2-3 year horizon).",
+      "Bottleneck analysis: identify whether CPU, memory, disk I/O, or network bandwidth saturates first."
     ],
     "furtherReading": [
       {
-        "title": "System Design Primer - Back-of-the-envelope capacity planning",
-        "url": "https://github.com/donnemartin/system-design-primer"
+        "title": "Dynamo: Amazon's Highly Available Key-value Store (DeCandia et al., 2007)",
+        "url": "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf"
+      },
+      {
+        "title": "High Scalability: Numbers Everyone Should Know",
+        "url": "https://highscalability.com/numbers-everyone-should-know/"
       }
     ]
   },
@@ -135,15 +153,18 @@ window.MODULE_CONTENT["learning-foundations"] = {
     },
     "content": "<div class=\"lesson-content\"><h2>Lesson Content</h2><p><em>This topic is covered in depth in the curriculum archive above. The video lesson provides additional visual explanation and real-world examples.</em></p></div>",
     "keyTakeaways": [
-      "Understand the core trade-offs involved in How a server handles many requests.",
-      "Identify the right scenarios to use this pattern.",
-      "Consider the impact on system latency and scalability.",
-      "Measure and monitor to ensure the system behaves as expected."
+      "Concurrency is handling multiple interleaved tasks; parallelism is executing tasks simultaneously on multiple cores.",
+      "Thread-per-request models hit OS thread limits (~10K); event-loop and actor models scale to millions of concurrent connections.",
+      "Shared mutable state requires synchronization (locks, atomics); lock-free data structures trade memory for contention avoidance."
     ],
     "furtherReading": [
       {
-        "title": "System Design Primer - How a server handles many requests",
-        "url": "https://github.com/donnemartin/system-design-primer"
+        "title": "Ousterhout: Why Threads Are a Bad Idea (1996)",
+        "url": "https://web.stanford.edu/~ouster/cgi-bin/papers/threads.pdf"
+      },
+      {
+        "title": "Akka Documentation: The Actor Model",
+        "url": "https://doc.akka.io/docs/akka/current/typed/guide/actors-intro.html"
       }
     ]
   },

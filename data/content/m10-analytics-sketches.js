@@ -17,6 +17,14 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "Scaling counting at YouTube",
         "url": "https://bytebytego.com/"
+      },
+      {
+        "title": "The Log: What every software engineer should know about real-time data",
+        "url": "https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying"
+      },
+      {
+        "title": "Distributed Counting with Apache Kafka",
+        "url": "https://kafka.apache.org/documentation/#design"
       }
     ]
   },
@@ -37,6 +45,14 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "Lambda Architecture",
         "url": "https://en.wikipedia.org/wiki/Lambda_architecture"
+      },
+      {
+        "title": "Questioning the Lambda Architecture (Jay Kreps)",
+        "url": "https://www.oreilly.com/radar/questioning-the-lambda-architecture/"
+      },
+      {
+        "title": "Designing Data-Intensive Applications - Stream Processing (Martin Kleppmann)",
+        "url" : "https://dataintensive.net/"
       }
     ]
   },
@@ -57,6 +73,10 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "Apache Druid Architecture",
         "url": "https://druid.apache.org/docs/latest/design/"
+      },
+      {
+        "title": "Real-Time Bidding with Apache Kafka (Confluent)",
+        "url": "https://developer.confluent.io/use-cases/programmatic-advertising/"
       }
     ]
   },
@@ -77,6 +97,10 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "Redis HyperLogLog",
         "url": "https://redis.io/docs/data-types/probabilistic/hyperloglogs/"
+      },
+      {
+        "title": "HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm (Flajolet et al.)",
+        "url": "https://algo.inria.fr/flajolet/Publications/DuFlMoFaSc07.pdf"
       }
     ]
   },
@@ -97,6 +121,10 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "Apache DataSketches",
         "url": "https://datasketches.apache.org/"
+      },
+      {
+        "title": "The Count-Min Sketch: A Compact Data Structure (Cormode & Muthukrishnan)",
+        "url": "https://www.cs.rutgers.edu/~muthukra/papers/soda-countmin.pdf"
       }
     ]
   },
@@ -117,6 +145,10 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "Windowing in Apache Flink",
         "url": "https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/datastream/operators/windows/"
+      },
+      {
+        "title": "The Dataflow Model (Google, Akidau et al.)",
+        "url": "https://research.google/pubs/pub41378/"
       }
     ]
   },
@@ -137,6 +169,10 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "Data Lake vs Data Warehouse",
         "url": "https://aws.amazon.com/big-data/datalakes-and-analytics/what-is-a-data-lake/"
+      },
+      {
+        "title": "Fundamentals of Data Engineering (Reis & Housley)",
+        "url": "https://www.oreilly.com/library/view/fundamentals-of-data/9781098108267/"
       }
     ]
   },
@@ -157,6 +193,10 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "Count-Min Sketch Wikipedia",
         "url": "https://en.wikipedia.org/wiki/Count%E2%80%93min_sketch"
+      },
+      {
+        "title": "An Improved Data Stream Summary: The Count-Min Sketch and its Applications (Cormode & Muthukrishnan)",
+        "url": "https://www.cs.rutgers.edu/~muthukra/papers/SODA04-cmsketch.pdf"
       }
     ]
   },
@@ -177,6 +217,10 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "Heavy Hitters Problem",
         "url": "https://en.wikipedia.org/wiki/Streaming_algorithm#Heavy_hitters"
+      },
+      {
+        "title": "Finding Frequent Items in Data Streams (Manku & Motwani, 2002)",
+        "url": "https://cis.upenn.edu/~sudik/papers/sigmod-final.pdf"
       }
     ]
   },
@@ -197,6 +241,10 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "Reservoir Sampling Proof",
         "url": "https://en.wikipedia.org/wiki/Reservoir_sampling"
+      },
+      {
+        "title": "Random sampling with a reservoir (Jeffrey Vitter, 1985)",
+        "url": "https://dl.acm.org/doi/10.1145/3141.3165"
       }
     ]
   },
@@ -217,6 +265,10 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "The t-digest paper",
         "url": "https://arxiv.org/abs/1902.04023"
+      },
+      {
+        "title": "Merging t-Digests (Cramer, 2019)",
+        "url": "https://arxiv.org/abs/1906.04032"
       }
     ]
   },
@@ -237,6 +289,10 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "High Dynamic Range Histogram",
         "url": "http://hdrhistogram.org/"
+      },
+      {
+        "title": "HdrHistogram: A High Dynamic Range Histogram Library (Gil Tene)",
+        "url": "https://www.cs.cmu.edu/~harchol/paper/DynamicRange.pdf"
       }
     ]
   },
@@ -257,6 +313,10 @@ window.MODULE_CONTENT["learning-analytics-sketches"] = {
       {
         "title": "Scaling WebSocket Broadcasts",
         "url": "https://bytebytego.com/"
+      },
+      {
+        "title": "Scaling WebSockets with Redis Pub/Sub (Redis)",
+        "url": "https://redis.io/docs/latest/develop/interact/pubsub/"
       }
     ]
   }

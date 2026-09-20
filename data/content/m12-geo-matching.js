@@ -17,6 +17,14 @@ window.MODULE_CONTENT["learning-geo-matching"] = {
       {
         "title": "Yelp System Design",
         "url": "https://bytebytego.com/"
+      },
+      {
+        "title": "Spatial Databases: With Application to GIS (Rigaux, Scholl, Voisard)",
+        "url": "https://link.springer.com/book/10.1007/978-3-662-05296-9"
+      },
+      {
+        "title": "PostGIS in Action (Obe, Hsu)",
+        "url": "https://www.manning.com/books/postgis-in-action-third-edition"
       }
     ]
   },
@@ -37,6 +45,10 @@ window.MODULE_CONTENT["learning-geo-matching"] = {
       {
         "title": "Understanding Geohash",
         "url": "https://en.wikipedia.org/wiki/Geohash"
+      },
+      {
+        "title": "R-trees: A Dynamic Index Structure for Spatial Searching (Guttman, 1984)",
+        "url": "https://dl.acm.org/doi/10.1145/971657.971662"
       }
     ]
   },
@@ -57,6 +69,14 @@ window.MODULE_CONTENT["learning-geo-matching"] = {
       {
         "title": "Uber H3 Documentation",
         "url": "https://h3geo.org/"
+      },
+      {
+        "title": "S2 Geometry Library (Google)",
+        "url": "https://s2geometry.io/"
+      },
+      {
+        "title": "A Tour of H3: Uber's Hexagonal Hierarchical Spatial Index (Uber Engineering)",
+        "url": "https://www.uber.com/blog/h3/"
       }
     ]
   },
@@ -77,6 +97,10 @@ window.MODULE_CONTENT["learning-geo-matching"] = {
       {
         "title": "Redis GEOSEARCH documentation",
         "url": "https://redis.io/commands/geosearch/"
+      },
+      {
+        "title": "Designing Data-Intensive Applications (Kleppmann)",
+        "url": "https://dataintensive.net/"
       }
     ]
   },
@@ -97,6 +121,10 @@ window.MODULE_CONTENT["learning-geo-matching"] = {
       {
         "title": "PostGIS R-Tree Spatial Indexes",
         "url": "https://postgis.net/workshops/postgis-intro/indexing.html"
+      },
+      {
+        "title": "Computational Geometry: Algorithms and Applications (de Berg, Cheong, van Kreveld, Overmars)",
+        "url": "https://link.springer.com/book/10.1007/978-3-540-77974-4"
       }
     ]
   },
@@ -117,6 +145,10 @@ window.MODULE_CONTENT["learning-geo-matching"] = {
       {
         "title": "Point in Polygon Wikipedia",
         "url": "https://en.wikipedia.org/wiki/Point_in_polygon"
+      },
+      {
+        "title": "A Simple and Correct Eulerian Algorithm for Point-in-Polygon (Sunday)",
+        "url": "https://wrfranklin.org/Research/Short_Notes/pnpoly.html"
       }
     ]
   },
@@ -137,6 +169,10 @@ window.MODULE_CONTENT["learning-geo-matching"] = {
       {
         "title": "Bloom Filters Explained",
         "url": "https://llimllib.github.io/bloomfilter-tutorial/"
+      },
+      {
+        "title": "Space/Time Trade-offs in Hash Coding with Allowable Error (Bloom, 1970)",
+        "url": "https://dl.acm.org/doi/10.1145/362686.362692"
       }
     ]
   },
@@ -157,6 +193,14 @@ window.MODULE_CONTENT["learning-geo-matching"] = {
       {
         "title": "Google Developers Course on Recommendation Systems",
         "url": "https://developers.google.com/machine-learning/recommendation"
+      },
+      {
+        "title": "Matrix Factorization Techniques for Recommender Systems (Koren, Bell, Volinsky, 2009)",
+        "url": "https://ieeexplore.ieee.org/document/5197422"
+      },
+      {
+        "title": "Deep Neural Networks for YouTube Recommendations (Covington, Adams, Sargin, 2016)",
+        "url": "https://dl.acm.org/doi/10.1145/2988450.2988456"
       }
     ]
   }
