@@ -254,7 +254,16 @@ window.Exercises = (() => {
    * Render an interactive exercise card for a unit
    */
   function renderExercise(slug, unitTitle) {
-    const ex = exerciseBank[slug] || generateDynamicExercise(slug, unitTitle);
+    if (window.Quiz && window.Quiz.hasQuestions(slug)) {
+      return window.Quiz.renderQuiz(slug);
+    }
+
+    let isAuto = false;
+    let ex = exerciseBank[slug];
+    if (!ex) {
+      ex = generateDynamicExercise(slug, unitTitle);
+      isAuto = true;
+    }
 
     // Shuffle options so correct answer is not always in the same position
     const correctAnswer = ex.options[ex.answer];
@@ -285,6 +294,7 @@ window.Exercises = (() => {
           <div class="feedback-msg"></div>
           <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> ${escapeHtml(ex.explanation)}</div>
         </div>
+        ${isAuto ? '<div class="auto-generated-notice">Auto-generated practice question</div>' : ''}
       </div>
     `;
   }

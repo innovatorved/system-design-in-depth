@@ -10,6 +10,7 @@ window.App = (() => {
   let currentSlug = null;
   let activeTab = 'curriculum';  // curriculum | builds
   let sidebarOpen = false;
+  let activeSimulator = null;
   const collapsedModules = new Set();
 
   // Helper: find module ID for a given slug
@@ -57,17 +58,17 @@ window.App = (() => {
     // Listen for hash changes
     window.addEventListener('hashchange', () => {
       parseRoute();
+      if (currentSlug && currentView === 'topic') loadModuleContent(currentSlug);
       renderCurrentView();
       updateSidebarActive();
-      if (currentSlug && currentView === 'topic') loadModuleContent(currentSlug);
     });
 
     // Listen for history popstate (forward/back)
     window.addEventListener('popstate', () => {
       parseRoute();
+      if (currentSlug && currentView === 'topic') loadModuleContent(currentSlug);
       renderCurrentView();
       updateSidebarActive();
-      if (currentSlug && currentView === 'topic') loadModuleContent(currentSlug);
     });
   }
 
@@ -102,6 +103,31 @@ window.App = (() => {
       currentSlug = hash.slice(6);
       activeTab = 'builds';
       syncSidebarTabs();
+    } else if (hash === '/review' || hash === 'review') {
+      currentView = 'review';
+      currentSlug = null;
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+    } else if (hash === '/paths' || hash === 'paths') {
+      currentView = 'paths';
+      currentSlug = null;
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+    } else if (hash === '/cards' || hash === 'cards') {
+      currentView = 'cards';
+      currentSlug = null;
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+    } else if (hash === '/glossary' || hash === 'glossary') {
+      currentView = 'glossary';
+      currentSlug = null;
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+    } else if (hash.startsWith('cheatsheet/')) {
+      currentView = 'cheatsheet';
+      currentSlug = hash.slice(11);
+      activeTab = 'curriculum';
+      syncSidebarTabs();
     } else if (hash.startsWith('topic/')) {
       currentView = 'topic';
       currentSlug = hash.slice(6);
@@ -125,12 +151,18 @@ window.App = (() => {
   }
 
   function navigateTo(slug) {
+    if (!slug) return;
+    loadModuleContent(slug);
     if (window.location.pathname !== '/') {
       history.pushState(null, '', '/#topic/' + slug);
       parseRoute();
       renderCurrentView();
     } else {
-      window.location.hash = 'topic/' + slug;
+      if (window.location.hash !== '#topic/' + slug && window.location.hash !== 'topic/' + slug) {
+        window.location.hash = 'topic/' + slug;
+      }
+      parseRoute();
+      renderCurrentView();
     }
     window.Progress.setLastVisited(slug);
     closeSidebar();
@@ -203,6 +235,11 @@ window.App = (() => {
     // Pause any active audio from previous view
     document.querySelectorAll('audio').forEach(a => a.pause());
 
+    if (activeSimulator) {
+      activeSimulator.unmount(reader);
+      activeSimulator = null;
+    }
+
     switch (currentView) {
       case 'home':
         reader.innerHTML = window.Renderer.renderOverview();
@@ -210,17 +247,54 @@ window.App = (() => {
           window.Analytics.trackPageView('System Design In Depth - Home', '/#/', window.location.href);
         }
         break;
+      case 'review':
+        reader.innerHTML = window.SRS.renderReviewSession();
+        if (window.Analytics) {
+          window.Analytics.trackPageView('SRS Review', '/#/review', window.location.href);
+        }
+        break;
+      case 'paths':
+        reader.innerHTML = window.Renderer.renderPaths();
+        if (window.Analytics) {
+          window.Analytics.trackPageView('Learning Paths', '/#/paths', window.location.href);
+        }
+        break;
+      case 'cards':
+        reader.innerHTML = window.Renderer.renderCardsGrid();
+        if (window.Analytics) {
+          window.Analytics.trackPageView('Flashcards Grid', '/#/cards', window.location.href);
+        }
+        break;
+      case 'glossary':
+        reader.innerHTML = window.Renderer.renderGlossary();
+        if (window.Analytics) {
+          window.Analytics.trackPageView('System Design Glossary', '/#/glossary', window.location.href);
+        }
+        break;
+      case 'cheatsheet':
+        reader.innerHTML = window.Renderer.renderCheatSheet(currentSlug);
+        if (window.Analytics) {
+          window.Analytics.trackPageView('Cheat Sheet', '/#cheatsheet/' + currentSlug, window.location.href);
+        }
+        break;
       case 'topic':
-        // Delay rendering until module content is loaded to avoid double-render flash
-        if (currentSlug && !window.MODULE_CONTENT[getModuleIdForSlug(currentSlug)]) {
-          reader.innerHTML = '<div class="loading-placeholder"><p>Loading content...</p></div>';
-          // Content will be loaded and renderCurrentView called when script loads
-        } else {
-          reader.innerHTML = window.Renderer.renderLesson(currentSlug);
-          initMermaid();
-          if (window.setupAudioListeners) {
-            window.setupAudioListeners(currentSlug);
+        if (currentSlug) {
+          loadModuleContent(currentSlug);
+        }
+
+        reader.innerHTML = window.Renderer.renderLesson(currentSlug);
+        
+        if (window.Simulators && window.Simulators.getSimulatorForUnit) {
+          const simData = window.Simulators.getSimulatorForUnit(currentSlug);
+          if (simData && simData.sim) {
+            simData.sim.mount(reader);
+            activeSimulator = simData.sim;
           }
+        }
+        
+        initMermaid();
+        if (window.setupAudioListeners) {
+          window.setupAudioListeners(currentSlug);
         }
         if (window.Analytics) {
           const data = window.CURRICULUM_DATA;
@@ -290,9 +364,12 @@ window.App = (() => {
   }
 
   // ── Module Content Loading ────────────────────────────────
+  const loadingModules = new Set();
+
   function loadModuleContent(slug) {
+    window.MODULE_CONTENT = window.MODULE_CONTENT || {};
     const data = window.CURRICULUM_DATA;
-    if (!data) return;
+    if (!data || !slug) return;
 
     // Find which module this slug belongs to
     let moduleId = null;
@@ -311,61 +388,38 @@ window.App = (() => {
 
     if (!moduleId) return;
     if (window.MODULE_CONTENT[moduleId]) return; // Already loaded
+    if (loadingModules.has(moduleId)) return; // Already in-flight
 
-    // Try to load the module content file
-    const moduleNum = moduleId.replace(/[^0-9]/g, '').padStart(2, '0') || moduleId;
-    const possibleFiles = [
-      'data/content/m' + moduleNum + '.js',
-      'data/content/' + moduleId + '.js'
-    ];
-
-    // Find the right file by module mapping
-    const moduleFileMap = buildModuleFileMap();
-    const filename = moduleFileMap[moduleId];
+    // Load content file from data-driven registry
+    const filename = getModuleContentFile(moduleId);
     if (filename) {
+      loadingModules.add(moduleId);
       const script = document.createElement('script');
       script.src = filename;
       script.onload = () => {
-        // Re-render if we're still on this topic
-        if (currentSlug === slug) renderCurrentView();
+        loadingModules.delete(moduleId);
+        // Re-render if the user is on any topic belonging to this module
+        if (currentView === 'topic' && getModuleIdForSlug(currentSlug) === moduleId) {
+          renderCurrentView();
+        }
       };
-      script.onerror = () => {}; // Content file doesn't exist yet, that's ok
+      script.onerror = (err) => {
+        loadingModules.delete(moduleId);
+        console.warn('Failed to load content for module:', moduleId, filename, err);
+      };
       document.head.appendChild(script);
     }
   }
 
-  function buildModuleFileMap() {
-    const map = {};
+  function getModuleContentFile(moduleId) {
     const data = window.CURRICULUM_DATA;
-    if (!data) return map;
-
-    const moduleFiles = {
-      'learning-foundations': 'data/content/m01-foundations.js',
-      'learning-apis-services': 'data/content/m02-apis-protocols.js',
-      'learning-data-sql': 'data/content/m03-data-modeling-sql.js',
-      'learning-nosql-partitioning': 'data/content/m04-nosql-partitioning.js',
-      'learning-caching-fast-reads': 'data/content/m05-caching.js',
-      'learning-distributed-coordination': 'data/content/m06-distributed-coord.js',
-      'learning-storage-engines': 'data/content/m07-storage-engines.js',
-      'learning-async-streams': 'data/content/m08-async-streams.js',
-      'learning-search-retrieval': 'data/content/m09-search-retrieval.js',
-      'learning-analytics-sketches': 'data/content/m10-analytics-sketches.js',
-      'learning-realtime-social': 'data/content/m11-realtime-social.js',
-      'learning-geo-matching': 'data/content/m12-geo-matching.js',
-      'learning-media-files': 'data/content/m13-media-cdn.js',
-      'learning-reliability-ops': 'data/content/m14-reliability-ops.js',
-      'design-services': 'data/content/m15-service-designs.js',
-      'design-products': 'data/content/m16-product-designs.js',
-      'design-operations': 'data/content/m17-media-ops-designs.js',
-      'company-cases': 'data/content/m18-case-studies.js'
-    };
-
+    if (!data) return null;
     for (const p of data.parts) {
       for (const m of p.modules) {
-        map[m.id] = moduleFiles[m.id] || null;
+        if (m.id === moduleId) return m.contentFile || null;
       }
     }
-    return map;
+    return null;
   }
 
   // ── Sidebar ───────────────────────────────────────────────

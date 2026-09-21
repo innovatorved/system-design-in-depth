@@ -29,10 +29,6 @@ window.MODULE_CONTENT["learning-data-sql"] = {
       {
         "title": "Kimball: The Data Warehouse Toolkit — Star Schema Design",
         "url": "https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/dimensional-modeling-techniques/"
-      },
-      {
-        "title": "Abadi: The Architecture of a Database System (CMU, 2017)",
-        "url": "https://stratos.seas.harvard.edu/files/stratos/files/databasearch.pdf"
       }
     ]
   },

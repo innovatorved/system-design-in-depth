@@ -6,7 +6,7 @@ A zero-build, client-side system design learning platform for senior and staff b
 
 - **18 Modules, 200 Units** covering distributed systems from fundamentals to FAANG case studies
 - **Deep technical content** — B-Trees vs LSM-Trees, Raft consensus, consistent hashing rings, Kafka internals, BM25 scoring, Reed-Solomon erasure coding, and more
-- **118 Mermaid architecture diagrams** — CQRS pipelines, Redis Cluster topologies, LSM-tree flush paths, Raft election sequences
+- **126 Mermaid architecture diagrams** — CQRS pipelines, Redis Cluster topologies, LSM-tree flush paths, Raft election sequences
 - **Curated YouTube embeds** from ByteByteGo, Hussein Nasser, Gaurav Sen, and others
 - **12 from-scratch algorithm builds** — consistent hashing, bloom filters, WAL engine, LRU cache, snowflake IDs, and more
 - **Interactive simulators** — consistent hashing ring, rate-limit token bucket, cache eviction visualizer

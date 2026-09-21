@@ -31,6 +31,8 @@ window.Renderer = (() => {
 
     const stats = data.stats;
     const pct = window.Progress.getPercentage();
+    const srsDue = window.SRS ? window.SRS.getDueCount() : 0;
+    const streak = window.Progress.getStreak ? window.Progress.getStreak().current : 0;
     const projects = window.PROJECTS_DATA || [];
     const pinnedProjects = projects.filter(p => p.pinned);
 
@@ -42,8 +44,15 @@ window.Renderer = (() => {
         <div class="hero__stats">
           <div><div class="hero__stat-value">${stats.modules}</div><div class="hero__stat-label">Modules</div></div>
           <div><div class="hero__stat-value">${stats.units}</div><div class="hero__stat-label">Topics</div></div>
-          <div><div class="hero__stat-value">${stats.builds}</div><div class="hero__stat-label">Builds</div></div>
           <div><div class="hero__stat-value">${pct}%</div><div class="hero__stat-label">Complete</div></div>
+          ${window.SRS ? `<div><div class="hero__stat-value" style="color: ${srsDue > 0 ? 'var(--accent)' : 'inherit'};"><a href="#/review" style="text-decoration:none; color:inherit;">${srsDue}</a></div><div class="hero__stat-label">Cards Due</div></div>` : ''}
+          <div><div class="hero__stat-value" style="color: ${streak > 0 ? '#f97316' : 'inherit'};">${streak} 🔥</div><div class="hero__stat-label">Day Streak</div></div>
+        </div>
+        <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+          <a href="#/paths" class="btn btn--sm btn--primary">🎯 Learning Paths</a>
+          <a href="#/cards" class="btn btn--sm btn--secondary">🗂️ 400 Flashcards</a>
+          <a href="#/review" class="btn btn--sm btn--outline">⚡ Spaced Review (${srsDue} Due)</a>
+          <a href="#/glossary" class="btn btn--sm btn--outline">📖 75 Term Glossary</a>
         </div>
       </div>`;
 
@@ -98,13 +107,17 @@ window.Renderer = (() => {
     const data = window.CURRICULUM_DATA;
     if (!data) return '<p>Loading...</p>';
 
-    // Find unit
-    let unit = null, mod = null, part = null;
+    // Find unit and module
+    let unit = null;
+    let mod = null;
+    let part = null;
     for (const p of data.parts) {
       for (const m of p.modules) {
         for (const u of m.units) {
           if (u.slug === slug) {
-            unit = u; mod = m; part = p;
+            unit = u;
+            mod = m;
+            part = p;
             break;
           }
         }
@@ -120,7 +133,18 @@ window.Renderer = (() => {
 
     // Get module content if loaded
     const moduleContent = window.MODULE_CONTENT?.[mod.id]?.[slug];
-    const archiveContent = unit.archive?.content;
+    const archiveContent = window.ARCHIVE_CONTENT?.[slug] || null;
+    // Trigger lazy-load of archive file if not yet loaded
+    if (!archiveContent && unit.archive && !window.ARCHIVE_CONTENT?.[slug]) {
+      const archiveScript = document.createElement('script');
+      archiveScript.src = 'data/archive/' + slug + '.js';
+      archiveScript.onload = () => {
+        // Re-render once archive content is available
+        const reader = document.getElementById('reader');
+        if (reader) reader.innerHTML = renderLesson(slug);
+      };
+      document.head.appendChild(archiveScript);
+    }
 
     // Build header
     let html = `
@@ -142,10 +166,23 @@ window.Renderer = (() => {
           ${unit.archive?.wordCount ? '<span class="lesson-header__meta-item">' + icons.clock + ' ' + Math.ceil(unit.archive.wordCount / 200) + ' min read</span>' : ''}
           <span class="lesson-header__meta-item">${icons.book} Module ${mod.number}: ${mod.title}</span>
         </div>
-        <div class="lesson-header__actions">
+        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle${isCompleted ? ' completed' : ''}" onclick="App.toggleComplete('${slug}')">
             ${isCompleted ? icons.check + ' Completed' : icons.circle + ' Mark Complete'}
           </button>
+          <button class="btn btn--sm btn--outline" id="skim-mode-toggle" onclick="
+            const article = document.querySelector('article.lesson-content');
+            if (article) {
+              article.classList.toggle('skim-mode');
+              this.classList.toggle('active');
+              this.textContent = article.classList.contains('skim-mode') ? '📖 Full Mode' : '⚡ Skim Mode';
+            }
+          " title="Toggle Skim Mode (focus on key points & diagrams)">
+            ⚡ Skim Mode
+          </button>
+          <a href="#cheatsheet/${mod.id}" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
+            📄 Cheat Sheet
+          </a>
         </div>
       </div>`;
 
@@ -197,7 +234,8 @@ window.Renderer = (() => {
 
     // Interactive Visual Simulator (if applicable for unit)
     if (window.Simulators && window.Simulators.getSimulatorForUnit) {
-      html += window.Simulators.getSimulatorForUnit(slug);
+      const simData = window.Simulators.getSimulatorForUnit(slug);
+      if (simData) html += simData.html;
     }
 
     // Interactive Practice / Challenge Exercise
@@ -294,16 +332,19 @@ window.Renderer = (() => {
     return `
       <div class="video-embed" id="video-${video.youtubeId}">
         <div class="video-embed__placeholder" onclick="loadYouTubeVideo('${video.youtubeId}', this.parentElement)">
-          <img src="https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg"
+          <img src="https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg"
                alt="${escapeHtml(video.title || '')}"
                loading="lazy"
-               onerror="this.src='https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg'">
+               onerror="this.src='https://img.youtube.com/vi/${video.youtubeId}/default.jpg'">
           <div class="video-embed__play-btn">${icons.play}</div>
         </div>
       </div>
       ${video.title ? `<div class="video-embed__info">
         <span class="video-embed__channel">${escapeHtml(video.channel || 'YouTube')}</span>
         <span class="video-embed__title">${escapeHtml(video.title)}</span>
+        <a href="https://www.youtube.com/watch?v=${video.youtubeId}" target="_blank" rel="noopener noreferrer" style="margin-left:auto; font-size:11px; color:var(--accent,#6366f1); text-decoration:none; display:flex; align-items:center; gap:2px;">
+          Watch on YouTube ↗
+        </a>
       </div>` : ''}`;
   }
 
@@ -756,6 +797,269 @@ window.Renderer = (() => {
     return html;
   }
 
+  /**
+   * Render Learning Paths
+   */
+  function renderPaths() {
+    const paths = window.LEARNING_PATHS || [];
+    let html = `
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep">${icons.chevronRight}</span>
+        <span class="breadcrumbs__current">Learning Paths</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--lesson">Curated Tracks</span>
+          <span class="tag">${paths.length} Paths</span>
+        </div>
+        <h1 class="lesson-header__title">Curated Learning Paths</h1>
+        <p class="hero__subtitle" style="margin-top:0.5rem;">Targeted curricula tailored for interview sprints, backend mastery, data systems, and staff engineer prep.</p>
+      </div>
+
+      <div class="module-grid" style="margin-top: 1.5rem;">
+    `;
+
+    for (const p of paths) {
+      let completed = 0;
+      let nextSlug = null;
+      for (const slug of p.slugs) {
+        if (window.Progress.isCompleted(slug)) {
+          completed++;
+        } else if (!nextSlug) {
+          nextSlug = slug;
+        }
+      }
+      const pct = p.slugs.length > 0 ? Math.round((completed / p.slugs.length) * 100) : 0;
+      const targetSlug = nextSlug || p.slugs[0];
+
+      html += `
+        <div class="module-card" style="cursor:default;">
+          <div class="module-card__header">
+            <span class="badge badge--accent">${p.badge}</span>
+            <span style="font-size:12px; color:var(--fg-muted);">${p.duration}</span>
+          </div>
+          <h3 style="margin:0.5rem 0 0.25rem; font-size:16px;">${p.title}</h3>
+          <p class="module-card__summary">${p.description}</p>
+          <div style="margin:1rem 0 0.5rem; display:flex; justify-content:space-between; font-size:12px;">
+            <span>${completed}/${p.slugs.length} units completed</span>
+            <strong>${pct}%</strong>
+          </div>
+          <div class="module-card__progress" style="margin-bottom:1rem;">
+            <div class="module-card__progress-fill" style="width:${pct}%;"></div>
+          </div>
+          <a href="#topic/${targetSlug}" class="btn btn--sm btn--primary" style="display:inline-block; text-align:center; width:100%;">
+            ${completed === 0 ? 'Start Path' : (nextSlug ? 'Continue Path' : 'Review Path')} →
+          </a>
+        </div>
+      `;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  /**
+   * Render Flashcards Concept Grid
+   */
+  function renderCardsGrid(selectedModuleId) {
+    const flashcardsMap = window.FLASHCARDS || {};
+    const data = window.CURRICULUM_DATA;
+    let allCards = [];
+
+    if (data) {
+      for (const part of data.parts) {
+        for (const mod of part.modules) {
+          if (selectedModuleId && mod.id !== selectedModuleId) continue;
+          for (const unit of mod.units) {
+            const cards = flashcardsMap[unit.slug] || [];
+            cards.forEach(c => allCards.push({ ...c, moduleTitle: mod.title, moduleNumber: mod.number, unitTitle: unit.title, slug: unit.slug }));
+          }
+        }
+      }
+    }
+
+    const srsDue = window.SRS ? window.SRS.getDueCount() : 0;
+
+    let html = `
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep">${icons.chevronRight}</span>
+        <span class="breadcrumbs__current">Flashcards</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--lesson">Active Recall</span>
+          <span class="tag">${allCards.length} Cards</span>
+        </div>
+        <h1 class="lesson-header__title">Concept Flashcards Grid</h1>
+        <p class="hero__subtitle" style="margin-top:0.5rem;">400 retrieval cards across all 18 modules. Click any card to reveal the answer.</p>
+        <div class="lesson-header__actions" style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <a href="#/review" class="btn btn--sm btn--primary">
+            ⚡ Start Spaced Repetition Review (${srsDue} Due)
+          </a>
+        </div>
+      </div>
+
+      <div style="margin: 1.5rem 0; display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:1rem;">
+    `;
+
+    for (const c of allCards) {
+      html += `
+        <div class="card-flip-item" style="min-height:140px; cursor:pointer;" onclick="
+          const back = this.querySelector('.card-back-content');
+          const hint = this.querySelector('.card-back-hint');
+          if (back.style.display === 'none') {
+            back.style.display = 'block';
+            hint.style.display = 'none';
+            this.querySelector('.card-box').style.borderColor = 'var(--accent, #6366f1)';
+          } else {
+            back.style.display = 'none';
+            hint.style.display = 'block';
+            this.querySelector('.card-box').style.borderColor = 'var(--border-color, #333)';
+          }
+        ">
+          <div class="card-box" style="width:100%; height:100%; border:1px solid var(--border-color,#333); border-radius:8px; padding:1rem; background:var(--bg-card,#191a1c); transition:border-color 0.2s;">
+            <div style="font-size:11px; font-weight:700; color:var(--accent,#6366f1); margin-bottom:0.25rem;">M${c.moduleNumber}: ${c.unitTitle}</div>
+            <div style="font-size:13px; font-weight:600; margin-top:0.25rem; line-height:1.4;">${escapeHtml(c.front)}</div>
+            <div class="card-back-hint" style="margin-top:0.75rem; font-size:11px; color:var(--fg-muted,#888); border-top:1px dashed var(--border-color,#333); padding-top:0.5rem;">
+              Click to reveal answer ▾
+            </div>
+            <div class="card-back-content" style="display:none; margin-top:0.5rem; font-size:12px; color:var(--fg-muted,#ccc); line-height:1.4;">
+              ${escapeHtml(c.back)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  /**
+   * Render System Design Glossary
+   */
+  function renderGlossary() {
+    const glossary = window.GLOSSARY || [];
+    let html = `
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep">${icons.chevronRight}</span>
+        <span class="breadcrumbs__current">Glossary</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--lesson">Reference</span>
+          <span class="tag">${glossary.length} Terms</span>
+        </div>
+        <h1 class="lesson-header__title">System Design Glossary</h1>
+        <p class="hero__subtitle" style="margin-top:0.5rem;">Essential distributed systems, database, networking, and architecture definitions.</p>
+        <div style="margin-top:1rem;">
+          <input type="text" id="glossary-filter" placeholder="Filter terms (e.g. cache, consensus, replication)..." style="width:100%; max-width:400px; padding:0.5rem 0.75rem; background:var(--bg-surface,#222); border:1px solid var(--border-color,#333); border-radius:6px; color:inherit; font-size:13px;" oninput="
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('.glossary-item').forEach(item => {
+              const text = item.textContent.toLowerCase();
+              item.style.display = text.includes(q) ? 'block' : 'none';
+            });
+          ">
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem; display:flex; flex-direction:column; gap:0.75rem;">
+    `;
+
+    for (const item of glossary) {
+      html += `
+        <div class="glossary-item" style="padding:1rem; border:1px solid var(--border-color,#333); border-radius:6px; background:var(--bg-card,#191a1c);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+            <strong style="font-size:15px; color:var(--fg,#fff);">${escapeHtml(item.term)}</strong>
+            <span class="badge badge--secondary" style="font-size:11px;">${escapeHtml(item.cat || 'General')}</span>
+          </div>
+          <p style="margin:0.25rem 0 0; font-size:13px; color:var(--fg-muted,#aaa); line-height:1.5;">${escapeHtml(item.def)}</p>
+        </div>
+      `;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  /**
+   * Render Printable Module Cheat Sheet
+   */
+  function renderCheatSheet(moduleId) {
+    const data = window.CURRICULUM_DATA;
+    let targetMod = null;
+    if (data) {
+      for (const p of data.parts) {
+        for (const m of p.modules) {
+          if (m.id === moduleId || m.number === moduleId) {
+            targetMod = m;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!targetMod) {
+      return '<div style="padding:40px; text-align:center;">Module not found for cheat sheet.</div>';
+    }
+
+    const modContent = window.MODULE_CONTENT?.[targetMod.id] || {};
+
+    let html = `
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep">${icons.chevronRight}</span>
+        <a href="#topic/${targetMod.units[0]?.slug}">Module ${targetMod.number}</a>
+        <span class="breadcrumbs__sep">${icons.chevronRight}</span>
+        <span class="breadcrumbs__current">Cheat Sheet</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--lesson">Module ${targetMod.number}</span>
+          <span class="tag">Printable</span>
+        </div>
+        <h1 class="lesson-header__title">${targetMod.title} — Cheat Sheet</h1>
+        <p class="hero__subtitle" style="margin-top:0.5rem;">${targetMod.summary}</p>
+        <div class="lesson-header__actions" style="margin-top:1rem;">
+          <button class="btn btn--sm btn--primary" onclick="window.print()">
+            🖨️ Print / Save as PDF
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem; display:flex; flex-direction:column; gap:1.5rem;">
+    `;
+
+    for (const unit of targetMod.units) {
+      const c = modContent[unit.slug];
+      const takeaways = c?.keyTakeaways || [];
+      html += `
+        <div style="padding:1.25rem; border:1px solid var(--border-color,#333); border-radius:8px; background:var(--bg-card,#191a1c);">
+          <h3 style="font-size:16px; margin:0 0 0.5rem; display:flex; justify-content:space-between;">
+            <span>${unit.title}</span>
+            <a href="#topic/${unit.slug}" style="font-size:12px; color:var(--accent,#6366f1); text-decoration:none;">View Lesson →</a>
+          </h3>
+          ${takeaways.length ? `
+            <div style="font-size:12px; font-weight:700; color:var(--fg-muted,#888); margin-bottom:0.25rem;">KEY TAKEAWAYS:</div>
+            <ul style="margin:0; padding-left:1.25rem; font-size:13px; color:var(--fg-muted,#ccc); line-height:1.5;">
+              ${takeaways.map(t => `<li style="margin-bottom:0.25rem;">${escapeHtml(t)}</li>`).join('')}
+            </ul>
+          ` : '<p style="font-size:12px; color:var(--fg-muted);">Deep unit content available in lesson.</p>'}
+        </div>
+      `;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
   return {
     renderOverview,
     renderLesson,
@@ -763,6 +1067,10 @@ window.Renderer = (() => {
     renderProjects,
     renderProjectCard,
     renderVideoEmbed,
+    renderPaths,
+    renderCardsGrid,
+    renderGlossary,
+    renderCheatSheet,
     convertMarkdownToHTML,
     escapeHtml,
     icons
