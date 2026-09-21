@@ -31,7 +31,6 @@ window.Renderer = (() => {
 
     const stats = data.stats;
     const pct = window.Progress.getPercentage();
-    const srsDue = window.SRS ? window.SRS.getDueCount() : 0;
     const streak = window.Progress.getStreak ? window.Progress.getStreak().current : 0;
     const projects = window.PROJECTS_DATA || [];
     const pinnedProjects = projects.filter(p => p.pinned);
@@ -45,14 +44,10 @@ window.Renderer = (() => {
           <div><div class="hero__stat-value">${stats.modules}</div><div class="hero__stat-label">Modules</div></div>
           <div><div class="hero__stat-value">${stats.units}</div><div class="hero__stat-label">Topics</div></div>
           <div><div class="hero__stat-value">${pct}%</div><div class="hero__stat-label">Complete</div></div>
-          ${window.SRS ? `<div><div class="hero__stat-value" style="color: ${srsDue > 0 ? 'var(--accent)' : 'inherit'};"><a href="#/review" style="text-decoration:none; color:inherit;">${srsDue}</a></div><div class="hero__stat-label">Cards Due</div></div>` : ''}
           <div><div class="hero__stat-value" style="color: ${streak > 0 ? '#f97316' : 'inherit'};">${streak} 🔥</div><div class="hero__stat-label">Day Streak</div></div>
         </div>
         <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-          <a href="#/paths" class="btn btn--sm btn--primary">🎯 Learning Paths</a>
-          <a href="#/cards" class="btn btn--sm btn--secondary">🗂️ 400 Flashcards</a>
-          <a href="#/review" class="btn btn--sm btn--outline">⚡ Spaced Review (${srsDue} Due)</a>
-          <a href="#/glossary" class="btn btn--sm btn--outline">📖 75 Term Glossary</a>
+          <a href="#/glossary" class="btn btn--sm btn--primary">📖 75 Term Glossary</a>
         </div>
       </div>`;
 
@@ -797,147 +792,9 @@ window.Renderer = (() => {
     return html;
   }
 
-  /**
-   * Render Learning Paths
-   */
-  function renderPaths() {
-    const paths = window.LEARNING_PATHS || [];
-    let html = `
-      <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="/" data-nav="home">Home</a>
-        <span class="breadcrumbs__sep">${icons.chevronRight}</span>
-        <span class="breadcrumbs__current">Learning Paths</span>
-      </nav>
 
-      <div class="lesson-header">
-        <div class="lesson-header__badge">
-          <span class="lesson-header__kind lesson-header__kind--lesson">Curated Tracks</span>
-          <span class="tag">${paths.length} Paths</span>
-        </div>
-        <h1 class="lesson-header__title">Curated Learning Paths</h1>
-        <p class="hero__subtitle" style="margin-top:0.5rem;">Targeted curricula tailored for interview sprints, backend mastery, data systems, and staff engineer prep.</p>
-      </div>
 
-      <div class="module-grid" style="margin-top: 1.5rem;">
-    `;
 
-    for (const p of paths) {
-      let completed = 0;
-      let nextSlug = null;
-      for (const slug of p.slugs) {
-        if (window.Progress.isCompleted(slug)) {
-          completed++;
-        } else if (!nextSlug) {
-          nextSlug = slug;
-        }
-      }
-      const pct = p.slugs.length > 0 ? Math.round((completed / p.slugs.length) * 100) : 0;
-      const targetSlug = nextSlug || p.slugs[0];
-
-      html += `
-        <div class="module-card" style="cursor:default;">
-          <div class="module-card__header">
-            <span class="badge badge--accent">${p.badge}</span>
-            <span style="font-size:12px; color:var(--fg-muted);">${p.duration}</span>
-          </div>
-          <h3 style="margin:0.5rem 0 0.25rem; font-size:16px;">${p.title}</h3>
-          <p class="module-card__summary">${p.description}</p>
-          <div style="margin:1rem 0 0.5rem; display:flex; justify-content:space-between; font-size:12px;">
-            <span>${completed}/${p.slugs.length} units completed</span>
-            <strong>${pct}%</strong>
-          </div>
-          <div class="module-card__progress" style="margin-bottom:1rem;">
-            <div class="module-card__progress-fill" style="width:${pct}%;"></div>
-          </div>
-          <a href="#topic/${targetSlug}" class="btn btn--sm btn--primary" style="display:inline-block; text-align:center; width:100%;">
-            ${completed === 0 ? 'Start Path' : (nextSlug ? 'Continue Path' : 'Review Path')} →
-          </a>
-        </div>
-      `;
-    }
-
-    html += `</div>`;
-    return html;
-  }
-
-  /**
-   * Render Flashcards Concept Grid
-   */
-  function renderCardsGrid(selectedModuleId) {
-    const flashcardsMap = window.FLASHCARDS || {};
-    const data = window.CURRICULUM_DATA;
-    let allCards = [];
-
-    if (data) {
-      for (const part of data.parts) {
-        for (const mod of part.modules) {
-          if (selectedModuleId && mod.id !== selectedModuleId) continue;
-          for (const unit of mod.units) {
-            const cards = flashcardsMap[unit.slug] || [];
-            cards.forEach(c => allCards.push({ ...c, moduleTitle: mod.title, moduleNumber: mod.number, unitTitle: unit.title, slug: unit.slug }));
-          }
-        }
-      }
-    }
-
-    const srsDue = window.SRS ? window.SRS.getDueCount() : 0;
-
-    let html = `
-      <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="/" data-nav="home">Home</a>
-        <span class="breadcrumbs__sep">${icons.chevronRight}</span>
-        <span class="breadcrumbs__current">Flashcards</span>
-      </nav>
-
-      <div class="lesson-header">
-        <div class="lesson-header__badge">
-          <span class="lesson-header__kind lesson-header__kind--lesson">Active Recall</span>
-          <span class="tag">${allCards.length} Cards</span>
-        </div>
-        <h1 class="lesson-header__title">Concept Flashcards Grid</h1>
-        <p class="hero__subtitle" style="margin-top:0.5rem;">400 retrieval cards across all 18 modules. Click any card to reveal the answer.</p>
-        <div class="lesson-header__actions" style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
-          <a href="#/review" class="btn btn--sm btn--primary">
-            ⚡ Start Spaced Repetition Review (${srsDue} Due)
-          </a>
-        </div>
-      </div>
-
-      <div style="margin: 1.5rem 0; display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:1rem;">
-    `;
-
-    for (const c of allCards) {
-      html += `
-        <div class="card-flip-item" style="min-height:140px; cursor:pointer;" onclick="
-          const back = this.querySelector('.card-back-content');
-          const hint = this.querySelector('.card-back-hint');
-          if (back.style.display === 'none') {
-            back.style.display = 'block';
-            hint.style.display = 'none';
-            this.querySelector('.card-box').style.borderColor = 'var(--accent, #6366f1)';
-          } else {
-            back.style.display = 'none';
-            hint.style.display = 'block';
-            this.querySelector('.card-box').style.borderColor = 'var(--border-color, #333)';
-          }
-        ">
-          <div class="card-box" style="width:100%; height:100%; border:1px solid var(--border-color,#333); border-radius:8px; padding:1rem; background:var(--bg-card,#191a1c); transition:border-color 0.2s;">
-            <div style="font-size:11px; font-weight:700; color:var(--accent,#6366f1); margin-bottom:0.25rem;">M${c.moduleNumber}: ${c.unitTitle}</div>
-            <div style="font-size:13px; font-weight:600; margin-top:0.25rem; line-height:1.4;">${escapeHtml(c.front)}</div>
-            <div class="card-back-hint" style="margin-top:0.75rem; font-size:11px; color:var(--fg-muted,#888); border-top:1px dashed var(--border-color,#333); padding-top:0.5rem;">
-              Click to reveal answer ▾
-            </div>
-            <div class="card-back-content" style="display:none; margin-top:0.5rem; font-size:12px; color:var(--fg-muted,#ccc); line-height:1.4;">
-              ${escapeHtml(c.back)}
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    html += `</div>`;
-    return html;
-  }
 
   /**
    * Render System Design Glossary
@@ -1067,8 +924,6 @@ window.Renderer = (() => {
     renderProjects,
     renderProjectCard,
     renderVideoEmbed,
-    renderPaths,
-    renderCardsGrid,
     renderGlossary,
     renderCheatSheet,
     convertMarkdownToHTML,

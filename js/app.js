@@ -104,20 +104,14 @@ window.App = (() => {
       activeTab = 'builds';
       syncSidebarTabs();
     } else if (hash === '/review' || hash === 'review') {
-      currentView = 'review';
-      currentSlug = null;
-      activeTab = 'curriculum';
-      syncSidebarTabs();
+      window.location.hash = '';
+      return;
     } else if (hash === '/paths' || hash === 'paths') {
-      currentView = 'paths';
-      currentSlug = null;
-      activeTab = 'curriculum';
-      syncSidebarTabs();
+      window.location.hash = '';
+      return;
     } else if (hash === '/cards' || hash === 'cards') {
-      currentView = 'cards';
-      currentSlug = null;
-      activeTab = 'curriculum';
-      syncSidebarTabs();
+      window.location.hash = '';
+      return;
     } else if (hash === '/glossary' || hash === 'glossary') {
       currentView = 'glossary';
       currentSlug = null;
@@ -247,24 +241,9 @@ window.App = (() => {
           window.Analytics.trackPageView('System Design In Depth - Home', '/#/', window.location.href);
         }
         break;
-      case 'review':
-        reader.innerHTML = window.SRS.renderReviewSession();
-        if (window.Analytics) {
-          window.Analytics.trackPageView('SRS Review', '/#/review', window.location.href);
-        }
-        break;
-      case 'paths':
-        reader.innerHTML = window.Renderer.renderPaths();
-        if (window.Analytics) {
-          window.Analytics.trackPageView('Learning Paths', '/#/paths', window.location.href);
-        }
-        break;
-      case 'cards':
-        reader.innerHTML = window.Renderer.renderCardsGrid();
-        if (window.Analytics) {
-          window.Analytics.trackPageView('Flashcards Grid', '/#/cards', window.location.href);
-        }
-        break;
+
+
+
       case 'glossary':
         reader.innerHTML = window.Renderer.renderGlossary();
         if (window.Analytics) {
