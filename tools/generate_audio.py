@@ -220,6 +220,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate neural TTS audio narration for lessons")
     parser.add_argument("--slug", help="Generate audio for a specific unit slug")
     parser.add_argument("--module", help="Generate audio for a specific module (e.g. m01, m14)")
+    parser.add_argument("--part", help="Generate audio for specific curriculum part(s) (e.g. 2, 3, '2,3')")
     parser.add_argument("--all", action="store_true", help="Generate audio for all units")
     parser.add_argument("--changed", action="store_true", help="Generate audio for units with changed or missing content")
     parser.add_argument("--force", action="store_true", help="Force regeneration even if content hash matches")
@@ -229,7 +230,7 @@ def main():
     args = parser.parse_args()
 
     # Default to --changed if no specific selector is provided
-    if not (args.slug or args.module or args.all):
+    if not (args.slug or args.module or args.part or args.all):
         args.changed = True
 
     print("📚 Loading curriculum, content modules, and archive...")
@@ -243,7 +244,7 @@ def main():
 
     # Collect all units
     all_units = []
-    for part in curriculum.get("parts", []):
+    for part_idx, part in enumerate(curriculum.get("parts", []), 1):
         for mod in part.get("modules", []):
             mod_id = mod.get("id")
             mod_number = mod.get("number")
@@ -273,6 +274,7 @@ def main():
                 narration_text = clean_text_for_tts(raw, title=title, takeaways=takeaways)
                 
                 all_units.append({
+                    "partNumber": part_idx,
                     "moduleId": mod_id,
                     "moduleNumber": mod_number,
                     "slug": slug,
@@ -289,9 +291,14 @@ def main():
         slug = u["slug"]
         mod_id = u["moduleId"]
         mod_num = u.get("moduleNumber")
+        part_num = u.get("partNumber")
 
         if args.slug and args.slug != slug:
             continue
+        if args.part:
+            requested_parts = [int(x.strip()) for x in str(args.part).split(',') if x.strip().isdigit()]
+            if part_num not in requested_parts:
+                continue
         if args.module:
             m_target = str(args.module).lower().strip()
             # Normalize target: 'm01' -> 1, '1' -> 1, 'm1' -> 1
@@ -319,6 +326,9 @@ def main():
         elif args.changed and is_changed:
             targets.append((u, text_hash, is_changed))
         elif args.module:
+            if args.force or is_changed:
+                targets.append((u, text_hash, is_changed))
+        elif args.part:
             if args.force or is_changed:
                 targets.append((u, text_hash, is_changed))
 
