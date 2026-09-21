@@ -39,7 +39,7 @@ window.Quiz = (() => {
           </div>
           <span class="exercise-box__difficulty">${escapeHtml(q.difficulty || 'recall')}</span>
         </div>
-        ${q.scenario ? \`<div class="exercise-box__scenario"><strong>Scenario:</strong> \${escapeHtml(q.scenario)}</div>\` : ''}
+        ${q.scenario ? `<div class="exercise-box__scenario"><strong>Scenario:</strong> ${escapeHtml(q.scenario)}</div>` : ''}
         <div class="exercise-box__prompt"><strong>Problem:</strong> ${escapeHtml(q.prompt)}</div>
         
         <div class="quiz-options exercise-options" id="quiz-options-${q.id}" style="margin-top: 15px;">
@@ -145,10 +145,10 @@ window.Quiz = (() => {
         
         let correct = false;
         if (type === 'mcq') {
-           const checked = card.querySelector(\`input[name="quiz-\${qid}"]:checked\`);
+           const checked = card.querySelector(`input[name="quiz-${qid}"]:checked`);
            if (checked && parseInt(checked.value) === q.answer) correct = true;
         } else if (type === 'multi') {
-           const checked = Array.from(card.querySelectorAll(\`input[name="quiz-\${qid}"]:checked\`)).map(el => parseInt(el.value));
+           const checked = Array.from(card.querySelectorAll(`input[name="quiz-${qid}"]:checked`)).map(el => parseInt(el.value));
            if (checked.length === q.answer.length && checked.every(v => q.answer.includes(v))) correct = true;
         } else if (type === 'ordering') {
            const currentOrder = Array.from(card.querySelectorAll('.quiz-order-item')).map(el => parseInt(el.dataset.id));
@@ -157,8 +157,8 @@ window.Quiz = (() => {
            const val = parseFloat(card.querySelector('.quiz-number-input').value);
            if (val === q.answer) correct = true;
         } else if (type === 'tradeoff') {
-           const opt = card.querySelector(\`input[name="quiz-tradeoff-opt-\${qid}"]:checked\`);
-           const rsn = card.querySelector(\`input[name="quiz-tradeoff-rsn-\${qid}"]:checked\`);
+           const opt = card.querySelector(`input[name="quiz-tradeoff-opt-${qid}"]:checked`);
+           const rsn = card.querySelector(`input[name="quiz-tradeoff-rsn-${qid}"]:checked`);
            if (opt && rsn && parseInt(opt.value) === q.answer.option && parseInt(rsn.value) === q.answer.reason) {
              correct = true;
            }

@@ -892,7 +892,7 @@ window.SIMULATORS = window.SIMULATORS || {};
         const L = parseInt(lam.value) * (parseInt(w.value) / 1000);
         const Lceil = Math.ceil(L);
         lVal.textContent = L.toFixed(1);
-        rec.textContent = \`Recommendation: Configure connection pool / thread pool size to at least \${Lceil}.\`;
+        rec.textContent = `Recommendation: Configure connection pool / thread pool size to at least ${Lceil}.`;
       };
 
       lam.addEventListener('input', calc);
