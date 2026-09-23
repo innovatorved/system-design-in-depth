@@ -1,18 +1,18 @@
 # Building an Inverted Index Search Engine from Scratch
 
-A comprehensive, step-by-step engineering masterclass on building a full-text search engine from first principles.
+A comprehensive engineering masterclass on constructing a full-text search engine from first principles.
 
-This guide accompanies the video [*"Inverted Index - The Data Structure Behind Search Engines"*](https://www.youtube.com/watch?v=iHHqnyThrqE) and the detailed architectural write-up [*"BM25: The Information Retrieval Algorithm That Outlived Its Era"*](https://arpitbhayani.me/blogs/bm25/) by **Arpit Bhayani**.
+This build accompanies the video tutorial [*"Inverted Index - The Data Structure Behind Search Engines"*](https://www.youtube.com/watch?v=iHHqnyThrqE) and the architectural breakdown [*"BM25: The Information Retrieval Algorithm That Outlived Its Era"*](https://arpitbhayani.me/blogs/bm25/) by Arpit Bhayani.
 
 ---
 
 ## 1. Architectural Overview & The Core Problem
 
-Traditional relational databases store records by Document ID ($DocID \rightarrow \text{Fields}$). When evaluating a full-text search query such as:
+Traditional relational databases store records by Document ID (`DocID → Fields`). When evaluating a full-text search query such as:
 ```sql
 SELECT * FROM documents WHERE content LIKE '%consensus%';
 ```
-The database has no choice but to execute a full table scan across all $N$ documents ($O(N)$ execution time). At a million documents with 10 KB per document, every single search query would read 10 GB of data from disk into memory.
+The database must execute a full table scan across all `N` documents (`O(N)` execution time). At a million documents with 10 KB per document, every single search query would read 10 GB of data from disk into memory.
 
 An **Inverted Index** reverses this layout into a term-centric dictionary:
 
@@ -28,250 +28,169 @@ Inverted Index: "consensus"  ──► [ Doc 1, Doc 3 ]   <── Postings List 
 
 ```mermaid
 flowchart TD
-    subgraph OfflinePipeline ["1. Ingestion Pipeline"]
-      Raw["Raw Document Strings"] --> Tokenizer["Step 1: Tokenizer & Normalizer (tokenizer.js)"]
-      Tokenizer --> PostingsList["Step 2: Sorted Postings Lists (postings.js)"]
-      PostingsList --> Compression["Step 3: Delta Gap + VByte Compression (compression.js)"]
-      Compression --> ChampionLists["Step 4: Tier 1 Champion Lists in RAM (engine.js)"]
+    subgraph IngestionPipeline ["1. Ingestion & Index Construction"]
+      RawDocs["Raw Documents (Arbitrary Corpus)"] --> Tokenizer["Tokenizer & Normalizer"]
+      Tokenizer --> Stemmer["Porter Suffix Stemming"]
+      Stemmer --> Postings["Sorted Postings Lists (DocID + TF + Positions)"]
+      Postings --> DeltaComp["Delta + Variable Byte Compression"]
+      Postings --> ChampBuild["Tier 1 Champion Lists (Top-K PageRank)"]
     end
 
-    subgraph OnlinePipeline ["2. Query Serving Engine"]
-      Query["User Search: 'raft consensus'"] --> QueryTokenizer["Tokenize Query Terms"]
-      QueryTokenizer --> FastPath{"Matches in Tier 1 Champion Lists >= K?"}
-      FastPath -->|"Yes (sub-5ms)"| Scorer["Step 5: Okapi BM25 Ranking Formula"]
-      FastPath -->|"No"| Fallback["Cascade to Full Tier 2 Archive"]
-      Fallback --> Scorer
-      Scorer --> Results["Top-K Ranked Documents"]
+    subgraph QueryPipeline ["2. Online Query Serving"]
+      UserQuery["User Query: 'distributed consensus'"] --> QTok["Query Tokenizer"]
+      QTok --> QueryPlan{"Matches in Tier 1?"}
+      QueryPlan -->|"Yes (sub-5ms)"| Ranker["Okapi BM25 Ranking Formula"]
+      QueryPlan -->|"No"| Cascade["Cascade to Tier 2 Full Archive"]
+      Cascade --> Ranker
+      Ranker --> TopResults["Top-K Scored Results"]
     end
 ```
 
 ---
 
-## 2. Step-by-Step Module Guide: Building Each Component
+## 2. The Document Ingestion Pipeline
+
+Text cannot be indexed directly. If Document 1 contains `"Consensus!"` and Document 2 contains `"consensus,"`, a naive equality check fails. Raw text must pass through three normalization stages:
+
+### Step 2.1: Case Folding & Punctuation Stripping
+Input text is converted to lowercase and non-alphanumeric characters are stripped. Whitespace is collapsed into single delimiter spaces:
+```javascript
+const cleaned = text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
+```
+
+### Step 2.2: Stop-Word Elimination
+Ubiquitous grammatical words (`the`, `is`, `at`, `and`, `to`) appear in almost every document. They carry near-zero information entropy while inflating index memory.
+
+> [!NOTE]
+> Early search engines aggressively stripped all stop words. Modern search engines retain stop words for phrase and positional lookups (e.g. *"To be or not to be"* or the band *"The Who"*), but assign them near-zero weight using inverse document frequency (IDF).
+
+### Step 2.3: Algorithmic Suffix Stemming
+Users searching for `"searched"` or `"searching"` expect documents containing `"search"` to match. We apply a Porter-style morphological suffix reduction:
+- `ies` → `y` (e.g. `cities` → `city`)
+- `sses` → `ss` (e.g. `dresses` → `dress`)
+- `ing` → root (e.g. `running` → `runn`)
+- `ed` → root (e.g. `searched` → `search`)
+- `es` → root (e.g. `searches` → `search`)
+- `s` → root (e.g. `dogs` → `dog`)
 
 ---
 
-### Module 1: Text Tokenization & Normalization (`src/tokenizer.js`)
+## 3. The Anatomy of a Production Postings List
 
-#### Why this module is necessary:
-Raw human language cannot be indexed directly. If Document 1 contains `"Consensus!"` and Document 2 contains `"consensus,"`, a naive equality check treats them as different terms. Furthermore, high-frequency grammatical words like `"the"`, `"is"`, and `"at"` appear in every document, carrying zero discriminatory power while wasting RAM.
-
-#### Step-by-Step Implementation:
-
-1. **Step 1.1: Unicode Lowercasing & Punctuation Stripping**
-   We convert all input text to lowercase and replace non-alphanumeric characters with spaces using regex `/[^a-z0-9\s]/g`:
-   ```javascript
-   const cleaned = text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
-   ```
-
-2. **Step 1.2: Stop-Word Filtering**
-   We define a `Set` of ubiquitous English words (`DEFAULT_STOP_WORDS`). During tokenization, if a token exists in this set, it is dropped from index vocabulary.
-
-3. **Step 1.3: Algorithmic Suffix Stemming (Porter-style)**
-   Users searching for `"searched"` or `"searching"` expect documents containing `"search"` to match. We apply morphological suffix reduction rules:
-   ```javascript
-   function stemWord(word) {
-     if (word.length <= 3) return word;
-     let w = word;
-     if (w.endsWith('ies') && w.length > 4) return w.slice(0, -3) + 'y';
-     if (w.endsWith('ing') && w.length > 5) return w.slice(0, -3);
-     if (w.endsWith('ed') && w.length > 4) return w.slice(0, -2);
-     if (w.endsWith('s') && !w.endsWith('ss') && w.length > 3) return w.slice(0, -1);
-     return w;
-   }
-   ```
+In production engines (Apache Lucene, Elasticsearch), a postings list is not merely an array of integers. Each entry records:
+1. **Document ID (`DocID`):** Strictly sorted in ascending order (`[1, 4, 12, 99]`).
+2. **Term Frequency (`tf`):** The number of times the term appears within the document (used for BM25 ranking).
+3. **Word Positions (`positions`):** The token offsets where the term occurred (used for exact phrase searches and snippet highlighting).
+4. **Skip Pointers:** Pointers that leap forward past blocks of IDs (e.g. every 8 or 128 documents) to avoid linear scanning during intersections.
 
 ---
 
-### Module 2: Postings Lists & Two-Pointer Intersection (`src/postings.js`)
+## 4. Set Intersection Algorithms (`O(N + M)`)
 
-#### The Core Invariant:
-**Every postings list must maintain document IDs in strictly ascending order.**
-If list $A = [1, 5, 12, 40]$ and list $B = [3, 5, 40, 99]$, sorting allows us to intersect both lists in **$O(N + M)$ linear time** using two pointers, rather than a slow $O(N \times M)$ nested scan!
+The strict ascending sorting invariant of document IDs enables two-pointer linear merge operations:
 
-#### Step-by-Step Implementation:
+### Conjunction (Boolean AND)
+Two cursors advance concurrently across sorted lists `A` and `B`:
+- If `DocID_A == DocID_B`, record match and advance both cursors.
+- If `DocID_A < DocID_B`, advance cursor `A`.
+- If `DocID_A > DocID_B`, advance cursor `B`.
 
-1. **Step 2.1: Sorted Insertion with Binary Search**
-   When a document is indexed, we insert `{ docId, tf }` into the list. If doc IDs arrive sequentially, we append in $O(1)$. If out of order, we use binary search (`>>> 1`) to find the exact insertion index:
-   ```javascript
-   let low = 0, high = this.entries.length;
-   while (low < high) {
-     const mid = (low + high) >>> 1;
-     if (this.entries[mid].docId === docId) {
-       this.entries[mid].tf += tf; // Accumulate Term Frequency
-       return;
-     }
-     if (this.entries[mid].docId < docId) low = mid + 1;
-     else high = mid;
-   }
-   this.entries.splice(low, 0, { docId, tf });
-   ```
+Complexity: **`O(N + M)`**, compared to `O(N × M)` in unindexed databases.
 
-2. **Step 2.2: Skip Pointers for Sublinear Leaps**
-   When intersecting a short list (e.g. 5 items) with a multi-million-item list, scanning every item is wasteful. We store skip pointers every $S = 8$ items:
-   ```javascript
-   skipForward(currentIndex, targetDocId) {
-     for (const skip of this.skipPointers) {
-       if (skip.index > currentIndex && skip.docId <= targetDocId) {
-         bestSkipIdx = skip.index;
-       } else if (skip.docId > targetDocId) break;
-     }
-     return bestSkipIdx;
-   }
-   ```
+### The Rarest-First Heuristic
+When evaluating multi-term queries (`distributed AND consensus AND raft`), we sort postings lists by length ascending (`df`) first. Intersecting the smallest list first dramatically shrinks intermediate candidate sets, slashing memory and CPU comparisons.
 
-3. **Step 2.3: Two-Pointer Linear Intersection (`AND` queries)**
-   ```javascript
-   while (pA < listA.length && pB < listB.length) {
-     if (listA[pA].docId === listB[pB].docId) {
-       result.push(listA[pA].docId);
-       pA++; pB++;
-     } else if (listA[pA].docId < listB[pB].docId) {
-       pA++; // list A lags behind
-     } else {
-       pB++; // list B lags behind
-     }
-   }
-   ```
-
-4. **Step 2.4: Shortest-List-First Query Planning**
-   When evaluating `AND` across 3 or more terms, always sort the postings lists by length in ascending order. Intersecting the rarest terms first shrinks intermediate candidate sets immediately!
+### Positional Exact Phrase Search
+To evaluate exact phrase queries (`"distributed consensus"`):
+1. Intersect document IDs to find documents containing both terms.
+2. For matching documents, verify that a position of the second term immediately follows the first (`pos_B = pos_A + 1`).
 
 ---
 
-### Module 3: Postings Compression (`src/compression.js`)
+## 5. Postings List Compression Engineering
 
-#### The Scale Problem:
-If a search engine indexes 1 billion documents, storing 32-bit integers (4 bytes each) for common words would require gigabytes per keyword.
+Storing raw 32-bit integers for millions of document IDs consumes gigabytes of memory and swamps memory bandwidth:
 
-#### Step-by-Step Implementation:
+### 1. Delta (Gap) Encoding
+Because postings lists are strictly sorted, we replace absolute IDs (`[1000, 1004, 1008, 1020]`) with the differences between consecutive IDs (`[1000, 4, 4, 12]`). All deltas become small positive numbers.
 
-1. **Step 3.1: Delta (Gap) Encoding**
-   Because document IDs are strictly sorted, we do not store absolute IDs. We store the difference between consecutive IDs:
-   $$\text{Original: } [1000, 1004, 1007, 1019] \longrightarrow \text{Deltas: } [1000, 4, 3, 12]$$
-   ```javascript
-   function deltaEncode(sortedArray) {
-     const deltas = [sortedArray[0]];
-     for (let i = 1; i < sortedArray.length; i++) {
-       deltas.push(sortedArray[i] - sortedArray[i - 1]);
-     }
-     return deltas;
-   }
-   ```
+### 2. Variable-Byte (VByte / VarInt) Compression
+Standard 32-bit integers consume 4 bytes regardless of value. VByte encodes numbers into 7 bits per byte, reserving the 8th bit (MSB) as a continuation/termination flag:
+- Values `< 128` consume only **1 byte** (a 75% immediate reduction).
+- Values `< 16,384` consume **2 bytes** (a 50% reduction).
 
-2. **Step 3.2: Variable-Byte (VByte) Bit Packing**
-   Raw integers consume 4 bytes regardless of value. VByte encodes numbers into 7-bit chunks. Bit 8 (MSB) acts as a termination flag:
-   - Values $< 128$ consume **1 byte** (e.g. delta `4` = `0x84`).
-   - Values $< 16,384$ consume **2 bytes**.
-   - Values $\ge 16,384$ consume **3 or 4 bytes**.
-   ```javascript
-   function vbyteEncode(numbers) {
-     const bytes = [];
-     for (let num of numbers) {
-       const stack = [(num & 0x7F) | 0x80]; // Terminal byte has MSB = 1
-       num = Math.floor(num / 128);
-       while (num > 0) {
-         stack.push(num & 0x7F); // Continuation bytes have MSB = 0
-         num = Math.floor(num / 128);
-       }
-       for (let i = stack.length - 1; i >= 0; i--) bytes.push(stack[i]);
-     }
-     return Buffer.from(bytes);
-   }
-   ```
-   **Measured Savings**: Cuts postings storage by **$70\% - 80\%$**!
+> [!TIP]
+> Apache Lucene uses **Frame of Reference (FoR)** bit-packing for blocks of 128 integers, calculating the maximum bit-width required in each block to pack integers with zero wasted bits.
 
 ---
 
-### Module 4: Quality Tiering & Champion Lists (`src/engine.js`)
+## 6. Scale & Tiered Architecture: Champion Lists
 
-#### Why this module is necessary:
-At web scale, evaluating multi-term queries against cold disk files adds hundreds of milliseconds of I/O latency. 95% of users only look at the top 10 results.
+When serving millions of users, querying the full multi-gigabyte postings archive on every keystroke exhausts disk I/O.
 
-#### Step-by-Step Implementation:
+Search engines partition documents into quality tiers:
+- **Tier 1 (Hot In-Memory Core):** Maintains precomputed "Champion Lists" in RAM containing the top-`K` highest-authority documents per term (ranked by PageRank, click velocity, or document quality).
+- **Tier 2 (Cold Disk Archive):** Stores complete postings lists on NVMe SSDs or persistent storage.
 
-1. **Step 4.1: Quality Tiers**
-   Every document has an index-time static quality score $S(d) \in [0.0, 1.0]$ based on PageRank, click popularity, or seller reputation.
-2. **Step 4.2: Building Champion Lists**
-   For each vocabulary term, we precompute a **Tier 1 Champion List** containing only the top-$K$ highest-authority documents ($K = 1,000$) and pin them in RAM:
-   ```javascript
-   const topK = sortedEntries.slice(0, this.championK);
-   this.championIndex.set(term, topK);
-   ```
-3. **Step 4.3: Fast-Path Execution**
-   - Query engine first searches Tier 1 Champion Lists in RAM ($< 5\text{ms}$).
-   - If match count $\ge \text{topK}$, returns immediately.
-   - If match count $< \text{topK}$, lazily cascades to the full Tier 2 disk archive.
+**Query Routing:** Queries first evaluate against Tier 1. If Tier 1 returns `≥ K` results (the common case for 90%+ of queries), the engine returns immediately with single-digit millisecond latency. Only when matches are insufficient does it cascade to Tier 2.
 
 ---
 
-### Module 5: Okapi BM25 Ranking Formula (`src/engine.js`)
+## 7. Relevance Ranking: Okapi BM25 Deep Dive
 
-#### Why BM25 Replaced TF-IDF:
-Simple TF-IDF suffers from two critical flaws:
-1. **Term Stuffing**: A page repeating "insurance" 500 times scores 50 times higher than a page with 10 mentions.
-2. **Document Length Bias**: A 1,000-page book mentioning a word 10 times by accident beats a concise 1-page article.
+While TF-IDF laid the foundation for information retrieval, raw TF grows linearly: a document mentioning a keyword 500 times scores 50x higher than one mentioning it 10 times, making it vulnerable to keyword stuffing.
 
-#### The BM25 Formula:
-$$\text{BM25}(D, Q) = \sum_{t \in Q} \text{IDF}(t) \cdot \frac{f(t, D) \cdot (k_1 + 1)}{f(t, D) + k_1 \cdot \left(1 - b + b \cdot \frac{|D|}{\text{avgdl}}\right)}$$
+**Okapi BM25** (Best Matching 25) solves this with non-linear saturation:
 
-#### Step-by-Step Implementation:
+```
+BM25(D, Q) = Σ IDF(qᵢ) × [ (f(qᵢ, D) × (k₁ + 1)) / (f(qᵢ, D) + k₁ × (1 - b + b × (|D| / avgdl))) ]
+```
 
-1. **Step 5.1: Robertson-Spärck Jones IDF**
-   Penalizes ubiquitous words and boosts rare terms:
-   ```javascript
-   const idf = Math.log(1 + ((N - df + 0.5) / (df + 0.5)));
-   ```
-2. **Step 5.2: Asymptotic TF Saturation ($k_1 = 1.2$)**
-   As term frequency $f(t, D)$ increases, incremental score gains diminish and asymptotically approach $(k_1 + 1)$:
-   ```javascript
-   const numerator = tf * (this.k1 + 1);
-   ```
-3. **Step 5.3: Document Length Normalization ($b = 0.75$)**
-   Penalizes long documents relative to the average document length $\text{avgdl}$:
-   ```javascript
-   const denominator = tf + this.k1 * (1 - this.b + this.b * (docLen / avgdl));
-   const termScore = idf * (numerator / denominator);
-   ```
+### Key Parameters:
+1. **Term Saturation Parameter `k₁` (Default: ≈ 1.2):** Controls how quickly the term frequency score saturates. As keyword occurrences increase, incremental score gains diminish, asymptotically approaching a ceiling of `k₁ + 1`.
+2. **Document Length Normalization `b` (Default: ≈ 0.75):** Penalizes long, verbose documents relative to the average corpus length (`avgdl`). When `b = 1.0`, scores are fully scaled by document length; when `b = 0`, length normalization is disabled.
+3. **Robertson-Spärck Jones IDF with Lucene Smoothing:**
+```
+IDF(q) = ln( 1 + (N - df + 0.5) / (df + 0.5) )
+```
+Adding `1` inside the logarithm guarantees that IDF never goes negative, even for high-frequency terms.
 
 ---
 
-## 3. Running the Code & In-Browser Playground
+## 8. Scalability: Indexing Any Volume of Data
 
-### Option 1: In-Browser Self-Hosted IDE (Zero Install!)
-Open [`index.html`](file:///Users/vedgupta/system-design/projects/tiny-search-engine/index.html) in any browser:
-- **Full In-Memory CommonJS Runtime**: Runs `require()`, `module.exports`, and unit tests client-side.
-- **Visual Split-Screen Query Inspector**: Search your running engine with real-time term highlighting and latency benchmarks.
-- **Zero Cloud**: 100% self-contained, no external services, no StackBlitz.
+The engine provides both single-document (`addDocument`) and bulk-ingestion (`addDocuments`) APIs. It handles arbitrary document counts:
 
-### Option 2: Command Line CLI
+```javascript
+const engine = new InvertedIndexEngine({ k1: 1.2, b: 0.75, championK: 10 });
+
+// Ingest any volume of records dynamically
+engine.addDocuments([
+  { id: 1, text: "Distributed systems consensus protocols...", staticScore: 0.95 },
+  { id: 2, text: "Consistent hashing in distributed caches...", staticScore: 0.88 },
+  // ... any number of documents (10, 1,000, 100,000+)
+]);
+
+// Build Tier-1 hot in-memory index
+engine.buildChampionLists();
+
+// Execute exact phrase search
+const phrases = engine.searchPhrase("distributed systems");
+
+// Execute Okapi BM25 ranked search
+const ranked = engine.searchBM25("consensus protocols", { topK: 5 });
+```
+
+---
+
+## 9. Verification & Running the Lab
+
+Run the interactive demonstration script:
 ```bash
-# Clone or navigate to the directory
-cd projects/tiny-search-engine
-
-# Run the 6-phase walkthrough demo
-node src/demo.js
-
-# Run the 14 automated unit tests
-node src/test.js
+node projects/tiny-search-engine/src/demo.js
 ```
 
----
-
-## 4. Verification & Test Assertions
-
-The test suite (`src/test.js`) verifies all 14 architectural invariants:
-1. `Tokenizer`: Unicode case folding and punctuation stripping.
-2. `Tokenizer`: Stop-word elimination.
-3. `Stemmer`: Suffix reduction (`-ing`, `-ed`, `-es`, `-s`).
-4. `Compression`: Lossless Delta gap encoding roundtrip.
-5. `Compression`: Lossless Variable-Byte encoding roundtrip.
-6. `Compression`: $> 60\%$ storage savings benchmark.
-7. `Postings`: Strict ascending document ID sort order.
-8. `Intersection`: $O(N + M)$ two-pointer `AND` conjunction.
-9. `Query Planner`: Shortest-list-first multi-term intersection.
-10. `Union`: $O(N + M)$ two-pointer `OR` disjunction.
-11. `Difference`: $O(N + M)$ two-pointer `AND NOT` exclusion.
-12. `Engine`: Full Boolean query evaluator.
-13. `Engine`: Tier 1 Champion List fast-path execution.
-14. `BM25`: Monotonic score ranking by term rarity and frequency.
+Run the automated test suite:
+```bash
+node projects/tiny-search-engine/src/test.js
+```
