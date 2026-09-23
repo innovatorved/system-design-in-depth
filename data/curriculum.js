@@ -7211,15 +7211,17 @@ window.CURRICULUM_DATA = {
         "bm25-production-ranking",
         "search-index-sharding"
       ],
-      "summary": "A small inverted index with tokenization, posting lists, and a BM25-style ranking pass.",
-      "primaryLanguage": "TypeScript",
+      "summary": "A complete educational inverted index with tokenization, delta & variable-byte compression, two-pointer boolean intersection, tiered champion lists, and BM25 ranking.",
+      "primaryLanguage": "JavaScript",
       "difficulty": "intermediate",
-      "entryFile": "src/index.ts",
-      "runHint": "Read src/demo.ts and run it with any TypeScript runner.",
+      "entryFile": "src/engine.js",
+      "runHint": "node projects/tiny-search-engine/src/demo.js",
       "takeaways": [
-        "Indexing turns documents into term -> posting-list mappings.",
-        "Query time starts from postings, not from scanning every document.",
-        "Ranking combines term frequency, rarity, and document-length normalization."
+        "Indexing transforms document texts into strictly sorted term -> posting-list mappings.",
+        "Delta gaps and Variable-Byte encoding compress postings by 70-80% compared to raw 32-bit doc IDs.",
+        "Two-pointer linear merge evaluates Boolean AND/OR/NOT queries in O(N + M) time.",
+        "Champion Lists provide single-digit millisecond responses by caching high-authority documents in hot RAM.",
+        "BM25 balances term frequency saturation, inverse document frequency, and document-length normalization."
       ],
       "files": [
         {
@@ -7228,23 +7230,13 @@ window.CURRICULUM_DATA = {
           "role": "overview"
         },
         {
-          "path": "src/tokenize.ts",
-          "language": "typescript",
-          "role": "normalizer"
+          "path": "src/engine.js",
+          "language": "javascript",
+          "role": "core search engine"
         },
         {
-          "path": "src/index.ts",
-          "language": "typescript",
-          "role": "inverted index"
-        },
-        {
-          "path": "src/search.ts",
-          "language": "typescript",
-          "role": "ranking"
-        },
-        {
-          "path": "src/demo.ts",
-          "language": "typescript",
+          "path": "src/demo.js",
+          "language": "javascript",
           "role": "walkthrough"
         }
       ]
