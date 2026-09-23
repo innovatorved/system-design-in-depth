@@ -35,216 +35,7 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       "title": "Inverted Index - The Data Structure Behind Search Engines",
       "channel": "Arpit Bhayani"
     },
-    "content": "<div class=\"lesson-content\">\n      <div class=\"callout callout--note\">\n        <div class=\"callout__title\">Implementation build</div>\n        <p>A companion from-scratch implementation is available in the builds catalog: <a href=\"#build/tiny-search-engine\">Tiny Search Engine (Inverted Index, Compression & BM25)</a>.</p>\n      </div>\n\n      <h2>Under the Hood: The Inverted Index Data Structure</h2>\n      <p>Traditional relational databases organize data around documents or rows (DocID → Text content). Evaluating a full-text search query like <code>WHERE content LIKE '%consensus%'</code> forces a full table scan across millions of rows (<code>O(N)</code> execution time).</p>\n      <p>An <strong>Inverted Index</strong> reverses this relationship: every distinct vocabulary term points to a strictly sorted list of Document IDs where it appears (Term → [DocIDs]). This sorted sequence is called a <strong>Postings List</strong>.</p>\n\n      <h2>Forward Index vs Inverted Index</h2>\n      <div class=\"mermaid\">\nflowchart LR\n    subgraph ForwardIndex [\"1. Forward Index (Document -> Words)\"]\n      D1[\"Doc 1\"] --> W1[\"'raft', 'consensus', 'replicated'\"]\n      D2[\"Doc 2\"] --> W2[\"'consistent', 'hashing', 'nodes'\"]\n      D3[\"Doc 3\"] --> W3[\"'raft', 'consensus', 'state'\"]\n    end\n\n    subgraph InvertedIndex [\"2. Inverted Index (Term -> Sorted Postings)\"]\n      T1[\"'consensus'\"] --> P1[\"[Doc 1, Doc 3]\"]\n      T2[\"'raft'\"] --> P2[\"[Doc 1, Doc 3]\"]\n      T3[\"'hashing'\"] --> P3[\"[Doc 2]\"]\n    end\n      </div>\n\n      <h2>The Document Ingestion Pipeline</h2>\n      <ol>\n        <li><strong>Tokenization & Normalization:</strong> Strips punctuation, folds Unicode cases, and splits raw continuous character streams into discrete linguistic tokens.</li>\n        <li><strong>Stop-Word Elimination:</strong> Filters out ubiquitous, low-information entropy words (such as <em>\"the\"</em>, <em>\"is\"</em>, <em>\"at\"</em>, <em>\"which\"</em>) that appear in nearly all documents.</li>\n        <li><strong>Stemming & Lemmatization:</strong> Reduces word inflections to a shared root. Algorithmic stemmers (Porter or Snowball) strip morphological suffixes (reducing <em>\"searching\"</em>, <em>\"searched\"</em>, <em>\"searches\"</em> to <code>search</code>), ensuring that variant forms match the user's intent.</li>\n      </ol>\n\n      <h2>Postings Lists & The Two-Pointer Intersection Invariant</h2>\n      <p>The single most important invariant of an inverted index is that <strong>document IDs within each postings list must be strictly sorted in ascending order</strong> (<code>[1, 4, 12, 99]</code>).</p>\n      <p>When evaluating multi-term conjunction queries (e.g. <code>distributed AND consensus</code>), the engine does not perform an <code>O(N × M)</code> nested loop. Instead, it advances two cursors concurrently across the sorted lists in <strong>linear <code>O(N + M)</code> time</strong>:</p>\n      <ul>\n        <li>If <code>DocID_A == DocID_B</code>, record a match and increment both pointers.</li>\n        <li>If <code>DocID_A < DocID_B</code>, advance pointer A forward.</li>\n        <li>If <code>DocID_A > DocID_B</code>, advance pointer B forward.</li>\n      </ul>\n      <p><strong>Query Optimization:</strong> When intersecting three or more terms, the engine always sorts the postings lists by length in ascending order (rarest terms first). Intersecting the smallest list first dramatically shrinks intermediate candidate sets.</p>\n\n      <h2>Postings List Compression: Delta Gaps & Variable Byte</h2>\n      <p>At web scale, storing raw 32-bit integers for billions of document IDs would require petabytes of storage and swamp memory bandwidth. Search engines use a two-step compression pipeline:</p>\n      <ul>\n        <li><strong>Delta (Gap) Encoding:</strong> Instead of storing absolute IDs (<code>[1000, 1004, 1008, 1020]</code>), the engine stores differences between consecutive IDs (<code>[1000, 4, 4, 12]</code>). Because postings lists are sorted, all delta gaps are small positive integers.</li>\n        <li><strong>Variable-Byte (VByte) & Frame of Reference (FoR):</strong> Standard 32-bit integers require 4 bytes. VByte encodes numbers into 7 bits per byte with a 1-bit continuation flag. Values < 128 consume only 1 byte, yielding an immediate <strong>75% storage reduction</strong>. Lucene packages blocks of 128 integer deltas using <strong>Frame of Reference (FoR)</strong> bit-packing.</li>\n      </ul>\n\n      <h2>Skip Lists and Champion Lists</h2>\n      <ul>\n        <li><strong>Skip Pointers:</strong> When intersecting a short postings list with a multi-million-item postings list, scanning every item is wasteful. Skip pointers allow the engine to leap forward past entire blocks of non-matching IDs in sublinear time.</li>\n        <li><strong>Champion Lists (Tiered Indexing):</strong> To guarantee low response latencies for popular searches, engines maintain a hot Tier 1 index containing only the top-<code>K</code> highest-authority documents (ranked by static signals like PageRank or sales velocity). Queries are first executed against Tier 1; only if insufficient matches are returned does the engine cascade to the full Tier 2 archive.</li>\n      </ul>\n    </div>",
-    "keyTakeaways": [
-      "Inverted indexes reverse document storage to map terms to strictly sorted lists of document IDs called Postings Lists.",
-      "Keeping postings lists sorted enables O(N + M) two-pointer linear intersection for Boolean AND queries.",
-      "Delta (gap) encoding combined with Variable-Byte or Frame of Reference (FoR) compression slashes index storage by 70-80%.",
-      "Champion lists (Tier 1 hot indexes) cache high-authority documents in RAM to serve popular queries with single-digit millisecond latency."
-    ],
-    "furtherReading": [
-      {
-        "title": "Arpit Bhayani: Inverted Index - The Data Structure Behind Search Engines (YouTube)",
-        "url": "https://www.youtube.com/watch?v=iHHqnyThrqE"
-      },
-      {
-        "title": "Arpit Bhayani: BM25 - The Information Retrieval Algorithm That Outlived Its Era (Detailed Blog)",
-        "url": "https://arpitbhayani.me/blogs/bm25/"
-      },
-      {
-        "title": "Hello Interview: Elasticsearch Deep Dive w/ an Ex-Meta Senior Manager (YouTube)",
-        "url": "https://www.youtube.com/watch?v=PuZvF2EyfBM"
-      },
-      {
-        "title": "Manning, Raghavan, Schütze: Inverted Index Construction (Stanford IR Book)",
-        "url": "https://nlp.stanford.edu/IR-book/html/htmledition/the-inverted-index-1.html"
-      },
-      {
-        "title": "Adrien Grand: Frame of Reference and Roaring Bitmaps in Lucene (Elastic Blog)",
-        "url": "https://www.elastic.co/blog/frame-of-reference-and-roaring-bitmaps"
-      }
-    ]
-  },
-  "boolean-tiered-search": {
-    "title": "Boolean and tiered search",
-    "video": {
-      "youtubeId": "wmCWCVAl1Us",
-      "title": "What's ElasticSearch Used For? | Search Indexes | Systems Design Interview 0 to 1 with Ex-Google SWE",
-      "channel": "Jordan has no life"
-    },
-    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Multi-Term Boolean Evaluation</h2>\n      <p>When users search for multi-word queries (e.g. <code>\"distributed consensus raft\"</code>), the search engine parses the query into a boolean expression tree combining <code>MUST</code> (AND), <code>SHOULD</code> (OR), and <code>MUST_NOT</code> (NOT) clauses.</p>\n\n      <h2>A separate optimization: quality-tiered indexes</h2>\n      <p>The archive above uses <em>tiers</em> for matching policy: complete AND matches precede broader OR matches. The optimization below is different: it partitions documents by a precomputed quality class to reduce search work. Do not use a quality tier to relax required terms or authorization filters.</p>\n      <div class=\"mermaid\">\nflowchart TD\n    UserQuery[\"Query: 'distributed consensus'\"] --> Tier1Check[\"1. Search Tier 1: High-Authority Documents (PageRank > 0.8 / In-Stock)\"]\n    Tier1Check --> CountCheck{\"Found >= K (e.g. 50) Results?\"}\n    CountCheck -->|\"Yes: Fast Path\"| Score[\"Score & Return Top Results (Latency: 5ms)\"]\n    CountCheck -->|\"No: Insufficient Matches\"| Tier2Check[\"2. Fallback to Tier 2: Low-Authority / Archive Documents\"]\n    Tier2Check --> Score\n      </div>\n\n      <h2>Under the Hood: Tiered Indexing Mechanics</h2>\n      <ul>\n        <li><strong>Quality Tiers:</strong> Rather than forcing every query to search the entire multi-billion document corpus, documents are partitioned into quality tiers based on static quality scores (PageRank, click popularity, freshness, seller reputation).</li>\n        <li><strong>Tier 1 (Hot Core):</strong> Contains top 10% highest-quality documents, stored on ultra-fast NVMe SSDs or pinned in RAM. 95% of user queries find sufficient high-relevance matches entirely within Tier 1.</li>\n        <li><strong>Tier 2 & 3 (Cold Archive):</strong> Contains long-tail documents on dense hard drives. The query engine only cascades to lower tiers if the top-tier match count is below the desired result threshold.</li>\n      </ul>\n    </div>",
-    "keyTakeaways": [
-      "Tiered indexes partition documents into quality tiers based on static authority and popularity signals.",
-      "A measured workload may terminate many queries in a high-quality tier; latency and coverage must be evaluated rather than assumed.",
-      "Lower tiers are evaluated lazily only when high-tier matching yields insufficient candidates."
-    ],
-    "furtherReading": [
-      {
-        "title": "Manning et al.: Tiered Indexes and Champion Lists",
-        "url": "https://nlp.stanford.edu/IR-book/html/htmledition/tiered-indexes-1.html"
-      },
-      {
-        "title": "Broder et al.: Approximating the Conjunction: A Survey (ACM SIGMOD)",
-        "url": "https://dl.acm.org/doi/10.1145/1164394.1164396"
-      },
-      {
-        "title": "Elasticsearch: Multi-term Queries (Official Documentation)",
-        "url": "https://www.elastic.co/guide/en/elasticsearch/reference/current/multi-term-queries.html"
-      }
-    ]
-  },
-  "tf-idf-relevance-scoring": {
-    "title": "TF-IDF relevance scoring",
-    "video": {
-      "youtubeId": "PuZvF2EyfBM",
-      "title": "Elasticsearch Deep Dive w/ a Ex-Meta Senior Manager for System Design Interviews",
-      "channel": "Hello Interview"
-    },
-    "content": "<div class=\"lesson-content\">\n      <h2>The Foundations of Lexical Relevance</h2>\n      <p>How does a search engine decide whether Document A is more relevant to a query than Document B? The foundational mathematical model of information retrieval is <strong>TF-IDF</strong> (Term Frequency - Inverse Document Frequency).</p>\n\n      <h2>The Two Core Components of TF-IDF</h2>\n      <div class=\"mermaid\">\nflowchart LR\n    TF[\"Term Frequency (TF): How often does term t appear in doc d? (Local Importance)\"] --> Mult[\"Multiply: TF x IDF\"]\n    IDF[\"Inverse Document Frequency (IDF): How rare is term t across all N docs? (Global Discriminator)\"] --> Mult\n    Mult --> Score[\"Relevance Weight for (t, d)\"]\n      </div>\n\n      <h2>Under the Hood: The Mathematical Formulas</h2>\n      <h3>1. Term Frequency (TF)</h3>\n      <p>Measures how frequently term <code>t</code> occurs in document <code>d</code>. The simplest form is raw count <code>freq(t, d)</code>, but modern systems apply logarithmic damping to prevent documents with 100 mentions of a word from dominating documents with 10 mentions:</p>\n      <pre><code>TF(t, d) = 1 + ln(freq(t, d))  (for freq > 0)</code></pre>\n\n      <h3>2. Inverse Document Frequency (IDF)</h3>\n      <p>Common words (e.g. \"the\", \"system\") appear in almost every document and provide zero discriminatory power. Rare words (e.g. \"Paxos\", \"Bloom\") carry high information entropy. Given total documents <code>N</code> and document frequency <code>DF(t)</code>:</p>\n      <pre><code>IDF(t) = ln(1 + (N / DF(t)))</code></pre>\n\n      <h3>3. The Vector Space Model (Cosine Similarity)</h3>\n      <p>Documents and queries are represented as high-dimensional vectors in term space. The relevance score is computed as the cosine of the angle between query vector q and document vector d:</p>\n      <pre><code>Cosine_Similarity(q, d) = (q . d) / (||q|| * ||d||)</code></pre>\n    </div>",
-    "keyTakeaways": [
-      "TF measures how often a term appears in a document; logarithmic damping prevents term-stuffing manipulation.",
-      "IDF penalizes ubiquitous common words and boosts rare, highly informative keywords.",
-      "The Vector Space Model computes document relevance via cosine similarity between query and document vectors."
-    ],
-    "furtherReading": [
-      {
-        "title": "Salton & Buckley: Term-Weighting Approaches in Automatic Text Retrieval",
-        "url": "https://www.sciencedirect.com/science/article/pii/0306457388900210"
-      },
-      {
-        "title": "Manning et al.: TF-IDF and the Vector Space Model (Stanford IR Book)",
-        "url": "https://nlp.stanford.edu/IR-book/html/htmledition/tf-idf-weighting-1.html"
-      },
-      {
-        "title": "Liu: Introduction to Information Retrieval (Cambridge University Press)",
-        "url": "https://nlp.stanford.edu/IR-book/"
-      }
-    ]
-  },
-  "bm25-production-ranking": {
-    "title": "BM25 production ranking",
-    "video": {
-      "youtubeId": "PuZvF2EyfBM",
-      "title": "Elasticsearch Deep Dive w/ a Ex-Meta Senior Manager for System Design Interviews",
-      "channel": "Hello Interview"
-    },
-    "content": "<div class=\"lesson-content\">\n      <div class=\"callout callout--note\">\n        <div class=\"callout__title\">Implementation build</div>\n        <p>Explore the BM25 scoring algorithm and document length normalization implemented from first principles in <a href=\"#build/tiny-search-engine\">Tiny Search Engine (Inverted Index, Compression & BM25)</a>.</p>\n      </div>\n\n      <h2>Under the Hood: Why Okapi BM25 Replaced TF-IDF</h2>\n      <p>While TF-IDF laid the foundation for information retrieval, raw-TF variants grow linearly with repetition, while the logarithmically damped TF taught in the previous lesson grows more slowly. BM25 makes saturation and document-length normalization explicit and tunable. <strong>Okapi BM25</strong> (Best Matching 25) introduced non-linear term frequency saturation and tunable document length penalties, becoming the industry standard ranking function in Lucene, Elasticsearch, and Vespa.</p>\n\n      <h2>The BM25 Mathematical Formula</h2>\n      <pre><code>BM25(D, Q) = sum_{i=1}^n IDF(q_i) * ( (f(q_i, D) * (k1 + 1)) / (f(q_i, D) + k1 * (1 - b + b * (|D| / avgdl))) )</code></pre>\n\n      <h2>BM25 Term Frequency Saturation Curve</h2>\n      <div class=\"mermaid\">\nflowchart LR\n    TFPoints[\"Term Count: 1 -> 5 -> 10 -> 50 -> 100\"] --> BM25Curve[\"BM25 Score asymptotically approaches (k1 + 1) ceiling!\"]\n    TFPoints --> LinearTF[\"TF-IDF continues climbing indefinitely!\"]\n      </div>\n\n      <h2>Under the Hood: The Parameters <code>k₁</code> and <code>b</code></h2>\n      <ul>\n        <li><strong>Term Saturation Parameter <code>k₁</code> (Default: ≈ 1.2):</strong> Calibrates how quickly the term frequency score saturates. As the count of a keyword in a document increases, its incremental score addition diminishes, preventing keyword-stuffed spam pages from winning ranking.</li>\n        <li><strong>Document Length Normalization <code>b</code> (Default: ≈ 0.75):</strong> Penalizes long documents. If a 100,000-word book mentions \"Kafka\" 5 times, it is far less relevant than a 50-word tweet that mentions \"Kafka\" 5 times. When $b = 1.0$, the score is fully scaled by length; when $b = 0$, length normalization is disabled.</li>\n      </ul>\n    </div>",
-    "keyTakeaways": [
-      "BM25 prevents keyword spam by asymptotically saturating term frequency scores as count increases.",
-      "The k1 parameter (~1.2) controls term frequency saturation non-linearity.",
-      "The b parameter (~0.75) penalizes verbose, long documents relative to average document length."
-    ],
-    "furtherReading": [
-      {
-        "title": "Arpit Bhayani: BM25 - The Information Retrieval Algorithm That Outlived Its Era (Detailed Blog)",
-        "url": "https://arpitbhayani.me/blogs/bm25/"
-      },
-      {
-        "title": "Stephen Robertson: The Probabilistic Relevance Framework: BM25 and Beyond",
-        "url": "https://www.staff.city.ac.uk/~sb317/papers/foundations_bm25_review.pdf"
-      },
-      {
-        "title": "Robertson & Zaragoza: The Probabilistic Relevance Framework: BM25 and Beyond (Foundations and Trends in IR)",
-        "url": "https://www.nowpublishers.com/article/Details/MIR-03"
-      },
-      {
-        "title": "Elasticsearch: BM25 Reference (Official Documentation)",
-        "url": "https://www.elastic.co/guide/en/elasticsearch/reference/current/bm25.html"
-      }
-    ]
-  },
-  "stop-words-and-champion-lists": {
-    "title": "Stop words and champion lists",
-    "video": {
-      "youtubeId": "wmCWCVAl1Us",
-      "title": "What's ElasticSearch Used For? | Search Indexes | Systems Design Interview 0 to 1 with Ex-Google SWE",
-      "channel": "Jordan has no life"
-    },
-    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Optimization Strategies for Massive Corpora</h2>\n      <p>When searching over billions of documents, postings lists for common words contain hundreds of millions of entries. Search engines employ two contrasting strategies to maximize query throughput without sacrificing accuracy: <strong>Stop Word Handling</strong> and <strong>Champion Lists</strong>.</p>\n\n      <h2>Champion Lists (Fancy Lists) Architecture</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    Term[\"Vocabulary Term: 'database' (Appears in 50,000,000 documents)\"] --> Split[\"Split at Index Time\"]\n    Split --> Champ[\"Champion List (RAM): Top 1,000 Documents with Highest BM25 Weight\"]\n    Split --> Full[\"Full Postings List (Disk): All 50,000,000 Documents\"]\n    \n    UserQuery[\"Query: 'distributed database'\"] --> QueryChamp[\"1. Intersect Champion Lists in RAM (sub-5ms)\"]\n    QueryChamp --> Check{\"Found >= 20 High-Relevance Results?\"}\n    Check -->|\"Yes\"| Return[\"Return Immediate Top-K Results\"]\n    Check -->|\"No\"| Fallback[\"2. Fall back to Full Disk Postings Lists\"]\n      </div>\n\n      <h2>Under the Hood: The Evolution of Stop Words</h2>\n      <ul>\n        <li><strong>Historical Approach (Aggressive Removal):</strong> Early search engines stripped all stop words (\"the\", \"to\", \"and\", \"or\") during indexing to save disk space. <strong>The Failure:</strong> Queries like <em>\"To be or not to be\"</em> or <em>\"The Who\"</em> returned zero results or completely corrupted semantics.</li>\n        <li><strong>Modern Approach (Common-Grams & WAND):</strong> Modern engines retain all words in the index. Common words are handled via positional indexing (bi-grams like \"to_be\") and pruned during query evaluation using dynamic pruning algorithms like <strong>WAND (Weak AND)</strong> and <strong>Block-Max WAND</strong>.</li>\n      </ul>\n    </div>",
-    "keyTakeaways": [
-      "Champion lists precompute the top R highest-scoring documents per term, answering top-K queries in RAM.",
-      "Modern search engines avoid hard stop word deletion to preserve phrase semantics ('The Who').",
-      "Block-Max WAND dynamically skips postings blocks whose upper-bound scores cannot beat the current top-K threshold."
-    ],
-    "furtherReading": [
-      {
-        "title": "Ding & Suel: Faster Top-k Document Retrieval Using Block-Max Indexes",
-        "url": "https://dl.acm.org/doi/10.1145/2009916.2010048"
-      },
-      {
-        "title": "Manning et al.: Stop Words (Stanford IR Book)",
-        "url": "https://nlp.stanford.edu/IR-book/html/htmledition/common-words-stop-lists-1.html"
-      },
-      {
-        "title": "Cambazoglu et al.: Early Experiences with Search Engine Advertising (ACM SIGIR)",
-        "url": "https://dl.acm.org/doi/10.1145/1571941.1572128"
-      }
-    ]
-  },
-  "query-understanding-pipeline": {
-    "title": "Query understanding pipeline",
-    "video": {
-      "youtubeId": "MXLMQ5yWIwk",
-      "title": "Search Engine Design | Google Search Architecture and Ranking",
-      "channel": "Architecture Bytes - AI"
-    },
-    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Bridging the Vocabulary Mismatch</h2>\n      <p>Users express search intent using incomplete, misspelled, or ambiguous queries (e.g. <code>\"cheap nike shoes red size 10\"</code>). A naive literal keyword search against an inverted index frequently returns zero results. The <strong>Query Understanding Pipeline</strong> transforms raw user queries into rich structured search intents before querying the index.</p>\n\n      <h2>The Multi-Stage Query Understanding Flow</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    Raw[\"Raw User Query: 'red nkie runnign shoe'\"] --> Spell[\"1. Spelling Correction: 'red nike running shoe'\"]\n    Spell --> Tokenize[\"2. Tokenization & Normalization\"]\n    Tokenize --> NER[\"3. Named Entity Recognition (NER)\"]\n    \n    subgraph EntityExtraction [\"Entity Mapping\"]\n      NER --> Brand[\"Brand: 'Nike'\"]\n      NER --> Category[\"Category: 'Running Shoes'\"]\n      NER --> Color[\"Attribute: Color = 'Red'\"]\n    end\n    \n    NER --> Intent[\"4. Intent Classifier: Commercial Purchase\"]\n    Intent --> Rewrite[\"5. Query Rewriting & Expansion (Synonyms: 'sneakers', 'trainers')\"]\n    Rewrite --> Structured[\"6. Structured Query: filter(brand='Nike', cat='Shoes') & match('red running')\"]\n      </div>\n\n      <h2>Under the Hood: Machine Learning at the Query Boundary</h2>\n      <ul>\n        <li><strong>Named Entity Recognition (NER):</strong> Lightweight transformer models (DistilBERT) or fast linear CRF models identify brand names, product models, sizes, and colors in sub-10 milliseconds.</li>\n        <li><strong>Synonym Expansion:</strong> Expands query terms using offline word embedding graphs (e.g. mapping \"hoodie\" to \"sweatshirt\"). Expansion weights are discounted ($\text{weight} = 0.5$) so exact matches rank higher than synonym matches.</li>\n        <li><strong>Query Relaxation:</strong> If a strict boolean query yields zero results, the pipeline automatically relaxes constraints (e.g. dropping non-essential adjective tokens) while warning the user: <em>\"No exact match found; showing results for Nike shoes\"</em>.</li>\n      </ul>\n    </div>",
-    "keyTakeaways": [
-      "Query understanding bridges the semantic gap between imprecise user searches and structured index schemas.",
-      "Sub-10ms NER models extract structured attributes (brands, sizes, categories) to build filtered queries.",
-      "Query relaxation and synonym expansions prevent zero-result dead ends."
-    ],
-    "furtherReading": [
-      {
-        "title": "eBay Engineering: Building a Query Understanding Engine",
-        "url": "https://innovation.ebayinc.com/tech/engineering/"
-      },
-      {
-        "title": "Jones & Fain: Query Word Deletion and Search Query Reformulation (ACM TOIS)",
-        "url": "https://dl.acm.org/doi/10.1145/2422249.2422251"
-      },
-      {
-        "title": "Google Research: Query Understanding (Search Dev Guide)",
-        "url": "https://developers.google.com/search/docs/fundamentals/creating-helpful-content"
-      }
-    ]
-  },
-  "search-feedback-and-relevance-signals": {
-    "title": "Search feedback and relevance signals",
-    "video": {
-      "youtubeId": "MXLMQ5yWIwk",
-      "title": "Search Engine Design | Google Search Architecture and Ranking",
-      "channel": "Architecture Bytes - AI"
-    },
-    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Implicit Feedback & Learning to Rank (LTR)</h2>\n      <p>While BM25 scores textual overlap, real-world user intent requires factoring in non-textual signals: item popularity, geographical distance, price competitiveness, seller ratings, and real-time user behavior. <strong>Learning to Rank (LTR)</strong> uses machine learning models to combine hundreds of disparate features into a single ranking score.</p>\n\n      <h2>Two-Stage Search Architecture: Retrieval & Reranking</h2>\n      <div class=\"mermaid\">\nflowchart LR\n    Query[\"User Query\"] --> Phase1[\"Stage 1: Retrieval (BM25 + Ann Vector)\"]\n    Phase1 -->|\"Filter 100,000,000 -> Top 1,000 Candidates\"| Candidates[\"Candidate Set (1,000 Docs)\"]\n    Candidates --> Phase2[\"Stage 2: Heavy ML Reranker (LambdaMART / Cross-Encoder)\"]\n    Phase2 -->|\"Re-score using 200 Features\"| FinalTop[\"Top 20 Results Served to User\"]\n      </div>\n\n      <h2>Under the Hood: Feature Engineering & Position Bias</h2>\n      <h3>1. Signal Categories</h3>\n      <ul>\n        <li><strong>Query-Document Features:</strong> BM25 score, phrase match proximity, vector cosine similarity.</li>\n        <li><strong>Document Static Features:</strong> Historical conversion rate, return rate, average review rating, page load speed.</li>\n        <li><strong>User Context Features:</strong> User location, browsing history, past brand affinity, device type.</li>\n      </ul>\n\n      <h3>2. The Position Bias Trap</h3>\n      <p>Users click the #1 result significantly more often than the #5 result, regardless of true relevance. Training an ML model directly on raw click logs creates a feedback loop that permanently cements existing top results. High-performance search engines apply <strong>Inverse Propensity Scoring (IPS)</strong> to debias click data before model training.</p>\n    </div>",
-    "keyTakeaways": [
-      "Production search operates in two stages: fast lexical/vector candidate retrieval (Top 1,000) followed by heavy ML reranking (Top 20).",
-      "Learning-to-Rank models (LambdaMART, GBDT) combine BM25, static document quality, and personalized user affinity.",
-      "Position bias must be counteracted using Inverse Propensity Scoring to prevent self-reinforcing click feedback loops."
-    ],
-    "furtherReading": [
-      {
-        "title": "Burges: From RankNet to LambdaRank to LambdaMART (Microsoft Research)",
-        "url": "https://www.microsoft.com/en-us/research/publication/from-ranknet-to-lambdarank-to-lambdamart-an-overview/"
-      },
-      {
-        "title": "Liu: Learning to Rank for Information Retrieval (Springer)",
-        "url": "https://www.nowpublishers.com/article/Details/MIR-01"
-      },
-      {
-        "title": "Radlinski & Joachims: Learning to Rank with A/B Testing (ACM SIGIR)",
-        "url": "https://dl.acm.org/doi/10.1145/1148170.1148275"
-      }
-    ]
-  },
-  "search-evaluation-metrics": {
-    "title": "Search evaluation metrics",
-    "video": {
-      "youtubeId": "MXLMQ5yWIwk",
-      "title": "Search Engine Design | Google Search Architecture and Ranking",
-      "channel": "Architecture Bytes - AI"
-    },
-    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Quantifying Search Quality</h2>\n      <p>You cannot improve search relevance without rigorous mathematical evaluation metrics. In information retrieval, search quality is evaluated using both offline benchmark datasets (judged by human evaluators) and online user telemetry.</p>\n\n      <h2>The Core IR Evaluation Metrics</h2>\n      <table>\n        <thead>\n          <tr><th>Metric</th><th>Formula & Focus</th><th>When to Use</th></tr>\n        </thead>\n        <tbody>\n          <tr><td><strong>Precision@K</strong></td><td>$\frac{\text{Relevant in top } K}{K}$. Focuses on purity of the first page.</td><td>E-commerce product search where top 10 items must be accurate.</td></tr>\n          <tr><td><strong>Recall@K</strong></td><td>$\frac{\text{Relevant in top } K}{\text{Total relevant in corpus}}$. Focuses on completeness.</td><td>Legal discovery, patent search, and medical research.</td></tr>\n          <tr><td><strong>MAP (Mean Average Precision)</strong></td><td>Average of precision scores at each relevant document rank across queries.</td><td>Binary relevance evaluations across diverse query sets.</td></tr>\n          <tr><td><strong>NDCG@K</strong></td><td>$\frac{DCG_K}{IDCG_K}$ where $DCG = \\sum_{i=1}^K \frac{2^{rel_i} - 1}{\\log_2(i + 1)}$.</td><td><strong>The Gold Standard:</strong> Evaluates graded relevance (0-4 stars) with position discounting.</td></tr>\n        </tbody>\n      </table>\n\n      <h2>Under the Hood: Interleaving A/B Testing</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    subgraph TraditionalAB [\"Traditional A/B Test (High Variance: 100k Users Needed)\"]\n      U1[\"50% Users -> Model A\"]\n      U2[\"50% Users -> Model B\"]\n    end\n\n    subgraph Interleaving [\"Team-Draft Interleaving (100x Faster: 1k Users Needed)\"]\n      Q[\"User Query\"] --> Interleaver[\"Team-Draft Interleaver\"]\n      Interleaver --> Combined[\"Rank 1: Model A #1<br/>Rank 2: Model B #1<br/>Rank 3: Model A #2<br/>Rank 4: Model B #2\"]\n      Combined --> ClickTelemetry[\"Detect which algorithm's items won the user's click!\"]\n    end\n      </div>\n      <p>Interleaving blends the top results of Model A and Model B into a single merged result list presented to every user. This eliminates user variance, allowing engineering teams to validate ranking changes with 1/100th of the sample size.</p>\n    </div>",
+    "content": "<div class=\"lesson-content\">\n      <div class=\"callout callout--note\">\n        <div class=\"callout__title\">Implementation build</div>\n        <p>A companion from-scratch implementation is available in the builds catalog: <a href=\"#build/tiny-search-engine\">Tiny Search Engine (Inverted Index, Compression & BM25)</a>.</p>\n      </div>\n\n      <h2>Under the Hood: The Inverted Index Data Structure</h2>\n      <p>Traditional relational databases organize data around documents or rows (DocID → Text content). Evaluating a full-text search query like <code>WHERE content LIKE '%consensus%'</code> forces a full table scan across millions of rows (<code>O(N)</code> execution time).</p>\n      <p>An <strong>Inverted Index</strong> reverses this relationship: every distinct vocabulary term points to a strictly sorted list of Document IDs where <code>DCG = Σ (2^relᵢ - 1) / log₂(i + 1)</code>..</td><td><strong>The Gold Standard:</strong> Evaluates graded relevance (0-4 stars) with position discounting.</td></tr>\n        </tbody>\n      </table>\n\n      <h2>Under the Hood: Interleaving A/B Testing</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    subgraph TraditionalAB [\"Traditional A/B Test (High Variance: 100k Users Needed)\"]\n      U1[\"50% Users -> Model A\"]\n      U2[\"50% Users -> Model B\"]\n    end\n\n    subgraph Interleaving [\"Team-Draft Interleaving (100x Faster: 1k Users Needed)\"]\n      Q[\"User Query\"] --> Interleaver[\"Team-Draft Interleaver\"]\n      Interleaver --> Combined[\"Rank 1: Model A #1<br/>Rank 2: Model B #1<br/>Rank 3: Model A #2<br/>Rank 4: Model B #2\"]\n      Combined --> ClickTelemetry[\"Detect which algorithm's items won the user's click!\"]\n    end\n      </div>\n      <p>Interleaving blends the top results of Model A and Model B into a single merged result list presented to every user. This eliminates user variance, allowing engineering teams to validate ranking changes with 1/100th of the sample size.</p>\n    </div>",
     "keyTakeaways": [
       "NDCG (Normalized Discounted Cumulative Gain) is the gold standard metric for graded relevance rankings.",
       "Precision@K measures top-slot purity; Recall@K measures corpus coverage.",
@@ -384,7 +175,7 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       "title": "System Design: Autocomplete in 100 Milliseconds",
       "channel": "Learning Podcasts"
     },
-    "content": "<div class=\"lesson-content\">\n      <h2>The Latency SLA of Autocomplete</h2>\n      <p>Search autocomplete (typeahead) displays the top 5 to 10 suggested queries as the user types each keystroke. Because humans type at ~300ms intervals, the entire end-to-end autocomplete pipeline must return suggestions within <strong>under 30 milliseconds</strong>, including network transit.</p>\n\n      <h2>Prefix Trie with Pre-Materialized Top-K Suggestions</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    Root[\"Root Node\"] --> S[\"'s' (Top: ['system', 'sql', 'spring'])\"]\n    S --> Y[\"'sy' (Top: ['system design', 'system requirements'])\"]\n    Y --> S2[\"'sys' (Top: ['system design', 'system architecture'])\"]\n    S2 --> T[\"'syst' (Top: ['system design'])\"]\n      </div>\n\n      <h2>Under the Hood: Why Naive Tries Fail at Scale</h2>\n      <p>In a textbook Trie, finding matching prefixes requires traversing down to the prefix node and performing a Depth-First Search (DFS) across all descendant nodes to find the highest-frequency suggestions. In a dictionary with 100,000,000 query logs, this DFS takes hundreds of milliseconds.</p>\n      <p><strong>The Pre-Materialization Pattern:</strong> Each Trie node pre-computes and caches the top 5 most popular global search phrases in its node payload. Querying autocomplete traverses the analyzed prefix in $O(|prefix|)$ and then returns a bounded precomputed list. Network and serving latency must be measured; the lookup is not globally constant-time.</p>\n\n      <h2>Offline Aggregation Pipeline</h2>\n      <p>Search query click logs are streamed to Kafka and aggregated hourly via Apache Flink. Flink calculates weekly query frequency, filters offensive terms, and builds a fresh immutable Trie file. The new Trie is deployed to production Redis instances or local worker memory using zero-downtime pointer swaps.</p>\n    </div>",
+    "content": "<div class=\"lesson-content\">\n      <h2>The Latency SLA of Autocomplete</h2>\n      <p>Search autocomplete (typeahead) displays the top 5 to 10 suggested queries as the user types each keystroke. Because humans type at ~300ms intervals, the entire end-to-end autocomplete pipeline must return suggestions within <strong>under 30 milliseconds</strong>, including network transit.</p>\n\n      <h2>Prefix Trie with Pre-Materialized Top-K Suggestions</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    Root[\"Root Node\"] --> S[\"'s' (Top: ['system', 'sql', 'spring'])\"]\n    S --> Y[\"'sy' (Top: ['system design', 'system requirements'])\"]\n    Y --> S2[\"'sys' (Top: ['system design', 'system architecture'])\"]\n    S2 --> T[\"'syst' (Top: ['system design'])\"]\n      </div>\n\n      <h2>Under the Hood: Why Naive Tries Fail at Scale</h2>\n      <p>In a textbook Trie, finding matching prefixes requires traversing down to the prefix node and performing a Depth-First Search (DFS) across all descendant nodes to find the highest-frequency suggestions. In a dictionary with 100,000,000 query logs, this DFS takes hundreds of milliseconds.</p>\n      <p><strong>The Pre-Materialization Pattern:</strong> Each Trie node pre-computes and caches the top 5 most popular global search phrases in its node payload. Querying autocomplete traverses the analyzed prefix in <code>O(|prefix|)</code> and then returns a bounded precomputed list. Network and serving latency must be measured; the lookup is not globally constant-time.</p>\n\n      <h2>Offline Aggregation Pipeline</h2>\n      <p>Search query click logs are streamed to Kafka and aggregated hourly via Apache Flink. Flink calculates weekly query frequency, filters offensive terms, and builds a fresh immutable Trie file. The new Trie is deployed to production Redis instances or local worker memory using zero-downtime pointer swaps.</p>\n    </div>",
     "keyTakeaways": [
       "Autocomplete requires sub-30ms response times to provide instantaneous feedback between keystrokes.",
       "Trie nodes pre-cache the top 5 most frequent search terms, converting complex graph searches into O(1) reads.",
@@ -412,7 +203,7 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
       "title": "System Design: Autocomplete in 100 Milliseconds",
       "channel": "Learning Podcasts"
     },
-    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Real-Time Spelling Correction</h2>\n      <p>Approximately 10% to 15% of all web and e-commerce search queries contain typos (e.g. <code>\"appple iphone\"</code>, <code>\"teh lord of the rings\"</code>). When a query produces zero or poor results, the search engine must instantaneously evaluate edit distance candidates and suggest corrections.</p>\n\n      <h2>The SymSpell Algorithm (Symmetric Delete Spelling Correction)</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    Dict[\"Dictionary Word: 'apple'\"] --> Precompute[\"Precompute Deletes (Distance 1 & 2)\"]\n    Precompute --> HashLookup[\"In-Memory Hash Table: 'pple' -> 'apple', 'aple' -> 'apple'\"]\n    \n    UserTypo[\"User Input: 'appple'\"] --> GenDeletes[\"Generate Deletes of Input: 'apple', 'ppple'\"]\n    GenDeletes --> HashLookup\n    HashLookup --> Match[\"Instant O(1) Match: Correct to 'apple'!\"]\n      </div>\n\n      <h2>Under the Hood: SymSpell vs Traditional Levenshtein Distance</h2>\n      <ul>\n        <li><strong>Standard Levenshtein Distance:</strong> Calculating Levenshtein matrix distance between an input typo and every word in a 500,000-term dictionary requires billions of operations, taking seconds per query.</li>\n        <li><strong>SymSpell Breakthrough:</strong> Rather than testing insertions, deletions, substitutions, and transpositions against the entire vocabulary, SymSpell precomputes all <code>K</code>-distance <em>deletions</em> for dictionary words and stores them in a hash table. At query time, only deletions of the misspelled input are looked up in the hash table, achieving sub-millisecond execution. The original benchmark (Wolfgarbe, 2012) reports up to 1,000x speedup vs. standard Levenshtein on a 500K dictionary, but actual speedup depends on edit distance threshold and dictionary size.</li>\n        <li><strong>The Noisy Channel Model:</strong> Scores candidate corrections using Bayesian probability: $P(Word | Typo) \\propto P(Typo | Word) \\cdot P(Word)$, balancing keyboard typo proximity with unigram/bigram word frequencies from search logs.</li>\n      </ul>\n    </div>",
+    "content": "<div class=\"lesson-content\">\n      <h2>Under the Hood: Real-Time Spelling Correction</h2>\n      <p>Approximately 10% to 15% of all web and e-commerce search queries contain typos (e.g. <code>\"appple iphone\"</code>, <code>\"teh lord of the rings\"</code>). When a query produces zero or poor results, the search engine must instantaneously evaluate edit distance candidates and suggest corrections.</p>\n\n      <h2>The SymSpell Algorithm (Symmetric Delete Spelling Correction)</h2>\n      <div class=\"mermaid\">\nflowchart TD\n    Dict[\"Dictionary Word: 'apple'\"] --> Precompute[\"Precompute Deletes (Distance 1 & 2)\"]\n    Precompute --> HashLookup[\"In-Memory Hash Table: 'pple' -> 'apple', 'aple' -> 'apple'\"]\n    \n    UserTypo[\"User Input: 'appple'\"] --> GenDeletes[\"Generate Deletes of Input: 'apple', 'ppple'\"]\n    GenDeletes --> HashLookup\n    HashLookup --> Match[\"Instant O(1) Match: Correct to 'apple'!\"]\n      </div>\n\n      <h2>Under the Hood: SymSpell vs Traditional Levenshtein Distance</h2>\n      <ul>\n        <li><strong>Standard Levenshtein Distance:</strong> Calculating Levenshtein matrix distance between an input typo and every word in a 500,000-term dictionary requires billions of operations, taking seconds per query.</li>\n        <li><strong>SymSpell Breakthrough:</strong> Rather than testing insertions, deletions, substitutions, and transpositions against the entire vocabulary, SymSpell precomputes all <code>K</code>-distance <em>deletions</em> for dictionary words and stores them in a hash table. At query time, only deletions of the misspelled input are looked up in the hash table, achieving sub-millisecond execution. The original benchmark (Wolfgarbe, 2012) reports up to 1,000x speedup vs. standard Levenshtein on a 500K dictionary, but actual speedup depends on edit distance threshold and dictionary size.</li>\n        <li><strong>The Noisy Channel Model:</strong> Scores candidate corrections using Bayesian probability: <code>P(Word | Typo) ∝ P(Typo | Word) × P(Word)</code>, balancing keyboard typo proximity with unigram/bigram word frequencies from search logs.</li>\n      </ul>\n    </div>",
     "keyTakeaways": [
       "SymSpell achieves sub-millisecond spell correction by precomputing word deletions into an in-memory hash table.",
       "The Noisy Channel Model combines keyboard typo likelihood with language unigram frequency to pick the best correction.",
