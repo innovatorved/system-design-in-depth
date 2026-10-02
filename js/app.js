@@ -11,6 +11,7 @@ window.App = (() => {
   let activeTab = 'curriculum';  // curriculum | builds
   let sidebarOpen = false;
   let activeSimulator = null;
+  let landingCleanup = null;  // live demo on the landing page
   const collapsedModules = new Set();
 
   // Helper: find module ID for a given slug
@@ -233,10 +234,21 @@ window.App = (() => {
       activeSimulator.unmount(reader);
       activeSimulator = null;
     }
+    if (landingCleanup) {
+      landingCleanup();
+      landingCleanup = null;
+    }
+    // Landing page is full-width (sidebar hidden until opened)
+    document.body.classList.toggle('view-landing', currentView === 'home' && !!window.Landing);
 
     switch (currentView) {
       case 'home':
-        reader.innerHTML = window.Renderer.renderOverview();
+        if (window.Landing) {
+          reader.innerHTML = window.Landing.render();
+          landingCleanup = window.Landing.mount(reader);
+        } else {
+          reader.innerHTML = window.Renderer.renderOverview();
+        }
         if (window.Analytics) {
           window.Analytics.trackPageView('System Design In Depth - Home', '/#/', window.location.href);
         }
