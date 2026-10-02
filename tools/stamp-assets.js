@@ -6,6 +6,7 @@
 // Usage: node tools/stamp-assets.js [--check]   (--check exits 1 if anything is stale)
 
 const fs = require('fs');
+const vm = require('vm');
 const path = require('path');
 const crypto = require('crypto');
 
@@ -24,6 +25,52 @@ function hashDir(rel) {
   return h.digest('hex').slice(0, 10);
 }
 
+
+// Per-module data loaded on demand by js/lazy.js: {path: hash}, plus site-wide counts the
+// landing page shows without loading that data.
+function lazyMeta() {
+  const manifest = {};
+  const win = { MODULE_CONTENT: {}, QUESTION_BANK: {} };
+  for (const dir of ['data/content', 'data/questions']) {
+    const abs = path.join(root, dir);
+    if (!fs.existsSync(abs)) continue;
+    for (const f of fs.readdirSync(abs).filter(f => f.endsWith('.js')).sort()) {
+      const buf = fs.readFileSync(path.join(abs, f));
+      manifest[`${dir}/${f}`] = hashOf(buf);
+      vm.runInNewContext(buf.toString('utf8'), { window: win });
+    }
+  }
+  const videos = new Set();
+  for (const m of Object.values(win.MODULE_CONTENT)) for (const u of Object.values(m)) {
+    if (u.video?.youtubeId) videos.add(u.video.youtubeId);
+    (u.videos || []).forEach(v => videos.add(v.youtubeId));
+  }
+  const questions = Object.values(win.QUESTION_BANK).reduce((n, qs) => n + qs.length, 0);
+  const sims = new Set();
+  for (const f of fs.readdirSync(path.join(root, 'js')).filter(f => /^simulators.*\.js$/.test(f))) {
+    for (const m of fs.readFileSync(path.join(root, 'js', f), 'utf8').matchAll(/window\.SIMULATORS(?:\[['"]([^'"]+)['"]\]|\.(\w+))\s*=/g)) sims.add(m[1] || m[2]);
+  }
+  const site = { CURRICULUM_DATA: null, IMPLEMENTATIONS_DATA: {} };
+  for (const f of ['data/curriculum.js', 'data/implementations_code.js']) {
+    if (fs.existsSync(path.join(root, f))) vm.runInNewContext(fs.readFileSync(path.join(root, f), 'utf8'), { window: site });
+  }
+  const topics = (site.CURRICULUM_DATA?.parts || []).reduce((n, p) => n + p.modules.reduce((k, m) => k + m.units.length, 0), 0);
+  const counts = { topics, simulators: sims.size, builds: Object.keys(site.IMPLEMENTATIONS_DATA).length, videos: videos.size, questions };
+  const tag = `<script>window.LAZY_MANIFEST = ${JSON.stringify(manifest)}; window.SITE_COUNTS = ${JSON.stringify(counts)};</script>`;
+
+  // Prerender the landing page with the real Landing.render() for a first-time visitor,
+  // so it paints in one go; app.js swaps in the live version (progress, demo) on load.
+  const page = {
+    ...site,
+    SITE_COUNTS: counts,
+    SIMULATORS: Object.fromEntries([...sims].map(id => [id, {}])),
+    Progress: { getLastVisited: () => null, getModuleProgress: () => ({ completed: 0, total: 0 }) },
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'js/landing.js'), 'utf8'), { window: page });
+  const landing = page.Landing.render().replace('<div class="landing">', '<div class="landing landing-shell">');
+  return { tag, landing };
+}
+
 let stale = 0;
 for (const page of pages) {
   const file = path.join(root, page);
@@ -39,6 +86,13 @@ for (const page of pages) {
     out = /<script>window\.ASSET_VERSION = "[\w]*";<\/script>/.test(out)
       ? out.replace(/<script>window\.ASSET_VERSION = "[\w]*";<\/script>/, tag)
       : out.replace('</head>', `  ${tag}\n</head>`);
+  }
+  if (page === 'index.html') {
+    const { tag: meta, landing } = lazyMeta();
+    out = /<script>window\.LAZY_MANIFEST = [^\n]*<\/script>/.test(out)
+      ? out.replace(/<script>window\.LAZY_MANIFEST = [^\n]*<\/script>/, () => meta)
+      : out.replace('</head>', () => `  ${meta}\n</head>`);
+    out = out.replace(/(<!-- landing:start[^>]*-->\n)[\s\S]*?(\s*<!-- landing:end -->)/, (all, open, close) => open + landing + close);
   }
   if (out !== src) {
     stale++;

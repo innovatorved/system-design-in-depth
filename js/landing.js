@@ -39,18 +39,15 @@ window.Landing = (() => {
     return null;
   }
 
+  // Precomputed by tools/stamp-assets.js: content and questions load per module, not up front
   function counts() {
-    const videos = new Set();
-    for (const m of Object.values(window.MODULE_CONTENT || {})) for (const u of Object.values(m)) {
-      if (u.video?.youtubeId) videos.add(u.video.youtubeId);
-      (u.videos || []).forEach(v => videos.add(v.youtubeId));
-    }
+    const c = window.SITE_COUNTS || {};
     return {
       topics: allUnits().length,
-      simulators: Object.keys(window.SIMULATORS || {}).length,
+      simulators: c.simulators || Object.keys(window.SIMULATORS || {}).length,
       builds: Object.keys(window.IMPLEMENTATIONS_DATA || {}).length,
-      videos: videos.size,
-      questions: Object.values(window.QUESTION_BANK || {}).reduce((n, qs) => n + qs.length, 0),
+      videos: c.videos || 0,
+      questions: c.questions || 0,
     };
   }
 
@@ -130,7 +127,7 @@ window.Landing = (() => {
         const prog = window.Progress.getModuleProgress(mod.id);
         const pct = prog.total ? Math.round((prog.completed / prog.total) * 100) : 0;
         html += `
-          <a class="landing-module" href="#" data-module="${mod.id}">
+          <a class="landing-module" href="#" data-module="${mod.id}" data-units="${mod.units.map(u => esc(u.slug)).join(' ')}">
             <span class="landing-module__num">${esc(mod.number)}</span>
             <span class="landing-module__title">${esc(mod.title)}</span>
             <span class="landing-module__meta">${mod.units.length} topics</span>

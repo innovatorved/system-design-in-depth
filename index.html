@@ -25,20 +25,16 @@
   
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=544d272d9a">
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
   <link rel="stylesheet" href="css/layout.css?v=d51fb5dfe4">
   <link rel="stylesheet" href="css/components.css?v=ef8b78bc61">
   <link rel="stylesheet" href="css/content.css?v=48ce78969e">
-  <link rel="stylesheet" href="css/landing.css?v=fee3f02973">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
-  <!-- Google Analytics 4 (GA4) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SZ26BQZCQ7" id="ga4-gtag-script"></script>
+  <!-- Google Analytics 4 (GA4): events queue in dataLayer; gtag.js is fetched with the app scripts below. -->
   <script>
     window.GA_MEASUREMENT_ID = 'G-SZ26BQZCQ7';
     window.dataLayer = window.dataLayer || [];
@@ -52,6 +48,8 @@
   <!-- Theme initialization (prevent FOUC) -->
   <script>
     (() => {
+      // Deep links (#topic/..., /projects) skip the prerendered landing hero.
+      if (location.hash.length > 1 || location.pathname !== '/') document.documentElement.classList.add('no-shell');
       try {
         const stored = localStorage.getItem('sd-theme');
         const dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -61,13 +59,15 @@
     })();
   </script>
   <script>window.ASSET_VERSION = "638557a3ee";</script>
+  <script>window.LAZY_MANIFEST = {"data/content/m01-foundations.js":"61ad2f4191","data/content/m02-apis-protocols.js":"8ce8b7cfca","data/content/m03-data-modeling-sql.js":"1a2cae9e6b","data/content/m04-nosql-partitioning.js":"2dec170ef5","data/content/m05-caching.js":"091f5198c9","data/content/m06-distributed-coord.js":"cf7d9dbabf","data/content/m07-storage-engines.js":"e43a846052","data/content/m08-async-streams.js":"a2f1e014f1","data/content/m09-search-retrieval.js":"f9b1898389","data/content/m10-analytics-sketches.js":"c870973fdc","data/content/m11-realtime-social.js":"e87c177924","data/content/m12-geo-matching.js":"b468335126","data/content/m13-media-cdn.js":"ac87ceb492","data/content/m14-reliability-ops.js":"7b029fe954","data/content/m15-service-designs.js":"2d2ae83544","data/content/m16-product-designs.js":"d8b386b063","data/content/m17-media-ops-designs.js":"a3650de433","data/content/m18-case-studies.js":"0f6a54aec2","data/questions/q01-foundations.js":"81794753c2","data/questions/q02-apis-protocols.js":"3ae8293a0e","data/questions/q03-data-modeling-sql.js":"850e097b30","data/questions/q04-nosql-partitioning.js":"41bb27dacb","data/questions/q05-caching.js":"38cf2cc929","data/questions/q06-distributed-coord.js":"7e99e2bc80","data/questions/q07-storage-engines.js":"de2480bd0b","data/questions/q08-async-streams.js":"a17fcbf5db","data/questions/q09-search-retrieval.js":"8188f1b270","data/questions/q10-analytics-sketches.js":"fe4b7da996","data/questions/q11-realtime-social.js":"b7cc16595b","data/questions/q12-geo-matching.js":"564a085047","data/questions/q13-media-cdn.js":"514d931e44","data/questions/q14-reliability-ops.js":"a69a9ddabc","data/questions/q15-service-designs.js":"7028361a3a","data/questions/q16-product-designs.js":"31779cc0d8","data/questions/q17-media-ops-designs.js":"d3721b1ab1","data/questions/q18-case-studies.js":"3c6df68044"}; window.SITE_COUNTS = {"topics":200,"simulators":32,"builds":15,"videos":470,"questions":600};</script>
 </head>
 <body>
+  <script>if (!document.documentElement.classList.contains('no-shell')) document.body.classList.add('view-landing');</script>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
 
   <!-- Top Bar -->
-  <header class="topbar" role="banner">
+  <header class="topbar">
     <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </button>
@@ -111,7 +111,7 @@
   </header>
 
   <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Course navigation">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
@@ -123,8 +123,193 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content" role="main">
-    <div class="main__content" id="reader"></div>
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader">
+      <!-- landing:start (generated by tools/stamp-assets.js from js/landing.js) -->
+<div class="landing landing-shell">
+      <section class="landing-hero">
+        <div class="landing-hero__eyebrow"><span class="landing-dot"></span>Free &amp; open source</div>
+        <h1 class="landing-hero__title">System design,<br>in depth.</h1>
+        <p class="landing-hero__subtitle">Read it, watch it, run it, build it.</p>
+        <div class="landing-hero__actions">
+          <a class="btn btn--primary landing-btn" href="#topic/requirements-clarification">Start learning →</a>
+          <button class="btn btn--outline landing-btn" type="button" data-landing-scroll="landing-curriculum">Browse curriculum</button>
+          <button class="landing-search" type="button" data-landing-search>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Search <kbd>⌘K</kbd>
+          </button>
+        </div>
+        <dl class="landing-stats">
+          <div><dt>200</dt><dd>Topics</dd></div>
+          <div><dt>32</dt><dd>Simulators</dd></div>
+          <div><dt>15</dt><dd>Builds</dd></div>
+          <div><dt>470</dt><dd>Videos</dd></div>
+          <div><dt>600</dt><dd>Questions</dd></div>
+        </dl>
+      </section>
+      <section class="landing-section" id="landing-demos">
+        <h2 class="landing-section__title">Try it live</h2>
+        <div class="landing-tabs" role="tablist">
+          <button class="landing-tab is-active" role="tab" aria-selected="true" data-demo="0">Quorums</button><button class="landing-tab" role="tab" aria-selected="false" data-demo="1">Load balancing</button><button class="landing-tab" role="tab" aria-selected="false" data-demo="2">Raft</button><button class="landing-tab" role="tab" aria-selected="false" data-demo="3">Cache stampede</button><button class="landing-tab" role="tab" aria-selected="false" data-demo="4">MVCC</button>
+        </div>
+        <div class="landing-demo" id="landing-demo-stage"></div>
+        <a class="landing-link" id="landing-demo-lesson" href="#topic/case-amazon-dynamo">Open lesson →</a>
+      </section>
+      <section class="landing-section">
+        <h2 class="landing-section__title">In every lesson</h2>
+        <div class="landing-features">
+          <div class="landing-feature"><span class="landing-feature__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><span class="landing-feature__title">Intuition first</span></div><div class="landing-feature"><span class="landing-feature__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg></span><span class="landing-feature__title">Hand-picked videos</span></div><div class="landing-feature"><span class="landing-feature__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4a2 2 0 0 1 2 2V14"/></svg></span><span class="landing-feature__title">Diagrams &amp; notes</span></div><div class="landing-feature"><span class="landing-feature__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg></span><span class="landing-feature__title">Audio narration</span></div><div class="landing-feature"><span class="landing-feature__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="landing-feature__title">Check yourself</span></div><div class="landing-feature"><span class="landing-feature__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg></span><span class="landing-feature__title">Code you can run</span></div>
+        </div>
+      </section>
+      <section class="landing-section" id="landing-builds">
+        <h2 class="landing-section__title">15 from-scratch builds</h2>
+        <div class="landing-builds">
+          <a class="landing-build" href="#build/load-balancer-from-scratch">Layer 7 Load Balancer From Scratch<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/consistent-hashing-ring">Consistent Hashing Ring with Virtual Nodes<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/sliding-window-rate-limiter">Sliding Window Rate Limiter<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/lru-cache">LRU Cache<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/ttl-cache-reaper">TTL Cache with a Redis-Style Adaptive Reaper<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/bloom-filter-membership">Bloom Filter Membership Testing<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/snowflake-id-generator">Snowflake 64-bit ID Generator<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/keyset-pagination-cursors">Keyset (Cursor) Pagination vs SQL OFFSET<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/write-ahead-log">Write-Ahead Log (WAL) &amp; Crash Recovery<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/lsm-tree-kv-store">LSM-Tree Key/Value Store<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/lease-leader-election">Lease-Based Leader Election with Fencing Tokens<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/gossip-protocol">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/merkle-anti-entropy">Merkle-Tree Anti-Entropy Repair<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/hyperloglog-cardinality">HyperLogLog Cardinality Sketch<span aria-hidden="true">→</span></a><a class="landing-build" href="#build/tiny-search-engine">Tiny Search Engine<span aria-hidden="true">→</span></a>
+        </div>
+      </section><section class="landing-section" id="landing-curriculum"><h2 class="landing-section__title">Curriculum</h2><h3 class="landing-part">Fundamentals</h3><div class="landing-modules">
+          <a class="landing-module" href="#" data-module="learning-foundations" data-units="requirements-clarification logical-system-design non-functional-requirements system-design-tradeoffs availability-durability-consistency-cost back-of-the-envelope-capacity-planning concurrency-vs-parallelism horizontal-vs-vertical-scaling monolith-vs-microservices repository-pattern extensible-data-modeling cost-aware-architecture when-not-to-add-infrastructure">
+            <span class="landing-module__num">01</span>
+            <span class="landing-module__title">Foundations</span>
+            <span class="landing-module__meta">13 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-apis-services" data-units="api-design-contracts service-to-service-communication http-rest-grpc tcp-vs-udp api-gateway-vs-load-balancer load-balancers consistent-hashing-load-balancing event-contracts retries-timeouts-idempotency batching backpressure tail-latency load-shedding">
+            <span class="landing-module__num">02</span>
+            <span class="landing-module__title">APIs, services and protocols</span>
+            <span class="landing-module__meta">13 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-data-sql" data-units="relational-database-design sql-backed-key-value-store database-indexing b-tree query-planning database-locking-and-isolation mvcc database-wal-and-recovery database-ticket-servers relational-database-scaling online-indexing schema-evolution soft-delete">
+            <span class="landing-module__num">03</span>
+            <span class="landing-module__title">Data modeling and SQL</span>
+            <span class="landing-module__meta">13 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-nosql-partitioning" data-units="nosql-decision-boundaries document-vs-key-value-stores columnar-vs-wide-column-stores graph-database-decision-boundary sharding-and-partitioning hot-partitions consistent-hashing distributed-id-generation uuid-objectid-and-snowflake snowflake-id-design clock-skew-and-id-ordering keyset-pagination bloom-filters hot-cold-storage-archival">
+            <span class="landing-module__num">04</span>
+            <span class="landing-module__title">NoSQL, partitioning and IDs</span>
+            <span class="landing-module__meta">14 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-caching-fast-reads" data-units="caching-layers distributed-cache-design cache-eviction-policies ttl-expiration-and-cache-reapers cache-concurrency-control cache-availability-and-database-fallback">
+            <span class="landing-module__num">05</span>
+            <span class="landing-module__title">Caching and fast reads</span>
+            <span class="landing-module__meta">6 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-distributed-coordination" data-units="distributed-systems-foundations consistency-models replication cap-and-pacelc clocks-and-ordering consensus leader-election distributed-locks-and-leases redis-redlock-and-fencing-tokens circuit-breakers-and-timeouts gossip-protocol metadata-service-and-node-discovery distributed-hash-tables">
+            <span class="landing-module__num">06</span>
+            <span class="landing-module__title">Distributed coordination</span>
+            <span class="landing-module__meta">13 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-storage-engines" data-units="storage-engine-design-constraints storage-engine-tradeoffs file-backed-dictionary-storage-engine custom-binary-file-format byte-range-indexed-object-storage immutable-versioned-data-files log-structured-storage bitcask-storage-engine lsm-tree-storage-engine memtable-wal-and-sstable lsm-read-path-bloom-and-sparse-index compaction-and-amplification object-storage-vs-database s3-object-storage-architecture range-partitioning-vs-consistent-hashing-storage partition-manager-and-map-table metadata-db-for-object-storage append-only-object-storage-stream-layer object-storage-durability-and-replication end-to-end-checksums">
+            <span class="landing-module__num">07</span>
+            <span class="landing-module__title">Storage engines</span>
+            <span class="landing-module__meta">20 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-async-streams" data-units="delegation-and-async-work task-queue-vs-event-stream event-bus-for-product-events queue-lag distributed-task-scheduler postgres-skip-locked-work-queue dag-workflow-orchestration rule-engine-trigger-framework fanout-patterns flash-sale-inventory-locking">
+            <span class="landing-module__num">08</span>
+            <span class="landing-module__title">Async work and streams</span>
+            <span class="landing-module__meta">10 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-search-retrieval" data-units="information-retrieval-system-design inverted-index-and-posting-lists boolean-tiered-search tf-idf-relevance-scoring bm25-production-ranking stop-words-and-champion-lists query-understanding-pipeline search-feedback-and-relevance-signals search-evaluation-metrics search-index-synchronization search-index-sharding crawler-and-indexing-pipeline vector-search-and-hybrid-retrieval autocomplete-system-design did-you-mean-and-spell-correction related-searches recent-searches-system-design">
+            <span class="landing-module__num">09</span>
+            <span class="landing-module__title">Search and retrieval</span>
+            <span class="landing-module__meta">17 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-analytics-sketches" data-units="counting-at-scale view-counting-at-scale impression-counting-system-design hyperloglog-cardinality-estimation mergeable-sketches-for-analytics bucketed-time-window-aggregation raw-events-vs-derived-analytics count-min-sketch top-k-heavy-hitters reservoir-sampling tdigest-quantile-sketch streaming-percentile-analytics live-reactions-high-throughput-design">
+            <span class="landing-module__num">10</span>
+            <span class="landing-module__title">Analytics and sketches</span>
+            <span class="landing-module__meta">13 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-realtime-social" data-units="realtime-database-and-websocket-scaling websockets-vs-sse-vs-long-polling social-network-database-modeling social-graph-follows-and-flockdb feed-generation-push-pull-hybrid newly-unread-indicator hashtag-extraction-and-tag-store reaction-modeling photo-tagging-coordinate-model live-commentary-system-design">
+            <span class="landing-module__num">11</span>
+            <span class="landing-module__title">Realtime, social and feeds</span>
+            <span class="landing-module__meta">10 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-geo-matching" data-units="nearby-geospatial-search-system-design geohash-prefix-spatial-index geospatial-grid-systems-h3-s2-geohash redis-geo-spatial-hot-path geofencing-point-in-polygon ray-casting-point-in-polygon seen-filtering-bloom-vs-exact-sets matching-and-recommendation-algorithms">
+            <span class="landing-module__num">12</span>
+            <span class="landing-module__title">Geo, matching and recs</span>
+            <span class="landing-module__meta">8 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-media-files" data-units="direct-to-object-storage-upload image-cdn-and-resizing gravatar-style-avatar-service video-upload-signed-url-multipart video-transcoding-pipeline adaptive-bitrate-and-cdn-decider signed-urls-drm-and-video-security live-streaming-webrtc-and-latency remote-file-sync-design fixed-block-chunking-and-content-addressing blocklist-versioned-file-metadata">
+            <span class="landing-module__num">13</span>
+            <span class="landing-module__title">Media, files and CDN</span>
+            <span class="landing-module__meta">11 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="learning-reliability-ops" data-units="observability-for-distributed-systems slos-and-error-budgets incident-response deployment-and-migration-safety database-migration-safety parallel-monolith-read-drain database-backups-and-restore disaster-recovery data-retention-and-deletion security-and-abuse-prevention rate-limiter-placement-and-keys sliding-window-rate-limiter multi-tenant-design">
+            <span class="landing-module__num">14</span>
+            <span class="landing-module__title">Reliability and operations</span>
+            <span class="landing-module__meta">13 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a></div><h3 class="landing-part">Real-world systems</h3><div class="landing-modules">
+          <a class="landing-module" href="#" data-module="design-services" data-units="url-shortener-system-design rate-limiting-and-abuse-prevention-case-study url-shortener-at-scale ecommerce-product-listing-system-design collaborative-editing-system-design object-store-system-design partitioned-log-system-design">
+            <span class="landing-module__num">15</span>
+            <span class="landing-module__title">Service and data designs</span>
+            <span class="landing-module__meta">7 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="design-products" data-units="notification-system-design ticket-booking-system-design payment-system-design search-engine-system-design recommendation-system-design chat-and-messaging-system-design social-feed-system-design-case-study geospatial-nearby-search-case-study">
+            <span class="landing-module__num">16</span>
+            <span class="landing-module__title">Product designs</span>
+            <span class="landing-module__meta">8 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a>
+          <a class="landing-module" href="#" data-module="design-operations" data-units="ride-matching-system-design video-platform-system-design file-sync-system-design observability-slo-case-study zero-downtime-database-migration-case-study interview-design-instagram">
+            <span class="landing-module__num">17</span>
+            <span class="landing-module__title">Media and operations designs</span>
+            <span class="landing-module__meta">6 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a></div><h3 class="landing-part">Case studies</h3><div class="landing-modules">
+          <a class="landing-module" href="#" data-module="company-cases" data-units="case-instagram-early-architecture case-stripe-idempotency-keys case-discord-message-storage case-amazon-dynamo case-gitlab-database-incident">
+            <span class="landing-module__num">18</span>
+            <span class="landing-module__title">Engineering case studies</span>
+            <span class="landing-module__meta">5 topics</span>
+            <span class="landing-module__bar"><span style="width:0%"></span></span>
+          </a></div></section>
+      <section class="landing-closing">
+        <h2 class="landing-closing__title">Start with the first lesson.</h2>
+        <a class="btn btn--primary landing-btn" href="#topic/requirements-clarification">Start learning →</a>
+      </section></div>      <!-- landing:end -->
+      <script>
+        // Personalise the prerendered landing + progress pill from saved progress before first paint,
+        // so returning visitors never see "Start learning" swap to "Continue learning".
+        (() => {
+          let p = {};
+          try { p = JSON.parse(localStorage.getItem('sd-progress-v2') || localStorage.getItem('sd-progress') || '{}') || {}; } catch {}
+          const completed = Array.isArray(p.completed) ? p.completed : [];
+          const done = new Set(completed);
+          const shell = document.querySelector('.landing-shell');
+          const cards = shell ? [...shell.querySelectorAll('.landing-module[data-units]')] : [];
+          const slugs = new Set(cards.flatMap(c => c.dataset.units.split(' ')));
+          const last = typeof p.lastVisited === 'string' && slugs.has(p.lastVisited) ? p.lastVisited : null;
+          const cta = shell?.querySelector('.landing-hero__actions .btn--primary');
+          if (cta && last) {
+            cta.textContent = 'Continue learning →';
+            cta.setAttribute('href', '#topic/' + last);
+          }
+          for (const card of cards) {
+            const units = card.dataset.units.split(' ');
+            const n = units.filter(u => done.has(u)).length;
+            const bar = card.querySelector('.landing-module__bar > span');
+            if (bar && n) bar.style.width = Math.round((n / units.length) * 100) + '%';
+          }
+          const pct = Math.round((completed.length / ((window.SITE_COUNTS && window.SITE_COUNTS.topics) || 200)) * 100);
+          const text = document.getElementById('progress-text');
+          const ring = document.getElementById('progress-ring-fill');
+          if (text) text.textContent = pct + '%';
+          if (ring) ring.style.strokeDashoffset = 2 * Math.PI * 8 * (1 - pct / 100);
+        })();
+      </script>
+    </div>
   </main>
 
   <!-- Search Modal -->
@@ -182,64 +367,61 @@
   </div>
 
   <!-- Data Scripts -->
-  <script defer src="data/curriculum.js?v=ed52a91626"></script>
-  <script defer src="data/implementations_code.js?v=4eb40c96bd"></script>
-  <script defer src="data/projects.js?v=8783850429"></script>
-  <script defer src="data/glossary.js?v=81c87d4aae"></script>
-  <script defer src="data/content/m01-foundations.js?v=61ad2f4191"></script>
-  <script defer src="data/content/m02-apis-protocols.js?v=8ce8b7cfca"></script>
-  <script defer src="data/content/m03-data-modeling-sql.js?v=1a2cae9e6b"></script>
-  <script defer src="data/content/m04-nosql-partitioning.js?v=2dec170ef5"></script>
-  <script defer src="data/content/m05-caching.js?v=091f5198c9"></script>
-  <script defer src="data/content/m06-distributed-coord.js?v=cf7d9dbabf"></script>
-  <script defer src="data/content/m07-storage-engines.js?v=e43a846052"></script>
-  <script defer src="data/content/m08-async-streams.js?v=a2f1e014f1"></script>
-  <script defer src="data/content/m09-search-retrieval.js?v=f9b1898389"></script>
-  <script defer src="data/content/m10-analytics-sketches.js?v=c870973fdc"></script>
-  <script defer src="data/content/m11-realtime-social.js?v=e87c177924"></script>
-  <script defer src="data/content/m12-geo-matching.js?v=b468335126"></script>
-  <script defer src="data/content/m13-media-cdn.js?v=ac87ceb492"></script>
-  <script defer src="data/content/m14-reliability-ops.js?v=7b029fe954"></script>
-  <script defer src="data/content/m15-service-designs.js?v=2d2ae83544"></script>
-  <script defer src="data/content/m16-product-designs.js?v=d8b386b063"></script>
-  <script defer src="data/content/m17-media-ops-designs.js?v=a3650de433"></script>
-  <script defer src="data/content/m18-case-studies.js?v=0f6a54aec2"></script>
+  <script type="text/plain" data-defer src="data/curriculum.js?v=ed52a91626"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=8783850429"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
-  <script defer src="js/analytics.js?v=8e2304fc12"></script>
-  <script defer src="js/progress.js?v=8d04470dea"></script>
-  <script defer src="js/search.js?v=2ebf07c1f2"></script>
-  <script defer src="js/exercises.js?v=ad524429c3"></script>
-  <script defer src="js/simulators.js?v=d091a36e30"></script>
-  <script defer src="js/simulators-extra.js?v=37273649b6"></script>
-  <script defer src="js/simulators-advanced.js?v=3f59fb03a7"></script>
-  <script defer src="js/simulators-distributed.js?v=30d663cc4e"></script>
-  <script defer src="js/simulators-ops.js?v=ff1d2ff9b7"></script>
-  <script defer src="js/simulators-data.js?v=a0ae4e411f"></script>
-  <script defer src="js/renderer.js?v=cfc05f7559"></script>
-  <script defer src="js/landing.js?v=6253374ce4"></script>
+  <script type="text/plain" data-defer src="js/lazy.js?v=277e38c043"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=8e2304fc12"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=8d04470dea"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=2ebf07c1f2"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=ad524429c3"></script>
+  <script type="text/plain" data-defer src="js/simulators.js?v=d091a36e30"></script>
+  <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
+  <script type="text/plain" data-defer src="js/simulators-advanced.js?v=3f59fb03a7"></script>
+  <script type="text/plain" data-defer src="js/simulators-distributed.js?v=30d663cc4e"></script>
+  <script type="text/plain" data-defer src="js/simulators-ops.js?v=ff1d2ff9b7"></script>
+  <script type="text/plain" data-defer src="js/simulators-data.js?v=a0ae4e411f"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=cfc05f7559"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=d1dd10746f"></script>
   
-  <script defer src="data/questions/q01-foundations.js?v=81794753c2"></script>
-  <script defer src="data/questions/q02-apis-protocols.js?v=3ae8293a0e"></script>
-  <script defer src="data/questions/q03-data-modeling-sql.js?v=850e097b30"></script>
-  <script defer src="data/questions/q04-nosql-partitioning.js?v=41bb27dacb"></script>
-  <script defer src="data/questions/q05-caching.js?v=38cf2cc929"></script>
-  <script defer src="data/questions/q06-distributed-coord.js?v=7e99e2bc80"></script>
-  <script defer src="data/questions/q07-storage-engines.js?v=de2480bd0b"></script>
-  <script defer src="data/questions/q08-async-streams.js?v=a17fcbf5db"></script>
-  <script defer src="data/questions/q09-search-retrieval.js?v=8188f1b270"></script>
-  <script defer src="data/questions/q10-analytics-sketches.js?v=fe4b7da996"></script>
-  <script defer src="data/questions/q11-realtime-social.js?v=b7cc16595b"></script>
-  <script defer src="data/questions/q12-geo-matching.js?v=564a085047"></script>
-  <script defer src="data/questions/q13-media-cdn.js?v=514d931e44"></script>
-  <script defer src="data/questions/q14-reliability-ops.js?v=a69a9ddabc"></script>
-  <script defer src="data/questions/q15-service-designs.js?v=7028361a3a"></script>
-  <script defer src="data/questions/q16-product-designs.js?v=31779cc0d8"></script>
-  <script defer src="data/questions/q17-media-ops-designs.js?v=d3721b1ab1"></script>
-  <script defer src="data/questions/q18-case-studies.js?v=3c6df68044"></script>
-  <script defer src="js/quiz.js?v=6925d26197"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
   
-  <script defer src="js/app.js?v=a5feee5569"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=229d2af4f1"></script>
+
+  <!-- App scripts (and GA) are fetched once the prerendered landing has painted, so they never delay it. -->
+  <script>
+    (() => {
+      let started = false;
+      const start = () => {
+        if (started) return;
+        started = true;
+        document.querySelectorAll('script[data-defer]').forEach(old => {
+          const s = document.createElement('script');
+          s.src = old.getAttribute('src');
+          s.async = false; // keep execution order
+          document.body.appendChild(s);
+        });
+        const ga = document.createElement('script');
+        ga.async = true;
+        ga.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(window.GA_MEASUREMENT_ID);
+        document.head.appendChild(ga);
+      };
+      if (PerformanceObserver.supportedEntryTypes?.includes('largest-contentful-paint')) {
+        // Fires after the largest element has actually been presented
+        new PerformanceObserver((_, obs) => { obs.disconnect(); setTimeout(start, 0); })
+          .observe({ type: 'largest-contentful-paint', buffered: true });
+      } else {
+        // Safari/Firefox: after load and two frames
+        const afterPaint = () => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(start, 0)));
+        if (document.readyState === 'complete') afterPaint();
+        else addEventListener('load', afterPaint, { once: true });
+      }
+      setTimeout(start, 4000); // hidden tabs report no paint
+    })();
+  </script>
 
   <!-- Mermaid (lazy-loaded) -->
   <script>

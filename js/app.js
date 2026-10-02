@@ -244,7 +244,10 @@ window.App = (() => {
     switch (currentView) {
       case 'home':
         if (window.Landing) {
-          reader.innerHTML = window.Landing.render();
+          // Keep the prerendered landing (already personalised inline in index.html) so nothing re-renders
+          const shell = reader.querySelector('.landing-shell');
+          if (shell) shell.classList.remove('landing-shell');
+          else reader.innerHTML = window.Landing.render();
           landingCleanup = window.Landing.mount(reader);
         } else {
           reader.innerHTML = window.Renderer.renderOverview();
@@ -263,6 +266,7 @@ window.App = (() => {
         }
         break;
       case 'cheatsheet':
+        loadModuleContent(currentSlug);
         reader.innerHTML = window.Renderer.renderCheatSheet(currentSlug);
         if (window.Analytics) {
           window.Analytics.trackPageView('Cheat Sheet', '/#cheatsheet/' + currentSlug, window.location.href);
@@ -355,62 +359,31 @@ window.App = (() => {
   }
 
   // ── Module Content Loading ────────────────────────────────
-  const loadingModules = new Set();
+  // Lesson content and question banks load per module on demand (see js/lazy.js).
+  const loadedModules = new Set();
 
-  function loadModuleContent(slug) {
-    window.MODULE_CONTENT = window.MODULE_CONTENT || {};
-    const data = window.CURRICULUM_DATA;
-    if (!data || !slug) return;
-
-    // Find which module this slug belongs to
-    let moduleId = null;
-    for (const p of data.parts) {
+  function findModule(key) {
+    for (const p of window.CURRICULUM_DATA?.parts || []) {
       for (const m of p.modules) {
-        for (const u of m.units) {
-          if (u.slug === slug) {
-            moduleId = m.id;
-            break;
-          }
-        }
-        if (moduleId) break;
-      }
-      if (moduleId) break;
-    }
-
-    if (!moduleId) return;
-    if (window.MODULE_CONTENT[moduleId]) return; // Already loaded
-    if (loadingModules.has(moduleId)) return; // Already in-flight
-
-    // Load content file from data-driven registry
-    const filename = getModuleContentFile(moduleId);
-    if (filename) {
-      loadingModules.add(moduleId);
-      const script = document.createElement('script');
-      script.src = filename;
-      script.onload = () => {
-        loadingModules.delete(moduleId);
-        // Re-render if the user is on any topic belonging to this module
-        if (currentView === 'topic' && getModuleIdForSlug(currentSlug) === moduleId) {
-          renderCurrentView();
-        }
-      };
-      script.onerror = (err) => {
-        loadingModules.delete(moduleId);
-        console.warn('Failed to load content for module:', moduleId, filename, err);
-      };
-      document.head.appendChild(script);
-    }
-  }
-
-  function getModuleContentFile(moduleId) {
-    const data = window.CURRICULUM_DATA;
-    if (!data) return null;
-    for (const p of data.parts) {
-      for (const m of p.modules) {
-        if (m.id === moduleId) return m.contentFile || null;
+        if (m.id === key || m.number === key || m.units.some(u => u.slug === key)) return m;
       }
     }
     return null;
+  }
+
+  function loadModuleContent(key) {
+    const mod = findModule(key);
+    if (!mod || loadedModules.has(mod.id) || !window.Lazy) return;
+    loadedModules.add(mod.id);
+    window.Lazy.module(mod.number).then(() => {
+      // Re-render if the learner is still on a view that needs this module
+      const needed = (currentView === 'topic' && getModuleIdForSlug(currentSlug) === mod.id) ||
+        (currentView === 'cheatsheet' && findModule(currentSlug)?.id === mod.id);
+      if (needed) renderCurrentView();
+    }).catch(err => {
+      loadedModules.delete(mod.id);
+      console.warn('Failed to load content for module:', mod.id, err);
+    });
   }
 
   // ── Sidebar ───────────────────────────────────────────────
@@ -1063,7 +1036,9 @@ window.App = (() => {
   }
 
   // ── Boot ──────────────────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', init);
+  // Scripts are injected after first paint, so DOMContentLoaded may already have fired
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 
   window.openDiagramLightbox = openDiagramLightbox;
   window.closeDiagramLightbox = closeDiagramLightbox;
