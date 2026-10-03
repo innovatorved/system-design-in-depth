@@ -47,7 +47,7 @@ window.Renderer = (() => {
           <div><div class="hero__stat-value" style="color: ${streak > 0 ? '#f97316' : 'inherit'};">${streak} 🔥</div><div class="hero__stat-label">Day Streak</div></div>
         </div>
         <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-          <a href="#/glossary" class="btn btn--sm btn--primary">📖 75 Term Glossary</a>
+          <a href="#/glossary" class="btn btn--sm btn--primary">📖 Glossary</a>
         </div>
       </div>`;
 
@@ -55,7 +55,7 @@ window.Renderer = (() => {
     for (const part of data.parts) {
       html += `
         <div class="part-header">
-          <div class="part-header__label">Part ${part.number}</div>
+          <div class="part-header__label">Track ${part.number}</div>
           <h2 class="part-header__title">${part.title}</h2>
           <p class="part-header__summary">${part.summary}</p>
         </div>
@@ -153,7 +153,7 @@ window.Renderer = (() => {
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="#" data-nav="home">Home</a>
         <span class="breadcrumbs__sep">${icons.chevronRight}</span>
-        <a href="#" data-nav="module" data-module="${mod.id}">Module ${mod.number}</a>
+        <a href="#" data-nav="module" data-module="${mod.id}">${mod.title}</a>
         <span class="breadcrumbs__sep">${icons.chevronRight}</span>
         <span class="breadcrumbs__current">${unit.title}</span>
       </nav>

@@ -1,92 +1,86 @@
 # System Design In Depth
 
-Deep system design curriculum for senior engineers — 18 modules, 200 topics, interactive simulators, from-scratch builds, and 470+ curated video explainers.
+An open-source interactive curriculum for learning system design, data architectures, and distributed systems engineering from first principles.
 
 ---
 
 ## Why This Exists
 
-Most system design resources are either too shallow (flashcard-level) or too scattered (dozens of blog posts you'll never finish). This is a single, structured curriculum that goes **deep** — from capacity planning to Raft consensus to LSM-tree compaction — with real code you can run, diagrams you can zoom into, and videos hand-picked from the best lecturers in the field.
+Most system design resources are either high-level interview summaries or scattered blog posts. This project provides a structured, dependency-driven learning path grounded in primary research papers, RFCs, and engineering postmortems — paired with interactive visual simulators and from-scratch algorithmic builds you can execute locally.
 
 No signup. No paywall. Just open it and learn.
 
 ## Quick Start
 
 ```bash
-# serve locally (zero dependencies)
+# Serve locally (zero dependencies, vanilla JS)
 python3 -m http.server 8080
 ```
 
-Open `http://localhost:8080` — that's it.
+Open `http://localhost:8080` in any modern web browser.
 
 ---
 
 ## What's Inside
 
-**200 deep-dive topics** organized into 18 modules, each with:
-
-- 📝 **Written notes** with architecture diagrams (182 Mermaid diagrams)
-- 🎥 **Curated videos** — 470+ picks from Kleppmann, MIT 6.824, CMU DB, ByteByteGo, Hussein Nasser, Strange Loop, and more
-- 🧠 **Intuition-first primers** — plain-language analogies, one-line mental models, and interview traps
-- 🔊 **Audio narrations** — 200 spoken summaries with speed control (0.75x–2x)
-- ✅ **Quizzes** — 3 review questions per topic with explanations
-
-**15 from-scratch builds** (zero dependencies, just Node.js):
-
-Load balancer · Consistent hashing · Rate limiter · LRU/TTL cache · Bloom filter · Snowflake IDs · Keyset pagination · WAL · LSM-tree KV store · Leases with fencing · Gossip + SWIM · Merkle anti-entropy · HyperLogLog · Tiny search engine
-
-
-**32 interactive simulators** across 68 lessons:
-
-Raft elections · Vector clocks · Quorum (N/R/W) tuning · Consistent hashing rings · WAL crash recovery · MVCC isolation anomalies · Cache stampedes · Load-balancing algorithms · Count-Min Sketch · Gossip protocol · Adaptive bitrate · SLO burn-rate alerts
-
-**Plus:** `⌘K` search, progress tracking with streaks, printable cheat sheets per module, and a 75-term glossary.
+- 📝 **Architectural notes & diagrams** — 180+ Mermaid sequence, architecture, and state diagrams
+- 🔬 **32 interactive visual simulators** — hands-on sandboxes for Raft elections, vector clocks, quorum tuning, WAL crash recovery, MVCC isolation anomalies, cache stampede defense, and consistent hash rings
+- 💻 **15 from-scratch algorithmic builds** — pure Node.js reference implementations with automated test suites (LSM-tree KV store, Raft/lease leader election, sliding window rate limiter, SWIM gossip protocol, tiny search engine, HyperLogLog, WAL, and Bloom filters)
+- 🎥 **Curated video lectures** — lectures from Martin Kleppmann, MIT 6.824, CMU Database Group, and senior systems practitioners
+- 🧠 **Intuition-first primers** — mental models, concrete failure modes, and architectural trade-off matrices
+- 🔊 **Audio narrations** — spoken unit summaries with adjustable playback speed
+- ✅ **Assessment questions** — topic review questions with detailed rationales
+- 📖 **Glossary & search** — instant `⌘K` fuzzy search across all concepts and a systems glossary
 
 ---
 
-## Curriculum
+## Curriculum Structure (v2.0)
 
-### Part 1 — Fundamentals
+The curriculum is organized into **6 Core Engineering Tracks** structured by conceptual prerequisites:
 
-| # | Module | Topics |
-|---|--------|--------|
-| 01 | **Foundations** | Requirements, trade-offs, capacity planning, NFRs |
-| 02 | **APIs & Protocols** | REST, gRPC, GraphQL, WebSockets, TCP vs UDP |
-| 03 | **Data Modeling & SQL** | Schema design, indexing, joins, migrations |
-| 04 | **NoSQL & Partitioning** | Document vs KV stores, sharding, consistent hashing |
-| 05 | **Caching** | Cache layers, eviction, stampede prevention, Redis |
-| 06 | **Distributed Coordination** | Raft, Paxos, leader election, distributed locks |
-| 07 | **Storage Engines** | B-Trees, LSM-Trees, WAL, compaction, SSTables |
-| 08 | **Async & Streams** | Kafka internals, event sourcing, CQRS |
-| 09 | **Search & Retrieval** | Inverted indexes, BM25, posting lists |
-| 10 | **Analytics & Sketches** | HyperLogLog, Count-Min, t-digest |
-| 11 | **Realtime & Social** | Feeds, fanout, presence, chat, social graphs |
-| 12 | **Geo & Matching** | Geohashing, R-trees, ride matching |
-| 13 | **Media & CDN** | Adaptive bitrate, transcoding, object storage |
-| 14 | **Reliability & Ops** | Circuit breakers, observability, SLOs |
+### Track 1 — Architectural Foundations & Workload Modeling
+Requirements clarification, system invariants, capacity estimation, latency numbers, concurrency runtimes (event loops vs thread pools), monolith-to-microservice boundaries, and hardware economics.
 
-### Part 2 — System Designs
+### Track 2 — Data Architecture, Storage Engines & State Persistence
+Relational schema normalization, indexing internals, B-trees, ACID transactions, locking, MVCC, write-ahead logging (WAL), ARIES recovery, LSM-tree compaction, Bitcask, blob object storage, and sharding keys.
 
-URL shortener · Distributed rate limiter · Collaborative editing · E-commerce listing · Chat system · Payment processing · Ride matching · Video transcoding · Notification system
+### Track 3 — Distributed Systems, Consensus & Coordination
+Network transports (TCP, UDP, gRPC), physical and logical time, replication models, CAP and PACELC trade-offs, Raft and Paxos consensus, leader election, leases, fencing tokens, and SWIM gossip membership.
 
-### Part 3 — Case Studies
+### Track 4 — Asynchronous Execution, Queues & Real-Time Processing
+Task queues, event-driven backbones, partitioned logs (Kafka internals), stream processing, probabilistic sketches (HyperLogLog, Count-Min, t-digest), caching tiers, eviction policies, and real-time WebSocket messaging.
 
-Instagram's early architecture · Stripe idempotency keys · Discord's trillion-message migration · Amazon Dynamo paper · GitLab database incident
+### Track 5 — Production Operations, Resilience & System Hardening
+Failure containment, circuit breakers, load shedding, distributed tracing, SLOs and error budgets, zero-downtime database migrations, disaster recovery topologies, multi-tenant isolation, and threat modeling.
+
+### Track 6 — Systems Design Labs & Architectural Evolution
+End-to-end design synthesis (URL shorteners, distributed rate limiters, collaborative editors, chat systems, search engines, video CDNs) and analysis of published architectures and postmortems (Amazon Dynamo, Discord message storage, Stripe idempotency, GitLab database outage).
+
+---
+
+## Governance & Provenance
+
+- [Learning Philosophy](docs/learning-philosophy.md) — The pedagogical framework and core educational maxims.
+- [Curriculum Dependency Graph](docs/curriculum-dependency-graph.md) — Conceptual prerequisite mapping across tracks.
+- [Editorial & Sourcing Policy](docs/editorial-policy.md) — Standards for primary research citations and verification.
+- [Bibliography & Sources](SOURCES.md) — Complete academic and RFC citations.
+- [Third-Party Notices](THIRD_PARTY_NOTICES.md) — Open-source software licenses and notices.
 
 ---
 
 ## Tech Stack
 
-Vanilla HTML + CSS + JavaScript. No build step, no frameworks, no `npm install`. Serves from any static HTTP server or CDN.
+Vanilla HTML, CSS, and modern JavaScript (ES2020). Zero runtime build dependencies, zero compilers, zero npm packages. Runs statically on Cloudflare Pages, GitHub Pages, or directly from the local filesystem.
 
 ---
 
 ## Author
 
-**[Ved Gupta](https://vedgupta.in)**
+**[Ved Gupta](https://vedgupta.in)** (`@innovatorved`)
 
 ---
 
 ## License
 
-[MIT](LICENSE) — use it, share it, learn from it.
+- **Software & Application Code:** [MIT License](LICENSE)
+- **Case Studies & Commentary:** Educational reconstructions based on publicly available academic papers, engineering publications, and conference presentations.

@@ -365,7 +365,7 @@ window.App = (() => {
   function findModule(key) {
     for (const p of window.CURRICULUM_DATA?.parts || []) {
       for (const m of p.modules) {
-        if (m.id === key || m.number === key || m.units.some(u => u.slug === key)) return m;
+        if (m.id === key || m.number === key || m.legacyNumber === key || m.units.some(u => u.slug === key)) return m;
       }
     }
     return null;
@@ -375,7 +375,8 @@ window.App = (() => {
     const mod = findModule(key);
     if (!mod || loadedModules.has(mod.id) || !window.Lazy) return;
     loadedModules.add(mod.id);
-    window.Lazy.module(mod.number).then(() => {
+    const num = mod.legacyNumber || mod.number;
+    window.Lazy.module(num).then(() => {
       // Re-render if the learner is still on a view that needs this module
       const needed = (currentView === 'topic' && getModuleIdForSlug(currentSlug) === mod.id) ||
         (currentView === 'cheatsheet' && findModule(currentSlug)?.id === mod.id);
@@ -408,7 +409,7 @@ window.App = (() => {
 
     let html = '';
     for (const part of data.parts) {
-      html += `<div style="padding:${part.number > 1 ? '8px' : '4px'} 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Part ${part.number}: ${part.title}</div>`;
+      html += `<div style="padding:${part.number > 1 ? '8px' : '4px'} 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Track ${part.number}: ${part.title}</div>`;
 
       for (const mod of part.modules) {
         const isCollapsed = collapsedModules.has(mod.id);

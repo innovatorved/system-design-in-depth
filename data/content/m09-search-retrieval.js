@@ -86,10 +86,6 @@ window.MODULE_CONTENT["learning-search-retrieval"] = {
     ],
     "furtherReading": [
       {
-        "title": "Arpit Bhayani: Inverted Index - The Data Structure Behind Search Engines (YouTube)",
-        "url": "https://www.youtube.com/watch?v=iHHqnyThrqE"
-      },
-      {
         "title": "Arpit Bhayani: BM25 - The Information Retrieval Algorithm That Outlived Its Era (Detailed Blog)",
         "url": "https://arpitbhayani.me/blogs/bm25/"
       },
