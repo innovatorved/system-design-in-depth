@@ -114,8 +114,9 @@ window.Progress = (() => {
   }
 
   function getTotalUnits() {
-    if (!window.CURRICULUM_DATA) return 200;
-    return window.CURRICULUM_DATA.stats.units;
+    if (window.CURRICULUM_DATA?.stats?.units) return window.CURRICULUM_DATA.stats.units;
+    if (window.SITE_COUNTS?.topics) return window.SITE_COUNTS.topics;
+    return 200;
   }
 
   function getPercentage() {
