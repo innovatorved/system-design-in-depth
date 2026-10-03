@@ -77,7 +77,7 @@ curriculum.parts.forEach((part) => {
       if (mod.units) {
         mod.units.forEach((unit) => {
           unitsCount++;
-          unitsMap.push({ moduleId: mod.id, modNumber: mod.number, unit });
+          unitsMap.push({ moduleId: mod.id, modNumber: mod.legacyNumber || mod.number, unit });
           
           if (!unit.slug) {
             reportError(`Unit missing slug in module ${mod.id}`);

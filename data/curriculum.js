@@ -1,6 +1,7 @@
+// System Design in Depth — Curriculum v2.0 (Dependency-Driven 6-Track Architecture)
 window.CURRICULUM_DATA = {
   "stats": {
-    "parts": 3,
+    "tracks": 6,
     "modules": 18,
     "units": 200,
     "lessons": 165,
@@ -9,17 +10,18 @@ window.CURRICULUM_DATA = {
   },
   "parts": [
     {
-      "id": "part-1",
+      "id": "track-1",
       "number": 1,
-      "title": "Fundamentals",
-      "summary": "The original fourteen modules, from requirements and capacity planning through reliability and operations.",
-      "hours": 35,
+      "title": "Architectural Foundations & Workload Modeling",
+      "summary": "Requirements clarification, system invariants, capacity estimation, concurrency models, and service boundaries.",
+      "hours": 12,
       "modules": [
         {
           "id": "learning-foundations",
-          "number": "01",
-          "title": "Foundations",
-          "summary": "Clarify requirements, estimate capacity, and decide which complexity the system needs.",
+          "number": "1.1",
+          "legacyNumber": "01",
+          "title": "Foundations & System Invariants",
+          "summary": "Clarify requirements, establish non-functional targets, model capacity and latency, and define service boundaries.",
           "units": [
             {
               "slug": "requirements-clarification",
@@ -415,479 +417,22 @@ window.CURRICULUM_DATA = {
               }
             }
           ]
-        },
-        {
-          "id": "learning-apis-services",
-          "number": "02",
-          "title": "APIs, services and protocols",
-          "summary": "Choose service boundaries and communication patterns, then handle retries and overload.",
-          "units": [
-            {
-              "slug": "api-design-contracts",
-              "title": "API design contracts",
-              "kind": "lesson",
-              "archive": {
-                "slug": "api-design-contracts",
-                "file": "api-design-contracts.md",
-                "title": "API design contracts",
-                "displayTitle": "API design contracts",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "api",
-                  "contracts"
-                ],
-                "sources": [
-                  "[[wiki/http-rest-grpc]]",
-                  "[[wiki/retries-timeouts-idempotency]]",
-                  "https://www.rfc-editor.org/rfc/rfc9110.html",
-                  "https://google.aip.dev/158",
-                  "https://google.aip.dev/180",
-                  "https://docs.stripe.com/api/idempotent_requests"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "An API contract defines what a caller can send, what an answer means, and which behavior will survive a server update.",
-                  "continuation": "The JSON shape is only part of it."
-                }
-              }
-            },
-            {
-              "slug": "service-to-service-communication",
-              "title": "Service-to-service communication",
-              "kind": "lesson",
-              "archive": {
-                "slug": "service-to-service-communication",
-                "file": "service-to-service-communication.md",
-                "title": "Service-to-service communication",
-                "displayTitle": "Service-to-service communication",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "scaling",
-                  "communication"
-                ],
-                "sources": [
-                  "[[wiki/monolith-vs-microservices]]",
-                  "[[wiki/task-queue-vs-event-stream]]",
-                  "https://grpc.io/docs/what-is-grpc/core-concepts/",
-                  "https://grpc.io/docs/guides/deadlines/",
-                  "https://d1.awsstatic.com/builderslibrary/pdfs/timeouts-retries-and-backoff-with-jitter.pdf",
-                  "https://learn.microsoft.com/en-us/azure/architecture/patterns/bulkhead",
-                  "https://docs.stripe.com/webhooks",
-                  "https://www.w3.org/TR/trace-context/",
-                  "https://www.rfc-editor.org/rfc/rfc9110.html#name-202-accepted"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "When work crosses a service boundary, the caller has to send a message and interpret what comes back.",
-                  "continuation": "The other service can finish its work while the caller sees only a timeout."
-                }
-              }
-            },
-            {
-              "slug": "http-rest-grpc",
-              "title": "HTTP, REST, and gRPC",
-              "kind": "lesson",
-              "archive": {
-                "slug": "http-rest-grpc",
-                "file": "http-rest-grpc.md",
-                "title": "HTTP, REST, and gRPC",
-                "displayTitle": "HTTP, REST, and gRPC",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "scaling",
-                  "api",
-                  "http"
-                ],
-                "sources": [
-                  "[[wiki/api-design-contracts]]",
-                  "https://www.rfc-editor.org/rfc/rfc9110.html",
-                  "https://www.rfc-editor.org/rfc/rfc9112.html",
-                  "https://www.rfc-editor.org/rfc/rfc9113.html",
-                  "https://www.rfc-editor.org/rfc/rfc9114.html",
-                  "https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm",
-                  "https://grpc.io/docs/what-is-grpc/core-concepts/",
-                  "https://grpc.io/docs/platforms/web/basics/",
-                  "https://github.com/grpc/grpc-web",
-                  "https://protobuf.dev/programming-guides/proto3/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Choosing between a resource-oriented HTTP API and gRPC means choosing how clients express remote operations.",
-                  "continuation": "Both can serve internal services or external clients."
-                }
-              }
-            },
-            {
-              "slug": "tcp-vs-udp",
-              "title": "TCP vs UDP",
-              "kind": "lesson",
-              "archive": {
-                "slug": "tcp-vs-udp",
-                "file": "tcp-vs-udp.md",
-                "title": "TCP vs UDP",
-                "displayTitle": "TCP vs UDP",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "ground-floor",
-                  "networking"
-                ],
-                "sources": [
-                  "https://www.rfc-editor.org/rfc/rfc9293.html",
-                  "https://hpbn.co/building-blocks-of-tcp/",
-                  "https://hpbn.co/building-blocks-of-udp/",
-                  "https://www.rfc-editor.org/rfc/rfc8085.html",
-                  "https://www.rfc-editor.org/rfc/rfc9000.html",
-                  "https://www.rfc-editor.org/rfc/rfc793",
-                  "https://www.rfc-editor.org/rfc/rfc9114.html",
-                  "https://www.rfc-editor.org/rfc/rfc7766.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "TCP and UDP are transport protocols: rules for moving data between applications over an IP network. They differ in how the receiving program gets that data and what happens when some of it goes missing.",
-                "mermaidCount": 0,
-                "content": "# TCP vs UDP\n\nTCP and UDP are transport protocols: rules for moving data between applications over an IP network. They differ in how the receiving program gets that data and what happens when some of it goes missing.\n\nTCP provides an ordered stream of bytes and retransmits missing data. UDP sends separate messages, called datagrams, without adding delivery or ordering guarantees.\n\n![TCP can deliver writes cat and nap as reads ca and tnap. UDP retains separate cat and nap datagrams when both arrive.](/course-assets/system-design/research-pilot/style-comparison/tcp-editorial.webp)\n\n| Behavior | TCP | UDP |\n|---|---|---|\n| Connection setup | Establishes a connection before the usual data transfer. | No transport handshake. |\n| What the app reads | A byte stream; reads can split or combine messages. | Separate datagrams that arrive. |\n| Missing data | Retransmits; later bytes wait behind a gap. | No automatic retransmission. |\n\nIP, the Internet Protocol, routes packets: chunks of data with addressing information. Packets can be lost, duplicated or delivered out of order. The transport protocol determines how much of that the app has to handle.\n\n## TCP message boundaries\n\nTCP keeps bytes in order, but it doesn't preserve the boundaries between the sender's writes. This matters when your program needs to recognize a complete message.\n\nFor example, a server writes `cat` and then `nap`. TCP carries the six bytes `catnap`. The client could read them as `cat` and `nap`, as `ca` and `tnap`, or all at once.\n\nThe application protocol needs a rule for finding the end of each message. This is called **framing**. A simple text protocol could put a newline after each word.\n\nThe receiver collects bytes until it reaches that newline, then processes the completed word. Another protocol might put a message length before the message contents.\n\nHTTP libraries handle their protocol's framing for you. If you work directly with TCP, a single read is not proof that the whole message has arrived.\n\nUDP preserves the boundary of each datagram. Sending `cat` in one and `nap` in another gives the receiver two distinguishable messages if both arrive. Their arrival order can differ from their send order.\n\n## TCP loss recovery\n\nTCP numbers bytes and uses acknowledgements, or ACKs, to track what has arrived. An ACK identifies the next byte the receiver expects after the continuous sequence it has already received.\n\nThe sender keeps unacknowledged data. It can resend that data when acknowledgements or a timeout indicate possible loss.\n\nConsider `catnap` again. Number the bytes from 1 to 6 for this example, and split them into packets carrying `ca`, `tn` and `ap`. The packet containing `tn` is lost.\n\n| Event | Bytes available to the app so far | Next expected byte |\n|---|---|---|\n| `ca` arrives | `ca` | 3 |\n| `ap` arrives, but `tn` is missing | `ca` | 3 |\n| Retransmitted `tn` arrives | `catnap` | 7 |\n\nThe receiver holds `ap` until the gap is filled. This is **head-of-line blocking**: missing earlier bytes prevent later bytes from being delivered to the application.\n\nThe byte positions are illustrative; the connection is already open. ACK 7 means all six bytes have arrived. The receiving program can still read them in smaller chunks.\n\nRetransmission doesn't promise a deadline. If the connection fails before recovery, the transfer remains incomplete.\n\nAn ACK also doesn't prove that the server program processed the data. The server's TCP implementation can acknowledge a request before the application reads it.\n\nFor a save operation, the client needs an application response confirming the save. If that response is lost, the client can still be unsure whether the save succeeded.\n\n![A TCP acknowledgment confirms receipt of bytes. In this example the bytes are in the server buffer and the application has not saved them yet.](/course-assets/system-design/research-pilot/style-comparison/tcp-sketch.webp)\n\n## Connection setup and traffic control\n\nA usual new TCP connection starts with three messages: SYN, SYN-ACK and ACK. The two ends establish their starting sequence numbers and connection settings during this handshake.\n\nThe client normally waits one round trip before sending application data. Reusing an open connection avoids repeating this setup. Packet travel time and waiting in network queues still apply to either protocol.\n\nTCP also limits how much data is in flight. **Flow control** respects the receiver's available buffer space. **Congestion control** adjusts sending to conditions on the network path.\n\nThey address different bottlenecks. A receiving machine can have plenty of memory while the network link leading to it is overloaded.\n\n## When skipping a message is acceptable\n\nA game might send a player's complete position in updates numbered 501, 502 and 503. If 502 is lost, the game can use 503 without waiting. If 502 arrives later, the game can discard it.\n\nThe update numbers and the rule for ignoring older positions belong to the game protocol. UDP doesn't supply them.\n\nThis only works if each update contains enough information on its own. If 503 describes movement since 502, losing 502 leaves the receiver without the position needed to apply that change.\n\nA voice call has a similar timing constraint: a sound fragment arriving after its playback time may no longer be useful. A protocol over UDP can skip it and continue.\n\nOther traffic in the same product may need reliable delivery. A chat message or purchase can't be treated like an outdated position update.\n\nUDP applications also need traffic control. Retrying every lost message immediately can overload a link that is already dropping packets.\n\n## HTTP/3 and QUIC\n\nUsing UDP doesn't necessarily mean giving up reliability. QUIC implements encrypted connections, congestion control and reliable byte streams over UDP. HTTP/3 uses QUIC.\n\nQUIC orders bytes separately in each stream. With HTTP/2 over one TCP connection, a gap in the shared TCP stream can delay both an image and a stylesheet.\n\nWith HTTP/3, received stylesheet bytes can continue along their stream while missing image bytes are recovered. If a lost packet contains data for both streams, both can be affected. They also share congestion control.\n\nFor an ordinary web API, use HTTPS and let its transport implementation handle these details. The [[wiki/http-rest-grpc|HTTP lesson]] explains the protocol versions further.\n\nDatabase clients also commonly use TCP. DNS uses both UDP and TCP, including retrying a truncated UDP answer over TCP. A familiar application name does not always imply one transport.\n\nBuilding directly on UDP makes sense when you need control over which messages can be skipped or recovered. You also take responsibility for the delivery behavior and traffic control your application requires.\n"
-              }
-            },
-            {
-              "slug": "api-gateway-vs-load-balancer",
-              "title": "API gateway vs load balancer",
-              "kind": "lesson",
-              "archive": {
-                "slug": "api-gateway-vs-load-balancer",
-                "file": "api-gateway-vs-load-balancer.md",
-                "title": "API gateway vs load balancer",
-                "displayTitle": "API gateway vs load balancer",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "api",
-                  "gateway"
-                ],
-                "sources": [
-                  "[[wiki/load-balancers]]",
-                  "[[wiki/monolith-vs-microservices]]",
-                  "https://learn.microsoft.com/en-us/azure/architecture/microservices/design/gateway",
-                  "https://learn.microsoft.com/en-us/azure/architecture/patterns/strangler-fig",
-                  "https://www.rfc-editor.org/rfc/rfc7239.html#section-8.1"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A request arrives at the public address for your application.",
-                  "continuation": "Two decisions follow: which service handles this operation, and which running copy of that service should receive it?"
-                }
-              }
-            },
-            {
-              "slug": "load-balancers",
-              "title": "Load balancers",
-              "kind": "lesson",
-              "archive": {
-                "slug": "load-balancers",
-                "file": "load-balancers.md",
-                "title": "Load balancers",
-                "displayTitle": "Load balancers",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "scaling",
-                  "load-balancing"
-                ],
-                "sources": [
-                  "[[wiki/horizontal-vs-vertical-scaling]]",
-                  "https://nginx.org/en/docs/http/ngx_http_upstream_module.html",
-                  "https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream",
-                  "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/health_checking",
-                  "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/operations/draining",
-                  "https://www.rfc-editor.org/rfc/rfc9113.html#section-5"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A visitor should be able to open a short link without knowing which application copy is running today.",
-                  "continuation": "If app A stops taking new work, the next request needs somewhere else to go."
-                }
-              }
-            },
-            {
-              "slug": "consistent-hashing-load-balancing",
-              "title": "Consistent-hashing load balancing",
-              "kind": "lesson",
-              "archive": {
-                "slug": "consistent-hashing-load-balancing",
-                "file": "consistent-hashing-load-balancing.md",
-                "title": "Consistent-hashing load balancing",
-                "displayTitle": "Consistent-hashing load balancing",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "load-balancing",
-                  "hashing"
-                ],
-                "sources": [
-                  "[[wiki/consistent-hashing]]",
-                  "[[wiki/load-balancers]]",
-                  "[[wiki/hot-partitions]]",
-                  "https://nginx.org/en/docs/http/ngx_http_upstream_module.html#hash",
-                  "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/load_balancers",
-                  "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A request reaches a healthy application, but the useful cached answer is in another application's memory.",
-                  "continuation": "Sending the next identical request somewhere else repeats work that a stable destination might share."
-                }
-              }
-            },
-            {
-              "slug": "event-contracts",
-              "title": "Event contracts",
-              "kind": "lesson",
-              "archive": {
-                "slug": "event-contracts",
-                "file": "event-contracts.md",
-                "title": "Event contracts",
-                "displayTitle": "Event contracts",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "events",
-                  "contracts"
-                ],
-                "sources": [
-                  "[[wiki/api-design-contracts]]",
-                  "[[wiki/schema-evolution]]",
-                  "[[wiki/raw-events-vs-derived-analytics]]",
-                  "https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md",
-                  "https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html",
-                  "https://docs.stripe.com/webhooks"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A report rebuilt tomorrow may read a redirect record written before today's application update.",
-                  "continuation": "The old program is gone, but its record still has to make sense."
-                }
-              }
-            },
-            {
-              "slug": "retries-timeouts-idempotency",
-              "title": "Retries, timeouts, and idempotency",
-              "kind": "lesson",
-              "archive": {
-                "slug": "retries-timeouts-idempotency",
-                "file": "retries-timeouts-idempotency.md",
-                "title": "Retries, timeouts, and idempotency",
-                "displayTitle": "Retries, timeouts, and idempotency",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "reliability",
-                  "retries"
-                ],
-                "sources": [
-                  "[[wiki/service-to-service-communication]]",
-                  "[[wiki/api-design-contracts]]",
-                  "https://grpc.io/docs/guides/deadlines/",
-                  "https://docs.stripe.com/api/idempotent_requests",
-                  "https://d1.awsstatic.com/builderslibrary/pdfs/timeouts-retries-and-backoff-with-jitter.pdf",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://www.rfc-editor.org/rfc/rfc9110.html#name-idempotent-methods"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "The server can finish creating your short link while your screen still says the request failed.",
-                  "continuation": "Clicking again may recover the answer, or create another link."
-                }
-              }
-            },
-            {
-              "slug": "batching",
-              "title": "Batching",
-              "kind": "lesson",
-              "archive": {
-                "slug": "batching",
-                "file": "batching.md",
-                "title": "Batching",
-                "displayTitle": "Batching",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "batching",
-                  "transactions"
-                ],
-                "sources": [
-                  "[[wiki/backpressure]]",
-                  "[[wiki/retries-timeouts-idempotency]]",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://kafka.apache.org/41/configuration/producer-configs/",
-                  "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessageBatch.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Committing a hundred records separately repeats transaction work a hundred times.",
-                  "continuation": "Grouping them can share that cost, but the first record may wait for the group to form."
-                }
-              }
-            },
-            {
-              "slug": "backpressure",
-              "title": "Backpressure",
-              "kind": "lesson",
-              "archive": {
-                "slug": "backpressure",
-                "file": "backpressure.md",
-                "title": "Backpressure",
-                "displayTitle": "Backpressure",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "queues",
-                  "reliability"
-                ],
-                "sources": [
-                  "[[wiki/concurrency-vs-parallelism]]",
-                  "[[wiki/load-shedding]]",
-                  "https://docs.python.org/3/library/asyncio-queue.html",
-                  "https://nodejs.org/en/learn/modules/backpressuring-in-streams",
-                  "https://www.rfc-editor.org/rfc/rfc9293.html#section-3.8.6"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A worker can be healthy and still fall behind.",
-                  "continuation": "Requests arrive while it is busy, so the program puts them somewhere to wait."
-                }
-              }
-            },
-            {
-              "slug": "tail-latency",
-              "title": "Tail latency",
-              "kind": "lesson",
-              "archive": {
-                "slug": "tail-latency",
-                "file": "tail-latency.md",
-                "title": "Tail latency",
-                "displayTitle": "Tail latency",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "latency",
-                  "measurement"
-                ],
-                "sources": [
-                  "[[wiki/non-functional-requirements]]",
-                  "[[wiki/load-shedding]]",
-                  "https://sre.google/sre-book/monitoring-distributed-systems/",
-                  "https://www.barroso.org/publications/TheTailAtScale.pdf",
-                  "https://docs.python.org/3/library/sqlite3.html",
-                  "https://prometheus.io/docs/practices/histograms/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Most requests can finish quickly while a small group of callers waits far too long.",
-                  "continuation": "The average blends those experiences together."
-                }
-              }
-            },
-            {
-              "slug": "load-shedding",
-              "title": "Load shedding",
-              "kind": "lesson",
-              "archive": {
-                "slug": "load-shedding",
-                "file": "load-shedding.md",
-                "title": "Load shedding",
-                "displayTitle": "Load shedding",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "reliability",
-                  "admission"
-                ],
-                "sources": [
-                  "[[wiki/backpressure]]",
-                  "[[wiki/retries-timeouts-idempotency]]",
-                  "[[wiki/slos-and-error-budgets]]",
-                  "https://docs.python.org/3/library/asyncio-queue.html",
-                  "https://www.rfc-editor.org/rfc/rfc9110.html#name-503-service-unavailable",
-                  "https://www.rfc-editor.org/rfc/rfc6585.html#section-4",
-                  "https://sre.google/sre-book/handling-overload/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "The queue is full, and the next caller cannot wait long enough for room.",
-                  "continuation": "Holding that request anyway spends memory and delays a failure the caller is already approaching."
-                }
-              }
-            }
-          ]
-        },
+        }
+      ]
+    },
+    {
+      "id": "track-2",
+      "number": 2,
+      "title": "Data Architecture, Storage Engines & State Persistence",
+      "summary": "Relational data modeling, query optimization, storage internals (B-trees, LSM-trees, Bitcask), and partitioning strategies.",
+      "hours": 24,
+      "modules": [
         {
           "id": "learning-data-sql",
-          "number": "03",
-          "title": "Data modeling and SQL",
-          "summary": "Study data modeling and SQL.",
+          "number": "2.1",
+          "legacyNumber": "03",
+          "title": "Relational Modeling & Query Execution",
+          "summary": "Relational schemas, index mechanics, B-trees, query planning, locking, MVCC, and schema migrations.",
           "units": [
             {
               "slug": "relational-database-design",
@@ -1334,9 +879,10 @@ window.CURRICULUM_DATA = {
         },
         {
           "id": "learning-nosql-partitioning",
-          "number": "04",
-          "title": "NoSQL, partitioning and IDs",
-          "summary": "Study noSQL, partitioning and IDs.",
+          "number": "2.2",
+          "legacyNumber": "04",
+          "title": "NoSQL Architectures, Partitioning & IDs",
+          "summary": "Document vs KV stores, columnar engines, sharding, consistent hashing, and distributed ID schemes.",
           "units": [
             {
               "slug": "nosql-decision-boundaries",
@@ -1810,672 +1356,11 @@ window.CURRICULUM_DATA = {
           ]
         },
         {
-          "id": "learning-caching-fast-reads",
-          "number": "05",
-          "title": "Caching and fast reads",
-          "summary": "Place caches, keep their contents useful, and plan for misses and failures.",
-          "units": [
-            {
-              "slug": "caching-layers",
-              "title": "Caching layers",
-              "kind": "lesson",
-              "archive": {
-                "slug": "caching-layers",
-                "file": "caching-layers.md",
-                "title": "Caching layers",
-                "displayTitle": "Caching layers",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "caching",
-                  "architecture"
-                ],
-                "sources": [
-                  "[[wiki/url-shortener-system-design]]",
-                  "https://dev.mysql.com/doc/refman/8.4/en/innodb-buffer-pool.html",
-                  "https://dev.mysql.com/doc/refman/8.4/en/memory-storage-engine.html",
-                  "https://www.rfc-editor.org/rfc/rfc9111.html",
-                  "https://www.postgresql.org/docs/16/rules-materializedviews.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "A cache keeps an answer so the next request can avoid some work: reading a database row, calling another service, resizing an image or recomputing a report. The useful question is which work a hit removes. That determines where the copy belongs.",
-                "mermaidCount": 1,
-                "content": "# Caching layers\n\nA cache keeps an answer so the next request can avoid some work: reading a database row, calling another service, resizing an image or recomputing a report. The useful question is which work a hit removes. That determines where the copy belongs.\n\nWe’ll compare the places a cache can live, follow a read that fills one, and distinguish a database’s page cache from a disposable SQL table.\n\n## Keep the source separate\n\nSuppose a catalog service copies product `p7` into a cache. Finding a usable copy is a **hit**; finding none is a **miss**. The product database remains the source of truth. Losing the cached copy should leave somewhere to recover the answer.\n\n![A source ledger retains product p7 while an arrow labeled copy points to a separate cache card held by a reader.](/course-assets/system-design/illustrations/cache-copy.webp)\n\nThat makes the copy replaceable, but does not make its contents permanently correct. If the product changes, the old copy needs a rule for when readers must stop using it. Name the allowed staleness before choosing a cache lifetime.\n\nThe key must distinguish answers that are different. A public product description might use its product ID and locale. An account’s private report also needs its account boundary; a report-name-only key could expose one customer’s data to another.\n\n## Choose the work to avoid\n\nThese layers are alternatives you can combine when each earns its place. They are not a checklist of infrastructure every request should traverse.\n\n| Placement | A hit can avoid | What needs care |\n| --- | --- | --- |\n| Client | Fetching or recomputing local data | Stale state and switching accounts |\n| CDN | Sending a reusable public response from the origin | Invalidation and personalized responses |\n| Gateway or reverse proxy | Running the application for a reusable response | Authorization and correct request matching |\n| API process memory | A repeated lookup or computation | Separate copies and fills in every instance |\n| API disk | Regenerating a larger artifact | Space limits and cleanup across deployments |\n| Redis or Memcached | Repeated source lookups across instances | Network delay, outages and invalidation |\n| Database buffer pool | Reading database pages from storage | Engine-specific memory management |\n| Materialized view | Repeating a join or aggregation | Refresh cost and out-of-date results |\n\nA buffer-pool hit still leaves the database executing the query. A cached query result can avoid that execution. A reusable HTTP response can skip the application entirely. Each moves the boundary of work saved, and therefore the behavior being skipped.\n\nFor example, our [[wiki/url-shortener-system-design|shortener design]] records every accepted redirect reaching the application. Caching its destination lookup preserves that write. Reusing a whole redirect before it reaches the application would bypass it.\n\nAn HTTP cache also needs the response’s reuse rules, not just a URL lookup. A response that varies by a request header needs matching variants; private and public answers must not become interchangeable.\n\n## Follow a cache-aside read\n\nWith **cache-aside**, the application checks the cache, reads the source on a miss and saves the result for another request. This diagram follows a successful lookup of an existing product. It omits authorization and error handling to isolate the fill.\n\n```mermaid\nsequenceDiagram\n    accTitle: Filling a product cache on a miss\n    accDescr: The application misses in the cache, reads product p7 from the database, and stores a copy. The database remains the source of truth.\n    participant A as Application\n    participant C as Cache\n    participant D as Product database\n    A->>C: Get p7\n    C-->>A: Miss\n    A->>D: Read p7\n    D-->>A: Product\n    A->>C: Store product copy\n    C-->>A: Stored\n```\n\nA process-local map avoids a network exchange. A shared cache lets different application instances reuse the same fill and can outlive an application restart. Shared ownership adds a dependency, so choose it when that reuse is worth the cost.\n\nFor changing data, you might delete a copy after a source update, give it a time limit, or update it through the write path. Writing both stores does not by itself make them atomic: a failure or concurrent fill can leave them disagreeing. The concurrency lesson follows that race.\n\n## A SQL-shaped cache\n\nMySQL’s `MEMORY` engine offers a transient table with SQL access. It can suit a disposable derived dataset when retaining an existing schema and query shape simplifies the application. The [MEMORY engine recording](/system/archive/caching-layers?recording=sd-60) explores this option.\n\nIn MySQL 8.4, the rows disappear on server restart while the table definition survives. This differs from InnoDB’s buffer pool, which holds pages belonging to durable tables. A materialized view is different again: it stores a query’s results until refreshed.\n\n`MEMORY` lacks transactions, uses table-level locks and cannot store `TEXT` or `BLOB` columns. Even `VARCHAR` occupies a fixed-length row representation. Table size is bounded by configured memory limits; extra rows do not automatically spill to disk.\n\nSQL reuse can be convenient, but these restrictions may cost more than they save. Compare the actual queries and schema with InnoDB or direct key access before assuming an in-memory table will be faster.\n\nFor any placement, measure the avoided operation, miss cost and total response time. A high hit ratio helps only if it removes meaningful work and the answers remain usable.\n"
-              }
-            },
-            {
-              "slug": "distributed-cache-design",
-              "title": "Distributed cache design",
-              "kind": "lesson",
-              "archive": {
-                "slug": "distributed-cache-design",
-                "file": "distributed-cache-design.md",
-                "title": "Distributed cache design",
-                "displayTitle": "Distributed cache design",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "caching",
-                  "key-value"
-                ],
-                "sources": [
-                  "[[wiki/caching-layers]]",
-                  "[[wiki/consistent-hashing]]",
-                  "https://redis.io/docs/latest/commands/get/",
-                  "https://redis.io/docs/latest/commands/set/",
-                  "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/",
-                  "https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A shared cache lets several application instances reuse the same copied answers.",
-                  "continuation": "A distributed cache spreads those answers across machines."
-                }
-              }
-            },
-            {
-              "slug": "cache-eviction-policies",
-              "title": "Cache eviction policies",
-              "kind": "lesson",
-              "archive": {
-                "slug": "cache-eviction-policies",
-                "file": "cache-eviction-policies.md",
-                "title": "Cache eviction policies",
-                "displayTitle": "Cache eviction policies",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "caching",
-                  "eviction"
-                ],
-                "sources": [
-                  "[[wiki/caching-layers]]",
-                  "https://redis.io/docs/latest/develop/reference/eviction/",
-                  "https://github.com/ben-manes/caffeine/wiki/Efficiency",
-                  "https://arxiv.org/abs/1512.00727"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Eviction removes a cached item to make room for another.",
-                  "continuation": "The next request for the removed item must fetch it again, so the policy is making a prediction: which saved answer will be least useful next?"
-                }
-              }
-            },
-            {
-              "slug": "ttl-expiration-and-cache-reapers",
-              "title": "TTL expiration and cache reapers",
-              "kind": "lesson",
-              "archive": {
-                "slug": "ttl-expiration-and-cache-reapers",
-                "file": "ttl-expiration-and-cache-reapers.md",
-                "title": "TTL expiration and cache reapers",
-                "displayTitle": "TTL expiration and cache reapers",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "caching",
-                  "expiration"
-                ],
-                "sources": [
-                  "[[wiki/cache-eviction-policies]]",
-                  "https://redis.io/docs/latest/commands/expire/",
-                  "https://docs.aws.amazon.com/whitepapers/latest/database-caching-strategies-using-redis/cache-validity.html",
-                  "https://netty.io/4.1/api/io/netty/util/HashedWheelTimer.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A time to live, or TTL, limits how long a cached entry may answer requests.",
-                  "continuation": "Expiration enforces that deadline."
-                }
-              }
-            },
-            {
-              "slug": "cache-concurrency-control",
-              "title": "Cache concurrency control",
-              "kind": "lesson",
-              "archive": {
-                "slug": "cache-concurrency-control",
-                "file": "cache-concurrency-control.md",
-                "title": "Cache concurrency control",
-                "displayTitle": "Cache concurrency control",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "caching",
-                  "concurrency"
-                ],
-                "sources": [
-                  "[[wiki/ttl-expiration-and-cache-reapers]]",
-                  "[[wiki/sql-backed-key-value-store]]",
-                  "https://docs.python.org/3.14/library/asyncio-task.html",
-                  "https://pkg.go.dev/golang.org/x/sync/singleflight",
-                  "https://redis.io/docs/latest/develop/using-commands/transactions/",
-                  "https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/latency/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Concurrent cache access raises two different problems: callers can duplicate the work of rebuilding a missing answer, and a delayed caller can overwrite a newer answer.",
-                  "continuation": "Making each cache command atomic does not automatically solve either problem."
-                }
-              }
-            },
-            {
-              "slug": "cache-availability-and-database-fallback",
-              "title": "Cache availability and database fallback",
-              "kind": "lesson",
-              "archive": {
-                "slug": "cache-availability-and-database-fallback",
-                "file": "cache-availability-and-database-fallback.md",
-                "title": "Cache availability and database fallback",
-                "displayTitle": "Cache availability and database fallback",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "caching",
-                  "availability"
-                ],
-                "sources": [
-                  "[[wiki/cache-concurrency-control]]",
-                  "[[wiki/load-shedding]]",
-                  "[[wiki/url-shortener-system-design]]",
-                  "https://aws.amazon.com/builders-library/caching-challenges-and-strategies/",
-                  "https://sre.google/sre-book/handling-overload/",
-                  "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/",
-                  "https://redis.io/docs/latest/operate/oss_and_stack/management/replication/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A cache can be disposable without being safe to lose under load.",
-                  "continuation": "Its source may retain every record yet lack capacity to serve the reads that were previously cache hits."
-                }
-              }
-            }
-          ]
-        },
-        {
-          "id": "learning-distributed-coordination",
-          "number": "06",
-          "title": "Distributed coordination",
-          "summary": "Reason about replication, agreement, locks, clocks, and consistency.",
-          "units": [
-            {
-              "slug": "distributed-systems-foundations",
-              "title": "Distributed systems foundations",
-              "kind": "lesson",
-              "archive": {
-                "slug": "distributed-systems-foundations",
-                "file": "distributed-systems-foundations.md",
-                "title": "Distributed systems foundations",
-                "displayTitle": "Distributed systems foundations",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "distributed-systems",
-                  "failure"
-                ],
-                "sources": [
-                  "[[wiki/retries-timeouts-idempotency]]",
-                  "https://d1.awsstatic.com/builderslibrary/pdfs/challenges-with-distributed-systems.pdf",
-                  "https://d1.awsstatic.com/builderslibrary/pdfs/timeouts-retries-and-backoff-with-jitter.pdf",
-                  "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A distributed system coordinates work across machines through messages.",
-                  "continuation": "Splitting the work can add capacity or keep a service running when one machine fails."
-                }
-              }
-            },
-            {
-              "slug": "consistency-models",
-              "title": "Consistency models",
-              "kind": "lesson",
-              "archive": {
-                "slug": "consistency-models",
-                "file": "consistency-models.md",
-                "title": "Consistency models",
-                "displayTitle": "Consistency models",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "consistency",
-                  "replication"
-                ],
-                "sources": [
-                  "[[wiki/mvcc]]",
-                  "[[wiki/cache-concurrency-control]]",
-                  "https://www.cs.cmu.edu/~wing/publications/HerlihyWing90.pdf",
-                  "https://www.cs.cornell.edu/courses/cs734/2000FA/cached%20papers/SessionGuaranteesPDIS_1.html",
-                  "https://www.cs.princeton.edu/courses/archive/fall19/cos418/papers/cops.pdf",
-                  "https://www.postgresql.org/docs/16/transaction-iso.html",
-                  "https://jepsen.io/consistency/models/strong-serializable"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A consistency model defines which histories of reads and writes a system allows.",
-                  "continuation": "A saved change can be durable while another copy still answers with an older value."
-                }
-              }
-            },
-            {
-              "slug": "replication",
-              "title": "Replication",
-              "kind": "lesson",
-              "archive": {
-                "slug": "replication",
-                "file": "replication.md",
-                "title": "Replication",
-                "displayTitle": "Replication",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "replication",
-                  "durability"
-                ],
-                "sources": [
-                  "[[wiki/database-wal-and-recovery]]",
-                  "https://www.postgresql.org/docs/16/warm-standby.html",
-                  "https://www.postgresql.org/docs/16/runtime-config-wal.html",
-                  "https://www.postgresql.org/docs/16/different-replication-solutions.html",
-                  "https://docs.ceph.com/en/latest/rados/operations/erasure-code/",
-                  "https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Replication maintains copies of data on multiple machines.",
-                  "continuation": "Those copies can support recovery, read capacity and nearby access."
-                }
-              }
-            },
-            {
-              "slug": "cap-and-pacelc",
-              "title": "CAP and PACELC",
-              "kind": "lesson",
-              "archive": {
-                "slug": "cap-and-pacelc",
-                "file": "cap-and-pacelc.md",
-                "title": "CAP and PACELC",
-                "displayTitle": "CAP and PACELC",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "consistency",
-                  "partitions"
-                ],
-                "sources": [
-                  "[[wiki/consistency-models]]",
-                  "https://users.ece.cmu.edu/~adrian/731-sp04/readings/GL-cap.pdf",
-                  "https://groups.csail.mit.edu/tds/papers/Gilbert/Brewer2.pdf",
-                  "https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "CAP describes a limit on replicated data: during a communication partition, a service cannot guarantee both linearizable reads and writes and a successful response to every request at every non-failing node.",
-                  "continuation": "PACELC adds a second question: what coordination cost do stronger guarantees impose while communication works?"
-                }
-              }
-            },
-            {
-              "slug": "clocks-and-ordering",
-              "title": "Clocks and ordering",
-              "kind": "lesson",
-              "archive": {
-                "slug": "clocks-and-ordering",
-                "file": "clocks-and-ordering.md",
-                "title": "Clocks and ordering",
-                "displayTitle": "Clocks and ordering",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "logical-clocks",
-                  "causality"
-                ],
-                "sources": [
-                  "[[wiki/clock-skew-and-id-ordering]]",
-                  "https://lamport.azurewebsites.net/pubs/time-clocks.pdf",
-                  "https://pages.cs.wisc.edu/~ra/Classes/739-sp20/papers/mattern89.pdf",
-                  "https://docs.python.org/3/library/time.html",
-                  "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Distributed systems need several kinds of order.",
-                  "continuation": "Measuring how long a request took, identifying which edit incorporated another, and agreeing on the next accepted command are different jobs."
-                }
-              }
-            },
-            {
-              "slug": "consensus",
-              "title": "Consensus",
-              "kind": "lesson",
-              "archive": {
-                "slug": "consensus",
-                "file": "consensus.md",
-                "title": "Consensus",
-                "displayTitle": "Consensus",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "coordination"
-                ],
-                "sources": [
-                  "https://raft.github.io/raft.pdf",
-                  "https://static.usenix.org/events/osdi06/tech/full_papers/burrows/burrows_html/",
-                  "https://etcd.io/docs/v3.6/learning/design-learner/",
-                  "https://github.com/etcd-io/raft",
-                  "[[wiki/replication]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Consensus lets a group agree on decisions despite some members failing.",
-                  "continuation": "For a replicated log, the useful promise is an accepted command history that a replacement leader must preserve."
-                }
-              }
-            },
-            {
-              "slug": "leader-election",
-              "title": "Leader election",
-              "kind": "lesson",
-              "archive": {
-                "slug": "leader-election",
-                "file": "leader-election.md",
-                "title": "Leader election",
-                "displayTitle": "Leader election",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "coordination"
-                ],
-                "sources": [
-                  "[[wiki/consensus]]",
-                  "[[wiki/cache-concurrency-control]]",
-                  "https://raft.github.io/raft.pdf",
-                  "https://d1.awsstatic.com/builderslibrary/pdfs/leader-election-in-distributed-systems.pdf",
-                  "https://static.usenix.org/events/osdi06/tech/full_papers/burrows/burrows_html/",
-                  "https://etcd.io/docs/v3.6/dev-guide/api_concurrency_reference_v3/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Leader election chooses a node to coordinate work for a particular scope.",
-                  "continuation": "That might mean assigning jobs, owning a partition, leading replication, or updating metadata."
-                }
-              }
-            },
-            {
-              "slug": "distributed-locks-and-leases",
-              "title": "Distributed locks and leases",
-              "kind": "lesson",
-              "archive": {
-                "slug": "distributed-locks-and-leases",
-                "file": "distributed-locks-and-leases.md",
-                "title": "Distributed locks and leases",
-                "displayTitle": "Distributed locks and leases",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "coordination"
-                ],
-                "sources": [
-                  "[[wiki/leader-election]]",
-                  "[[wiki/retries-timeouts-idempotency]]",
-                  "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html",
-                  "https://redis.io/docs/latest/commands/set/",
-                  "https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/",
-                  "https://www.sqlite.org/isolation.html",
-                  "https://static.usenix.org/events/osdi06/tech/full_papers/burrows/burrows_html/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A distributed lock coordinates clients on different machines when a local mutex cannot protect their shared work.",
-                  "continuation": "Clients ask a lock manager for ownership of a named resource, then release that ownership when finished."
-                }
-              }
-            },
-            {
-              "slug": "redis-redlock-and-fencing-tokens",
-              "title": "Redis Redlock and fencing tokens",
-              "kind": "lesson",
-              "archive": {
-                "slug": "redis-redlock-and-fencing-tokens",
-                "file": "redis-redlock-and-fencing-tokens.md",
-                "title": "Redis Redlock and fencing tokens",
-                "displayTitle": "Redis Redlock and fencing tokens",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "coordination"
-                ],
-                "sources": [
-                  "https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/",
-                  "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html",
-                  "https://antirez.com/news/101",
-                  "[[wiki/distributed-locks-and-leases]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Redlock is a client-side algorithm that acquires an expiring lock across several independent Redis instances.",
-                  "continuation": "It combines a majority of successful acquisitions with a limit on how much time acquisition consumed."
-                }
-              }
-            },
-            {
-              "slug": "circuit-breakers-and-timeouts",
-              "title": "Circuit breakers and timeouts",
-              "kind": "lesson",
-              "archive": {
-                "slug": "circuit-breakers-and-timeouts",
-                "file": "circuit-breakers-and-timeouts.md",
-                "title": "Circuit breakers and timeouts",
-                "displayTitle": "Circuit breakers and timeouts",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "reliability",
-                  "admission"
-                ],
-                "sources": [
-                  "[[wiki/retries-timeouts-idempotency]]",
-                  "[[wiki/load-balancers]]",
-                  "https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker",
-                  "https://resilience4j.readme.io/docs/circuitbreaker",
-                  "https://d1.awsstatic.com/builderslibrary/pdfs/timeouts-retries-and-backoff-with-jitter.pdf",
-                  "https://martinfowler.com/bliki/CircuitBreaker.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A circuit breaker temporarily refuses calls to a dependency after observing enough failures.",
-                  "continuation": "It lets the caller stop spending resources on attempts that are likely to fail, then cautiously check for recovery."
-                }
-              }
-            },
-            {
-              "slug": "gossip-protocol",
-              "title": "Gossip protocol",
-              "kind": "lesson",
-              "archive": {
-                "slug": "gossip-protocol",
-                "file": "gossip-protocol.md",
-                "title": "Gossip protocol",
-                "displayTitle": "Gossip protocol",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "coordination"
-                ],
-                "sources": [
-                  "[[wiki/clocks-and-ordering]]",
-                  "[[wiki/distributed-systems-foundations]]",
-                  "[[wiki/distributed-locks-and-leases]]",
-                  "https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf",
-                  "https://github.com/hashicorp/serf/blob/master/docs/internals/gossip.html.markdown",
-                  "https://developer.hashicorp.com/consul/docs/concept/gossip",
-                  "https://www.cis.upenn.edu/~bcpierce/courses/dd/papers/demers-epidemic.pdf"
-                ],
-                "created": "2026-05-17",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Gossip spreads information through repeated exchanges between peers.",
-                  "continuation": "A node tells a few others what it knows; they carry that information into later exchanges."
-                }
-              }
-            },
-            {
-              "slug": "metadata-service-and-node-discovery",
-              "title": "Metadata service and node discovery",
-              "kind": "lesson",
-              "archive": {
-                "slug": "metadata-service-and-node-discovery",
-                "file": "metadata-service-and-node-discovery.md",
-                "title": "Metadata service and node discovery",
-                "displayTitle": "Metadata service and node discovery",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "coordination"
-                ],
-                "sources": [
-                  "https://etcd.io/docs/v3.6/learning/api_guarantees/",
-                  "https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/",
-                  "https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/",
-                  "https://kubernetes.io/docs/reference/using-api/api-concepts/",
-                  "[[wiki/gossip-protocol]]",
-                  "[[wiki/consensus]]",
-                  "[[wiki/load-balancers]]",
-                  "[[wiki/distributed-locks-and-leases]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A metadata service publishes information about a system's nodes and their assignments.",
-                  "continuation": "Clients use it to find where a request belongs without hardcoding every server address."
-                }
-              }
-            },
-            {
-              "slug": "distributed-hash-tables",
-              "title": "Distributed hash tables",
-              "kind": "lesson",
-              "archive": {
-                "slug": "distributed-hash-tables",
-                "file": "distributed-hash-tables.md",
-                "title": "Distributed hash tables",
-                "displayTitle": "Distributed hash tables",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "coordination"
-                ],
-                "sources": [
-                  "https://pdos.csail.mit.edu/papers/chord:sigcomm01/chord_sigcomm.pdf",
-                  "https://cs.nyu.edu/~anirudh/CSCI-GA.2620-001/papers/kademlia.pdf",
-                  "https://bittorrent.org/beps/bep_0005.html",
-                  "https://www.cs.princeton.edu/courses/archive/fall06/cos561/papers/pastry.pdf",
-                  "[[wiki/consistent-hashing]]",
-                  "[[wiki/metadata-service-and-node-discovery]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A distributed hash table, or DHT, spreads key lookup across participating nodes.",
-                  "continuation": "A client can start with one known participant and discover the nodes responsible for a key without downloading the whole membership list."
-                }
-              }
-            }
-          ]
-        },
-        {
           "id": "learning-storage-engines",
-          "number": "07",
-          "title": "Storage engines",
-          "summary": "Follow how databases and object stores organize, persist, and retrieve bytes.",
+          "number": "2.3",
+          "legacyNumber": "07",
+          "title": "Storage Engine Internals & Blob Systems",
+          "summary": "Log-structured storage, Bitcask, LSM-trees, memtables, SSTables, write amplification, and object storage.",
           "units": [
             {
               "slug": "storage-engine-design-constraints",
@@ -3125,12 +2010,1163 @@ window.CURRICULUM_DATA = {
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "id": "track-3",
+      "number": 3,
+      "title": "Distributed Systems, Consensus & Coordination",
+      "summary": "Network realities, physical and logical time, replication topologies, Raft consensus, leases, and gossip protocols.",
+      "hours": 20,
+      "modules": [
+        {
+          "id": "learning-apis-services",
+          "number": "3.1",
+          "legacyNumber": "02",
+          "title": "Network Protocols & Service Communication",
+          "summary": "REST, gRPC, TCP vs UDP, API gateways, load balancing algorithms, retries, idempotency, and backpressure.",
+          "units": [
+            {
+              "slug": "api-design-contracts",
+              "title": "API design contracts",
+              "kind": "lesson",
+              "archive": {
+                "slug": "api-design-contracts",
+                "file": "api-design-contracts.md",
+                "title": "API design contracts",
+                "displayTitle": "API design contracts",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "api",
+                  "contracts"
+                ],
+                "sources": [
+                  "[[wiki/http-rest-grpc]]",
+                  "[[wiki/retries-timeouts-idempotency]]",
+                  "https://www.rfc-editor.org/rfc/rfc9110.html",
+                  "https://google.aip.dev/158",
+                  "https://google.aip.dev/180",
+                  "https://docs.stripe.com/api/idempotent_requests"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "An API contract defines what a caller can send, what an answer means, and which behavior will survive a server update.",
+                  "continuation": "The JSON shape is only part of it."
+                }
+              }
+            },
+            {
+              "slug": "service-to-service-communication",
+              "title": "Service-to-service communication",
+              "kind": "lesson",
+              "archive": {
+                "slug": "service-to-service-communication",
+                "file": "service-to-service-communication.md",
+                "title": "Service-to-service communication",
+                "displayTitle": "Service-to-service communication",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "scaling",
+                  "communication"
+                ],
+                "sources": [
+                  "[[wiki/monolith-vs-microservices]]",
+                  "[[wiki/task-queue-vs-event-stream]]",
+                  "https://grpc.io/docs/what-is-grpc/core-concepts/",
+                  "https://grpc.io/docs/guides/deadlines/",
+                  "https://d1.awsstatic.com/builderslibrary/pdfs/timeouts-retries-and-backoff-with-jitter.pdf",
+                  "https://learn.microsoft.com/en-us/azure/architecture/patterns/bulkhead",
+                  "https://docs.stripe.com/webhooks",
+                  "https://www.w3.org/TR/trace-context/",
+                  "https://www.rfc-editor.org/rfc/rfc9110.html#name-202-accepted"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "When work crosses a service boundary, the caller has to send a message and interpret what comes back.",
+                  "continuation": "The other service can finish its work while the caller sees only a timeout."
+                }
+              }
+            },
+            {
+              "slug": "http-rest-grpc",
+              "title": "HTTP, REST, and gRPC",
+              "kind": "lesson",
+              "archive": {
+                "slug": "http-rest-grpc",
+                "file": "http-rest-grpc.md",
+                "title": "HTTP, REST, and gRPC",
+                "displayTitle": "HTTP, REST, and gRPC",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "scaling",
+                  "api",
+                  "http"
+                ],
+                "sources": [
+                  "[[wiki/api-design-contracts]]",
+                  "https://www.rfc-editor.org/rfc/rfc9110.html",
+                  "https://www.rfc-editor.org/rfc/rfc9112.html",
+                  "https://www.rfc-editor.org/rfc/rfc9113.html",
+                  "https://www.rfc-editor.org/rfc/rfc9114.html",
+                  "https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm",
+                  "https://grpc.io/docs/what-is-grpc/core-concepts/",
+                  "https://grpc.io/docs/platforms/web/basics/",
+                  "https://github.com/grpc/grpc-web",
+                  "https://protobuf.dev/programming-guides/proto3/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Choosing between a resource-oriented HTTP API and gRPC means choosing how clients express remote operations.",
+                  "continuation": "Both can serve internal services or external clients."
+                }
+              }
+            },
+            {
+              "slug": "tcp-vs-udp",
+              "title": "TCP vs UDP",
+              "kind": "lesson",
+              "archive": {
+                "slug": "tcp-vs-udp",
+                "file": "tcp-vs-udp.md",
+                "title": "TCP vs UDP",
+                "displayTitle": "TCP vs UDP",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "ground-floor",
+                  "networking"
+                ],
+                "sources": [
+                  "https://www.rfc-editor.org/rfc/rfc9293.html",
+                  "https://hpbn.co/building-blocks-of-tcp/",
+                  "https://hpbn.co/building-blocks-of-udp/",
+                  "https://www.rfc-editor.org/rfc/rfc8085.html",
+                  "https://www.rfc-editor.org/rfc/rfc9000.html",
+                  "https://www.rfc-editor.org/rfc/rfc793",
+                  "https://www.rfc-editor.org/rfc/rfc9114.html",
+                  "https://www.rfc-editor.org/rfc/rfc7766.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "TCP and UDP are transport protocols: rules for moving data between applications over an IP network. They differ in how the receiving program gets that data and what happens when some of it goes missing.",
+                "mermaidCount": 0,
+                "content": "# TCP vs UDP\n\nTCP and UDP are transport protocols: rules for moving data between applications over an IP network. They differ in how the receiving program gets that data and what happens when some of it goes missing.\n\nTCP provides an ordered stream of bytes and retransmits missing data. UDP sends separate messages, called datagrams, without adding delivery or ordering guarantees.\n\n![TCP can deliver writes cat and nap as reads ca and tnap. UDP retains separate cat and nap datagrams when both arrive.](/course-assets/system-design/research-pilot/style-comparison/tcp-editorial.webp)\n\n| Behavior | TCP | UDP |\n|---|---|---|\n| Connection setup | Establishes a connection before the usual data transfer. | No transport handshake. |\n| What the app reads | A byte stream; reads can split or combine messages. | Separate datagrams that arrive. |\n| Missing data | Retransmits; later bytes wait behind a gap. | No automatic retransmission. |\n\nIP, the Internet Protocol, routes packets: chunks of data with addressing information. Packets can be lost, duplicated or delivered out of order. The transport protocol determines how much of that the app has to handle.\n\n## TCP message boundaries\n\nTCP keeps bytes in order, but it doesn't preserve the boundaries between the sender's writes. This matters when your program needs to recognize a complete message.\n\nFor example, a server writes `cat` and then `nap`. TCP carries the six bytes `catnap`. The client could read them as `cat` and `nap`, as `ca` and `tnap`, or all at once.\n\nThe application protocol needs a rule for finding the end of each message. This is called **framing**. A simple text protocol could put a newline after each word.\n\nThe receiver collects bytes until it reaches that newline, then processes the completed word. Another protocol might put a message length before the message contents.\n\nHTTP libraries handle their protocol's framing for you. If you work directly with TCP, a single read is not proof that the whole message has arrived.\n\nUDP preserves the boundary of each datagram. Sending `cat` in one and `nap` in another gives the receiver two distinguishable messages if both arrive. Their arrival order can differ from their send order.\n\n## TCP loss recovery\n\nTCP numbers bytes and uses acknowledgements, or ACKs, to track what has arrived. An ACK identifies the next byte the receiver expects after the continuous sequence it has already received.\n\nThe sender keeps unacknowledged data. It can resend that data when acknowledgements or a timeout indicate possible loss.\n\nConsider `catnap` again. Number the bytes from 1 to 6 for this example, and split them into packets carrying `ca`, `tn` and `ap`. The packet containing `tn` is lost.\n\n| Event | Bytes available to the app so far | Next expected byte |\n|---|---|---|\n| `ca` arrives | `ca` | 3 |\n| `ap` arrives, but `tn` is missing | `ca` | 3 |\n| Retransmitted `tn` arrives | `catnap` | 7 |\n\nThe receiver holds `ap` until the gap is filled. This is **head-of-line blocking**: missing earlier bytes prevent later bytes from being delivered to the application.\n\nThe byte positions are illustrative; the connection is already open. ACK 7 means all six bytes have arrived. The receiving program can still read them in smaller chunks.\n\nRetransmission doesn't promise a deadline. If the connection fails before recovery, the transfer remains incomplete.\n\nAn ACK also doesn't prove that the server program processed the data. The server's TCP implementation can acknowledge a request before the application reads it.\n\nFor a save operation, the client needs an application response confirming the save. If that response is lost, the client can still be unsure whether the save succeeded.\n\n![A TCP acknowledgment confirms receipt of bytes. In this example the bytes are in the server buffer and the application has not saved them yet.](/course-assets/system-design/research-pilot/style-comparison/tcp-sketch.webp)\n\n## Connection setup and traffic control\n\nA usual new TCP connection starts with three messages: SYN, SYN-ACK and ACK. The two ends establish their starting sequence numbers and connection settings during this handshake.\n\nThe client normally waits one round trip before sending application data. Reusing an open connection avoids repeating this setup. Packet travel time and waiting in network queues still apply to either protocol.\n\nTCP also limits how much data is in flight. **Flow control** respects the receiver's available buffer space. **Congestion control** adjusts sending to conditions on the network path.\n\nThey address different bottlenecks. A receiving machine can have plenty of memory while the network link leading to it is overloaded.\n\n## When skipping a message is acceptable\n\nA game might send a player's complete position in updates numbered 501, 502 and 503. If 502 is lost, the game can use 503 without waiting. If 502 arrives later, the game can discard it.\n\nThe update numbers and the rule for ignoring older positions belong to the game protocol. UDP doesn't supply them.\n\nThis only works if each update contains enough information on its own. If 503 describes movement since 502, losing 502 leaves the receiver without the position needed to apply that change.\n\nA voice call has a similar timing constraint: a sound fragment arriving after its playback time may no longer be useful. A protocol over UDP can skip it and continue.\n\nOther traffic in the same product may need reliable delivery. A chat message or purchase can't be treated like an outdated position update.\n\nUDP applications also need traffic control. Retrying every lost message immediately can overload a link that is already dropping packets.\n\n## HTTP/3 and QUIC\n\nUsing UDP doesn't necessarily mean giving up reliability. QUIC implements encrypted connections, congestion control and reliable byte streams over UDP. HTTP/3 uses QUIC.\n\nQUIC orders bytes separately in each stream. With HTTP/2 over one TCP connection, a gap in the shared TCP stream can delay both an image and a stylesheet.\n\nWith HTTP/3, received stylesheet bytes can continue along their stream while missing image bytes are recovered. If a lost packet contains data for both streams, both can be affected. They also share congestion control.\n\nFor an ordinary web API, use HTTPS and let its transport implementation handle these details. The [[wiki/http-rest-grpc|HTTP lesson]] explains the protocol versions further.\n\nDatabase clients also commonly use TCP. DNS uses both UDP and TCP, including retrying a truncated UDP answer over TCP. A familiar application name does not always imply one transport.\n\nBuilding directly on UDP makes sense when you need control over which messages can be skipped or recovered. You also take responsibility for the delivery behavior and traffic control your application requires.\n"
+              }
+            },
+            {
+              "slug": "api-gateway-vs-load-balancer",
+              "title": "API gateway vs load balancer",
+              "kind": "lesson",
+              "archive": {
+                "slug": "api-gateway-vs-load-balancer",
+                "file": "api-gateway-vs-load-balancer.md",
+                "title": "API gateway vs load balancer",
+                "displayTitle": "API gateway vs load balancer",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "api",
+                  "gateway"
+                ],
+                "sources": [
+                  "[[wiki/load-balancers]]",
+                  "[[wiki/monolith-vs-microservices]]",
+                  "https://learn.microsoft.com/en-us/azure/architecture/microservices/design/gateway",
+                  "https://learn.microsoft.com/en-us/azure/architecture/patterns/strangler-fig",
+                  "https://www.rfc-editor.org/rfc/rfc7239.html#section-8.1"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A request arrives at the public address for your application.",
+                  "continuation": "Two decisions follow: which service handles this operation, and which running copy of that service should receive it?"
+                }
+              }
+            },
+            {
+              "slug": "load-balancers",
+              "title": "Load balancers",
+              "kind": "lesson",
+              "archive": {
+                "slug": "load-balancers",
+                "file": "load-balancers.md",
+                "title": "Load balancers",
+                "displayTitle": "Load balancers",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "scaling",
+                  "load-balancing"
+                ],
+                "sources": [
+                  "[[wiki/horizontal-vs-vertical-scaling]]",
+                  "https://nginx.org/en/docs/http/ngx_http_upstream_module.html",
+                  "https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream",
+                  "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/health_checking",
+                  "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/operations/draining",
+                  "https://www.rfc-editor.org/rfc/rfc9113.html#section-5"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A visitor should be able to open a short link without knowing which application copy is running today.",
+                  "continuation": "If app A stops taking new work, the next request needs somewhere else to go."
+                }
+              }
+            },
+            {
+              "slug": "consistent-hashing-load-balancing",
+              "title": "Consistent-hashing load balancing",
+              "kind": "lesson",
+              "archive": {
+                "slug": "consistent-hashing-load-balancing",
+                "file": "consistent-hashing-load-balancing.md",
+                "title": "Consistent-hashing load balancing",
+                "displayTitle": "Consistent-hashing load balancing",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "load-balancing",
+                  "hashing"
+                ],
+                "sources": [
+                  "[[wiki/consistent-hashing]]",
+                  "[[wiki/load-balancers]]",
+                  "[[wiki/hot-partitions]]",
+                  "https://nginx.org/en/docs/http/ngx_http_upstream_module.html#hash",
+                  "https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/load_balancers",
+                  "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A request reaches a healthy application, but the useful cached answer is in another application's memory.",
+                  "continuation": "Sending the next identical request somewhere else repeats work that a stable destination might share."
+                }
+              }
+            },
+            {
+              "slug": "event-contracts",
+              "title": "Event contracts",
+              "kind": "lesson",
+              "archive": {
+                "slug": "event-contracts",
+                "file": "event-contracts.md",
+                "title": "Event contracts",
+                "displayTitle": "Event contracts",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "events",
+                  "contracts"
+                ],
+                "sources": [
+                  "[[wiki/api-design-contracts]]",
+                  "[[wiki/schema-evolution]]",
+                  "[[wiki/raw-events-vs-derived-analytics]]",
+                  "https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md",
+                  "https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html",
+                  "https://docs.stripe.com/webhooks"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A report rebuilt tomorrow may read a redirect record written before today's application update.",
+                  "continuation": "The old program is gone, but its record still has to make sense."
+                }
+              }
+            },
+            {
+              "slug": "retries-timeouts-idempotency",
+              "title": "Retries, timeouts, and idempotency",
+              "kind": "lesson",
+              "archive": {
+                "slug": "retries-timeouts-idempotency",
+                "file": "retries-timeouts-idempotency.md",
+                "title": "Retries, timeouts, and idempotency",
+                "displayTitle": "Retries, timeouts, and idempotency",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "reliability",
+                  "retries"
+                ],
+                "sources": [
+                  "[[wiki/service-to-service-communication]]",
+                  "[[wiki/api-design-contracts]]",
+                  "https://grpc.io/docs/guides/deadlines/",
+                  "https://docs.stripe.com/api/idempotent_requests",
+                  "https://d1.awsstatic.com/builderslibrary/pdfs/timeouts-retries-and-backoff-with-jitter.pdf",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://www.rfc-editor.org/rfc/rfc9110.html#name-idempotent-methods"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "The server can finish creating your short link while your screen still says the request failed.",
+                  "continuation": "Clicking again may recover the answer, or create another link."
+                }
+              }
+            },
+            {
+              "slug": "batching",
+              "title": "Batching",
+              "kind": "lesson",
+              "archive": {
+                "slug": "batching",
+                "file": "batching.md",
+                "title": "Batching",
+                "displayTitle": "Batching",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "batching",
+                  "transactions"
+                ],
+                "sources": [
+                  "[[wiki/backpressure]]",
+                  "[[wiki/retries-timeouts-idempotency]]",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://kafka.apache.org/41/configuration/producer-configs/",
+                  "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessageBatch.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Committing a hundred records separately repeats transaction work a hundred times.",
+                  "continuation": "Grouping them can share that cost, but the first record may wait for the group to form."
+                }
+              }
+            },
+            {
+              "slug": "backpressure",
+              "title": "Backpressure",
+              "kind": "lesson",
+              "archive": {
+                "slug": "backpressure",
+                "file": "backpressure.md",
+                "title": "Backpressure",
+                "displayTitle": "Backpressure",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "queues",
+                  "reliability"
+                ],
+                "sources": [
+                  "[[wiki/concurrency-vs-parallelism]]",
+                  "[[wiki/load-shedding]]",
+                  "https://docs.python.org/3/library/asyncio-queue.html",
+                  "https://nodejs.org/en/learn/modules/backpressuring-in-streams",
+                  "https://www.rfc-editor.org/rfc/rfc9293.html#section-3.8.6"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A worker can be healthy and still fall behind.",
+                  "continuation": "Requests arrive while it is busy, so the program puts them somewhere to wait."
+                }
+              }
+            },
+            {
+              "slug": "tail-latency",
+              "title": "Tail latency",
+              "kind": "lesson",
+              "archive": {
+                "slug": "tail-latency",
+                "file": "tail-latency.md",
+                "title": "Tail latency",
+                "displayTitle": "Tail latency",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "latency",
+                  "measurement"
+                ],
+                "sources": [
+                  "[[wiki/non-functional-requirements]]",
+                  "[[wiki/load-shedding]]",
+                  "https://sre.google/sre-book/monitoring-distributed-systems/",
+                  "https://www.barroso.org/publications/TheTailAtScale.pdf",
+                  "https://docs.python.org/3/library/sqlite3.html",
+                  "https://prometheus.io/docs/practices/histograms/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Most requests can finish quickly while a small group of callers waits far too long.",
+                  "continuation": "The average blends those experiences together."
+                }
+              }
+            },
+            {
+              "slug": "load-shedding",
+              "title": "Load shedding",
+              "kind": "lesson",
+              "archive": {
+                "slug": "load-shedding",
+                "file": "load-shedding.md",
+                "title": "Load shedding",
+                "displayTitle": "Load shedding",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "reliability",
+                  "admission"
+                ],
+                "sources": [
+                  "[[wiki/backpressure]]",
+                  "[[wiki/retries-timeouts-idempotency]]",
+                  "[[wiki/slos-and-error-budgets]]",
+                  "https://docs.python.org/3/library/asyncio-queue.html",
+                  "https://www.rfc-editor.org/rfc/rfc9110.html#name-503-service-unavailable",
+                  "https://www.rfc-editor.org/rfc/rfc6585.html#section-4",
+                  "https://sre.google/sre-book/handling-overload/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "The queue is full, and the next caller cannot wait long enough for room.",
+                  "continuation": "Holding that request anyway spends memory and delays a failure the caller is already approaching."
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "learning-distributed-coordination",
+          "number": "3.2",
+          "legacyNumber": "06",
+          "title": "Distributed Coordination, Consensus & Leases",
+          "summary": "Replication models, PACELC tradeoffs, clocks, Raft consensus, leader election, distributed locks, and gossip.",
+          "units": [
+            {
+              "slug": "distributed-systems-foundations",
+              "title": "Distributed systems foundations",
+              "kind": "lesson",
+              "archive": {
+                "slug": "distributed-systems-foundations",
+                "file": "distributed-systems-foundations.md",
+                "title": "Distributed systems foundations",
+                "displayTitle": "Distributed systems foundations",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "distributed-systems",
+                  "failure"
+                ],
+                "sources": [
+                  "[[wiki/retries-timeouts-idempotency]]",
+                  "https://d1.awsstatic.com/builderslibrary/pdfs/challenges-with-distributed-systems.pdf",
+                  "https://d1.awsstatic.com/builderslibrary/pdfs/timeouts-retries-and-backoff-with-jitter.pdf",
+                  "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A distributed system coordinates work across machines through messages.",
+                  "continuation": "Splitting the work can add capacity or keep a service running when one machine fails."
+                }
+              }
+            },
+            {
+              "slug": "consistency-models",
+              "title": "Consistency models",
+              "kind": "lesson",
+              "archive": {
+                "slug": "consistency-models",
+                "file": "consistency-models.md",
+                "title": "Consistency models",
+                "displayTitle": "Consistency models",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "consistency",
+                  "replication"
+                ],
+                "sources": [
+                  "[[wiki/mvcc]]",
+                  "[[wiki/cache-concurrency-control]]",
+                  "https://www.cs.cmu.edu/~wing/publications/HerlihyWing90.pdf",
+                  "https://www.cs.cornell.edu/courses/cs734/2000FA/cached%20papers/SessionGuaranteesPDIS_1.html",
+                  "https://www.cs.princeton.edu/courses/archive/fall19/cos418/papers/cops.pdf",
+                  "https://www.postgresql.org/docs/16/transaction-iso.html",
+                  "https://jepsen.io/consistency/models/strong-serializable"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A consistency model defines which histories of reads and writes a system allows.",
+                  "continuation": "A saved change can be durable while another copy still answers with an older value."
+                }
+              }
+            },
+            {
+              "slug": "replication",
+              "title": "Replication",
+              "kind": "lesson",
+              "archive": {
+                "slug": "replication",
+                "file": "replication.md",
+                "title": "Replication",
+                "displayTitle": "Replication",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "replication",
+                  "durability"
+                ],
+                "sources": [
+                  "[[wiki/database-wal-and-recovery]]",
+                  "https://www.postgresql.org/docs/16/warm-standby.html",
+                  "https://www.postgresql.org/docs/16/runtime-config-wal.html",
+                  "https://www.postgresql.org/docs/16/different-replication-solutions.html",
+                  "https://docs.ceph.com/en/latest/rados/operations/erasure-code/",
+                  "https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Replication maintains copies of data on multiple machines.",
+                  "continuation": "Those copies can support recovery, read capacity and nearby access."
+                }
+              }
+            },
+            {
+              "slug": "cap-and-pacelc",
+              "title": "CAP and PACELC",
+              "kind": "lesson",
+              "archive": {
+                "slug": "cap-and-pacelc",
+                "file": "cap-and-pacelc.md",
+                "title": "CAP and PACELC",
+                "displayTitle": "CAP and PACELC",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "consistency",
+                  "partitions"
+                ],
+                "sources": [
+                  "[[wiki/consistency-models]]",
+                  "https://users.ece.cmu.edu/~adrian/731-sp04/readings/GL-cap.pdf",
+                  "https://groups.csail.mit.edu/tds/papers/Gilbert/Brewer2.pdf",
+                  "https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "CAP describes a limit on replicated data: during a communication partition, a service cannot guarantee both linearizable reads and writes and a successful response to every request at every non-failing node.",
+                  "continuation": "PACELC adds a second question: what coordination cost do stronger guarantees impose while communication works?"
+                }
+              }
+            },
+            {
+              "slug": "clocks-and-ordering",
+              "title": "Clocks and ordering",
+              "kind": "lesson",
+              "archive": {
+                "slug": "clocks-and-ordering",
+                "file": "clocks-and-ordering.md",
+                "title": "Clocks and ordering",
+                "displayTitle": "Clocks and ordering",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "logical-clocks",
+                  "causality"
+                ],
+                "sources": [
+                  "[[wiki/clock-skew-and-id-ordering]]",
+                  "https://lamport.azurewebsites.net/pubs/time-clocks.pdf",
+                  "https://pages.cs.wisc.edu/~ra/Classes/739-sp20/papers/mattern89.pdf",
+                  "https://docs.python.org/3/library/time.html",
+                  "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Distributed systems need several kinds of order.",
+                  "continuation": "Measuring how long a request took, identifying which edit incorporated another, and agreeing on the next accepted command are different jobs."
+                }
+              }
+            },
+            {
+              "slug": "consensus",
+              "title": "Consensus",
+              "kind": "lesson",
+              "archive": {
+                "slug": "consensus",
+                "file": "consensus.md",
+                "title": "Consensus",
+                "displayTitle": "Consensus",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "coordination"
+                ],
+                "sources": [
+                  "https://raft.github.io/raft.pdf",
+                  "https://static.usenix.org/events/osdi06/tech/full_papers/burrows/burrows_html/",
+                  "https://etcd.io/docs/v3.6/learning/design-learner/",
+                  "https://github.com/etcd-io/raft",
+                  "[[wiki/replication]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Consensus lets a group agree on decisions despite some members failing.",
+                  "continuation": "For a replicated log, the useful promise is an accepted command history that a replacement leader must preserve."
+                }
+              }
+            },
+            {
+              "slug": "leader-election",
+              "title": "Leader election",
+              "kind": "lesson",
+              "archive": {
+                "slug": "leader-election",
+                "file": "leader-election.md",
+                "title": "Leader election",
+                "displayTitle": "Leader election",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "coordination"
+                ],
+                "sources": [
+                  "[[wiki/consensus]]",
+                  "[[wiki/cache-concurrency-control]]",
+                  "https://raft.github.io/raft.pdf",
+                  "https://d1.awsstatic.com/builderslibrary/pdfs/leader-election-in-distributed-systems.pdf",
+                  "https://static.usenix.org/events/osdi06/tech/full_papers/burrows/burrows_html/",
+                  "https://etcd.io/docs/v3.6/dev-guide/api_concurrency_reference_v3/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Leader election chooses a node to coordinate work for a particular scope.",
+                  "continuation": "That might mean assigning jobs, owning a partition, leading replication, or updating metadata."
+                }
+              }
+            },
+            {
+              "slug": "distributed-locks-and-leases",
+              "title": "Distributed locks and leases",
+              "kind": "lesson",
+              "archive": {
+                "slug": "distributed-locks-and-leases",
+                "file": "distributed-locks-and-leases.md",
+                "title": "Distributed locks and leases",
+                "displayTitle": "Distributed locks and leases",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "coordination"
+                ],
+                "sources": [
+                  "[[wiki/leader-election]]",
+                  "[[wiki/retries-timeouts-idempotency]]",
+                  "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html",
+                  "https://redis.io/docs/latest/commands/set/",
+                  "https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/",
+                  "https://www.sqlite.org/isolation.html",
+                  "https://static.usenix.org/events/osdi06/tech/full_papers/burrows/burrows_html/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A distributed lock coordinates clients on different machines when a local mutex cannot protect their shared work.",
+                  "continuation": "Clients ask a lock manager for ownership of a named resource, then release that ownership when finished."
+                }
+              }
+            },
+            {
+              "slug": "redis-redlock-and-fencing-tokens",
+              "title": "Redis Redlock and fencing tokens",
+              "kind": "lesson",
+              "archive": {
+                "slug": "redis-redlock-and-fencing-tokens",
+                "file": "redis-redlock-and-fencing-tokens.md",
+                "title": "Redis Redlock and fencing tokens",
+                "displayTitle": "Redis Redlock and fencing tokens",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "coordination"
+                ],
+                "sources": [
+                  "https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/",
+                  "https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html",
+                  "https://antirez.com/news/101",
+                  "[[wiki/distributed-locks-and-leases]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Redlock is a client-side algorithm that acquires an expiring lock across several independent Redis instances.",
+                  "continuation": "It combines a majority of successful acquisitions with a limit on how much time acquisition consumed."
+                }
+              }
+            },
+            {
+              "slug": "circuit-breakers-and-timeouts",
+              "title": "Circuit breakers and timeouts",
+              "kind": "lesson",
+              "archive": {
+                "slug": "circuit-breakers-and-timeouts",
+                "file": "circuit-breakers-and-timeouts.md",
+                "title": "Circuit breakers and timeouts",
+                "displayTitle": "Circuit breakers and timeouts",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "reliability",
+                  "admission"
+                ],
+                "sources": [
+                  "[[wiki/retries-timeouts-idempotency]]",
+                  "[[wiki/load-balancers]]",
+                  "https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker",
+                  "https://resilience4j.readme.io/docs/circuitbreaker",
+                  "https://d1.awsstatic.com/builderslibrary/pdfs/timeouts-retries-and-backoff-with-jitter.pdf",
+                  "https://martinfowler.com/bliki/CircuitBreaker.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A circuit breaker temporarily refuses calls to a dependency after observing enough failures.",
+                  "continuation": "It lets the caller stop spending resources on attempts that are likely to fail, then cautiously check for recovery."
+                }
+              }
+            },
+            {
+              "slug": "gossip-protocol",
+              "title": "Gossip protocol",
+              "kind": "lesson",
+              "archive": {
+                "slug": "gossip-protocol",
+                "file": "gossip-protocol.md",
+                "title": "Gossip protocol",
+                "displayTitle": "Gossip protocol",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "coordination"
+                ],
+                "sources": [
+                  "[[wiki/clocks-and-ordering]]",
+                  "[[wiki/distributed-systems-foundations]]",
+                  "[[wiki/distributed-locks-and-leases]]",
+                  "https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf",
+                  "https://github.com/hashicorp/serf/blob/master/docs/internals/gossip.html.markdown",
+                  "https://developer.hashicorp.com/consul/docs/concept/gossip",
+                  "https://www.cis.upenn.edu/~bcpierce/courses/dd/papers/demers-epidemic.pdf"
+                ],
+                "created": "2026-05-17",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Gossip spreads information through repeated exchanges between peers.",
+                  "continuation": "A node tells a few others what it knows; they carry that information into later exchanges."
+                }
+              }
+            },
+            {
+              "slug": "metadata-service-and-node-discovery",
+              "title": "Metadata service and node discovery",
+              "kind": "lesson",
+              "archive": {
+                "slug": "metadata-service-and-node-discovery",
+                "file": "metadata-service-and-node-discovery.md",
+                "title": "Metadata service and node discovery",
+                "displayTitle": "Metadata service and node discovery",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "coordination"
+                ],
+                "sources": [
+                  "https://etcd.io/docs/v3.6/learning/api_guarantees/",
+                  "https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/",
+                  "https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/",
+                  "https://kubernetes.io/docs/reference/using-api/api-concepts/",
+                  "[[wiki/gossip-protocol]]",
+                  "[[wiki/consensus]]",
+                  "[[wiki/load-balancers]]",
+                  "[[wiki/distributed-locks-and-leases]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A metadata service publishes information about a system's nodes and their assignments.",
+                  "continuation": "Clients use it to find where a request belongs without hardcoding every server address."
+                }
+              }
+            },
+            {
+              "slug": "distributed-hash-tables",
+              "title": "Distributed hash tables",
+              "kind": "lesson",
+              "archive": {
+                "slug": "distributed-hash-tables",
+                "file": "distributed-hash-tables.md",
+                "title": "Distributed hash tables",
+                "displayTitle": "Distributed hash tables",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "coordination"
+                ],
+                "sources": [
+                  "https://pdos.csail.mit.edu/papers/chord:sigcomm01/chord_sigcomm.pdf",
+                  "https://cs.nyu.edu/~anirudh/CSCI-GA.2620-001/papers/kademlia.pdf",
+                  "https://bittorrent.org/beps/bep_0005.html",
+                  "https://www.cs.princeton.edu/courses/archive/fall06/cos561/papers/pastry.pdf",
+                  "[[wiki/consistent-hashing]]",
+                  "[[wiki/metadata-service-and-node-discovery]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A distributed hash table, or DHT, spreads key lookup across participating nodes.",
+                  "continuation": "A client can start with one known participant and discover the nodes responsible for a key without downloading the whole membership list."
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "track-4",
+      "number": 4,
+      "title": "Asynchronous Execution, Queues & Real-Time Processing",
+      "summary": "Task queues, event-driven backbones, partitioned logs, probabilistic sketches, caching tiers, and real-time feeds.",
+      "hours": 22,
+      "modules": [
+        {
+          "id": "learning-caching-fast-reads",
+          "number": "4.1",
+          "legacyNumber": "05",
+          "title": "Caching Strategies & In-Memory State",
+          "summary": "Caching patterns, eviction policies, TTL expiration, adaptive reapers, and cache stampede defense.",
+          "units": [
+            {
+              "slug": "caching-layers",
+              "title": "Caching layers",
+              "kind": "lesson",
+              "archive": {
+                "slug": "caching-layers",
+                "file": "caching-layers.md",
+                "title": "Caching layers",
+                "displayTitle": "Caching layers",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "caching",
+                  "architecture"
+                ],
+                "sources": [
+                  "[[wiki/url-shortener-system-design]]",
+                  "https://dev.mysql.com/doc/refman/8.4/en/innodb-buffer-pool.html",
+                  "https://dev.mysql.com/doc/refman/8.4/en/memory-storage-engine.html",
+                  "https://www.rfc-editor.org/rfc/rfc9111.html",
+                  "https://www.postgresql.org/docs/16/rules-materializedviews.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "A cache keeps an answer so the next request can avoid some work: reading a database row, calling another service, resizing an image or recomputing a report. The useful question is which work a hit removes. That determines where the copy belongs.",
+                "mermaidCount": 1,
+                "content": "# Caching layers\n\nA cache keeps an answer so the next request can avoid some work: reading a database row, calling another service, resizing an image or recomputing a report. The useful question is which work a hit removes. That determines where the copy belongs.\n\nWe’ll compare the places a cache can live, follow a read that fills one, and distinguish a database’s page cache from a disposable SQL table.\n\n## Keep the source separate\n\nSuppose a catalog service copies product `p7` into a cache. Finding a usable copy is a **hit**; finding none is a **miss**. The product database remains the source of truth. Losing the cached copy should leave somewhere to recover the answer.\n\n![A source ledger retains product p7 while an arrow labeled copy points to a separate cache card held by a reader.](/course-assets/system-design/illustrations/cache-copy.webp)\n\nThat makes the copy replaceable, but does not make its contents permanently correct. If the product changes, the old copy needs a rule for when readers must stop using it. Name the allowed staleness before choosing a cache lifetime.\n\nThe key must distinguish answers that are different. A public product description might use its product ID and locale. An account’s private report also needs its account boundary; a report-name-only key could expose one customer’s data to another.\n\n## Choose the work to avoid\n\nThese layers are alternatives you can combine when each earns its place. They are not a checklist of infrastructure every request should traverse.\n\n| Placement | A hit can avoid | What needs care |\n| --- | --- | --- |\n| Client | Fetching or recomputing local data | Stale state and switching accounts |\n| CDN | Sending a reusable public response from the origin | Invalidation and personalized responses |\n| Gateway or reverse proxy | Running the application for a reusable response | Authorization and correct request matching |\n| API process memory | A repeated lookup or computation | Separate copies and fills in every instance |\n| API disk | Regenerating a larger artifact | Space limits and cleanup across deployments |\n| Redis or Memcached | Repeated source lookups across instances | Network delay, outages and invalidation |\n| Database buffer pool | Reading database pages from storage | Engine-specific memory management |\n| Materialized view | Repeating a join or aggregation | Refresh cost and out-of-date results |\n\nA buffer-pool hit still leaves the database executing the query. A cached query result can avoid that execution. A reusable HTTP response can skip the application entirely. Each moves the boundary of work saved, and therefore the behavior being skipped.\n\nFor example, our [[wiki/url-shortener-system-design|shortener design]] records every accepted redirect reaching the application. Caching its destination lookup preserves that write. Reusing a whole redirect before it reaches the application would bypass it.\n\nAn HTTP cache also needs the response’s reuse rules, not just a URL lookup. A response that varies by a request header needs matching variants; private and public answers must not become interchangeable.\n\n## Follow a cache-aside read\n\nWith **cache-aside**, the application checks the cache, reads the source on a miss and saves the result for another request. This diagram follows a successful lookup of an existing product. It omits authorization and error handling to isolate the fill.\n\n```mermaid\nsequenceDiagram\n    accTitle: Filling a product cache on a miss\n    accDescr: The application misses in the cache, reads product p7 from the database, and stores a copy. The database remains the source of truth.\n    participant A as Application\n    participant C as Cache\n    participant D as Product database\n    A->>C: Get p7\n    C-->>A: Miss\n    A->>D: Read p7\n    D-->>A: Product\n    A->>C: Store product copy\n    C-->>A: Stored\n```\n\nA process-local map avoids a network exchange. A shared cache lets different application instances reuse the same fill and can outlive an application restart. Shared ownership adds a dependency, so choose it when that reuse is worth the cost.\n\nFor changing data, you might delete a copy after a source update, give it a time limit, or update it through the write path. Writing both stores does not by itself make them atomic: a failure or concurrent fill can leave them disagreeing. The concurrency lesson follows that race.\n\n## A SQL-shaped cache\n\nMySQL’s `MEMORY` engine offers a transient table with SQL access. It can suit a disposable derived dataset when retaining an existing schema and query shape simplifies the application. The [MEMORY engine recording](/system/archive/caching-layers?recording=sd-60) explores this option.\n\nIn MySQL 8.4, the rows disappear on server restart while the table definition survives. This differs from InnoDB’s buffer pool, which holds pages belonging to durable tables. A materialized view is different again: it stores a query’s results until refreshed.\n\n`MEMORY` lacks transactions, uses table-level locks and cannot store `TEXT` or `BLOB` columns. Even `VARCHAR` occupies a fixed-length row representation. Table size is bounded by configured memory limits; extra rows do not automatically spill to disk.\n\nSQL reuse can be convenient, but these restrictions may cost more than they save. Compare the actual queries and schema with InnoDB or direct key access before assuming an in-memory table will be faster.\n\nFor any placement, measure the avoided operation, miss cost and total response time. A high hit ratio helps only if it removes meaningful work and the answers remain usable.\n"
+              }
+            },
+            {
+              "slug": "distributed-cache-design",
+              "title": "Distributed cache design",
+              "kind": "lesson",
+              "archive": {
+                "slug": "distributed-cache-design",
+                "file": "distributed-cache-design.md",
+                "title": "Distributed cache design",
+                "displayTitle": "Distributed cache design",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "caching",
+                  "key-value"
+                ],
+                "sources": [
+                  "[[wiki/caching-layers]]",
+                  "[[wiki/consistent-hashing]]",
+                  "https://redis.io/docs/latest/commands/get/",
+                  "https://redis.io/docs/latest/commands/set/",
+                  "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/",
+                  "https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A shared cache lets several application instances reuse the same copied answers.",
+                  "continuation": "A distributed cache spreads those answers across machines."
+                }
+              }
+            },
+            {
+              "slug": "cache-eviction-policies",
+              "title": "Cache eviction policies",
+              "kind": "lesson",
+              "archive": {
+                "slug": "cache-eviction-policies",
+                "file": "cache-eviction-policies.md",
+                "title": "Cache eviction policies",
+                "displayTitle": "Cache eviction policies",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "caching",
+                  "eviction"
+                ],
+                "sources": [
+                  "[[wiki/caching-layers]]",
+                  "https://redis.io/docs/latest/develop/reference/eviction/",
+                  "https://github.com/ben-manes/caffeine/wiki/Efficiency",
+                  "https://arxiv.org/abs/1512.00727"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Eviction removes a cached item to make room for another.",
+                  "continuation": "The next request for the removed item must fetch it again, so the policy is making a prediction: which saved answer will be least useful next?"
+                }
+              }
+            },
+            {
+              "slug": "ttl-expiration-and-cache-reapers",
+              "title": "TTL expiration and cache reapers",
+              "kind": "lesson",
+              "archive": {
+                "slug": "ttl-expiration-and-cache-reapers",
+                "file": "ttl-expiration-and-cache-reapers.md",
+                "title": "TTL expiration and cache reapers",
+                "displayTitle": "TTL expiration and cache reapers",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "caching",
+                  "expiration"
+                ],
+                "sources": [
+                  "[[wiki/cache-eviction-policies]]",
+                  "https://redis.io/docs/latest/commands/expire/",
+                  "https://docs.aws.amazon.com/whitepapers/latest/database-caching-strategies-using-redis/cache-validity.html",
+                  "https://netty.io/4.1/api/io/netty/util/HashedWheelTimer.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A time to live, or TTL, limits how long a cached entry may answer requests.",
+                  "continuation": "Expiration enforces that deadline."
+                }
+              }
+            },
+            {
+              "slug": "cache-concurrency-control",
+              "title": "Cache concurrency control",
+              "kind": "lesson",
+              "archive": {
+                "slug": "cache-concurrency-control",
+                "file": "cache-concurrency-control.md",
+                "title": "Cache concurrency control",
+                "displayTitle": "Cache concurrency control",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "caching",
+                  "concurrency"
+                ],
+                "sources": [
+                  "[[wiki/ttl-expiration-and-cache-reapers]]",
+                  "[[wiki/sql-backed-key-value-store]]",
+                  "https://docs.python.org/3.14/library/asyncio-task.html",
+                  "https://pkg.go.dev/golang.org/x/sync/singleflight",
+                  "https://redis.io/docs/latest/develop/using-commands/transactions/",
+                  "https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/latency/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Concurrent cache access raises two different problems: callers can duplicate the work of rebuilding a missing answer, and a delayed caller can overwrite a newer answer.",
+                  "continuation": "Making each cache command atomic does not automatically solve either problem."
+                }
+              }
+            },
+            {
+              "slug": "cache-availability-and-database-fallback",
+              "title": "Cache availability and database fallback",
+              "kind": "lesson",
+              "archive": {
+                "slug": "cache-availability-and-database-fallback",
+                "file": "cache-availability-and-database-fallback.md",
+                "title": "Cache availability and database fallback",
+                "displayTitle": "Cache availability and database fallback",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "caching",
+                  "availability"
+                ],
+                "sources": [
+                  "[[wiki/cache-concurrency-control]]",
+                  "[[wiki/load-shedding]]",
+                  "[[wiki/url-shortener-system-design]]",
+                  "https://aws.amazon.com/builders-library/caching-challenges-and-strategies/",
+                  "https://sre.google/sre-book/handling-overload/",
+                  "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/",
+                  "https://redis.io/docs/latest/operate/oss_and_stack/management/replication/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A cache can be disposable without being safe to lose under load.",
+                  "continuation": "Its source may retain every record yet lack capacity to serve the reads that were previously cache hits."
+                }
+              }
+            }
+          ]
         },
         {
           "id": "learning-async-streams",
-          "number": "08",
-          "title": "Async work and streams",
-          "summary": "Separate background work from requests and handle retries, ordering, and contention.",
+          "number": "4.2",
+          "legacyNumber": "08",
+          "title": "Asynchronous Workflows & Partitioned Logs",
+          "summary": "Task queues, event streams, Kafka internals, distributed schedulers, and workflow orchestration.",
           "units": [
             {
               "slug": "delegation-and-async-work",
@@ -3478,10 +3514,1953 @@ window.CURRICULUM_DATA = {
           ]
         },
         {
+          "id": "learning-analytics-sketches",
+          "number": "4.3",
+          "legacyNumber": "10",
+          "title": "Probabilistic Sketches & Stream Analytics",
+          "summary": "Cardinality estimation with HyperLogLog, frequency estimation with Count-Min, t-digest quantiles, and sampling.",
+          "units": [
+            {
+              "slug": "counting-at-scale",
+              "title": "Counting at scale",
+              "kind": "lesson",
+              "archive": {
+                "slug": "counting-at-scale",
+                "file": "counting-at-scale.md",
+                "title": "Counting at scale",
+                "displayTitle": "Counting at scale",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "analytics",
+                  "counters"
+                ],
+                "sources": [
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://sqlite.org/lang_upsert.html",
+                  "https://firebase.google.com/docs/firestore/solutions/counters",
+                  "https://redis.io/docs/latest/develop/data-types/probabilistic/hyperloglogs/",
+                  "[[wiki/hot-partitions]]",
+                  "[[wiki/mergeable-sketches-for-analytics]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A like count is a projection of facts: which accounts currently like a post.",
+                  "continuation": "A view count may instead count qualifying visits, including repeated visits by one account."
+                }
+              }
+            },
+            {
+              "slug": "view-counting-at-scale",
+              "title": "View counting at scale",
+              "kind": "lesson",
+              "archive": {
+                "slug": "view-counting-at-scale",
+                "file": "view-counting-at-scale.md",
+                "title": "View counting at scale",
+                "displayTitle": "View counting at scale",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "analytics",
+                  "events"
+                ],
+                "sources": [
+                  "[[wiki/counting-at-scale]]",
+                  "[[wiki/hyperloglog-cardinality-estimation]]",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/stateful-stream-processing/",
+                  "https://nightlies.apache.org/flink/flink-docs-stable/docs/learn-flink/fault_tolerance/",
+                  "https://support.google.com/youtube/answer/2991785?hl=en",
+                  "https://redis.io/docs/latest/develop/data-types/probabilistic/count-min-sketch/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A view counter turns client observations into a product metric.",
+                  "continuation": "Starting a video, watching for a chosen duration and finishing it are different events."
+                }
+              }
+            },
+            {
+              "slug": "impression-counting-system-design",
+              "title": "Impression counting",
+              "kind": "lesson",
+              "archive": {
+                "slug": "impression-counting-system-design",
+                "file": "impression-counting-system-design.md",
+                "title": "Impression counting",
+                "displayTitle": "Impression counting",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "analytics",
+                  "impressions"
+                ],
+                "sources": [
+                  "https://www.w3.org/TR/intersection-observer/",
+                  "https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API/Timing_element_visibility",
+                  "https://redis.io/docs/latest/develop/data-types/probabilistic/hyperloglogs/",
+                  "https://redis.io/docs/latest/commands/pfmerge/",
+                  "https://nightlies.apache.org/flink/flink-docs-stable/docs/learn-flink/fault_tolerance/",
+                  "[[wiki/search-feedback-and-relevance-signals]]",
+                  "[[wiki/view-counting-at-scale]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "An impression records an exposure under a stated rule.",
+                  "continuation": "It does not necessarily mean a unique person: one account can see an item in several displays."
+                }
+              }
+            },
+            {
+              "slug": "hyperloglog-cardinality-estimation",
+              "title": "HyperLogLog cardinality estimation",
+              "kind": "lesson",
+              "archive": {
+                "slug": "hyperloglog-cardinality-estimation",
+                "file": "hyperloglog-cardinality-estimation.md",
+                "title": "HyperLogLog cardinality estimation",
+                "displayTitle": "HyperLogLog cardinality estimation",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "probabilistic-structures"
+                ],
+                "sources": [
+                  "https://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf",
+                  "https://redis.io/docs/latest/develop/data-types/probabilistic/hyperloglogs/",
+                  "https://datasketches.apache.org/docs/HLL/HllSketches.html",
+                  "[[wiki/mergeable-sketches-for-analytics]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Repeated arrivals can increase an event counter without increasing the number of distinct identities.",
+                  "continuation": "An exact set handles that distinction by keeping the identities and counting its entries."
+                }
+              }
+            },
+            {
+              "slug": "mergeable-sketches-for-analytics",
+              "title": "Mergeable sketches for analytics",
+              "kind": "lesson",
+              "archive": {
+                "slug": "mergeable-sketches-for-analytics",
+                "file": "mergeable-sketches-for-analytics.md",
+                "title": "Mergeable sketches for analytics",
+                "displayTitle": "Mergeable sketches for analytics",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "probabilistic-structures"
+                ],
+                "sources": [
+                  "https://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf",
+                  "https://github.com/CamDavidsonPilon/tdigest",
+                  "https://datasketches.apache.org/docs/Architecture/KeyFeatures.html",
+                  "https://datasketches.apache.org/docs/HLL/HllSketches.html",
+                  "https://roaringbitmap.org/",
+                  "[[wiki/tdigest-quantile-sketch]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "A mergeable summary lets workers combine retained state without sending every original event to one reader. Regions, shards and time buckets can each produce a summary, then supply it to a larger report.",
+                "mermaidCount": 1,
+                "content": "# Mergeable sketches for analytics\n\nA mergeable summary lets workers combine retained state without sending every original event to one reader. Regions, shards and time buckets can each produce a summary, then supply it to a larger report.\n\nWe'll choose a summary by its query, compare a merged build with one pass over the input, and see what happens when a partition arrives twice.\n\n## Start with the query\n\n| Required answer | Candidate | Detail it must preserve |\n|---|---|---|\n| Approximate distinct IDs | HLL | Compatible identity and hash observations |\n| Estimated frequency of a supplied key | Count-Min Sketch | Counter mass and matching row hashes |\n| Frequent items | A frequent-items sketch | Candidate identities and its frequency guarantees |\n| Latency percentiles | A suitable quantile sketch | Distribution evidence and observation weights |\n| Exact integer-set operations | Roaring bitmap | Exact integer membership |\n\nRoaring is a compressed exact set representation, not an approximate count. HLL supports union, while other distinct-count families, such as Theta, support additional set operations. These choices are not interchangeable simply because all can combine stored state.\n\nLocal summaries reduce transport and allow precomputed rollups or “last N buckets” queries. They can also rebuild a larger rollup from retained smaller summaries. A new metric or dimension may still require raw events: a summary cannot restore information it never kept.\n\n## Compatible evidence\n\nWe split the twelve document-ID occurrences used in the HLL lesson into a left partition containing the first six and a right partition containing the remaining six. Their arrival occurrences are disjoint, although some document IDs appear in both. Processing their union gives twelve occurrences and nine distinct IDs under the same string-identity rule.\n\nFor Bloom filters, merge corresponding bits with logical OR. If either input has set a position, the combined filter sets it. For HLL, merge corresponding registers by maximum. Each combined register then holds the strongest observation seen by either partition.\n\nFor a count-min sketch, add corresponding counters. Each counter receives the sum of the contributions assigned to it by both partitions. That operation represents combined event mass only when each contribution belongs in the intended population with the multiplicity being added.\n\nThese rules require compatible layouts. The Bloom filter needs the same array length, probe count, hash scheme, and input encoding. HLL needs the same precision, hash width, and register interpretation. Count-min needs matching matrix dimensions and row hashes. Matching payload size alone does not establish compatibility.\n\n## The local merge path\n\nOur [replay](/course-assets/system-design/m18-sketches.py) builds each summary separately for the two partitions, merges them, and compares their retained states against a single pass over the whole stream. It also attempts incompatible merges, which its wrappers explicitly reject. No network transport or distributed coordination is implemented here.\n\nThe diagram separates the observed partition summaries from the external contribution receipts used later in the replay. A receipt identifies a partition already included in a total; it is application state, with a different role from hash registers or shared counters.\n\n```mermaid\nflowchart TD\n    accTitle: Merge summaries over a declared population\n    accDescr: Left and right partitions produce compatible summaries. The merger combines their state and compares it with a single pass over the whole input. Contribution receipts are separate application state for additive summaries.\n    left[First six arrivals] --> ls[Left summary]\n    right[Last six arrivals] --> rs[Right summary]\n    ls --> merge[Compatible merge]\n    rs --> merge\n    receipts[Contribution receipts] -.->|For additive summaries| merge\n    merge --> result[Combined state]\n    whole[Single pass over all arrivals] --> check[Compare retained states]\n    result --> check\n```\n\n\n## Unequal reservoirs\n\nA reservoir holds a fixed-size uniform sample of arrivals. Combining samples needs the original population sizes as well as the retained items.\n\nConsider a capacity-one reservoir from a left partition with one original item and another from a right partition with three original items. The left sample always contains its sole item. The right sample chooses each of its originals with probability one third.\n\nIf we concatenate those two samples and choose either stored item uniformly, the left original wins with probability one half. Each right original wins with probability one third times one half, or one sixth. A uniform sample from all four originals would give each probability one quarter.\n\nThe replay enumerates the possible sample-and-selection paths using exact fractions and prints those probabilities. It demonstrates why equal treatment of retained samples loses the populations they represent. A correct distributed sampling algorithm needs appropriate population accounting and a defined merge procedure; concatenation alone supplies neither.\n\nThe capture compares the partition summaries and prints the unequal-reservoir probabilities. Save the replay as `m18-sketches.py` and run its standard-library mode. It uses the same implementations as the individual sketch lessons; the count-min details follow later in this module.\n\n```bash title=\"terminal\"\npython3 m18-sketches.py merge\n```\n\n```output\nleft_events=6 right_events=6 total=12 exact_distinct=9\nBloom merged matches single: True\nHLL merged matches single: True\nCMS merged matches single: True\nduplicate HLL partition changes registers: False\nduplicate CMS partition row sums: [18, 18, 18]\nBloom incompatible merge: rejected\nCMS incompatible merge: rejected\nHLL incompatible merge: rejected\nwith external partition receipts row sums: [12, 12, 12]\nunequal reservoir enumerated probabilities: {'L': '1/2', 'R1': '1/6', 'R2': '1/6', 'R3': '1/6'}\nuniform target per original item: 1/4\n```\n\nAll three merged states match their corresponding single-pass states for the correctly split population. That equality says the merge operation preserves this representation on these contributions. It does not establish that a real ingestion service delivered each original event exactly once.\n\n## A repeated partition\n\nMerging the right HLL partition again leaves its registers unchanged because taking a maximum with the same observation is idempotent. Bloom OR has the same duplicate-state property. Repeating the same bits or register observations leaves their state unchanged.\n\nAdding the right count-min partition again raises each row sum from twelve to eighteen. The repeated six-occurrence contribution has been counted twice. This is the correct result for counter addition on the delivered inputs, and the wrong population if the application intended each partition to contribute once.\n\nThe replay then uses an external set of partition receipts while processing left, right, and right again. It skips the repeated receipt and recovers row sums of twelve. This is a sequential in-memory illustration; it does not implement a durable atomic transaction between checking a receipt and recording the merged result.\n\nIf a worker crashes between those actions, a real service needs to decide whether to retry or skip without losing or doubling contributions. A merge function cannot settle that question because the failure occurs around its invocation. The event-processing module owns those identity and recovery boundaries.\n\n## Distribution summaries\n\nA t-digest retains weighted groups of numerical observations, called centroids, for percentile queries. The [[wiki/tdigest-quantile-sketch|later t-digest lesson]] examines the algorithm and this package's limitations. Here the narrower question is whether partition merging preserves the intended weight.\n\nOur chosen population contains 360 values: 0 through 89 three times each, followed by 100 through 990 in steps of ten. Split it into two disjoint 180-observation partitions. Compare a single build, both merge orders and a repeated right partition.\n\nFor this optional package replay, save [the t-digest script](/course-assets/system-design/m18-tdigest.py) and [its pinned requirements](/course-assets/system-design/m18-tdigest-requirements.txt) beside each other. Use Python 3.12 and a new virtual environment:\n\n```bash title=\"terminal\"\npython3.12 -m venv .venv-sketch-merge\n.venv-sketch-merge/bin/python -m pip install -r m18-tdigest-requirements.txt\n```\n\nThe wrapper checks `tdigest==0.5.2.2` and its dependency versions, fixes the random seed, and rejects a chosen incompatible parameter pair before calling the package merge.\n\n```bash title=\"terminal\"\n.venv-sketch-merge/bin/python m18-tdigest.py merge\n```\n\n```output\ndisjoint value partitions: left=180 right=180 total=360\nsingle: weight=360 centroids=102 p50=59.500000 p99=959.000000\nL+R: weight=360 centroids=84 p50=59.500000 p99=959.000000\nR+L: weight=360 centroids=83 p50=59.500000 p99=959.000000\nL+R+R: weight=540 centroids=81 p50=74.557143 p99=968.000000\nwrapper incompatible delta: rejected before package merge\nexact nearest-rank p50=59 p99=960 for original360\n```\n\nThe correctly merged digests retain total weight three hundred sixty and match the printed single-build percentile estimates on this fixture. Their centroid counts differ, including between the two merge orders. Equal queried values here therefore do not imply identical retained state or universal order independence.\n\nThe repeated right partition raises total weight to five hundred forty and changes the median and ninety-ninth-percentile estimates. The summary has faithfully accepted extra weight, even though the original population remains unchanged. Keeping contribution identities outside the digest is necessary when that duplicate is unintended.\n\n| Summary | Compatible merge | Repeating identical contribution |\n|---|---|---|\n| Bloom filter | Bitwise OR | Bits unchanged |\n| HLL | Register maxima | Registers unchanged |\n| Count-min | Counter sums | Counts increase |\n| This t-digest | Weighted centroid merge | Weight increases; estimates may change |\n\n## Store enough to interpret the bytes\n\nA stored summary needs its algorithm/version, parameters, encoding and identity rule. Its envelope also needs the metric, bucket boundaries, source partition/range and contribution identity. Test serialized compatibility across the actual producer and consumer library versions; a common algorithm name or payload size is insufficient.\n\nThe replay checks a few wrapper fields and compares in-memory arrays. It does not implement cross-language serialization or durable receipts. DataSketches and Roaring publish compatibility mechanisms for their own representations; those do not make our Python arrays directly interchangeable with them.\n\nFor additive summaries, a contribution ID must name immutable content. If a worker sends a revised cumulative partition under a new ID, adding it to the earlier version counts the overlap again. Replace that partition's retained version and recompute the union, or publish disjoint deltas with their own receipt protocol.\n\nPersist the receipt with the aggregate change, or use a recoverable publication scheme that makes a retry unambiguous. Also verify that all expected partitions are present. Duplicate-safe merging alone cannot distinguish an empty partition from a lost one.\n\nChoose exact aggregation while the population fits and exact answers are needed. When summaries are justified, retain controls for their error and a fallback for unsupported queries or broken versions. The [[wiki/bucketed-time-window-aggregation|next lesson]] assigns events to buckets and defines when their published answers may stop changing.\n"
+              }
+            },
+            {
+              "slug": "bucketed-time-window-aggregation",
+              "title": "Bucketed time-window aggregation",
+              "kind": "lesson",
+              "archive": {
+                "slug": "bucketed-time-window-aggregation",
+                "file": "bucketed-time-window-aggregation.md",
+                "title": "Bucketed time-window aggregation",
+                "displayTitle": "Bucketed time-window aggregation",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "analytics",
+                  "windows"
+                ],
+                "sources": [
+                  "https://beam.apache.org/documentation/programming-guide/",
+                  "https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastream/event-time/generating_watermarks/",
+                  "https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastream/operators/windows/",
+                  "[[wiki/event-contracts]]",
+                  "[[wiki/impression-counting-system-design]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Time buckets make a continuing stream queryable: a report asks for a bounded interval and combines the groups that cover it.",
+                  "continuation": "Bucket width controls both the detail available to the query and the amount of state to retain."
+                }
+              }
+            },
+            {
+              "slug": "raw-events-vs-derived-analytics",
+              "title": "Raw events vs derived analytics",
+              "kind": "lesson",
+              "archive": {
+                "slug": "raw-events-vs-derived-analytics",
+                "file": "raw-events-vs-derived-analytics.md",
+                "title": "Raw events vs derived analytics",
+                "displayTitle": "Raw events vs derived analytics",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "analytics",
+                  "recovery"
+                ],
+                "sources": [
+                  "https://kafka.apache.org/41/design/design/",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing",
+                  "[[wiki/event-bus-for-product-events]]",
+                  "[[wiki/immutable-versioned-data-files]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A dashboard says an ad received four impressions.",
+                  "continuation": "Tomorrow, a fraud rule excludes two of them."
+                }
+              }
+            },
+            {
+              "slug": "count-min-sketch",
+              "title": "Count-min sketch",
+              "kind": "lesson",
+              "archive": {
+                "slug": "count-min-sketch",
+                "file": "count-min-sketch.md",
+                "title": "Count-min sketch",
+                "displayTitle": "Count-min sketch",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "probabilistic-structures"
+                ],
+                "sources": [
+                  "https://www.cs.ox.ac.uk/people/graham.cormode/pubs/papers/cm-latin.pdf",
+                  "https://redis.io/docs/latest/develop/data-types/probabilistic/count-min-sketch/",
+                  "https://apache.github.io/datasketches-python/main/frequency/count_min_sketch.html",
+                  "[[wiki/top-k-heavy-hitters]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A service tracking search queries or cache keys can see too many distinct keys to keep an exact count for each.",
+                  "continuation": "A count-min sketch shares a fixed number of counters across keys and answers approximate frequency queries."
+                }
+              }
+            },
+            {
+              "slug": "top-k-heavy-hitters",
+              "title": "Top-k heavy hitters",
+              "kind": "lesson",
+              "archive": {
+                "slug": "top-k-heavy-hitters",
+                "file": "top-k-heavy-hitters.md",
+                "title": "Top-k and heavy hitters",
+                "displayTitle": "Top-k and heavy hitters",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "probabilistic-structures"
+                ],
+                "sources": [
+                  "https://www.cs.utexas.edu/~misra/scannedPdf.dir/FindRepeatedElements.pdf",
+                  "https://www.cs.ucsb.edu/sites/default/files/documents/2005-23.pdf",
+                  "https://redis.io/docs/latest/develop/data-types/probabilistic/top-k/",
+                  "[[wiki/count-min-sketch]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "“How often did this query occur?",
+                  "continuation": "” starts with an identity."
+                }
+              }
+            },
+            {
+              "slug": "reservoir-sampling",
+              "title": "Reservoir sampling",
+              "kind": "lesson",
+              "archive": {
+                "slug": "reservoir-sampling",
+                "file": "reservoir-sampling.md",
+                "title": "Reservoir sampling",
+                "displayTitle": "Reservoir sampling",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "probabilistic-structures"
+                ],
+                "sources": [
+                  "https://www.cs.umd.edu/~samir/498/vitter.pdf",
+                  "https://datasketches.apache.org/docs/Sampling/ReservoirSamplingSketches.html",
+                  "[[wiki/mergeable-sketches-for-analytics]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "You want a few hundred requests to inspect from a stream that may contain millions.",
+                  "continuation": "Keeping the first few hundred mostly tells you what happened when collection began."
+                }
+              }
+            },
+            {
+              "slug": "tdigest-quantile-sketch",
+              "title": "t-digest quantile sketch",
+              "kind": "lesson",
+              "archive": {
+                "slug": "tdigest-quantile-sketch",
+                "file": "tdigest-quantile-sketch.md",
+                "title": "T-digest quantile sketches",
+                "displayTitle": "T-digest quantile sketches",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "probabilistic-structures"
+                ],
+                "sources": [
+                  "https://arxiv.org/pdf/1902.04023",
+                  "https://github.com/tdunning/t-digest",
+                  "https://pypi.org/project/tdigest/0.5.2.2/",
+                  "https://github.com/CamDavidsonPilon/tdigest",
+                  "https://www.datadoghq.com/blog/engineering/computing-accurate-percentiles-with-ddsketch/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "A service can have a comfortable p50 latency and an unpleasant p99. The median describes the middle request; the high percentile exposes slower requests that an average can hide. To query those percentiles across many hosts, we need more information than one average or p99 per host.",
+                "mermaidCount": 0,
+                "content": "# T-digest quantile sketches\n\nA service can have a comfortable p50 latency and an unpleasant p99. The median describes the middle request; the high percentile exposes slower requests that an average can hide. To query those percentiles across many hosts, we need more information than one average or p99 per host.\n\nA t-digest keeps a compact, approximate description of a numerical distribution. We will look at what it stores, how local digests combine, and why a plausible percentile still needs an accuracy check.\n\n## Store weighted groups\n\nFor an exact reference, choose the nearest-rank convention: sort N observations and take the one-based position `ceil(q × N)`, where q is the requested fraction. At q = 0.99, that gives p99. Retaining and sorting every observation becomes costly for large streams and many dashboard queries. Exact frequency counts are another option when the value domain is small enough.\n\nA t-digest compresses observations into **centroids**. Each stores a mean and a weight: the number of observations it represents. For example, grouping 10, 11 and 12 yields mean 11 and weight 3. That record preserves the group's mass and mean, but not its individual values.\n\nThe distinctive choice is where to spend detail. T-digest limits centroid weights more tightly near the distribution's ends and allows larger groups near the middle. This helps preserve tail resolution without retaining every observation. The scale function, insertion order and interpolation rules still affect the result.\n\nEach host can build a local digest. A backend combines compatible weighted centroids, recompresses them and queries the combined distribution. The weights prevent a quiet host from receiving the same influence as a busy one. This merge does not recognize duplicated observations or overlapping uploads; [[wiki/mergeable-sketches-for-analytics|the merge lesson]] covers that accounting separately.\n\n## What a query returns\n\nA percentile query uses the ordered centroids and their cumulative weights, often interpolating between them. Its answer can lie between values that actually occurred. That is different from our nearest-rank reference, which always returns an observed value.\n\nCheck two kinds of error:\n\n- **Value difference:** how far the estimate is from the exact reference, in the measurement's units.\n- **Rank distance:** how far the estimate lies from the requested fraction of the population.\n\nFor ties, use a rank interval: the fraction strictly below the estimate through the fraction at or below it. The rank distance is zero if q lies inside that interval; otherwise it is the distance to the closer endpoint. This lets an observed value represent a whole block of equal observations.\n\nA small rank error can mean a large latency error in a sparse tail. A small latency difference can also cross a large repeated mass. Neither measure substitutes for the other.\n\n## Run one pinned implementation\n\nThe example uses Cam Davidson-Pilon's Python `tdigest` package, version 0.5.2.2. It is a reproducible implementation study, not a claim that every package called t-digest has the same behavior.\n\nThis package uses an admission threshold `4 × N × delta × q_c × (1 − q_c)`, where q_c is a centroid's midpoint rank and N is total weight. It permits smaller centroid weights toward the ends. Here delta is a compression parameter, not a failure probability. We use delta 0.05 and K 25; the package triggers compression when its centroid count exceeds `K / delta`.\n\nDownload the [quantile example](/course-assets/system-design/m18-tdigest.py) and [pinned requirements](/course-assets/system-design/m18-tdigest-requirements.txt) into one directory, keeping their filenames. The [package license](/course-assets/system-design/m18-tdigest-license.txt) accompanies the dependency. The setup below requires Python 3.12.\n\nThe chosen input has 360 dimensionless observations: 0 through 89 repeated three times each, then 100 through 990 in steps of 10. These are constructed values, not measured service latencies. The example processes forward, reverse and shuffled orders, resetting the package's random seed to 23 for each build.\n\nIn the output, `m` is centroid mean and `c` is its weight. Centroid count measures stored entries, not complete memory allocation.\n\n```bash title=\"terminal\"\npython3.12 -m venv .venv-quantiles\n.venv-quantiles/bin/python -m pip install -r m18-tdigest-requirements.txt\n.venv-quantiles/bin/python m18-tdigest.py quantiles\n```\n\n```output\ntdigest=0.5.2.2 accumulation-tree=0.6.4 pyudorandom=1.0.0\nvalues=360; 0..89 each repeated3, then 100..990 step10; delta=0.05 K=25 seed=23\nforward: centroids=102 total_weight=360 first={'m': 0.0, 'c': 3.0} last={'m': 990.0, 'c': 1.0}\n  q=0.50 nearest_rank=59 estimate=59.500000 value_difference=0.500000 rank_distance=0.000000\n  q=0.90 nearest_rank=630 estimate=635.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.95 nearest_rank=810 estimate=815.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.99 nearest_rank=960 estimate=959.000000 value_difference=-1.000000 rank_distance=0.001111\nreverse: centroids=102 total_weight=360 first={'m': 0.0, 'c': 3.0} last={'m': 990.0, 'c': 1.0}\n  q=0.50 nearest_rank=59 estimate=59.500000 value_difference=0.500000 rank_distance=0.000000\n  q=0.90 nearest_rank=630 estimate=635.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.95 nearest_rank=810 estimate=815.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.99 nearest_rank=960 estimate=959.000000 value_difference=-1.000000 rank_distance=0.001111\nshuffle: centroids=69 total_weight=360 first={'m': 0.0, 'c': 3.0} last={'m': 990.0, 'c': 1.0}\n  q=0.50 nearest_rank=59 estimate=59.527273 value_difference=0.527273 rank_distance=0.000000\n  q=0.90 nearest_rank=630 estimate=635.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.95 nearest_rank=810 estimate=815.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.99 nearest_rank=960 estimate=959.000000 value_difference=-1.000000 rank_distance=0.001111\nrepeated-zero control: n=1000 exact_median=0 estimate=0.110988 empirical_rank_interval=[0.90,0.90] rank_distance=0.40\n```\n\nThe forward and reverse runs retain 102 centroids; shuffled order retains 69. All preserve total weight 360. At p99, each estimates 959 against nearest-rank 960. At the median, interpolation returns roughly 59.5 instead of 59, with zero rank distance under our stated measure.\n\nThose results look useful, but the final line tests a different shape.\n\n## A small value error can hide a bad median\n\nThe control contains 900 zeros, the integers 1 through 90, and ten values of 1,000. There are 1,000 observations. The nearest-rank median is zero, and zero occupies the empirical rank interval [0, 0.90].\n\nThe pinned package returns about 0.110988. All 900 zeros lie below that answer and every positive observation lies above it. Its rank interval is therefore [0.90, 0.90], which is 0.40 away from the requested median rank 0.50.\n\nThe estimate is numerically close to zero but badly misplaced in rank. This package's interpolation does not handle this repeated mass acceptably for a median-rank requirement. Other t-digest implementations have different interpolation and repeated-value handling; test the one you will actually deploy.\n\n:::note\nWould reducing the compression parameter alone prove that this median is fixed?\n:::\n\nNo. More retained detail may help some inputs, but the query's treatment of repeated values still matters. Rerun the control and check the actual result.\n\n## Choose around the required error\n\nT-digest is useful when you want compact, mergeable quantile estimates and can validate its behavior on representative distributions. Check repeated values, sorted and shuffled input, sparse tails and the same merge tree your backend will use. A local digest passing a test does not establish the error after repeated merges.\n\nIf the requirement is a relative error in the returned value, investigate a sketch designed for that measure, such as DDSketch. For a positive exact value of 200 ms, a 2% value-error target means 196–204 ms; it says nothing by itself about the rank interval. DDSketch uses logarithmic value buckets, while t-digest uses weighted centroids. Datadog's published distribution-metrics design describes DDSketch.\n\nKeep exact reference populations small enough to inspect. For the repeated-zero population above, this pinned package fails our median-rank check, even though its other examples look good. The [[wiki/streaming-percentile-analytics|streaming percentile pipeline]] adds the next requirements: windows, compatible summaries and exactly which contributions reached a report.\n"
+              }
+            },
+            {
+              "slug": "streaming-percentile-analytics",
+              "title": "Streaming percentile analytics",
+              "kind": "lesson",
+              "archive": {
+                "slug": "streaming-percentile-analytics",
+                "file": "streaming-percentile-analytics.md",
+                "title": "Streaming percentile analytics",
+                "displayTitle": "Streaming percentile analytics",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "analytics",
+                  "quantiles"
+                ],
+                "sources": [
+                  "https://github.com/CamDavidsonPilon/tdigest",
+                  "https://prometheus.io/docs/practices/histograms/",
+                  "https://www.datadoghq.com/blog/engineering/computing-accurate-percentiles-with-ddsketch/",
+                  "[[wiki/tdigest-quantile-sketch]]",
+                  "[[wiki/mergeable-sketches-for-analytics]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A checkout dashboard needs p50, p95 and p99 across all service instances for the last five minutes.",
+                  "continuation": "Each instance can summarize its durations locally, but sending its p99 alone loses information the combined query needs."
+                }
+              }
+            },
+            {
+              "slug": "live-reactions-high-throughput-design",
+              "title": "Design: live reactions at high throughput",
+              "kind": "design",
+              "archive": {
+                "slug": "live-reactions-high-throughput-design",
+                "file": "live-reactions-high-throughput-design.md",
+                "title": "Design: live reactions at high throughput",
+                "displayTitle": "Design: live reactions at high throughput",
+                "type": "design",
+                "tags": [
+                  "system-design",
+                  "analytics",
+                  "reactions",
+                  "design"
+                ],
+                "sources": [
+                  "https://ably.com/blog/making-fan-experiences-economically-viable",
+                  "https://slack.engineering/real-time-messaging/",
+                  "https://redis.io/docs/latest/develop/pubsub/",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://docs.python.org/3/library/http.server.html",
+                  "[[wiki/counting-at-scale]]",
+                  "[[wiki/fanout-patterns]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 2,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A goal is scored during a livestream.",
+                  "continuation": "Thousands of viewers tap the heart button at once."
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "learning-realtime-social",
+          "number": "4.4",
+          "legacyNumber": "11",
+          "title": "Real-Time Messaging & Feed Architectures",
+          "summary": "WebSockets vs SSE vs long polling, social graphs, feed fanout on write vs read, and presence detection.",
+          "units": [
+            {
+              "slug": "realtime-database-and-websocket-scaling",
+              "title": "Realtime database and WebSocket scaling",
+              "kind": "lesson",
+              "archive": {
+                "slug": "realtime-database-and-websocket-scaling",
+                "file": "realtime-database-and-websocket-scaling.md",
+                "title": "Realtime database and WebSocket scaling",
+                "displayTitle": "Realtime database and WebSocket scaling",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "realtime",
+                  "recovery"
+                ],
+                "sources": [
+                  "[[wiki/websockets-vs-sse-vs-long-polling]]",
+                  "[[wiki/raw-events-vs-derived-analytics]]",
+                  "https://redis.io/docs/latest/develop/pubsub/",
+                  "https://socket.io/docs/v4/redis-adapter/",
+                  "https://socket.io/docs/v4/using-multiple-nodes/",
+                  "https://www.postgresql.org/docs/current/logicaldecoding-explanation.html",
+                  "https://www.sqlite.org/lang_transaction.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Ada posts a message through server A.",
+                  "continuation": "Bo is connected to server B."
+                }
+              }
+            },
+            {
+              "slug": "websockets-vs-sse-vs-long-polling",
+              "title": "WebSockets vs SSE vs long polling",
+              "kind": "lesson",
+              "archive": {
+                "slug": "websockets-vs-sse-vs-long-polling",
+                "file": "websockets-vs-sse-vs-long-polling.md",
+                "title": "WebSockets vs SSE vs long polling",
+                "displayTitle": "WebSockets vs SSE vs long polling",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "realtime",
+                  "transport"
+                ],
+                "sources": [
+                  "[[wiki/realtime-database-and-websocket-scaling]]",
+                  "https://html.spec.whatwg.org/multipage/server-sent-events.html",
+                  "https://www.rfc-editor.org/rfc/rfc6202",
+                  "https://www.rfc-editor.org/rfc/rfc6455",
+                  "https://websockets.spec.whatwg.org/",
+                  "https://websockets.readthedocs.io/en/15.0.1/reference/sync/server.html",
+                  "https://websockets.readthedocs.io/en/15.0.1/reference/sync/client.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A build log receives new lines.",
+                  "continuation": "A shared drawing sends cursor movements in both directions."
+                }
+              }
+            },
+            {
+              "slug": "social-network-database-modeling",
+              "title": "Social network database modeling",
+              "kind": "lesson",
+              "archive": {
+                "slug": "social-network-database-modeling",
+                "file": "social-network-database-modeling.md",
+                "title": "Social network database modeling",
+                "displayTitle": "Social network database modeling",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "social",
+                  "data-modeling"
+                ],
+                "sources": [
+                  "https://www.sqlite.org/foreignkeys.html",
+                  "https://www.sqlite.org/queryplanner.html",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://engineering.fb.com/2013/06/25/core-infra/tao-the-power-of-the-graph/",
+                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook",
+                  "[[wiki/social-graph-follows-and-flockdb]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Bo changes his display name after publishing a post.",
+                  "continuation": "Ada should still follow the same account, the post should still have the same author, and its existing reactions should remain attached."
+                }
+              }
+            },
+            {
+              "slug": "social-graph-follows-and-flockdb",
+              "title": "Social graph: follows and FlockDB",
+              "kind": "lesson",
+              "archive": {
+                "slug": "social-graph-follows-and-flockdb",
+                "file": "social-graph-follows-and-flockdb.md",
+                "title": "Social graph follows and FlockDB",
+                "displayTitle": "Social graph follows and FlockDB",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "social",
+                  "graphs"
+                ],
+                "sources": [
+                  "[[wiki/social-network-database-modeling]]",
+                  "https://blog.x.com/engineering/en_us/a/2010/introducing-flockdb",
+                  "https://github.com/twitter-archive/flockdb",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://www.sqlite.org/rowvalue.html",
+                  "https://engineering.fb.com/2013/06/25/core-infra/tao-the-power-of-the-graph/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "Ada follows Bo. Opening Ada's following list asks for edges leaving Ada; publishing Bo's post asks for edges entering Bo. The relationship is the same, but the two reads need different access paths.",
+                "mermaidCount": 1,
+                "content": "# Social graph follows and FlockDB\n\nAda follows Bo. Opening Ada's following list asks for edges leaving Ada; publishing Bo's post asks for edges entering Bo. The relationship is the same, but the two reads need different access paths.\n\nMost follow-graph work is shallow: test one relationship, list neighbors, page through followers, or count them. Start with those operations. A graph-shaped data model does not automatically require arbitrary graph traversal.\n\n## Store the direction, then the relationship rule\n\nThe [[wiki/social-network-database-modeling|previous model]] uses `(follower, followee)` as a unique pair. A mutual friendship would need a different acceptance rule or two confirmed directions. A reverse lookup for Ada following Bo is not a second friendship and does not mean Bo follows Ada.\n\nA broader `relations(source, type, target, state, position)` model can support follows, blocks or mutes when their storage needs are shared. Include the type in relationship identity. Keep each type's permissions and state transitions explicit: a pending follow request and an active block are not interchangeable just because both connect accounts.\n\nA sort position supports ordered listing. State can distinguish active, removed or archived edges. Extra metadata belongs to the relationship it describes; it should not turn every pair into an unvalidated bag of unrelated values.\n\n## Why the reverse lookup changes after sharding\n\nOn one database, a forward index on `(follower, followee)` and a reverse index on `(followee, follower)` can serve both reads. The database maintains the indexes when a row changes.\n\nNow partition the rows by follower. Ada's outgoing list stays on Ada's partition. Bo's followers can be spread across all the other users' partitions. A local index on `followee` helps inside each partition, but does not tell the router which partitions contain Bo's incoming edges.\n\nA separately placed reverse list solves that routing problem. The forward entry is grouped by Ada, and its reverse entry is grouped by Bo.\n\n```mermaid\nflowchart TB\n    accTitle: One follow has two access paths\n    accDescr: Ada following Bo creates a forward entry grouped by Ada and a reverse entry grouped by Bo. Both entries describe the same directed relationship.\n    E[Ada follows Bo] --> F[Grouped by Ada]\n    E --> R[Grouped by Bo]\n    F --> A[Following list<br/>contains Bo]\n    R --> B[Follower list<br/>contains Ada]\n```\n\nIf Bo also follows Ada, that is a second logical relationship with its own forward and reverse entries: four entries for two follows. The cost is two logical entries per relationship before indexes and replication, plus the work of keeping them consistent. It is not a universal two-times storage estimate.\n\n## What FlockDB chose\n\nTwitter's 2010 FlockDB design used MySQL-backed adjacency lists, indexed and partitioned in both directions. It targeted large neighbor lists, ordered pagination and set operations rather than multi-hop graph walks. Its position field supported ordered reads; removed and archived states let it retain edges without exposing them as active follows.\n\nThat design also accepted retried and out-of-order writes using operation ordering. It did not make an arbitrary pair of remote database writes into a single SQLite transaction. The archived repository is no longer maintained; this is a historical design to understand, not a current package recommendation.\n\nThe useful distinction survives the implementation: listing direct followers is different work from finding paths, communities or recommendations across many hops. Choose an online adjacency service and an offline graph-analysis pipeline according to the queries each must answer.\n\n## Keep the two representations consistent\n\nOur [social example](/course-assets/system-design/m22-social.py), with its [shared helpers](/course-assets/system-design/m22-common.py), deliberately stores two tables in one SQLite database. One transaction writes the forward row, reverse row and operation receipt. An exception between the row writes rolls everything back. This exposes the maintenance obligation without pretending to implement distributed FlockDB.\n\nThe six-account graph starts with Ada and Dee following Bo and Cy, plus Eli and Fay following Cy. The replay interrupts Eli's new follow of Bo, retries it, and then unfollows. A delayed retry of the old follow returns its historical receipt without restoring the edge.\n\n```bash title=\"terminal\"\npython3 m22-social.py graph\n```\n```output\nAda follows: Bo,Cy\nCy followers: Ada,Dee,Eli,Fay\ninterrupted Eli->Bo: forward=False reverse=False\nretry committed: {\"accepted_state\":true,\"duplicate\":true}\ndelayed old follow: current=False\nabsent unfollow: {\"accepted_state\":false,\"duplicate\":false}\nchanged operation: 409\ncommitted forward/reverse pairs: 6 6\n```\n\nThe successful retry is repeated before printing, hence `duplicate:true`. Reusing its operation identity with different input returns conflict. The receipt describes an accepted operation; the current adjacency list describes the relationship now. The final check compares complete forward and reverse pair sets, not just equal counts.\n\nAcross independent stores, choose a consistency and recovery contract. A reverse projection updated asynchronously needs retained changes, duplicate handling, an applied position and repair. If it drives delivery, lag can omit recipients. A cached follower count cannot reconstruct who is missing.\n\n## Page by a stable boundary\n\nOffset pagination repeatedly skips earlier rows. An indexed cursor can seek to the last returned ordering key instead. Include a tie-breaker: several follows can share one timestamp.\n\nFor a relational extension with non-null `created_at` and a unique `(followee, follower)` pair, use an index beginning with `(followee, created_at DESC, follower DESC)`. After returning the row at `(100, 'Eli')`, the next-page query is:\n\n```sql title=\"Follower page after a cursor\"\nSELECT follower, created_at\nFROM follows_by_time\nWHERE followee = :author\n  AND (created_at, follower) < (:last_time, :last_id)\nORDER BY created_at DESC, follower DESC\nLIMIT :page_size;\n```\n\nThis is a proposed time-ordered table, separate from the example's alphabetically sorted lists. If Cy's followers sort as `Fay@100, Eli@100, Dee@99, Ada@99`, a two-row first page ends at `(100, 'Eli')`; the next page returns Dee and Ada. A one-row page ending at `(100, 'Fay')` still reaches Eli because the ID breaks the timestamp tie.\n\nKeyset pagination avoids deep offset scans when an appropriate index is used. It does not freeze a changing graph. If an edge is removed or its sort position changes between requests, define whether the caller accepts a live list or needs a versioned snapshot. The cursor must also belong to the requested account and relationship type.\n\n## Handle a very large follower list deliberately\n\nA single popular account can dominate one reverse partition. Isolating it protects other accounts, but does not divide its own workload. Bucketing that list spreads storage and writes; reads now need to merge ordered bucket pages and carry enough cursor state to resume them.\n\nCache frequently read first pages when their freshness policy permits it. Separate an approximate public count from exact edge membership, and batch recipient enumeration for downstream delivery. Preserve current access rules when a cached list is used for a protected action.\n\nOnce outgoing and incoming relationships have clear meanings, the [[wiki/feed-generation-push-pull-hybrid|feed-generation comparison]] can decide whether to write feed references when a post appears or collect posts when a reader opens the page.\n"
+              }
+            },
+            {
+              "slug": "feed-generation-push-pull-hybrid",
+              "title": "Feed generation: push, pull, hybrid",
+              "kind": "lesson",
+              "archive": {
+                "slug": "feed-generation-push-pull-hybrid",
+                "file": "feed-generation-push-pull-hybrid.md",
+                "title": "Feed generation with push, pull, and hybrid assembly",
+                "displayTitle": "Feed generation with push, pull, and hybrid assembly",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "social",
+                  "feeds"
+                ],
+                "sources": [
+                  "[[wiki/social-graph-follows-and-flockdb]]",
+                  "[[wiki/fanout-patterns]]",
+                  "[[wiki/social-feed-system-design-case-study]]",
+                  "https://www.linkedin.com/blog/engineering/feed/followfeed-linkedin-s-feed-made-faster-and-smarter",
+                  "https://blog.x.com/engineering/en_us/topics/infrastructure/2017/the-infrastructure-behind-twitter-scale",
+                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A home feed collects posts for one viewer.",
+                  "continuation": "The follow graph tells us which authors matter; feed generation decides when to collect their posts."
+                }
+              }
+            },
+            {
+              "slug": "newly-unread-indicator",
+              "title": "Design: a newly-unread indicator",
+              "kind": "design",
+              "archive": {
+                "slug": "newly-unread-indicator",
+                "file": "newly-unread-indicator.md",
+                "title": "Design: a newly-unread inbox indicator",
+                "displayTitle": "Design: a newly-unread inbox indicator",
+                "type": "design",
+                "tags": [
+                  "system-design",
+                  "social",
+                  "messaging"
+                ],
+                "sources": [
+                  "https://slack.com/help/articles/226410907-View-all-your-unread-messages",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://redis.io/docs/latest/commands/zadd/",
+                  "https://redis.io/docs/latest/commands/zcount/",
+                  "[[wiki/chat-and-messaging-system-design]]",
+                  "[[wiki/realtime-database-and-websocket-scaling]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "A newly-unread badge tells someone how much new activity has arrived since they last opened an overview. It can clear when they open that screen even though they have not read every conversation. That makes it a separate feature from message read receipts.",
+                "mermaidCount": 2,
+                "content": "# Design: a newly-unread inbox indicator\n\nA newly-unread badge tells someone how much new activity has arrived since they last opened an overview. It can clear when they open that screen even though they have not read every conversation. That makes it a separate feature from message read receipts.\n\nWe'll design a badge that counts distinct senders, preserve arrivals that race with opening the inbox, and keep reads correct while a background worker is behind. The example is our own small inbox service, not a claim about Slack's or another messenger's internals.\n\n## Decide what the number means\n\nBo sends Ada two messages and Cy sends one. Our badge shows **2**, because two sender accounts contributed new activity. It does not show three messages, two humans, or a count of unread conversations.\n\n| State | What it means |\n|---|---|\n| Newly-unread badge | Distinct eligible senders after Ada's last inbox acknowledgement |\n| Thread unread | A conversation contains messages beyond its own read position |\n| Message read receipt | The client reported a particular message or position as read |\n\nOpening the overview advances only the first state. The [[wiki/chat-and-messaging-system-design|chat design]] deals with delivery and thread-read reports separately. None of these reports proves that a person understood the text.\n\nRepeated delivery of one send must not create another message. But two intentional sends with identical text are still two messages. Give each send an operation ID; use sender identity only when collapsing messages into the badge count.\n\nFor this design, only the recipient may view or acknowledge the inbox. Senders and recipients must be active accounts, and inactive senders disappear from badge reads. Blocking, group conversations and message deletion need additional rules; they are outside the executable example.\n\n## Clear what the screen observed\n\nDeleting the whole badge set when Ada opens the inbox looks simple. It fails if a new message arrives after the server prepared her response but before the acknowledgement reaches the server. The deletion clears activity she never had a chance to see.\n\nGive each accepted message a position within its recipient's inbox. Ada's first three messages occupy positions 1, 2 and 3. The response records that it observed through 3. Dee's later message receives position 4.\n\n```mermaid\nsequenceDiagram\n  accTitle: Acknowledge the observed inbox\n  accDescr: Ada receives an inbox snapshot through position 3. Dee's message commits at position 4 before Ada acknowledges the older snapshot. Position 4 remains newly unread.\n  participant A as Ada\n  participant S as Inbox service\n  A->>S: Open inbox\n  S-->>A: Snapshot through 3\n  Note over S: Dee's message commits at 4\n  A->>S: Acknowledge snapshot 3\n  S-->>A: One new sender remains\n```\n\nStore an acknowledged-through position **A**. A sender counts when their latest eligible message position is strictly greater than A. After acknowledging 3, Bo and Cy stop contributing, while Dee at 4 remains.\n\nPositions describe acceptance order for one recipient. They are not wall-clock timestamps or a global order across all users. Equal timestamps cannot tell us which of two arrivals belonged to an earlier inbox response.\n\nThe server stores an issued snapshot containing its recipient and observed boundary. Ada acknowledges the snapshot ID, not an arbitrary position supplied by her client. The server checks ownership and updates A to the greater of its current value and the snapshot boundary.\n\nThat maximum handles multiple devices. If device B has already acknowledged through 4, device A's delayed acknowledgement through 3 leaves A at 4. A retry with the same operation ID returns its original receipt; that historical reply must not make the client lower a newer local boundary.\n\nThe product decides when to send the acknowledgement: for example, after the overview loads successfully. Issuing a snapshot only proves which response the server prepared, not that Ada saw it. An acknowledgement should not be sent just because navigation began and the request might still fail.\n\n## Store the source and the prepared count separately\n\nAccepted messages are the source. A projection keeps each sender's greatest processed position so a badge read need not rescan the entire message history. Let **H** be the accepted head and **P** the position through which the projection is complete.\n\nOur local service puts these records in one SQLite database:\n\n| Record and key | Relevant fields |\n|---|---|\n| Message: recipient, position | Sender and text |\n| Inbox head: recipient | H, A and P |\n| Sender summary: recipient, sender | Greatest processed position |\n| Issued snapshot: snapshot ID | Recipient and observed-through position |\n| Operation receipt: actor, operation ID | Original input and accepted result |\n\nSeparate thread-read rows exist to demonstrate that inbox acknowledgements leave them unchanged. A real thread-reading API is outside this service.\n\n```mermaid\nflowchart TD\n  accTitle: The badge combines a prefix and a tail\n  accDescr: A badge read merges sender maxima processed through P with source messages after P, then counts active senders whose latest position is above acknowledgement A. All records are read from one SQLite snapshot.\n  P[Sender maxima through P] --> M[Merge latest positions]\n  T[Messages after P] --> M\n  M --> C[Count active senders<br/>above A]\n```\n\nA read uses one database snapshot for the heads, projection, tail and account eligibility. Otherwise, it could combine a new P with an old projection and miss messages. The count is exact for that snapshot; an arrival after it begins can appear on the next read.\n\nThis is a deliberate cost choice. With P=0 and H=4, the read examines four tail messages. Once the worker reaches P=4, the tail is empty, though this implementation still reads the sender summaries and checks account eligibility.\n\n## Follow a send, a read and an acknowledgement\n\nThe HTTP handler binds its demonstration credential to an account. Source methods then enforce ownership. The routes keep the three operations distinct:\n\n| Route | Input or result |\n|---|---|\n| POST `/messages` | Send an operation ID, recipient and text; receive an accepted position |\n| GET `/inbox/Ada` | Receive eligible messages, snapshot ID and observed-through position |\n| GET `/badge/Ada` | Receive the count and diagnostic H, A, P and tail-row fields |\n| POST `/inbox/Ada/ack` | Send an operation ID and issued snapshot ID; receive acknowledged-through |\n\nBo's send transaction checks his operation receipt, validates the recipient, advances Ada's head, inserts the message and saves the result. Commit precedes the 201 response. The same operation and input return 200 with the original position; changed input under that ID returns 409.\n\nOpening Ada's inbox reads its head and eligible message history, then stores the snapshot in the same transaction. The example returns the entire retained history. Pagination would require a product decision: does opening page one acknowledge the overview, or only messages actually fetched? Do not extend the current token to pages without answering that.\n\nAcknowledgement verifies the path's account and the snapshot's owner independently. A predictable snapshot ID is not permission to use it. A guessed snapshot belonging to Ada is refused when Bo submits it through his own route.\n\nSQLite serializes the example's write transactions. Dee's arrival may commit before or after Ada acknowledges the older snapshot; either way, the final state is H=4 and A=3. The acknowledgement never replaces its issued boundary with the current head.\n\n## Keep projection lag from changing the answer\n\nThe background worker reads messages after P in order. It updates each sender's maximum and advances P in the same transaction. An interrupted transaction leaves both unchanged, so retrying starts from the last committed position.\n\nA badge read merges those processed maxima with every message in the unprocessed tail, taking the greater position per sender. It then counts active senders above A. Delayed work from Bo cannot undo Ada's acknowledgement or turn an older message into new activity.\n\nThis retains the original goal of preparing cheap reads, while making the fallback cost visible. Measure tail length, worker progress and badge-read latency. If a tail becomes too large, catch the worker up, bound recovery with an explicit failure, or choose a documented stale-count experience. Returning an old projection as an exact current count is not the same contract.\n\nA live notification can tell an online client to refetch. A disconnected client reconciles on its next badge read, as in the [[wiki/realtime-database-and-websocket-scaling|realtime recovery lesson]]. This particular example sends no WebSocket notifications; it tests the source and reconciliation path.\n\n## Run the arrival race\n\nSave the standard-library [inbox service](/course-assets/system-design/m22-inbox.py) and [shared helpers](/course-assets/system-design/m22-common.py) together. They use a private temporary SQLite file and an actual loopback HTTP server with fake account-bound credentials.\n\nBo sends twice and Cy once. Device A fetches through 3, then two threads race Dee's fourth message against acknowledgement of that snapshot. A later device acknowledges through 4 before the first device submits its older snapshot again.\n\n```bash title=\"terminal\"\npython3 m22-inbox.py\n```\n```output\noffline arrivals: events=3 distinct senders=2\nduplicate message: 200\nchanged message: 409\ndevice A observes through: 3\narrival races ACK3: {\"accepted_through\":4,\"acknowledged_through\":3,\"count\":1,\"projected_through\":0,\"senders\":[\"Dee\"],\"tail_rows\":4}\nclear-all control: would drop new sender Dee; boundary ACK retains her\nprojection interruption/reopen: projected=0\ndelayed projection after ACK: {\"accepted_through\":4,\"acknowledged_through\":3,\"count\":1,\"projected_through\":4,\"senders\":[\"Dee\"],\"tail_rows\":0}\ndevice B ACK4 then old device ACK3: 4\nwrong-user acknowledgement: 403\nwrong snapshot owner: 403\nmalformed framing: [[\"empty transfer encoding\",400],[\"ambiguous length\",400],[\"huge numeric length\",400],[\"unpaired surrogate\",400],[\"short body\",400]]\nthread read positions: [0, 0, 0]\nretained events=4 serialized message bytes=245\nunavailable authority: 503\nHTTP requests: application=15 malformed=5\n```\n\nThe badge finds Dee both before projection and after it. Only `tail_rows` changes from four to zero. The thread-read positions stay at zero, confirming that the overview acknowledgement did not mark conversations read.\n\nThe interruption is an exception before commit followed by reopening the database, not an operating-system crash. The replay also checks retry identity, ownership and malformed HTTP requests. Its 245-byte count covers only compact message JSON, not database size or network overhead.\n\nThose protocol probes exercise this small server's rules: one bounded Content-Length, no Transfer-Encoding, complete bodies and valid JSON Unicode. They are not a production authentication or load test. An unavailable source returns 503, so the client should retain a clearly stale display or show unavailability rather than invent zero.\n\n## Where a Redis sorted set fits\n\nA sorted set is useful for the prepared sender summary: the recipient identifies the key, the sender ID is the unique member, and the latest accepted position is its score. Updating Bo changes his score without creating another member. Resolve display names separately so a rename does not change identity.\n\nFor small exact integer positions, the core operations look like this:\n\n```text\nZADD newly_unread:Ada GT 2 Bo\nZADD newly_unread:Ada GT 3 Cy\nZADD newly_unread:Ada GT 4 Dee\nZCOUNT newly_unread:Ada (3 +inf\n```\n\n`GT` prevents an older delivery from lowering an existing score. The exclusive bound `(3` counts only positions above acknowledgement 3. The result is one sender. This sketch assumes A=3 is already known; it does not implement cross-store acknowledgement or projection recovery.\n\n`ZCARD` is sufficient only if every retained member is newly unread. Once old entries remain, use the acknowledgement boundary. Deleting scores through A can reclaim space, but a late event can reinsert an old sender; counting above A still excludes that activity.\n\nThe [Redis control](/course-assets/system-design/m22-redis-badge.py) starts a private process with TCP disabled and demonstrates the unsafe alternatives:\n\n```bash title=\"terminal\"\npython3 m22-redis-badge.py\n```\n```output\nRedis server v=8.4.0\nsnapshot through3: distinct senders=2\narrival4 then clear-all: count=0\nremove through3: senders=Dee\ndelayed older update: ZCARD=2; ZCOUNT above ACK3=1\nequal timestamp100: remove-through100 removes both senders\n```\n\nRedis scores are floating-point numbers. Integers through 2^53 are exact, but arbitrary 64-bit source positions are not. Choose a representation that preserves the actual position range before using scores as acknowledgement boundaries.\n\nA separate Redis deployment also adds a consistency boundary. Preserve message acceptance in the source, use replayable work to maintain the projection, and keep acknowledgement authoritative during cache loss. A cache miss means “state unavailable or not yet built,” not necessarily “no new messages.”\n\n## Retain enough to recover\n\nThe local database retains all messages, snapshots and operation receipts for its temporary lifetime. Production retention cannot discard them under one guessed expiry: messages support reconstruction, snapshots authorize acknowledgements, and receipts suppress repeated operations.\n\nA clean projection rebuild resets sender maxima and P together, then replays retained messages. The badge path checks that its unprocessed tail reaches H without gaps; missing source positions produce a conflict instead of an incomplete count.\n\nIf history must be trimmed, retain a sufficient checkpoint and define a floor below which replay is unavailable. Account erasure and message deletion must also update the eligibility and summary rules. A surviving sender maximum alone does not prove that its supporting message still exists.\n\nThe essential boundary is simple: clearing the overview covers the inbox the server returned. New work beyond that boundary remains visible, regardless of device timing or background-worker progress.\n"
+              }
+            },
+            {
+              "slug": "hashtag-extraction-and-tag-store",
+              "title": "Hashtag extraction and tag store",
+              "kind": "lesson",
+              "archive": {
+                "slug": "hashtag-extraction-and-tag-store",
+                "file": "hashtag-extraction-and-tag-store.md",
+                "title": "Hashtag extraction and the tag store",
+                "displayTitle": "Hashtag extraction and the tag store",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "social",
+                  "indexing"
+                ],
+                "sources": [
+                  "[[wiki/feed-generation-push-pull-hybrid]]",
+                  "[[wiki/search-index-synchronization]]",
+                  "[[wiki/social-network-database-modeling]]",
+                  "https://www.unicode.org/reports/tr31/",
+                  "https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html",
+                  "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-partition-key-sharding.html",
+                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A hashtag connects a piece of caption text to a page of matching posts.",
+                  "continuation": "Recognizing Cache is the first step."
+                }
+              }
+            },
+            {
+              "slug": "reaction-modeling",
+              "title": "Reaction modeling",
+              "kind": "lesson",
+              "archive": {
+                "slug": "reaction-modeling",
+                "file": "reaction-modeling.md",
+                "title": "Reaction modeling",
+                "displayTitle": "Reaction modeling",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "social",
+                  "reactions"
+                ],
+                "sources": [
+                  "[[wiki/live-reactions-high-throughput-design]]",
+                  "[[wiki/social-network-database-modeling]]",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://docs.slack.dev/reference/methods/reactions.add/",
+                  "https://www.mongodb.com/docs/manual/reference/operator/update/addtoset/",
+                  "https://www.mongodb.com/docs/v8.0/data-modeling/design-antipatterns/unbounded-arrays/",
+                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A reaction can represent an account's current choice on a post, several selected emoji, or a stream of taps.",
+                  "continuation": "Those are different products."
+                }
+              }
+            },
+            {
+              "slug": "photo-tagging-coordinate-model",
+              "title": "Design: photo tagging coordinates",
+              "kind": "design",
+              "archive": {
+                "slug": "photo-tagging-coordinate-model",
+                "file": "photo-tagging-coordinate-model.md",
+                "title": "Design: photo tags that survive resizing",
+                "displayTitle": "Design: photo tags that survive resizing",
+                "type": "design",
+                "tags": [
+                  "system-design",
+                  "social",
+                  "images"
+                ],
+                "sources": [
+                  "https://www.flickr.com/services/api/flickr.photos.people.add.html",
+                  "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/object-fit",
+                  "https://www.w3.org/TR/media-frags/#naming-space",
+                  "[[wiki/reaction-modeling]]",
+                  "[[wiki/image-cdn-and-resizing]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "A photo tag associates an account with a place in an image. That place should stay attached to its subject when a laptop-sized photo becomes a phone thumbnail. Storing the click's screen coordinates cannot provide that guarantee: the next display may have a different size, margins or crop.",
+                "mermaidCount": 2,
+                "content": "# Design: photo tags that survive resizing\n\nA photo tag associates an account with a place in an image. That place should stay attached to its subject when a laptop-sized photo becomes a phone thumbnail. Storing the click's screen coordinates cannot provide that guarantee: the next display may have a different size, margins or crop.\n\nWe'll work through source coordinates, map a point into a square card, and extend the model to boxes and crop edits. Then we'll follow a tag through placement, approval and image replacement in a small executable service.\n\n## Store a place in the source image\n\nChoose a coordinate convention before choosing a database. Here the origin is the upper-left corner, horizontal coordinates increase rightward, and vertical coordinates increase downward. Each tag belongs to one immutable image version with known dimensions and orientation.\n\nFor our 800 by 600 source, a point at (200,150) is one quarter of the way across and down. Store those fractions as `u=0.25` and `v=0.25`. In a simple 400 by 300 resize, the same point becomes (100,75).\n\n```text\nu = source_x / source_width\nv = source_y / source_height\n\nrendered_x = u * rendered_image_width\nrendered_y = v * rendered_image_height\n```\n\nSource pixels would also work if every consumer knew which source dimensions they referred to. The mistake is storing pixels from an unspecified display. Ratios make the convention convenient; the image version keeps their meaning stable.\n\nKeep full precision in storage. For example, rounding a 600/1024 ratio to 0.586 before multiplying it by 512 yields 300.032 instead of 300. Round only when presenting a value or placing a raster pixel.\n\nOur point domain includes 0 and 1. The point (1,1) denotes the lower-right boundary of the image extent, not an indexed raster pixel. Whether the marker's label extends beyond that boundary is a separate layout choice.\n\n## Account for the display box\n\nThe rendered image and its surrounding box are not always the same size. With `contain`, the entire image fits and unused space becomes margins. With `cover`, the image fills the box and some source content may be cropped. Both preserve aspect ratio.\n\nFor a centered image in a box of width W and height H, choose a scale and then an offset:\n\n```text\ncontain: s = min(W / 800, H / 600)\ncover:   s = max(W / 800, H / 600)\n\nox = (W - 800*s) / 2\noy = (H - 600*s) / 2\nX = ox + 800*s*u\nY = oy + 600*s*v\n```\n\nThese are CSS-pixel positions within the box, independent of the display's physical pixel density. The formulas assume centered positioning and no border, padding or CSS rotation. A different `object-position` needs different offsets.\n\n| In a 500 by 500 box | Result for the quarter-width, quarter-height point |\n| --- | --- |\n| Contain: image is 500 by 375, with 62.5-pixel top and bottom margins | (125,156.25) |\n| Cover: image is about 666.67 by 500, with 83.33 pixels cropped from each side | About (83.33,125) |\n\nMultiplying both fractions by 500 misses the contain margin. It gives (125,125), which is a valid place in the square but the wrong place on the photo.\n\nThe generated preview below puts the marker over the source's upper-left circle. Its raster rounds the 62.5-pixel top offset to an integer row; the calculation above retains the fractional position.\n\n![Contained square preview with the chosen marker over the upper-left circle and blank margins above and below the image](/course-assets/system-design/m22-photo-overlay.png)\n\nFor editing, invert the transform: subtract the offsets, then divide by the scaled source dimensions. Reject a click in a contain margin. For viewing, hide a point outside a cover crop instead of moving it to the edge, where it would label a different place.\n\nThe example checks exact display-space membership first and clips only floating-point quotient roundoff at 0 and 1. It does not use clamping to turn an invalid click into a valid tag.\n\n## Boxes and crop edits\n\nA point is enough for a small name marker. To identify an area, store a rectangle using either normalized corners `(u1,v1,u2,v2)` or normalized origin and size `(u,v,width,height)`.\n\nFor corners, require finite values with `0 <= u1 < u2 <= 1` and `0 <= v1 < v2 <= 1`. For origin and size, require positive dimensions and an extent that stays inside the source. Keep the representation explicit; a point with a decorative label is not automatically a bounding box.\n\nRender both corners through the same transform. A partially cropped box can be clipped for display while retaining its original source bounds. This box extension is a design choice; the executable below accepts only points.\n\nA crop creates another coordinate space. Suppose an 800 by 600 source is cropped to the rectangle starting at (100,50), with width 400 and height 300. The original point (200,150) becomes (100,100) inside that crop, or fractions (0.25,1/3).\n\n```text\ncropped_u = (source_u * 800 - crop_left) / crop_width\ncropped_v = (source_v * 600 - crop_top) / crop_height\n```\n\nA point outside the crop is hidden, not reassigned to its nearest edge. Store the crop transform with the derived variant so the client can recover this relationship. A rotation needs its own transform and orientation convention too.\n\nAn unrelated replacement has no such relationship. Even another 800 by 600 image may contain something different at the same fractions. Give it a new version and require explicit retagging. The [[wiki/image-cdn-and-resizing|image pipeline]] should normalize orientation before establishing the canonical coordinate space.\n\n## Separate the tag from the image bytes\n\nOur service starts with a generated upright geometric image. Ada owns it and selects Bo as the target of a point tag. This records a person's account selection; it performs no face recognition.\n\nThe image bytes stay immutable. A database stores version metadata and tag relationships. The client reads the image through the media path, while the tagging API handles coordinates and permission.\n\n```mermaid\nflowchart TB\n  accTitle: Coordinates refer to an image version\n  accDescr: The client reads immutable image bytes through the media path and sends coordinates or consent to the tag API. The API checks image version and permission in the tag database.\n  C[Image client] -->|point or consent| A[Tag API]\n  A --> D[(Versions and tags)]\n  C -->|media path| I[Immutable image bytes]\n```\n\nThe fixture has three main records:\n\n| Record | Meaning |\n| --- | --- |\n| Image | Owner, current version, visibility and placement revision |\n| Immutable version | Image/version key, digest, dimensions and orientation |\n| Tag | Tag ID, image/version, target account, u, v and approval state |\n\nAn extended box schema would replace the point fields with one declared rectangle representation. Record the creator and creation time explicitly if other accounts may propose tags; this fixture restricts all placement to the image owner.\n\nDecide the product rules early. Unregistered names need a separate label identity rather than a fabricated account ID. Machine-suggested boxes need an explicit confirmation state. A per-image tag limit, bounded reads and marker clustering keep hundreds of tags from turning into an unreadable overlay. Those extensions are not implemented here.\n\n## Place, approve and read\n\nAda sends `POST /images/photo-1/tags` with an operation ID, image version, base placement revision, target and point. The server binds Ada from her credential, validates the numbers and verifies ownership. It never accepts a caller-supplied owner as authority.\n\nThe new tag begins pending. In one transaction the service inserts it, advances the placement revision and saves the operation receipt. Repeating the identical request returns the receipt; reusing its identity with changed coordinates conflicts.\n\nBo can approve or withdraw through `POST /tags/1/consent`. Reads expose only approved tags for the current version, with active owner and target accounts and current permission to view the image. Placement and approval answer different questions: Ada can suggest an association, while Bo controls whether this design displays it.\n\n```mermaid\nsequenceDiagram\n  accTitle: A proposed tag becomes visible after approval\n  accDescr: Ada places a pending tag. A reader sees no tag until Bo approves it. A later withdrawal hides it from subsequent reads.\n  participant A as Ada\n  participant S as Tag service\n  participant B as Bo\n  A->>S: Place tag, v1\n  S-->>A: Pending tag 1\n  B->>S: Approve tag 1\n  Note over S: Approved: visible\n  B->>S: Withdraw approval\n  Note over S: Withdrawn: hidden\n```\n\nTwo placements based on revision 1 cannot both advance this editor to revision 2. One succeeds; the other refetches. This whole-image precondition is a deliberate editing policy. Independent annotations could instead use per-tag revisions or a declared merge rule.\n\nConsent does not advance the placement revision. The fixture serializes new consent writes in arrival order, so a production interface with multiple active editing devices would need a separate consent revision if it must reject stale new intentions.\n\nAn identical old approval retry only returns its historical receipt; it does not undo a later withdrawal. As in [[wiki/reaction-modeling|reaction modeling]], the client must distinguish an operation result from current state.\n\n## Run the geometry and HTTP example\n\nSave the [tagging service](/course-assets/system-design/m22-tagging.py), [shared helpers](/course-assets/system-design/m22-common.py) and [pinned image dependency](/course-assets/system-design/m22-image-requirements.txt) together. Use an isolated Python environment with the pinned Pillow version. The program generates geometric images, owns a temporary SQLite database and serves requests only on loopback.\n\n```bash title=\"setup\"\npython3 -m venv /tmp/fanout-m22\nuv pip install --python /tmp/fanout-m22/bin/python -r m22-image-requirements.txt\n```\n\nBefore running it, predict two outcomes: whether a top-margin click is accepted, and whether an editor holding image version 1 can place a tag after the source is replaced by version 2.\n\n```bash title=\"terminal\"\n/tmp/fanout-m22/bin/python m22-tagging.py --images ./m22-images\n```\n```output\nPillow=12.1.0 source=800x600 orientation=1\nnormalized point: u=0.25 v=0.25; source=(200,150)\ncontain 500x500: (125.000000,156.250000) roundtrip_error=0.000000000000\ncover 500x500: (83.333333,125.000000) roundtrip_error=0.000000000000\nright/bottom equality: (1.0, 1.0)\nletterbox click: refused\ncover left-edge source point: None\nowner placement: 201 pending\nidentical retry: 200\nchanged retry: 409\nnon-owner placement: 403\nbefore consent visible tags: 0\nafter Bo consent visible tags: 1\nconcurrent revision1: [201, 409]\nconsent withdrawn visible tags: 0\nmalformed framing: [[\"empty transfer encoding\",400],[\"ambiguous length\",400],[\"huge numeric length\",400],[\"unpaired surrogate\",400],[\"short body\",400]]\nretained tags=2 coordinate pairs=2\nreplacement visible tags: 0\nold image placement: 409\nprivate image read: 404\n```\n\nThe inverse calculation is checked before its error is rounded for printing. The HTTP run exercises retries, permission, approval and concurrent placement. The five malformed framing probes are refused without adding tags. Either concurrent target may win; sorting the status codes makes the capture independent of that choice.\n\nTwo rows remain because the initial placement and one concurrent placement succeeded. Replacement retains those rows under version 1 but makes the current version's visible list empty. An old editor must reload the image and ask for confirmation; silently resending its fractions under version 2 defeats the version check.\n\nFinally, Bo's earlier approval does not grant access after Ada makes the image private. The fixture returns 404 for that read. A real private-media product must also authorize the image bytes and every variant: filtering tag metadata alone cannot protect a publicly served photo.\n"
+              }
+            },
+            {
+              "slug": "live-commentary-system-design",
+              "title": "Design: live commentary",
+              "kind": "design",
+              "archive": {
+                "slug": "live-commentary-system-design",
+                "file": "live-commentary-system-design.md",
+                "title": "Design: live commentary",
+                "displayTitle": "Design: live commentary",
+                "type": "design",
+                "tags": [
+                  "system-design",
+                  "realtime",
+                  "commentary"
+                ],
+                "sources": [
+                  "[[wiki/realtime-database-and-websocket-scaling]]",
+                  "[[wiki/websockets-vs-sse-vs-long-polling]]",
+                  "[[wiki/retries-timeouts-idempotency]]",
+                  "[[wiki/caching-layers]]",
+                  "https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html",
+                  "https://www.rfc-editor.org/rfc/rfc9110.html",
+                  "https://html.spec.whatwg.org/multipage/server-sent-events.html",
+                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 3,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Live commentary lets a few writers publish updates to a much larger audience.",
+                  "continuation": "Most readers want the newest page; some scroll back through the match."
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "track-5",
+      "number": 5,
+      "title": "Production Operations, Resilience & System Hardening",
+      "summary": "Graceful degradation, circuit breakers, SLO-based observability, zero-downtime migrations, disaster recovery, and multi-tenant isolation.",
+      "hours": 24,
+      "modules": [
+        {
+          "id": "learning-reliability-ops",
+          "number": "5.1",
+          "legacyNumber": "14",
+          "title": "Production Reliability, SLOs & Resilience",
+          "summary": "Distributed observability, SLOs, error budgets, incident response, disaster recovery, rate limiting, and multi-tenant isolation.",
+          "units": [
+            {
+              "slug": "observability-for-distributed-systems",
+              "title": "Observability for distributed systems",
+              "kind": "lesson",
+              "archive": {
+                "slug": "observability-for-distributed-systems",
+                "file": "observability-for-distributed-systems.md",
+                "title": "Observing a request across services",
+                "displayTitle": "Observing a request across services",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "observability",
+                  "telemetry"
+                ],
+                "sources": [
+                  "[[wiki/file-sync-system-design]]",
+                  "https://sre.google/sre-book/monitoring-distributed-systems/",
+                  "https://opentelemetry.io/docs/concepts/signals/traces/",
+                  "https://prometheus.io/docs/practices/naming/",
+                  "https://prometheus.io/docs/introduction/overview/",
+                  "https://docs.python.org/3.12/library/time.html#time.monotonic_ns"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A customer says a file never appeared.",
+                  "continuation": "The API dashboard shows successful requests."
+                }
+              }
+            },
+            {
+              "slug": "slos-and-error-budgets",
+              "title": "SLOs and error budgets",
+              "kind": "lesson",
+              "archive": {
+                "slug": "slos-and-error-budgets",
+                "file": "slos-and-error-budgets.md",
+                "title": "SLOs and error budgets",
+                "displayTitle": "SLOs and error budgets",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "reliability",
+                  "slo"
+                ],
+                "sources": [
+                  "[[wiki/observability-for-distributed-systems]]",
+                  "https://sre.google/workbook/implementing-slos/",
+                  "https://sre.google/workbook/alerting-on-slos/",
+                  "https://sre.google/sre-book/service-level-objectives/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A sync service can be available while taking an hour to deliver a file.",
+                  "continuation": "A search service can respond quickly with stale results."
+                }
+              }
+            },
+            {
+              "slug": "incident-response",
+              "title": "Incident response",
+              "kind": "lesson",
+              "archive": {
+                "slug": "incident-response",
+                "file": "incident-response.md",
+                "title": "Incident response through a verified recovery",
+                "displayTitle": "Incident response through a verified recovery",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "incidents",
+                  "reliability"
+                ],
+                "sources": [
+                  "[[wiki/observability-for-distributed-systems]]",
+                  "[[wiki/slos-and-error-budgets]]",
+                  "https://sre.google/sre-book/managing-incidents/",
+                  "https://sre.google/sre-book/monitoring-distributed-systems/",
+                  "https://sre.google/sre-book/postmortem-culture/",
+                  "https://sre.google/workbook/incident-response/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "An incident rarely arrives as a complete explanation.",
+                  "continuation": "A probe fails, a customer reports bad data, or a queue stops moving."
+                }
+              }
+            },
+            {
+              "slug": "deployment-and-migration-safety",
+              "title": "Deployment and migration safety",
+              "kind": "lesson",
+              "archive": {
+                "slug": "deployment-and-migration-safety",
+                "file": "deployment-and-migration-safety.md",
+                "title": "Deployment and migration safety",
+                "displayTitle": "Deployment and migration safety",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "deployment",
+                  "migration"
+                ],
+                "sources": [
+                  "https://aws.amazon.com/builders-library/ensuring-rollback-safety-during-deployments/",
+                  "https://martinfowler.com/bliki/BlueGreenDeployment.html",
+                  "https://sre.google/workbook/canarying-releases/",
+                  "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/",
+                  "[[wiki/database-migration-safety]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-17",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A deployment replaces running software while requests and background jobs are still arriving.",
+                  "continuation": "The strategy determines how much traffic sees the new version, what you watch during the change, and how you return to the previous version if it fails."
+                }
+              }
+            },
+            {
+              "slug": "database-migration-safety",
+              "title": "Database migration safety",
+              "kind": "lesson",
+              "archive": {
+                "slug": "database-migration-safety",
+                "file": "database-migration-safety.md",
+                "title": "Database migration safety",
+                "displayTitle": "Database migration safety",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "database",
+                  "migration"
+                ],
+                "sources": [
+                  "[[wiki/deployment-and-migration-safety]]",
+                  "[[wiki/schema-evolution]]",
+                  "[[wiki/online-indexing]]",
+                  "https://www.postgresql.org/docs/current/ddl-alter.html",
+                  "https://www.postgresql.org/docs/current/sql-altertable.html",
+                  "https://www.postgresql.org/docs/current/sql-createindex.html",
+                  "https://stripe.com/blog/online-migrations",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://www.sqlite.org/lang_createview.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A database migration changes data or schema while applications still depend on it.",
+                  "continuation": "During a rolling deployment, old code, new code, workers and backfills may all be active."
+                }
+              }
+            },
+            {
+              "slug": "parallel-monolith-read-drain",
+              "title": "Parallel monolith read drain",
+              "kind": "lesson",
+              "archive": {
+                "slug": "parallel-monolith-read-drain",
+                "file": "parallel-monolith-read-drain.md",
+                "title": "Parallel monolith read drain",
+                "displayTitle": "Parallel monolith read drain",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "migration",
+                  "routing"
+                ],
+                "sources": [
+                  "[[wiki/database-migration-safety]]",
+                  "[[wiki/replication]]",
+                  "https://www.krakend.io/docs/v2.8/endpoints/",
+                  "https://www.postgresql.org/docs/current/hot-standby.html",
+                  "https://stripe.com/blog/online-migrations",
+                  "https://www.sqlite.org/lang_transaction.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "A legacy monolith can overload its primary database with reads simply because its default connection points there. Many of those queries may tolerate a replica's delay, but changing every old call site could take months. Moving a few suitable routes can buy time for that cleanup.",
+                "mermaidCount": 1,
+                "content": "# Parallel monolith read drain\n\nA legacy monolith can overload its primary database with reads simply because its default connection points there. Many of those queries may tolerate a replica's delay, but changing every old call site could take months. Moving a few suitable routes can buy time for that cleanup.\n\nThe useful boundary is the running application: give a second copy a different database configuration, then control which requests reach it. First choose eligible routes, then measure whether moving them actually relieves the primary.\n\n## Same code, different default database\n\nKeep the existing fleet pointed at the primary. Run another fleet from the same application code with its default connection pointed at a replica. An API gateway sends selected read routes to the second fleet; writes and all other routes stay on the existing path.\n\n| Application fleet | Default database |\n|---|---|\n| Existing monolith | Primary |\n| Read-drain monolith | Replica, with read-only credentials |\n\nThis avoids editing individual queries only when they use that configurable default. Audit explicit connection overrides, startup migrations, background consumers and scheduled jobs. Disable work that should not run in the second fleet. A second HTTP deployment should not accidentally become a second job scheduler.\n\n```mermaid\nflowchart TB\n  accTitle: Route selected reads to a second monolith\n  accDescr: The gateway sends eligible reads to the replica-default monolith and all other routes to the primary-default monolith. The primary replicates changes to the replica.\n  G[API gateway] -->|Other routes| W[Primary-default<br/>monolith]\n  G -->|Eligible reads| R[Replica-default<br/>monolith]\n  W --> P[(Primary)]\n  R --> S[(Replica)]\n  P -. Replication .-> S\n```\n\nRoute by both path and method. Gateway support for `GET /catalog` does not imply that `POST /catalog` should reach the same backend. KrakenD, for example, lets endpoint definitions select a method and backend. That supplies a routing mechanism; it cannot tell you whether the application behind a route is safe to move.\n\n## Choose by behavior and freshness\n\n“GET” is not enough. A handler might update a last-seen timestamp, create a missing row, refresh a token or publish an external event. Read-only database credentials help reject accidental database writes, including after a replica is promoted. They do not prevent external side effects.\n\nA route also needs a freshness contract. An asynchronous replica can return a state from before an accepted write. Decide whether that is acceptable for the particular answer:\n\n| Possible candidates, after inspection | Keep on the primary unless stronger guarantees exist |\n|---|---|\n| Catalog descriptions with an accepted delay | Checkout confirmation immediately after payment |\n| Profile display where a delayed edit is acceptable | Balance or entitlement decisions requiring current state |\n| Dashboards that show their data freshness | Read-modify-write and idempotency endpoints |\n\nThese are starting points, not permanent labels. A catalog page that promises current inventory has a different requirement from one displaying descriptions. A profile response that includes current access permissions needs a separate authorization decision.\n\nFor read-after-write flows, retaining the primary route is often the simplest first choice. The [[wiki/replication|replication lesson]] examines other freshness strategies. Do not silently weaken the product's behavior merely to move more queries.\n\n## Move one route and watch both databases\n\nStart with primary read work attributable to the route: request volume, query volume and expensive queries. Establish enough replica capacity, then route a small population through the second fleet. Watch the primary's work, replica replay lag, endpoint errors and p95/p99 latency together.\n\nA replica can be healthy and still give users a poor answer. In PostgreSQL hot standby, long queries may conflict with WAL replay; letting them run can delay replay, while applying replay can require canceling them. A read drain therefore needs evidence about cancellations and freshness as well as CPU.\n\nShadow reads are an optional earlier step: keep serving the old answer while privately comparing the new one. They add work, so bound the sample. With separate databases, two requests do not automatically share a snapshot. Differences can mean expected lag, a query bug or an incompatible representation; classify them before deciding what blocks rollout.\n\nExpand the route list only when the expected primary work falls without violating those route contracts. Keep enough primary capacity to take the traffic back. Reverting a gateway rule can restore routing while the old path remains compatible; it cannot undo stale answers already delivered.\n\n## Try the serving decisions locally\n\nThe following experiment isolates comparison, cutover and fallback. It uses the [[wiki/database-migration-safety|migration lesson's]] three orders and two representations in **one SQLite database**. It runs real read/write HTTP listeners, but it does not deploy two monoliths, a gateway or a database replica.\n\nAda is selected for the new read path; Bo stays on the old one. The local router checks current source ownership, account activity, deletion state, version and a canonical-record fingerprint before serving a copied body. It therefore still queries the source on every request. This demonstrates a strict acceptance rule, not reduced primary load.\n\nThe example separates three target failures: missing means no copied record, stale means a different version, and mismatch means changed contents at the current version. Old-served shadow comparisons use one shared SQLite snapshot here, so they do not have the cross-database timing ambiguity described above.\n\nSave the [read-drain replay](/course-assets/system-design/m27-lab.py) and [shared implementation](/course-assets/system-design/m27-core.py) together. The original capture used Python 3.14.6 and SQLite 3.53.4 on 12 September 2026. Each run creates temporary state.\n\n```bash title=\"terminal\"\npython3 m27-lab.py drain\n```\n```output\nold served; shadow check: 200 equal\nmissing shadow: missing\nwrong-value shadow: mismatch\nAda cohort new read: 200\nstale target fallback: 200 paid stale\ncaught-up new read: 200\nmissing new fallback: 200\nfallback disabled: 503\nBo remains old cohort: 200\nBo reads Ada object: 404\ncurrent Ada revocation: 403\nwrite on read-only listener: 405\nrollback cohort: []\nroute work: {\"fallback\":2,\"new\":2,\"old\":4,\"refused\":1,\"shadow\":4}\nshadow log fields: classification only; no response bodies\nHTTP outcomes: {\"200\":8,\"201\":1,\"403\":1,\"404\":1,\"405\":1,\"503\":1}\n```\n\nAfter the new writer changes Ada's order, the target is stale. Fallback returns paid from the authoritative source. Disabling fallback makes an unusable target return 503. Bo cannot read Ada's order, a revoked Ada cannot read her own, and the read listener rejects writes.\n\nThe four shadow checks are additional comparisons attached to old reads, not four more user responses. The thirteen HTTP outcomes include the accepted write and permission/method refusals. Diagnostic logs retain comparison classes, not copied response bodies.\n\n## Decide what happens when the replica falls behind\n\nFallback trades freshness and availability for extra primary work. During a replica problem, unbounded fallback can send the entire drained workload back at once. Budget that capacity and cap retries; where capacity is insufficient, the route needs an explicit choice between refusal and an older answer that its product contract permits.\n\nA successful fallback should still count as a degraded new path. Otherwise a green response-success chart can hide a replica that serves almost nothing. Keep served-old, served-new, fallback and refusal counts separate.\n\nBefore adding another route, ask: if this replica pauses immediately after a write, what will the caller see, and can the primary absorb the return traffic? Answer those questions with the route owner. The [[wiki/zero-downtime-database-migration-case-study|complete migration design]] combines the local acceptance checks with copying, retirement and the point where the old fallback disappears.\n"
+              }
+            },
+            {
+              "slug": "database-backups-and-restore",
+              "title": "Backups and restore",
+              "kind": "lesson",
+              "archive": {
+                "slug": "database-backups-and-restore",
+                "file": "database-backups-and-restore.md",
+                "title": "Database backups and restore",
+                "displayTitle": "Database backups and restore",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "backups",
+                  "recovery"
+                ],
+                "sources": [
+                  "[[wiki/database-wal-and-recovery]]",
+                  "[[wiki/disaster-recovery]]",
+                  "https://www.sqlite.org/backup.html",
+                  "https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup",
+                  "https://www.postgresql.org/docs/18/continuous-archiving.html",
+                  "https://www.postgresql.org/docs/18/backup-dump.html",
+                  "https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_planning_for_recovery_dr_tested.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A database backup preserves a recoverable earlier state.",
+                  "continuation": "The useful question is whether you can restore that state with the tools and access available during a failure, and whether it is recent enough for the application."
+                }
+              }
+            },
+            {
+              "slug": "disaster-recovery",
+              "title": "Disaster recovery",
+              "kind": "lesson",
+              "archive": {
+                "slug": "disaster-recovery",
+                "file": "disaster-recovery.md",
+                "title": "Disaster recovery",
+                "displayTitle": "Disaster recovery",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "recovery",
+                  "operations"
+                ],
+                "sources": [
+                  "[[wiki/database-backups-and-restore]]",
+                  "[[wiki/data-retention-and-deletion]]",
+                  "[[wiki/case-gitlab-database-incident]]",
+                  "https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_planning_for_recovery_objective_defined_recovery.html",
+                  "https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-options-in-the-cloud.html",
+                  "https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_planning_for_recovery_dr_tested.html",
+                  "https://www.postgresql.org/docs/18/continuous-archiving.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Disaster recovery restores useful service after a failure that the normal serving setup cannot absorb.",
+                  "continuation": "The plan may cover a lost region, corrupted data, a catastrophic deployment, compromised credentials or an operator mistake."
+                }
+              }
+            },
+            {
+              "slug": "data-retention-and-deletion",
+              "title": "Data retention, deletion, and privacy",
+              "kind": "lesson",
+              "archive": {
+                "slug": "data-retention-and-deletion",
+                "file": "data-retention-and-deletion.md",
+                "title": "Data retention and deletion",
+                "displayTitle": "Data retention and deletion",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "deletion",
+                  "privacy"
+                ],
+                "sources": [
+                  "[[wiki/database-backups-and-restore]]",
+                  "[[wiki/disaster-recovery]]",
+                  "[[wiki/security-and-abuse-prevention]]",
+                  "[[wiki/multi-tenant-design]]",
+                  "https://docs.cloud.google.com/docs/security/deletion",
+                  "https://cassandra.apache.org/doc/latest/cassandra/managing/operating/compaction/tombstones.html",
+                  "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
+                  "https://www.sqlite.org/pragma.html#pragma_secure_delete"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Retention defines how long a system keeps data.",
+                  "continuation": "Deletion removes it from the places the system has copied it."
+                }
+              }
+            },
+            {
+              "slug": "security-and-abuse-prevention",
+              "title": "Security and abuse prevention",
+              "kind": "lesson",
+              "archive": {
+                "slug": "security-and-abuse-prevention",
+                "file": "security-and-abuse-prevention.md",
+                "title": "Security and abuse prevention",
+                "displayTitle": "Security and abuse prevention",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "security",
+                  "abuse"
+                ],
+                "sources": [
+                  "[[wiki/data-retention-and-deletion]]",
+                  "[[wiki/multi-tenant-design]]",
+                  "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+                  "https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption/",
+                  "https://cheatsheetseries.owasp.org/cheatsheets/Credential_Stuffing_Prevention_Cheat_Sheet.html",
+                  "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html",
+                  "https://www.rfc-editor.org/rfc/rfc9449.html#section-11.1",
+                  "https://docs.python.org/3/library/hmac.html",
+                  "https://docs.python.org/3/library/http.server.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Security design decides who may use a system and what they may do with its data.",
+                  "continuation": "Abuse prevention also considers how legitimate operations can harm users or exhaust shared resources."
+                }
+              }
+            },
+            {
+              "slug": "rate-limiter-placement-and-keys",
+              "title": "Rate limiter placement and keys",
+              "kind": "lesson",
+              "archive": {
+                "slug": "rate-limiter-placement-and-keys",
+                "file": "rate-limiter-placement-and-keys.md",
+                "title": "Rate limiter placement and keys",
+                "displayTitle": "Rate limiter placement and keys",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "rate-limiting",
+                  "admission"
+                ],
+                "sources": [
+                  "[[wiki/api-gateway-vs-load-balancer]]",
+                  "[[wiki/load-shedding]]",
+                  "https://nginx.org/en/docs/http/ngx_http_limit_req_module.html",
+                  "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api",
+                  "https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/rate_limit_filter",
+                  "https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/local_rate_limit_filter",
+                  "https://www.rfc-editor.org/rfc/rfc6585.html",
+                  "https://www.rfc-editor.org/rfc/rfc7239.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A rate limiter decides how much work a caller may start within a period.",
+                  "continuation": "Its usefulness depends on where it runs and which requests share an allowance."
+                }
+              }
+            },
+            {
+              "slug": "sliding-window-rate-limiter",
+              "title": "Sliding window rate limiter",
+              "kind": "lesson",
+              "archive": {
+                "slug": "sliding-window-rate-limiter",
+                "file": "sliding-window-rate-limiter.md",
+                "title": "Sliding window rate limiter",
+                "displayTitle": "Sliding window rate limiter",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "rate-limiting",
+                  "algorithms"
+                ],
+                "sources": [
+                  "[[wiki/rate-limiter-placement-and-keys]]",
+                  "https://redis.io/tutorials/howtos/ratelimiting/",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://www.rfc-editor.org/rfc/rfc6585.html",
+                  "https://www.rfc-editor.org/rfc/rfc9110.html#name-retry-after",
+                  "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api",
+                  "https://developer.mozilla.org/en-US/docs/Web/API/Performance/now"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A sliding-window limiter checks how much a caller has been admitted during the most recent period.",
+                  "continuation": "The window moves with each decision."
+                }
+              }
+            },
+            {
+              "slug": "multi-tenant-design",
+              "title": "Multi-tenant design",
+              "kind": "lesson",
+              "archive": {
+                "slug": "multi-tenant-design",
+                "file": "multi-tenant-design.md",
+                "title": "Multi-tenant design",
+                "displayTitle": "Multi-tenant design",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "tenancy",
+                  "isolation"
+                ],
+                "sources": [
+                  "[[wiki/security-and-abuse-prevention]]",
+                  "[[wiki/data-retention-and-deletion]]",
+                  "[[wiki/disaster-recovery]]",
+                  "https://docs.aws.amazon.com/whitepapers/latest/saas-tenant-isolation-strategies/silo-isolation.html",
+                  "https://docs.aws.amazon.com/whitepapers/latest/saas-tenant-isolation-strategies/pool-isolation.html",
+                  "https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/approaches/storage-data",
+                  "https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/service/storage",
+                  "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A multi-tenant service serves several customers on shared infrastructure.",
+                  "continuation": "A tenant is the customer boundary, often a company or workspace."
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "learning-media-files",
+          "number": "5.2",
+          "legacyNumber": "13",
+          "title": "Media Processing & CDN Distribution",
+          "summary": "Direct uploads, image CDN pipelines, video transcoding, adaptive bitrate streaming, signed URLs, and file chunking.",
+          "units": [
+            {
+              "slug": "direct-to-object-storage-upload",
+              "title": "Direct-to-object-storage upload",
+              "kind": "lesson",
+              "archive": {
+                "slug": "direct-to-object-storage-upload",
+                "file": "direct-to-object-storage-upload.md",
+                "title": "Direct-to-object-storage upload",
+                "displayTitle": "Direct-to-object-storage upload",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "media",
+                  "uploads"
+                ],
+                "sources": [
+                  "[[wiki/s3-object-storage-architecture]]",
+                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html",
+                  "https://docs.aws.amazon.com/AmazonS3/latest/developerguide/sigv4-HTTPPOSTConstructPolicy.html",
+                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/cors.html",
+                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html",
+                  "https://www.rfc-editor.org/rfc/rfc9112.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Direct upload sends file bytes from the client to object storage.",
+                  "continuation": "The application authorizes the transfer and decides when the file becomes usable, without relaying the whole body through its API servers."
+                }
+              }
+            },
+            {
+              "slug": "image-cdn-and-resizing",
+              "title": "Image CDN and resizing",
+              "kind": "lesson",
+              "archive": {
+                "slug": "image-cdn-and-resizing",
+                "file": "image-cdn-and-resizing.md",
+                "title": "Image CDN and resizing",
+                "displayTitle": "Image CDN and resizing",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "images",
+                  "caching"
+                ],
+                "sources": [
+                  "[[wiki/direct-to-object-storage-upload]]",
+                  "[[wiki/photo-tagging-coordinate-model]]",
+                  "https://aws.amazon.com/blogs/networking-and-content-delivery/image-optimization-using-amazon-cloudfront-and-aws-lambda/",
+                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook",
+                  "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-signed-urls.html",
+                  "https://pillow.readthedocs.io/en/stable/reference/Image.html",
+                  "https://pillow.readthedocs.io/en/stable/reference/ImageOps.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Image delivery has two separate jobs: choose a useful representation of the source, then avoid fetching and processing it again for every reader.",
+                  "continuation": "A resize worker produces variants; a CDN caches their bytes near readers."
+                }
+              }
+            },
+            {
+              "slug": "gravatar-style-avatar-service",
+              "title": "An avatar service",
+              "kind": "lesson",
+              "archive": {
+                "slug": "gravatar-style-avatar-service",
+                "file": "gravatar-style-avatar-service.md",
+                "title": "An avatar service",
+                "displayTitle": "An avatar service",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "images",
+                  "identity"
+                ],
+                "sources": [
+                  "[[wiki/image-cdn-and-resizing]]",
+                  "https://docs.gravatar.com/sdk/images/",
+                  "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Invalidation.html",
+                  "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "An avatar service turns an account reference into its current profile image.",
+                  "continuation": "Comments can keep the author's account ID even when that author changes their photo."
+                }
+              }
+            },
+            {
+              "slug": "video-upload-signed-url-multipart",
+              "title": "Video upload: signed URLs and multipart",
+              "kind": "lesson",
+              "archive": {
+                "slug": "video-upload-signed-url-multipart",
+                "file": "video-upload-signed-url-multipart.md",
+                "title": "Video upload: signed URLs and multipart",
+                "displayTitle": "Video upload: signed URLs and multipart",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "video",
+                  "uploads"
+                ],
+                "sources": [
+                  "[[wiki/direct-to-object-storage-upload]]",
+                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html",
+                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html",
+                  "https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html",
+                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Multipart upload transfers one file in separately numbered portions, then assembles them into an object.",
+                  "continuation": "A failed portion can be retried without resending the whole video."
+                }
+              }
+            },
+            {
+              "slug": "video-transcoding-pipeline",
+              "title": "Video transcoding pipeline",
+              "kind": "lesson",
+              "archive": {
+                "slug": "video-transcoding-pipeline",
+                "file": "video-transcoding-pipeline.md",
+                "title": "Video transcoding pipeline",
+                "displayTitle": "Video transcoding pipeline",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "media",
+                  "workflows"
+                ],
+                "sources": [
+                  "[[wiki/video-upload-signed-url-multipart]]",
+                  "https://ffmpeg.org/ffmpeg.html",
+                  "https://ffmpeg.org/ffmpeg-formats.html#hls-2",
+                  "https://www.rfc-editor.org/rfc/rfc8216.html",
+                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.html",
+                  "https://netflixtechblog.com/rebuilding-netflix-video-processing-pipeline-with-microservices-4e5e6310e359"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Transcoding turns an uploaded video into representations suited to playback: different dimensions, compression settings or codecs.",
+                  "continuation": "Packaging then arranges the encoded media into files and playlists."
+                }
+              }
+            },
+            {
+              "slug": "adaptive-bitrate-and-cdn-decider",
+              "title": "Adaptive bitrate and the CDN decider",
+              "kind": "lesson",
+              "archive": {
+                "slug": "adaptive-bitrate-and-cdn-decider",
+                "file": "adaptive-bitrate-and-cdn-decider.md",
+                "title": "Adaptive bitrate and CDN selection",
+                "displayTitle": "Adaptive bitrate and CDN selection",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "media",
+                  "playback"
+                ],
+                "sources": [
+                  "[[wiki/video-transcoding-pipeline]]",
+                  "https://www.rfc-editor.org/rfc/rfc8216.html",
+                  "https://ffmpeg.org/ffmpeg-formats.html#hls-2",
+                  "https://dashif.org/dash.js/pages/usage/abr/",
+                  "https://openconnect.zendesk.com/hc/en-us/articles/360035618071-Fill-patterns"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "Adaptive bitrate streaming lets a player choose among encoded representations as network and playback conditions change. A smaller next segment can help avoid a stall. It cannot undo time already spent waiting for an earlier segment.",
+                "mermaidCount": 1,
+                "content": "# Adaptive bitrate and CDN selection\n\nAdaptive bitrate streaming lets a player choose among encoded representations as network and playback conditions change. A smaller next segment can help avoid a stall. It cannot undo time already spent waiting for an earlier segment.\n\nThere are three related decisions: which rendition the viewer requests now, which renditions the service prepares, and where their bytes should be cached. We'll separate them, then use real segment sizes in a small simulation to see why reacting to the last transfer can be too late.\n\n## The player chooses from a prepared offer\n\nThe [[wiki/video-transcoding-pipeline|transcoding pipeline]] creates the representations. In HLS, a master playlist identifies available variants, and their media playlists identify ordered segments. The player chooses files that already exist; it does not ask the encoder to change an in-flight file's quality.\n\nThe ladder is the set of offered resolutions and bitrates. It must fit supported devices and codecs, with corresponding content aligned in time. A higher resolution is not automatically useful on a small display, and bitrate alone does not compare visual quality across different codecs or scenes.\n\nThree quantities guide playback:\n\n| Quantity | Meaning |\n|---|---|\n| Media bitrate | Encoded bits per second of media |\n| Download throughput | Received bits per second of transfer time |\n| Buffer | Seconds of media available ahead of playback |\n\nA rendition can have a modest average bitrate and still contain a large segment. The player needs enough buffer to survive that segment's actual transfer. A path's last observed throughput is evidence about the next request, not knowledge of its future capacity.\n\nProduction selectors may combine throughput estimates, buffer levels, device limits and switching history. For example, dash.js documents distinct throughput, buffer, dropped-frame and request-abandonment rules. Our rule below intentionally uses only the previous completed transfer so its delay is easy to see.\n\n## A three-request experiment\n\nThe [lab](/course-assets/system-design/m24-lab.py) and [media helper](/course-assets/system-design/m24-media.py) generate the same HLS files as the preceding lesson. Use its pinned Python environment and FFmpeg 8.1.2. File sizes are measured; download times and stalls are calculated under a chosen capacity schedule, with no real congested network.\n\nBoth policies start with one second buffered. Fixed-high always requests the larger rendition. Adaptive requests high if its previous observed capacity is at least 200,000 bits/s, otherwise low. Its initial observation is 400,000 bits/s; neither policy can see the next capacity before choosing.\n\n```bash title=\"terminal\"\n/tmp/fanout-m24/bin/python m24-lab.py abr\n```\n```output\n#EXTM3U\n#EXT-X-VERSION:6\n#EXT-X-STREAM-INF:BANDWIDTH=55648,RESOLUTION=160x90\nlow/index.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=188000,RESOLUTION=320x180\nhigh/index.m3u8\nchosen capacity bits/s=[400000, 40000, 400000] initial buffer=1.000s\nfixed-high download/buffer/stall: high:0.447s/1.553s/0.000s, high:4.474s/1.000s/2.922s, high:0.470s/1.530s/0.000s total_stall=2.922s\nadaptive download/buffer/stall: high:0.447s/1.553s/0.000s, high:4.474s/1.000s/2.922s, low:0.139s/1.861s/0.000s total_stall=2.922s\nsimulated origin observations: A age=4 refused; B age=1 selected=B\n```\n\nEach generated segment lasts one second. The largest high segment contains 23,500 bytes, giving the advertised peak of 188,000 bits/s. This calculation is valid for the fixture's equal one-second segments and one-second target duration; it is not a promise of network capacity.\n\nFor a segment of `S` bytes and a path capacity of `C` bits/s, ideal transfer time is `8*S/C`. If the player starts that request with `B` seconds buffered, the stall is `max(0, transfer time − B)`. Afterward, the buffer is `max(0, B − transfer time) + segment duration`.\n\nThe first high segment is 22,372 bytes. At 400,000 bits/s it takes 0.44744 seconds, leaving 1.55256 seconds buffered after adding the new second of media. The next high segment has the same size, but capacity drops to 40,000 bits/s.\n\nThat transfer takes 4.4744 seconds: 2.92184 seconds longer than the available buffer. Both policies stall by the displayed 2.922 seconds. Adaptive learns about the drop only after that transfer completes, then switches low just as capacity recovers.\n\n```mermaid\nflowchart TD\n    accTitle: A playback decision arrives late\n    accDescr: The first fast transfer makes the selector choose high again. The second transfer is slow and stalls. Only afterward does the selector choose low, when the path has already recovered.\n    A[\"Request 1: high<br/>Fast transfer\"] --> B[\"Request 2: high<br/>Capacity drops; stall\"]\n    B --> C[\"Observe slow transfer\"]\n    C --> D[\"Request 3: low<br/>Capacity has recovered\"]\n```\n\nThe last low segment's 6,956 bytes arrive quickly, but cannot recover time already stalled. On this schedule the adaptive rule does not improve the total-stall metric. The experiment omits round trips, protocol overhead, contention and decoder startup; it tests the consequence of delayed information, not a production ABR algorithm.\n\nA buffer-aware rule could become more cautious as playable time runs low. More startup buffer can absorb longer transfers, but makes the viewer wait before playback. Evaluate startup delay, rebuffering and quality changes together rather than choosing a universal threshold from this three-second clip.\n\n## Which renditions should exist?\n\nThe player cannot select a version the service has not prepared. Encoding every upload into every possible format spends compute and storage even on videos that nobody watches. Deferring everything makes the first viewer wait for processing.\n\n| Preparation policy | Useful when | Cost or delay |\n|---|---|---|\n| Eager ladder | The expected audience needs several representations immediately | Work is paid even if some renditions are never watched |\n| Baseline, then more on demand | A complete initial offer is enough for less-watched uploads | New representations take time to become available |\n| Prepare for predicted demand | A release or rising audience provides advance notice | A wrong prediction wastes work or misses demand |\n\nIn our proposed service, an on-demand miss queues a deduplicated job keyed by source and encoding recipe. The existing baseline remains playable while the new rendition is prepared. Add it to the advertised offer only after validation; a viewer request should not receive a playlist pointing at unfinished work.\n\nThis is independent of the request-by-request ABR rule. It changes what the rule will be able to choose later.\n\n## The CDN decider controls preparation and placement\n\n“CDN decider” is a name for our proposed policy service, not a standard CDN API. It combines recent view velocity, viewer geography, channel audience, content type, shares, trending signals and known release spikes to decide where extra work is justified.\n\nIts actions may include generating another rendition, warming selected ready objects in a region, retaining an origin copy or retiring an unused cache placement. The available controls depend on the delivery provider; ordinary CDN eviction is often automatic, not a per-object command the application owns.\n\nWarming transfers bytes before a viewer requests them. It can reduce a first miss while consuming fill bandwidth and cache space. Moving a source to colder storage is a separate retention choice and may increase retrieval delay. Keep encoding, cache placement and storage tiering as separate actions with explicit costs.\n\nNetflix's Open Connect fill documentation gives a concrete placement example: appliances hold portions of the catalog and primarily receive updates in off-peak windows. Popularity changes and new or re-encoded titles affect those updates. This is Netflix's documented delivery model, not a guarantee offered by every CDN.\n\nOur controller can consume [[wiki/event-bus-for-product-events|product events]] such as `video.published`, `video.viewed` and `video.trending`, and emit a request to prepare or cache a version. Treat `variant.generated` as evidence of a ready output, not merely a queued task. Repeated events should converge on one intended action.\n\nUse bounded budgets and a quiet period before reversing a placement decision. Otherwise noisy demand can repeatedly trigger expensive encodes or cache fills. Measure useful cache hits and avoided viewer delay against the work spent; traffic volume alone does not show that warming paid off.\n\n## Choosing a delivery location\n\nAfter selecting a ready object, a player or delivery service may still choose which CDN or origin serves it. This is a separate decision from choosing the rendition. Old latency samples can mislead either choice.\n\nThe final line of the replay compares two simulated origins transferring the same 1,000 bytes. A took 0.1 seconds at tick 1; B took 0.2 seconds at tick 4. At tick 5, a maximum age of two ticks excludes the faster but stale A sample, so B wins.\n\nThat toy rule only compares fresh equal-size observations. A real selector also needs failure rates, comparable workloads and a fallback when no candidate is eligible. Neither the example nor the label “CDN” establishes a global performance result.\n\nThe next [[wiki/signed-urls-drm-and-video-security|access lesson]] checks permission on every playlist and segment the player chooses.\n"
+              }
+            },
+            {
+              "slug": "signed-urls-drm-and-video-security",
+              "title": "Signed URLs, DRM, and video security",
+              "kind": "lesson",
+              "archive": {
+                "slug": "signed-urls-drm-and-video-security",
+                "file": "signed-urls-drm-and-video-security.md",
+                "title": "Signed URLs, DRM, and video security",
+                "displayTitle": "Signed URLs, DRM, and video security",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "media",
+                  "access"
+                ],
+                "sources": [
+                  "[[wiki/adaptive-bitrate-and-cdn-decider]]",
+                  "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-signed-urls.html",
+                  "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-choosing-signed-urls-cookies.html",
+                  "https://www.w3.org/TR/2017/REC-encrypted-media-20170918/",
+                  "https://aws.amazon.com/blogs/media/securing-media-content-using-watermarking-at-the-edge/",
+                  "https://www.rfc-editor.org/rfc/rfc9110.html",
+                  "https://learn.microsoft.com/en-us/playready/overview/security-level"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "A private video needs protection wherever its media is served.",
+                  "continuation": "Requiring login on the watch page is insufficient if its playlist points to public segments."
+                }
+              }
+            },
+            {
+              "slug": "live-streaming-webrtc-and-latency",
+              "title": "Live streaming, WebRTC, and latency",
+              "kind": "lesson",
+              "archive": {
+                "slug": "live-streaming-webrtc-and-latency",
+                "file": "live-streaming-webrtc-and-latency.md",
+                "title": "Live streaming, WebRTC, and latency",
+                "displayTitle": "Live streaming, WebRTC, and latency",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "media",
+                  "realtime"
+                ],
+                "sources": [
+                  "[[wiki/adaptive-bitrate-and-cdn-decider]]",
+                  "https://webrtc.org/getting-started/peer-connections",
+                  "https://aiortc.readthedocs.io/en/latest/api.html",
+                  "https://www.rfc-editor.org/rfc/rfc8834.html",
+                  "https://www.rfc-editor.org/rfc/rfc8445.html",
+                  "https://www.rfc-editor.org/rfc/rfc8656.html",
+                  "https://janus.conf.meetecho.com/docs/videoroom.html",
+                  "https://developer.apple.com/videos/play/wwdc2020/10228/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Live delivery sends media while it is being produced.",
+                  "continuation": "A broadcast viewer may tolerate being a few seconds behind the camera; people talking to each other need a much shorter feedback loop."
+                }
+              }
+            },
+            {
+              "slug": "remote-file-sync-design",
+              "title": "Remote file sync design",
+              "kind": "lesson",
+              "archive": {
+                "slug": "remote-file-sync-design",
+                "file": "remote-file-sync-design.md",
+                "title": "Remote file sync",
+                "displayTitle": "Remote file sync",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "file-sync",
+                  "revisions"
+                ],
+                "sources": [
+                  "[[wiki/metadata-db-for-object-storage]]",
+                  "https://dropbox.tech/infrastructure/streaming-file-synchronization",
+                  "https://dropbox.tech/infrastructure/-testing-our-new-sync-engine",
+                  "https://docs.syncthing.net/users/syncing.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "File synchronization carries changes between local folders and remote storage, including changes made while a device was offline.",
+                  "continuation": "It must discover what changed, move the required bytes, and handle competing edits without silently losing someone's work."
+                }
+              }
+            },
+            {
+              "slug": "fixed-block-chunking-and-content-addressing",
+              "title": "Fixed-block chunking and content addressing",
+              "kind": "lesson",
+              "archive": {
+                "slug": "fixed-block-chunking-and-content-addressing",
+                "file": "fixed-block-chunking-and-content-addressing.md",
+                "title": "Fixed blocks and content addresses",
+                "displayTitle": "Fixed blocks and content addresses",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "file-sync",
+                  "chunking"
+                ],
+                "sources": [
+                  "[[wiki/remote-file-sync-design]]",
+                  "https://dropbox.tech/infrastructure/streaming-file-synchronization",
+                  "https://docs.syncthing.net/users/syncing.html",
+                  "https://docs.python.org/3.12/library/hashlib.html",
+                  "https://borgbackup.readthedocs.io/en/stable/internals/data-structures.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Chunking divides a file into smaller transfer units.",
+                  "continuation": "Content addressing names each unit by a hash of its bytes, so a sender can ask which pieces the receiver lacks instead of always resending the file."
+                }
+              }
+            },
+            {
+              "slug": "blocklist-versioned-file-metadata",
+              "title": "Blocklist versioned file metadata",
+              "kind": "lesson",
+              "archive": {
+                "slug": "blocklist-versioned-file-metadata",
+                "file": "blocklist-versioned-file-metadata.md",
+                "title": "Blocklists and file revisions",
+                "displayTitle": "Blocklists and file revisions",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "file-sync",
+                  "metadata"
+                ],
+                "sources": [
+                  "[[wiki/fixed-block-chunking-and-content-addressing]]",
+                  "[[wiki/metadata-db-for-object-storage]]",
+                  "https://dropbox.tech/infrastructure/streaming-file-synchronization",
+                  "https://dropbox.tech/infrastructure/inside-the-magic-pocket",
+                  "https://www.sqlite.org/lang_transaction.html",
+                  "https://www.sqlite.org/autoinc.html",
+                  "https://www.sqlite.org/pragma.html#pragma_synchronous",
+                  "https://docs.python.org/3.12/library/os.html#os.fsync"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "A blocklist records which pieces make up a file and in what order. An immutable revision preserves that recipe, while a mutable path pointer selects the version users currently see. Publishing the recipe must wait until its referenced bytes are ready to read.",
+                "mermaidCount": 1,
+                "content": "# Blocklists and file revisions\n\nA blocklist records which pieces make up a file and in what order. An immutable revision preserves that recipe, while a mutable path pointer selects the version users currently see. Publishing the recipe must wait until its referenced bytes are ready to read.\n\nWe'll connect the blocklist to a namespace journal, follow the publication transaction, and test missing bytes, corruption and retries in the local sync service.\n\n## One file, several kinds of identity\n\nA path names a location within a namespace. A revision identifies an accepted publication. A digest identifies bytes. Two revisions can contain identical bytes, and two positions in one file can reference the same blob.\n\nOur sixteen-byte file still contains `AAAA`, `BBBB`, `CCCC`, `AAAA`. Its four ordered references need three stored blobs. Turning the blocklist into a set loses the final `AAAA`; sorting the references can produce a different file.\n\n| Record | Key | Relevant content |\n| --- | --- | --- |\n| Journal entry | Namespace and revision | Path, ordered blocks, size, digest, deletion state |\n| Current path | Namespace and path | Selected revision |\n| Operation receipt | Device and operation | Exact proposal and accepted result |\n| Blob | Content digest within allowed storage | Verified immutable bytes |\n\nA fuller file model may also retain timestamps, permissions and application metadata. Keep server acceptance order separate from client modification time. Dropbox's 2016 Magic Pocket account describes the same broad separation of mutable file history from immutable stored blocks; our SQLite schema is a teaching implementation, not its production database.\n\n## The cursor spans the namespace\n\nA journal cursor answers “which accepted changes have I learned about?” across the file tree. A file's base revision answers “which version of this path did I edit?” Those numbers can differ.\n\nFor example, suppose `notes.txt` is revision 14 and another file changes at revision 15. A device can read through cursor 15 while still proposing a new `notes.txt` version against base 14. Rejecting it merely because 14 is not the namespace head would create a conflict with an unrelated edit.\n\nThe proposed query has this shape:\n\n```sql title=\"changes.sql\"\nSELECT revision, path, blocks, digest, size, deleted\nFROM file_journal\nWHERE namespace_id = :namespace\n  AND revision > :after\nORDER BY revision\nLIMIT :page_size;\n```\n\nThe server derives the permitted namespace from authenticated access. A page returns a continuation position for the rows it actually supplies; a client must not skip straight to a later head while earlier pages remain unread. Receiving metadata also does not mean its files have been applied locally.\n\nOur fixture holds only Ada's namespace, so its tables omit a namespace column. It caps history and returns all later rows without pagination. Publication allocates revisions inside the transaction. Its restricted append/rollback path maintains contiguous history; SQLite `AUTOINCREMENT` alone does not promise gap-free IDs.\n\n## Prepare bytes before selecting the revision\n\nThe [[wiki/metadata-db-for-object-storage|object-metadata lesson]] separated stored bytes from published state. Apply the same ordering here:\n\n```mermaid\nflowchart TD\n  accTitle: Publishing a reconstructable revision\n  accDescr: For a new proposal, the local authority checks permission and base, verifies and synchronizes referenced blobs, then commits the journal entry, path pointer and receipt together before replying. Missing or corrupt bytes stop publication.\n  A[Check permission and base] --> B[Verify referenced blobs]\n  B --> C[Synchronize blob files]\n  C --> D[Commit metadata and receipt]\n  D --> E[Reply with revision]\n```\n\nA new blob is written to a temporary file, flushed and synchronized, then renamed to its final address and followed by directory synchronization. The lab repeats synchronization for an identical existing blob: a previous attempt may have left complete bytes but failed before reporting preparation success.\n\nPublication verifies each referenced length and digest and the assembled whole-file identity. One SQLite transaction then appends the revision, moves the path pointer and records the operation's result. A failure rolls back these metadata changes together.\n\nThe file writes occur outside SQLite's storage format; this is not one atomic transaction spanning arbitrary files and a database. The ordering allows unreferenced prepared blobs after a failed publication, which cleanup can handle. It avoids intentionally committing a reference before preparation succeeds.\n\nThe fixture serializes upload, publication and cleanup through SQLite write transactions, including verification and synchronization. That makes the boundary straightforward but holds the writer while doing file I/O. Preparing outside that lock in a larger service needs a pin or equivalent ownership rule so cleanup cannot remove bytes before commitment.\n\n## Run the publication boundary\n\nDownload [the publication example](/course-assets/system-design/m25-sync.py). The command uses temporary private files and SQLite. The corruption step alters only its own fixture and restores the original bytes before retrying.\n\n```bash title=\"terminal\"\nuv venv --quiet --allow-existing --python 3.12.12 /tmp/fanout-m25\n/tmp/fanout-m25/bin/python m25-sync.py publication\n```\n```output\nbefore blocks=409\nuploaded unique bytes=12; visible paths before commit=0\npublished=201; revision=1; ordered references=4\nreconstructed bytes=16; identical=True\nduplicate commit=200\ncorrupt referenced block=503\nrestored-byte retry=201\nstale base=409\nreopened revisions=2; first ordered digests=['63c1dd95', '4a8d8134', '90b4853e', '63c1dd95']\n```\n\nTwelve uploaded bytes initially expose zero paths. Publication selects four references, and the other device reconstructs all sixteen bytes. The last digest display repeats the first because the file repeats that block; storage uses full digests, not these eight-character labels.\n\nChanging stored `BBBB` to same-length `xxxx` defeats a size-only check but fails digest verification. No revision is published until the bytes are restored and synchronized again. The stale base still refuses afterward.\n\nThe database uses `synchronous=EXTRA`; files and directories have explicit synchronization calls. Reopening verifies retained records, but this experiment does not test power loss, disk-controller behavior or replicated durability.\n\n## Recover an operation without authorizing a new one\n\nA matching receipt must be checked before rejecting its now-old base: the original proposal may already have advanced the path. Current device permission still comes first. Reusing an operation ID with a different path, base or payload is a conflict.\n\nThat distinction lets a lost reply recover the original revision while a new stale proposal receives a conflict. Receipt device/operation fields are non-null and unique together; missing identity must not bypass the rule. The original payload is retained so equality can be checked.\n\nRevision history also creates lifecycle work. A deletion record, or tombstone, tells an offline client that absence is intentional. Renames need a defined identity model: this fixture atomically tombstones the old path and appends the destination; a stable file ID can instead preserve identity while its path changes.\n\nKeep blocks while any retained revision still needs them, including history retained after deletion. Then separately decide when history expires, how an old cursor recovers, and how privacy deletion reaches shared blobs and backups. Immutability makes old versions readable; it does not decide how long they should remain.\n\nThe [[wiki/file-sync-system-design|complete file-sync service]] exercises those rename, replay and cleanup paths. [[wiki/data-retention-and-deletion|Data retention and deletion]] develops the broader lifecycle policy.\n"
+              }
+            }
+          ]
+        },
+        {
+          "id": "learning-geo-matching",
+          "number": "5.3",
+          "legacyNumber": "12",
+          "title": "Geospatial Indexing & Proximity Search",
+          "summary": "Geohashes, H3 and S2 grid systems, spatial hot paths in Redis, geofencing with ray casting, and matching algorithms.",
+          "units": [
+            {
+              "slug": "nearby-geospatial-search-system-design",
+              "title": "Nearby geospatial search",
+              "kind": "lesson",
+              "archive": {
+                "slug": "nearby-geospatial-search-system-design",
+                "file": "nearby-geospatial-search-system-design.md",
+                "title": "Nearby search and distance",
+                "displayTitle": "Nearby search and distance",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "geospatial",
+                  "distance"
+                ],
+                "sources": [
+                  "[[wiki/social-feed-system-design-case-study]]",
+                  "https://geographiclib.sourceforge.io/html/python/code.html",
+                  "https://postgis.net/workshops/postgis-intro/indexing.html",
+                  "https://redis.io/docs/latest/commands/geosearch/",
+                  "https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-geo-distance-query",
+                  "https://postgis.net/docs/ST_DWithin.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Nearby search finds objects within a distance of a location: shops around a hotel, available couriers near a pickup, or people a viewer is allowed to discover.",
+                  "continuation": "Its usual shape is a cheap candidate search followed by exact checks."
+                }
+              }
+            },
+            {
+              "slug": "geohash-prefix-spatial-index",
+              "title": "Geohash prefix spatial index",
+              "kind": "lesson",
+              "archive": {
+                "slug": "geohash-prefix-spatial-index",
+                "file": "geohash-prefix-spatial-index.md",
+                "title": "Geohash prefix cells",
+                "displayTitle": "Geohash prefix cells",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "geospatial",
+                  "geohash"
+                ],
+                "sources": [
+                  "[[wiki/nearby-geospatial-search-system-design]]",
+                  "https://github.com/wdm0006/pygeohash",
+                  "https://firebase.google.com/docs/firestore/solutions/geoqueries",
+                  "https://pypi.org/project/pygeohash/3.3.1/",
+                  "https://pygeohash.mcginniscommawill.com/api.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Geohash turns a location into a string that identifies a rectangular cell.",
+                  "continuation": "Objects in the same cell can be grouped under one lookup key, so a nearby search can fetch candidate IDs without scanning every stored point."
+                }
+              }
+            },
+            {
+              "slug": "geospatial-grid-systems-h3-s2-geohash",
+              "title": "Grid systems: H3, S2, geohash",
+              "kind": "lesson",
+              "archive": {
+                "slug": "geospatial-grid-systems-h3-s2-geohash",
+                "file": "geospatial-grid-systems-h3-s2-geohash.md",
+                "title": "H3, S2 and geohash grids",
+                "displayTitle": "H3, S2 and geohash grids",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "geospatial",
+                  "spatial-index"
+                ],
+                "sources": [
+                  "https://h3geo.org/docs/highlights/indexing/",
+                  "https://h3geo.org/docs/core-library/overview/",
+                  "https://h3geo.org/docs/api/hierarchy/",
+                  "https://h3geo.org/docs/core-library/restable/",
+                  "https://s2geometry.io/devguide/s2cell_hierarchy.html",
+                  "https://s2geometry.io/devguide/examples/coverings.html",
+                  "https://postgis.net/workshops/postgis-intro/indexing.html",
+                  "https://s2geometry.io/resources/s2cell_statistics.html",
+                  "https://s2sphere.readthedocs.io/en/latest/",
+                  "https://pypi.org/project/h3/4.5.0/",
+                  "https://pypi.org/project/s2sphere/0.2.5/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Geospatial grids give regions stable identifiers, letting a system group locations under ordinary keys.",
+                  "continuation": "That is useful for counting orders by area, joining two location datasets, or narrowing a nearby search."
+                }
+              }
+            },
+            {
+              "slug": "redis-geo-spatial-hot-path",
+              "title": "Redis GEO hot path",
+              "kind": "lesson",
+              "archive": {
+                "slug": "redis-geo-spatial-hot-path",
+                "file": "redis-geo-spatial-hot-path.md",
+                "title": "Redis GEO for changing candidates",
+                "displayTitle": "Redis GEO for changing candidates",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "geospatial",
+                  "redis"
+                ],
+                "sources": [
+                  "https://redis.io/docs/latest/commands/geoadd/",
+                  "https://redis.io/docs/latest/commands/geosearch/",
+                  "https://redis.io/docs/latest/commands/geopos/",
+                  "https://redis.io/docs/latest/commands/zrem/",
+                  "https://redis.io/docs/latest/commands/expire/",
+                  "https://redis.io/docs/latest/develop/programmability/eval-intro/",
+                  "https://geographiclib.sourceforge.io/html/python/code.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Redis GEO maintains an in-memory index of named locations and finds members within a radius or box.",
+                  "continuation": "It can serve a nearby lookup for active couriers, rental bikes or stores when the working set fits in memory and the spatial queries are simple."
+                }
+              }
+            },
+            {
+              "slug": "geofencing-point-in-polygon",
+              "title": "Geofencing: point in polygon",
+              "kind": "lesson",
+              "archive": {
+                "slug": "geofencing-point-in-polygon",
+                "file": "geofencing-point-in-polygon.md",
+                "title": "Geofencing and boundary policy",
+                "displayTitle": "Geofencing and boundary policy",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "geospatial",
+                  "geometry"
+                ],
+                "sources": [
+                  "https://shapely.readthedocs.io/en/2.1.2/reference/shapely.covers.html",
+                  "https://shapely.readthedocs.io/en/2.1.2/reference/shapely.contains.html",
+                  "https://shapely.readthedocs.io/en/2.1.2/manual.html",
+                  "https://postgis.net/docs/ST_Covers.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Geofencing checks whether a reported location belongs to a named region.",
+                  "continuation": "A delivery service can use it to decide which addresses it serves; an airport pickup flow can use it to select the appropriate pickup zone."
+                }
+              }
+            },
+            {
+              "slug": "ray-casting-point-in-polygon",
+              "title": "Ray casting point in polygon",
+              "kind": "lesson",
+              "archive": {
+                "slug": "ray-casting-point-in-polygon",
+                "file": "ray-casting-point-in-polygon.md",
+                "title": "Ray casting and polygon edges",
+                "displayTitle": "Ray casting and polygon edges",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "geospatial",
+                  "algorithms"
+                ],
+                "sources": [
+                  "https://shapely.readthedocs.io/en/2.1.2/reference/shapely.covers.html",
+                  "https://shapely.readthedocs.io/en/2.1.2/manual.html",
+                  "https://wrfranklin.org/Research/Short_Notes/pnpoly.html",
+                  "https://erich.realtimerendering.com/ptinpoly/",
+                  "https://www.cs.cmu.edu/~quake/robust.html"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 0,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Ray casting is a way to test whether a point lies inside a polygon.",
+                  "continuation": "Draw an imaginary ray from the point to the right and count its boundary crossings: an odd count means inside, an even count means outside."
+                }
+              }
+            },
+            {
+              "slug": "seen-filtering-bloom-vs-exact-sets",
+              "title": "Seen filtering: Bloom vs exact sets",
+              "kind": "lesson",
+              "archive": {
+                "slug": "seen-filtering-bloom-vs-exact-sets",
+                "file": "seen-filtering-bloom-vs-exact-sets.md",
+                "title": "Seen filtering: Bloom filters and exact sets",
+                "displayTitle": "Seen filtering: Bloom filters and exact sets",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "probabilistic-structures"
+                ],
+                "sources": [
+                  "[[wiki/bloom-filters]]",
+                  "[[wiki/retries-timeouts-idempotency]]",
+                  "https://www.eecs.harvard.edu/~michaelm/postscripts/rsa2008.pdf",
+                  "https://redis.io/docs/latest/develop/data-types/probabilistic/bloom-filter/",
+                  "https://redis.io/docs/latest/commands/cf.del/",
+                  "https://roaringbitmap.org/"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Seen filtering removes candidates a viewer has already encountered: swiped profiles, dismissed products, watched videos or previously shown ads.",
+                  "continuation": "The first decision is what counts as “seen."
+                }
+              }
+            },
+            {
+              "slug": "matching-and-recommendation-algorithms",
+              "title": "Matching and recommendation algorithms",
+              "kind": "lesson",
+              "archive": {
+                "slug": "matching-and-recommendation-algorithms",
+                "file": "matching-and-recommendation-algorithms.md",
+                "title": "Matching and recommendation algorithms",
+                "displayTitle": "Matching and recommendation algorithms",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "recommendations",
+                  "ranking"
+                ],
+                "sources": [
+                  "https://developers.google.com/machine-learning/recommendation/content-based/basics",
+                  "https://developers.google.com/machine-learning/recommendation/collaborative/basics",
+                  "https://scikit-learn.org/stable/common_pitfalls.html#data-leakage",
+                  "https://developers.google.com/machine-learning/recommendation/overview/types",
+                  "https://developers.google.com/machine-learning/recommendation/dnn/re-ranking",
+                  "[[wiki/search-feedback-and-relevance-signals]]",
+                  "[[wiki/search-evaluation-metrics]]"
+                ],
+                "created": "2026-05-14",
+                "updated": "2026-09-18",
+                "excerpt": "",
+                "mermaidCount": 1,
+                "content": "",
+                "preview": {
+                  "heading": "The core idea",
+                  "paragraph": "Matching chooses useful pairings: a rider and driver, a job and candidate, or a reader and article.",
+                  "continuation": "A recommender usually proposes items the user may choose from."
+                }
+              }
+            }
+          ]
+        },
+        {
           "id": "learning-search-retrieval",
-          "number": "09",
-          "title": "Search and retrieval",
-          "summary": "Build indexes, process queries, and retrieve useful results.",
+          "number": "5.4",
+          "legacyNumber": "09",
+          "title": "Information Retrieval & Search Engines",
+          "summary": "Inverted indexes, posting lists, BM25 ranking, query pipelines, search sharding, crawlers, and vector search.",
           "units": [
             {
               "slug": "information-retrieval-system-design",
@@ -4051,1949 +6030,22 @@ window.CURRICULUM_DATA = {
               }
             }
           ]
-        },
-        {
-          "id": "learning-analytics-sketches",
-          "number": "10",
-          "title": "Analytics and sketches",
-          "summary": "Aggregate events and use compact data structures when exact answers cost too much.",
-          "units": [
-            {
-              "slug": "counting-at-scale",
-              "title": "Counting at scale",
-              "kind": "lesson",
-              "archive": {
-                "slug": "counting-at-scale",
-                "file": "counting-at-scale.md",
-                "title": "Counting at scale",
-                "displayTitle": "Counting at scale",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "analytics",
-                  "counters"
-                ],
-                "sources": [
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://sqlite.org/lang_upsert.html",
-                  "https://firebase.google.com/docs/firestore/solutions/counters",
-                  "https://redis.io/docs/latest/develop/data-types/probabilistic/hyperloglogs/",
-                  "[[wiki/hot-partitions]]",
-                  "[[wiki/mergeable-sketches-for-analytics]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A like count is a projection of facts: which accounts currently like a post.",
-                  "continuation": "A view count may instead count qualifying visits, including repeated visits by one account."
-                }
-              }
-            },
-            {
-              "slug": "view-counting-at-scale",
-              "title": "View counting at scale",
-              "kind": "lesson",
-              "archive": {
-                "slug": "view-counting-at-scale",
-                "file": "view-counting-at-scale.md",
-                "title": "View counting at scale",
-                "displayTitle": "View counting at scale",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "analytics",
-                  "events"
-                ],
-                "sources": [
-                  "[[wiki/counting-at-scale]]",
-                  "[[wiki/hyperloglog-cardinality-estimation]]",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/stateful-stream-processing/",
-                  "https://nightlies.apache.org/flink/flink-docs-stable/docs/learn-flink/fault_tolerance/",
-                  "https://support.google.com/youtube/answer/2991785?hl=en",
-                  "https://redis.io/docs/latest/develop/data-types/probabilistic/count-min-sketch/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A view counter turns client observations into a product metric.",
-                  "continuation": "Starting a video, watching for a chosen duration and finishing it are different events."
-                }
-              }
-            },
-            {
-              "slug": "impression-counting-system-design",
-              "title": "Impression counting",
-              "kind": "lesson",
-              "archive": {
-                "slug": "impression-counting-system-design",
-                "file": "impression-counting-system-design.md",
-                "title": "Impression counting",
-                "displayTitle": "Impression counting",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "analytics",
-                  "impressions"
-                ],
-                "sources": [
-                  "https://www.w3.org/TR/intersection-observer/",
-                  "https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API/Timing_element_visibility",
-                  "https://redis.io/docs/latest/develop/data-types/probabilistic/hyperloglogs/",
-                  "https://redis.io/docs/latest/commands/pfmerge/",
-                  "https://nightlies.apache.org/flink/flink-docs-stable/docs/learn-flink/fault_tolerance/",
-                  "[[wiki/search-feedback-and-relevance-signals]]",
-                  "[[wiki/view-counting-at-scale]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "An impression records an exposure under a stated rule.",
-                  "continuation": "It does not necessarily mean a unique person: one account can see an item in several displays."
-                }
-              }
-            },
-            {
-              "slug": "hyperloglog-cardinality-estimation",
-              "title": "HyperLogLog cardinality estimation",
-              "kind": "lesson",
-              "archive": {
-                "slug": "hyperloglog-cardinality-estimation",
-                "file": "hyperloglog-cardinality-estimation.md",
-                "title": "HyperLogLog cardinality estimation",
-                "displayTitle": "HyperLogLog cardinality estimation",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "probabilistic-structures"
-                ],
-                "sources": [
-                  "https://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf",
-                  "https://redis.io/docs/latest/develop/data-types/probabilistic/hyperloglogs/",
-                  "https://datasketches.apache.org/docs/HLL/HllSketches.html",
-                  "[[wiki/mergeable-sketches-for-analytics]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Repeated arrivals can increase an event counter without increasing the number of distinct identities.",
-                  "continuation": "An exact set handles that distinction by keeping the identities and counting its entries."
-                }
-              }
-            },
-            {
-              "slug": "mergeable-sketches-for-analytics",
-              "title": "Mergeable sketches for analytics",
-              "kind": "lesson",
-              "archive": {
-                "slug": "mergeable-sketches-for-analytics",
-                "file": "mergeable-sketches-for-analytics.md",
-                "title": "Mergeable sketches for analytics",
-                "displayTitle": "Mergeable sketches for analytics",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "probabilistic-structures"
-                ],
-                "sources": [
-                  "https://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf",
-                  "https://github.com/CamDavidsonPilon/tdigest",
-                  "https://datasketches.apache.org/docs/Architecture/KeyFeatures.html",
-                  "https://datasketches.apache.org/docs/HLL/HllSketches.html",
-                  "https://roaringbitmap.org/",
-                  "[[wiki/tdigest-quantile-sketch]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "A mergeable summary lets workers combine retained state without sending every original event to one reader. Regions, shards and time buckets can each produce a summary, then supply it to a larger report.",
-                "mermaidCount": 1,
-                "content": "# Mergeable sketches for analytics\n\nA mergeable summary lets workers combine retained state without sending every original event to one reader. Regions, shards and time buckets can each produce a summary, then supply it to a larger report.\n\nWe'll choose a summary by its query, compare a merged build with one pass over the input, and see what happens when a partition arrives twice.\n\n## Start with the query\n\n| Required answer | Candidate | Detail it must preserve |\n|---|---|---|\n| Approximate distinct IDs | HLL | Compatible identity and hash observations |\n| Estimated frequency of a supplied key | Count-Min Sketch | Counter mass and matching row hashes |\n| Frequent items | A frequent-items sketch | Candidate identities and its frequency guarantees |\n| Latency percentiles | A suitable quantile sketch | Distribution evidence and observation weights |\n| Exact integer-set operations | Roaring bitmap | Exact integer membership |\n\nRoaring is a compressed exact set representation, not an approximate count. HLL supports union, while other distinct-count families, such as Theta, support additional set operations. These choices are not interchangeable simply because all can combine stored state.\n\nLocal summaries reduce transport and allow precomputed rollups or “last N buckets” queries. They can also rebuild a larger rollup from retained smaller summaries. A new metric or dimension may still require raw events: a summary cannot restore information it never kept.\n\n## Compatible evidence\n\nWe split the twelve document-ID occurrences used in the HLL lesson into a left partition containing the first six and a right partition containing the remaining six. Their arrival occurrences are disjoint, although some document IDs appear in both. Processing their union gives twelve occurrences and nine distinct IDs under the same string-identity rule.\n\nFor Bloom filters, merge corresponding bits with logical OR. If either input has set a position, the combined filter sets it. For HLL, merge corresponding registers by maximum. Each combined register then holds the strongest observation seen by either partition.\n\nFor a count-min sketch, add corresponding counters. Each counter receives the sum of the contributions assigned to it by both partitions. That operation represents combined event mass only when each contribution belongs in the intended population with the multiplicity being added.\n\nThese rules require compatible layouts. The Bloom filter needs the same array length, probe count, hash scheme, and input encoding. HLL needs the same precision, hash width, and register interpretation. Count-min needs matching matrix dimensions and row hashes. Matching payload size alone does not establish compatibility.\n\n## The local merge path\n\nOur [replay](/course-assets/system-design/m18-sketches.py) builds each summary separately for the two partitions, merges them, and compares their retained states against a single pass over the whole stream. It also attempts incompatible merges, which its wrappers explicitly reject. No network transport or distributed coordination is implemented here.\n\nThe diagram separates the observed partition summaries from the external contribution receipts used later in the replay. A receipt identifies a partition already included in a total; it is application state, with a different role from hash registers or shared counters.\n\n```mermaid\nflowchart TD\n    accTitle: Merge summaries over a declared population\n    accDescr: Left and right partitions produce compatible summaries. The merger combines their state and compares it with a single pass over the whole input. Contribution receipts are separate application state for additive summaries.\n    left[First six arrivals] --> ls[Left summary]\n    right[Last six arrivals] --> rs[Right summary]\n    ls --> merge[Compatible merge]\n    rs --> merge\n    receipts[Contribution receipts] -.->|For additive summaries| merge\n    merge --> result[Combined state]\n    whole[Single pass over all arrivals] --> check[Compare retained states]\n    result --> check\n```\n\n\n## Unequal reservoirs\n\nA reservoir holds a fixed-size uniform sample of arrivals. Combining samples needs the original population sizes as well as the retained items.\n\nConsider a capacity-one reservoir from a left partition with one original item and another from a right partition with three original items. The left sample always contains its sole item. The right sample chooses each of its originals with probability one third.\n\nIf we concatenate those two samples and choose either stored item uniformly, the left original wins with probability one half. Each right original wins with probability one third times one half, or one sixth. A uniform sample from all four originals would give each probability one quarter.\n\nThe replay enumerates the possible sample-and-selection paths using exact fractions and prints those probabilities. It demonstrates why equal treatment of retained samples loses the populations they represent. A correct distributed sampling algorithm needs appropriate population accounting and a defined merge procedure; concatenation alone supplies neither.\n\nThe capture compares the partition summaries and prints the unequal-reservoir probabilities. Save the replay as `m18-sketches.py` and run its standard-library mode. It uses the same implementations as the individual sketch lessons; the count-min details follow later in this module.\n\n```bash title=\"terminal\"\npython3 m18-sketches.py merge\n```\n\n```output\nleft_events=6 right_events=6 total=12 exact_distinct=9\nBloom merged matches single: True\nHLL merged matches single: True\nCMS merged matches single: True\nduplicate HLL partition changes registers: False\nduplicate CMS partition row sums: [18, 18, 18]\nBloom incompatible merge: rejected\nCMS incompatible merge: rejected\nHLL incompatible merge: rejected\nwith external partition receipts row sums: [12, 12, 12]\nunequal reservoir enumerated probabilities: {'L': '1/2', 'R1': '1/6', 'R2': '1/6', 'R3': '1/6'}\nuniform target per original item: 1/4\n```\n\nAll three merged states match their corresponding single-pass states for the correctly split population. That equality says the merge operation preserves this representation on these contributions. It does not establish that a real ingestion service delivered each original event exactly once.\n\n## A repeated partition\n\nMerging the right HLL partition again leaves its registers unchanged because taking a maximum with the same observation is idempotent. Bloom OR has the same duplicate-state property. Repeating the same bits or register observations leaves their state unchanged.\n\nAdding the right count-min partition again raises each row sum from twelve to eighteen. The repeated six-occurrence contribution has been counted twice. This is the correct result for counter addition on the delivered inputs, and the wrong population if the application intended each partition to contribute once.\n\nThe replay then uses an external set of partition receipts while processing left, right, and right again. It skips the repeated receipt and recovers row sums of twelve. This is a sequential in-memory illustration; it does not implement a durable atomic transaction between checking a receipt and recording the merged result.\n\nIf a worker crashes between those actions, a real service needs to decide whether to retry or skip without losing or doubling contributions. A merge function cannot settle that question because the failure occurs around its invocation. The event-processing module owns those identity and recovery boundaries.\n\n## Distribution summaries\n\nA t-digest retains weighted groups of numerical observations, called centroids, for percentile queries. The [[wiki/tdigest-quantile-sketch|later t-digest lesson]] examines the algorithm and this package's limitations. Here the narrower question is whether partition merging preserves the intended weight.\n\nOur chosen population contains 360 values: 0 through 89 three times each, followed by 100 through 990 in steps of ten. Split it into two disjoint 180-observation partitions. Compare a single build, both merge orders and a repeated right partition.\n\nFor this optional package replay, save [the t-digest script](/course-assets/system-design/m18-tdigest.py) and [its pinned requirements](/course-assets/system-design/m18-tdigest-requirements.txt) beside each other. Use Python 3.12 and a new virtual environment:\n\n```bash title=\"terminal\"\npython3.12 -m venv .venv-sketch-merge\n.venv-sketch-merge/bin/python -m pip install -r m18-tdigest-requirements.txt\n```\n\nThe wrapper checks `tdigest==0.5.2.2` and its dependency versions, fixes the random seed, and rejects a chosen incompatible parameter pair before calling the package merge.\n\n```bash title=\"terminal\"\n.venv-sketch-merge/bin/python m18-tdigest.py merge\n```\n\n```output\ndisjoint value partitions: left=180 right=180 total=360\nsingle: weight=360 centroids=102 p50=59.500000 p99=959.000000\nL+R: weight=360 centroids=84 p50=59.500000 p99=959.000000\nR+L: weight=360 centroids=83 p50=59.500000 p99=959.000000\nL+R+R: weight=540 centroids=81 p50=74.557143 p99=968.000000\nwrapper incompatible delta: rejected before package merge\nexact nearest-rank p50=59 p99=960 for original360\n```\n\nThe correctly merged digests retain total weight three hundred sixty and match the printed single-build percentile estimates on this fixture. Their centroid counts differ, including between the two merge orders. Equal queried values here therefore do not imply identical retained state or universal order independence.\n\nThe repeated right partition raises total weight to five hundred forty and changes the median and ninety-ninth-percentile estimates. The summary has faithfully accepted extra weight, even though the original population remains unchanged. Keeping contribution identities outside the digest is necessary when that duplicate is unintended.\n\n| Summary | Compatible merge | Repeating identical contribution |\n|---|---|---|\n| Bloom filter | Bitwise OR | Bits unchanged |\n| HLL | Register maxima | Registers unchanged |\n| Count-min | Counter sums | Counts increase |\n| This t-digest | Weighted centroid merge | Weight increases; estimates may change |\n\n## Store enough to interpret the bytes\n\nA stored summary needs its algorithm/version, parameters, encoding and identity rule. Its envelope also needs the metric, bucket boundaries, source partition/range and contribution identity. Test serialized compatibility across the actual producer and consumer library versions; a common algorithm name or payload size is insufficient.\n\nThe replay checks a few wrapper fields and compares in-memory arrays. It does not implement cross-language serialization or durable receipts. DataSketches and Roaring publish compatibility mechanisms for their own representations; those do not make our Python arrays directly interchangeable with them.\n\nFor additive summaries, a contribution ID must name immutable content. If a worker sends a revised cumulative partition under a new ID, adding it to the earlier version counts the overlap again. Replace that partition's retained version and recompute the union, or publish disjoint deltas with their own receipt protocol.\n\nPersist the receipt with the aggregate change, or use a recoverable publication scheme that makes a retry unambiguous. Also verify that all expected partitions are present. Duplicate-safe merging alone cannot distinguish an empty partition from a lost one.\n\nChoose exact aggregation while the population fits and exact answers are needed. When summaries are justified, retain controls for their error and a fallback for unsupported queries or broken versions. The [[wiki/bucketed-time-window-aggregation|next lesson]] assigns events to buckets and defines when their published answers may stop changing.\n"
-              }
-            },
-            {
-              "slug": "bucketed-time-window-aggregation",
-              "title": "Bucketed time-window aggregation",
-              "kind": "lesson",
-              "archive": {
-                "slug": "bucketed-time-window-aggregation",
-                "file": "bucketed-time-window-aggregation.md",
-                "title": "Bucketed time-window aggregation",
-                "displayTitle": "Bucketed time-window aggregation",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "analytics",
-                  "windows"
-                ],
-                "sources": [
-                  "https://beam.apache.org/documentation/programming-guide/",
-                  "https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastream/event-time/generating_watermarks/",
-                  "https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastream/operators/windows/",
-                  "[[wiki/event-contracts]]",
-                  "[[wiki/impression-counting-system-design]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Time buckets make a continuing stream queryable: a report asks for a bounded interval and combines the groups that cover it.",
-                  "continuation": "Bucket width controls both the detail available to the query and the amount of state to retain."
-                }
-              }
-            },
-            {
-              "slug": "raw-events-vs-derived-analytics",
-              "title": "Raw events vs derived analytics",
-              "kind": "lesson",
-              "archive": {
-                "slug": "raw-events-vs-derived-analytics",
-                "file": "raw-events-vs-derived-analytics.md",
-                "title": "Raw events vs derived analytics",
-                "displayTitle": "Raw events vs derived analytics",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "analytics",
-                  "recovery"
-                ],
-                "sources": [
-                  "https://kafka.apache.org/41/design/design/",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing",
-                  "[[wiki/event-bus-for-product-events]]",
-                  "[[wiki/immutable-versioned-data-files]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A dashboard says an ad received four impressions.",
-                  "continuation": "Tomorrow, a fraud rule excludes two of them."
-                }
-              }
-            },
-            {
-              "slug": "count-min-sketch",
-              "title": "Count-min sketch",
-              "kind": "lesson",
-              "archive": {
-                "slug": "count-min-sketch",
-                "file": "count-min-sketch.md",
-                "title": "Count-min sketch",
-                "displayTitle": "Count-min sketch",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "probabilistic-structures"
-                ],
-                "sources": [
-                  "https://www.cs.ox.ac.uk/people/graham.cormode/pubs/papers/cm-latin.pdf",
-                  "https://redis.io/docs/latest/develop/data-types/probabilistic/count-min-sketch/",
-                  "https://apache.github.io/datasketches-python/main/frequency/count_min_sketch.html",
-                  "[[wiki/top-k-heavy-hitters]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A service tracking search queries or cache keys can see too many distinct keys to keep an exact count for each.",
-                  "continuation": "A count-min sketch shares a fixed number of counters across keys and answers approximate frequency queries."
-                }
-              }
-            },
-            {
-              "slug": "top-k-heavy-hitters",
-              "title": "Top-k heavy hitters",
-              "kind": "lesson",
-              "archive": {
-                "slug": "top-k-heavy-hitters",
-                "file": "top-k-heavy-hitters.md",
-                "title": "Top-k and heavy hitters",
-                "displayTitle": "Top-k and heavy hitters",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "probabilistic-structures"
-                ],
-                "sources": [
-                  "https://www.cs.utexas.edu/~misra/scannedPdf.dir/FindRepeatedElements.pdf",
-                  "https://www.cs.ucsb.edu/sites/default/files/documents/2005-23.pdf",
-                  "https://redis.io/docs/latest/develop/data-types/probabilistic/top-k/",
-                  "[[wiki/count-min-sketch]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "“How often did this query occur?",
-                  "continuation": "” starts with an identity."
-                }
-              }
-            },
-            {
-              "slug": "reservoir-sampling",
-              "title": "Reservoir sampling",
-              "kind": "lesson",
-              "archive": {
-                "slug": "reservoir-sampling",
-                "file": "reservoir-sampling.md",
-                "title": "Reservoir sampling",
-                "displayTitle": "Reservoir sampling",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "probabilistic-structures"
-                ],
-                "sources": [
-                  "https://www.cs.umd.edu/~samir/498/vitter.pdf",
-                  "https://datasketches.apache.org/docs/Sampling/ReservoirSamplingSketches.html",
-                  "[[wiki/mergeable-sketches-for-analytics]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "You want a few hundred requests to inspect from a stream that may contain millions.",
-                  "continuation": "Keeping the first few hundred mostly tells you what happened when collection began."
-                }
-              }
-            },
-            {
-              "slug": "tdigest-quantile-sketch",
-              "title": "t-digest quantile sketch",
-              "kind": "lesson",
-              "archive": {
-                "slug": "tdigest-quantile-sketch",
-                "file": "tdigest-quantile-sketch.md",
-                "title": "T-digest quantile sketches",
-                "displayTitle": "T-digest quantile sketches",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "probabilistic-structures"
-                ],
-                "sources": [
-                  "https://arxiv.org/pdf/1902.04023",
-                  "https://github.com/tdunning/t-digest",
-                  "https://pypi.org/project/tdigest/0.5.2.2/",
-                  "https://github.com/CamDavidsonPilon/tdigest",
-                  "https://www.datadoghq.com/blog/engineering/computing-accurate-percentiles-with-ddsketch/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "A service can have a comfortable p50 latency and an unpleasant p99. The median describes the middle request; the high percentile exposes slower requests that an average can hide. To query those percentiles across many hosts, we need more information than one average or p99 per host.",
-                "mermaidCount": 0,
-                "content": "# T-digest quantile sketches\n\nA service can have a comfortable p50 latency and an unpleasant p99. The median describes the middle request; the high percentile exposes slower requests that an average can hide. To query those percentiles across many hosts, we need more information than one average or p99 per host.\n\nA t-digest keeps a compact, approximate description of a numerical distribution. We will look at what it stores, how local digests combine, and why a plausible percentile still needs an accuracy check.\n\n## Store weighted groups\n\nFor an exact reference, choose the nearest-rank convention: sort N observations and take the one-based position `ceil(q × N)`, where q is the requested fraction. At q = 0.99, that gives p99. Retaining and sorting every observation becomes costly for large streams and many dashboard queries. Exact frequency counts are another option when the value domain is small enough.\n\nA t-digest compresses observations into **centroids**. Each stores a mean and a weight: the number of observations it represents. For example, grouping 10, 11 and 12 yields mean 11 and weight 3. That record preserves the group's mass and mean, but not its individual values.\n\nThe distinctive choice is where to spend detail. T-digest limits centroid weights more tightly near the distribution's ends and allows larger groups near the middle. This helps preserve tail resolution without retaining every observation. The scale function, insertion order and interpolation rules still affect the result.\n\nEach host can build a local digest. A backend combines compatible weighted centroids, recompresses them and queries the combined distribution. The weights prevent a quiet host from receiving the same influence as a busy one. This merge does not recognize duplicated observations or overlapping uploads; [[wiki/mergeable-sketches-for-analytics|the merge lesson]] covers that accounting separately.\n\n## What a query returns\n\nA percentile query uses the ordered centroids and their cumulative weights, often interpolating between them. Its answer can lie between values that actually occurred. That is different from our nearest-rank reference, which always returns an observed value.\n\nCheck two kinds of error:\n\n- **Value difference:** how far the estimate is from the exact reference, in the measurement's units.\n- **Rank distance:** how far the estimate lies from the requested fraction of the population.\n\nFor ties, use a rank interval: the fraction strictly below the estimate through the fraction at or below it. The rank distance is zero if q lies inside that interval; otherwise it is the distance to the closer endpoint. This lets an observed value represent a whole block of equal observations.\n\nA small rank error can mean a large latency error in a sparse tail. A small latency difference can also cross a large repeated mass. Neither measure substitutes for the other.\n\n## Run one pinned implementation\n\nThe example uses Cam Davidson-Pilon's Python `tdigest` package, version 0.5.2.2. It is a reproducible implementation study, not a claim that every package called t-digest has the same behavior.\n\nThis package uses an admission threshold `4 × N × delta × q_c × (1 − q_c)`, where q_c is a centroid's midpoint rank and N is total weight. It permits smaller centroid weights toward the ends. Here delta is a compression parameter, not a failure probability. We use delta 0.05 and K 25; the package triggers compression when its centroid count exceeds `K / delta`.\n\nDownload the [quantile example](/course-assets/system-design/m18-tdigest.py) and [pinned requirements](/course-assets/system-design/m18-tdigest-requirements.txt) into one directory, keeping their filenames. The [package license](/course-assets/system-design/m18-tdigest-license.txt) accompanies the dependency. The setup below requires Python 3.12.\n\nThe chosen input has 360 dimensionless observations: 0 through 89 repeated three times each, then 100 through 990 in steps of 10. These are constructed values, not measured service latencies. The example processes forward, reverse and shuffled orders, resetting the package's random seed to 23 for each build.\n\nIn the output, `m` is centroid mean and `c` is its weight. Centroid count measures stored entries, not complete memory allocation.\n\n```bash title=\"terminal\"\npython3.12 -m venv .venv-quantiles\n.venv-quantiles/bin/python -m pip install -r m18-tdigest-requirements.txt\n.venv-quantiles/bin/python m18-tdigest.py quantiles\n```\n\n```output\ntdigest=0.5.2.2 accumulation-tree=0.6.4 pyudorandom=1.0.0\nvalues=360; 0..89 each repeated3, then 100..990 step10; delta=0.05 K=25 seed=23\nforward: centroids=102 total_weight=360 first={'m': 0.0, 'c': 3.0} last={'m': 990.0, 'c': 1.0}\n  q=0.50 nearest_rank=59 estimate=59.500000 value_difference=0.500000 rank_distance=0.000000\n  q=0.90 nearest_rank=630 estimate=635.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.95 nearest_rank=810 estimate=815.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.99 nearest_rank=960 estimate=959.000000 value_difference=-1.000000 rank_distance=0.001111\nreverse: centroids=102 total_weight=360 first={'m': 0.0, 'c': 3.0} last={'m': 990.0, 'c': 1.0}\n  q=0.50 nearest_rank=59 estimate=59.500000 value_difference=0.500000 rank_distance=0.000000\n  q=0.90 nearest_rank=630 estimate=635.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.95 nearest_rank=810 estimate=815.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.99 nearest_rank=960 estimate=959.000000 value_difference=-1.000000 rank_distance=0.001111\nshuffle: centroids=69 total_weight=360 first={'m': 0.0, 'c': 3.0} last={'m': 990.0, 'c': 1.0}\n  q=0.50 nearest_rank=59 estimate=59.527273 value_difference=0.527273 rank_distance=0.000000\n  q=0.90 nearest_rank=630 estimate=635.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.95 nearest_rank=810 estimate=815.000000 value_difference=5.000000 rank_distance=0.000000\n  q=0.99 nearest_rank=960 estimate=959.000000 value_difference=-1.000000 rank_distance=0.001111\nrepeated-zero control: n=1000 exact_median=0 estimate=0.110988 empirical_rank_interval=[0.90,0.90] rank_distance=0.40\n```\n\nThe forward and reverse runs retain 102 centroids; shuffled order retains 69. All preserve total weight 360. At p99, each estimates 959 against nearest-rank 960. At the median, interpolation returns roughly 59.5 instead of 59, with zero rank distance under our stated measure.\n\nThose results look useful, but the final line tests a different shape.\n\n## A small value error can hide a bad median\n\nThe control contains 900 zeros, the integers 1 through 90, and ten values of 1,000. There are 1,000 observations. The nearest-rank median is zero, and zero occupies the empirical rank interval [0, 0.90].\n\nThe pinned package returns about 0.110988. All 900 zeros lie below that answer and every positive observation lies above it. Its rank interval is therefore [0.90, 0.90], which is 0.40 away from the requested median rank 0.50.\n\nThe estimate is numerically close to zero but badly misplaced in rank. This package's interpolation does not handle this repeated mass acceptably for a median-rank requirement. Other t-digest implementations have different interpolation and repeated-value handling; test the one you will actually deploy.\n\n:::note\nWould reducing the compression parameter alone prove that this median is fixed?\n:::\n\nNo. More retained detail may help some inputs, but the query's treatment of repeated values still matters. Rerun the control and check the actual result.\n\n## Choose around the required error\n\nT-digest is useful when you want compact, mergeable quantile estimates and can validate its behavior on representative distributions. Check repeated values, sorted and shuffled input, sparse tails and the same merge tree your backend will use. A local digest passing a test does not establish the error after repeated merges.\n\nIf the requirement is a relative error in the returned value, investigate a sketch designed for that measure, such as DDSketch. For a positive exact value of 200 ms, a 2% value-error target means 196–204 ms; it says nothing by itself about the rank interval. DDSketch uses logarithmic value buckets, while t-digest uses weighted centroids. Datadog's published distribution-metrics design describes DDSketch.\n\nKeep exact reference populations small enough to inspect. For the repeated-zero population above, this pinned package fails our median-rank check, even though its other examples look good. The [[wiki/streaming-percentile-analytics|streaming percentile pipeline]] adds the next requirements: windows, compatible summaries and exactly which contributions reached a report.\n"
-              }
-            },
-            {
-              "slug": "streaming-percentile-analytics",
-              "title": "Streaming percentile analytics",
-              "kind": "lesson",
-              "archive": {
-                "slug": "streaming-percentile-analytics",
-                "file": "streaming-percentile-analytics.md",
-                "title": "Streaming percentile analytics",
-                "displayTitle": "Streaming percentile analytics",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "analytics",
-                  "quantiles"
-                ],
-                "sources": [
-                  "https://github.com/CamDavidsonPilon/tdigest",
-                  "https://prometheus.io/docs/practices/histograms/",
-                  "https://www.datadoghq.com/blog/engineering/computing-accurate-percentiles-with-ddsketch/",
-                  "[[wiki/tdigest-quantile-sketch]]",
-                  "[[wiki/mergeable-sketches-for-analytics]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A checkout dashboard needs p50, p95 and p99 across all service instances for the last five minutes.",
-                  "continuation": "Each instance can summarize its durations locally, but sending its p99 alone loses information the combined query needs."
-                }
-              }
-            },
-            {
-              "slug": "live-reactions-high-throughput-design",
-              "title": "Design: live reactions at high throughput",
-              "kind": "design",
-              "archive": {
-                "slug": "live-reactions-high-throughput-design",
-                "file": "live-reactions-high-throughput-design.md",
-                "title": "Design: live reactions at high throughput",
-                "displayTitle": "Design: live reactions at high throughput",
-                "type": "design",
-                "tags": [
-                  "system-design",
-                  "analytics",
-                  "reactions",
-                  "design"
-                ],
-                "sources": [
-                  "https://ably.com/blog/making-fan-experiences-economically-viable",
-                  "https://slack.engineering/real-time-messaging/",
-                  "https://redis.io/docs/latest/develop/pubsub/",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://docs.python.org/3/library/http.server.html",
-                  "[[wiki/counting-at-scale]]",
-                  "[[wiki/fanout-patterns]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 2,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A goal is scored during a livestream.",
-                  "continuation": "Thousands of viewers tap the heart button at once."
-                }
-              }
-            }
-          ]
-        },
-        {
-          "id": "learning-realtime-social",
-          "number": "11",
-          "title": "Realtime, social and feeds",
-          "summary": "Deliver live updates, messages, and feeds under changing load.",
-          "units": [
-            {
-              "slug": "realtime-database-and-websocket-scaling",
-              "title": "Realtime database and WebSocket scaling",
-              "kind": "lesson",
-              "archive": {
-                "slug": "realtime-database-and-websocket-scaling",
-                "file": "realtime-database-and-websocket-scaling.md",
-                "title": "Realtime database and WebSocket scaling",
-                "displayTitle": "Realtime database and WebSocket scaling",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "realtime",
-                  "recovery"
-                ],
-                "sources": [
-                  "[[wiki/websockets-vs-sse-vs-long-polling]]",
-                  "[[wiki/raw-events-vs-derived-analytics]]",
-                  "https://redis.io/docs/latest/develop/pubsub/",
-                  "https://socket.io/docs/v4/redis-adapter/",
-                  "https://socket.io/docs/v4/using-multiple-nodes/",
-                  "https://www.postgresql.org/docs/current/logicaldecoding-explanation.html",
-                  "https://www.sqlite.org/lang_transaction.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Ada posts a message through server A.",
-                  "continuation": "Bo is connected to server B."
-                }
-              }
-            },
-            {
-              "slug": "websockets-vs-sse-vs-long-polling",
-              "title": "WebSockets vs SSE vs long polling",
-              "kind": "lesson",
-              "archive": {
-                "slug": "websockets-vs-sse-vs-long-polling",
-                "file": "websockets-vs-sse-vs-long-polling.md",
-                "title": "WebSockets vs SSE vs long polling",
-                "displayTitle": "WebSockets vs SSE vs long polling",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "realtime",
-                  "transport"
-                ],
-                "sources": [
-                  "[[wiki/realtime-database-and-websocket-scaling]]",
-                  "https://html.spec.whatwg.org/multipage/server-sent-events.html",
-                  "https://www.rfc-editor.org/rfc/rfc6202",
-                  "https://www.rfc-editor.org/rfc/rfc6455",
-                  "https://websockets.spec.whatwg.org/",
-                  "https://websockets.readthedocs.io/en/15.0.1/reference/sync/server.html",
-                  "https://websockets.readthedocs.io/en/15.0.1/reference/sync/client.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A build log receives new lines.",
-                  "continuation": "A shared drawing sends cursor movements in both directions."
-                }
-              }
-            },
-            {
-              "slug": "social-network-database-modeling",
-              "title": "Social network database modeling",
-              "kind": "lesson",
-              "archive": {
-                "slug": "social-network-database-modeling",
-                "file": "social-network-database-modeling.md",
-                "title": "Social network database modeling",
-                "displayTitle": "Social network database modeling",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "social",
-                  "data-modeling"
-                ],
-                "sources": [
-                  "https://www.sqlite.org/foreignkeys.html",
-                  "https://www.sqlite.org/queryplanner.html",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://engineering.fb.com/2013/06/25/core-infra/tao-the-power-of-the-graph/",
-                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook",
-                  "[[wiki/social-graph-follows-and-flockdb]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Bo changes his display name after publishing a post.",
-                  "continuation": "Ada should still follow the same account, the post should still have the same author, and its existing reactions should remain attached."
-                }
-              }
-            },
-            {
-              "slug": "social-graph-follows-and-flockdb",
-              "title": "Social graph: follows and FlockDB",
-              "kind": "lesson",
-              "archive": {
-                "slug": "social-graph-follows-and-flockdb",
-                "file": "social-graph-follows-and-flockdb.md",
-                "title": "Social graph follows and FlockDB",
-                "displayTitle": "Social graph follows and FlockDB",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "social",
-                  "graphs"
-                ],
-                "sources": [
-                  "[[wiki/social-network-database-modeling]]",
-                  "https://blog.x.com/engineering/en_us/a/2010/introducing-flockdb",
-                  "https://github.com/twitter-archive/flockdb",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://www.sqlite.org/rowvalue.html",
-                  "https://engineering.fb.com/2013/06/25/core-infra/tao-the-power-of-the-graph/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "Ada follows Bo. Opening Ada's following list asks for edges leaving Ada; publishing Bo's post asks for edges entering Bo. The relationship is the same, but the two reads need different access paths.",
-                "mermaidCount": 1,
-                "content": "# Social graph follows and FlockDB\n\nAda follows Bo. Opening Ada's following list asks for edges leaving Ada; publishing Bo's post asks for edges entering Bo. The relationship is the same, but the two reads need different access paths.\n\nMost follow-graph work is shallow: test one relationship, list neighbors, page through followers, or count them. Start with those operations. A graph-shaped data model does not automatically require arbitrary graph traversal.\n\n## Store the direction, then the relationship rule\n\nThe [[wiki/social-network-database-modeling|previous model]] uses `(follower, followee)` as a unique pair. A mutual friendship would need a different acceptance rule or two confirmed directions. A reverse lookup for Ada following Bo is not a second friendship and does not mean Bo follows Ada.\n\nA broader `relations(source, type, target, state, position)` model can support follows, blocks or mutes when their storage needs are shared. Include the type in relationship identity. Keep each type's permissions and state transitions explicit: a pending follow request and an active block are not interchangeable just because both connect accounts.\n\nA sort position supports ordered listing. State can distinguish active, removed or archived edges. Extra metadata belongs to the relationship it describes; it should not turn every pair into an unvalidated bag of unrelated values.\n\n## Why the reverse lookup changes after sharding\n\nOn one database, a forward index on `(follower, followee)` and a reverse index on `(followee, follower)` can serve both reads. The database maintains the indexes when a row changes.\n\nNow partition the rows by follower. Ada's outgoing list stays on Ada's partition. Bo's followers can be spread across all the other users' partitions. A local index on `followee` helps inside each partition, but does not tell the router which partitions contain Bo's incoming edges.\n\nA separately placed reverse list solves that routing problem. The forward entry is grouped by Ada, and its reverse entry is grouped by Bo.\n\n```mermaid\nflowchart TB\n    accTitle: One follow has two access paths\n    accDescr: Ada following Bo creates a forward entry grouped by Ada and a reverse entry grouped by Bo. Both entries describe the same directed relationship.\n    E[Ada follows Bo] --> F[Grouped by Ada]\n    E --> R[Grouped by Bo]\n    F --> A[Following list<br/>contains Bo]\n    R --> B[Follower list<br/>contains Ada]\n```\n\nIf Bo also follows Ada, that is a second logical relationship with its own forward and reverse entries: four entries for two follows. The cost is two logical entries per relationship before indexes and replication, plus the work of keeping them consistent. It is not a universal two-times storage estimate.\n\n## What FlockDB chose\n\nTwitter's 2010 FlockDB design used MySQL-backed adjacency lists, indexed and partitioned in both directions. It targeted large neighbor lists, ordered pagination and set operations rather than multi-hop graph walks. Its position field supported ordered reads; removed and archived states let it retain edges without exposing them as active follows.\n\nThat design also accepted retried and out-of-order writes using operation ordering. It did not make an arbitrary pair of remote database writes into a single SQLite transaction. The archived repository is no longer maintained; this is a historical design to understand, not a current package recommendation.\n\nThe useful distinction survives the implementation: listing direct followers is different work from finding paths, communities or recommendations across many hops. Choose an online adjacency service and an offline graph-analysis pipeline according to the queries each must answer.\n\n## Keep the two representations consistent\n\nOur [social example](/course-assets/system-design/m22-social.py), with its [shared helpers](/course-assets/system-design/m22-common.py), deliberately stores two tables in one SQLite database. One transaction writes the forward row, reverse row and operation receipt. An exception between the row writes rolls everything back. This exposes the maintenance obligation without pretending to implement distributed FlockDB.\n\nThe six-account graph starts with Ada and Dee following Bo and Cy, plus Eli and Fay following Cy. The replay interrupts Eli's new follow of Bo, retries it, and then unfollows. A delayed retry of the old follow returns its historical receipt without restoring the edge.\n\n```bash title=\"terminal\"\npython3 m22-social.py graph\n```\n```output\nAda follows: Bo,Cy\nCy followers: Ada,Dee,Eli,Fay\ninterrupted Eli->Bo: forward=False reverse=False\nretry committed: {\"accepted_state\":true,\"duplicate\":true}\ndelayed old follow: current=False\nabsent unfollow: {\"accepted_state\":false,\"duplicate\":false}\nchanged operation: 409\ncommitted forward/reverse pairs: 6 6\n```\n\nThe successful retry is repeated before printing, hence `duplicate:true`. Reusing its operation identity with different input returns conflict. The receipt describes an accepted operation; the current adjacency list describes the relationship now. The final check compares complete forward and reverse pair sets, not just equal counts.\n\nAcross independent stores, choose a consistency and recovery contract. A reverse projection updated asynchronously needs retained changes, duplicate handling, an applied position and repair. If it drives delivery, lag can omit recipients. A cached follower count cannot reconstruct who is missing.\n\n## Page by a stable boundary\n\nOffset pagination repeatedly skips earlier rows. An indexed cursor can seek to the last returned ordering key instead. Include a tie-breaker: several follows can share one timestamp.\n\nFor a relational extension with non-null `created_at` and a unique `(followee, follower)` pair, use an index beginning with `(followee, created_at DESC, follower DESC)`. After returning the row at `(100, 'Eli')`, the next-page query is:\n\n```sql title=\"Follower page after a cursor\"\nSELECT follower, created_at\nFROM follows_by_time\nWHERE followee = :author\n  AND (created_at, follower) < (:last_time, :last_id)\nORDER BY created_at DESC, follower DESC\nLIMIT :page_size;\n```\n\nThis is a proposed time-ordered table, separate from the example's alphabetically sorted lists. If Cy's followers sort as `Fay@100, Eli@100, Dee@99, Ada@99`, a two-row first page ends at `(100, 'Eli')`; the next page returns Dee and Ada. A one-row page ending at `(100, 'Fay')` still reaches Eli because the ID breaks the timestamp tie.\n\nKeyset pagination avoids deep offset scans when an appropriate index is used. It does not freeze a changing graph. If an edge is removed or its sort position changes between requests, define whether the caller accepts a live list or needs a versioned snapshot. The cursor must also belong to the requested account and relationship type.\n\n## Handle a very large follower list deliberately\n\nA single popular account can dominate one reverse partition. Isolating it protects other accounts, but does not divide its own workload. Bucketing that list spreads storage and writes; reads now need to merge ordered bucket pages and carry enough cursor state to resume them.\n\nCache frequently read first pages when their freshness policy permits it. Separate an approximate public count from exact edge membership, and batch recipient enumeration for downstream delivery. Preserve current access rules when a cached list is used for a protected action.\n\nOnce outgoing and incoming relationships have clear meanings, the [[wiki/feed-generation-push-pull-hybrid|feed-generation comparison]] can decide whether to write feed references when a post appears or collect posts when a reader opens the page.\n"
-              }
-            },
-            {
-              "slug": "feed-generation-push-pull-hybrid",
-              "title": "Feed generation: push, pull, hybrid",
-              "kind": "lesson",
-              "archive": {
-                "slug": "feed-generation-push-pull-hybrid",
-                "file": "feed-generation-push-pull-hybrid.md",
-                "title": "Feed generation with push, pull, and hybrid assembly",
-                "displayTitle": "Feed generation with push, pull, and hybrid assembly",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "social",
-                  "feeds"
-                ],
-                "sources": [
-                  "[[wiki/social-graph-follows-and-flockdb]]",
-                  "[[wiki/fanout-patterns]]",
-                  "[[wiki/social-feed-system-design-case-study]]",
-                  "https://www.linkedin.com/blog/engineering/feed/followfeed-linkedin-s-feed-made-faster-and-smarter",
-                  "https://blog.x.com/engineering/en_us/topics/infrastructure/2017/the-infrastructure-behind-twitter-scale",
-                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A home feed collects posts for one viewer.",
-                  "continuation": "The follow graph tells us which authors matter; feed generation decides when to collect their posts."
-                }
-              }
-            },
-            {
-              "slug": "newly-unread-indicator",
-              "title": "Design: a newly-unread indicator",
-              "kind": "design",
-              "archive": {
-                "slug": "newly-unread-indicator",
-                "file": "newly-unread-indicator.md",
-                "title": "Design: a newly-unread inbox indicator",
-                "displayTitle": "Design: a newly-unread inbox indicator",
-                "type": "design",
-                "tags": [
-                  "system-design",
-                  "social",
-                  "messaging"
-                ],
-                "sources": [
-                  "https://slack.com/help/articles/226410907-View-all-your-unread-messages",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://redis.io/docs/latest/commands/zadd/",
-                  "https://redis.io/docs/latest/commands/zcount/",
-                  "[[wiki/chat-and-messaging-system-design]]",
-                  "[[wiki/realtime-database-and-websocket-scaling]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "A newly-unread badge tells someone how much new activity has arrived since they last opened an overview. It can clear when they open that screen even though they have not read every conversation. That makes it a separate feature from message read receipts.",
-                "mermaidCount": 2,
-                "content": "# Design: a newly-unread inbox indicator\n\nA newly-unread badge tells someone how much new activity has arrived since they last opened an overview. It can clear when they open that screen even though they have not read every conversation. That makes it a separate feature from message read receipts.\n\nWe'll design a badge that counts distinct senders, preserve arrivals that race with opening the inbox, and keep reads correct while a background worker is behind. The example is our own small inbox service, not a claim about Slack's or another messenger's internals.\n\n## Decide what the number means\n\nBo sends Ada two messages and Cy sends one. Our badge shows **2**, because two sender accounts contributed new activity. It does not show three messages, two humans, or a count of unread conversations.\n\n| State | What it means |\n|---|---|\n| Newly-unread badge | Distinct eligible senders after Ada's last inbox acknowledgement |\n| Thread unread | A conversation contains messages beyond its own read position |\n| Message read receipt | The client reported a particular message or position as read |\n\nOpening the overview advances only the first state. The [[wiki/chat-and-messaging-system-design|chat design]] deals with delivery and thread-read reports separately. None of these reports proves that a person understood the text.\n\nRepeated delivery of one send must not create another message. But two intentional sends with identical text are still two messages. Give each send an operation ID; use sender identity only when collapsing messages into the badge count.\n\nFor this design, only the recipient may view or acknowledge the inbox. Senders and recipients must be active accounts, and inactive senders disappear from badge reads. Blocking, group conversations and message deletion need additional rules; they are outside the executable example.\n\n## Clear what the screen observed\n\nDeleting the whole badge set when Ada opens the inbox looks simple. It fails if a new message arrives after the server prepared her response but before the acknowledgement reaches the server. The deletion clears activity she never had a chance to see.\n\nGive each accepted message a position within its recipient's inbox. Ada's first three messages occupy positions 1, 2 and 3. The response records that it observed through 3. Dee's later message receives position 4.\n\n```mermaid\nsequenceDiagram\n  accTitle: Acknowledge the observed inbox\n  accDescr: Ada receives an inbox snapshot through position 3. Dee's message commits at position 4 before Ada acknowledges the older snapshot. Position 4 remains newly unread.\n  participant A as Ada\n  participant S as Inbox service\n  A->>S: Open inbox\n  S-->>A: Snapshot through 3\n  Note over S: Dee's message commits at 4\n  A->>S: Acknowledge snapshot 3\n  S-->>A: One new sender remains\n```\n\nStore an acknowledged-through position **A**. A sender counts when their latest eligible message position is strictly greater than A. After acknowledging 3, Bo and Cy stop contributing, while Dee at 4 remains.\n\nPositions describe acceptance order for one recipient. They are not wall-clock timestamps or a global order across all users. Equal timestamps cannot tell us which of two arrivals belonged to an earlier inbox response.\n\nThe server stores an issued snapshot containing its recipient and observed boundary. Ada acknowledges the snapshot ID, not an arbitrary position supplied by her client. The server checks ownership and updates A to the greater of its current value and the snapshot boundary.\n\nThat maximum handles multiple devices. If device B has already acknowledged through 4, device A's delayed acknowledgement through 3 leaves A at 4. A retry with the same operation ID returns its original receipt; that historical reply must not make the client lower a newer local boundary.\n\nThe product decides when to send the acknowledgement: for example, after the overview loads successfully. Issuing a snapshot only proves which response the server prepared, not that Ada saw it. An acknowledgement should not be sent just because navigation began and the request might still fail.\n\n## Store the source and the prepared count separately\n\nAccepted messages are the source. A projection keeps each sender's greatest processed position so a badge read need not rescan the entire message history. Let **H** be the accepted head and **P** the position through which the projection is complete.\n\nOur local service puts these records in one SQLite database:\n\n| Record and key | Relevant fields |\n|---|---|\n| Message: recipient, position | Sender and text |\n| Inbox head: recipient | H, A and P |\n| Sender summary: recipient, sender | Greatest processed position |\n| Issued snapshot: snapshot ID | Recipient and observed-through position |\n| Operation receipt: actor, operation ID | Original input and accepted result |\n\nSeparate thread-read rows exist to demonstrate that inbox acknowledgements leave them unchanged. A real thread-reading API is outside this service.\n\n```mermaid\nflowchart TD\n  accTitle: The badge combines a prefix and a tail\n  accDescr: A badge read merges sender maxima processed through P with source messages after P, then counts active senders whose latest position is above acknowledgement A. All records are read from one SQLite snapshot.\n  P[Sender maxima through P] --> M[Merge latest positions]\n  T[Messages after P] --> M\n  M --> C[Count active senders<br/>above A]\n```\n\nA read uses one database snapshot for the heads, projection, tail and account eligibility. Otherwise, it could combine a new P with an old projection and miss messages. The count is exact for that snapshot; an arrival after it begins can appear on the next read.\n\nThis is a deliberate cost choice. With P=0 and H=4, the read examines four tail messages. Once the worker reaches P=4, the tail is empty, though this implementation still reads the sender summaries and checks account eligibility.\n\n## Follow a send, a read and an acknowledgement\n\nThe HTTP handler binds its demonstration credential to an account. Source methods then enforce ownership. The routes keep the three operations distinct:\n\n| Route | Input or result |\n|---|---|\n| POST `/messages` | Send an operation ID, recipient and text; receive an accepted position |\n| GET `/inbox/Ada` | Receive eligible messages, snapshot ID and observed-through position |\n| GET `/badge/Ada` | Receive the count and diagnostic H, A, P and tail-row fields |\n| POST `/inbox/Ada/ack` | Send an operation ID and issued snapshot ID; receive acknowledged-through |\n\nBo's send transaction checks his operation receipt, validates the recipient, advances Ada's head, inserts the message and saves the result. Commit precedes the 201 response. The same operation and input return 200 with the original position; changed input under that ID returns 409.\n\nOpening Ada's inbox reads its head and eligible message history, then stores the snapshot in the same transaction. The example returns the entire retained history. Pagination would require a product decision: does opening page one acknowledge the overview, or only messages actually fetched? Do not extend the current token to pages without answering that.\n\nAcknowledgement verifies the path's account and the snapshot's owner independently. A predictable snapshot ID is not permission to use it. A guessed snapshot belonging to Ada is refused when Bo submits it through his own route.\n\nSQLite serializes the example's write transactions. Dee's arrival may commit before or after Ada acknowledges the older snapshot; either way, the final state is H=4 and A=3. The acknowledgement never replaces its issued boundary with the current head.\n\n## Keep projection lag from changing the answer\n\nThe background worker reads messages after P in order. It updates each sender's maximum and advances P in the same transaction. An interrupted transaction leaves both unchanged, so retrying starts from the last committed position.\n\nA badge read merges those processed maxima with every message in the unprocessed tail, taking the greater position per sender. It then counts active senders above A. Delayed work from Bo cannot undo Ada's acknowledgement or turn an older message into new activity.\n\nThis retains the original goal of preparing cheap reads, while making the fallback cost visible. Measure tail length, worker progress and badge-read latency. If a tail becomes too large, catch the worker up, bound recovery with an explicit failure, or choose a documented stale-count experience. Returning an old projection as an exact current count is not the same contract.\n\nA live notification can tell an online client to refetch. A disconnected client reconciles on its next badge read, as in the [[wiki/realtime-database-and-websocket-scaling|realtime recovery lesson]]. This particular example sends no WebSocket notifications; it tests the source and reconciliation path.\n\n## Run the arrival race\n\nSave the standard-library [inbox service](/course-assets/system-design/m22-inbox.py) and [shared helpers](/course-assets/system-design/m22-common.py) together. They use a private temporary SQLite file and an actual loopback HTTP server with fake account-bound credentials.\n\nBo sends twice and Cy once. Device A fetches through 3, then two threads race Dee's fourth message against acknowledgement of that snapshot. A later device acknowledges through 4 before the first device submits its older snapshot again.\n\n```bash title=\"terminal\"\npython3 m22-inbox.py\n```\n```output\noffline arrivals: events=3 distinct senders=2\nduplicate message: 200\nchanged message: 409\ndevice A observes through: 3\narrival races ACK3: {\"accepted_through\":4,\"acknowledged_through\":3,\"count\":1,\"projected_through\":0,\"senders\":[\"Dee\"],\"tail_rows\":4}\nclear-all control: would drop new sender Dee; boundary ACK retains her\nprojection interruption/reopen: projected=0\ndelayed projection after ACK: {\"accepted_through\":4,\"acknowledged_through\":3,\"count\":1,\"projected_through\":4,\"senders\":[\"Dee\"],\"tail_rows\":0}\ndevice B ACK4 then old device ACK3: 4\nwrong-user acknowledgement: 403\nwrong snapshot owner: 403\nmalformed framing: [[\"empty transfer encoding\",400],[\"ambiguous length\",400],[\"huge numeric length\",400],[\"unpaired surrogate\",400],[\"short body\",400]]\nthread read positions: [0, 0, 0]\nretained events=4 serialized message bytes=245\nunavailable authority: 503\nHTTP requests: application=15 malformed=5\n```\n\nThe badge finds Dee both before projection and after it. Only `tail_rows` changes from four to zero. The thread-read positions stay at zero, confirming that the overview acknowledgement did not mark conversations read.\n\nThe interruption is an exception before commit followed by reopening the database, not an operating-system crash. The replay also checks retry identity, ownership and malformed HTTP requests. Its 245-byte count covers only compact message JSON, not database size or network overhead.\n\nThose protocol probes exercise this small server's rules: one bounded Content-Length, no Transfer-Encoding, complete bodies and valid JSON Unicode. They are not a production authentication or load test. An unavailable source returns 503, so the client should retain a clearly stale display or show unavailability rather than invent zero.\n\n## Where a Redis sorted set fits\n\nA sorted set is useful for the prepared sender summary: the recipient identifies the key, the sender ID is the unique member, and the latest accepted position is its score. Updating Bo changes his score without creating another member. Resolve display names separately so a rename does not change identity.\n\nFor small exact integer positions, the core operations look like this:\n\n```text\nZADD newly_unread:Ada GT 2 Bo\nZADD newly_unread:Ada GT 3 Cy\nZADD newly_unread:Ada GT 4 Dee\nZCOUNT newly_unread:Ada (3 +inf\n```\n\n`GT` prevents an older delivery from lowering an existing score. The exclusive bound `(3` counts only positions above acknowledgement 3. The result is one sender. This sketch assumes A=3 is already known; it does not implement cross-store acknowledgement or projection recovery.\n\n`ZCARD` is sufficient only if every retained member is newly unread. Once old entries remain, use the acknowledgement boundary. Deleting scores through A can reclaim space, but a late event can reinsert an old sender; counting above A still excludes that activity.\n\nThe [Redis control](/course-assets/system-design/m22-redis-badge.py) starts a private process with TCP disabled and demonstrates the unsafe alternatives:\n\n```bash title=\"terminal\"\npython3 m22-redis-badge.py\n```\n```output\nRedis server v=8.4.0\nsnapshot through3: distinct senders=2\narrival4 then clear-all: count=0\nremove through3: senders=Dee\ndelayed older update: ZCARD=2; ZCOUNT above ACK3=1\nequal timestamp100: remove-through100 removes both senders\n```\n\nRedis scores are floating-point numbers. Integers through 2^53 are exact, but arbitrary 64-bit source positions are not. Choose a representation that preserves the actual position range before using scores as acknowledgement boundaries.\n\nA separate Redis deployment also adds a consistency boundary. Preserve message acceptance in the source, use replayable work to maintain the projection, and keep acknowledgement authoritative during cache loss. A cache miss means “state unavailable or not yet built,” not necessarily “no new messages.”\n\n## Retain enough to recover\n\nThe local database retains all messages, snapshots and operation receipts for its temporary lifetime. Production retention cannot discard them under one guessed expiry: messages support reconstruction, snapshots authorize acknowledgements, and receipts suppress repeated operations.\n\nA clean projection rebuild resets sender maxima and P together, then replays retained messages. The badge path checks that its unprocessed tail reaches H without gaps; missing source positions produce a conflict instead of an incomplete count.\n\nIf history must be trimmed, retain a sufficient checkpoint and define a floor below which replay is unavailable. Account erasure and message deletion must also update the eligibility and summary rules. A surviving sender maximum alone does not prove that its supporting message still exists.\n\nThe essential boundary is simple: clearing the overview covers the inbox the server returned. New work beyond that boundary remains visible, regardless of device timing or background-worker progress.\n"
-              }
-            },
-            {
-              "slug": "hashtag-extraction-and-tag-store",
-              "title": "Hashtag extraction and tag store",
-              "kind": "lesson",
-              "archive": {
-                "slug": "hashtag-extraction-and-tag-store",
-                "file": "hashtag-extraction-and-tag-store.md",
-                "title": "Hashtag extraction and the tag store",
-                "displayTitle": "Hashtag extraction and the tag store",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "social",
-                  "indexing"
-                ],
-                "sources": [
-                  "[[wiki/feed-generation-push-pull-hybrid]]",
-                  "[[wiki/search-index-synchronization]]",
-                  "[[wiki/social-network-database-modeling]]",
-                  "https://www.unicode.org/reports/tr31/",
-                  "https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html",
-                  "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-partition-key-sharding.html",
-                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A hashtag connects a piece of caption text to a page of matching posts.",
-                  "continuation": "Recognizing Cache is the first step."
-                }
-              }
-            },
-            {
-              "slug": "reaction-modeling",
-              "title": "Reaction modeling",
-              "kind": "lesson",
-              "archive": {
-                "slug": "reaction-modeling",
-                "file": "reaction-modeling.md",
-                "title": "Reaction modeling",
-                "displayTitle": "Reaction modeling",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "social",
-                  "reactions"
-                ],
-                "sources": [
-                  "[[wiki/live-reactions-high-throughput-design]]",
-                  "[[wiki/social-network-database-modeling]]",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://docs.slack.dev/reference/methods/reactions.add/",
-                  "https://www.mongodb.com/docs/manual/reference/operator/update/addtoset/",
-                  "https://www.mongodb.com/docs/v8.0/data-modeling/design-antipatterns/unbounded-arrays/",
-                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A reaction can represent an account's current choice on a post, several selected emoji, or a stream of taps.",
-                  "continuation": "Those are different products."
-                }
-              }
-            },
-            {
-              "slug": "photo-tagging-coordinate-model",
-              "title": "Design: photo tagging coordinates",
-              "kind": "design",
-              "archive": {
-                "slug": "photo-tagging-coordinate-model",
-                "file": "photo-tagging-coordinate-model.md",
-                "title": "Design: photo tags that survive resizing",
-                "displayTitle": "Design: photo tags that survive resizing",
-                "type": "design",
-                "tags": [
-                  "system-design",
-                  "social",
-                  "images"
-                ],
-                "sources": [
-                  "https://www.flickr.com/services/api/flickr.photos.people.add.html",
-                  "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/object-fit",
-                  "https://www.w3.org/TR/media-frags/#naming-space",
-                  "[[wiki/reaction-modeling]]",
-                  "[[wiki/image-cdn-and-resizing]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "A photo tag associates an account with a place in an image. That place should stay attached to its subject when a laptop-sized photo becomes a phone thumbnail. Storing the click's screen coordinates cannot provide that guarantee: the next display may have a different size, margins or crop.",
-                "mermaidCount": 2,
-                "content": "# Design: photo tags that survive resizing\n\nA photo tag associates an account with a place in an image. That place should stay attached to its subject when a laptop-sized photo becomes a phone thumbnail. Storing the click's screen coordinates cannot provide that guarantee: the next display may have a different size, margins or crop.\n\nWe'll work through source coordinates, map a point into a square card, and extend the model to boxes and crop edits. Then we'll follow a tag through placement, approval and image replacement in a small executable service.\n\n## Store a place in the source image\n\nChoose a coordinate convention before choosing a database. Here the origin is the upper-left corner, horizontal coordinates increase rightward, and vertical coordinates increase downward. Each tag belongs to one immutable image version with known dimensions and orientation.\n\nFor our 800 by 600 source, a point at (200,150) is one quarter of the way across and down. Store those fractions as `u=0.25` and `v=0.25`. In a simple 400 by 300 resize, the same point becomes (100,75).\n\n```text\nu = source_x / source_width\nv = source_y / source_height\n\nrendered_x = u * rendered_image_width\nrendered_y = v * rendered_image_height\n```\n\nSource pixels would also work if every consumer knew which source dimensions they referred to. The mistake is storing pixels from an unspecified display. Ratios make the convention convenient; the image version keeps their meaning stable.\n\nKeep full precision in storage. For example, rounding a 600/1024 ratio to 0.586 before multiplying it by 512 yields 300.032 instead of 300. Round only when presenting a value or placing a raster pixel.\n\nOur point domain includes 0 and 1. The point (1,1) denotes the lower-right boundary of the image extent, not an indexed raster pixel. Whether the marker's label extends beyond that boundary is a separate layout choice.\n\n## Account for the display box\n\nThe rendered image and its surrounding box are not always the same size. With `contain`, the entire image fits and unused space becomes margins. With `cover`, the image fills the box and some source content may be cropped. Both preserve aspect ratio.\n\nFor a centered image in a box of width W and height H, choose a scale and then an offset:\n\n```text\ncontain: s = min(W / 800, H / 600)\ncover:   s = max(W / 800, H / 600)\n\nox = (W - 800*s) / 2\noy = (H - 600*s) / 2\nX = ox + 800*s*u\nY = oy + 600*s*v\n```\n\nThese are CSS-pixel positions within the box, independent of the display's physical pixel density. The formulas assume centered positioning and no border, padding or CSS rotation. A different `object-position` needs different offsets.\n\n| In a 500 by 500 box | Result for the quarter-width, quarter-height point |\n| --- | --- |\n| Contain: image is 500 by 375, with 62.5-pixel top and bottom margins | (125,156.25) |\n| Cover: image is about 666.67 by 500, with 83.33 pixels cropped from each side | About (83.33,125) |\n\nMultiplying both fractions by 500 misses the contain margin. It gives (125,125), which is a valid place in the square but the wrong place on the photo.\n\nThe generated preview below puts the marker over the source's upper-left circle. Its raster rounds the 62.5-pixel top offset to an integer row; the calculation above retains the fractional position.\n\n![Contained square preview with the chosen marker over the upper-left circle and blank margins above and below the image](/course-assets/system-design/m22-photo-overlay.png)\n\nFor editing, invert the transform: subtract the offsets, then divide by the scaled source dimensions. Reject a click in a contain margin. For viewing, hide a point outside a cover crop instead of moving it to the edge, where it would label a different place.\n\nThe example checks exact display-space membership first and clips only floating-point quotient roundoff at 0 and 1. It does not use clamping to turn an invalid click into a valid tag.\n\n## Boxes and crop edits\n\nA point is enough for a small name marker. To identify an area, store a rectangle using either normalized corners `(u1,v1,u2,v2)` or normalized origin and size `(u,v,width,height)`.\n\nFor corners, require finite values with `0 <= u1 < u2 <= 1` and `0 <= v1 < v2 <= 1`. For origin and size, require positive dimensions and an extent that stays inside the source. Keep the representation explicit; a point with a decorative label is not automatically a bounding box.\n\nRender both corners through the same transform. A partially cropped box can be clipped for display while retaining its original source bounds. This box extension is a design choice; the executable below accepts only points.\n\nA crop creates another coordinate space. Suppose an 800 by 600 source is cropped to the rectangle starting at (100,50), with width 400 and height 300. The original point (200,150) becomes (100,100) inside that crop, or fractions (0.25,1/3).\n\n```text\ncropped_u = (source_u * 800 - crop_left) / crop_width\ncropped_v = (source_v * 600 - crop_top) / crop_height\n```\n\nA point outside the crop is hidden, not reassigned to its nearest edge. Store the crop transform with the derived variant so the client can recover this relationship. A rotation needs its own transform and orientation convention too.\n\nAn unrelated replacement has no such relationship. Even another 800 by 600 image may contain something different at the same fractions. Give it a new version and require explicit retagging. The [[wiki/image-cdn-and-resizing|image pipeline]] should normalize orientation before establishing the canonical coordinate space.\n\n## Separate the tag from the image bytes\n\nOur service starts with a generated upright geometric image. Ada owns it and selects Bo as the target of a point tag. This records a person's account selection; it performs no face recognition.\n\nThe image bytes stay immutable. A database stores version metadata and tag relationships. The client reads the image through the media path, while the tagging API handles coordinates and permission.\n\n```mermaid\nflowchart TB\n  accTitle: Coordinates refer to an image version\n  accDescr: The client reads immutable image bytes through the media path and sends coordinates or consent to the tag API. The API checks image version and permission in the tag database.\n  C[Image client] -->|point or consent| A[Tag API]\n  A --> D[(Versions and tags)]\n  C -->|media path| I[Immutable image bytes]\n```\n\nThe fixture has three main records:\n\n| Record | Meaning |\n| --- | --- |\n| Image | Owner, current version, visibility and placement revision |\n| Immutable version | Image/version key, digest, dimensions and orientation |\n| Tag | Tag ID, image/version, target account, u, v and approval state |\n\nAn extended box schema would replace the point fields with one declared rectangle representation. Record the creator and creation time explicitly if other accounts may propose tags; this fixture restricts all placement to the image owner.\n\nDecide the product rules early. Unregistered names need a separate label identity rather than a fabricated account ID. Machine-suggested boxes need an explicit confirmation state. A per-image tag limit, bounded reads and marker clustering keep hundreds of tags from turning into an unreadable overlay. Those extensions are not implemented here.\n\n## Place, approve and read\n\nAda sends `POST /images/photo-1/tags` with an operation ID, image version, base placement revision, target and point. The server binds Ada from her credential, validates the numbers and verifies ownership. It never accepts a caller-supplied owner as authority.\n\nThe new tag begins pending. In one transaction the service inserts it, advances the placement revision and saves the operation receipt. Repeating the identical request returns the receipt; reusing its identity with changed coordinates conflicts.\n\nBo can approve or withdraw through `POST /tags/1/consent`. Reads expose only approved tags for the current version, with active owner and target accounts and current permission to view the image. Placement and approval answer different questions: Ada can suggest an association, while Bo controls whether this design displays it.\n\n```mermaid\nsequenceDiagram\n  accTitle: A proposed tag becomes visible after approval\n  accDescr: Ada places a pending tag. A reader sees no tag until Bo approves it. A later withdrawal hides it from subsequent reads.\n  participant A as Ada\n  participant S as Tag service\n  participant B as Bo\n  A->>S: Place tag, v1\n  S-->>A: Pending tag 1\n  B->>S: Approve tag 1\n  Note over S: Approved: visible\n  B->>S: Withdraw approval\n  Note over S: Withdrawn: hidden\n```\n\nTwo placements based on revision 1 cannot both advance this editor to revision 2. One succeeds; the other refetches. This whole-image precondition is a deliberate editing policy. Independent annotations could instead use per-tag revisions or a declared merge rule.\n\nConsent does not advance the placement revision. The fixture serializes new consent writes in arrival order, so a production interface with multiple active editing devices would need a separate consent revision if it must reject stale new intentions.\n\nAn identical old approval retry only returns its historical receipt; it does not undo a later withdrawal. As in [[wiki/reaction-modeling|reaction modeling]], the client must distinguish an operation result from current state.\n\n## Run the geometry and HTTP example\n\nSave the [tagging service](/course-assets/system-design/m22-tagging.py), [shared helpers](/course-assets/system-design/m22-common.py) and [pinned image dependency](/course-assets/system-design/m22-image-requirements.txt) together. Use an isolated Python environment with the pinned Pillow version. The program generates geometric images, owns a temporary SQLite database and serves requests only on loopback.\n\n```bash title=\"setup\"\npython3 -m venv /tmp/fanout-m22\nuv pip install --python /tmp/fanout-m22/bin/python -r m22-image-requirements.txt\n```\n\nBefore running it, predict two outcomes: whether a top-margin click is accepted, and whether an editor holding image version 1 can place a tag after the source is replaced by version 2.\n\n```bash title=\"terminal\"\n/tmp/fanout-m22/bin/python m22-tagging.py --images ./m22-images\n```\n```output\nPillow=12.1.0 source=800x600 orientation=1\nnormalized point: u=0.25 v=0.25; source=(200,150)\ncontain 500x500: (125.000000,156.250000) roundtrip_error=0.000000000000\ncover 500x500: (83.333333,125.000000) roundtrip_error=0.000000000000\nright/bottom equality: (1.0, 1.0)\nletterbox click: refused\ncover left-edge source point: None\nowner placement: 201 pending\nidentical retry: 200\nchanged retry: 409\nnon-owner placement: 403\nbefore consent visible tags: 0\nafter Bo consent visible tags: 1\nconcurrent revision1: [201, 409]\nconsent withdrawn visible tags: 0\nmalformed framing: [[\"empty transfer encoding\",400],[\"ambiguous length\",400],[\"huge numeric length\",400],[\"unpaired surrogate\",400],[\"short body\",400]]\nretained tags=2 coordinate pairs=2\nreplacement visible tags: 0\nold image placement: 409\nprivate image read: 404\n```\n\nThe inverse calculation is checked before its error is rounded for printing. The HTTP run exercises retries, permission, approval and concurrent placement. The five malformed framing probes are refused without adding tags. Either concurrent target may win; sorting the status codes makes the capture independent of that choice.\n\nTwo rows remain because the initial placement and one concurrent placement succeeded. Replacement retains those rows under version 1 but makes the current version's visible list empty. An old editor must reload the image and ask for confirmation; silently resending its fractions under version 2 defeats the version check.\n\nFinally, Bo's earlier approval does not grant access after Ada makes the image private. The fixture returns 404 for that read. A real private-media product must also authorize the image bytes and every variant: filtering tag metadata alone cannot protect a publicly served photo.\n"
-              }
-            },
-            {
-              "slug": "live-commentary-system-design",
-              "title": "Design: live commentary",
-              "kind": "design",
-              "archive": {
-                "slug": "live-commentary-system-design",
-                "file": "live-commentary-system-design.md",
-                "title": "Design: live commentary",
-                "displayTitle": "Design: live commentary",
-                "type": "design",
-                "tags": [
-                  "system-design",
-                  "realtime",
-                  "commentary"
-                ],
-                "sources": [
-                  "[[wiki/realtime-database-and-websocket-scaling]]",
-                  "[[wiki/websockets-vs-sse-vs-long-polling]]",
-                  "[[wiki/retries-timeouts-idempotency]]",
-                  "[[wiki/caching-layers]]",
-                  "https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html",
-                  "https://www.rfc-editor.org/rfc/rfc9110.html",
-                  "https://html.spec.whatwg.org/multipage/server-sent-events.html",
-                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 3,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Live commentary lets a few writers publish updates to a much larger audience.",
-                  "continuation": "Most readers want the newest page; some scroll back through the match."
-                }
-              }
-            }
-          ]
-        },
-        {
-          "id": "learning-geo-matching",
-          "number": "12",
-          "title": "Geo, matching and recs",
-          "summary": "Find nearby candidates, match supply to demand, and rank recommendations.",
-          "units": [
-            {
-              "slug": "nearby-geospatial-search-system-design",
-              "title": "Nearby geospatial search",
-              "kind": "lesson",
-              "archive": {
-                "slug": "nearby-geospatial-search-system-design",
-                "file": "nearby-geospatial-search-system-design.md",
-                "title": "Nearby search and distance",
-                "displayTitle": "Nearby search and distance",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "geospatial",
-                  "distance"
-                ],
-                "sources": [
-                  "[[wiki/social-feed-system-design-case-study]]",
-                  "https://geographiclib.sourceforge.io/html/python/code.html",
-                  "https://postgis.net/workshops/postgis-intro/indexing.html",
-                  "https://redis.io/docs/latest/commands/geosearch/",
-                  "https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-geo-distance-query",
-                  "https://postgis.net/docs/ST_DWithin.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Nearby search finds objects within a distance of a location: shops around a hotel, available couriers near a pickup, or people a viewer is allowed to discover.",
-                  "continuation": "Its usual shape is a cheap candidate search followed by exact checks."
-                }
-              }
-            },
-            {
-              "slug": "geohash-prefix-spatial-index",
-              "title": "Geohash prefix spatial index",
-              "kind": "lesson",
-              "archive": {
-                "slug": "geohash-prefix-spatial-index",
-                "file": "geohash-prefix-spatial-index.md",
-                "title": "Geohash prefix cells",
-                "displayTitle": "Geohash prefix cells",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "geospatial",
-                  "geohash"
-                ],
-                "sources": [
-                  "[[wiki/nearby-geospatial-search-system-design]]",
-                  "https://github.com/wdm0006/pygeohash",
-                  "https://firebase.google.com/docs/firestore/solutions/geoqueries",
-                  "https://pypi.org/project/pygeohash/3.3.1/",
-                  "https://pygeohash.mcginniscommawill.com/api.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Geohash turns a location into a string that identifies a rectangular cell.",
-                  "continuation": "Objects in the same cell can be grouped under one lookup key, so a nearby search can fetch candidate IDs without scanning every stored point."
-                }
-              }
-            },
-            {
-              "slug": "geospatial-grid-systems-h3-s2-geohash",
-              "title": "Grid systems: H3, S2, geohash",
-              "kind": "lesson",
-              "archive": {
-                "slug": "geospatial-grid-systems-h3-s2-geohash",
-                "file": "geospatial-grid-systems-h3-s2-geohash.md",
-                "title": "H3, S2 and geohash grids",
-                "displayTitle": "H3, S2 and geohash grids",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "geospatial",
-                  "spatial-index"
-                ],
-                "sources": [
-                  "https://h3geo.org/docs/highlights/indexing/",
-                  "https://h3geo.org/docs/core-library/overview/",
-                  "https://h3geo.org/docs/api/hierarchy/",
-                  "https://h3geo.org/docs/core-library/restable/",
-                  "https://s2geometry.io/devguide/s2cell_hierarchy.html",
-                  "https://s2geometry.io/devguide/examples/coverings.html",
-                  "https://postgis.net/workshops/postgis-intro/indexing.html",
-                  "https://s2geometry.io/resources/s2cell_statistics.html",
-                  "https://s2sphere.readthedocs.io/en/latest/",
-                  "https://pypi.org/project/h3/4.5.0/",
-                  "https://pypi.org/project/s2sphere/0.2.5/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Geospatial grids give regions stable identifiers, letting a system group locations under ordinary keys.",
-                  "continuation": "That is useful for counting orders by area, joining two location datasets, or narrowing a nearby search."
-                }
-              }
-            },
-            {
-              "slug": "redis-geo-spatial-hot-path",
-              "title": "Redis GEO hot path",
-              "kind": "lesson",
-              "archive": {
-                "slug": "redis-geo-spatial-hot-path",
-                "file": "redis-geo-spatial-hot-path.md",
-                "title": "Redis GEO for changing candidates",
-                "displayTitle": "Redis GEO for changing candidates",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "geospatial",
-                  "redis"
-                ],
-                "sources": [
-                  "https://redis.io/docs/latest/commands/geoadd/",
-                  "https://redis.io/docs/latest/commands/geosearch/",
-                  "https://redis.io/docs/latest/commands/geopos/",
-                  "https://redis.io/docs/latest/commands/zrem/",
-                  "https://redis.io/docs/latest/commands/expire/",
-                  "https://redis.io/docs/latest/develop/programmability/eval-intro/",
-                  "https://geographiclib.sourceforge.io/html/python/code.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Redis GEO maintains an in-memory index of named locations and finds members within a radius or box.",
-                  "continuation": "It can serve a nearby lookup for active couriers, rental bikes or stores when the working set fits in memory and the spatial queries are simple."
-                }
-              }
-            },
-            {
-              "slug": "geofencing-point-in-polygon",
-              "title": "Geofencing: point in polygon",
-              "kind": "lesson",
-              "archive": {
-                "slug": "geofencing-point-in-polygon",
-                "file": "geofencing-point-in-polygon.md",
-                "title": "Geofencing and boundary policy",
-                "displayTitle": "Geofencing and boundary policy",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "geospatial",
-                  "geometry"
-                ],
-                "sources": [
-                  "https://shapely.readthedocs.io/en/2.1.2/reference/shapely.covers.html",
-                  "https://shapely.readthedocs.io/en/2.1.2/reference/shapely.contains.html",
-                  "https://shapely.readthedocs.io/en/2.1.2/manual.html",
-                  "https://postgis.net/docs/ST_Covers.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Geofencing checks whether a reported location belongs to a named region.",
-                  "continuation": "A delivery service can use it to decide which addresses it serves; an airport pickup flow can use it to select the appropriate pickup zone."
-                }
-              }
-            },
-            {
-              "slug": "ray-casting-point-in-polygon",
-              "title": "Ray casting point in polygon",
-              "kind": "lesson",
-              "archive": {
-                "slug": "ray-casting-point-in-polygon",
-                "file": "ray-casting-point-in-polygon.md",
-                "title": "Ray casting and polygon edges",
-                "displayTitle": "Ray casting and polygon edges",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "geospatial",
-                  "algorithms"
-                ],
-                "sources": [
-                  "https://shapely.readthedocs.io/en/2.1.2/reference/shapely.covers.html",
-                  "https://shapely.readthedocs.io/en/2.1.2/manual.html",
-                  "https://wrfranklin.org/Research/Short_Notes/pnpoly.html",
-                  "https://erich.realtimerendering.com/ptinpoly/",
-                  "https://www.cs.cmu.edu/~quake/robust.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Ray casting is a way to test whether a point lies inside a polygon.",
-                  "continuation": "Draw an imaginary ray from the point to the right and count its boundary crossings: an odd count means inside, an even count means outside."
-                }
-              }
-            },
-            {
-              "slug": "seen-filtering-bloom-vs-exact-sets",
-              "title": "Seen filtering: Bloom vs exact sets",
-              "kind": "lesson",
-              "archive": {
-                "slug": "seen-filtering-bloom-vs-exact-sets",
-                "file": "seen-filtering-bloom-vs-exact-sets.md",
-                "title": "Seen filtering: Bloom filters and exact sets",
-                "displayTitle": "Seen filtering: Bloom filters and exact sets",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "probabilistic-structures"
-                ],
-                "sources": [
-                  "[[wiki/bloom-filters]]",
-                  "[[wiki/retries-timeouts-idempotency]]",
-                  "https://www.eecs.harvard.edu/~michaelm/postscripts/rsa2008.pdf",
-                  "https://redis.io/docs/latest/develop/data-types/probabilistic/bloom-filter/",
-                  "https://redis.io/docs/latest/commands/cf.del/",
-                  "https://roaringbitmap.org/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Seen filtering removes candidates a viewer has already encountered: swiped profiles, dismissed products, watched videos or previously shown ads.",
-                  "continuation": "The first decision is what counts as “seen."
-                }
-              }
-            },
-            {
-              "slug": "matching-and-recommendation-algorithms",
-              "title": "Matching and recommendation algorithms",
-              "kind": "lesson",
-              "archive": {
-                "slug": "matching-and-recommendation-algorithms",
-                "file": "matching-and-recommendation-algorithms.md",
-                "title": "Matching and recommendation algorithms",
-                "displayTitle": "Matching and recommendation algorithms",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "recommendations",
-                  "ranking"
-                ],
-                "sources": [
-                  "https://developers.google.com/machine-learning/recommendation/content-based/basics",
-                  "https://developers.google.com/machine-learning/recommendation/collaborative/basics",
-                  "https://scikit-learn.org/stable/common_pitfalls.html#data-leakage",
-                  "https://developers.google.com/machine-learning/recommendation/overview/types",
-                  "https://developers.google.com/machine-learning/recommendation/dnn/re-ranking",
-                  "[[wiki/search-feedback-and-relevance-signals]]",
-                  "[[wiki/search-evaluation-metrics]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Matching chooses useful pairings: a rider and driver, a job and candidate, or a reader and article.",
-                  "continuation": "A recommender usually proposes items the user may choose from."
-                }
-              }
-            }
-          ]
-        },
-        {
-          "id": "learning-media-files",
-          "number": "13",
-          "title": "Media, files and CDN",
-          "summary": "Study media, files and CDN.",
-          "units": [
-            {
-              "slug": "direct-to-object-storage-upload",
-              "title": "Direct-to-object-storage upload",
-              "kind": "lesson",
-              "archive": {
-                "slug": "direct-to-object-storage-upload",
-                "file": "direct-to-object-storage-upload.md",
-                "title": "Direct-to-object-storage upload",
-                "displayTitle": "Direct-to-object-storage upload",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "media",
-                  "uploads"
-                ],
-                "sources": [
-                  "[[wiki/s3-object-storage-architecture]]",
-                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html",
-                  "https://docs.aws.amazon.com/AmazonS3/latest/developerguide/sigv4-HTTPPOSTConstructPolicy.html",
-                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/cors.html",
-                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html",
-                  "https://www.rfc-editor.org/rfc/rfc9112.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Direct upload sends file bytes from the client to object storage.",
-                  "continuation": "The application authorizes the transfer and decides when the file becomes usable, without relaying the whole body through its API servers."
-                }
-              }
-            },
-            {
-              "slug": "image-cdn-and-resizing",
-              "title": "Image CDN and resizing",
-              "kind": "lesson",
-              "archive": {
-                "slug": "image-cdn-and-resizing",
-                "file": "image-cdn-and-resizing.md",
-                "title": "Image CDN and resizing",
-                "displayTitle": "Image CDN and resizing",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "images",
-                  "caching"
-                ],
-                "sources": [
-                  "[[wiki/direct-to-object-storage-upload]]",
-                  "[[wiki/photo-tagging-coordinate-model]]",
-                  "https://aws.amazon.com/blogs/networking-and-content-delivery/image-optimization-using-amazon-cloudfront-and-aws-lambda/",
-                  "https://www.greatfrontend.com/questions/system-design/news-feed-facebook",
-                  "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-signed-urls.html",
-                  "https://pillow.readthedocs.io/en/stable/reference/Image.html",
-                  "https://pillow.readthedocs.io/en/stable/reference/ImageOps.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Image delivery has two separate jobs: choose a useful representation of the source, then avoid fetching and processing it again for every reader.",
-                  "continuation": "A resize worker produces variants; a CDN caches their bytes near readers."
-                }
-              }
-            },
-            {
-              "slug": "gravatar-style-avatar-service",
-              "title": "An avatar service",
-              "kind": "lesson",
-              "archive": {
-                "slug": "gravatar-style-avatar-service",
-                "file": "gravatar-style-avatar-service.md",
-                "title": "An avatar service",
-                "displayTitle": "An avatar service",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "images",
-                  "identity"
-                ],
-                "sources": [
-                  "[[wiki/image-cdn-and-resizing]]",
-                  "https://docs.gravatar.com/sdk/images/",
-                  "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Invalidation.html",
-                  "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "An avatar service turns an account reference into its current profile image.",
-                  "continuation": "Comments can keep the author's account ID even when that author changes their photo."
-                }
-              }
-            },
-            {
-              "slug": "video-upload-signed-url-multipart",
-              "title": "Video upload: signed URLs and multipart",
-              "kind": "lesson",
-              "archive": {
-                "slug": "video-upload-signed-url-multipart",
-                "file": "video-upload-signed-url-multipart.md",
-                "title": "Video upload: signed URLs and multipart",
-                "displayTitle": "Video upload: signed URLs and multipart",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "video",
-                  "uploads"
-                ],
-                "sources": [
-                  "[[wiki/direct-to-object-storage-upload]]",
-                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html",
-                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html",
-                  "https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html",
-                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Multipart upload transfers one file in separately numbered portions, then assembles them into an object.",
-                  "continuation": "A failed portion can be retried without resending the whole video."
-                }
-              }
-            },
-            {
-              "slug": "video-transcoding-pipeline",
-              "title": "Video transcoding pipeline",
-              "kind": "lesson",
-              "archive": {
-                "slug": "video-transcoding-pipeline",
-                "file": "video-transcoding-pipeline.md",
-                "title": "Video transcoding pipeline",
-                "displayTitle": "Video transcoding pipeline",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "media",
-                  "workflows"
-                ],
-                "sources": [
-                  "[[wiki/video-upload-signed-url-multipart]]",
-                  "https://ffmpeg.org/ffmpeg.html",
-                  "https://ffmpeg.org/ffmpeg-formats.html#hls-2",
-                  "https://www.rfc-editor.org/rfc/rfc8216.html",
-                  "https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.html",
-                  "https://netflixtechblog.com/rebuilding-netflix-video-processing-pipeline-with-microservices-4e5e6310e359"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Transcoding turns an uploaded video into representations suited to playback: different dimensions, compression settings or codecs.",
-                  "continuation": "Packaging then arranges the encoded media into files and playlists."
-                }
-              }
-            },
-            {
-              "slug": "adaptive-bitrate-and-cdn-decider",
-              "title": "Adaptive bitrate and the CDN decider",
-              "kind": "lesson",
-              "archive": {
-                "slug": "adaptive-bitrate-and-cdn-decider",
-                "file": "adaptive-bitrate-and-cdn-decider.md",
-                "title": "Adaptive bitrate and CDN selection",
-                "displayTitle": "Adaptive bitrate and CDN selection",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "media",
-                  "playback"
-                ],
-                "sources": [
-                  "[[wiki/video-transcoding-pipeline]]",
-                  "https://www.rfc-editor.org/rfc/rfc8216.html",
-                  "https://ffmpeg.org/ffmpeg-formats.html#hls-2",
-                  "https://dashif.org/dash.js/pages/usage/abr/",
-                  "https://openconnect.zendesk.com/hc/en-us/articles/360035618071-Fill-patterns"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "Adaptive bitrate streaming lets a player choose among encoded representations as network and playback conditions change. A smaller next segment can help avoid a stall. It cannot undo time already spent waiting for an earlier segment.",
-                "mermaidCount": 1,
-                "content": "# Adaptive bitrate and CDN selection\n\nAdaptive bitrate streaming lets a player choose among encoded representations as network and playback conditions change. A smaller next segment can help avoid a stall. It cannot undo time already spent waiting for an earlier segment.\n\nThere are three related decisions: which rendition the viewer requests now, which renditions the service prepares, and where their bytes should be cached. We'll separate them, then use real segment sizes in a small simulation to see why reacting to the last transfer can be too late.\n\n## The player chooses from a prepared offer\n\nThe [[wiki/video-transcoding-pipeline|transcoding pipeline]] creates the representations. In HLS, a master playlist identifies available variants, and their media playlists identify ordered segments. The player chooses files that already exist; it does not ask the encoder to change an in-flight file's quality.\n\nThe ladder is the set of offered resolutions and bitrates. It must fit supported devices and codecs, with corresponding content aligned in time. A higher resolution is not automatically useful on a small display, and bitrate alone does not compare visual quality across different codecs or scenes.\n\nThree quantities guide playback:\n\n| Quantity | Meaning |\n|---|---|\n| Media bitrate | Encoded bits per second of media |\n| Download throughput | Received bits per second of transfer time |\n| Buffer | Seconds of media available ahead of playback |\n\nA rendition can have a modest average bitrate and still contain a large segment. The player needs enough buffer to survive that segment's actual transfer. A path's last observed throughput is evidence about the next request, not knowledge of its future capacity.\n\nProduction selectors may combine throughput estimates, buffer levels, device limits and switching history. For example, dash.js documents distinct throughput, buffer, dropped-frame and request-abandonment rules. Our rule below intentionally uses only the previous completed transfer so its delay is easy to see.\n\n## A three-request experiment\n\nThe [lab](/course-assets/system-design/m24-lab.py) and [media helper](/course-assets/system-design/m24-media.py) generate the same HLS files as the preceding lesson. Use its pinned Python environment and FFmpeg 8.1.2. File sizes are measured; download times and stalls are calculated under a chosen capacity schedule, with no real congested network.\n\nBoth policies start with one second buffered. Fixed-high always requests the larger rendition. Adaptive requests high if its previous observed capacity is at least 200,000 bits/s, otherwise low. Its initial observation is 400,000 bits/s; neither policy can see the next capacity before choosing.\n\n```bash title=\"terminal\"\n/tmp/fanout-m24/bin/python m24-lab.py abr\n```\n```output\n#EXTM3U\n#EXT-X-VERSION:6\n#EXT-X-STREAM-INF:BANDWIDTH=55648,RESOLUTION=160x90\nlow/index.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=188000,RESOLUTION=320x180\nhigh/index.m3u8\nchosen capacity bits/s=[400000, 40000, 400000] initial buffer=1.000s\nfixed-high download/buffer/stall: high:0.447s/1.553s/0.000s, high:4.474s/1.000s/2.922s, high:0.470s/1.530s/0.000s total_stall=2.922s\nadaptive download/buffer/stall: high:0.447s/1.553s/0.000s, high:4.474s/1.000s/2.922s, low:0.139s/1.861s/0.000s total_stall=2.922s\nsimulated origin observations: A age=4 refused; B age=1 selected=B\n```\n\nEach generated segment lasts one second. The largest high segment contains 23,500 bytes, giving the advertised peak of 188,000 bits/s. This calculation is valid for the fixture's equal one-second segments and one-second target duration; it is not a promise of network capacity.\n\nFor a segment of `S` bytes and a path capacity of `C` bits/s, ideal transfer time is `8*S/C`. If the player starts that request with `B` seconds buffered, the stall is `max(0, transfer time − B)`. Afterward, the buffer is `max(0, B − transfer time) + segment duration`.\n\nThe first high segment is 22,372 bytes. At 400,000 bits/s it takes 0.44744 seconds, leaving 1.55256 seconds buffered after adding the new second of media. The next high segment has the same size, but capacity drops to 40,000 bits/s.\n\nThat transfer takes 4.4744 seconds: 2.92184 seconds longer than the available buffer. Both policies stall by the displayed 2.922 seconds. Adaptive learns about the drop only after that transfer completes, then switches low just as capacity recovers.\n\n```mermaid\nflowchart TD\n    accTitle: A playback decision arrives late\n    accDescr: The first fast transfer makes the selector choose high again. The second transfer is slow and stalls. Only afterward does the selector choose low, when the path has already recovered.\n    A[\"Request 1: high<br/>Fast transfer\"] --> B[\"Request 2: high<br/>Capacity drops; stall\"]\n    B --> C[\"Observe slow transfer\"]\n    C --> D[\"Request 3: low<br/>Capacity has recovered\"]\n```\n\nThe last low segment's 6,956 bytes arrive quickly, but cannot recover time already stalled. On this schedule the adaptive rule does not improve the total-stall metric. The experiment omits round trips, protocol overhead, contention and decoder startup; it tests the consequence of delayed information, not a production ABR algorithm.\n\nA buffer-aware rule could become more cautious as playable time runs low. More startup buffer can absorb longer transfers, but makes the viewer wait before playback. Evaluate startup delay, rebuffering and quality changes together rather than choosing a universal threshold from this three-second clip.\n\n## Which renditions should exist?\n\nThe player cannot select a version the service has not prepared. Encoding every upload into every possible format spends compute and storage even on videos that nobody watches. Deferring everything makes the first viewer wait for processing.\n\n| Preparation policy | Useful when | Cost or delay |\n|---|---|---|\n| Eager ladder | The expected audience needs several representations immediately | Work is paid even if some renditions are never watched |\n| Baseline, then more on demand | A complete initial offer is enough for less-watched uploads | New representations take time to become available |\n| Prepare for predicted demand | A release or rising audience provides advance notice | A wrong prediction wastes work or misses demand |\n\nIn our proposed service, an on-demand miss queues a deduplicated job keyed by source and encoding recipe. The existing baseline remains playable while the new rendition is prepared. Add it to the advertised offer only after validation; a viewer request should not receive a playlist pointing at unfinished work.\n\nThis is independent of the request-by-request ABR rule. It changes what the rule will be able to choose later.\n\n## The CDN decider controls preparation and placement\n\n“CDN decider” is a name for our proposed policy service, not a standard CDN API. It combines recent view velocity, viewer geography, channel audience, content type, shares, trending signals and known release spikes to decide where extra work is justified.\n\nIts actions may include generating another rendition, warming selected ready objects in a region, retaining an origin copy or retiring an unused cache placement. The available controls depend on the delivery provider; ordinary CDN eviction is often automatic, not a per-object command the application owns.\n\nWarming transfers bytes before a viewer requests them. It can reduce a first miss while consuming fill bandwidth and cache space. Moving a source to colder storage is a separate retention choice and may increase retrieval delay. Keep encoding, cache placement and storage tiering as separate actions with explicit costs.\n\nNetflix's Open Connect fill documentation gives a concrete placement example: appliances hold portions of the catalog and primarily receive updates in off-peak windows. Popularity changes and new or re-encoded titles affect those updates. This is Netflix's documented delivery model, not a guarantee offered by every CDN.\n\nOur controller can consume [[wiki/event-bus-for-product-events|product events]] such as `video.published`, `video.viewed` and `video.trending`, and emit a request to prepare or cache a version. Treat `variant.generated` as evidence of a ready output, not merely a queued task. Repeated events should converge on one intended action.\n\nUse bounded budgets and a quiet period before reversing a placement decision. Otherwise noisy demand can repeatedly trigger expensive encodes or cache fills. Measure useful cache hits and avoided viewer delay against the work spent; traffic volume alone does not show that warming paid off.\n\n## Choosing a delivery location\n\nAfter selecting a ready object, a player or delivery service may still choose which CDN or origin serves it. This is a separate decision from choosing the rendition. Old latency samples can mislead either choice.\n\nThe final line of the replay compares two simulated origins transferring the same 1,000 bytes. A took 0.1 seconds at tick 1; B took 0.2 seconds at tick 4. At tick 5, a maximum age of two ticks excludes the faster but stale A sample, so B wins.\n\nThat toy rule only compares fresh equal-size observations. A real selector also needs failure rates, comparable workloads and a fallback when no candidate is eligible. Neither the example nor the label “CDN” establishes a global performance result.\n\nThe next [[wiki/signed-urls-drm-and-video-security|access lesson]] checks permission on every playlist and segment the player chooses.\n"
-              }
-            },
-            {
-              "slug": "signed-urls-drm-and-video-security",
-              "title": "Signed URLs, DRM, and video security",
-              "kind": "lesson",
-              "archive": {
-                "slug": "signed-urls-drm-and-video-security",
-                "file": "signed-urls-drm-and-video-security.md",
-                "title": "Signed URLs, DRM, and video security",
-                "displayTitle": "Signed URLs, DRM, and video security",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "media",
-                  "access"
-                ],
-                "sources": [
-                  "[[wiki/adaptive-bitrate-and-cdn-decider]]",
-                  "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-signed-urls.html",
-                  "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-choosing-signed-urls-cookies.html",
-                  "https://www.w3.org/TR/2017/REC-encrypted-media-20170918/",
-                  "https://aws.amazon.com/blogs/media/securing-media-content-using-watermarking-at-the-edge/",
-                  "https://www.rfc-editor.org/rfc/rfc9110.html",
-                  "https://learn.microsoft.com/en-us/playready/overview/security-level"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A private video needs protection wherever its media is served.",
-                  "continuation": "Requiring login on the watch page is insufficient if its playlist points to public segments."
-                }
-              }
-            },
-            {
-              "slug": "live-streaming-webrtc-and-latency",
-              "title": "Live streaming, WebRTC, and latency",
-              "kind": "lesson",
-              "archive": {
-                "slug": "live-streaming-webrtc-and-latency",
-                "file": "live-streaming-webrtc-and-latency.md",
-                "title": "Live streaming, WebRTC, and latency",
-                "displayTitle": "Live streaming, WebRTC, and latency",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "media",
-                  "realtime"
-                ],
-                "sources": [
-                  "[[wiki/adaptive-bitrate-and-cdn-decider]]",
-                  "https://webrtc.org/getting-started/peer-connections",
-                  "https://aiortc.readthedocs.io/en/latest/api.html",
-                  "https://www.rfc-editor.org/rfc/rfc8834.html",
-                  "https://www.rfc-editor.org/rfc/rfc8445.html",
-                  "https://www.rfc-editor.org/rfc/rfc8656.html",
-                  "https://janus.conf.meetecho.com/docs/videoroom.html",
-                  "https://developer.apple.com/videos/play/wwdc2020/10228/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Live delivery sends media while it is being produced.",
-                  "continuation": "A broadcast viewer may tolerate being a few seconds behind the camera; people talking to each other need a much shorter feedback loop."
-                }
-              }
-            },
-            {
-              "slug": "remote-file-sync-design",
-              "title": "Remote file sync design",
-              "kind": "lesson",
-              "archive": {
-                "slug": "remote-file-sync-design",
-                "file": "remote-file-sync-design.md",
-                "title": "Remote file sync",
-                "displayTitle": "Remote file sync",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "file-sync",
-                  "revisions"
-                ],
-                "sources": [
-                  "[[wiki/metadata-db-for-object-storage]]",
-                  "https://dropbox.tech/infrastructure/streaming-file-synchronization",
-                  "https://dropbox.tech/infrastructure/-testing-our-new-sync-engine",
-                  "https://docs.syncthing.net/users/syncing.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "File synchronization carries changes between local folders and remote storage, including changes made while a device was offline.",
-                  "continuation": "It must discover what changed, move the required bytes, and handle competing edits without silently losing someone's work."
-                }
-              }
-            },
-            {
-              "slug": "fixed-block-chunking-and-content-addressing",
-              "title": "Fixed-block chunking and content addressing",
-              "kind": "lesson",
-              "archive": {
-                "slug": "fixed-block-chunking-and-content-addressing",
-                "file": "fixed-block-chunking-and-content-addressing.md",
-                "title": "Fixed blocks and content addresses",
-                "displayTitle": "Fixed blocks and content addresses",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "file-sync",
-                  "chunking"
-                ],
-                "sources": [
-                  "[[wiki/remote-file-sync-design]]",
-                  "https://dropbox.tech/infrastructure/streaming-file-synchronization",
-                  "https://docs.syncthing.net/users/syncing.html",
-                  "https://docs.python.org/3.12/library/hashlib.html",
-                  "https://borgbackup.readthedocs.io/en/stable/internals/data-structures.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Chunking divides a file into smaller transfer units.",
-                  "continuation": "Content addressing names each unit by a hash of its bytes, so a sender can ask which pieces the receiver lacks instead of always resending the file."
-                }
-              }
-            },
-            {
-              "slug": "blocklist-versioned-file-metadata",
-              "title": "Blocklist versioned file metadata",
-              "kind": "lesson",
-              "archive": {
-                "slug": "blocklist-versioned-file-metadata",
-                "file": "blocklist-versioned-file-metadata.md",
-                "title": "Blocklists and file revisions",
-                "displayTitle": "Blocklists and file revisions",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "file-sync",
-                  "metadata"
-                ],
-                "sources": [
-                  "[[wiki/fixed-block-chunking-and-content-addressing]]",
-                  "[[wiki/metadata-db-for-object-storage]]",
-                  "https://dropbox.tech/infrastructure/streaming-file-synchronization",
-                  "https://dropbox.tech/infrastructure/inside-the-magic-pocket",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://www.sqlite.org/autoinc.html",
-                  "https://www.sqlite.org/pragma.html#pragma_synchronous",
-                  "https://docs.python.org/3.12/library/os.html#os.fsync"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "A blocklist records which pieces make up a file and in what order. An immutable revision preserves that recipe, while a mutable path pointer selects the version users currently see. Publishing the recipe must wait until its referenced bytes are ready to read.",
-                "mermaidCount": 1,
-                "content": "# Blocklists and file revisions\n\nA blocklist records which pieces make up a file and in what order. An immutable revision preserves that recipe, while a mutable path pointer selects the version users currently see. Publishing the recipe must wait until its referenced bytes are ready to read.\n\nWe'll connect the blocklist to a namespace journal, follow the publication transaction, and test missing bytes, corruption and retries in the local sync service.\n\n## One file, several kinds of identity\n\nA path names a location within a namespace. A revision identifies an accepted publication. A digest identifies bytes. Two revisions can contain identical bytes, and two positions in one file can reference the same blob.\n\nOur sixteen-byte file still contains `AAAA`, `BBBB`, `CCCC`, `AAAA`. Its four ordered references need three stored blobs. Turning the blocklist into a set loses the final `AAAA`; sorting the references can produce a different file.\n\n| Record | Key | Relevant content |\n| --- | --- | --- |\n| Journal entry | Namespace and revision | Path, ordered blocks, size, digest, deletion state |\n| Current path | Namespace and path | Selected revision |\n| Operation receipt | Device and operation | Exact proposal and accepted result |\n| Blob | Content digest within allowed storage | Verified immutable bytes |\n\nA fuller file model may also retain timestamps, permissions and application metadata. Keep server acceptance order separate from client modification time. Dropbox's 2016 Magic Pocket account describes the same broad separation of mutable file history from immutable stored blocks; our SQLite schema is a teaching implementation, not its production database.\n\n## The cursor spans the namespace\n\nA journal cursor answers “which accepted changes have I learned about?” across the file tree. A file's base revision answers “which version of this path did I edit?” Those numbers can differ.\n\nFor example, suppose `notes.txt` is revision 14 and another file changes at revision 15. A device can read through cursor 15 while still proposing a new `notes.txt` version against base 14. Rejecting it merely because 14 is not the namespace head would create a conflict with an unrelated edit.\n\nThe proposed query has this shape:\n\n```sql title=\"changes.sql\"\nSELECT revision, path, blocks, digest, size, deleted\nFROM file_journal\nWHERE namespace_id = :namespace\n  AND revision > :after\nORDER BY revision\nLIMIT :page_size;\n```\n\nThe server derives the permitted namespace from authenticated access. A page returns a continuation position for the rows it actually supplies; a client must not skip straight to a later head while earlier pages remain unread. Receiving metadata also does not mean its files have been applied locally.\n\nOur fixture holds only Ada's namespace, so its tables omit a namespace column. It caps history and returns all later rows without pagination. Publication allocates revisions inside the transaction. Its restricted append/rollback path maintains contiguous history; SQLite `AUTOINCREMENT` alone does not promise gap-free IDs.\n\n## Prepare bytes before selecting the revision\n\nThe [[wiki/metadata-db-for-object-storage|object-metadata lesson]] separated stored bytes from published state. Apply the same ordering here:\n\n```mermaid\nflowchart TD\n  accTitle: Publishing a reconstructable revision\n  accDescr: For a new proposal, the local authority checks permission and base, verifies and synchronizes referenced blobs, then commits the journal entry, path pointer and receipt together before replying. Missing or corrupt bytes stop publication.\n  A[Check permission and base] --> B[Verify referenced blobs]\n  B --> C[Synchronize blob files]\n  C --> D[Commit metadata and receipt]\n  D --> E[Reply with revision]\n```\n\nA new blob is written to a temporary file, flushed and synchronized, then renamed to its final address and followed by directory synchronization. The lab repeats synchronization for an identical existing blob: a previous attempt may have left complete bytes but failed before reporting preparation success.\n\nPublication verifies each referenced length and digest and the assembled whole-file identity. One SQLite transaction then appends the revision, moves the path pointer and records the operation's result. A failure rolls back these metadata changes together.\n\nThe file writes occur outside SQLite's storage format; this is not one atomic transaction spanning arbitrary files and a database. The ordering allows unreferenced prepared blobs after a failed publication, which cleanup can handle. It avoids intentionally committing a reference before preparation succeeds.\n\nThe fixture serializes upload, publication and cleanup through SQLite write transactions, including verification and synchronization. That makes the boundary straightforward but holds the writer while doing file I/O. Preparing outside that lock in a larger service needs a pin or equivalent ownership rule so cleanup cannot remove bytes before commitment.\n\n## Run the publication boundary\n\nDownload [the publication example](/course-assets/system-design/m25-sync.py). The command uses temporary private files and SQLite. The corruption step alters only its own fixture and restores the original bytes before retrying.\n\n```bash title=\"terminal\"\nuv venv --quiet --allow-existing --python 3.12.12 /tmp/fanout-m25\n/tmp/fanout-m25/bin/python m25-sync.py publication\n```\n```output\nbefore blocks=409\nuploaded unique bytes=12; visible paths before commit=0\npublished=201; revision=1; ordered references=4\nreconstructed bytes=16; identical=True\nduplicate commit=200\ncorrupt referenced block=503\nrestored-byte retry=201\nstale base=409\nreopened revisions=2; first ordered digests=['63c1dd95', '4a8d8134', '90b4853e', '63c1dd95']\n```\n\nTwelve uploaded bytes initially expose zero paths. Publication selects four references, and the other device reconstructs all sixteen bytes. The last digest display repeats the first because the file repeats that block; storage uses full digests, not these eight-character labels.\n\nChanging stored `BBBB` to same-length `xxxx` defeats a size-only check but fails digest verification. No revision is published until the bytes are restored and synchronized again. The stale base still refuses afterward.\n\nThe database uses `synchronous=EXTRA`; files and directories have explicit synchronization calls. Reopening verifies retained records, but this experiment does not test power loss, disk-controller behavior or replicated durability.\n\n## Recover an operation without authorizing a new one\n\nA matching receipt must be checked before rejecting its now-old base: the original proposal may already have advanced the path. Current device permission still comes first. Reusing an operation ID with a different path, base or payload is a conflict.\n\nThat distinction lets a lost reply recover the original revision while a new stale proposal receives a conflict. Receipt device/operation fields are non-null and unique together; missing identity must not bypass the rule. The original payload is retained so equality can be checked.\n\nRevision history also creates lifecycle work. A deletion record, or tombstone, tells an offline client that absence is intentional. Renames need a defined identity model: this fixture atomically tombstones the old path and appends the destination; a stable file ID can instead preserve identity while its path changes.\n\nKeep blocks while any retained revision still needs them, including history retained after deletion. Then separately decide when history expires, how an old cursor recovers, and how privacy deletion reaches shared blobs and backups. Immutability makes old versions readable; it does not decide how long they should remain.\n\nThe [[wiki/file-sync-system-design|complete file-sync service]] exercises those rename, replay and cleanup paths. [[wiki/data-retention-and-deletion|Data retention and deletion]] develops the broader lifecycle policy.\n"
-              }
-            }
-          ]
-        },
-        {
-          "id": "learning-reliability-ops",
-          "number": "14",
-          "title": "Reliability and operations",
-          "summary": "Observe a running service, change it safely, and recover its data.",
-          "units": [
-            {
-              "slug": "observability-for-distributed-systems",
-              "title": "Observability for distributed systems",
-              "kind": "lesson",
-              "archive": {
-                "slug": "observability-for-distributed-systems",
-                "file": "observability-for-distributed-systems.md",
-                "title": "Observing a request across services",
-                "displayTitle": "Observing a request across services",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "observability",
-                  "telemetry"
-                ],
-                "sources": [
-                  "[[wiki/file-sync-system-design]]",
-                  "https://sre.google/sre-book/monitoring-distributed-systems/",
-                  "https://opentelemetry.io/docs/concepts/signals/traces/",
-                  "https://prometheus.io/docs/practices/naming/",
-                  "https://prometheus.io/docs/introduction/overview/",
-                  "https://docs.python.org/3.12/library/time.html#time.monotonic_ns"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A customer says a file never appeared.",
-                  "continuation": "The API dashboard shows successful requests."
-                }
-              }
-            },
-            {
-              "slug": "slos-and-error-budgets",
-              "title": "SLOs and error budgets",
-              "kind": "lesson",
-              "archive": {
-                "slug": "slos-and-error-budgets",
-                "file": "slos-and-error-budgets.md",
-                "title": "SLOs and error budgets",
-                "displayTitle": "SLOs and error budgets",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "reliability",
-                  "slo"
-                ],
-                "sources": [
-                  "[[wiki/observability-for-distributed-systems]]",
-                  "https://sre.google/workbook/implementing-slos/",
-                  "https://sre.google/workbook/alerting-on-slos/",
-                  "https://sre.google/sre-book/service-level-objectives/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A sync service can be available while taking an hour to deliver a file.",
-                  "continuation": "A search service can respond quickly with stale results."
-                }
-              }
-            },
-            {
-              "slug": "incident-response",
-              "title": "Incident response",
-              "kind": "lesson",
-              "archive": {
-                "slug": "incident-response",
-                "file": "incident-response.md",
-                "title": "Incident response through a verified recovery",
-                "displayTitle": "Incident response through a verified recovery",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "incidents",
-                  "reliability"
-                ],
-                "sources": [
-                  "[[wiki/observability-for-distributed-systems]]",
-                  "[[wiki/slos-and-error-budgets]]",
-                  "https://sre.google/sre-book/managing-incidents/",
-                  "https://sre.google/sre-book/monitoring-distributed-systems/",
-                  "https://sre.google/sre-book/postmortem-culture/",
-                  "https://sre.google/workbook/incident-response/"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "An incident rarely arrives as a complete explanation.",
-                  "continuation": "A probe fails, a customer reports bad data, or a queue stops moving."
-                }
-              }
-            },
-            {
-              "slug": "deployment-and-migration-safety",
-              "title": "Deployment and migration safety",
-              "kind": "lesson",
-              "archive": {
-                "slug": "deployment-and-migration-safety",
-                "file": "deployment-and-migration-safety.md",
-                "title": "Deployment and migration safety",
-                "displayTitle": "Deployment and migration safety",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "deployment",
-                  "migration"
-                ],
-                "sources": [
-                  "https://aws.amazon.com/builders-library/ensuring-rollback-safety-during-deployments/",
-                  "https://martinfowler.com/bliki/BlueGreenDeployment.html",
-                  "https://sre.google/workbook/canarying-releases/",
-                  "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/",
-                  "[[wiki/database-migration-safety]]"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-17",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A deployment replaces running software while requests and background jobs are still arriving.",
-                  "continuation": "The strategy determines how much traffic sees the new version, what you watch during the change, and how you return to the previous version if it fails."
-                }
-              }
-            },
-            {
-              "slug": "database-migration-safety",
-              "title": "Database migration safety",
-              "kind": "lesson",
-              "archive": {
-                "slug": "database-migration-safety",
-                "file": "database-migration-safety.md",
-                "title": "Database migration safety",
-                "displayTitle": "Database migration safety",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "database",
-                  "migration"
-                ],
-                "sources": [
-                  "[[wiki/deployment-and-migration-safety]]",
-                  "[[wiki/schema-evolution]]",
-                  "[[wiki/online-indexing]]",
-                  "https://www.postgresql.org/docs/current/ddl-alter.html",
-                  "https://www.postgresql.org/docs/current/sql-altertable.html",
-                  "https://www.postgresql.org/docs/current/sql-createindex.html",
-                  "https://stripe.com/blog/online-migrations",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://www.sqlite.org/lang_createview.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A database migration changes data or schema while applications still depend on it.",
-                  "continuation": "During a rolling deployment, old code, new code, workers and backfills may all be active."
-                }
-              }
-            },
-            {
-              "slug": "parallel-monolith-read-drain",
-              "title": "Parallel monolith read drain",
-              "kind": "lesson",
-              "archive": {
-                "slug": "parallel-monolith-read-drain",
-                "file": "parallel-monolith-read-drain.md",
-                "title": "Parallel monolith read drain",
-                "displayTitle": "Parallel monolith read drain",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "migration",
-                  "routing"
-                ],
-                "sources": [
-                  "[[wiki/database-migration-safety]]",
-                  "[[wiki/replication]]",
-                  "https://www.krakend.io/docs/v2.8/endpoints/",
-                  "https://www.postgresql.org/docs/current/hot-standby.html",
-                  "https://stripe.com/blog/online-migrations",
-                  "https://www.sqlite.org/lang_transaction.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "A legacy monolith can overload its primary database with reads simply because its default connection points there. Many of those queries may tolerate a replica's delay, but changing every old call site could take months. Moving a few suitable routes can buy time for that cleanup.",
-                "mermaidCount": 1,
-                "content": "# Parallel monolith read drain\n\nA legacy monolith can overload its primary database with reads simply because its default connection points there. Many of those queries may tolerate a replica's delay, but changing every old call site could take months. Moving a few suitable routes can buy time for that cleanup.\n\nThe useful boundary is the running application: give a second copy a different database configuration, then control which requests reach it. First choose eligible routes, then measure whether moving them actually relieves the primary.\n\n## Same code, different default database\n\nKeep the existing fleet pointed at the primary. Run another fleet from the same application code with its default connection pointed at a replica. An API gateway sends selected read routes to the second fleet; writes and all other routes stay on the existing path.\n\n| Application fleet | Default database |\n|---|---|\n| Existing monolith | Primary |\n| Read-drain monolith | Replica, with read-only credentials |\n\nThis avoids editing individual queries only when they use that configurable default. Audit explicit connection overrides, startup migrations, background consumers and scheduled jobs. Disable work that should not run in the second fleet. A second HTTP deployment should not accidentally become a second job scheduler.\n\n```mermaid\nflowchart TB\n  accTitle: Route selected reads to a second monolith\n  accDescr: The gateway sends eligible reads to the replica-default monolith and all other routes to the primary-default monolith. The primary replicates changes to the replica.\n  G[API gateway] -->|Other routes| W[Primary-default<br/>monolith]\n  G -->|Eligible reads| R[Replica-default<br/>monolith]\n  W --> P[(Primary)]\n  R --> S[(Replica)]\n  P -. Replication .-> S\n```\n\nRoute by both path and method. Gateway support for `GET /catalog` does not imply that `POST /catalog` should reach the same backend. KrakenD, for example, lets endpoint definitions select a method and backend. That supplies a routing mechanism; it cannot tell you whether the application behind a route is safe to move.\n\n## Choose by behavior and freshness\n\n“GET” is not enough. A handler might update a last-seen timestamp, create a missing row, refresh a token or publish an external event. Read-only database credentials help reject accidental database writes, including after a replica is promoted. They do not prevent external side effects.\n\nA route also needs a freshness contract. An asynchronous replica can return a state from before an accepted write. Decide whether that is acceptable for the particular answer:\n\n| Possible candidates, after inspection | Keep on the primary unless stronger guarantees exist |\n|---|---|\n| Catalog descriptions with an accepted delay | Checkout confirmation immediately after payment |\n| Profile display where a delayed edit is acceptable | Balance or entitlement decisions requiring current state |\n| Dashboards that show their data freshness | Read-modify-write and idempotency endpoints |\n\nThese are starting points, not permanent labels. A catalog page that promises current inventory has a different requirement from one displaying descriptions. A profile response that includes current access permissions needs a separate authorization decision.\n\nFor read-after-write flows, retaining the primary route is often the simplest first choice. The [[wiki/replication|replication lesson]] examines other freshness strategies. Do not silently weaken the product's behavior merely to move more queries.\n\n## Move one route and watch both databases\n\nStart with primary read work attributable to the route: request volume, query volume and expensive queries. Establish enough replica capacity, then route a small population through the second fleet. Watch the primary's work, replica replay lag, endpoint errors and p95/p99 latency together.\n\nA replica can be healthy and still give users a poor answer. In PostgreSQL hot standby, long queries may conflict with WAL replay; letting them run can delay replay, while applying replay can require canceling them. A read drain therefore needs evidence about cancellations and freshness as well as CPU.\n\nShadow reads are an optional earlier step: keep serving the old answer while privately comparing the new one. They add work, so bound the sample. With separate databases, two requests do not automatically share a snapshot. Differences can mean expected lag, a query bug or an incompatible representation; classify them before deciding what blocks rollout.\n\nExpand the route list only when the expected primary work falls without violating those route contracts. Keep enough primary capacity to take the traffic back. Reverting a gateway rule can restore routing while the old path remains compatible; it cannot undo stale answers already delivered.\n\n## Try the serving decisions locally\n\nThe following experiment isolates comparison, cutover and fallback. It uses the [[wiki/database-migration-safety|migration lesson's]] three orders and two representations in **one SQLite database**. It runs real read/write HTTP listeners, but it does not deploy two monoliths, a gateway or a database replica.\n\nAda is selected for the new read path; Bo stays on the old one. The local router checks current source ownership, account activity, deletion state, version and a canonical-record fingerprint before serving a copied body. It therefore still queries the source on every request. This demonstrates a strict acceptance rule, not reduced primary load.\n\nThe example separates three target failures: missing means no copied record, stale means a different version, and mismatch means changed contents at the current version. Old-served shadow comparisons use one shared SQLite snapshot here, so they do not have the cross-database timing ambiguity described above.\n\nSave the [read-drain replay](/course-assets/system-design/m27-lab.py) and [shared implementation](/course-assets/system-design/m27-core.py) together. The original capture used Python 3.14.6 and SQLite 3.53.4 on 12 September 2026. Each run creates temporary state.\n\n```bash title=\"terminal\"\npython3 m27-lab.py drain\n```\n```output\nold served; shadow check: 200 equal\nmissing shadow: missing\nwrong-value shadow: mismatch\nAda cohort new read: 200\nstale target fallback: 200 paid stale\ncaught-up new read: 200\nmissing new fallback: 200\nfallback disabled: 503\nBo remains old cohort: 200\nBo reads Ada object: 404\ncurrent Ada revocation: 403\nwrite on read-only listener: 405\nrollback cohort: []\nroute work: {\"fallback\":2,\"new\":2,\"old\":4,\"refused\":1,\"shadow\":4}\nshadow log fields: classification only; no response bodies\nHTTP outcomes: {\"200\":8,\"201\":1,\"403\":1,\"404\":1,\"405\":1,\"503\":1}\n```\n\nAfter the new writer changes Ada's order, the target is stale. Fallback returns paid from the authoritative source. Disabling fallback makes an unusable target return 503. Bo cannot read Ada's order, a revoked Ada cannot read her own, and the read listener rejects writes.\n\nThe four shadow checks are additional comparisons attached to old reads, not four more user responses. The thirteen HTTP outcomes include the accepted write and permission/method refusals. Diagnostic logs retain comparison classes, not copied response bodies.\n\n## Decide what happens when the replica falls behind\n\nFallback trades freshness and availability for extra primary work. During a replica problem, unbounded fallback can send the entire drained workload back at once. Budget that capacity and cap retries; where capacity is insufficient, the route needs an explicit choice between refusal and an older answer that its product contract permits.\n\nA successful fallback should still count as a degraded new path. Otherwise a green response-success chart can hide a replica that serves almost nothing. Keep served-old, served-new, fallback and refusal counts separate.\n\nBefore adding another route, ask: if this replica pauses immediately after a write, what will the caller see, and can the primary absorb the return traffic? Answer those questions with the route owner. The [[wiki/zero-downtime-database-migration-case-study|complete migration design]] combines the local acceptance checks with copying, retirement and the point where the old fallback disappears.\n"
-              }
-            },
-            {
-              "slug": "database-backups-and-restore",
-              "title": "Backups and restore",
-              "kind": "lesson",
-              "archive": {
-                "slug": "database-backups-and-restore",
-                "file": "database-backups-and-restore.md",
-                "title": "Database backups and restore",
-                "displayTitle": "Database backups and restore",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "backups",
-                  "recovery"
-                ],
-                "sources": [
-                  "[[wiki/database-wal-and-recovery]]",
-                  "[[wiki/disaster-recovery]]",
-                  "https://www.sqlite.org/backup.html",
-                  "https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup",
-                  "https://www.postgresql.org/docs/18/continuous-archiving.html",
-                  "https://www.postgresql.org/docs/18/backup-dump.html",
-                  "https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_planning_for_recovery_dr_tested.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A database backup preserves a recoverable earlier state.",
-                  "continuation": "The useful question is whether you can restore that state with the tools and access available during a failure, and whether it is recent enough for the application."
-                }
-              }
-            },
-            {
-              "slug": "disaster-recovery",
-              "title": "Disaster recovery",
-              "kind": "lesson",
-              "archive": {
-                "slug": "disaster-recovery",
-                "file": "disaster-recovery.md",
-                "title": "Disaster recovery",
-                "displayTitle": "Disaster recovery",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "recovery",
-                  "operations"
-                ],
-                "sources": [
-                  "[[wiki/database-backups-and-restore]]",
-                  "[[wiki/data-retention-and-deletion]]",
-                  "[[wiki/case-gitlab-database-incident]]",
-                  "https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_planning_for_recovery_objective_defined_recovery.html",
-                  "https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/disaster-recovery-options-in-the-cloud.html",
-                  "https://docs.aws.amazon.com/wellarchitected/latest/framework/rel_planning_for_recovery_dr_tested.html",
-                  "https://www.postgresql.org/docs/18/continuous-archiving.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Disaster recovery restores useful service after a failure that the normal serving setup cannot absorb.",
-                  "continuation": "The plan may cover a lost region, corrupted data, a catastrophic deployment, compromised credentials or an operator mistake."
-                }
-              }
-            },
-            {
-              "slug": "data-retention-and-deletion",
-              "title": "Data retention, deletion, and privacy",
-              "kind": "lesson",
-              "archive": {
-                "slug": "data-retention-and-deletion",
-                "file": "data-retention-and-deletion.md",
-                "title": "Data retention and deletion",
-                "displayTitle": "Data retention and deletion",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "deletion",
-                  "privacy"
-                ],
-                "sources": [
-                  "[[wiki/database-backups-and-restore]]",
-                  "[[wiki/disaster-recovery]]",
-                  "[[wiki/security-and-abuse-prevention]]",
-                  "[[wiki/multi-tenant-design]]",
-                  "https://docs.cloud.google.com/docs/security/deletion",
-                  "https://cassandra.apache.org/doc/latest/cassandra/managing/operating/compaction/tombstones.html",
-                  "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
-                  "https://www.sqlite.org/pragma.html#pragma_secure_delete"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Retention defines how long a system keeps data.",
-                  "continuation": "Deletion removes it from the places the system has copied it."
-                }
-              }
-            },
-            {
-              "slug": "security-and-abuse-prevention",
-              "title": "Security and abuse prevention",
-              "kind": "lesson",
-              "archive": {
-                "slug": "security-and-abuse-prevention",
-                "file": "security-and-abuse-prevention.md",
-                "title": "Security and abuse prevention",
-                "displayTitle": "Security and abuse prevention",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "security",
-                  "abuse"
-                ],
-                "sources": [
-                  "[[wiki/data-retention-and-deletion]]",
-                  "[[wiki/multi-tenant-design]]",
-                  "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
-                  "https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption/",
-                  "https://cheatsheetseries.owasp.org/cheatsheets/Credential_Stuffing_Prevention_Cheat_Sheet.html",
-                  "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html",
-                  "https://www.rfc-editor.org/rfc/rfc9449.html#section-11.1",
-                  "https://docs.python.org/3/library/hmac.html",
-                  "https://docs.python.org/3/library/http.server.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "Security design decides who may use a system and what they may do with its data.",
-                  "continuation": "Abuse prevention also considers how legitimate operations can harm users or exhaust shared resources."
-                }
-              }
-            },
-            {
-              "slug": "rate-limiter-placement-and-keys",
-              "title": "Rate limiter placement and keys",
-              "kind": "lesson",
-              "archive": {
-                "slug": "rate-limiter-placement-and-keys",
-                "file": "rate-limiter-placement-and-keys.md",
-                "title": "Rate limiter placement and keys",
-                "displayTitle": "Rate limiter placement and keys",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "rate-limiting",
-                  "admission"
-                ],
-                "sources": [
-                  "[[wiki/api-gateway-vs-load-balancer]]",
-                  "[[wiki/load-shedding]]",
-                  "https://nginx.org/en/docs/http/ngx_http_limit_req_module.html",
-                  "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api",
-                  "https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/rate_limit_filter",
-                  "https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/local_rate_limit_filter",
-                  "https://www.rfc-editor.org/rfc/rfc6585.html",
-                  "https://www.rfc-editor.org/rfc/rfc7239.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A rate limiter decides how much work a caller may start within a period.",
-                  "continuation": "Its usefulness depends on where it runs and which requests share an allowance."
-                }
-              }
-            },
-            {
-              "slug": "sliding-window-rate-limiter",
-              "title": "Sliding window rate limiter",
-              "kind": "lesson",
-              "archive": {
-                "slug": "sliding-window-rate-limiter",
-                "file": "sliding-window-rate-limiter.md",
-                "title": "Sliding window rate limiter",
-                "displayTitle": "Sliding window rate limiter",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "rate-limiting",
-                  "algorithms"
-                ],
-                "sources": [
-                  "[[wiki/rate-limiter-placement-and-keys]]",
-                  "https://redis.io/tutorials/howtos/ratelimiting/",
-                  "https://www.sqlite.org/lang_transaction.html",
-                  "https://www.rfc-editor.org/rfc/rfc6585.html",
-                  "https://www.rfc-editor.org/rfc/rfc9110.html#name-retry-after",
-                  "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api",
-                  "https://developer.mozilla.org/en-US/docs/Web/API/Performance/now"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 0,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A sliding-window limiter checks how much a caller has been admitted during the most recent period.",
-                  "continuation": "The window moves with each decision."
-                }
-              }
-            },
-            {
-              "slug": "multi-tenant-design",
-              "title": "Multi-tenant design",
-              "kind": "lesson",
-              "archive": {
-                "slug": "multi-tenant-design",
-                "file": "multi-tenant-design.md",
-                "title": "Multi-tenant design",
-                "displayTitle": "Multi-tenant design",
-                "type": "lesson",
-                "tags": [
-                  "system-design",
-                  "tenancy",
-                  "isolation"
-                ],
-                "sources": [
-                  "[[wiki/security-and-abuse-prevention]]",
-                  "[[wiki/data-retention-and-deletion]]",
-                  "[[wiki/disaster-recovery]]",
-                  "https://docs.aws.amazon.com/whitepapers/latest/saas-tenant-isolation-strategies/silo-isolation.html",
-                  "https://docs.aws.amazon.com/whitepapers/latest/saas-tenant-isolation-strategies/pool-isolation.html",
-                  "https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/approaches/storage-data",
-                  "https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/service/storage",
-                  "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
-                ],
-                "created": "2026-05-14",
-                "updated": "2026-09-18",
-                "excerpt": "",
-                "mermaidCount": 1,
-                "content": "",
-                "preview": {
-                  "heading": "The core idea",
-                  "paragraph": "A multi-tenant service serves several customers on shared infrastructure.",
-                  "continuation": "A tenant is the customer boundary, often a company or workspace."
-                }
-              }
-            }
-          ]
         }
       ]
     },
     {
-      "id": "part-2",
-      "number": 2,
-      "title": "Real-world systems",
-      "summary": "Additional system designs, with a concrete request path, data model and failure behavior.",
-      "hours": 4,
+      "id": "track-6",
+      "number": 6,
+      "title": "Systems Design Labs & Architectural Evolution",
+      "summary": "End-to-end synthesis across core service designs, product architectures, and historical corporate architecture postmortems.",
+      "hours": 18,
       "modules": [
         {
           "id": "design-services",
-          "number": "15",
-          "title": "Service and data designs",
-          "summary": "Follow a complete system design, from requirements through failure behavior.",
+          "number": "6.1",
+          "legacyNumber": "15",
+          "title": "Infrastructure & Core Service Designs",
+          "summary": "URL shortener at scale, distributed rate limiting, collaborative editing, S3 object storage, and partitioned logs.",
           "units": [
             {
               "slug": "url-shortener-system-design",
@@ -6303,9 +6355,10 @@ window.CURRICULUM_DATA = {
         },
         {
           "id": "design-products",
-          "number": "16",
-          "title": "Product designs",
-          "summary": "Follow a complete system design, from requirements through failure behavior.",
+          "number": "6.2",
+          "legacyNumber": "16",
+          "title": "Interactive Product System Designs",
+          "summary": "Notification system, ticket booking, payment gateways, full-text search, recommendations, chat, and feeds.",
           "units": [
             {
               "slug": "notification-system-design",
@@ -6635,9 +6688,10 @@ window.CURRICULUM_DATA = {
         },
         {
           "id": "design-operations",
-          "number": "17",
-          "title": "Media and operations designs",
-          "summary": "Follow a complete system design, from requirements through failure behavior.",
+          "number": "6.3",
+          "legacyNumber": "17",
+          "title": "High-Scale Media & Operations Designs",
+          "summary": "Ride matching, video platform, file synchronization, observability systems, and zero-downtime database migrations.",
           "units": [
             {
               "slug": "ride-matching-system-design",
@@ -6878,21 +6932,13 @@ window.CURRICULUM_DATA = {
               }
             }
           ]
-        }
-      ]
-    },
-    {
-      "id": "part-3",
-      "number": 3,
-      "title": "Case studies",
-      "summary": "Documented engineering decisions and incidents.",
-      "hours": 1,
-      "modules": [
+        },
         {
           "id": "company-cases",
-          "number": "18",
-          "title": "Engineering case studies",
-          "summary": "Study the systems and incidents described by their engineering teams.",
+          "number": "6.4",
+          "legacyNumber": "18",
+          "title": "Real-World Architecture Evolution & Incidents",
+          "summary": "In-depth analysis of Instagram early architecture, Stripe idempotency, Discord message storage, Amazon Dynamo, and the GitLab incident.",
           "units": [
             {
               "slug": "case-instagram-early-architecture",
