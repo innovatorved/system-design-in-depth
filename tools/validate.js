@@ -105,7 +105,7 @@ curriculum.parts.forEach((part) => {
   }
 });
 
-reportSuccess(`Curriculum: ${unitsCount} units across ${modulesCount} modules`);
+reportSuccess(`Curriculum: ${unitsCount} units across ${curriculum.parts.length} tracks`);
 if (errorCount === 0) {
   reportSuccess(`Slugs: all unique, all kebab-case`);
 }

@@ -41,7 +41,7 @@ window.Renderer = (() => {
         <h1 class="hero__title">System Design In Depth</h1>
         <p class="hero__subtitle">Deep notes, case studies, YouTube tutorials, and from-scratch implementations for senior engineering practice.</p>
         <div class="hero__stats">
-          <div><div class="hero__stat-value">${stats.modules}</div><div class="hero__stat-label">Modules</div></div>
+          <div><div class="hero__stat-value">${stats.tracks || 6}</div><div class="hero__stat-label">Tracks</div></div>
           <div><div class="hero__stat-value">${stats.units}</div><div class="hero__stat-label">Topics</div></div>
           <div><div class="hero__stat-value">${pct}%</div><div class="hero__stat-label">Complete</div></div>
           <div><div class="hero__stat-value" style="color: ${streak > 0 ? '#f97316' : 'inherit'};">${streak} 🔥</div><div class="hero__stat-label">Day Streak</div></div>

@@ -2,7 +2,6 @@
 window.CURRICULUM_DATA = {
   "stats": {
     "tracks": 6,
-    "modules": 18,
     "units": 200,
     "lessons": 165,
     "systems": 35,
