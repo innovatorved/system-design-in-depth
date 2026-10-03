@@ -55,7 +55,6 @@ window.Renderer = (() => {
     for (const part of data.parts) {
       html += `
         <div class="part-header">
-          <div class="part-header__label">Track ${part.number}</div>
           <h2 class="part-header__title">${part.title}</h2>
           <p class="part-header__summary">${part.summary}</p>
         </div>

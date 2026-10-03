@@ -409,7 +409,7 @@ window.App = (() => {
 
     let html = '';
     for (const part of data.parts) {
-      html += `<div style="padding:${part.number > 1 ? '8px' : '4px'} 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Track ${part.number}: ${part.title}</div>`;
+      html += `<div style="padding:${part.number > 1 ? '8px' : '4px'} 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">${part.title}</div>`;
 
       for (const mod of part.modules) {
         const isCollapsed = collapsedModules.has(mod.id);
