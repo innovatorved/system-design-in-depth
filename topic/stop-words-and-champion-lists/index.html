@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Stop words and champion lists — System Design In Depth</title>
+  <meta name="description" content="Imagine a shop assistant asked for &quot;the red jacket&quot;. Checking every item in the warehouse tagged &quot;the&quot; would be absurd, so the assistant focuses on &quot;red&quot; and.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Stop words and champion lists — System Design In Depth">
+  <meta property="og:description" content="Imagine a shop assistant asked for &quot;the red jacket&quot;. Checking every item in the warehouse tagged &quot;the&quot; would be absurd, so the assistant focuses on &quot;red&quot; and.">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/stop-words-and-champion-lists/">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Stop words and champion lists — System Design In Depth">
+  <meta name="twitter:description" content="Imagine a shop assistant asked for &quot;the red jacket&quot;. Checking every item in the warehouse tagged &quot;the&quot; would be absurd, so the assistant focuses on &quot;red&quot; and.">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/stop-words-and-champion-lists/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
+  <link rel="stylesheet" href="css/layout.css?v=3946cca8fd">
+  <link rel="stylesheet" href="css/components.css?v=535eda5884">
+  <link rel="stylesheet" href="css/content.css?v=441918c46b">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=d484bc426c"></script>
+  <script src="js/manifest.js?v=8ce3cc0278"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Stop words and champion lists",
+  "description": "Imagine a shop assistant asked for \"the red jacket\". Checking every item in the warehouse tagged \"the\" would be absurd, so the assistant focuses on \"red\" and.",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/stop-words-and-champion-lists/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" style="display:flex; gap:0.4rem; margin-right:0.5rem;">
+        <a href="#/glossary" class="btn btn--sm btn--outline" style="font-size:11px; padding:4px 8px; text-decoration:none; white-space:nowrap;">📖 Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">1.1</span>
+          <span class="module-group__title">Foundations &amp; System Invariants</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="requirements-clarification" href="/topic/requirements-clarification/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Requirements clarification</span>
+        </a><a class="unit-item" data-slug="logical-system-design" href="/topic/logical-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Logical system design</span>
+        </a><a class="unit-item" data-slug="non-functional-requirements" href="/topic/non-functional-requirements/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Non-functional requirements</span>
+        </a><a class="unit-item" data-slug="system-design-tradeoffs" href="/topic/system-design-tradeoffs/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">System design tradeoffs</span>
+        </a><a class="unit-item" data-slug="availability-durability-consistency-cost" href="/topic/availability-durability-consistency-cost/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Availability, durability, consistency, cost</span>
+        </a><a class="unit-item" data-slug="back-of-the-envelope-capacity-planning" href="/topic/back-of-the-envelope-capacity-planning/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Back-of-the-envelope capacity planning</span>
+        </a><a class="unit-item" data-slug="concurrency-vs-parallelism" href="/topic/concurrency-vs-parallelism/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">How a server handles many requests</span>
+        </a><a class="unit-item" data-slug="horizontal-vs-vertical-scaling" href="/topic/horizontal-vs-vertical-scaling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Horizontal vs vertical scaling</span>
+        </a><a class="unit-item" data-slug="monolith-vs-microservices" href="/topic/monolith-vs-microservices/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Monolith vs microservices</span>
+        </a><a class="unit-item" data-slug="repository-pattern" href="/topic/repository-pattern/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Repository pattern</span>
+        </a><a class="unit-item" data-slug="extensible-data-modeling" href="/topic/extensible-data-modeling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Extensible data modeling</span>
+        </a><a class="unit-item" data-slug="cost-aware-architecture" href="/topic/cost-aware-architecture/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Cost-aware architecture</span>
+        </a><a class="unit-item" data-slug="when-not-to-add-infrastructure" href="/topic/when-not-to-add-infrastructure/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">When not to add infrastructure</span>
+        </a></div></div><div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Data Architecture, Storage Engines &amp; State Persistence</div><div class="module-group" data-module="learning-data-sql">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">2.1</span>
+          <span class="module-group__title">Relational Modeling &amp; Query Execution</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="relational-database-design" href="/topic/relational-database-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Relational database design</span>
+        </a><a class="unit-item" data-slug="sql-backed-key-value-store" href="/topic/sql-backed-key-value-store/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a key-value store on SQL</span>
+        </a><a class="unit-item" data-slug="database-indexing" href="/topic/database-indexing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Database indexing</span>
+        </a><a class="unit-item" data-slug="b-tree" href="/topic/b-tree/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">B-tree</span>
+        </a><a class="unit-item" data-slug="query-planning" href="/topic/query-planning/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Query planning</span>
+        </a><a class="unit-item" data-slug="database-locking-and-isolation" href="/topic/database-locking-and-isolation/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Database locking and isolation</span>
+        </a><a class="unit-item" data-slug="mvcc" href="/topic/mvcc/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">MVCC</span>
+        </a><a class="unit-item" data-slug="database-wal-and-recovery" href="/topic/database-wal-and-recovery/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Database WAL and recovery</span>
+        </a><a class="unit-item" data-slug="database-ticket-servers" href="/topic/database-ticket-servers/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Database ticket servers</span>
+        </a><a class="unit-item" data-slug="relational-database-scaling" href="/topic/relational-database-scaling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Relational database scaling</span>
+        </a><a class="unit-item" data-slug="online-indexing" href="/topic/online-indexing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Online indexing</span>
+        </a><a class="unit-item" data-slug="schema-evolution" href="/topic/schema-evolution/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Schema evolution</span>
+        </a><a class="unit-item" data-slug="soft-delete" href="/topic/soft-delete/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Soft delete</span>
+        </a></div></div><div class="module-group" data-module="learning-nosql-partitioning">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">2.2</span>
+          <span class="module-group__title">NoSQL Architectures, Partitioning &amp; IDs</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="nosql-decision-boundaries" href="/topic/nosql-decision-boundaries/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">NoSQL decision boundaries</span>
+        </a><a class="unit-item" data-slug="document-vs-key-value-stores" href="/topic/document-vs-key-value-stores/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Document vs key-value stores</span>
+        </a><a class="unit-item" data-slug="columnar-vs-wide-column-stores" href="/topic/columnar-vs-wide-column-stores/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Columnar vs wide-column stores</span>
+        </a><a class="unit-item" data-slug="graph-database-decision-boundary" href="/topic/graph-database-decision-boundary/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Graph database decision boundary</span>
+        </a><a class="unit-item" data-slug="sharding-and-partitioning" href="/topic/sharding-and-partitioning/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Sharding and partitioning</span>
+        </a><a class="unit-item" data-slug="hot-partitions" href="/topic/hot-partitions/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Hot partitions</span>
+        </a><a class="unit-item" data-slug="consistent-hashing" href="/topic/consistent-hashing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Consistent hashing</span>
+        </a><a class="unit-item" data-slug="distributed-id-generation" href="/topic/distributed-id-generation/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed ID generation</span>
+        </a><a class="unit-item" data-slug="uuid-objectid-and-snowflake" href="/topic/uuid-objectid-and-snowflake/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">UUID, ObjectId, and Snowflake</span>
+        </a><a class="unit-item" data-slug="snowflake-id-design" href="/topic/snowflake-id-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Snowflake ID design</span>
+        </a><a class="unit-item" data-slug="clock-skew-and-id-ordering" href="/topic/clock-skew-and-id-ordering/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Clock skew and ID ordering</span>
+        </a><a class="unit-item" data-slug="keyset-pagination" href="/topic/keyset-pagination/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Keyset pagination</span>
+        </a><a class="unit-item" data-slug="bloom-filters" href="/topic/bloom-filters/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Bloom filters</span>
+        </a><a class="unit-item" data-slug="hot-cold-storage-archival" href="/topic/hot-cold-storage-archival/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Hot and cold storage, archival</span>
+        </a></div></div><div class="module-group" data-module="learning-storage-engines">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">2.3</span>
+          <span class="module-group__title">Storage Engine Internals &amp; Blob Systems</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="storage-engine-design-constraints" href="/topic/storage-engine-design-constraints/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Storage engine design constraints</span>
+        </a><a class="unit-item" data-slug="storage-engine-tradeoffs" href="/topic/storage-engine-tradeoffs/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Storage engine tradeoffs</span>
+        </a><a class="unit-item" data-slug="file-backed-dictionary-storage-engine" href="/topic/file-backed-dictionary-storage-engine/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">A file-backed dictionary</span>
+        </a><a class="unit-item" data-slug="custom-binary-file-format" href="/topic/custom-binary-file-format/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Custom binary file format</span>
+        </a><a class="unit-item" data-slug="byte-range-indexed-object-storage" href="/topic/byte-range-indexed-object-storage/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Byte-range indexed object storage</span>
+        </a><a class="unit-item" data-slug="immutable-versioned-data-files" href="/topic/immutable-versioned-data-files/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Immutable versioned data files</span>
+        </a><a class="unit-item" data-slug="log-structured-storage" href="/topic/log-structured-storage/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Log-structured storage</span>
+        </a><a class="unit-item" data-slug="bitcask-storage-engine" href="/topic/bitcask-storage-engine/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Bitcask storage engine</span>
+        </a><a class="unit-item" data-slug="lsm-tree-storage-engine" href="/topic/lsm-tree-storage-engine/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">LSM-tree storage engine</span>
+        </a><a class="unit-item" data-slug="memtable-wal-and-sstable" href="/topic/memtable-wal-and-sstable/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Memtable, WAL, and SSTable</span>
+        </a><a class="unit-item" data-slug="lsm-read-path-bloom-and-sparse-index" href="/topic/lsm-read-path-bloom-and-sparse-index/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">LSM read path: Bloom filters and sparse index</span>
+        </a><a class="unit-item" data-slug="compaction-and-amplification" href="/topic/compaction-and-amplification/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Compaction and amplification</span>
+        </a><a class="unit-item" data-slug="object-storage-vs-database" href="/topic/object-storage-vs-database/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Object storage vs database</span>
+        </a><a class="unit-item" data-slug="s3-object-storage-architecture" href="/topic/s3-object-storage-architecture/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">S3 object storage architecture</span>
+        </a><a class="unit-item" data-slug="range-partitioning-vs-consistent-hashing-storage" href="/topic/range-partitioning-vs-consistent-hashing-storage/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Range partitioning vs consistent hashing for storage</span>
+        </a><a class="unit-item" data-slug="partition-manager-and-map-table" href="/topic/partition-manager-and-map-table/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Partition manager and map table</span>
+        </a><a class="unit-item" data-slug="metadata-db-for-object-storage" href="/topic/metadata-db-for-object-storage/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Metadata database for object storage</span>
+        </a><a class="unit-item" data-slug="append-only-object-storage-stream-layer" href="/topic/append-only-object-storage-stream-layer/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Append-only stream layer</span>
+        </a><a class="unit-item" data-slug="object-storage-durability-and-replication" href="/topic/object-storage-durability-and-replication/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Durability and replication</span>
+        </a><a class="unit-item" data-slug="end-to-end-checksums" href="/topic/end-to-end-checksums/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">End-to-end checksums</span>
+        </a></div></div><div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Distributed Systems, Consensus &amp; Coordination</div><div class="module-group" data-module="learning-apis-services">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">3.1</span>
+          <span class="module-group__title">Network Protocols &amp; Service Communication</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="api-design-contracts" href="/topic/api-design-contracts/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">API design contracts</span>
+        </a><a class="unit-item" data-slug="service-to-service-communication" href="/topic/service-to-service-communication/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Service-to-service communication</span>
+        </a><a class="unit-item" data-slug="http-rest-grpc" href="/topic/http-rest-grpc/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">HTTP, REST, and gRPC</span>
+        </a><a class="unit-item" data-slug="tcp-vs-udp" href="/topic/tcp-vs-udp/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">TCP vs UDP</span>
+        </a><a class="unit-item" data-slug="api-gateway-vs-load-balancer" href="/topic/api-gateway-vs-load-balancer/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">API gateway vs load balancer</span>
+        </a><a class="unit-item" data-slug="load-balancers" href="/topic/load-balancers/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Load balancers</span>
+        </a><a class="unit-item" data-slug="consistent-hashing-load-balancing" href="/topic/consistent-hashing-load-balancing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Consistent-hashing load balancing</span>
+        </a><a class="unit-item" data-slug="event-contracts" href="/topic/event-contracts/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Event contracts</span>
+        </a><a class="unit-item" data-slug="retries-timeouts-idempotency" href="/topic/retries-timeouts-idempotency/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Retries, timeouts, and idempotency</span>
+        </a><a class="unit-item" data-slug="batching" href="/topic/batching/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Batching</span>
+        </a><a class="unit-item" data-slug="backpressure" href="/topic/backpressure/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Backpressure</span>
+        </a><a class="unit-item" data-slug="tail-latency" href="/topic/tail-latency/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Tail latency</span>
+        </a><a class="unit-item" data-slug="load-shedding" href="/topic/load-shedding/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Load shedding</span>
+        </a></div></div><div class="module-group" data-module="learning-distributed-coordination">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">3.2</span>
+          <span class="module-group__title">Distributed Coordination, Consensus &amp; Leases</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="distributed-systems-foundations" href="/topic/distributed-systems-foundations/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed systems foundations</span>
+        </a><a class="unit-item" data-slug="consistency-models" href="/topic/consistency-models/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Consistency models</span>
+        </a><a class="unit-item" data-slug="replication" href="/topic/replication/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Replication</span>
+        </a><a class="unit-item" data-slug="cap-and-pacelc" href="/topic/cap-and-pacelc/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">CAP and PACELC</span>
+        </a><a class="unit-item" data-slug="clocks-and-ordering" href="/topic/clocks-and-ordering/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Clocks and ordering</span>
+        </a><a class="unit-item" data-slug="consensus" href="/topic/consensus/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Consensus</span>
+        </a><a class="unit-item" data-slug="leader-election" href="/topic/leader-election/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Leader election</span>
+        </a><a class="unit-item" data-slug="distributed-locks-and-leases" href="/topic/distributed-locks-and-leases/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed locks and leases</span>
+        </a><a class="unit-item" data-slug="redis-redlock-and-fencing-tokens" href="/topic/redis-redlock-and-fencing-tokens/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Redis Redlock and fencing tokens</span>
+        </a><a class="unit-item" data-slug="circuit-breakers-and-timeouts" href="/topic/circuit-breakers-and-timeouts/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Circuit breakers and timeouts</span>
+        </a><a class="unit-item" data-slug="gossip-protocol" href="/topic/gossip-protocol/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Gossip protocol</span>
+        </a><a class="unit-item" data-slug="metadata-service-and-node-discovery" href="/topic/metadata-service-and-node-discovery/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Metadata service and node discovery</span>
+        </a><a class="unit-item" data-slug="distributed-hash-tables" href="/topic/distributed-hash-tables/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed hash tables</span>
+        </a></div></div><div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Asynchronous Execution, Queues &amp; Real-Time Processing</div><div class="module-group" data-module="learning-caching-fast-reads">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">4.1</span>
+          <span class="module-group__title">Caching Strategies &amp; In-Memory State</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="caching-layers" href="/topic/caching-layers/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Caching layers</span>
+        </a><a class="unit-item" data-slug="distributed-cache-design" href="/topic/distributed-cache-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed cache design</span>
+        </a><a class="unit-item" data-slug="cache-eviction-policies" href="/topic/cache-eviction-policies/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Cache eviction policies</span>
+        </a><a class="unit-item" data-slug="ttl-expiration-and-cache-reapers" href="/topic/ttl-expiration-and-cache-reapers/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">TTL expiration and cache reapers</span>
+        </a><a class="unit-item" data-slug="cache-concurrency-control" href="/topic/cache-concurrency-control/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Cache concurrency control</span>
+        </a><a class="unit-item" data-slug="cache-availability-and-database-fallback" href="/topic/cache-availability-and-database-fallback/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Cache availability and database fallback</span>
+        </a></div></div><div class="module-group" data-module="learning-async-streams">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">4.2</span>
+          <span class="module-group__title">Asynchronous Workflows &amp; Partitioned Logs</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="delegation-and-async-work" href="/topic/delegation-and-async-work/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Delegation and async work</span>
+        </a><a class="unit-item" data-slug="task-queue-vs-event-stream" href="/topic/task-queue-vs-event-stream/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Task queue vs event stream</span>
+        </a><a class="unit-item" data-slug="event-bus-for-product-events" href="/topic/event-bus-for-product-events/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Event bus for product events</span>
+        </a><a class="unit-item" data-slug="queue-lag" href="/topic/queue-lag/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Queue lag</span>
+        </a><a class="unit-item" data-slug="distributed-task-scheduler" href="/topic/distributed-task-scheduler/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed task scheduler</span>
+        </a><a class="unit-item" data-slug="postgres-skip-locked-work-queue" href="/topic/postgres-skip-locked-work-queue/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Postgres SKIP LOCKED work queue</span>
+        </a><a class="unit-item" data-slug="dag-workflow-orchestration" href="/topic/dag-workflow-orchestration/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">DAG workflow orchestration</span>
+        </a><a class="unit-item" data-slug="rule-engine-trigger-framework" href="/topic/rule-engine-trigger-framework/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Rule engine and trigger framework</span>
+        </a><a class="unit-item" data-slug="fanout-patterns" href="/topic/fanout-patterns/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Fanout patterns</span>
+        </a><a class="unit-item" data-slug="flash-sale-inventory-locking" href="/topic/flash-sale-inventory-locking/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Flash sale inventory locking</span>
+        </a></div></div><div class="module-group" data-module="learning-analytics-sketches">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">4.3</span>
+          <span class="module-group__title">Probabilistic Sketches &amp; Stream Analytics</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="counting-at-scale" href="/topic/counting-at-scale/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Counting at scale</span>
+        </a><a class="unit-item" data-slug="view-counting-at-scale" href="/topic/view-counting-at-scale/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">View counting at scale</span>
+        </a><a class="unit-item" data-slug="impression-counting-system-design" href="/topic/impression-counting-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Impression counting</span>
+        </a><a class="unit-item" data-slug="hyperloglog-cardinality-estimation" href="/topic/hyperloglog-cardinality-estimation/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">HyperLogLog cardinality estimation</span>
+        </a><a class="unit-item" data-slug="mergeable-sketches-for-analytics" href="/topic/mergeable-sketches-for-analytics/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Mergeable sketches for analytics</span>
+        </a><a class="unit-item" data-slug="bucketed-time-window-aggregation" href="/topic/bucketed-time-window-aggregation/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Bucketed time-window aggregation</span>
+        </a><a class="unit-item" data-slug="raw-events-vs-derived-analytics" href="/topic/raw-events-vs-derived-analytics/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Raw events vs derived analytics</span>
+        </a><a class="unit-item" data-slug="count-min-sketch" href="/topic/count-min-sketch/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Count-min sketch</span>
+        </a><a class="unit-item" data-slug="top-k-heavy-hitters" href="/topic/top-k-heavy-hitters/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Top-k heavy hitters</span>
+        </a><a class="unit-item" data-slug="reservoir-sampling" href="/topic/reservoir-sampling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Reservoir sampling</span>
+        </a><a class="unit-item" data-slug="tdigest-quantile-sketch" href="/topic/tdigest-quantile-sketch/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">t-digest quantile sketch</span>
+        </a><a class="unit-item" data-slug="streaming-percentile-analytics" href="/topic/streaming-percentile-analytics/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Streaming percentile analytics</span>
+        </a><a class="unit-item" data-slug="live-reactions-high-throughput-design" href="/topic/live-reactions-high-throughput-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: live reactions at high throughput</span>
+        </a></div></div><div class="module-group" data-module="learning-realtime-social">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">4.4</span>
+          <span class="module-group__title">Real-Time Messaging &amp; Feed Architectures</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="realtime-database-and-websocket-scaling" href="/topic/realtime-database-and-websocket-scaling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Realtime database and WebSocket scaling</span>
+        </a><a class="unit-item" data-slug="websockets-vs-sse-vs-long-polling" href="/topic/websockets-vs-sse-vs-long-polling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">WebSockets vs SSE vs long polling</span>
+        </a><a class="unit-item" data-slug="social-network-database-modeling" href="/topic/social-network-database-modeling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Social network database modeling</span>
+        </a><a class="unit-item" data-slug="social-graph-follows-and-flockdb" href="/topic/social-graph-follows-and-flockdb/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Social graph: follows and FlockDB</span>
+        </a><a class="unit-item" data-slug="feed-generation-push-pull-hybrid" href="/topic/feed-generation-push-pull-hybrid/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Feed generation: push, pull, hybrid</span>
+        </a><a class="unit-item" data-slug="newly-unread-indicator" href="/topic/newly-unread-indicator/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a newly-unread indicator</span>
+        </a><a class="unit-item" data-slug="hashtag-extraction-and-tag-store" href="/topic/hashtag-extraction-and-tag-store/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Hashtag extraction and tag store</span>
+        </a><a class="unit-item" data-slug="reaction-modeling" href="/topic/reaction-modeling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Reaction modeling</span>
+        </a><a class="unit-item" data-slug="photo-tagging-coordinate-model" href="/topic/photo-tagging-coordinate-model/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: photo tagging coordinates</span>
+        </a><a class="unit-item" data-slug="live-commentary-system-design" href="/topic/live-commentary-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: live commentary</span>
+        </a></div></div><div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Production Operations, Resilience &amp; System Hardening</div><div class="module-group" data-module="learning-reliability-ops">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">5.1</span>
+          <span class="module-group__title">Production Reliability, SLOs &amp; Resilience</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="observability-for-distributed-systems" href="/topic/observability-for-distributed-systems/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Observability for distributed systems</span>
+        </a><a class="unit-item" data-slug="slos-and-error-budgets" href="/topic/slos-and-error-budgets/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">SLOs and error budgets</span>
+        </a><a class="unit-item" data-slug="incident-response" href="/topic/incident-response/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Incident response</span>
+        </a><a class="unit-item" data-slug="deployment-and-migration-safety" href="/topic/deployment-and-migration-safety/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Deployment and migration safety</span>
+        </a><a class="unit-item" data-slug="database-migration-safety" href="/topic/database-migration-safety/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Database migration safety</span>
+        </a><a class="unit-item" data-slug="parallel-monolith-read-drain" href="/topic/parallel-monolith-read-drain/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Parallel monolith read drain</span>
+        </a><a class="unit-item" data-slug="database-backups-and-restore" href="/topic/database-backups-and-restore/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Backups and restore</span>
+        </a><a class="unit-item" data-slug="disaster-recovery" href="/topic/disaster-recovery/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Disaster recovery</span>
+        </a><a class="unit-item" data-slug="data-retention-and-deletion" href="/topic/data-retention-and-deletion/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Data retention, deletion, and privacy</span>
+        </a><a class="unit-item" data-slug="security-and-abuse-prevention" href="/topic/security-and-abuse-prevention/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Security and abuse prevention</span>
+        </a><a class="unit-item" data-slug="rate-limiter-placement-and-keys" href="/topic/rate-limiter-placement-and-keys/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Rate limiter placement and keys</span>
+        </a><a class="unit-item" data-slug="sliding-window-rate-limiter" href="/topic/sliding-window-rate-limiter/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Sliding window rate limiter</span>
+        </a><a class="unit-item" data-slug="multi-tenant-design" href="/topic/multi-tenant-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Multi-tenant design</span>
+        </a></div></div><div class="module-group" data-module="learning-media-files">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">5.2</span>
+          <span class="module-group__title">Media Processing &amp; CDN Distribution</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="direct-to-object-storage-upload" href="/topic/direct-to-object-storage-upload/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Direct-to-object-storage upload</span>
+        </a><a class="unit-item" data-slug="image-cdn-and-resizing" href="/topic/image-cdn-and-resizing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Image CDN and resizing</span>
+        </a><a class="unit-item" data-slug="gravatar-style-avatar-service" href="/topic/gravatar-style-avatar-service/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">An avatar service</span>
+        </a><a class="unit-item" data-slug="video-upload-signed-url-multipart" href="/topic/video-upload-signed-url-multipart/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Video upload: signed URLs and multipart</span>
+        </a><a class="unit-item" data-slug="video-transcoding-pipeline" href="/topic/video-transcoding-pipeline/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Video transcoding pipeline</span>
+        </a><a class="unit-item" data-slug="adaptive-bitrate-and-cdn-decider" href="/topic/adaptive-bitrate-and-cdn-decider/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Adaptive bitrate and the CDN decider</span>
+        </a><a class="unit-item" data-slug="signed-urls-drm-and-video-security" href="/topic/signed-urls-drm-and-video-security/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Signed URLs, DRM, and video security</span>
+        </a><a class="unit-item" data-slug="live-streaming-webrtc-and-latency" href="/topic/live-streaming-webrtc-and-latency/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Live streaming, WebRTC, and latency</span>
+        </a><a class="unit-item" data-slug="remote-file-sync-design" href="/topic/remote-file-sync-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Remote file sync design</span>
+        </a><a class="unit-item" data-slug="fixed-block-chunking-and-content-addressing" href="/topic/fixed-block-chunking-and-content-addressing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Fixed-block chunking and content addressing</span>
+        </a><a class="unit-item" data-slug="blocklist-versioned-file-metadata" href="/topic/blocklist-versioned-file-metadata/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Blocklist versioned file metadata</span>
+        </a></div></div><div class="module-group" data-module="learning-geo-matching">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">5.3</span>
+          <span class="module-group__title">Geospatial Indexing &amp; Proximity Search</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="nearby-geospatial-search-system-design" href="/topic/nearby-geospatial-search-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Nearby geospatial search</span>
+        </a><a class="unit-item" data-slug="geohash-prefix-spatial-index" href="/topic/geohash-prefix-spatial-index/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Geohash prefix spatial index</span>
+        </a><a class="unit-item" data-slug="geospatial-grid-systems-h3-s2-geohash" href="/topic/geospatial-grid-systems-h3-s2-geohash/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Grid systems: H3, S2, geohash</span>
+        </a><a class="unit-item" data-slug="redis-geo-spatial-hot-path" href="/topic/redis-geo-spatial-hot-path/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Redis GEO hot path</span>
+        </a><a class="unit-item" data-slug="geofencing-point-in-polygon" href="/topic/geofencing-point-in-polygon/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Geofencing: point in polygon</span>
+        </a><a class="unit-item" data-slug="ray-casting-point-in-polygon" href="/topic/ray-casting-point-in-polygon/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Ray casting point in polygon</span>
+        </a><a class="unit-item" data-slug="seen-filtering-bloom-vs-exact-sets" href="/topic/seen-filtering-bloom-vs-exact-sets/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Seen filtering: Bloom vs exact sets</span>
+        </a><a class="unit-item" data-slug="matching-and-recommendation-algorithms" href="/topic/matching-and-recommendation-algorithms/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Matching and recommendation algorithms</span>
+        </a></div></div><div class="module-group" data-module="learning-search-retrieval">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">5.4</span>
+          <span class="module-group__title">Information Retrieval &amp; Search Engines</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="information-retrieval-system-design" href="/topic/information-retrieval-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Information retrieval system design</span>
+        </a><a class="unit-item" data-slug="inverted-index-and-posting-lists" href="/topic/inverted-index-and-posting-lists/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Inverted index and posting lists</span>
+        </a><a class="unit-item" data-slug="boolean-tiered-search" href="/topic/boolean-tiered-search/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Boolean and tiered search</span>
+        </a><a class="unit-item" data-slug="tf-idf-relevance-scoring" href="/topic/tf-idf-relevance-scoring/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">TF-IDF relevance scoring</span>
+        </a><a class="unit-item" data-slug="bm25-production-ranking" href="/topic/bm25-production-ranking/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">BM25 production ranking</span>
+        </a><a class="unit-item active" data-slug="stop-words-and-champion-lists" href="/topic/stop-words-and-champion-lists/">
+          <span class="unit-item__status unit-item__status--active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg></span>
+          <span class="unit-item__title">Stop words and champion lists</span>
+        </a><a class="unit-item" data-slug="query-understanding-pipeline" href="/topic/query-understanding-pipeline/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Query understanding pipeline</span>
+        </a><a class="unit-item" data-slug="search-feedback-and-relevance-signals" href="/topic/search-feedback-and-relevance-signals/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Search feedback and relevance signals</span>
+        </a><a class="unit-item" data-slug="search-evaluation-metrics" href="/topic/search-evaluation-metrics/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Search evaluation metrics</span>
+        </a><a class="unit-item" data-slug="search-index-synchronization" href="/topic/search-index-synchronization/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Search index synchronization</span>
+        </a><a class="unit-item" data-slug="search-index-sharding" href="/topic/search-index-sharding/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Search index sharding</span>
+        </a><a class="unit-item" data-slug="crawler-and-indexing-pipeline" href="/topic/crawler-and-indexing-pipeline/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Crawler and indexing pipeline</span>
+        </a><a class="unit-item" data-slug="vector-search-and-hybrid-retrieval" href="/topic/vector-search-and-hybrid-retrieval/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Vector search and hybrid retrieval</span>
+        </a><a class="unit-item" data-slug="autocomplete-system-design" href="/topic/autocomplete-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: autocomplete</span>
+        </a><a class="unit-item" data-slug="did-you-mean-and-spell-correction" href="/topic/did-you-mean-and-spell-correction/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: did-you-mean and spell correction</span>
+        </a><a class="unit-item" data-slug="related-searches" href="/topic/related-searches/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: related searches</span>
+        </a><a class="unit-item" data-slug="recent-searches-system-design" href="/topic/recent-searches-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: recent searches</span>
+        </a></div></div><div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Systems Design Labs &amp; Architectural Evolution</div><div class="module-group" data-module="design-services">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">6.1</span>
+          <span class="module-group__title">Infrastructure &amp; Core Service Designs</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="url-shortener-system-design" href="/topic/url-shortener-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a URL shortener, one machine</span>
+        </a><a class="unit-item" data-slug="rate-limiting-and-abuse-prevention-case-study" href="/topic/rate-limiting-and-abuse-prevention-case-study/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: rate limiting and abuse prevention</span>
+        </a><a class="unit-item" data-slug="url-shortener-at-scale" href="/topic/url-shortener-at-scale/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a URL shortener at scale</span>
+        </a><a class="unit-item" data-slug="ecommerce-product-listing-system-design" href="/topic/ecommerce-product-listing-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a product listing</span>
+        </a><a class="unit-item" data-slug="collaborative-editing-system-design" href="/topic/collaborative-editing-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a collaborative editor</span>
+        </a><a class="unit-item" data-slug="object-store-system-design" href="/topic/object-store-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: an object store (S3)</span>
+        </a><a class="unit-item" data-slug="partitioned-log-system-design" href="/topic/partitioned-log-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a Kafka-style log</span>
+        </a></div></div><div class="module-group" data-module="design-products">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">6.2</span>
+          <span class="module-group__title">Interactive Product System Designs</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="notification-system-design" href="/topic/notification-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a notification system</span>
+        </a><a class="unit-item" data-slug="ticket-booking-system-design" href="/topic/ticket-booking-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a ticket booking system</span>
+        </a><a class="unit-item" data-slug="payment-system-design" href="/topic/payment-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a payment system</span>
+        </a><a class="unit-item" data-slug="search-engine-system-design" href="/topic/search-engine-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a search service</span>
+        </a><a class="unit-item" data-slug="recommendation-system-design" href="/topic/recommendation-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a recommendation system</span>
+        </a><a class="unit-item" data-slug="chat-and-messaging-system-design" href="/topic/chat-and-messaging-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: chat and messaging</span>
+        </a><a class="unit-item" data-slug="social-feed-system-design-case-study" href="/topic/social-feed-system-design-case-study/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a social feed</span>
+        </a><a class="unit-item" data-slug="geospatial-nearby-search-case-study" href="/topic/geospatial-nearby-search-case-study/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: nearby search</span>
+        </a></div></div><div class="module-group" data-module="design-operations">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">6.3</span>
+          <span class="module-group__title">High-Scale Media &amp; Operations Designs</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="ride-matching-system-design" href="/topic/ride-matching-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: ride matching</span>
+        </a><a class="unit-item" data-slug="video-platform-system-design" href="/topic/video-platform-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a video platform</span>
+        </a><a class="unit-item" data-slug="file-sync-system-design" href="/topic/file-sync-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a file sync service</span>
+        </a><a class="unit-item" data-slug="observability-slo-case-study" href="/topic/observability-slo-case-study/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: observability and SLOs</span>
+        </a><a class="unit-item" data-slug="zero-downtime-database-migration-case-study" href="/topic/zero-downtime-database-migration-case-study/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a database migration</span>
+        </a><a class="unit-item" data-slug="interview-design-instagram" href="/topic/interview-design-instagram/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a photo-sharing interview</span>
+        </a></div></div><div class="module-group" data-module="company-cases">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">6.4</span>
+          <span class="module-group__title">Real-World Architecture Evolution &amp; Incidents</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="case-instagram-early-architecture" href="/topic/case-instagram-early-architecture/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Case: Instagram&#39;s first architecture</span>
+        </a><a class="unit-item" data-slug="case-stripe-idempotency-keys" href="/topic/case-stripe-idempotency-keys/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Case: Stripe&#39;s idempotency keys</span>
+        </a><a class="unit-item" data-slug="case-discord-message-storage" href="/topic/case-discord-message-storage/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Case: how Discord stores trillions of messages</span>
+        </a><a class="unit-item" data-slug="case-amazon-dynamo" href="/topic/case-amazon-dynamo/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Case: Amazon Dynamo, the paper</span>
+        </a><a class="unit-item" data-slug="case-gitlab-database-incident" href="/topic/case-gitlab-database-incident/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Case: GitLab’s database incident</span>
+        </a></div></div>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered="stop-words-and-champion-lists">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <a href="#" data-nav="module" data-module="learning-search-retrieval">Information Retrieval & Search Engines</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">Stop words and champion lists</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
+          <span class="tag">system-design</span><span class="tag">search</span>
+        </div>
+        <h1 class="lesson-header__title">Stop words and champion lists</h1>
+        <div class="lesson-header__meta">
+          
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 5.4: Information Retrieval & Search Engines</span>
+          <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
+        </div>
+        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+          <button class="completion-toggle" data-action="toggle-complete" data-slug="stop-words-and-champion-lists">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
+          </button>
+          <a href="#cheatsheet/learning-search-retrieval" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
+            📄 Cheat Sheet
+          </a>
+        </div>
+      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;XNxzXQa55jQ&quot;,&quot;title&quot;:&quot;IR Course Lecture 13: Efficient Scoring&quot;,&quot;channel&quot;:&quot;Venkatesh Vinayakarao&quot;,&quot;why&quot;:&quot;Lecture on inexact top-K retrieval: champion lists, index elimination of low-IDF terms, static quality scores and tiered indexes, precisely this unit.&quot;,&quot;length&quot;:&quot;25:19&quot;}">
+      <div class="video-embed" id="video-XNxzXQa55jQ"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="XNxzXQa55jQ">
+          <img class="video-embed__thumb" src="https://img.youtube.com/vi/XNxzXQa55jQ/hqdefault.jpg"
+               alt="IR Course Lecture 13: Efficient Scoring"
+               loading="lazy">
+          <div class="video-embed__play-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        </div></div>
+      <div class="video-embed__info">
+        <span class="video-embed__channel">Venkatesh Vinayakarao</span>
+        <span class="video-embed__title">IR Course Lecture 13: Efficient Scoring</span>
+        <a href="https://www.youtube.com/watch?v=XNxzXQa55jQ" target="_blank" rel="noopener noreferrer" style="margin-left:auto; font-size:11px; color:var(--accent,#6366f1); text-decoration:none; display:flex; align-items:center; gap:2px;">
+          Watch on YouTube ↗
+        </a>
+      </div>
+      <p class="video-embed__why">Lecture on inexact top-K retrieval: champion lists, index elimination of low-IDF terms, static quality scores and tiered indexes, precisely this unit.</p></div>
+      <div class="video-more">
+        <h3 class="video-more__heading">More videos on this topic</h3>
+        <div class="video-more__list">
+      <a class="video-more__card" href="https://www.youtube.com/watch?v=eo9tAldtrm8" target="_blank" rel="noopener noreferrer"
+         data-action="play-in-main-video" data-video="{&quot;youtubeId&quot;:&quot;eo9tAldtrm8&quot;,&quot;title&quot;:&quot;IR4.10 Removing stopwords&quot;,&quot;channel&quot;:&quot;Victor Lavrenko&quot;,&quot;role&quot;:&quot;intro&quot;,&quot;why&quot;:&quot;Compact explanation of what stop words are, why they were removed, and the cost of removing them.&quot;,&quot;length&quot;:&quot;3:22&quot;}"
+         title="Play here (Ctrl/⌘-click to open on YouTube)">
+        <span class="video-more__thumb">
+          <img src="https://img.youtube.com/vi/eo9tAldtrm8/mqdefault.jpg" alt="" loading="lazy">
+          <span class="video-more__play"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+          <span class="video-more__len">3:22</span>
+        </span>
+        <span class="video-more__meta">
+          <span class="video-more__role">Quick intro</span>
+          <span class="video-more__title">IR4.10 Removing stopwords</span>
+          <span class="video-more__channel">Victor Lavrenko</span>
+          <span class="video-more__why">Compact explanation of what stop words are, why they were removed, and the cost of removing them.</span>
+        </span>
+      </a></div>
+      </div>
+        <aside class="intuition">
+          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
+          <div class="intuition__body"><p>Imagine a shop assistant asked for "the red jacket". Checking every item in the warehouse tagged "the" would be absurd, so the assistant focuses on "red" and "jacket". And for "jacket", they first check the shortlist of best-sellers by the door before walking into the back room. Stop-word handling and champion lists are those two shortcuts.</p>
+<p><strong>Mental model:</strong> common words have enormous postings lists but tiny IDF, so they contribute little score at huge cost; champion lists precompute, per term, the few hundred documents most likely to make the top K so most queries never touch the full list.</p>
+<ul>
+<li><strong>Trap:</strong> deleting stop words from the index. "The Who", "to be or not to be" and "vitamin A" break. Modern engines keep them and prune at query time.</li>
+<li><strong>Trap:</strong> treating champion lists as exact. They are an approximation; a document outside every champion list can be the true best match.</li>
+<li><strong>Trap:</strong> confusing champion lists (per term) with tiered indexes (per corpus). They are related but not the same structure.</li>
+</ul></div>
+        </aside>
+      <div class="audio-player" id="audio-player-stop-words-and-champion-lists">
+        <button class="audio-player__play-btn" id="audio-btn-stop-words-and-champion-lists" data-action="toggle-audio" data-slug="stop-words-and-champion-lists" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-stop-words-and-champion-lists" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-stop-words-and-champion-lists" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-stop-words-and-champion-lists">0:00 / --:--</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="stop-words-and-champion-lists" id="audio-track-stop-words-and-champion-lists">
+          <div class="audio-player__progress" id="audio-bar-stop-words-and-champion-lists" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="stop-words-and-champion-lists" id="audio-speed-stop-words-and-champion-lists" title="Playback speed">1x</button>
+        <audio id="audio-stop-words-and-champion-lists" src="audio/stop-words-and-champion-lists.mp3" preload="metadata"></audio>
+      </div><article class="prose"><h2>Stop words and champion lists</h2>
+
+<p>A scoring function cannot rescue a document that was removed before scoring began. We can reduce search work by omitting common words or retaining only selected candidates for each term, but each shortcut discards information. The useful question is which queries lose an answer when that information disappears.</p>
+
+<p>We'll compare removing words with capping candidates, then follow how each changes the results.</p>
+
+<h2>Removing words from the representation</h2>
+
+<a href="#" data-nav="topic" data-slug="bm25-production-ranking">The BM25 lesson</a> kept every analyzed token and let document frequency influence its weight. Another approach removes selected words entirely. A configured list of words to omit is a stop-word list. Commonness may motivate the choice, but the actual removal is a product and language policy rather than a consequence of the score formula.
+
+<p>Our experiment chooses exactly <code>a</code>, <code>and</code> and <code>to</code>. They are test inputs, not a recommended English stop list. The unchanged corpus retains them; the replay creates a separate pruned copy so later lessons continue to use the same source texts and statistics.</p>
+
+<p>Deleting tokens can change more than whether a term is searchable. If the remaining tokens are packed together, their positions change. The original <code>d5</code> text includes <code>keys to rows</code>. A packed pruned representation contains <code>keys rows</code>, so a request for that exact adjacent phrase can match even though the original document did not contain it.</p>
+
+<p>The posting-list lesson's phrase helper checks adjacent analyzed tokens. In this experiment the stop policy is applied to both document and query text. That lets <code>keys to rows</code> continue to match after both sides lose <code>to</code>, while the distinct literal request <code>keys rows</code> also becomes a match. Preserving the original position gaps would avoid that particular adjacency error, though queries requiring a removed word would still need a representation that retained it.</p>
+
+<h2>Which common words are expendable?</h2>
+
+<p>Inspect both how widely a term occurs (<code>df / N</code>) and how often it repeats. Define the averaging population: total occurrences divided by all documents differs from the average among matching documents. These are diagnostics, not a universal rule for deleting terms.</p>
+
+<p>In a database-only catalog, <code>database</code> may occur almost everywhere yet still matter in an exact title. A required word, negation or direction can be essential even when it has little ranking weight. Review representative title and phrase queries before choosing a stop list. Lower weighting retains evidence that deletion removes.</p>
+
+<p>A configured language list is only a starting policy. Elasticsearch's stop filter allows explicit words, language lists and case handling. Its trailing-token option also matters for completion: removing the word currently being typed can change the offered suggestions. Our experiment does not emulate that analyzer; it deliberately repacks tokens to expose the phrase error.</p>
+
+<h2>Keeping selected candidates</h2>
+
+<p>There is another way to reduce work without deleting a word: retain a small preselected list of documents for it. Such a retained subset is called a champion list. The subset is chosen before the full query is known. It can be built for any term, not only common words; list sizes can differ by term.</p>
+
+<p>Our chosen cap is one document per term. Build each list by scoring that single term with our BM25 variant and retaining the highest result, using identifier order for ties. At query time, take the union of the retained lists, then apply the full requested matching condition to those candidates. This is a candidate restriction, not a complete implementation of arbitrary top-result search.</p>
+
+<p>For <code>database</code>, the equal-length single-term tie retains <code>d2</code> ahead of <code>d5</code>. For <code>index</code>, the shorter document <code>d8</code> wins over <code>d5</code>. The combined query <code>database index</code> therefore begins with only <code>d2</code> and <code>d8</code> available, even though <code>d5</code> contains both terms. A document that is second for each individual term can be the best combined answer.</p>
+
+<p>The two retained single-term winners contain different words. Requiring both after the cap cannot recover <code>d5</code>:</p>
+
+<div class="mermaid">flowchart TD
+    accTitle: A per-term cap loses the combined match
+    accDescr: Database retains d2 and index retains d8. Their union contains d2 and d8; requiring both terms returns no document. A separate full posting-list path retains d5, which contains both query terms.
+    Q["database index"] --> C["One champion per term"]
+    C --> U["Candidates: d2, d8"]
+    U --> A["Require both terms"]
+    A --> E["No result"]
+    Q --> F["Complete posting lists"]
+    F --> D["Require both: d5"]</div>
+
+<h2>The losses in one capture</h2>
+
+<p>The Python replay performs both transformations from the original corpus. <code>original</code> and <code>pruned</code> label separately analyzed document sets. The champion portion prints complete either-term candidates, retained candidates and the result after requiring both query terms.</p>
+
+<pre><code class="language-bash">python3 public/course-assets/system-design/m16-search.py pruning</code></pre>
+
+<pre><code class="language-output">stop words: [&#039;a&#039;, &#039;and&#039;, &#039;to&#039;]
+token occurrences: 50 -&gt; 43
+phrase keys to rows: original= [&#039;d5&#039;] pruned= [&#039;d5&#039;]
+phrase keys rows: original= [] pruned= [&#039;d5&#039;]
+champions database/index: {&#039;database&#039;: [&#039;d2&#039;], &#039;index&#039;: [&#039;d8&#039;]}
+full OR candidates: [&#039;d2&#039;, &#039;d5&#039;, &#039;d8&#039;] capped candidates: [&#039;d2&#039;, &#039;d8&#039;]
+full AND: [&#039;d5&#039;] capped then AND: [] missed: [&#039;d5&#039;]</code></pre>
+
+<p>Fifty token occurrences become forty-three under the selected stop policy. That is a count of retained occurrences, not measured index bytes or a latency improvement. The byte layout of a real posting list could include dictionaries, offsets, positions and compression, each with its own cost.</p>
+
+<p>The champion restriction removes <code>d5</code>, so the required-term check returns nothing. Running the scorer over the retained documents cannot repair that result because the missing identifier never reaches it. Keeping a complete index behind the shortcut would allow a fallback, but that means the complete representation and its maintenance cost still exist.</p>
+
+<h2>The policy boundary</h2>
+
+<p>For this corpus, retain every token and the complete posting lists. Their counts are small, and the counterexamples give a concrete cost for removing information. If a measured workload later makes common-term traversal expensive, first consider a query-specific policy that preserves required phrases and filters. That lets a broad browsing request accept a shortcut without silently changing exact phrase semantics.</p>
+
+<p>Choose the shortcut from the kind of answer the caller expects:</p>
+
+<table><thead><tr><th>Query contract</th><th>Default</th><th>Reason</th></tr></thead><tbody><tr><td>Required words or exact phrase</td><td>Complete retained representation</td><td>Omitted evidence can change eligibility</td></tr><tr><td>Broad exploration with complete fallback</td><td>Try bounded candidates, then complete search</td><td>Recover misses at additional work</td></tr><tr><td>Explicitly approximate suggestions</td><td>Evaluated candidate cap</td><td>The product accepts evaluated coverage loss</td></tr></tbody></table>Champion selection can also incorporate a quality or freshness score, but that still chooses candidates before the complete query. Keeping a full fallback costs storage and maintenance; omitting it accepts a loss that must be evaluated.
+
+<p>Choosing query-specific pruning adds branches that need tests. A rule that ignores <code>to</code> in a broad topic query must not also erase it from an exact title request. Keeping a separate phrase-capable representation is another option, with the cost of another field or index. Choose that complexity only when the query contract and measurements justify it.</p>
+
+<h2>Evidence before an approximation</h2>
+
+<p>The missed <code>d5</code> is an exact matching failure, which requires no user judgment to detect. Whether dropping a broader result harms the reader is a different question. <a href="#" data-nav="topic" data-slug="search-evaluation-metrics">Search evaluation</a> will label documents against particular information needs and compare what the result list preserves.</p>
+
+<p>Champion lists also need a publication boundary. Recomputing them after documents change can alter who survives the cap; an outdated champion entry may refer to a removed or now-inaccessible document. <a href="#" data-nav="topic" data-slug="search-index-synchronization">Index synchronization</a> owns that version and deletion work. A preselected list never replaces the access check before exposure.</p>
+
+<p>The next lesson changes another part of the path: it interprets the caller's words before retrieval. <a href="#" data-nav="topic" data-slug="query-understanding-pipeline">Query understanding</a> makes those transformations visible so that a broader answer can be traced to a chosen rule rather than mistaken for a match to the original request.</p>
+<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+      <h2>Under the Hood: Optimization Strategies for Massive Corpora</h2>
+      <p>When searching over billions of documents, postings lists for common words contain hundreds of millions of entries. Search engines employ two contrasting strategies to maximize query throughput without sacrificing accuracy: <strong>Stop Word Handling</strong> and <strong>Champion Lists</strong>.</p>
+
+      <h2>Champion Lists (Fancy Lists) Architecture</h2>
+      <div class="mermaid">
+flowchart TD
+    Term["Vocabulary Term: 'database' (Appears in 50,000,000 documents)"] --> Split["Split at Index Time"]
+    Split --> Champ["Champion List (RAM): Top 1,000 Documents with Highest BM25 Weight"]
+    Split --> Full["Full Postings List (Disk): All 50,000,000 Documents"]
+    
+    UserQuery["Query: 'distributed database'"] --> QueryChamp["1. Intersect Champion Lists in RAM (sub-5ms)"]
+    QueryChamp --> Check{"Found >= 20 High-Relevance Results?"}
+    Check -->|"Yes"| Return["Return Immediate Top-K Results"]
+    Check -->|"No"| Fallback["2. Fall back to Full Disk Postings Lists"]
+      </div>
+
+      <h2>Under the Hood: The Evolution of Stop Words</h2>
+      <ul>
+        <li><strong>Historical Approach (Aggressive Removal):</strong> Early search engines stripped all stop words ("the", "to", "and", "or") during indexing to save disk space. <strong>The Failure:</strong> Queries like <em>"To be or not to be"</em> or <em>"The Who"</em> returned zero results or completely corrupted semantics.</li>
+        <li><strong>Modern Approach (Common-Grams & WAND):</strong> Modern engines retain all words in the index. Frequent word pairs can be indexed as single tokens (common-grams such as "to_be"), positional indexes answer phrase queries containing common words, and common terms are pruned during query evaluation using dynamic pruning algorithms like <strong>WAND (Weak AND)</strong> and <strong>Block-Max WAND</strong>.</li>
+      </ul>
+    
+<!-- enriched -->
+<h2>Worked example: the cost of "the"</h2>
+<p>In a 1 billion document English web corpus, "the" appears in the large majority of documents. Even at about one byte per compressed posting, walking its list means reading hundreds of megabytes for one query term, yet its IDF is close to zero, so it barely changes the ranking. Meanwhile "raft" might appear in 200,000 documents: a fraction of a megabyte.</p>
+<p>Three ways to handle the query <code>the raft paper</code>:</p>
+<table><thead><tr><th>Approach</th><th>Work</th><th>Risk</th></tr></thead><tbody>
+<tr><td>Drop "the" at index time</td><td>Minimal</td><td>Phrase and name queries such as "The Who" become impossible</td></tr>
+<tr><td>Keep it, evaluate naively</td><td>Scans the huge list</td><td>Latency spikes on every query containing common words</td></tr>
+<tr><td>Keep it, dynamic pruning such as WAND or Block-Max WAND</td><td>Skips most of the list because its maximum possible score contribution is tiny</td><td>Exact top K preserved; more complex implementation</td></tr>
+<tr><td>Common grams, index "the_who" as one token</td><td>Short list for the phrase</td><td>Larger index; must choose which pairs to index</td></tr>
+</tbody></table>
+<h2>How WAND skips work, in one paragraph</h2>
+<p>Each term stores an upper bound on its score contribution. Suppose the current 10th best score is 9.0, and the upper bounds are raft 7.0, paper 3.5, the 0.1. A document containing only "the" and "paper" can score at most 3.6, below 9.0, so it cannot enter the top 10. WAND jumps directly to the next document that contains raft, skipping millions of "the" postings. Block-Max WAND stores bounds per block of 128 postings, making the skips even tighter. Lucene has used block-max WAND for top-K disjunctions since version 8.</p>
+<h2>Champion list sizing</h2>
+<p>Choose r, the champion list length per term, larger than K. With r = 1,000 and K = 20, most two-term queries find enough candidates in the union of champion lists; queries that do not fall back to full postings. Larger r means more RAM and better recall; the right value comes from measuring recall at K on a query log against full evaluation.</p>
+</div></div></article>
+      <section class="check-slider" data-slug="stop-words-and-champion-lists" data-total="3" aria-label="Check yourself">
+        <div class="check-slider__head">
+          <span class="check-slider__label">Check yourself</span>
+          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+        </div>
+        <div class="check-slider__track">
+      <div class="quiz-card check-slider__slide" id="quiz-stop-words-and-champion-lists-c1" data-type="mcq" data-slug="stop-words-and-champion-lists" data-index="0">
+        <div class="check-slider__meta">
+          <span class="check-slider__title">Keeping stop words</span>
+          <span class="check-slider__level">recall</span>
+        </div>
+        <div class="check-slider__section">From: Under the Hood: The Evolution of Stop Words</div>
+        <p class="check-slider__prompt">Why do modern engines keep words such as the and to in the index rather than stripping them at index time?</p>
+        <div class="quiz-options check-slider__options">
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c1" value="0" />
+             <span>Because their postings compress to almost nothing with delta encoding, so dropping them saves no space</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c1" value="1" />
+             <span>Because phrase and name queries such as The Who or to be or not to be become impossible otherwise; the cost is handled at query time by pruning</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c1" value="2" />
+             <span>Because BM25 assigns them a strongly negative IDF, which helps demote spam pages that overuse them</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c1" value="3" />
+             <span>Because the tokenizer cannot identify stop words until the query arrives and the language is known</span>
+           </label>
+         </div>
+        <div class="check-slider__actions">
+          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="stop-words-and-champion-lists-c1">Check answer</button>
+          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-stop-words-and-champion-lists-c1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Removing stop words destroys queries where they carry meaning; modern engines keep them and use common-grams, positional indexes and WAND-style pruning to avoid paying for their huge lists. Their lists remain huge even when compressed, which is why pruning matters.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-stop-words-and-champion-lists-c2" data-type="mcq" data-slug="stop-words-and-champion-lists" data-index="1" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__title">WAND upper bounds</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        <div class="check-slider__section">From: How WAND skips work, in one paragraph</div>
+        <p class="check-slider__prompt">The current 10th-best score is 9.0. Per-term upper bounds are kafka 6.5, streams 2.0, apache 1.2 and the 0.1. Which candidate document must WAND actually score, rather than skip?</p>
+        <div class="quiz-options check-slider__options">
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c2" value="0" />
+             <span>A document containing streams, apache and the</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c2" value="1" />
+             <span>A document containing kafka and streams</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c2" value="2" />
+             <span>A document containing kafka, apache and the</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c2" value="3" />
+             <span>A document containing kafka, streams and apache</span>
+           </label>
+         </div>
+        <div class="check-slider__actions">
+          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="stop-words-and-champion-lists-c2">Check answer</button>
+          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-stop-words-and-champion-lists-c2" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Only kafka + streams + apache has an upper bound of 9.7, which could beat 9.0; the others top out at 3.3, 8.5 and 7.8, so they cannot enter the top 10 and are skipped. kafka and streams alone looks close but 8.5 is still below the threshold.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-stop-words-and-champion-lists-c3" data-type="mcq" data-slug="stop-words-and-champion-lists" data-index="2" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__title">Sizing champion lists</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        <div class="check-slider__section">From: Champion list sizing</div>
+        <p class="check-slider__prompt">You must choose r, the champion list length per term, for a system returning K = 20 results. What is the defensible way to pick r?</p>
+        <div class="quiz-options check-slider__options">
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c3" value="0" />
+             <span>Set r equal to K so that champion lists hold exactly one page of results and use the least RAM</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c3" value="1" />
+             <span>Measure recall at K on a real query log against full evaluation for several values of r, and pick the smallest r that meets the recall target within the RAM budget</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c3" value="2" />
+             <span>Set r to the average postings length divided by 1,000, so every term gets the same fraction of its list</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-stop-words-and-champion-lists-c3" value="3" />
+             <span>Grow r until the fallback to full postings never fires, since any fallback means the champion lists are wrong</span>
+           </label>
+         </div>
+        <div class="check-slider__actions">
+          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="stop-words-and-champion-lists-c3">Check answer</button>
+          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-stop-words-and-champion-lists-c3" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Champion lists are an approximation whose recall depends on the query mix, so r must be chosen empirically, larger than K, trading RAM for recall. Eliminating fallback entirely is the wrong goal; fallback is the safety valve and a few percent of queries using it is expected.</div>
+        </div>
+      </div></div>
+        <div class="check-slider__done" hidden>
+          <p class="check-slider__score"></p>
+          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+        </div>
+      </section>
+        <div class="takeaways">
+          <h3 class="takeaways__title">Key Takeaways</h3>
+          <div class="takeaways__list">
+            <div class="takeaways__item">Champion lists precompute the top R highest-scoring documents per term, answering top-K queries in RAM.</div><div class="takeaways__item">Modern search engines avoid hard stop word deletion to preserve phrase semantics ('The Who').</div><div class="takeaways__item">Block-Max WAND dynamically skips postings blocks whose upper-bound scores cannot beat the current top-K threshold.</div>
+          </div>
+        </div>
+      <div class="lesson-builds">
+        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch</h3>
+        
+          <a class="lesson-builds__item" href="#build/tiny-search-engine" data-action="navigate-build" data-build-id="tiny-search-engine">
+            <span class="lesson-builds__name">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+            <span class="lesson-builds__summary">A complete in-memory search engine: tokenizer, positional inverted index, delta + VByte posting compression, Boolean intersection, champion lists, phrase search and BM25 ranking, with a test suite.</span>
+          </a>
+      </div>
+        <div class="further-reading">
+          <h3 class="further-reading__title">Further Reading</h3>
+          <div class="further-reading__list">
+            <a class="further-reading__link" href="https://dl.acm.org/doi/10.1145/2009916.2010048" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Ding & Suel: Faster Top-k Document Retrieval Using Block-Max Indexes</a><a class="further-reading__link" href="https://nlp.stanford.edu/IR-book/html/htmledition/dropping-common-terms-stop-words-1.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Manning et al.: Dropping Common Terms: Stop Words (Stanford IR Book)</a><a class="further-reading__link" href="https://nlp.stanford.edu/IR-book/html/htmledition/champion-lists-1.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Manning et al.: Champion Lists (Stanford IR Book)</a>
+          </div>
+        </div>
+      <div class="lesson-feedback" id="lesson-feedback-stop-words-and-champion-lists">
+        <div class="lesson-feedback__content">
+          <div class="lesson-feedback__meta">
+            <span class="lesson-feedback__title">Was this lesson helpful?</span>
+            <span class="lesson-feedback__sub">Spot an issue or have a suggestion? Let us know on GitHub.</span>
+          </div>
+          <div class="lesson-feedback__actions">
+            <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="stop-words-and-champion-lists" data-vote="yes">
+              👍 Helpful
+            </button>
+            <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="stop-words-and-champion-lists" data-vote="no">
+              👎 Needs work
+            </button>
+            <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Stop%20words%20and%20champion%20lists&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Stop%20words%20and%20champion%20lists%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fstop-words-and-champion-lists%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
+            </a>
+          </div>
+        </div>
+      </div><div class="lesson-nav"><a class="lesson-nav__link" href="/topic/bm25-production-ranking/" data-nav="topic" data-slug="bm25-production-ranking">
+        <span class="lesson-nav__label">← Previous</span>
+        <span class="lesson-nav__title">BM25 production ranking</span>
+      </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/query-understanding-pipeline/" data-nav="topic" data-slug="query-understanding-pipeline">
+        <span class="lesson-nav__label">Next →</span>
+        <span class="lesson-nav__title">Query understanding pipeline</span>
+      </a></div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=10833565b2"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=8783850429"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=277e38c043"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=78c1d850b4"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=0be9cd1f02"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=2ebf07c1f2"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/simulators.js?v=64793331c5"></script>
+  <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
+  <script type="text/plain" data-defer src="js/simulators-advanced.js?v=3f59fb03a7"></script>
+  <script type="text/plain" data-defer src="js/simulators-distributed.js?v=30d663cc4e"></script>
+  <script type="text/plain" data-defer src="js/simulators-ops.js?v=ff1d2ff9b7"></script>
+  <script type="text/plain" data-defer src="js/simulators-data.js?v=accc3870f9"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=cb407445c0"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=d1dd10746f"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=2a7f6ce38d"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

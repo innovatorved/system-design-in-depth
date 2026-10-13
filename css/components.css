@@ -2123,6 +2123,37 @@
 .sim-bar > div { width: 100%; background: var(--info); border-radius: 2px 2px 0 0; min-height: 2px; }
 .sim-bar > span { font-size: 10px; color: var(--fg-faint); font-family: var(--font-mono); }
 
+/* Mobile and touch optimization for interactive simulators */
+.sim-node, .simulator-card .btn, .simulator-card input[type="range"] {
+  touch-action: manipulation;
+}
+.sim-node {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (max-width: 640px) {
+  .simulator-card {
+    padding: var(--space-4) var(--space-3);
+  }
+  .simulator-card__controls {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .sim-node {
+    min-width: 70px;
+    padding: var(--space-2);
+  }
+  .sim-cols {
+    grid-template-columns: 1fr;
+  }
+  .sim-select {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+  }
+}
+
 /* ── Check yourself slider (one question at a time) ────────── */
 .check-slider {
   margin: var(--space-8) 0;
@@ -2216,3 +2247,49 @@
 }
 .video-more__play svg { width: 12px; height: 12px; margin-left: 2px; }
 .video-more__card:hover .video-more__play { opacity: 1; transform: scale(1.08); }
+
+/* ── Cookie & Analytics Consent Banner ── */
+.consent-banner {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  max-width: 380px;
+  z-index: 9999;
+  background: var(--surface);
+  border: 1px solid var(--border-strong, var(--border));
+  border-radius: var(--r-md);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.28);
+  padding: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--fg);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  backdrop-filter: blur(8px);
+}
+.consent-banner__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.consent-banner__text {
+  margin: 0;
+  line-height: 1.45;
+  color: var(--fg-muted);
+}
+.consent-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.consent-banner__btn {
+  font-size: 11px;
+  padding: 4px 12px;
+}
+@media (max-width: 640px) {
+  .consent-banner {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-width: none;
+  }
+}
+

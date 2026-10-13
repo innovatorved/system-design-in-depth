@@ -2,17 +2,6 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <!-- Canonical domain enforcement -->
-  <script>
-    (() => {
-      const targetHost = 'system-design-in-depth.vedgupta.in';
-      const host = window.location.hostname;
-      const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host === '[::1]' || host.endsWith('.local') || host.endsWith('.internal') || /^192\.168\./.test(host) || /^10\./.test(host);
-      if (!isLocal && (host !== targetHost || window.location.protocol !== 'https:')) {
-        window.location.replace('https://' + targetHost + window.location.pathname + window.location.search + window.location.hash);
-      }
-    })();
-  </script>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>System Design In Depth</title>
@@ -24,10 +13,10 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="System Design In Depth - Projects">
   <meta property="og:description" content="An interactive, open-source curriculum for system design and distributed systems engineering — architectural tracks, interactive simulators, from-scratch builds, and authoritative source citations.">
-  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/projects">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/projects/">
 
   <!-- Canonical -->
-  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/projects">
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/projects/">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <!-- Fonts -->
@@ -37,33 +26,13 @@
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
-  <link rel="stylesheet" href="css/layout.css?v=d51fb5dfe4">
-  <link rel="stylesheet" href="css/components.css?v=ef8b78bc61">
-  <link rel="stylesheet" href="css/content.css?v=48ce78969e">
+  <link rel="stylesheet" href="css/layout.css?v=3946cca8fd">
+  <link rel="stylesheet" href="css/components.css?v=535eda5884">
+  <link rel="stylesheet" href="css/content.css?v=441918c46b">
 
-  <!-- Google Analytics 4 (GA4) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SZ26BQZCQ7" id="ga4-gtag-script"></script>
-  <script>
-    window.GA_MEASUREMENT_ID = 'G-SZ26BQZCQ7';
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-SZ26BQZCQ7', {
-      send_page_view: false // Handled dynamically on SPA route changes by js/analytics.js
-    });
-  </script>
+  <!-- Head initialization: domain enforcement, theme, GA4 & Consent Mode v2 -->
+  <script src="js/init.js?v=d484bc426c"></script>
 
-  <!-- Theme initialization (prevent FOUC) -->
-  <script>
-    (() => {
-      try {
-        const stored = localStorage.getItem('sd-theme');
-        const dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#000000' : '#ffffff');
-      } catch {}
-    })();
-  </script>
 </head>
 <body>
   <!-- Skip to content -->
@@ -186,66 +155,16 @@
   <script src="data/projects.js?v=8783850429"></script>
 
   <!-- App Scripts -->
-  <script src="js/analytics.js?v=8e2304fc12"></script>
+  <script src="js/analytics.js?v=78c1d850b4"></script>
   <script src="js/progress.js?v=0be9cd1f02"></script>
   <script src="js/search.js?v=2ebf07c1f2"></script>
-  <script src="js/exercises.js?v=ad524429c3"></script>
-  <script src="js/simulators.js?v=d091a36e30"></script>
-  <script src="js/renderer.js?v=d0668ed9f7"></script>
-  <script src="js/app.js?v=9ea64fc15f"></script>
+  <script src="js/exercises.js?v=94728bc41f"></script>
+  <script src="js/simulators.js?v=64793331c5"></script>
+  <script src="js/renderer.js?v=cb407445c0"></script>
+  <script src="js/app.js?v=2a7f6ce38d"></script>
 
-  <!-- Mermaid (lazy-loaded) -->
-  <script>
-    // Load mermaid only when needed
-    window.loadMermaid = function() {
-      if (window.mermaid) return Promise.resolve();
-      if (window._mermaidPromise) return window._mermaidPromise;
-      window._mermaidPromise = new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
-        s.onload = () => {
-          const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-          mermaid.initialize({
-            startOnLoad: false,
-            securityLevel: 'loose',
-            theme: 'base', // base honours themeVariables; 'default'/'dark' override them
-            themeVariables: {
-              darkMode: isDark,
-              background: isDark ? '#0a0a0a' : '#ffffff',
-              primaryColor: isDark ? '#171717' : '#fafafa',
-              primaryTextColor: isDark ? '#ffffff' : '#0a0a0a',
-              primaryBorderColor: isDark ? '#404040' : '#d4d4d4',
-              lineColor: isDark ? '#737373' : '#a1a1a1',
-              secondaryColor: isDark ? '#0a0a0a' : '#f5f5f5',
-              tertiaryColor: isDark ? '#262626' : '#e5e5e5',
-          mainBkg: isDark ? '#171717' : '#fafafa',
-          nodeBorder: isDark ? '#404040' : '#d4d4d4',
-          clusterBkg: isDark ? '#0a0a0a' : '#ffffff',
-          clusterBorder: isDark ? '#262626' : '#e5e5e5',
-          textColor: isDark ? '#e5e5e5' : '#262626',
-          edgeLabelBackground: isDark ? '#0a0a0a' : '#ffffff',
-          actorBkg: isDark ? '#171717' : '#fafafa',
-          actorBorder: isDark ? '#404040' : '#d4d4d4',
-          actorTextColor: isDark ? '#ffffff' : '#0a0a0a',
-          signalColor: isDark ? '#a1a1a1' : '#525252',
-          signalTextColor: isDark ? '#e5e5e5' : '#262626',
-          noteBkgColor: isDark ? '#262626' : '#f5f5f5',
-          noteBorderColor: isDark ? '#404040' : '#d4d4d4',
-          noteTextColor: isDark ? '#e5e5e5' : '#262626',
-              fontFamily: '"Geist", -apple-system, sans-serif',
-              fontSize: '13px'
-            }
-          });
-          resolve();
-        };
-        s.onerror = (e) => {
-          window._mermaidPromise = null;
-          reject(e);
-        };
-        document.head.appendChild(s);
-      });
-      return window._mermaidPromise;
-    };
-  </script>
+  <!-- Client Bootstrap: deferred loader, on-demand Mermaid, and privacy consent -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
 </body>
 </html>
+

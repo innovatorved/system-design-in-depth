@@ -19,8 +19,31 @@ window.Renderer = (() => {
     pin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.89A2 2 0 0 1 15 10.77V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5.77a2 2 0 0 1-1.11 1.79l-1.78.89A2 2 0 0 0 5 15.24Z"/></svg>',
     github: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>',
     globe: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
-    external: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+    external: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+    calendar: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
   };
+
+  /**
+   * Format content review date (e.g. "2026-09-17" -> "Sep 17, 2026")
+   */
+  function formatReviewDate(dateStr) {
+    if (!dateStr) return '2026';
+    try {
+      const parts = String(dateStr).split('-');
+      if (parts.length === 3) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const m = parseInt(parts[1], 10) - 1;
+        const d = parseInt(parts[2], 10);
+        const y = parts[0];
+        if (m >= 0 && m < 12 && !isNaN(d)) {
+          return `${months[m]} ${d}, ${y}`;
+        }
+      }
+      return String(dateStr);
+    } catch (_) {
+      return String(dateStr);
+    }
+  }
 
   /**
    * Render the Course Overview (home page)
@@ -64,7 +87,7 @@ window.Renderer = (() => {
         const prog = window.Progress.getModuleProgress(mod.id);
         const progPct = prog.total > 0 ? Math.round((prog.completed / prog.total) * 100) : 0;
         html += `
-          <div class="module-card" data-module="${mod.id}" onclick="App.navigateToModule('${mod.id}')">
+          <div class="module-card" data-module="${mod.id}" data-action="navigate-module" data-module-id="${mod.id}">
             <div class="module-card__header">
               <span class="module-card__number">${mod.number}</span>
               <div class="module-card__info">
@@ -147,10 +170,12 @@ window.Renderer = (() => {
       document.head.appendChild(archiveScript);
     }
 
+    const reviewDate = formatReviewDate(unit.archive?.updated);
+
     // Build header
     let html = `
       <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="#" data-nav="home">Home</a>
+        <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep">${icons.chevronRight}</span>
         <a href="#" data-nav="module" data-module="${mod.id}">${mod.title}</a>
         <span class="breadcrumbs__sep">${icons.chevronRight}</span>
@@ -166,9 +191,10 @@ window.Renderer = (() => {
         <div class="lesson-header__meta">
           ${unit.archive?.wordCount ? '<span class="lesson-header__meta-item">' + icons.clock + ' ' + Math.ceil(unit.archive.wordCount / 200) + ' min read</span>' : ''}
           <span class="lesson-header__meta-item">${icons.book} Module ${mod.number}: ${mod.title}</span>
+          <span class="lesson-header__meta-item" title="Content curriculum review date">${icons.calendar} Updated ${reviewDate}</span>
         </div>
         <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
-          <button class="completion-toggle${isCompleted ? ' completed' : ''}" onclick="App.toggleComplete('${slug}')">
+          <button class="completion-toggle${isCompleted ? ' completed' : ''}" data-action="toggle-complete" data-slug="${slug}">
             ${isCompleted ? icons.check + ' Completed' : icons.circle + ' Mark Complete'}
           </button>
           <a href="#cheatsheet/${mod.id}" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
@@ -195,7 +221,7 @@ window.Renderer = (() => {
     // Audio player
     html += `
       <div class="audio-player" id="audio-player-${slug}">
-        <button class="audio-player__play-btn" id="audio-btn-${slug}" onclick="toggleAudio('${slug}')" aria-label="Play audio" title="Play audio">
+        <button class="audio-player__play-btn" id="audio-btn-${slug}" data-action="toggle-audio" data-slug="${slug}" aria-label="Play audio" title="Play audio">
           <svg id="audio-play-icon-${slug}" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
             <path d="M8 5v14l11-7z"/>
           </svg>
@@ -204,11 +230,11 @@ window.Renderer = (() => {
           </svg>
         </button>
         <span class="audio-player__time" id="audio-time-${slug}">0:00 / --:--</span>
-        <div class="audio-player__track" onclick="seekAudio('${slug}', event)" id="audio-track-${slug}">
+        <div class="audio-player__track" data-action="seek-audio" data-slug="${slug}" id="audio-track-${slug}">
           <div class="audio-player__progress" id="audio-bar-${slug}" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" onclick="cycleAudioSpeed('${slug}')" id="audio-speed-${slug}" title="Playback speed">1x</button>
-        <audio id="audio-${slug}" src="audio/${slug}.mp3" preload="metadata" onloadedmetadata="setupAudioListeners('${slug}')"></audio>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="${slug}" id="audio-speed-${slug}" title="Playback speed">1x</button>
+        <audio id="audio-${slug}" src="audio/${slug}.mp3" preload="metadata"></audio>
       </div>`;
 
     // Content
@@ -280,6 +306,9 @@ window.Renderer = (() => {
         </div>`;
     }
 
+    // Was this helpful / Report issue feedback bar
+    html += renderLessonFeedback(slug, unit);
+
     // Prev/Next navigation
     html += renderLessonNav(slug, mod, part);
 
@@ -312,7 +341,7 @@ window.Renderer = (() => {
       <div class="lesson-builds">
         <h3 class="lesson-builds__title">${icons.code} Build it from scratch</h3>
         ${builds.map(([id, b]) => `
-          <a class="lesson-builds__item" href="#build/${id}" onclick="event.preventDefault(); App.navigateToBuild('${id}')">
+          <a class="lesson-builds__item" href="#build/${id}" data-action="navigate-build" data-build-id="${id}">
             <span class="lesson-builds__name">${escapeHtml(b.title || id)}</span>
             ${b.summary ? `<span class="lesson-builds__summary">${escapeHtml(b.summary)}</span>` : ''}
           </a>`).join('')}
@@ -355,10 +384,10 @@ window.Renderer = (() => {
           <strong>Run it locally</strong> (Node 18+, no dependencies): save the files below into one folder, or paste the setup script into a terminal. Then run
           ${[demoFile, testFile].filter(Boolean).map(f => '<code>node ' + escapeHtml(f) + '</code>').join(' and ')}.
         </div>
-        <button class="btn btn--sm btn--outline" onclick="copyBuildScript('${buildId}', this)">Copy setup script</button>
+        <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="${buildId}">Copy setup script</button>
       </div>
 
-      <div class="build-files">${files.map(([f]) => `<a href="#" class="build-files__item" onclick="event.preventDefault(); document.getElementById('build-file-${buildId}-${f.replace(/[^\w-]/g, '_')}')?.scrollIntoView({behavior:'smooth'})">${escapeHtml(f)}</a>`).join('')}</div>`;
+      <div class="build-files">${files.map(([f]) => `<a href="#build-file-${buildId}-${f.replace(/[^\w-]/g, '_')}" class="build-files__item" data-action="scroll-to-file" data-target="build-file-${buildId}-${f.replace(/[^\w-]/g, '_')}">${escapeHtml(f)}</a>`).join('')}</div>`;
 
     for (const [filename, content] of files) {
       const anchor = `build-file-${buildId}-${filename.replace(/[^\w-]/g, '_')}`;
@@ -369,7 +398,7 @@ window.Renderer = (() => {
           <div class="code-block" id="${anchor}">
             <div class="code-block__header">
               <span class="code-block__lang">${escapeHtml(filename)}</span>
-              <button class="code-block__copy" onclick="copyCode(this)">Copy</button>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
             </div>
             <pre><code>${escapeHtml(content)}</code></pre>
           </div>`;
@@ -408,12 +437,11 @@ window.Renderer = (() => {
   function renderMainVideoInner(video, autoplay) {
     const id = video.youtubeId;
     const player = autoplay
-      ? `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
-      : `<div class="video-embed__placeholder" onclick="loadYouTubeVideo('${id}', this.parentElement)">
-          <img src="https://img.youtube.com/vi/${id}/hqdefault.jpg"
+      ? `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+      : `<div class="video-embed__placeholder" data-action="load-youtube" data-video-id="${id}">
+          <img class="video-embed__thumb" src="https://img.youtube.com/vi/${id}/hqdefault.jpg"
                alt="${escapeHtml(video.title || '')}"
-               loading="lazy"
-               onerror="this.src='https://img.youtube.com/vi/${id}/default.jpg'">
+               loading="lazy">
           <div class="video-embed__play-btn">${icons.play}</div>
         </div>`;
     return `
@@ -443,7 +471,7 @@ window.Renderer = (() => {
   function renderMoreVideoCard(v) {
     return `
       <a class="video-more__card" href="https://www.youtube.com/watch?v=${v.youtubeId}" target="_blank" rel="noopener noreferrer"
-         onclick="return playInMainVideo(event, this)" data-video="${escapeHtml(JSON.stringify(v))}"
+         data-action="play-in-main-video" data-video="${escapeHtml(JSON.stringify(v))}"
          title="Play here (Ctrl/⌘-click to open on YouTube)">
         <span class="video-more__thumb">
           <img src="https://img.youtube.com/vi/${v.youtubeId}/mqdefault.jpg" alt="" loading="lazy">
@@ -644,6 +672,36 @@ window.Renderer = (() => {
   }
 
   /**
+   * Render feedback and report issue bar
+   */
+  function renderLessonFeedback(slug, unit) {
+    const issueTitle = encodeURIComponent(`[Feedback] ${unit.title}`);
+    const issueBody = encodeURIComponent(`### Topic: ${unit.title}\n**URL:** https://system-design-in-depth.vedgupta.in/topic/${slug}/\n\n### Feedback / Correction:\n`);
+    const issueUrl = `https://github.com/innovatorved/system-design-in-depth/issues/new?title=${issueTitle}&labels=feedback,curriculum&body=${issueBody}`;
+
+    return `
+      <div class="lesson-feedback" id="lesson-feedback-${slug}">
+        <div class="lesson-feedback__content">
+          <div class="lesson-feedback__meta">
+            <span class="lesson-feedback__title">Was this lesson helpful?</span>
+            <span class="lesson-feedback__sub">Spot an issue or have a suggestion? Let us know on GitHub.</span>
+          </div>
+          <div class="lesson-feedback__actions">
+            <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="${slug}" data-vote="yes">
+              👍 Helpful
+            </button>
+            <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="${slug}" data-vote="no">
+              👎 Needs work
+            </button>
+            <a href="${issueUrl}" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
+              ${icons.github} Report an issue
+            </a>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  /**
    * Render prev/next lesson navigation
    */
   function renderLessonNav(currentSlug, currentMod, currentPart) {
@@ -669,7 +727,7 @@ window.Renderer = (() => {
     let html = '<div class="lesson-nav">';
 
     if (prev) {
-      html += `<a class="lesson-nav__link" href="#" data-nav="topic" data-slug="${prev.slug}">
+      html += `<a class="lesson-nav__link" href="/topic/${prev.slug}/" data-nav="topic" data-slug="${prev.slug}">
         <span class="lesson-nav__label">← Previous</span>
         <span class="lesson-nav__title">${prev.title}</span>
       </a>`;
@@ -678,7 +736,7 @@ window.Renderer = (() => {
     }
 
     if (next) {
-      html += `<a class="lesson-nav__link lesson-nav__link--next" href="#" data-nav="topic" data-slug="${next.slug}">
+      html += `<a class="lesson-nav__link lesson-nav__link--next" href="/topic/${next.slug}/" data-nav="topic" data-slug="${next.slug}">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">${next.title}</span>
       </a>`;
@@ -705,10 +763,37 @@ window.Renderer = (() => {
 
   // Global helper for video loading
   window.loadYouTubeVideo = function(videoId, container) {
-    container.innerHTML = '<iframe src="https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
+    container.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
     if (window.Analytics?.trackVideoPlay) {
       const title = container.parentElement?.querySelector('.video-embed__title')?.textContent || '';
       window.Analytics.trackVideoPlay(videoId, title);
+    }
+  };
+
+  // Global helper for lesson feedback
+  window.handleFeedbackVote = function(btn, slug, vote) {
+    const parent = btn.closest('.lesson-feedback__actions');
+    if (parent) {
+      parent.querySelectorAll('.lesson-feedback__btn').forEach(b => {
+        if (b.tagName === 'BUTTON') {
+          b.classList.remove('is-voted');
+          b.disabled = true;
+        }
+      });
+      btn.classList.add('is-voted');
+      btn.textContent = vote === 'yes' ? '✓ Thanks for your feedback!' : '✓ We\'ll improve this!';
+    }
+    try {
+      localStorage.setItem('feedback_' + slug, vote);
+    } catch (_) {}
+    if (window.Analytics?.trackLessonFeedback) {
+      window.Analytics.trackLessonFeedback({ slug, vote });
+    } else if (window.Analytics?.trackEvent) {
+      window.Analytics.trackEvent('lesson_feedback', {
+        topic_slug: slug,
+        feedback_vote: vote,
+        event_category: 'engagement'
+      });
     }
   };
 
@@ -963,13 +1048,7 @@ window.Renderer = (() => {
         <h1 class="lesson-header__title">System Design Glossary</h1>
         <p class="hero__subtitle" style="margin-top:0.5rem;">Essential distributed systems, database, networking, and architecture definitions.</p>
         <div style="margin-top:1rem;">
-          <input type="text" id="glossary-filter" placeholder="Filter terms (e.g. cache, consensus, replication)..." style="width:100%; max-width:400px; padding:0.5rem 0.75rem; background:var(--bg-surface,#222); border:1px solid var(--border-color,#333); border-radius:6px; color:inherit; font-size:13px;" oninput="
-            const q = this.value.toLowerCase();
-            document.querySelectorAll('.glossary-item').forEach(item => {
-              const text = item.textContent.toLowerCase();
-              item.style.display = text.includes(q) ? 'block' : 'none';
-            });
-          ">
+          <input type="text" id="glossary-filter" data-action="filter-glossary" placeholder="Filter terms (e.g. cache, consensus, replication)..." style="width:100%; max-width:400px; padding:0.5rem 0.75rem; background:var(--bg-surface,#222); border:1px solid var(--border-color,#333); border-radius:6px; color:inherit; font-size:13px;">
         </div>
       </div>
 
@@ -1032,7 +1111,7 @@ window.Renderer = (() => {
         <h1 class="lesson-header__title">${targetMod.title} — Cheat Sheet</h1>
         <p class="hero__subtitle" style="margin-top:0.5rem;">${targetMod.summary}</p>
         <div class="lesson-header__actions" style="margin-top:1rem;">
-          <button class="btn btn--sm btn--primary" onclick="window.print()">
+          <button class="btn btn--sm btn--primary" data-action="window-print">
             🖨️ Print / Save as PDF
           </button>
         </div>

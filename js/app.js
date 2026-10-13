@@ -94,46 +94,66 @@ window.App = (() => {
       currentSlug = hash.startsWith('project-') ? hash.slice(8) : (hash.startsWith('project/') ? hash.slice(8) : null);
       activeTab = 'curriculum';
       syncSidebarTabs();
-    } else if (!hash || hash === '/') {
-      currentView = 'home';
-      currentSlug = null;
-      activeTab = 'curriculum';
-      syncSidebarTabs();
-    } else if (hash.startsWith('build/')) {
+      return;
+    }
+
+    if (hash.startsWith('build/')) {
       currentView = 'build';
       currentSlug = hash.slice(6);
       activeTab = 'builds';
       syncSidebarTabs();
-    } else if (hash === '/review' || hash === 'review') {
+      return;
+    }
+    if (hash === '/review' || hash === 'review' || hash === '/paths' || hash === 'paths' || hash === '/cards' || hash === 'cards') {
       window.location.hash = '';
       return;
-    } else if (hash === '/paths' || hash === 'paths') {
-      window.location.hash = '';
-      return;
-    } else if (hash === '/cards' || hash === 'cards') {
-      window.location.hash = '';
-      return;
-    } else if (hash === '/glossary' || hash === 'glossary') {
+    }
+    if (hash === '/glossary' || hash === 'glossary') {
       currentView = 'glossary';
       currentSlug = null;
       activeTab = 'curriculum';
       syncSidebarTabs();
-    } else if (hash.startsWith('cheatsheet/')) {
+      return;
+    }
+    if (hash.startsWith('cheatsheet/')) {
       currentView = 'cheatsheet';
       currentSlug = hash.slice(11);
       activeTab = 'curriculum';
       syncSidebarTabs();
-    } else if (hash.startsWith('topic/')) {
-      currentView = 'topic';
-      currentSlug = hash.slice(6);
-      activeTab = 'curriculum';
-      syncSidebarTabs();
-    } else {
-      currentView = 'topic';
-      currentSlug = hash;
-      activeTab = 'curriculum';
-      syncSidebarTabs();
+      return;
     }
+    if (hash.startsWith('topic/')) {
+      currentView = 'topic';
+      currentSlug = hash.slice(6).replace(/\/+$/, '');
+      if (currentSlug === 'write-ahead-log') currentSlug = 'database-wal-and-recovery';
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+      return;
+    }
+
+    // Clean URL topic route: topic/<slug> or /topic/<slug>
+    if (path.startsWith('topic/')) {
+      currentView = 'topic';
+      currentSlug = path.slice(6).replace(/\/+$/, '');
+      if (currentSlug === 'write-ahead-log') currentSlug = 'database-wal-and-recovery';
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+      return;
+    }
+
+    if (!hash || hash === '/') {
+      currentView = 'home';
+      currentSlug = null;
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+      return;
+    }
+
+    currentView = 'topic';
+    currentSlug = hash;
+    if (currentSlug === 'write-ahead-log') currentSlug = 'database-wal-and-recovery';
+    activeTab = 'curriculum';
+    syncSidebarTabs();
   }
 
   function syncSidebarTabs() {
@@ -145,26 +165,21 @@ window.App = (() => {
     renderSidebar();
   }
 
-  function navigateTo(slug) {
+  function navigateTo(slug, event) {
+    if (event && event.preventDefault) event.preventDefault();
     if (!slug) return;
     loadModuleContent(slug);
-    if (window.location.pathname !== '/') {
-      history.pushState(null, '', '/#topic/' + slug);
-      parseRoute();
-      renderCurrentView();
-    } else {
-      if (window.location.hash !== '#topic/' + slug && window.location.hash !== 'topic/' + slug) {
-        window.location.hash = 'topic/' + slug;
-      }
-      parseRoute();
-      renderCurrentView();
-    }
+    history.pushState(null, '', '/topic/' + slug + '/');
+    parseRoute();
+    renderCurrentView();
     window.Progress.setLastVisited(slug);
+    updateSidebarActive();
     closeSidebar();
     window.scrollTo(0, 0);
   }
 
-  function navigateToBuild(buildId) {
+  function navigateToBuild(buildId, event) {
+    if (event && event.preventDefault) event.preventDefault();
     if (window.location.pathname !== '/') {
       history.pushState(null, '', '/#build/' + buildId);
       parseRoute();
@@ -176,7 +191,8 @@ window.App = (() => {
     window.scrollTo(0, 0);
   }
 
-  function navigateToProject(projectId) {
+  function navigateToProject(projectId, event) {
+    if (event && event.preventDefault) event.preventDefault();
     const targetUrl = '/projects' + (projectId ? ('#project-' + projectId) : '');
     if (window.location.pathname !== '/projects' || window.location.hash !== (projectId ? ('#project-' + projectId) : '')) {
       history.pushState(null, '', targetUrl);
@@ -253,16 +269,14 @@ window.App = (() => {
           reader.innerHTML = window.Renderer.renderOverview();
         }
         if (window.Analytics) {
-          window.Analytics.trackPageView('System Design In Depth - Home', '/#/', window.location.href);
+          window.Analytics.trackPageView('System Design In Depth - Home', '/', window.location.href);
         }
         break;
-
-
 
       case 'glossary':
         reader.innerHTML = window.Renderer.renderGlossary();
         if (window.Analytics) {
-          window.Analytics.trackPageView('System Design Glossary', '/#/glossary', window.location.href);
+          window.Analytics.trackPageView('System Design Glossary | System Design In Depth', '/glossary/', window.location.href);
         }
         break;
       case 'cheatsheet':
@@ -277,13 +291,39 @@ window.App = (() => {
           loadModuleContent(currentSlug);
         }
 
-        reader.innerHTML = window.Renderer.renderLesson(currentSlug);
+        const isPrerendered = reader.getAttribute('data-prerendered') === currentSlug;
+        if (isPrerendered) {
+          const toggleBtn = reader.querySelector('.completion-toggle');
+          if (toggleBtn && window.Progress) {
+            const isCompleted = window.Progress.isCompleted(currentSlug);
+            toggleBtn.classList.toggle('completed', isCompleted);
+            toggleBtn.innerHTML = isCompleted
+              ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Completed'
+              : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete';
+          }
+        } else {
+          reader.removeAttribute('data-prerendered');
+          reader.innerHTML = window.Renderer.renderLesson(currentSlug);
+        }
         
         if (window.Simulators && window.Simulators.getSimulatorForUnit) {
           const simData = window.Simulators.getSimulatorForUnit(currentSlug);
           if (simData && simData.sim) {
-            simData.sim.mount(reader);
-            activeSimulator = simData.sim;
+            try {
+              const existingSim = reader.querySelector('.sim-card');
+              if (!existingSim && simData.html) {
+                const hook = reader.querySelector('.lesson__body');
+                if (hook) {
+                  const wrapper = document.createElement('div');
+                  wrapper.innerHTML = simData.html;
+                  hook.appendChild(wrapper.firstElementChild || wrapper);
+                }
+              }
+              simData.sim.mount(reader);
+              activeSimulator = simData.sim;
+            } catch (err) {
+              console.error('[Simulator mount error]', err);
+            }
           }
         }
         
@@ -309,14 +349,16 @@ window.App = (() => {
             }
           }
           const title = foundUnit?.title || currentSlug;
-          window.Analytics.trackPageView(title + ' | System Design In Depth', '/#topic/' + currentSlug, window.location.href);
+          window.Analytics.trackPageView(title + ' | System Design In Depth', '/topic/' + currentSlug + '/', window.location.href);
           window.Analytics.trackTopicView({
             slug: currentSlug,
             title: title,
             moduleTitle: foundMod?.title || '',
             moduleNumber: foundMod?.number || '',
             partNumber: foundPart?.number || '',
-            kind: foundUnit?.kind || 'lesson'
+            kind: foundUnit?.kind || 'lesson',
+            wordCount: foundUnit?.archive?.wordCount || 0,
+            readingTimeMin: foundUnit?.archive?.wordCount ? Math.ceil(foundUnit.archive.wordCount / 200) : 0
           });
         }
         break;
@@ -329,7 +371,7 @@ window.App = (() => {
           }, 80);
         }
         if (window.Analytics) {
-          window.Analytics.trackPageView('Top Projects | @innovatorved', '/#projects', window.location.href);
+          window.Analytics.trackPageView('Top Projects | @innovatorved', '/projects/', window.location.href);
         }
         break;
       case 'build':
@@ -348,6 +390,7 @@ window.App = (() => {
     // Add click handlers for internal navigation links
     reader.querySelectorAll('[data-nav]').forEach(el => {
       el.addEventListener('click', (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
         e.preventDefault();
         const nav = el.dataset.nav;
         if (nav === 'home') navigateHome();
@@ -417,7 +460,7 @@ window.App = (() => {
         const progPct = prog.total > 0 ? Math.round((prog.completed / prog.total) * 100) : 0;
 
         html += `<div class="module-group${isCollapsed ? ' collapsed' : ''}" data-module="${mod.id}">
-          <div class="module-group__header" onclick="App.toggleModule('${mod.id}')">
+          <div class="module-group__header">
             <span class="module-group__chevron">${window.Renderer.icons.chevronDown}</span>
             <span class="module-group__number">${mod.number}</span>
             <span class="module-group__title">${mod.title}</span>
@@ -431,10 +474,10 @@ window.App = (() => {
           const statusClass = completed ? 'completed' : active ? 'active' : 'pending';
           const statusIcon = completed ? window.Renderer.icons.check : active ? window.Renderer.icons.circle : window.Renderer.icons.dot;
 
-          html += `<div class="unit-item${active ? ' active' : ''}" data-slug="${unit.slug}" onclick="App.navigateTo('${unit.slug}')">
+          html += `<a class="unit-item${active ? ' active' : ''}" data-slug="${unit.slug}" href="/topic/${unit.slug}/">
             <span class="unit-item__status unit-item__status--${statusClass}">${statusIcon}</span>
             <span class="unit-item__title">${unit.title}</span>
-          </div>`;
+          </a>`;
         }
 
         html += '</div></div>';
@@ -452,10 +495,10 @@ window.App = (() => {
 
     for (const [id, build] of Object.entries(impls)) {
       const active = currentView === 'build' && currentSlug === id;
-      html += `<div class="unit-item${active ? ' active' : ''}" data-build="${id}" onclick="App.navigateToBuild('${id}')">
+      html += `<a class="unit-item${active ? ' active' : ''}" data-build="${id}" href="/#build/${id}">
         <span class="unit-item__status unit-item__status--${active ? 'active' : 'pending'}">${window.Renderer.icons.code}</span>
         <span class="unit-item__title">${build.title || id.replace(/-/g, ' ')}</span>
-      </div>`;
+      </a>`;
     }
 
     container.innerHTML = html;
@@ -478,7 +521,7 @@ window.App = (() => {
       const active = (currentView === 'projects' && currentSlug === project.id);
       const isPinned = project.pinned;
       html += `
-        <div class="unit-item project-unit-item${active ? ' active' : ''}" data-project="${project.id}" onclick="App.navigateToProject('${project.id}')">
+        <a class="unit-item project-unit-item${active ? ' active' : ''}" data-project="${project.id}" href="/projects#project-${project.id}">
           <span class="unit-item__status" style="color: ${isPinned ? 'var(--accent)' : 'var(--fg-muted)'}; display:flex; align-items:center;">
             ${isPinned ? window.Renderer.icons.pin : window.Renderer.icons.code}
           </span>
@@ -494,7 +537,7 @@ window.App = (() => {
               ${project.stars ? `<span>· ${project.stars} ★</span>` : ''}
             </div>
           </div>
-        </div>
+        </a>
       `;
     }
 
@@ -990,6 +1033,221 @@ window.App = (() => {
     const overlay = document.getElementById('sidebar-overlay');
     if (overlay) overlay.addEventListener('click', closeSidebar);
 
+    // Delegated click handler on sidebar (handles module toggle and unit item navigation without inline onclick)
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+      sidebar.addEventListener('click', (e) => {
+        // Module group toggle
+        const groupHeader = e.target.closest('.module-group__header');
+        if (groupHeader) {
+          const group = groupHeader.closest('.module-group');
+          const modId = group?.dataset?.module;
+          if (modId) {
+            e.preventDefault();
+            toggleModule(modId);
+          }
+          return;
+        }
+
+        // Unit item navigation (topic, build, project)
+        const unitItem = e.target.closest('.unit-item');
+        if (unitItem) {
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+            return; // Allow native behavior (new tab/window)
+          }
+          if (unitItem.dataset.slug) {
+            e.preventDefault();
+            navigateTo(unitItem.dataset.slug, e);
+            return;
+          }
+          if (unitItem.dataset.build) {
+            e.preventDefault();
+            navigateToBuild(unitItem.dataset.build, e);
+            return;
+          }
+          if (unitItem.dataset.project) {
+            e.preventDefault();
+            navigateToProject(unitItem.dataset.project, e);
+            return;
+          }
+        }
+      });
+    }
+
+    // Video thumbnail error fallback (CSP-compliant, no inline onerror)
+    window.addEventListener('error', (e) => {
+      const target = e.target;
+      if (target && target.tagName === 'IMG' && target.classList.contains('video-embed__thumb')) {
+        const src = target.getAttribute('src') || '';
+        if (src.includes('/hqdefault.jpg')) {
+          target.src = src.replace('/hqdefault.jpg', '/default.jpg');
+        }
+      }
+    }, true);
+
+    // Delegated input listener for glossary filter (CSP-compliant, no inline oninput)
+    document.addEventListener('input', (e) => {
+      const target = e.target;
+      if (target && target.matches('[data-action="filter-glossary"]')) {
+        const q = target.value.toLowerCase();
+        document.querySelectorAll('.glossary-item').forEach(item => {
+          const text = item.textContent.toLowerCase();
+          item.style.display = text.includes(q) ? 'block' : 'none';
+        });
+      }
+    });
+
+    // Delegated click listener for interactive actions and navigation (CSP-compliant, no inline onclick)
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!target) return;
+
+      // 1. Navigation links with [data-nav]
+      const navEl = target.closest('[data-nav]');
+      if (navEl) {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        e.preventDefault();
+        const nav = navEl.dataset.nav;
+        if (nav === 'home') navigateHome();
+        else if (nav === 'projects') navigateToProject(navEl.dataset.project);
+        else if (nav === 'topic') navigateTo(navEl.dataset.slug);
+        else if (nav === 'module') navigateToModule(navEl.dataset.module);
+        return;
+      }
+
+      // 2. Module card navigation
+      const modCard = target.closest('[data-action="navigate-module"]');
+      if (modCard) {
+        const modId = modCard.getAttribute('data-module-id') || modCard.getAttribute('data-module');
+        if (modId) {
+          e.preventDefault();
+          navigateToModule(modId);
+        }
+        return;
+      }
+
+      // 3. Mark complete toggle
+      const compBtn = target.closest('[data-action="toggle-complete"]');
+      if (compBtn) {
+        const slug = compBtn.getAttribute('data-slug');
+        if (slug) {
+          e.preventDefault();
+          toggleComplete(slug);
+        }
+        return;
+      }
+
+      // 4. Audio player controls
+      const audioBtn = target.closest('[data-action="toggle-audio"]');
+      if (audioBtn) {
+        const slug = audioBtn.getAttribute('data-slug');
+        if (slug && typeof window.toggleAudio === 'function') {
+          e.preventDefault();
+          window.toggleAudio(slug);
+        }
+        return;
+      }
+
+      const seekTrack = target.closest('[data-action="seek-audio"]');
+      if (seekTrack) {
+        const slug = seekTrack.getAttribute('data-slug');
+        if (slug && typeof window.seekAudio === 'function') {
+          e.preventDefault();
+          window.seekAudio(slug, e);
+        }
+        return;
+      }
+
+      const speedBtn = target.closest('[data-action="cycle-audio-speed"]');
+      if (speedBtn) {
+        const slug = speedBtn.getAttribute('data-slug');
+        if (slug && typeof window.cycleAudioSpeed === 'function') {
+          e.preventDefault();
+          window.cycleAudioSpeed(slug);
+        }
+        return;
+      }
+
+      // 5. Build & code actions
+      const buildBtn = target.closest('[data-action="navigate-build"]');
+      if (buildBtn) {
+        const buildId = buildBtn.getAttribute('data-build-id');
+        if (buildId) {
+          e.preventDefault();
+          navigateToBuild(buildId, e);
+        }
+        return;
+      }
+
+      const copyScriptBtn = target.closest('[data-action="copy-build-script"]');
+      if (copyScriptBtn) {
+        const buildId = copyScriptBtn.getAttribute('data-build-id');
+        if (buildId && typeof window.copyBuildScript === 'function') {
+          e.preventDefault();
+          window.copyBuildScript(buildId, copyScriptBtn);
+        }
+        return;
+      }
+
+      const scrollFileBtn = target.closest('[data-action="scroll-to-file"]');
+      if (scrollFileBtn) {
+        const targetId = scrollFileBtn.getAttribute('data-target');
+        if (targetId) {
+          e.preventDefault();
+          document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+        }
+        return;
+      }
+
+      const copyBtn = target.closest('[data-action="copy-code"]');
+      if (copyBtn) {
+        e.preventDefault();
+        if (typeof window.copyCode === 'function') {
+          window.copyCode(copyBtn);
+        }
+        return;
+      }
+
+      // 6. Video player & embed
+      const ytBtn = target.closest('[data-action="load-youtube"]');
+      if (ytBtn) {
+        const videoId = ytBtn.getAttribute('data-video-id');
+        if (videoId && typeof window.loadYouTubeVideo === 'function') {
+          e.preventDefault();
+          window.loadYouTubeVideo(videoId, ytBtn.parentElement);
+        }
+        return;
+      }
+
+      const videoCard = target.closest('[data-action="play-in-main-video"]');
+      if (videoCard) {
+        if (typeof window.playInMainVideo === 'function') {
+          window.playInMainVideo(e, videoCard);
+        }
+        return;
+      }
+
+      // 7. Lesson feedback vote
+      const fbBtn = target.closest('[data-action="feedback-vote"]');
+      if (fbBtn) {
+        const slug = fbBtn.getAttribute('data-slug');
+        const vote = fbBtn.getAttribute('data-vote');
+        if (slug && vote && typeof window.handleFeedbackVote === 'function') {
+          e.preventDefault();
+          window.handleFeedbackVote(fbBtn, slug, vote);
+        }
+        return;
+      }
+
+      // 8. Cheat sheet print
+      const printBtn = target.closest('[data-action="window-print"]');
+      if (printBtn) {
+        e.preventDefault();
+        window.print();
+        return;
+      }
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       // Left/Right arrow for prev/next (when not in input)
@@ -1036,15 +1294,7 @@ window.App = (() => {
     return slugs;
   }
 
-  // ── Boot ──────────────────────────────────────────────────
-  // Scripts are injected after first paint, so DOMContentLoaded may already have fired
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-
-  window.openDiagramLightbox = openDiagramLightbox;
-  window.closeDiagramLightbox = closeDiagramLightbox;
-
-  return {
+  const App = {
     navigateTo,
     navigateToBuild,
     navigateToProject,
@@ -1057,6 +1307,28 @@ window.App = (() => {
     renderSidebar,
     initMermaid,
     openDiagramLightbox,
-    closeDiagramLightbox
+    closeDiagramLightbox,
+    getCurrentSlug: () => currentSlug,
+    getCurrentView: () => currentView,
+    getActiveTab: () => activeTab
   };
+
+  window.App = App;
+  window.openDiagramLightbox = openDiagramLightbox;
+  window.closeDiagramLightbox = closeDiagramLightbox;
+
+  const boot = () => {
+    try {
+      init();
+    } catch (err) {
+      console.error('[App init error]', err);
+    }
+  };
+
+  // ── Boot ──────────────────────────────────────────────────
+  // Scripts are injected after first paint, so DOMContentLoaded may already have fired
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+
+  return App;
 })();

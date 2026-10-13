@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Design: a newly-unread indicator — System Design In Depth</title>
+  <meta name="description" content="Imagine a guest book at a party with a bookmark in it. Each time you glance at the book you slide the bookmark to the last entry you were shown.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Design: a newly-unread indicator — System Design In Depth">
+  <meta property="og:description" content="Imagine a guest book at a party with a bookmark in it. Each time you glance at the book you slide the bookmark to the last entry you were shown.">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/newly-unread-indicator/">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Design: a newly-unread indicator — System Design In Depth">
+  <meta name="twitter:description" content="Imagine a guest book at a party with a bookmark in it. Each time you glance at the book you slide the bookmark to the last entry you were shown.">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/newly-unread-indicator/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
+  <link rel="stylesheet" href="css/layout.css?v=3946cca8fd">
+  <link rel="stylesheet" href="css/components.css?v=535eda5884">
+  <link rel="stylesheet" href="css/content.css?v=441918c46b">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=d484bc426c"></script>
+  <script src="js/manifest.js?v=8ce3cc0278"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Design: a newly-unread indicator",
+  "description": "Imagine a guest book at a party with a bookmark in it. Each time you glance at the book you slide the bookmark to the last entry you were shown.",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/newly-unread-indicator/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" style="display:flex; gap:0.4rem; margin-right:0.5rem;">
+        <a href="#/glossary" class="btn btn--sm btn--outline" style="font-size:11px; padding:4px 8px; text-decoration:none; white-space:nowrap;">📖 Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">1.1</span>
+          <span class="module-group__title">Foundations &amp; System Invariants</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="requirements-clarification" href="/topic/requirements-clarification/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Requirements clarification</span>
+        </a><a class="unit-item" data-slug="logical-system-design" href="/topic/logical-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Logical system design</span>
+        </a><a class="unit-item" data-slug="non-functional-requirements" href="/topic/non-functional-requirements/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Non-functional requirements</span>
+        </a><a class="unit-item" data-slug="system-design-tradeoffs" href="/topic/system-design-tradeoffs/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">System design tradeoffs</span>
+        </a><a class="unit-item" data-slug="availability-durability-consistency-cost" href="/topic/availability-durability-consistency-cost/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Availability, durability, consistency, cost</span>
+        </a><a class="unit-item" data-slug="back-of-the-envelope-capacity-planning" href="/topic/back-of-the-envelope-capacity-planning/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Back-of-the-envelope capacity planning</span>
+        </a><a class="unit-item" data-slug="concurrency-vs-parallelism" href="/topic/concurrency-vs-parallelism/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">How a server handles many requests</span>
+        </a><a class="unit-item" data-slug="horizontal-vs-vertical-scaling" href="/topic/horizontal-vs-vertical-scaling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Horizontal vs vertical scaling</span>
+        </a><a class="unit-item" data-slug="monolith-vs-microservices" href="/topic/monolith-vs-microservices/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Monolith vs microservices</span>
+        </a><a class="unit-item" data-slug="repository-pattern" href="/topic/repository-pattern/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Repository pattern</span>
+        </a><a class="unit-item" data-slug="extensible-data-modeling" href="/topic/extensible-data-modeling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Extensible data modeling</span>
+        </a><a class="unit-item" data-slug="cost-aware-architecture" href="/topic/cost-aware-architecture/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Cost-aware architecture</span>
+        </a><a class="unit-item" data-slug="when-not-to-add-infrastructure" href="/topic/when-not-to-add-infrastructure/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">When not to add infrastructure</span>
+        </a></div></div><div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Data Architecture, Storage Engines &amp; State Persistence</div><div class="module-group" data-module="learning-data-sql">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">2.1</span>
+          <span class="module-group__title">Relational Modeling &amp; Query Execution</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="relational-database-design" href="/topic/relational-database-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Relational database design</span>
+        </a><a class="unit-item" data-slug="sql-backed-key-value-store" href="/topic/sql-backed-key-value-store/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a key-value store on SQL</span>
+        </a><a class="unit-item" data-slug="database-indexing" href="/topic/database-indexing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Database indexing</span>
+        </a><a class="unit-item" data-slug="b-tree" href="/topic/b-tree/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">B-tree</span>
+        </a><a class="unit-item" data-slug="query-planning" href="/topic/query-planning/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Query planning</span>
+        </a><a class="unit-item" data-slug="database-locking-and-isolation" href="/topic/database-locking-and-isolation/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Database locking and isolation</span>
+        </a><a class="unit-item" data-slug="mvcc" href="/topic/mvcc/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">MVCC</span>
+        </a><a class="unit-item" data-slug="database-wal-and-recovery" href="/topic/database-wal-and-recovery/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Database WAL and recovery</span>
+        </a><a class="unit-item" data-slug="database-ticket-servers" href="/topic/database-ticket-servers/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Database ticket servers</span>
+        </a><a class="unit-item" data-slug="relational-database-scaling" href="/topic/relational-database-scaling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Relational database scaling</span>
+        </a><a class="unit-item" data-slug="online-indexing" href="/topic/online-indexing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Online indexing</span>
+        </a><a class="unit-item" data-slug="schema-evolution" href="/topic/schema-evolution/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Schema evolution</span>
+        </a><a class="unit-item" data-slug="soft-delete" href="/topic/soft-delete/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Soft delete</span>
+        </a></div></div><div class="module-group" data-module="learning-nosql-partitioning">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">2.2</span>
+          <span class="module-group__title">NoSQL Architectures, Partitioning &amp; IDs</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="nosql-decision-boundaries" href="/topic/nosql-decision-boundaries/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">NoSQL decision boundaries</span>
+        </a><a class="unit-item" data-slug="document-vs-key-value-stores" href="/topic/document-vs-key-value-stores/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Document vs key-value stores</span>
+        </a><a class="unit-item" data-slug="columnar-vs-wide-column-stores" href="/topic/columnar-vs-wide-column-stores/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Columnar vs wide-column stores</span>
+        </a><a class="unit-item" data-slug="graph-database-decision-boundary" href="/topic/graph-database-decision-boundary/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Graph database decision boundary</span>
+        </a><a class="unit-item" data-slug="sharding-and-partitioning" href="/topic/sharding-and-partitioning/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Sharding and partitioning</span>
+        </a><a class="unit-item" data-slug="hot-partitions" href="/topic/hot-partitions/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Hot partitions</span>
+        </a><a class="unit-item" data-slug="consistent-hashing" href="/topic/consistent-hashing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Consistent hashing</span>
+        </a><a class="unit-item" data-slug="distributed-id-generation" href="/topic/distributed-id-generation/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed ID generation</span>
+        </a><a class="unit-item" data-slug="uuid-objectid-and-snowflake" href="/topic/uuid-objectid-and-snowflake/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">UUID, ObjectId, and Snowflake</span>
+        </a><a class="unit-item" data-slug="snowflake-id-design" href="/topic/snowflake-id-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Snowflake ID design</span>
+        </a><a class="unit-item" data-slug="clock-skew-and-id-ordering" href="/topic/clock-skew-and-id-ordering/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Clock skew and ID ordering</span>
+        </a><a class="unit-item" data-slug="keyset-pagination" href="/topic/keyset-pagination/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Keyset pagination</span>
+        </a><a class="unit-item" data-slug="bloom-filters" href="/topic/bloom-filters/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Bloom filters</span>
+        </a><a class="unit-item" data-slug="hot-cold-storage-archival" href="/topic/hot-cold-storage-archival/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Hot and cold storage, archival</span>
+        </a></div></div><div class="module-group" data-module="learning-storage-engines">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">2.3</span>
+          <span class="module-group__title">Storage Engine Internals &amp; Blob Systems</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="storage-engine-design-constraints" href="/topic/storage-engine-design-constraints/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Storage engine design constraints</span>
+        </a><a class="unit-item" data-slug="storage-engine-tradeoffs" href="/topic/storage-engine-tradeoffs/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Storage engine tradeoffs</span>
+        </a><a class="unit-item" data-slug="file-backed-dictionary-storage-engine" href="/topic/file-backed-dictionary-storage-engine/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">A file-backed dictionary</span>
+        </a><a class="unit-item" data-slug="custom-binary-file-format" href="/topic/custom-binary-file-format/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Custom binary file format</span>
+        </a><a class="unit-item" data-slug="byte-range-indexed-object-storage" href="/topic/byte-range-indexed-object-storage/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Byte-range indexed object storage</span>
+        </a><a class="unit-item" data-slug="immutable-versioned-data-files" href="/topic/immutable-versioned-data-files/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Immutable versioned data files</span>
+        </a><a class="unit-item" data-slug="log-structured-storage" href="/topic/log-structured-storage/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Log-structured storage</span>
+        </a><a class="unit-item" data-slug="bitcask-storage-engine" href="/topic/bitcask-storage-engine/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Bitcask storage engine</span>
+        </a><a class="unit-item" data-slug="lsm-tree-storage-engine" href="/topic/lsm-tree-storage-engine/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">LSM-tree storage engine</span>
+        </a><a class="unit-item" data-slug="memtable-wal-and-sstable" href="/topic/memtable-wal-and-sstable/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Memtable, WAL, and SSTable</span>
+        </a><a class="unit-item" data-slug="lsm-read-path-bloom-and-sparse-index" href="/topic/lsm-read-path-bloom-and-sparse-index/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">LSM read path: Bloom filters and sparse index</span>
+        </a><a class="unit-item" data-slug="compaction-and-amplification" href="/topic/compaction-and-amplification/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Compaction and amplification</span>
+        </a><a class="unit-item" data-slug="object-storage-vs-database" href="/topic/object-storage-vs-database/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Object storage vs database</span>
+        </a><a class="unit-item" data-slug="s3-object-storage-architecture" href="/topic/s3-object-storage-architecture/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">S3 object storage architecture</span>
+        </a><a class="unit-item" data-slug="range-partitioning-vs-consistent-hashing-storage" href="/topic/range-partitioning-vs-consistent-hashing-storage/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Range partitioning vs consistent hashing for storage</span>
+        </a><a class="unit-item" data-slug="partition-manager-and-map-table" href="/topic/partition-manager-and-map-table/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Partition manager and map table</span>
+        </a><a class="unit-item" data-slug="metadata-db-for-object-storage" href="/topic/metadata-db-for-object-storage/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Metadata database for object storage</span>
+        </a><a class="unit-item" data-slug="append-only-object-storage-stream-layer" href="/topic/append-only-object-storage-stream-layer/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Append-only stream layer</span>
+        </a><a class="unit-item" data-slug="object-storage-durability-and-replication" href="/topic/object-storage-durability-and-replication/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Durability and replication</span>
+        </a><a class="unit-item" data-slug="end-to-end-checksums" href="/topic/end-to-end-checksums/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">End-to-end checksums</span>
+        </a></div></div><div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Distributed Systems, Consensus &amp; Coordination</div><div class="module-group" data-module="learning-apis-services">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">3.1</span>
+          <span class="module-group__title">Network Protocols &amp; Service Communication</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="api-design-contracts" href="/topic/api-design-contracts/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">API design contracts</span>
+        </a><a class="unit-item" data-slug="service-to-service-communication" href="/topic/service-to-service-communication/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Service-to-service communication</span>
+        </a><a class="unit-item" data-slug="http-rest-grpc" href="/topic/http-rest-grpc/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">HTTP, REST, and gRPC</span>
+        </a><a class="unit-item" data-slug="tcp-vs-udp" href="/topic/tcp-vs-udp/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">TCP vs UDP</span>
+        </a><a class="unit-item" data-slug="api-gateway-vs-load-balancer" href="/topic/api-gateway-vs-load-balancer/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">API gateway vs load balancer</span>
+        </a><a class="unit-item" data-slug="load-balancers" href="/topic/load-balancers/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Load balancers</span>
+        </a><a class="unit-item" data-slug="consistent-hashing-load-balancing" href="/topic/consistent-hashing-load-balancing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Consistent-hashing load balancing</span>
+        </a><a class="unit-item" data-slug="event-contracts" href="/topic/event-contracts/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Event contracts</span>
+        </a><a class="unit-item" data-slug="retries-timeouts-idempotency" href="/topic/retries-timeouts-idempotency/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Retries, timeouts, and idempotency</span>
+        </a><a class="unit-item" data-slug="batching" href="/topic/batching/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Batching</span>
+        </a><a class="unit-item" data-slug="backpressure" href="/topic/backpressure/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Backpressure</span>
+        </a><a class="unit-item" data-slug="tail-latency" href="/topic/tail-latency/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Tail latency</span>
+        </a><a class="unit-item" data-slug="load-shedding" href="/topic/load-shedding/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Load shedding</span>
+        </a></div></div><div class="module-group" data-module="learning-distributed-coordination">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">3.2</span>
+          <span class="module-group__title">Distributed Coordination, Consensus &amp; Leases</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="distributed-systems-foundations" href="/topic/distributed-systems-foundations/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed systems foundations</span>
+        </a><a class="unit-item" data-slug="consistency-models" href="/topic/consistency-models/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Consistency models</span>
+        </a><a class="unit-item" data-slug="replication" href="/topic/replication/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Replication</span>
+        </a><a class="unit-item" data-slug="cap-and-pacelc" href="/topic/cap-and-pacelc/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">CAP and PACELC</span>
+        </a><a class="unit-item" data-slug="clocks-and-ordering" href="/topic/clocks-and-ordering/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Clocks and ordering</span>
+        </a><a class="unit-item" data-slug="consensus" href="/topic/consensus/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Consensus</span>
+        </a><a class="unit-item" data-slug="leader-election" href="/topic/leader-election/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Leader election</span>
+        </a><a class="unit-item" data-slug="distributed-locks-and-leases" href="/topic/distributed-locks-and-leases/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed locks and leases</span>
+        </a><a class="unit-item" data-slug="redis-redlock-and-fencing-tokens" href="/topic/redis-redlock-and-fencing-tokens/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Redis Redlock and fencing tokens</span>
+        </a><a class="unit-item" data-slug="circuit-breakers-and-timeouts" href="/topic/circuit-breakers-and-timeouts/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Circuit breakers and timeouts</span>
+        </a><a class="unit-item" data-slug="gossip-protocol" href="/topic/gossip-protocol/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Gossip protocol</span>
+        </a><a class="unit-item" data-slug="metadata-service-and-node-discovery" href="/topic/metadata-service-and-node-discovery/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Metadata service and node discovery</span>
+        </a><a class="unit-item" data-slug="distributed-hash-tables" href="/topic/distributed-hash-tables/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed hash tables</span>
+        </a></div></div><div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Asynchronous Execution, Queues &amp; Real-Time Processing</div><div class="module-group" data-module="learning-caching-fast-reads">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">4.1</span>
+          <span class="module-group__title">Caching Strategies &amp; In-Memory State</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="caching-layers" href="/topic/caching-layers/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Caching layers</span>
+        </a><a class="unit-item" data-slug="distributed-cache-design" href="/topic/distributed-cache-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed cache design</span>
+        </a><a class="unit-item" data-slug="cache-eviction-policies" href="/topic/cache-eviction-policies/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Cache eviction policies</span>
+        </a><a class="unit-item" data-slug="ttl-expiration-and-cache-reapers" href="/topic/ttl-expiration-and-cache-reapers/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">TTL expiration and cache reapers</span>
+        </a><a class="unit-item" data-slug="cache-concurrency-control" href="/topic/cache-concurrency-control/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Cache concurrency control</span>
+        </a><a class="unit-item" data-slug="cache-availability-and-database-fallback" href="/topic/cache-availability-and-database-fallback/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Cache availability and database fallback</span>
+        </a></div></div><div class="module-group" data-module="learning-async-streams">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">4.2</span>
+          <span class="module-group__title">Asynchronous Workflows &amp; Partitioned Logs</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="delegation-and-async-work" href="/topic/delegation-and-async-work/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Delegation and async work</span>
+        </a><a class="unit-item" data-slug="task-queue-vs-event-stream" href="/topic/task-queue-vs-event-stream/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Task queue vs event stream</span>
+        </a><a class="unit-item" data-slug="event-bus-for-product-events" href="/topic/event-bus-for-product-events/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Event bus for product events</span>
+        </a><a class="unit-item" data-slug="queue-lag" href="/topic/queue-lag/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Queue lag</span>
+        </a><a class="unit-item" data-slug="distributed-task-scheduler" href="/topic/distributed-task-scheduler/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Distributed task scheduler</span>
+        </a><a class="unit-item" data-slug="postgres-skip-locked-work-queue" href="/topic/postgres-skip-locked-work-queue/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Postgres SKIP LOCKED work queue</span>
+        </a><a class="unit-item" data-slug="dag-workflow-orchestration" href="/topic/dag-workflow-orchestration/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">DAG workflow orchestration</span>
+        </a><a class="unit-item" data-slug="rule-engine-trigger-framework" href="/topic/rule-engine-trigger-framework/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Rule engine and trigger framework</span>
+        </a><a class="unit-item" data-slug="fanout-patterns" href="/topic/fanout-patterns/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Fanout patterns</span>
+        </a><a class="unit-item" data-slug="flash-sale-inventory-locking" href="/topic/flash-sale-inventory-locking/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Flash sale inventory locking</span>
+        </a></div></div><div class="module-group" data-module="learning-analytics-sketches">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">4.3</span>
+          <span class="module-group__title">Probabilistic Sketches &amp; Stream Analytics</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="counting-at-scale" href="/topic/counting-at-scale/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Counting at scale</span>
+        </a><a class="unit-item" data-slug="view-counting-at-scale" href="/topic/view-counting-at-scale/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">View counting at scale</span>
+        </a><a class="unit-item" data-slug="impression-counting-system-design" href="/topic/impression-counting-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Impression counting</span>
+        </a><a class="unit-item" data-slug="hyperloglog-cardinality-estimation" href="/topic/hyperloglog-cardinality-estimation/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">HyperLogLog cardinality estimation</span>
+        </a><a class="unit-item" data-slug="mergeable-sketches-for-analytics" href="/topic/mergeable-sketches-for-analytics/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Mergeable sketches for analytics</span>
+        </a><a class="unit-item" data-slug="bucketed-time-window-aggregation" href="/topic/bucketed-time-window-aggregation/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Bucketed time-window aggregation</span>
+        </a><a class="unit-item" data-slug="raw-events-vs-derived-analytics" href="/topic/raw-events-vs-derived-analytics/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Raw events vs derived analytics</span>
+        </a><a class="unit-item" data-slug="count-min-sketch" href="/topic/count-min-sketch/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Count-min sketch</span>
+        </a><a class="unit-item" data-slug="top-k-heavy-hitters" href="/topic/top-k-heavy-hitters/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Top-k heavy hitters</span>
+        </a><a class="unit-item" data-slug="reservoir-sampling" href="/topic/reservoir-sampling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Reservoir sampling</span>
+        </a><a class="unit-item" data-slug="tdigest-quantile-sketch" href="/topic/tdigest-quantile-sketch/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">t-digest quantile sketch</span>
+        </a><a class="unit-item" data-slug="streaming-percentile-analytics" href="/topic/streaming-percentile-analytics/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Streaming percentile analytics</span>
+        </a><a class="unit-item" data-slug="live-reactions-high-throughput-design" href="/topic/live-reactions-high-throughput-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: live reactions at high throughput</span>
+        </a></div></div><div class="module-group" data-module="learning-realtime-social">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">4.4</span>
+          <span class="module-group__title">Real-Time Messaging &amp; Feed Architectures</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="realtime-database-and-websocket-scaling" href="/topic/realtime-database-and-websocket-scaling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Realtime database and WebSocket scaling</span>
+        </a><a class="unit-item" data-slug="websockets-vs-sse-vs-long-polling" href="/topic/websockets-vs-sse-vs-long-polling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">WebSockets vs SSE vs long polling</span>
+        </a><a class="unit-item" data-slug="social-network-database-modeling" href="/topic/social-network-database-modeling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Social network database modeling</span>
+        </a><a class="unit-item" data-slug="social-graph-follows-and-flockdb" href="/topic/social-graph-follows-and-flockdb/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Social graph: follows and FlockDB</span>
+        </a><a class="unit-item" data-slug="feed-generation-push-pull-hybrid" href="/topic/feed-generation-push-pull-hybrid/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Feed generation: push, pull, hybrid</span>
+        </a><a class="unit-item active" data-slug="newly-unread-indicator" href="/topic/newly-unread-indicator/">
+          <span class="unit-item__status unit-item__status--active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg></span>
+          <span class="unit-item__title">Design: a newly-unread indicator</span>
+        </a><a class="unit-item" data-slug="hashtag-extraction-and-tag-store" href="/topic/hashtag-extraction-and-tag-store/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Hashtag extraction and tag store</span>
+        </a><a class="unit-item" data-slug="reaction-modeling" href="/topic/reaction-modeling/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Reaction modeling</span>
+        </a><a class="unit-item" data-slug="photo-tagging-coordinate-model" href="/topic/photo-tagging-coordinate-model/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: photo tagging coordinates</span>
+        </a><a class="unit-item" data-slug="live-commentary-system-design" href="/topic/live-commentary-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: live commentary</span>
+        </a></div></div><div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Production Operations, Resilience &amp; System Hardening</div><div class="module-group" data-module="learning-reliability-ops">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">5.1</span>
+          <span class="module-group__title">Production Reliability, SLOs &amp; Resilience</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="observability-for-distributed-systems" href="/topic/observability-for-distributed-systems/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Observability for distributed systems</span>
+        </a><a class="unit-item" data-slug="slos-and-error-budgets" href="/topic/slos-and-error-budgets/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">SLOs and error budgets</span>
+        </a><a class="unit-item" data-slug="incident-response" href="/topic/incident-response/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Incident response</span>
+        </a><a class="unit-item" data-slug="deployment-and-migration-safety" href="/topic/deployment-and-migration-safety/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Deployment and migration safety</span>
+        </a><a class="unit-item" data-slug="database-migration-safety" href="/topic/database-migration-safety/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Database migration safety</span>
+        </a><a class="unit-item" data-slug="parallel-monolith-read-drain" href="/topic/parallel-monolith-read-drain/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Parallel monolith read drain</span>
+        </a><a class="unit-item" data-slug="database-backups-and-restore" href="/topic/database-backups-and-restore/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Backups and restore</span>
+        </a><a class="unit-item" data-slug="disaster-recovery" href="/topic/disaster-recovery/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Disaster recovery</span>
+        </a><a class="unit-item" data-slug="data-retention-and-deletion" href="/topic/data-retention-and-deletion/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Data retention, deletion, and privacy</span>
+        </a><a class="unit-item" data-slug="security-and-abuse-prevention" href="/topic/security-and-abuse-prevention/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Security and abuse prevention</span>
+        </a><a class="unit-item" data-slug="rate-limiter-placement-and-keys" href="/topic/rate-limiter-placement-and-keys/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Rate limiter placement and keys</span>
+        </a><a class="unit-item" data-slug="sliding-window-rate-limiter" href="/topic/sliding-window-rate-limiter/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Sliding window rate limiter</span>
+        </a><a class="unit-item" data-slug="multi-tenant-design" href="/topic/multi-tenant-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Multi-tenant design</span>
+        </a></div></div><div class="module-group" data-module="learning-media-files">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">5.2</span>
+          <span class="module-group__title">Media Processing &amp; CDN Distribution</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="direct-to-object-storage-upload" href="/topic/direct-to-object-storage-upload/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Direct-to-object-storage upload</span>
+        </a><a class="unit-item" data-slug="image-cdn-and-resizing" href="/topic/image-cdn-and-resizing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Image CDN and resizing</span>
+        </a><a class="unit-item" data-slug="gravatar-style-avatar-service" href="/topic/gravatar-style-avatar-service/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">An avatar service</span>
+        </a><a class="unit-item" data-slug="video-upload-signed-url-multipart" href="/topic/video-upload-signed-url-multipart/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Video upload: signed URLs and multipart</span>
+        </a><a class="unit-item" data-slug="video-transcoding-pipeline" href="/topic/video-transcoding-pipeline/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Video transcoding pipeline</span>
+        </a><a class="unit-item" data-slug="adaptive-bitrate-and-cdn-decider" href="/topic/adaptive-bitrate-and-cdn-decider/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Adaptive bitrate and the CDN decider</span>
+        </a><a class="unit-item" data-slug="signed-urls-drm-and-video-security" href="/topic/signed-urls-drm-and-video-security/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Signed URLs, DRM, and video security</span>
+        </a><a class="unit-item" data-slug="live-streaming-webrtc-and-latency" href="/topic/live-streaming-webrtc-and-latency/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Live streaming, WebRTC, and latency</span>
+        </a><a class="unit-item" data-slug="remote-file-sync-design" href="/topic/remote-file-sync-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Remote file sync design</span>
+        </a><a class="unit-item" data-slug="fixed-block-chunking-and-content-addressing" href="/topic/fixed-block-chunking-and-content-addressing/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Fixed-block chunking and content addressing</span>
+        </a><a class="unit-item" data-slug="blocklist-versioned-file-metadata" href="/topic/blocklist-versioned-file-metadata/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Blocklist versioned file metadata</span>
+        </a></div></div><div class="module-group" data-module="learning-geo-matching">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">5.3</span>
+          <span class="module-group__title">Geospatial Indexing &amp; Proximity Search</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="nearby-geospatial-search-system-design" href="/topic/nearby-geospatial-search-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Nearby geospatial search</span>
+        </a><a class="unit-item" data-slug="geohash-prefix-spatial-index" href="/topic/geohash-prefix-spatial-index/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Geohash prefix spatial index</span>
+        </a><a class="unit-item" data-slug="geospatial-grid-systems-h3-s2-geohash" href="/topic/geospatial-grid-systems-h3-s2-geohash/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Grid systems: H3, S2, geohash</span>
+        </a><a class="unit-item" data-slug="redis-geo-spatial-hot-path" href="/topic/redis-geo-spatial-hot-path/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Redis GEO hot path</span>
+        </a><a class="unit-item" data-slug="geofencing-point-in-polygon" href="/topic/geofencing-point-in-polygon/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Geofencing: point in polygon</span>
+        </a><a class="unit-item" data-slug="ray-casting-point-in-polygon" href="/topic/ray-casting-point-in-polygon/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Ray casting point in polygon</span>
+        </a><a class="unit-item" data-slug="seen-filtering-bloom-vs-exact-sets" href="/topic/seen-filtering-bloom-vs-exact-sets/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Seen filtering: Bloom vs exact sets</span>
+        </a><a class="unit-item" data-slug="matching-and-recommendation-algorithms" href="/topic/matching-and-recommendation-algorithms/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Matching and recommendation algorithms</span>
+        </a></div></div><div class="module-group" data-module="learning-search-retrieval">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">5.4</span>
+          <span class="module-group__title">Information Retrieval &amp; Search Engines</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="information-retrieval-system-design" href="/topic/information-retrieval-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Information retrieval system design</span>
+        </a><a class="unit-item" data-slug="inverted-index-and-posting-lists" href="/topic/inverted-index-and-posting-lists/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Inverted index and posting lists</span>
+        </a><a class="unit-item" data-slug="boolean-tiered-search" href="/topic/boolean-tiered-search/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Boolean and tiered search</span>
+        </a><a class="unit-item" data-slug="tf-idf-relevance-scoring" href="/topic/tf-idf-relevance-scoring/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">TF-IDF relevance scoring</span>
+        </a><a class="unit-item" data-slug="bm25-production-ranking" href="/topic/bm25-production-ranking/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">BM25 production ranking</span>
+        </a><a class="unit-item" data-slug="stop-words-and-champion-lists" href="/topic/stop-words-and-champion-lists/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Stop words and champion lists</span>
+        </a><a class="unit-item" data-slug="query-understanding-pipeline" href="/topic/query-understanding-pipeline/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Query understanding pipeline</span>
+        </a><a class="unit-item" data-slug="search-feedback-and-relevance-signals" href="/topic/search-feedback-and-relevance-signals/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Search feedback and relevance signals</span>
+        </a><a class="unit-item" data-slug="search-evaluation-metrics" href="/topic/search-evaluation-metrics/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Search evaluation metrics</span>
+        </a><a class="unit-item" data-slug="search-index-synchronization" href="/topic/search-index-synchronization/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Search index synchronization</span>
+        </a><a class="unit-item" data-slug="search-index-sharding" href="/topic/search-index-sharding/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Search index sharding</span>
+        </a><a class="unit-item" data-slug="crawler-and-indexing-pipeline" href="/topic/crawler-and-indexing-pipeline/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Crawler and indexing pipeline</span>
+        </a><a class="unit-item" data-slug="vector-search-and-hybrid-retrieval" href="/topic/vector-search-and-hybrid-retrieval/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Vector search and hybrid retrieval</span>
+        </a><a class="unit-item" data-slug="autocomplete-system-design" href="/topic/autocomplete-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: autocomplete</span>
+        </a><a class="unit-item" data-slug="did-you-mean-and-spell-correction" href="/topic/did-you-mean-and-spell-correction/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: did-you-mean and spell correction</span>
+        </a><a class="unit-item" data-slug="related-searches" href="/topic/related-searches/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: related searches</span>
+        </a><a class="unit-item" data-slug="recent-searches-system-design" href="/topic/recent-searches-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: recent searches</span>
+        </a></div></div><div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Systems Design Labs &amp; Architectural Evolution</div><div class="module-group" data-module="design-services">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">6.1</span>
+          <span class="module-group__title">Infrastructure &amp; Core Service Designs</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="url-shortener-system-design" href="/topic/url-shortener-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a URL shortener, one machine</span>
+        </a><a class="unit-item" data-slug="rate-limiting-and-abuse-prevention-case-study" href="/topic/rate-limiting-and-abuse-prevention-case-study/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: rate limiting and abuse prevention</span>
+        </a><a class="unit-item" data-slug="url-shortener-at-scale" href="/topic/url-shortener-at-scale/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a URL shortener at scale</span>
+        </a><a class="unit-item" data-slug="ecommerce-product-listing-system-design" href="/topic/ecommerce-product-listing-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a product listing</span>
+        </a><a class="unit-item" data-slug="collaborative-editing-system-design" href="/topic/collaborative-editing-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a collaborative editor</span>
+        </a><a class="unit-item" data-slug="object-store-system-design" href="/topic/object-store-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: an object store (S3)</span>
+        </a><a class="unit-item" data-slug="partitioned-log-system-design" href="/topic/partitioned-log-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a Kafka-style log</span>
+        </a></div></div><div class="module-group" data-module="design-products">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">6.2</span>
+          <span class="module-group__title">Interactive Product System Designs</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="notification-system-design" href="/topic/notification-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a notification system</span>
+        </a><a class="unit-item" data-slug="ticket-booking-system-design" href="/topic/ticket-booking-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a ticket booking system</span>
+        </a><a class="unit-item" data-slug="payment-system-design" href="/topic/payment-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a payment system</span>
+        </a><a class="unit-item" data-slug="search-engine-system-design" href="/topic/search-engine-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a search service</span>
+        </a><a class="unit-item" data-slug="recommendation-system-design" href="/topic/recommendation-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a recommendation system</span>
+        </a><a class="unit-item" data-slug="chat-and-messaging-system-design" href="/topic/chat-and-messaging-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: chat and messaging</span>
+        </a><a class="unit-item" data-slug="social-feed-system-design-case-study" href="/topic/social-feed-system-design-case-study/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a social feed</span>
+        </a><a class="unit-item" data-slug="geospatial-nearby-search-case-study" href="/topic/geospatial-nearby-search-case-study/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: nearby search</span>
+        </a></div></div><div class="module-group" data-module="design-operations">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">6.3</span>
+          <span class="module-group__title">High-Scale Media &amp; Operations Designs</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="ride-matching-system-design" href="/topic/ride-matching-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: ride matching</span>
+        </a><a class="unit-item" data-slug="video-platform-system-design" href="/topic/video-platform-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a video platform</span>
+        </a><a class="unit-item" data-slug="file-sync-system-design" href="/topic/file-sync-system-design/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a file sync service</span>
+        </a><a class="unit-item" data-slug="observability-slo-case-study" href="/topic/observability-slo-case-study/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: observability and SLOs</span>
+        </a><a class="unit-item" data-slug="zero-downtime-database-migration-case-study" href="/topic/zero-downtime-database-migration-case-study/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a database migration</span>
+        </a><a class="unit-item" data-slug="interview-design-instagram" href="/topic/interview-design-instagram/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Design: a photo-sharing interview</span>
+        </a></div></div><div class="module-group" data-module="company-cases">
+        <div class="module-group__header">
+          <span class="module-group__chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="module-group__number">6.4</span>
+          <span class="module-group__title">Real-World Architecture Evolution &amp; Incidents</span>
+          <div class="module-group__progress"><div class="module-group__progress-fill" style="width:0%"></div></div>
+        </div>
+        <div class="module-group__units"><a class="unit-item" data-slug="case-instagram-early-architecture" href="/topic/case-instagram-early-architecture/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Case: Instagram&#39;s first architecture</span>
+        </a><a class="unit-item" data-slug="case-stripe-idempotency-keys" href="/topic/case-stripe-idempotency-keys/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Case: Stripe&#39;s idempotency keys</span>
+        </a><a class="unit-item" data-slug="case-discord-message-storage" href="/topic/case-discord-message-storage/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Case: how Discord stores trillions of messages</span>
+        </a><a class="unit-item" data-slug="case-amazon-dynamo" href="/topic/case-amazon-dynamo/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Case: Amazon Dynamo, the paper</span>
+        </a><a class="unit-item" data-slug="case-gitlab-database-incident" href="/topic/case-gitlab-database-incident/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Case: GitLab’s database incident</span>
+        </a></div></div>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered="newly-unread-indicator">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <a href="#" data-nav="module" data-module="learning-realtime-social">Real-Time Messaging & Feed Architectures</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">Design: a newly-unread indicator</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--lesson">design</span>
+          <span class="tag">system-design</span><span class="tag">social</span><span class="tag">messaging</span>
+        </div>
+        <h1 class="lesson-header__title">Design: a newly-unread indicator</h1>
+        <div class="lesson-header__meta">
+          
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 4.4: Real-Time Messaging & Feed Architectures</span>
+          <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 18, 2026</span>
+        </div>
+        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+          <button class="completion-toggle" data-action="toggle-complete" data-slug="newly-unread-indicator">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
+          </button>
+          <a href="#cheatsheet/learning-realtime-social" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
+            📄 Cheat Sheet
+          </a>
+        </div>
+      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;cr6p0n0N-VA&quot;,&quot;title&quot;:&quot;Design Whatsapp: System Design Interview w/ a Ex-Meta Senior Manager&quot;,&quot;channel&quot;:&quot;Hello Interview&quot;,&quot;why&quot;:&quot;Kept: no dedicated video exists for unread badges, and this is the clearest treatment of per-recipient inboxes, message ordering, delivery acknowledgements and multi-device cursors that the badge design builds on.&quot;,&quot;length&quot;:&quot;58:12&quot;}">
+      <div class="video-embed" id="video-cr6p0n0N-VA"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="cr6p0n0N-VA">
+          <img class="video-embed__thumb" src="https://img.youtube.com/vi/cr6p0n0N-VA/hqdefault.jpg"
+               alt="Design Whatsapp: System Design Interview w/ a Ex-Meta Senior Manager"
+               loading="lazy">
+          <div class="video-embed__play-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        </div></div>
+      <div class="video-embed__info">
+        <span class="video-embed__channel">Hello Interview</span>
+        <span class="video-embed__title">Design Whatsapp: System Design Interview w/ a Ex-Meta Senior Manager</span>
+        <a href="https://www.youtube.com/watch?v=cr6p0n0N-VA" target="_blank" rel="noopener noreferrer" style="margin-left:auto; font-size:11px; color:var(--accent,#6366f1); text-decoration:none; display:flex; align-items:center; gap:2px;">
+          Watch on YouTube ↗
+        </a>
+      </div>
+      <p class="video-embed__why">Kept: no dedicated video exists for unread badges, and this is the clearest treatment of per-recipient inboxes, message ordering, delivery acknowledgements and multi-device cursors that the badge design builds on.</p></div>
+      <div class="video-more">
+        <h3 class="video-more__heading">More videos on this topic</h3>
+        <div class="video-more__list">
+      <a class="video-more__card" href="https://www.youtube.com/watch?v=IbwgUJcGMnA" target="_blank" rel="noopener noreferrer"
+         data-action="play-in-main-video" data-video="{&quot;youtubeId&quot;:&quot;IbwgUJcGMnA&quot;,&quot;title&quot;:&quot;Design Facebook Messenger/WhatsApp | Systems Design Questions 3.0 With Ex-Google SWE&quot;,&quot;channel&quot;:&quot;Jordan has no life&quot;,&quot;role&quot;:&quot;interview&quot;,&quot;why&quot;:&quot;A shorter alternative walkthrough that emphasizes sequence numbers and read state across devices.&quot;,&quot;length&quot;:&quot;14:36&quot;}"
+         title="Play here (Ctrl/⌘-click to open on YouTube)">
+        <span class="video-more__thumb">
+          <img src="https://img.youtube.com/vi/IbwgUJcGMnA/mqdefault.jpg" alt="" loading="lazy">
+          <span class="video-more__play"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+          <span class="video-more__len">14:36</span>
+        </span>
+        <span class="video-more__meta">
+          <span class="video-more__role">Interview walkthrough</span>
+          <span class="video-more__title">Design Facebook Messenger/WhatsApp | Systems Design Questions 3.0 With Ex-Google SWE</span>
+          <span class="video-more__channel">Jordan has no life</span>
+          <span class="video-more__why">A shorter alternative walkthrough that emphasizes sequence numbers and read state across devices.</span>
+        </span>
+      </a></div>
+      </div>
+        <aside class="intuition">
+          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
+          <div class="intuition__body"><p>Imagine a guest book at a party with a bookmark in it. Each time you glance at the book you slide the bookmark to the last entry you were shown. The badge answers one question: "how many different people have written since my bookmark?" Nobody tears pages out or resets a counter; you only ever move the bookmark forward.</p><p><strong>Mental model:</strong> the badge is a derived query, count of distinct senders whose latest message position is greater than the acknowledged boundary, and the boundary only moves forward to a position the server itself issued.</p><ul><li><strong>Clearing with SET badge 0.</strong> A message that commits between building the response and the clear is silently lost from the badge.</li><li><strong>Counting the wrong thing.</strong> Unread messages, unread conversations and distinct new senders are three different product metrics; confirm which one before designing storage.</li><li><strong>Letting a stale device move the boundary backwards.</strong> Use max(current, acknowledged) so a phone that was offline for a day cannot resurrect old items.</li></ul></div>
+        </aside>
+      <div class="audio-player" id="audio-player-newly-unread-indicator">
+        <button class="audio-player__play-btn" id="audio-btn-newly-unread-indicator" data-action="toggle-audio" data-slug="newly-unread-indicator" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-newly-unread-indicator" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-newly-unread-indicator" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-newly-unread-indicator">0:00 / --:--</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="newly-unread-indicator" id="audio-track-newly-unread-indicator">
+          <div class="audio-player__progress" id="audio-bar-newly-unread-indicator" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="newly-unread-indicator" id="audio-speed-newly-unread-indicator" title="Playback speed">1x</button>
+        <audio id="audio-newly-unread-indicator" src="audio/newly-unread-indicator.mp3" preload="metadata"></audio>
+      </div><article class="prose"><h2>Design: a newly-unread inbox indicator</h2>
+
+<p>A newly-unread badge tells someone how much new activity has arrived since they last opened an overview. It can clear when they open that screen even though they have not read every conversation. That makes it a separate feature from message read receipts.</p>
+
+<p>We'll design a badge that counts distinct senders, preserve arrivals that race with opening the inbox, and keep reads correct while a background worker is behind. The example is our own small inbox service, not a claim about Slack's or another messenger's internals.</p>
+
+<h2>Decide what the number means</h2>
+
+<p>Bo sends Ada two messages and Cy sends one. Our badge shows <strong>2</strong>, because two sender accounts contributed new activity. It does not show three messages, two humans, or a count of unread conversations.</p>
+
+<table><thead><tr><th>State</th><th>What it means</th></tr></thead><tbody><tr><td>Newly-unread badge</td><td>Distinct eligible senders after Ada's last inbox acknowledgement</td></tr><tr><td>Thread unread</td><td>A conversation contains messages beyond its own read position</td></tr><tr><td>Message read receipt</td><td>The client reported a particular message or position as read</td></tr></tbody></table>Opening the overview advances only the first state. The <a href="#" data-nav="topic" data-slug="chat-and-messaging-system-design">chat design</a> deals with delivery and thread-read reports separately. None of these reports proves that a person understood the text.
+
+<p>Repeated delivery of one send must not create another message. But two intentional sends with identical text are still two messages. Give each send an operation ID; use sender identity only when collapsing messages into the badge count.</p>
+
+<p>For this design, only the recipient may view or acknowledge the inbox. Senders and recipients must be active accounts, and inactive senders disappear from badge reads. Blocking, group conversations and message deletion need additional rules; they are outside the executable example.</p>
+
+<h2>Clear what the screen observed</h2>
+
+<p>Deleting the whole badge set when Ada opens the inbox looks simple. It fails if a new message arrives after the server prepared her response but before the acknowledgement reaches the server. The deletion clears activity she never had a chance to see.</p>
+
+<p>Give each accepted message a position within its recipient's inbox. Ada's first three messages occupy positions 1, 2 and 3. The response records that it observed through 3. Dee's later message receives position 4.</p>
+
+<div class="mermaid">sequenceDiagram
+  accTitle: Acknowledge the observed inbox
+  accDescr: Ada receives an inbox snapshot through position 3. Dee's message commits at position 4 before Ada acknowledges the older snapshot. Position 4 remains newly unread.
+  participant A as Ada
+  participant S as Inbox service
+  A->>S: Open inbox
+  S-->>A: Snapshot through 3
+  Note over S: Dee's message commits at 4
+  A->>S: Acknowledge snapshot 3
+  S-->>A: One new sender remains</div>
+
+<p>Store an acknowledged-through position <strong>A</strong>. A sender counts when their latest eligible message position is strictly greater than A. After acknowledging 3, Bo and Cy stop contributing, while Dee at 4 remains.</p>
+
+<p>Positions describe acceptance order for one recipient. They are not wall-clock timestamps or a global order across all users. Equal timestamps cannot tell us which of two arrivals belonged to an earlier inbox response.</p>
+
+<p>The server stores an issued snapshot containing its recipient and observed boundary. Ada acknowledges the snapshot ID, not an arbitrary position supplied by her client. The server checks ownership and updates A to the greater of its current value and the snapshot boundary.</p>
+
+<p>That maximum handles multiple devices. If device B has already acknowledged through 4, device A's delayed acknowledgement through 3 leaves A at 4. A retry with the same operation ID returns its original receipt; that historical reply must not make the client lower a newer local boundary.</p>
+
+<p>The product decides when to send the acknowledgement: for example, after the overview loads successfully. Issuing a snapshot only proves which response the server prepared, not that Ada saw it. An acknowledgement should not be sent just because navigation began and the request might still fail.</p>
+
+<h2>Store the source and the prepared count separately</h2>
+
+<p>Accepted messages are the source. A projection keeps each sender's greatest processed position so a badge read need not rescan the entire message history. Let <strong>H</strong> be the accepted head and <strong>P</strong> the position through which the projection is complete.</p>
+
+<p>Our local service puts these records in one SQLite database:</p>
+
+<table><thead><tr><th>Record and key</th><th>Relevant fields</th></tr></thead><tbody><tr><td>Message: recipient, position</td><td>Sender and text</td></tr><tr><td>Inbox head: recipient</td><td>H, A and P</td></tr><tr><td>Sender summary: recipient, sender</td><td>Greatest processed position</td></tr><tr><td>Issued snapshot: snapshot ID</td><td>Recipient and observed-through position</td></tr><tr><td>Operation receipt: actor, operation ID</td><td>Original input and accepted result</td></tr></tbody></table>Separate thread-read rows exist to demonstrate that inbox acknowledgements leave them unchanged. A real thread-reading API is outside this service.
+
+<div class="mermaid">flowchart TD
+  accTitle: The badge combines a prefix and a tail
+  accDescr: A badge read merges sender maxima processed through P with source messages after P, then counts active senders whose latest position is above acknowledgement A. All records are read from one SQLite snapshot.
+  P[Sender maxima through P] --> M[Merge latest positions]
+  T[Messages after P] --> M
+  M --> C[Count active senders<br/>above A]</div>
+
+<p>A read uses one database snapshot for the heads, projection, tail and account eligibility. Otherwise, it could combine a new P with an old projection and miss messages. The count is exact for that snapshot; an arrival after it begins can appear on the next read.</p>
+
+<p>This is a deliberate cost choice. With P=0 and H=4, the read examines four tail messages. Once the worker reaches P=4, the tail is empty, though this implementation still reads the sender summaries and checks account eligibility.</p>
+
+<h2>Follow a send, a read and an acknowledgement</h2>
+
+<p>The HTTP handler binds its demonstration credential to an account. Source methods then enforce ownership. The routes keep the three operations distinct:</p>
+
+<table><thead><tr><th>Route</th><th>Input or result</th></tr></thead><tbody><tr><td>POST <code>/messages</code></td><td>Send an operation ID, recipient and text; receive an accepted position</td></tr><tr><td>GET <code>/inbox/Ada</code></td><td>Receive eligible messages, snapshot ID and observed-through position</td></tr><tr><td>GET <code>/badge/Ada</code></td><td>Receive the count and diagnostic H, A, P and tail-row fields</td></tr><tr><td>POST <code>/inbox/Ada/ack</code></td><td>Send an operation ID and issued snapshot ID; receive acknowledged-through</td></tr></tbody></table>Bo's send transaction checks his operation receipt, validates the recipient, advances Ada's head, inserts the message and saves the result. Commit precedes the 201 response. The same operation and input return 200 with the original position; changed input under that ID returns 409.
+
+<p>Opening Ada's inbox reads its head and eligible message history, then stores the snapshot in the same transaction. The example returns the entire retained history. Pagination would require a product decision: does opening page one acknowledge the overview, or only messages actually fetched? Do not extend the current token to pages without answering that.</p>
+
+<p>Acknowledgement verifies the path's account and the snapshot's owner independently. A predictable snapshot ID is not permission to use it. A guessed snapshot belonging to Ada is refused when Bo submits it through his own route.</p>
+
+<p>SQLite serializes the example's write transactions. Dee's arrival may commit before or after Ada acknowledges the older snapshot; either way, the final state is H=4 and A=3. The acknowledgement never replaces its issued boundary with the current head.</p>
+
+<h2>Keep projection lag from changing the answer</h2>
+
+<p>The background worker reads messages after P in order. It updates each sender's maximum and advances P in the same transaction. An interrupted transaction leaves both unchanged, so retrying starts from the last committed position.</p>
+
+<p>A badge read merges those processed maxima with every message in the unprocessed tail, taking the greater position per sender. It then counts active senders above A. Delayed work from Bo cannot undo Ada's acknowledgement or turn an older message into new activity.</p>
+
+<p>This retains the original goal of preparing cheap reads, while making the fallback cost visible. Measure tail length, worker progress and badge-read latency. If a tail becomes too large, catch the worker up, bound recovery with an explicit failure, or choose a documented stale-count experience. Returning an old projection as an exact current count is not the same contract.</p>
+
+<p>A live notification can tell an online client to refetch. A disconnected client reconciles on its next badge read, as in the <a href="#" data-nav="topic" data-slug="realtime-database-and-websocket-scaling">realtime recovery lesson</a>. This particular example sends no WebSocket notifications; it tests the source and reconciliation path.</p>
+
+<h2>Run the arrival race</h2>
+
+<p>Save the standard-library inbox service and shared helpers together. They use a private temporary SQLite file and an actual loopback HTTP server with fake account-bound credentials.</p>
+
+<p>Bo sends twice and Cy once. Device A fetches through 3, then two threads race Dee's fourth message against acknowledgement of that snapshot. A later device acknowledges through 4 before the first device submits its older snapshot again.</p>
+
+<pre><code class="language-bash">python3 m22-inbox.py</code></pre>
+<pre><code class="language-output">offline arrivals: events=3 distinct senders=2
+duplicate message: 200
+changed message: 409
+device A observes through: 3
+arrival races ACK3: {&quot;accepted_through&quot;:4,&quot;acknowledged_through&quot;:3,&quot;count&quot;:1,&quot;projected_through&quot;:0,&quot;senders&quot;:[&quot;Dee&quot;],&quot;tail_rows&quot;:4}
+clear-all control: would drop new sender Dee; boundary ACK retains her
+projection interruption/reopen: projected=0
+delayed projection after ACK: {&quot;accepted_through&quot;:4,&quot;acknowledged_through&quot;:3,&quot;count&quot;:1,&quot;projected_through&quot;:4,&quot;senders&quot;:[&quot;Dee&quot;],&quot;tail_rows&quot;:0}
+device B ACK4 then old device ACK3: 4
+wrong-user acknowledgement: 403
+wrong snapshot owner: 403
+malformed framing: [[&quot;empty transfer encoding&quot;,400],[&quot;ambiguous length&quot;,400],[&quot;huge numeric length&quot;,400],[&quot;unpaired surrogate&quot;,400],[&quot;short body&quot;,400]]
+thread read positions: [0, 0, 0]
+retained events=4 serialized message bytes=245
+unavailable authority: 503
+HTTP requests: application=15 malformed=5</code></pre>
+
+<p>The badge finds Dee both before projection and after it. Only <code>tail_rows</code> changes from four to zero. The thread-read positions stay at zero, confirming that the overview acknowledgement did not mark conversations read.</p>
+
+<p>The interruption is an exception before commit followed by reopening the database, not an operating-system crash. The replay also checks retry identity, ownership and malformed HTTP requests. Its 245-byte count covers only compact message JSON, not database size or network overhead.</p>
+
+<p>Those protocol probes exercise this small server's rules: one bounded Content-Length, no Transfer-Encoding, complete bodies and valid JSON Unicode. They are not a production authentication or load test. An unavailable source returns 503, so the client should retain a clearly stale display or show unavailability rather than invent zero.</p>
+
+<h2>Where a Redis sorted set fits</h2>
+
+<p>A sorted set is useful for the prepared sender summary: the recipient identifies the key, the sender ID is the unique member, and the latest accepted position is its score. Updating Bo changes his score without creating another member. Resolve display names separately so a rename does not change identity.</p>
+
+<p>For small exact integer positions, the core operations look like this:</p>
+
+<pre><code class="language-text">ZADD newly_unread:Ada GT 2 Bo
+ZADD newly_unread:Ada GT 3 Cy
+ZADD newly_unread:Ada GT 4 Dee
+ZCOUNT newly_unread:Ada (3 +inf</code></pre>
+
+<code>GT</code> prevents an older delivery from lowering an existing score. The exclusive bound <code>(3</code> counts only positions above acknowledgement 3. The result is one sender. This sketch assumes A=3 is already known; it does not implement cross-store acknowledgement or projection recovery.
+
+<code>ZCARD</code> is sufficient only if every retained member is newly unread. Once old entries remain, use the acknowledgement boundary. Deleting scores through A can reclaim space, but a late event can reinsert an old sender; counting above A still excludes that activity.
+
+<p>The Redis control starts a private process with TCP disabled and demonstrates the unsafe alternatives:</p>
+
+<pre><code class="language-bash">python3 m22-redis-badge.py</code></pre>
+<pre><code class="language-output">Redis server v=8.4.0
+snapshot through3: distinct senders=2
+arrival4 then clear-all: count=0
+remove through3: senders=Dee
+delayed older update: ZCARD=2; ZCOUNT above ACK3=1
+equal timestamp100: remove-through100 removes both senders</code></pre>
+
+<p>Redis scores are floating-point numbers. Integers through 2^53 are exact, but arbitrary 64-bit source positions are not. Choose a representation that preserves the actual position range before using scores as acknowledgement boundaries.</p>
+
+<p>A separate Redis deployment also adds a consistency boundary. Preserve message acceptance in the source, use replayable work to maintain the projection, and keep acknowledgement authoritative during cache loss. A cache miss means “state unavailable or not yet built,” not necessarily “no new messages.”</p>
+
+<h2>Retain enough to recover</h2>
+
+<p>The local database retains all messages, snapshots and operation receipts for its temporary lifetime. Production retention cannot discard them under one guessed expiry: messages support reconstruction, snapshots authorize acknowledgements, and receipts suppress repeated operations.</p>
+
+<p>A clean projection rebuild resets sender maxima and P together, then replays retained messages. The badge path checks that its unprocessed tail reaches H without gaps; missing source positions produce a conflict instead of an incomplete count.</p>
+
+<p>If history must be trimmed, retain a sufficient checkpoint and define a floor below which replay is unavailable. Account erasure and message deletion must also update the eligibility and summary rules. A surviving sender maximum alone does not prove that its supporting message still exists.</p>
+
+<p>The essential boundary is simple: clearing the overview covers the inbox the server returned. New work beyond that boundary remains visible, regardless of device timing or background-worker progress.</p>
+<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+      <h2>Implementation notes for a newly-unread badge</h2>
+      <p>This design defines the badge precisely as distinct eligible senders after the last acknowledged inbox snapshot. It is not a count of unread messages or conversations, and opening the overview does not advance thread read receipts.</p>
+      
+      <h3>The unsafe clear-all approach</h3>
+      <p><code>SET badge 0</code> loses an arrival that commits after the server prepared the inbox response but before the clear. Counting rows with <code>read = false</code> also computes a different product metric from distinct senders after an overview boundary.</p>
+      
+      <h3>Prepared sender maxima</h3>
+      <p>Keep the accepted message stream authoritative. A projection may store each sender's greatest recipient-local position, for example as a Redis sorted-set member scored by position. Count members strictly above the acknowledged-through boundary. If projection progress lags, merge the projected prefix with source messages in the unprocessed tail rather than returning a stale cache value as exact.</p>
+      
+      <h3>Handling Consistency and High Water Marks</h3>
+      <p>Counters can easily drift out of sync due to network failures or race conditions. A more robust approach uses a "High Water Mark" or cursor. The server issues an inbox snapshot containing the recipient and the greatest accepted position included in that response. An acknowledgement names that server-issued snapshot, and the stored boundary advances by <code>max(current, snapshot_position)</code> so a delayed device cannot move it backward.</p>
+      <p>An arrival beyond the acknowledged snapshot remains newly unread even if it races with the acknowledgement. Cache loss triggers reconstruction from retained source messages or a checkpoint; it must not turn unknown state into zero.</p>
+      
+    
+<!-- enriched -->
+<h2>Worked example with positions</h2><p>Recipient-local positions are assigned when messages are accepted. Current sender maxima in the projection:</p><table><thead><tr><th>Sender</th><th>Greatest position</th></tr></thead><tbody><tr><td>alice</td><td>1040</td></tr><tr><td>bob</td><td>1045</td></tr></tbody></table><ol><li>The client opens the overview. The server builds the response, which includes everything up to position 1045, and returns snapshot token 1045.</li><li>While the response is in flight, carol's message commits at 1047 and alice sends again at 1049.</li><li>The client acknowledges snapshot 1045. The boundary becomes max(previous, 1045) = 1045.</li><li>Badge = senders with maximum above 1045 = carol (1047) and alice (1049) = <strong>2</strong>. The naive SET 0 would have shown 0 and hidden both.</li><li>An old tablet later acknowledges snapshot 1040. The boundary stays at max(1045, 1040) = 1045.</li></ol><h2>Redis projection</h2><p><code>ZADD newly:{user} GT 1049 alice</code> keeps only the greatest position per sender (the GT flag needs Redis 6.2 or later). The badge is <code>ZCOUNT newly:{user} (1045 +inf</code>, where the parenthesis makes the bound exclusive. Periodically <code>ZREMRANGEBYSCORE newly:{user} -inf 1045</code> trims senders at or below the boundary so the set stays small.</p><h2>Design options</h2><table><thead><tr><th>Approach</th><th>Correct under races?</th><th>Cost</th><th>Notes</th></tr></thead><tbody><tr><td>Counter incremented on arrival, SET 0 on open</td><td>No</td><td>Lowest</td><td>Loses arrivals that race with the clear; drifts on retries</td></tr><tr><td>COUNT unread rows at read time</td><td>Yes, but measures messages not senders</td><td>High on large inboxes</td><td>Different product metric</td></tr><tr><td>Sender maxima plus server-issued boundary</td><td>Yes</td><td>One sorted set per user</td><td>Needs projection lag handling</td></tr><tr><td>Recompute from message log on every open</td><td>Yes</td><td>Highest</td><td>Useful as the rebuild path after cache loss</td></tr></tbody></table><h2>Failure modes</h2><ul><li><strong>Projection lag:</strong> if the projector has processed up to 1046 but the log is at 1049, merge the projection with a scan of positions 1047 to 1049 rather than returning a stale count as exact.</li><li><strong>Cache loss:</strong> rebuild from retained messages or a checkpoint; never initialize an unknown badge to 0.</li><li><strong>Blocked or muted senders:</strong> eligibility is evaluated at read time, so a later block removes the sender from the count without rewriting history.</li></ul>
+</div></div></article>
+      <section class="check-slider" data-slug="newly-unread-indicator" data-total="3" aria-label="Check yourself">
+        <div class="check-slider__head">
+          <span class="check-slider__label">Check yourself</span>
+          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+        </div>
+        <div class="check-slider__track">
+      <div class="quiz-card check-slider__slide" id="quiz-newly-unread-indicator-c1" data-type="mcq" data-slug="newly-unread-indicator" data-index="0">
+        <div class="check-slider__meta">
+          <span class="check-slider__title">Why SET 0 is wrong</span>
+          <span class="check-slider__level">recall</span>
+        </div>
+        <div class="check-slider__section">From: Implementation notes for a newly-unread badge</div>
+        <p class="check-slider__prompt">A badge implementation increments a counter on each arrival and runs SET badge 0 when the user opens the inbox overview. What correctness bug does the lesson identify?</p>
+        <div class="quiz-options check-slider__options">
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c1" value="0" />
+             <span>Increments from multiple devices can overflow the counter before the clear runs</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c1" value="1" />
+             <span>The clear advances every thread&#039;s read receipt, which marks unopened conversations as read</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c1" value="2" />
+             <span>A message that commits after the response was built but before the clear is silently dropped from the badge</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c1" value="3" />
+             <span>The counter measures distinct senders, so repeated messages from one sender are undercounted</span>
+           </label>
+         </div>
+        <div class="check-slider__actions">
+          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="newly-unread-indicator-c1">Check answer</button>
+          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-newly-unread-indicator-c1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">SET 0 wipes arrivals that race with the response, so a message committed in that window never shows on the badge. The lesson explicitly separates the overview badge from thread read receipts, so the receipt option describes something this design deliberately does not do.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-newly-unread-indicator-c2" data-type="mcq" data-slug="newly-unread-indicator" data-index="1" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__title">Badge after racing acks</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        <div class="check-slider__section">From: Worked example with positions</div>
+        <p class="check-slider__prompt">Sender maxima are dan 2010 and erin 2015. The server returns an overview with snapshot token 2015. While that response is in flight, frank sends at 2018 and dan sends again at 2021. The phone then acknowledges 2015, and later an old tablet acknowledges 2012. What is the badge?</p>
+        <div class="quiz-options check-slider__options">
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c2" value="0" />
+             <span>0, because the phone&#039;s acknowledgement cleared the badge</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c2" value="1" />
+             <span>1, because only frank is a newly seen sender</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c2" value="2" />
+             <span>3, because the tablet moved the boundary back to 2012 and erin counts again</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c2" value="3" />
+             <span>2, because frank and dan both have maxima above the boundary of 2015</span>
+           </label>
+         </div>
+        <div class="check-slider__actions">
+          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="newly-unread-indicator-c2">Check answer</button>
+          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-newly-unread-indicator-c2" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">The boundary becomes max(previous, 2015) = 2015, and the tablet&#039;s 2012 cannot lower it, so the count is senders whose maximum exceeds 2015: frank (2018) and dan (2021). Answering 1 forgets that dan&#039;s new message raises dan&#039;s maximum past the boundary even though dan was already seen.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-newly-unread-indicator-c3" data-type="mcq" data-slug="newly-unread-indicator" data-index="2" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__title">Projection lag</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        <div class="check-slider__section">From: Failure modes</div>
+        <p class="check-slider__prompt">The sender-maxima projector has processed messages up to position 1046, but the authoritative message log is already at 1049 when a user opens the overview. What should the badge service do?</p>
+        <div class="quiz-options check-slider__options">
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c3" value="0" />
+             <span>Merge the projected counts with a scan of source positions 1047 to 1049 before returning</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c3" value="1" />
+             <span>Return the projected count, since the next projector run will correct the badge within seconds</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c3" value="2" />
+             <span>Block the request until the projector reaches 1049, then return the projected count</span>
+           </label>
+         
+           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+             <input type="radio" name="quiz-newly-unread-indicator-c3" value="3" />
+             <span>Return 0 for this request and mark the badge dirty so the client polls again</span>
+           </label>
+         </div>
+        <div class="check-slider__actions">
+          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="newly-unread-indicator-c3">Check answer</button>
+          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-newly-unread-indicator-c3" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">The lesson says to merge the projected prefix with the unprocessed tail from the source log rather than presenting a stale cache value as exact. Returning the stale count is tempting because it is cheap, but it is presented as exact and silently misses arrivals, which is the very bug the design exists to prevent.</div>
+        </div>
+      </div></div>
+        <div class="check-slider__done" hidden>
+          <p class="check-slider__score"></p>
+          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+        </div>
+      </section>
+        <div class="takeaways">
+          <h3 class="takeaways__title">Key Takeaways</h3>
+          <div class="takeaways__list">
+            <div class="takeaways__item">Keep newly-unread semantics distinct from message counts, conversation unread state, and read receipts.</div><div class="takeaways__item">Use recipient-local positions and server-issued snapshot acknowledgements so racing arrivals are not cleared.</div><div class="takeaways__item">A prepared sender projection may accelerate reads, but retained source messages and projection progress make lag recoverable.</div>
+          </div>
+        </div>
+        <div class="further-reading">
+          <h3 class="further-reading__title">Further Reading</h3>
+          <div class="further-reading__list">
+            <a class="further-reading__link" href="https://discord.com/blog/why-discord-is-switching-from-go-to-rust" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Discord: Why Discord is switching from Go to Rust (Read States service)</a><a class="further-reading__link" href="https://engineering.fb.com/2014/10/09/production-engineering/building-mobile-first-infrastructure-for-messenger/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Engineering at Meta: Building Mobile-First Infrastructure for Messenger</a><a class="further-reading__link" href="https://firebase.google.com/docs/cloud-messaging/fcm-architecture" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Firebase: FCM Architectural Overview</a>
+          </div>
+        </div>
+      <div class="lesson-feedback" id="lesson-feedback-newly-unread-indicator">
+        <div class="lesson-feedback__content">
+          <div class="lesson-feedback__meta">
+            <span class="lesson-feedback__title">Was this lesson helpful?</span>
+            <span class="lesson-feedback__sub">Spot an issue or have a suggestion? Let us know on GitHub.</span>
+          </div>
+          <div class="lesson-feedback__actions">
+            <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="newly-unread-indicator" data-vote="yes">
+              👍 Helpful
+            </button>
+            <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="newly-unread-indicator" data-vote="no">
+              👎 Needs work
+            </button>
+            <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Design%3A%20a%20newly-unread%20indicator&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Design%3A%20a%20newly-unread%20indicator%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fnewly-unread-indicator%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
+            </a>
+          </div>
+        </div>
+      </div><div class="lesson-nav"><a class="lesson-nav__link" href="/topic/feed-generation-push-pull-hybrid/" data-nav="topic" data-slug="feed-generation-push-pull-hybrid">
+        <span class="lesson-nav__label">← Previous</span>
+        <span class="lesson-nav__title">Feed generation: push, pull, hybrid</span>
+      </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/hashtag-extraction-and-tag-store/" data-nav="topic" data-slug="hashtag-extraction-and-tag-store">
+        <span class="lesson-nav__label">Next →</span>
+        <span class="lesson-nav__title">Hashtag extraction and tag store</span>
+      </a></div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=10833565b2"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=8783850429"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=277e38c043"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=78c1d850b4"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=0be9cd1f02"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=2ebf07c1f2"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/simulators.js?v=64793331c5"></script>
+  <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
+  <script type="text/plain" data-defer src="js/simulators-advanced.js?v=3f59fb03a7"></script>
+  <script type="text/plain" data-defer src="js/simulators-distributed.js?v=30d663cc4e"></script>
+  <script type="text/plain" data-defer src="js/simulators-ops.js?v=ff1d2ff9b7"></script>
+  <script type="text/plain" data-defer src="js/simulators-data.js?v=accc3870f9"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=cb407445c0"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=d1dd10746f"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=2a7f6ce38d"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

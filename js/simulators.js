@@ -28,19 +28,19 @@ window.Simulators = (() => {
           <div class="simulator-card__grid">
             <div>
               <label class="simulator-card__label">DAILY ACTIVE USERS (DAU)</label>
-              <input type="number" id="cap-dau" value="50000000" step="1000000" class="simulator-card__input" oninput="Simulators.recalcCapacity()">
+              <input type="number" id="cap-dau" value="50000000" step="1000000" class="simulator-card__input" data-sim-input="capacity">
             </div>
             <div>
               <label class="simulator-card__label">READS PER USER / DAY</label>
-              <input type="number" id="cap-reads" value="20" step="1" class="simulator-card__input" oninput="Simulators.recalcCapacity()">
+              <input type="number" id="cap-reads" value="20" step="1" class="simulator-card__input" data-sim-input="capacity">
             </div>
             <div>
               <label class="simulator-card__label">WRITES PER USER / DAY</label>
-              <input type="number" id="cap-writes" value="2" step="1" class="simulator-card__input" oninput="Simulators.recalcCapacity()">
+              <input type="number" id="cap-writes" value="2" step="1" class="simulator-card__input" data-sim-input="capacity">
             </div>
             <div>
               <label class="simulator-card__label">PAYLOAD SIZE (KB)</label>
-              <input type="number" id="cap-payload" value="100" step="10" class="simulator-card__input" oninput="Simulators.recalcCapacity()">
+              <input type="number" id="cap-payload" value="100" step="10" class="simulator-card__input" data-sim-input="capacity">
             </div>
           </div>
   
@@ -92,9 +92,9 @@ window.Simulators = (() => {
           </p>
   
           <div class="simulator-card__controls">
-            <button class="btn btn--secondary btn--sm" onclick="Simulators.addHashNode()">+ Add Node</button>
-            <button class="btn btn--secondary btn--sm" onclick="Simulators.removeHashNode()">- Remove Node</button>
-            <button class="btn btn--secondary btn--sm" onclick="Simulators.routeRandomKey()">Route Random Key</button>
+            <button class="btn btn--secondary btn--sm" data-sim-action="add-hash-node">+ Add Node</button>
+            <button class="btn btn--secondary btn--sm" data-sim-action="remove-hash-node">- Remove Node</button>
+            <button class="btn btn--secondary btn--sm" data-sim-action="route-random-key">Route Random Key</button>
             <span id="hash-ring-status" class="simulator-card__status">Nodes: 4 | Virtual Nodes/Node: 3</span>
           </div>
   
@@ -141,9 +141,9 @@ window.Simulators = (() => {
           </p>
   
           <div class="simulator-card__controls">
-            <button class="btn btn--primary btn--sm" onclick="Simulators.sendRateLimitRequest(1)">Send 1 Request</button>
-            <button class="btn btn--secondary btn--sm" onclick="Simulators.sendRateLimitRequest(5)">Send 5 Burst</button>
-            <button class="btn btn--secondary btn--sm" onclick="Simulators.sendRateLimitRequest(10)">Send 10 Burst</button>
+            <button class="btn btn--primary btn--sm" data-sim-action="ratelimit-request" data-burst="1">Send 1 Request</button>
+            <button class="btn btn--secondary btn--sm" data-sim-action="ratelimit-request" data-burst="5">Send 5 Burst</button>
+            <button class="btn btn--secondary btn--sm" data-sim-action="ratelimit-request" data-burst="10">Send 10 Burst</button>
           </div>
   
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--space-4);margin-bottom:var(--space-3);">
@@ -347,6 +347,29 @@ window.Simulators = (() => {
     }
     return null;
   }
+
+  // Delegated event listeners for simulator controls
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.dataset.simInput === 'capacity') {
+      recalcCapacity();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-sim-action]');
+    if (!btn) return;
+    const action = btn.dataset.simAction;
+    if (action === 'add-hash-node') {
+      addHashNode();
+    } else if (action === 'remove-hash-node') {
+      removeHashNode();
+    } else if (action === 'route-random-key') {
+      routeRandomKey();
+    } else if (action === 'ratelimit-request') {
+      const burst = parseInt(btn.dataset.burst, 10) || 1;
+      sendRateLimitRequest(burst);
+    }
+  });
 
   return {
     getSimulatorForUnit,

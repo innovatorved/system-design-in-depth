@@ -20,6 +20,29 @@ window.Analytics = (() => {
   }
 
   /**
+   * Cloudflare Web Analytics initialization (beacon.min.js)
+   * Supports automatic injection by Cloudflare Pages/proxy or explicit token via window.CF_BEACON_TOKEN.
+   */
+  let cfBeaconInjected = false;
+  function initCloudflareAnalytics() {
+    if (cfBeaconInjected || document.querySelector('script[src*="cloudflareinsights.com/beacon"]')) {
+      return;
+    }
+    const token = window.CF_BEACON_TOKEN;
+    if (token) {
+      cfBeaconInjected = true;
+      const script = document.createElement('script');
+      script.defer = true;
+      script.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+      script.setAttribute('data-cf-beacon', JSON.stringify({ token: token, spa: true }));
+      document.head.appendChild(script);
+      if (window.SD_ANALYTICS_DEBUG) {
+        console.log('⚡ [Cloudflare Analytics] Beacon loaded with token:', token);
+      }
+    }
+  }
+
+  /**
    * Safe event dispatching to GA4 (gtag.js / dataLayer)
    */
   function trackEvent(eventName, params = {}) {
@@ -59,14 +82,15 @@ window.Analytics = (() => {
     trackEvent('page_view', {
       page_title: title,
       page_path: path,
-      page_location: location
+      page_location: location,
+      page_referrer: document.referrer || ''
     });
   }
 
   /**
    * 2. Content & Topic Tracking
    */
-  function trackTopicView({ slug, title, moduleTitle, moduleNumber, partNumber, kind }) {
+  function trackTopicView({ slug, title, moduleTitle, moduleNumber, partNumber, kind, wordCount, readingTimeMin }) {
     // Flush previous topic time
     flushTopicEngagementTime();
 
@@ -78,10 +102,13 @@ window.Analytics = (() => {
       item_id: slug,
       item_name: title || slug,
       item_category: moduleTitle || `Module ${moduleNumber}`,
-      item_category2: `Part ${partNumber}`,
+      item_category2: partNumber ? `Part ${partNumber}` : '',
       content_type: kind || 'lesson',
       topic_slug: slug,
-      module_number: moduleNumber
+      module_number: moduleNumber,
+      part_number: partNumber || null,
+      word_count: wordCount || 0,
+      reading_time_min: readingTimeMin || 0
     });
   }
 
@@ -257,7 +284,18 @@ window.Analytics = (() => {
   /**
    * 8. Simulators & Exercises
    */
+  const simulatorCooldowns = new Map();
+  const SIM_THROTTLE_MS = 1200;
+
   function trackSimulatorInteraction(simulatorType, action, details = {}) {
+    const key = `${simulatorType}::${action}`;
+    const now = Date.now();
+    const lastTime = simulatorCooldowns.get(key) || 0;
+    if (now - lastTime < SIM_THROTTLE_MS) {
+      return;
+    }
+    simulatorCooldowns.set(key, now);
+
     trackEvent('simulator_interact', {
       simulator_name: simulatorType,
       action_type: action,
@@ -268,10 +306,34 @@ window.Analytics = (() => {
 
   function trackExerciseAttempt(slug, title, selectedIdx, isCorrect) {
     trackEvent('exercise_submit', {
-      topic_slug: slug,
+      topic_slug: slug || activeTopicSlug || 'unknown',
       exercise_title: title,
       selected_option_index: selectedIdx,
       is_correct: isCorrect
+    });
+  }
+
+  function trackQuizComplete({ slug, score, totalQuestions, percentage }) {
+    trackEvent('quiz_complete', {
+      topic_slug: slug || activeTopicSlug || 'unknown',
+      quiz_score: score,
+      total_questions: totalQuestions,
+      quiz_percentage: percentage
+    });
+  }
+
+  function trackFeedbackReportClick({ slug, issueUrl }) {
+    trackEvent('click_report_issue', {
+      topic_slug: slug || activeTopicSlug || 'unknown',
+      issue_url: issueUrl
+    });
+  }
+
+  function trackProjectView({ projectId, title, projectUrl }) {
+    trackEvent('view_project', {
+      project_id: projectId,
+      project_title: title || projectId,
+      project_url: projectUrl || ''
     });
   }
 
@@ -332,6 +394,9 @@ window.Analytics = (() => {
    * Setup global automatic event delegation
    */
   function init() {
+    // Initialize Cloudflare Web Analytics beacon if configured
+    initCloudflareAnalytics();
+
     // Scroll depth tracking with throttling
     let scrollThrottle = null;
     window.addEventListener('scroll', () => {
@@ -353,13 +418,32 @@ window.Analytics = (() => {
       }
     });
 
-    // Global click delegation for companion repo & outbound links
+    // Delegated click delegation for companion repo, feedback issues & outbound links
     document.addEventListener('click', (e) => {
+      // 1. Interactive simulator button click tracking (all simulators)
+      const simBtn = e.target.closest('.sim-card button, .sim-card input[type="button"], .sim-card input[type="submit"], .sim-card .btn');
+      if (simBtn && !simBtn.classList.contains('code-block__copy-btn')) {
+        const simCard = simBtn.closest('.sim-card');
+        const simTitle = simCard?.querySelector('.sim-card__title, h3, h4')?.textContent?.trim() || 'simulator';
+        const actionText = simBtn.textContent?.trim() || simBtn.id || 'interact';
+        trackSimulatorInteraction(simTitle, actionText, {
+          button_id: simBtn.id || null,
+          current_slug: activeTopicSlug
+        });
+      }
+
+      // 2. Link tracking
       const anchor = e.target.closest('a');
       if (!anchor) return;
 
       const href = anchor.getAttribute('href') || '';
       const text = anchor.textContent?.trim() || '';
+
+      // Check if it's the issue report link
+      if (href.includes('github.com') && href.includes('/issues/new')) {
+        trackFeedbackReportClick({ slug: activeTopicSlug, issueUrl: href });
+        return;
+      }
 
       // Check if it's the repository link
       if (href.includes('system-design-in-depth')) {
@@ -380,14 +464,26 @@ window.Analytics = (() => {
     });
   }
 
+  function trackLessonFeedback({ slug, vote }) {
+    trackEvent('lesson_feedback', {
+      topic_slug: slug,
+      feedback_vote: vote,
+      event_category: 'engagement'
+    });
+  }
+
   return {
     init,
+    getActiveTopicSlug: () => activeTopicSlug,
     trackEvent,
     trackPageView,
     trackTopicView,
     trackTopicComplete,
     trackTopicUncomplete,
+    trackLessonFeedback,
+    trackFeedbackReportClick,
     trackBuildView,
+    trackProjectView,
     trackCodeCopy,
     trackAudioPlay,
     trackAudioPause,
@@ -402,6 +498,7 @@ window.Analytics = (() => {
     trackDiagramClose,
     trackSimulatorInteraction,
     trackExerciseAttempt,
+    trackQuizComplete,
     trackRepoClick,
     trackOutboundClick,
     trackVideoPlay,
@@ -410,3 +507,4 @@ window.Analytics = (() => {
     trackModuleToggle
   };
 })();
+

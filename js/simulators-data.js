@@ -251,6 +251,7 @@ window.SIMULATORS = window.SIMULATORS || {};
         </div>`;
     },
     mount(root) {
+      if (!root.querySelector('#mv-matrix')) return;
       const lc = this._lc = lifecycle();
       const $ = s => root.querySelector(s);
       let scKey = 'dirty', level = 'rc', eng;
@@ -422,6 +423,7 @@ window.SIMULATORS = window.SIMULATORS || {};
         </div>`;
     },
     mount(root) {
+      if (!root.querySelector('#abr-svg')) return;
       const lc = this._lc = lifecycle();
       const $ = s => root.querySelector(s);
       let preset = 'steady', seg = 2, trace = [...ABR_PRESETS.steady], cursor = 0, timer = null, runs, dragging = false;
@@ -570,6 +572,7 @@ window.SIMULATORS = window.SIMULATORS || {};
         </div>`;
     },
     mount(root) {
+      if (!root.querySelector('#rc-svg')) return;
       const lc = this._lc = lifecycle();
       const $ = s => root.querySelector(s);
       let poly = RC_DEFAULT.map(v => [...v]), pt = [...RC_POINTS.notch.p], edit = false;
@@ -688,10 +691,24 @@ window.SIMULATORS = window.SIMULATORS || {};
         </div>`;
     },
     mount(root) {
+      if (!root.querySelector('#wal-log')) return;
       const lc = this._lc = lifecycle();
       const $ = s => root.querySelector(s);
       let log, durable, mem, disk, txid, cur, pendingAck, acked, expected, stats, crashed, lastLsn, policy = 'each', burstN = 0;
-      const emit = (msg, kind = '') => { const box = $('#wal-events'); const d = document.createElement('div'); d.className = 'sim-log-line ' + (LOG_CLASS[kind] || ''); d.textContent = msg; box.insertBefore(d, box.children[1] || null); };
+      const setVerdict = (msg, isHtml = false) => {
+        const el = $('#wal-verdict');
+        if (!el) return;
+        if (isHtml) el.innerHTML = msg;
+        else el.textContent = msg;
+      };
+      const emit = (msg, kind = '') => {
+        const box = $('#wal-events');
+        if (!box) return;
+        const d = document.createElement('div');
+        d.className = 'sim-log-line ' + (LOG_CLASS[kind] || '');
+        d.textContent = msg;
+        box.insertBefore(d, box.children[1] || null);
+      };
       const reset = () => {
         log = []; durable = 0; lastLsn = 0; mem = newPages(); disk = newPages(); txid = 1; cur = [];
         pendingAck = []; acked = []; expected = {}; stats = { acked: 0, fsyncs: 0 }; crashed = false;
@@ -711,11 +728,17 @@ window.SIMULATORS = window.SIMULATORS || {};
         });
         return buffered.length;
       };
-      const readInputs = () => ({ key: String($('#wal-key').value ?? '').trim().slice(0, 8), val: String($('#wal-val').value ?? '').trim().slice(0, 8) });
-      const guard = () => { if (crashed) { $('#wal-verdict').textContent = 'The node is down. Run recovery first.'; return false; } return true; };
+      const readInputs = () => {
+        const kEl = $('#wal-key'), vEl = $('#wal-val');
+        return {
+          key: String(kEl ? kEl.value : '').trim().slice(0, 8),
+          val: String(vEl ? vEl.value : '').trim().slice(0, 8)
+        };
+      };
+      const guard = () => { if (crashed) { setVerdict('The node is down. Run recovery first.'); return false; } return true; };
       const addOp = (type, key, val) => { const r = append(type, key, type === 'SET' ? val : undefined); cur.push(r); return r; };
       const commit = quiet => {
-        if (!cur.length) { if (!quiet) $('#wal-verdict').textContent = 'Nothing to commit: add a SET or DELETE first.'; return; }
+        if (!cur.length) { if (!quiet) setVerdict('Nothing to commit: add a SET or DELETE first.'); return; }
         const c = append('COMMIT');
         // no-steal: the transaction's changes enter the page cache only now, stamped with the commit LSN
         cur.forEach(o => { const p = mem[walPage(o.key)]; if (o.type === 'SET') p.data[o.key] = o.val; else delete p.data[o.key]; p.lsn = c.lsn; p.dirty = true; });
@@ -754,10 +777,10 @@ window.SIMULATORS = window.SIMULATORS || {};
         const lost = pendingAck.map(c => 'T' + c.txid);
         mem = null; cur = []; pendingAck = []; crashed = true;
         emit(`CRASH (${mode}). ${note}${lost.length ? ` Never acknowledged: ${lost.join(', ')}.` : ''}`, 'bad');
-        $('#wal-verdict').textContent = `${note} Memory (page cache, log buffer) is gone. Disk has ${log.length} log record(s) and the pages last written. Run recovery.`;
+        setVerdict(`${note} Memory (page cache, log buffer) is gone. Disk has ${log.length} log record(s) and the pages last written. Run recovery.`);
       };
       const recover = () => {
-        if (!crashed) { $('#wal-verdict').textContent = 'Crash the node first, then run recovery.'; return; }
+        if (!crashed) { setVerdict('Crash the node first, then run recovery.'); return; }
         const lines = [];
         // 1. scan: verify checksums and cut the log at the first bad record
         let end = log.length;
@@ -799,41 +822,49 @@ window.SIMULATORS = window.SIMULATORS || {};
         const head = exact ? '<b style="color:var(--success)">Recovered state matches every acknowledged commit.</b>'
           : okExtra ? `<b style="color:var(--warning)">Recovered every acknowledged commit, plus ${extra.map(t => 'T' + t).join(', ')}:</b> ${extra.length > 1 ? 'their COMMIT records' : 'its COMMIT record'} reached the disk but the client never got an ack. That is allowed (the outcome was unknown to the client), which is why retries must be idempotent.`
             : '<b style="color:var(--error)">Mismatch with acknowledged state.</b>';
-        $('#wal-verdict').innerHTML = `${head} Redo applied ${redone} page update(s), skipped ${skipped} already on disk.${table}`;
+        setVerdict(`${head} Redo applied ${redone} page update(s), skipped ${skipped} already on disk.${table}`, true);
         mem = clonePages(disk); durable = lastLsn = log.length ? log[log.length - 1].lsn : 0;
         txid = Math.max(txid, ...log.map(r => r.txid + 1)); crashed = false;
         acked = [...new Set([...acked, ...extra])]; expected = recovered;
       };
 
       const draw = () => {
+        const statsEl = $('#wal-stats');
+        const logEl = $('#wal-log');
+        const stateEl = $('#wal-state');
+        if (!statsEl && !logEl && !stateEl) return;
         const per = stats.fsyncs ? (stats.acked / stats.fsyncs).toFixed(1) : '-';
-        $('#wal-stats').textContent = `${stats.acked} acked commits · ${stats.fsyncs} fsyncs · ${per} commits/fsync · ${stats.fsyncs * WAL_FSYNC_MS} ms in fsync @ ${WAL_FSYNC_MS} ms`;
+        if (statsEl) statsEl.textContent = `${stats.acked} acked commits · ${stats.fsyncs} fsyncs · ${per} commits/fsync · ${stats.fsyncs * WAL_FSYNC_MS} ms in fsync @ ${WAL_FSYNC_MS} ms`;
         const shown = log.slice(-18);
         const statusOf = r => r.torn ? '<span style="color:var(--error)">torn</span>' : r.onDisk ? '<span style="color:var(--success)">durable</span>' : '<span style="color:var(--warning)">buffered</span>';
-        $('#wal-log').innerHTML = '<tr><th>LSN</th><th>txn</th><th>record</th><th>key</th><th>value</th><th>checksum</th><th>state</th></tr>' +
-          (log.length > shown.length ? `<tr><td colspan="7" class="sim-muted">… ${log.length - shown.length} earlier record(s)</td></tr>` : '') +
-          (shown.map(r => `<tr><td>${r.lsn}</td><td>T${r.txid}</td><td>${esc(r.type)}</td><td>${esc(r.key ?? '')}</td><td>${esc(r.val ?? '')}</td><td>${r.sum}</td><td>${statusOf(r)}</td></tr>`).join('') || '<tr><td colspan="7" class="sim-muted">empty</td></tr>');
-        const pageList = ps => ps.map((p, i) => `<div class="sim-event"><span class="sim-event__id">P${i}</span> page LSN ${p.lsn}${p.dirty ? ' <span style="color:var(--warning)">dirty</span>' : ''}<span class="sim-event__vc">${Object.entries(p.data).map(([k, v]) => `${esc(k)}=${esc(v)}`).join(' ') || 'empty'}</span></div>`).join('');
-        const exp = Object.entries(expected).map(([k, v]) => `${esc(k)}=${esc(v)}`).join(' ') || 'empty';
-        $('#wal-state').innerHTML = `
-          <div class="sim-col"><div class="sim-col__head">Memory (page cache)</div><div class="sim-col__events">${mem ? pageList(mem) : '<div class="sim-muted" style="color:var(--error)">lost in crash</div>'}</div></div>
-          <div class="sim-col"><div class="sim-col__head">Disk pages</div><div class="sim-col__events">${pageList(disk)}</div></div>
-          <div class="sim-col"><div class="sim-col__head">Client view</div><div class="sim-col__events">
-            <div class="sim-event">Open txn T${txid}<span class="sim-event__vc">${cur.map(o => o.type === 'SET' ? `${esc(o.key)}=${esc(o.val)}` : `del ${esc(o.key)}`).join(', ') || 'no changes yet'}</span></div>
-            <div class="sim-event">Awaiting fsync<span class="sim-event__vc">${pendingAck.map(c => 'T' + c.txid).join(', ') || 'none'}</span></div>
-            <div class="sim-event">Acknowledged state<span class="sim-event__vc">${exp}</span></div>
-            <div class="sim-event">Durable to LSN<span class="sim-event__vc">${durable}</span></div></div></div>`;
+        if (logEl) {
+          logEl.innerHTML = '<tr><th>LSN</th><th>txn</th><th>record</th><th>key</th><th>value</th><th>checksum</th><th>state</th></tr>' +
+            (log.length > shown.length ? `<tr><td colspan="7" class="sim-muted">… ${log.length - shown.length} earlier record(s)</td></tr>` : '') +
+            (shown.map(r => `<tr><td>${r.lsn}</td><td>T${r.txid}</td><td>${esc(r.type)}</td><td>${esc(r.key ?? '')}</td><td>${esc(r.val ?? '')}</td><td>${r.sum}</td><td>${statusOf(r)}</td></tr>`).join('') || '<tr><td colspan="7" class="sim-muted">empty</td></tr>');
+        }
+        if (stateEl) {
+          const pageList = ps => ps.map((p, i) => `<div class="sim-event"><span class="sim-event__id">P${i}</span> page LSN ${p.lsn}${p.dirty ? ' <span style="color:var(--warning)">dirty</span>' : ''}<span class="sim-event__vc">${Object.entries(p.data).map(([k, v]) => `${esc(k)}=${esc(v)}`).join(' ') || 'empty'}</span></div>`).join('');
+          const exp = Object.entries(expected).map(([k, v]) => `${esc(k)}=${esc(v)}`).join(' ') || 'empty';
+          stateEl.innerHTML = `
+            <div class="sim-col"><div class="sim-col__head">Memory (page cache)</div><div class="sim-col__events">${mem ? pageList(mem) : '<div class="sim-muted" style="color:var(--error)">lost in crash</div>'}</div></div>
+            <div class="sim-col"><div class="sim-col__head">Disk pages</div><div class="sim-col__events">${pageList(disk)}</div></div>
+            <div class="sim-col"><div class="sim-col__head">Client view</div><div class="sim-col__events">
+              <div class="sim-event">Open txn T${txid}<span class="sim-event__vc">${cur.map(o => o.type === 'SET' ? `${esc(o.key)}=${esc(o.val)}` : `del ${esc(o.key)}`).join(', ') || 'no changes yet'}</span></div>
+              <div class="sim-event">Awaiting fsync<span class="sim-event__vc">${pendingAck.map(c => 'T' + c.txid).join(', ') || 'none'}</span></div>
+              <div class="sim-event">Acknowledged state<span class="sim-event__vc">${exp}</span></div>
+              <div class="sim-event">Durable to LSN<span class="sim-event__vc">${durable}</span></div></div></div>`;
+        }
       };
 
       const act = fn => () => { if (guard()) fn(); draw(); };
       lc.on($('#wal-set'), 'click', act(() => {
         const { key, val } = readInputs();
-        if (!key) { $('#wal-verdict').textContent = 'Enter a key.'; return; }
+        if (!key) { setVerdict('Enter a key.'); return; }
         const r = addOp('SET', key, val); emit(`T${txid} append LSN ${r.lsn}: SET ${key}=${val} (buffered)`);
       }));
       lc.on($('#wal-del'), 'click', act(() => {
-        const { key } = readInputs();
-        if (!key) { $('#wal-verdict').textContent = 'Enter a key.'; return; }
+        const { key, val } = readInputs();
+        if (!key) { setVerdict('Enter a key.'); return; }
         const r = addOp('DEL', key); emit(`T${txid} append LSN ${r.lsn}: DELETE ${key} (buffered)`);
       }));
       lc.on($('#wal-commit'), 'click', act(() => commit(false)));
@@ -846,11 +877,11 @@ window.SIMULATORS = window.SIMULATORS || {};
         emit(`Burst: ${stats.acked - a0} commits acknowledged with ${stats.fsyncs - f0} fsync(s)${pendingAck.length ? `; ${pendingAck.length} still waiting for the next group` : ''}. At ${WAL_FSYNC_MS} ms per fsync that caps out near ${Math.round(1000 / WAL_FSYNC_MS * (policy === 'group' ? WAL_GROUP : 1))} commits/s.`, 'good');
       }));
       lc.on($('#wal-policy'), 'change', e => { policy = e.target.value; if (policy === 'each' && !crashed && pendingAck.length) { const n = pendingAck.length; fsync(); emit(`Switched to fsync per commit: flushed ${n} waiting commit(s)`, 'good'); } draw(); });
-      lc.on($('#wal-crash'), 'click', () => { if (crashed) { $('#wal-verdict').textContent = 'Already crashed. Run recovery.'; return; } crash($('#wal-crash-at').value || 'before'); draw(); });
+      lc.on($('#wal-crash'), 'click', () => { if (crashed) { setVerdict('Already crashed. Run recovery.'); return; } crash($('#wal-crash-at')?.value || 'before'); draw(); });
       lc.on($('#wal-recover'), 'click', () => { recover(); draw(); });
-      lc.on($('#wal-reset'), 'click', () => { reset(); $('#wal-verdict').textContent = 'Reset.'; draw(); });
+      lc.on($('#wal-reset'), 'click', () => { reset(); setVerdict('Reset.'); draw(); });
       reset();
-      $('#wal-verdict').textContent = 'Try: SET a=1, SET b=2, COMMIT, SET c=3, then Crash (mid-record torn write) and Run recovery.';
+      setVerdict('Try: SET a=1, SET b=2, COMMIT, SET c=3, then Crash (mid-record torn write) and Run recovery.');
       draw();
     },
     unmount() { this._lc?.dispose(); }

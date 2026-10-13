@@ -267,5 +267,72 @@ try {
   reportError('Asset stamps are stale — run `node tools/stamp-assets.js`');
 }
 
+// 3. Static Pages & SEO Validation
+const topicBaseDir = path.join(__dirname, '..', 'topic');
+const sitemapFile = path.join(__dirname, '..', 'sitemap.xml');
+let missingStaticCount = 0;
+let invalidCanonicalCount = 0;
+let emptyReaderCount = 0;
+let lowWordCount = 0;
+
+if (fs.existsSync(topicBaseDir)) {
+  for (const slug of allSlugs) {
+    const pagePath = path.join(topicBaseDir, slug, 'index.html');
+    if (!fs.existsSync(pagePath)) {
+      missingStaticCount++;
+      reportError(`Missing static page: topic/${slug}/index.html`);
+      continue;
+    }
+    const html = fs.readFileSync(pagePath, 'utf8');
+    const expectedCanonical = `<link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/${slug}/">`;
+    if (!html.includes(expectedCanonical)) {
+      invalidCanonicalCount++;
+      reportError(`Invalid or missing canonical URL in topic/${slug}/index.html`);
+    }
+    if (!html.includes(`data-prerendered="${slug}"`)) {
+      emptyReaderCount++;
+      reportError(`Empty or un-prerendered reader container in topic/${slug}/index.html`);
+    }
+
+    // Verify substantial prerendered lesson text (>= 300 words)
+    const readerMatch = html.match(/id="reader"[^>]*>([\s\S]*?)<\/div>\s*<\/main>/);
+    if (!readerMatch) {
+      emptyReaderCount++;
+      reportError(`Missing #reader container in topic/${slug}/index.html`);
+    } else {
+      const readerText = readerMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      const words = readerText ? readerText.split(/\s+/).length : 0;
+      if (words < 300) {
+        lowWordCount++;
+        reportError(`Static page topic/${slug}/index.html body text has only ${words} words (< 300 required)`);
+      }
+    }
+  }
+
+  if (missingStaticCount === 0 && invalidCanonicalCount === 0 && emptyReaderCount === 0 && lowWordCount === 0) {
+    reportSuccess(`Static pages: all ${allSlugs.size} topic pages prerendered with canonical URLs & >= 300 words`);
+  }
+} else {
+  reportError('Static pages directory not found: topic/');
+}
+
+// 4. Sitemap Validation
+if (fs.existsSync(sitemapFile)) {
+  const sitemapContent = fs.readFileSync(sitemapFile, 'utf8');
+  let missingSitemapUrls = 0;
+  for (const slug of allSlugs) {
+    const expectedLoc = `<loc>https://system-design-in-depth.vedgupta.in/topic/${slug}/</loc>`;
+    if (!sitemapContent.includes(expectedLoc)) {
+      missingSitemapUrls++;
+      reportError(`Sitemap missing topic URL: ${slug}`);
+    }
+  }
+  if (missingSitemapUrls === 0) {
+    reportSuccess(`Sitemap: contains all ${allSlugs.size} topic URLs with trailing slashes`);
+  }
+} else {
+  reportError('sitemap.xml not found');
+}
+
 console.log(`\n${errorCount} errors, ${warningCount} warnings`);
 process.exit(errorCount > 0 ? 1 : 0);

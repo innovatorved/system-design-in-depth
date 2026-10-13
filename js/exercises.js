@@ -264,12 +264,10 @@ window.Exercises = (() => {
     if (!ex) return '';
 
     // Shuffle options so correct answer is not always in the same position
-    const correctAnswer = ex.options[ex.answer];
     const shuffledOptions = shuffleArray(ex.options);
-    const newCorrectIdx = shuffledOptions.indexOf(correctAnswer);
 
     return `
-      <div class="exercise-box" id="exercise-${slug}">
+      <div class="exercise-box" id="exercise-${slug}" data-slug="${slug}">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
             <span>Architecture Challenge: ${escapeHtml(ex.title)}</span>
@@ -279,11 +277,11 @@ window.Exercises = (() => {
         ${ex.scenario ? `<div class="exercise-box__scenario"><strong>Context / Scenario:</strong> ${escapeHtml(ex.scenario)}</div>` : ''}
         <div class="exercise-box__prompt"><strong>Problem:</strong> ${escapeHtml(ex.prompt)}</div>
         
-        <div class="exercise-options" data-answer="${newCorrectIdx}">
+        <div class="exercise-options">
           ${shuffledOptions.map((opt, idx) => `
-            <div class="exercise-option" onclick="Exercises.checkAnswer(this, ${idx}, ${newCorrectIdx})" data-idx="${idx}">
+            <div class="exercise-option" data-action="exercise-option" data-idx="${idx}">
               <span class="exercise-option__bullet">${String.fromCharCode(65 + idx)}</span>
-              <span>${escapeHtml(opt)}</span>
+              <span class="exercise-option__text">${escapeHtml(opt)}</span>
             </div>
           `).join('')}
         </div>
@@ -297,28 +295,37 @@ window.Exercises = (() => {
   }
 
   /**
-   * Handle option click & display feedback
+   * Handle option click & display feedback safely without DOM answer exposure
    */
-  function checkAnswer(el, selectedIdx, correctIdx) {
+  function checkAnswer(el) {
     const parent = el.closest('.exercise-options');
-    if (parent.dataset.answered === 'true') return; // Prevent multiple attempts
+    if (!parent || parent.dataset.answered === 'true') return; // Prevent multiple attempts
     parent.dataset.answered = 'true';
 
-    const options = parent.querySelectorAll('.exercise-option');
     const box = el.closest('.exercise-box');
+    const slug = box?.dataset.slug;
+    const ex = exerciseBank[slug];
+    if (!ex) return;
+
+    const selectedIdx = parseInt(el.dataset.idx, 10);
+    const correctAnswerText = ex.options[ex.answer];
+
+    const options = parent.querySelectorAll('.exercise-option');
     const feedback = box.querySelector('.exercise-feedback');
     const msgEl = feedback.querySelector('.feedback-msg');
 
-    options.forEach((opt, idx) => {
-      if (idx === correctIdx) {
+    let isCorrect = false;
+    options.forEach((opt) => {
+      const text = opt.querySelector('.exercise-option__text')?.textContent || '';
+      if (text.trim() === correctAnswerText.trim()) {
         opt.classList.add('correct');
-      } else if (idx === selectedIdx) {
+        if (opt === el) isCorrect = true;
+      } else if (opt === el) {
         opt.classList.add('incorrect');
       }
     });
 
     feedback.classList.add('show');
-    const isCorrect = selectedIdx === correctIdx;
     if (isCorrect) {
       feedback.classList.add('success');
       msgEl.innerHTML = '<strong>✓ Correct! Exceptional architectural intuition.</strong>';
@@ -329,9 +336,15 @@ window.Exercises = (() => {
 
     if (window.Analytics?.trackExerciseAttempt) {
       const exerciseTitle = box?.querySelector('.exercise-box__title span')?.textContent || '';
-      window.Analytics.trackExerciseAttempt('', exerciseTitle, selectedIdx, isCorrect);
+      window.Analytics.trackExerciseAttempt(slug || '', exerciseTitle, selectedIdx, isCorrect);
     }
   }
+
+  // Delegated event listener for exercise options
+  document.addEventListener('click', (e) => {
+    const opt = e.target.closest('[data-action="exercise-option"]');
+    if (opt) checkAnswer(opt);
+  });
 
   function escapeHtml(str) {
     if (typeof str !== 'string') return '';
