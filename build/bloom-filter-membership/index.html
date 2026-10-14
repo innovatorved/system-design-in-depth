@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Bloom Filter Membership Testing — Interactive Build Lab | System Design In Depth</title>
+  <meta name="description" content="Bloom Filter Membership Testing: A Bloom filter sized from n and p using Kirsch–Mitzenmacher double hashing over a packed Uint8Array bit array, with...">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Bloom Filter Membership Testing — Interactive Build Lab | System Design In Depth">
+  <meta property="og:description" content="Bloom Filter Membership Testing: A Bloom filter sized from n and p using Kirsch–Mitzenmacher double hashing over a packed Uint8Array bit array, with...">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/build/bloom-filter-membership/">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bloom Filter Membership Testing — Interactive Build Lab | System Design In Depth">
+  <meta name="twitter:description" content="Bloom Filter Membership Testing: A Bloom filter sized from n and p using Kirsch–Mitzenmacher double hashing over a packed Uint8Array bit array, with...">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/bloom-filter-membership/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
+  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
+  <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
+  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="css/code-lab.css?v=2b9944bcbd">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=6e3af86ba6"></script>
+  <script src="js/manifest.js?v=2fe59c81f7"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Bloom Filter Membership Testing — Interactive Build Lab",
+  "description": "Bloom Filter Membership Testing: A Bloom filter sized from n and p using Kirsch–Mitzenmacher double hashing over a packed Uint8Array bit array, with...",
+  "url": "https://system-design-in-depth.vedgupta.in/build/bloom-filter-membership/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" style="display:flex; gap:0.4rem; margin-right:0.5rem;">
+        <a href="#/glossary" class="btn btn--sm btn--outline" style="font-size:11px; padding:4px 8px; text-decoration:none; white-space:nowrap;">📖 Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
+      <button class="sidebar__tab sidebar__tab--active" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div class="builds-sidebar"><div class="builds-sidebar__intro">
+    Full from-scratch Node.js implementations with Guided Interactive Labs, zero dependencies, and complete test suites.
+  </div><a class="unit-item unit-item--build " href="/build/load-balancer-from-scratch/" data-build="load-balancer-from-scratch">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/consistent-hashing-ring/" data-build="consistent-hashing-ring">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Consistent Hashing Ring with Virtual Nodes</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/sliding-window-rate-limiter/" data-build="sliding-window-rate-limiter">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lru-cache/" data-build="lru-cache">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LRU Cache (Doubly Linked List + Hash Map)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/ttl-cache-reaper/" data-build="ttl-cache-reaper">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">TTL Cache with a Redis-Style Adaptive Reaper</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build unit-item--active" href="/build/bloom-filter-membership/" data-build="bloom-filter-membership">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Bloom Filter Membership Testing</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/snowflake-id-generator/" data-build="snowflake-id-generator">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Snowflake 64-bit ID Generator</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/keyset-pagination-cursors/" data-build="keyset-pagination-cursors">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/write-ahead-log/" data-build="write-ahead-log">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Write-Ahead Log (WAL) &amp; Crash Recovery</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lsm-tree-kv-store/" data-build="lsm-tree-kv-store">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LSM-Tree Key/Value Store (WAL, Memtable, SSTables, Compaction)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lease-leader-election/" data-build="lease-leader-election">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Lease-Based Leader Election with Fencing Tokens</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/gossip-protocol/" data-build="gossip-protocol">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/merkle-anti-entropy/" data-build="merkle-anti-entropy">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/hyperloglog-cardinality/" data-build="hyperloglog-cardinality">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/tiny-search-engine/" data-build="tiny-search-engine">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+        <span class="unit-item__meta">8 files · Interactive Lab</span>
+      </div>
+    </a></div>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered-build="bloom-filter-membership">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">Bloom Filter Membership Testing</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> From-Scratch Build</span>
+        </div>
+        <h1 class="lesson-header__title">Bloom Filter Membership Testing</h1>
+        <p class="build-summary">A Bloom filter sized from n and p using Kirsch–Mitzenmacher double hashing over a packed Uint8Array bit array, with measured vs theoretical false-positive rates, binary serialization, and a 4-bit counting variant that supports deletes.</p>
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~30 min</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Intermediate</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="#" data-nav="topic" data-slug="bloom-filters">Bloom filters</a>, <a href="#" data-nav="topic" data-slug="seen-filtering-bloom-vs-exact-sets">Seen filtering: Bloom vs exact sets</a>, <a href="#" data-nav="topic" data-slug="lsm-read-path-bloom-and-sparse-index">LSM read path: Bloom filters and sparse index</a>, <a href="#" data-nav="topic" data-slug="lsm-tree-storage-engine">LSM-tree storage engine</a></span>
+        </div>
+      </div>
+
+      <div class="build-view-tabs" role="tablist" aria-label="Build View Mode">
+        <button type="button" class="build-view-tab active" role="tab" aria-selected="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Architecture &amp; Reference Code</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="guided">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>Interactive Lab IDE</span>
+          <span class="build-view-tab__badge">0/4 Steps</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="sandbox">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Sandbox Mode</span>
+        </button>
+      </div>
+
+      <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
+        <div class="build-lab-card__top">
+          <div class="build-lab-card__intro">
+            <div class="build-lab-card__eyebrow">
+              <span>Interactive Build Lab</span>
+              <span class="build-lab-card__progress" id="build-lab-progress-badge">0/4 Steps Completed</span>
+            </div>
+            <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
+            <p class="build-lab-card__desc">
+              Complete 4 progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+            </p>
+            <div class="build-lab-progress-track" aria-hidden="true">
+              <div class="build-lab-progress-track__fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="build-lab-card__cta-col">
+            <button type="button" class="btn btn--primary build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="guided">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Launch Guided Lab</span>
+            </button>
+            <button type="button" class="btn btn--outline build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="sandbox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Open Full Solution</span>
+            </button>
+          </div>
+        </div>
+
+        
+          <div class="build-lab-steps-grid" id="build-lab-steps-grid">
+            
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="0">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">01</span>
+                    <span class="build-lab-step-card__target">bloom.js · optimalParams</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Closed-Form Optimal Sizing &amp; Kirsch–Mitzenmacher Double Hashing</div>
+                  <div class="build-lab-step-card__concept">Information-Theoretic Bit Sizing (m, k) &amp; Double Hashing with MurmurHash3</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 1 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="1">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">02</span>
+                    <span class="build-lab-step-card__target">bloom.js · BloomFilter.add</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Packed Uint8Array Bit Manipulation (add &amp; has)</div>
+                  <div class="build-lab-step-card__concept">Bit-Packed Array Addressing (p &gt;&gt;&gt; 3, 1 &lt;&lt; (p &amp; 7)) &amp; Zero False Negatives</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>5 tests</span>
+                    <span class="build-lab-step-card__open">Step 2 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="2">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">03</span>
+                    <span class="build-lab-step-card__target">bloom.js · BloomFilter.estimateCardinality</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Swamidass–Baldi Cardinality Estimation, Bitwise Union &amp; Binary Wire Format</div>
+                  <div class="build-lab-step-card__concept">Logarithmic Fill-Ratio Cardinality Estimate &amp; Bitwise OR Set Union</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 3 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="3">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">04</span>
+                    <span class="build-lab-step-card__target">bloom.js · CountingBloomFilter.add</span>
+                  </div>
+                  <div class="build-lab-step-card__title">4-Bit Saturating Counting Bloom Filter (Safe Deletion)</div>
+                  <div class="build-lab-step-card__concept">Nibble-Packed 4-Bit Counters, Sticky Saturation at 15 &amp; Safe Remove</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>4 tests</span>
+                    <span class="build-lab-step-card__open">Step 4 →</span>
+                  </div>
+                </button>
+              
+          </div>
+        
+      </section>
+
+      <div id="build-walkthrough-pane">
+        <div class="build-run">
+          <div class="build-run__text">
+            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
+            <code>node demo.js</code> and <code>node test.js</code>.
+          </div>
+          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="bloom-filter-membership">Copy setup script</button>
+        </div>
+
+        <div class="build-files"><a href="#build-file-bloom-filter-membership-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-bloom-filter-membership-README_md">README.md</a><a href="#build-file-bloom-filter-membership-bloom_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-bloom-filter-membership-bloom_js">bloom.js</a><a href="#build-file-bloom-filter-membership-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-bloom-filter-membership-demo_js">demo.js</a><a href="#build-file-bloom-filter-membership-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-bloom-filter-membership-test_js">test.js</a></div><article class="prose" id="build-file-bloom-filter-membership-README_md"><h2>Bloom Filter Membership Testing</h2>
+
+<p>A Bloom filter answers "have I seen this key?" in a fixed amount of memory</p>
+<p>with two possible answers: <strong>definitely not</strong> or <strong>probably yes</strong>. It never</p>
+<p>gives false negatives. The false-positive rate (FPR) is something you choose</p>
+<p>at design time and pay for in bits.</p>
+
+<h2>Where it shows up</h2>
+
+<ul>
+<li><strong>LSM storage engines</strong> (RocksDB, Cassandra, HBase, LevelDB): each SSTable has</li>
+  a filter, so a point read skips files that can't contain the key and avoids a disk seek.
+<li><strong>Caches and CDNs</strong>: "one-hit-wonder" filters admit an object into cache only</li>
+  on its second request (Akamai's Maggs & Sitaraman, 2015).
+<li><strong>Recommendation / feed dedup</strong>: "has this user already seen this post?"</li>
+  (see the lesson <em>seen-filtering-bloom-vs-exact-sets</em>).
+<li><strong>Distributed joins</strong>: Spark and Impala runtime filters send a small Bloom</li>
+  filter from the build side to the probe side so non-matching rows are dropped early.
+</ul>
+<h2>Design</h2>
+
+<pre><code class="language-text">add(&quot;user:42&quot;)
+  h1 = murmur3(bytes, seedA)          h2 = murmur3(bytes, seedB) | 1
+  g_i = (h1 + i*h2) mod m   for i = 0..k-1       &lt;- Kirsch–Mitzenmacher
+  set bit g_i in Uint8Array               byte = g &gt;&gt; 3, mask = 1 &lt;&lt; (g &amp; 7)
+has(x): all k bits set?  -&gt; &quot;probably&quot;   any bit clear? -&gt; &quot;definitely not&quot;</code></pre>
+
+<strong>Sizing.</strong> For <code>n</code> expected items and target FPR <code>p</code>:
+
+<pre><code class="language-text">m = ceil( -n * ln(p) / (ln 2)^2 )      bits
+k = round( (m / n) * ln 2 )            hash functions
+FPR(n) = (1 - e^(-k n / m))^k          after inserting n distinct items</code></pre>
+
+<p>At the optimal <code>k</code> about half the bits are set. Each 10x reduction in <code>p</code></p>
+<p>costs <code>log2(10)/ln 2 ≈ 4.79</code> more bits per item. For 1% that works out to</p>
+<p>9.59 bits/item and k = 7. The demo checks these numbers.</p>
+
+<strong>Double hashing.</strong> Kirsch & Mitzenmacher (2006) showed that
+<code>g_i = h1 + i*h2</code> gives the same asymptotic FPR as k independent hashes, so
+<p>you only need two hash computations per operation. <code>h2</code> is forced odd so the</p>
+<p>stride is never zero. If it were, all k probes would land on one bit.</p>
+
+<strong>Invariants.</strong>
+<ol>
+<li>No false negatives. A bit is never cleared in the plain filter.</li>
+<li>Bits past <code>m</code> in the last byte are always zero. <code>deserialize</code> checks this.</li>
+<li><code>union</code> only works for filters with the same <code>(m, k)</code> and the same hash</li>
+   seeds. It is a bitwise OR, and the result is exactly the filter you would
+   get by building from both sets at once.
+</ol>
+<strong>Measured vs theoretical.</strong> <code>expectedFpr()</code> uses the formula above with the
+<p>insert count. <code>currentFpr()</code> uses the actual fill ratio <code>(X/m)^k</code>. The demo</p>
+<p>checks both against 200k real non-member probes. They agree to within a few</p>
+<p>percent of each other.</p>
+
+<strong>Serialization.</strong> A 16-byte big-endian header (<code>magic "BLM1" | k | m | count</code>)
+<p>followed by the raw bit array. This is enough to mmap or ship over the wire.</p>
+<p>Hash seeds are fixed constants, so any reader using this module computes the</p>
+<p>same positions.</p>
+
+<strong>Counting variant.</strong> <code>CountingBloomFilter</code> replaces each bit with a 4-bit
+<p>counter, packed two per byte, to support <code>remove()</code>. Fan et al. ("Summary</p>
+<p>Cache", 2000) showed that 4 bits overflow with negligible probability at</p>
+<p>optimal load. A counter that reaches 15 becomes <em>sticky</em> and is never</p>
+<p>decremented, because its true value is unknown. <code>toBloomFilter()</code> collapses</p>
+<p>it to a plain filter for read-only consumers.</p>
+
+<h2>Complexity</h2>
+
+<table><thead><tr><th>op</th><th>time</th><th>space</th></tr></thead><tbody><tr><td>add / has</td><td>O(k) hash probes, 2 hash computations</td><td>m bits (plain), 4m bits (counting)</td></tr><tr><td>union</td><td>O(m/8)</td><td>m bits</td></tr><tr><td>serialize</td><td>O(m/8)</td><td>m/8 + 16 bytes</td></tr><tr><td>popcount / estimateCardinality</td><td>O(m/8)</td><td>—</td></tr></tbody></table><h2>Failure modes and trade-offs</h2>
+
+<ul>
+<li><strong>Overfilling.</strong> At 2x design load a 1% filter gets about 16% FPR. At 4x it</li>
+  gets about 68% (see demo step 3). The filter cannot grow, so rebuild it or
+  use a scalable Bloom filter: a chain of filters with tightening FPRs.
+<li><strong>Counting-filter misuse.</strong> Calling <code>remove(x)</code> for an <code>x</code> that was never</li>
+  added, but tests positive, decrements counters that belong to other keys and
+  <strong>introduces false negatives</strong>. This implementation refuses removes that test
+  negative, but it cannot detect a false-positive remove. Only remove keys you
+  know you inserted.
+<li><strong>Cache misses.</strong> Probes are random across <code>m</code> bits, so each lookup can touch</li>
+  k cache lines. Blocked and cache-local filters (RocksDB's FastLocalBloom)
+  keep all k probes in one 64-byte line and pay a small FPR penalty.
+<li><strong>Hash quality.</strong> A weak or adversarially known hash lets attackers craft</li>
+  keys that collide. Use a keyed hash (e.g. SipHash) if inputs are hostile.
+<li><strong>Deletes vs space.</strong> Counting filters cost 4x the memory. Cuckoo filters</li>
+  support deletes at about the same space as a Bloom filter when FPR < ~3%.
+</ul>
+<h2>How production systems do it</h2>
+
+<ul>
+<li><strong>Cassandra</strong>: one Bloom filter per SSTable, kept off-heap. It is tuned per</li>
+  table with <code>bloom_filter_fp_chance</code> (default 0.01, and 0.1 for
+  LeveledCompactionStrategy). It uses Murmur3 128-bit with the same
+  <code>h1 + i*h2</code> double hashing.
+<li><strong>RocksDB</strong>: per-SST "full" filters, or partitioned filters for very large</li>
+  files. Configured with <code>bits_per_key</code> (commonly 10, about 1% FPR).
+  <code>format_version=5</code> introduced the cache-local FastLocalBloom. The Ribbon
+  filter (<code>NewRibbonFilterPolicy</code>) saves about 30% of the space for more build CPU.
+<li><strong>Google Guava</strong>: <code>BloomFilter.create(funnel, n, p)</code> uses the same m/k</li>
+  formulas and the <code>MURMUR128_MITZ_64</code> strategy (Kirsch–Mitzenmacher on
+  128-bit Murmur3).
+<li><strong>Redis Stack (RedisBloom)</strong>: <code>BF.RESERVE key error_rate capacity [EXPANSION n]</code></li>
+  creates a <em>scalable</em> Bloom filter that stacks sub-filters as it fills.
+  <code>CF.*</code> commands provide cuckoo filters with delete.
+<li><strong>HBase</strong>: per-HFile <code>ROW</code> or <code>ROWCOL</code> Bloom filters, chosen per column family.</li>
+</ul>
+<h2>How to run</h2>
+
+<pre><code class="language-bash">node demo.js   # sizing table, measured vs theoretical FPR, overfill, serialization, deletes
+node test.js   # 15 tests: hash vectors, sizing math, FPR bounds, serialization, counting filter</code></pre>
+
+<h2>Extension exercises</h2>
+
+<ol>
+<li>Implement a <strong>blocked Bloom filter</strong>. Pick one 512-bit block with <code>h1</code>, then</li>
+   set all k bits inside it. Measure the FPR penalty against this filter at
+   8, 10 and 16 bits/item.
+<li>Build a <strong>scalable Bloom filter</strong> (Almeida et al. 2007). When the fill ratio</li>
+   passes 50%, add a new filter with double the capacity and FPR multiplied by
+   r = 0.5. Check that the compound FPR stays below the target.
+<li>Replace MurmurHash3 with keyed <strong>SipHash-2-4</strong> via <code>crypto.createHmac</code> or a</li>
+   hand implementation, and explain which attack this prevents.
+<li>Add a <code>BloomFilter.intersectionEstimate(a, b)</code> using</li>
+   <code>|A∩B| ≈ |A| + |B| - |A∪B|</code> from the cardinality estimator, and test how
+   accurate it is.
+<li>Implement a <strong>cuckoo filter</strong> with the same interface and compare bits/item</li>
+   at p = 0.1%, 1% and 3%.
+</ol></article>
+          <div class="code-block" id="build-file-bloom-filter-membership-bloom_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">bloom.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+/**
+ * Bloom filter + counting Bloom filter.
+ *
+ * - Sizing: m = ceil(-n ln p / (ln 2)^2), k = round((m / n) ln 2)
+ * - Hashing: Kirsch–Mitzenmacher double hashing, g_i(x) = (h1 + i*h2) mod m,
+ *   built from two independent 32-bit MurmurHash3 evaluations (different seeds).
+ *   Two good hashes are enough: the asymptotic FPR matches k independent hashes.
+ * - Storage: plain bit array packed into a Uint8Array (bit j lives in byte j&gt;&gt;3).
+ * - Counting variant: 4-bit saturating counters (two per byte) to support delete.
+ */
+
+const MAGIC = 0x424c4d31; // &quot;BLM1&quot;
+const HEADER_BYTES = 16;  // magic u32 | k u32 | m u32 | count u32 (big endian)
+const MAX_BITS = 2 ** 32 - 1;
+
+/** Optimal parameters for n expected items at target false-positive rate p. */
+function optimalParams(n, p) {
+  if (!Number.isInteger(n) || n &lt;= 0) throw new RangeError(&#039;n must be a positive integer&#039;);
+  if (!(p &gt; 0 &amp;&amp; p &lt; 1)) throw new RangeError(&#039;p must be in (0, 1)&#039;);
+  const m = Math.ceil((-n * Math.log(p)) / (Math.LN2 * Math.LN2));
+  if (m &gt; MAX_BITS) throw new RangeError(`m=${m} bits exceeds 2^32-1; shard the filter`);
+  const k = Math.max(1, Math.round((m / n) * Math.LN2));
+  return { m, k, bitsPerItem: m / n };
+}
+
+/** Theoretical FPR after inserting n distinct items: (1 - e^(-kn/m))^k. */
+function theoreticalFpr(m, k, n) {
+  return Math.pow(1 - Math.exp((-k * n) / m), k);
+}
+
+// --- hashing ---------------------------------------------------------------
+
+function toBytes(item) {
+  if (typeof item === &#039;string&#039;) return Buffer.from(item, &#039;utf8&#039;);
+  if (item instanceof Uint8Array) return item;
+  if (typeof item === &#039;number&#039; || typeof item === &#039;bigint&#039;) return Buffer.from(String(item), &#039;utf8&#039;);
+  throw new TypeError(&#039;item must be a string, number, bigint, Buffer or Uint8Array&#039;);
+}
+
+/** MurmurHash3 x86_32. Returns an unsigned 32-bit integer. */
+function murmur3(bytes, seed) {
+  let h = seed &gt;&gt;&gt; 0;
+  const len = bytes.length;
+  const nblocks = len &gt;&gt;&gt; 2;
+  const c1 = 0xcc9e2d51, c2 = 0x1b873593;
+  for (let i = 0; i &lt; nblocks; i++) {
+    const o = i &lt;&lt; 2;
+    let k = bytes[o] | (bytes[o + 1] &lt;&lt; 8) | (bytes[o + 2] &lt;&lt; 16) | (bytes[o + 3] &lt;&lt; 24);
+    k = Math.imul(k, c1); k = (k &lt;&lt; 15) | (k &gt;&gt;&gt; 17); k = Math.imul(k, c2);
+    h ^= k; h = (h &lt;&lt; 13) | (h &gt;&gt;&gt; 19); h = (Math.imul(h, 5) + 0xe6546b64) | 0;
+  }
+  let k = 0;
+  const tail = nblocks &lt;&lt; 2;
+  switch (len &amp; 3) {
+    case 3: k ^= bytes[tail + 2] &lt;&lt; 16; // fallthrough
+    case 2: k ^= bytes[tail + 1] &lt;&lt; 8;  // fallthrough
+    case 1: k ^= bytes[tail];
+      k = Math.imul(k, c1); k = (k &lt;&lt; 15) | (k &gt;&gt;&gt; 17); k = Math.imul(k, c2); h ^= k;
+  }
+  h ^= len;
+  h ^= h &gt;&gt;&gt; 16; h = Math.imul(h, 0x85ebca6b);
+  h ^= h &gt;&gt;&gt; 13; h = Math.imul(h, 0xc2b2ae35);
+  h ^= h &gt;&gt;&gt; 16;
+  return h &gt;&gt;&gt; 0;
+}
+
+/**
+ * Fill `out` with k bit positions using double hashing. h2 is forced odd so
+ * the probe stride is never 0 (which would collapse all k probes onto h1).
+ * All arithmetic stays below 2^53: h1 &lt; 2^32, i*h2 &lt; k*2^32.
+ */
+function positions(bytes, k, m, out) {
+  const h1 = murmur3(bytes, 0x9747b28c);
+  const h2 = murmur3(bytes, 0x5bd1e995) | 1;
+  for (let i = 0; i &lt; k; i++) out[i] = (h1 + i * (h2 &gt;&gt;&gt; 0)) % m;
+  return out;
+}
+
+// --- standard Bloom filter -------------------------------------------------
+
+class BloomFilter {
+  /**
+   * new BloomFilter({ expectedItems, falsePositiveRate })  -&gt; optimal sizing
+   * new BloomFilter({ bits, hashes })                      -&gt; explicit sizing
+   */
+  constructor(opts = {}) {
+    let { bits: m, hashes: k } = opts;
+    if (m === undefined) {
+      ({ m, k } = optimalParams(opts.expectedItems ?? 1000, opts.falsePositiveRate ?? 0.01));
+    }
+    if (!Number.isInteger(m) || m &lt; 1 || m &gt; MAX_BITS) throw new RangeError(&#039;bits must be an integer in [1, 2^32-1]&#039;);
+    if (!Number.isInteger(k) || k &lt; 1 || k &gt; 64) throw new RangeError(&#039;hashes must be an integer in [1, 64]&#039;);
+    this.m = m;
+    this.k = k;
+    this.count = 0; // number of add() calls that set at least one new bit (approx distinct items)
+    this.bits = new Uint8Array(Math.ceil(m / 8));
+    this._pos = new Array(k);
+  }
+
+  add(item) {
+    positions(toBytes(item), this.k, this.m, this._pos);
+    let changed = false;
+    for (const p of this._pos) {
+      const byte = p &gt;&gt;&gt; 3, mask = 1 &lt;&lt; (p &amp; 7);
+      if ((this.bits[byte] &amp; mask) === 0) { this.bits[byte] |= mask; changed = true; }
+    }
+    // If no bit changed the item (or a collision twin) was already present;
+    // not counting it keeps `count` close to the number of distinct items.
+    if (changed) this.count++;
+    return changed;
+  }
+
+  /** false =&gt; definitely absent. true =&gt; probably present. */
+  has(item) {
+    positions(toBytes(item), this.k, this.m, this._pos);
+    for (const p of this._pos) {
+      if ((this.bits[p &gt;&gt;&gt; 3] &amp; (1 &lt;&lt; (p &amp; 7))) === 0) return false;
+    }
+    return true;
+  }
+
+  /** Number of set bits (population count). */
+  popcount() {
+    let c = 0;
+    for (let b of this.bits) { while (b) { b &amp;= b - 1; c++; } }
+    return c;
+  }
+
+  /** FPR predicted from the current fill ratio: (X/m)^k. Works even if count is unknown. */
+  currentFpr() { return Math.pow(this.popcount() / this.m, this.k); }
+
+  /** FPR predicted from the number of inserted items. */
+  expectedFpr() { return theoreticalFpr(this.m, this.k, this.count); }
+
+  /** Swamidass–Baldi cardinality estimate: n* = -(m/k) ln(1 - X/m). */
+  estimateCardinality() {
+    const x = this.popcount();
+    if (x === this.m) return Infinity;
+    return (-this.m / this.k) * Math.log(1 - x / this.m);
+  }
+
+  /** Bitwise OR of two filters with identical (m, k): the union of both sets. */
+  union(other) {
+    if (!(other instanceof BloomFilter) || other.m !== this.m || other.k !== this.k) {
+      throw new Error(&#039;union requires filters with identical m and k&#039;);
+    }
+    const out = new BloomFilter({ bits: this.m, hashes: this.k });
+    for (let i = 0; i &lt; this.bits.length; i++) out.bits[i] = this.bits[i] | other.bits[i];
+    out.count = Math.round(out.estimateCardinality());
+    return out;
+  }
+
+  /** Portable binary form: 16-byte big-endian header followed by the bit array. */
+  serialize() {
+    const buf = Buffer.alloc(HEADER_BYTES + this.bits.length);
+    buf.writeUInt32BE(MAGIC, 0);
+    buf.writeUInt32BE(this.k, 4);
+    buf.writeUInt32BE(this.m, 8);
+    buf.writeUInt32BE(Math.min(this.count, MAX_BITS), 12);
+    buf.set(this.bits, HEADER_BYTES);
+    return buf;
+  }
+
+  static deserialize(buf) {
+    if (!(buf instanceof Uint8Array) || buf.length &lt; HEADER_BYTES) throw new Error(&#039;buffer too short&#039;);
+    const b = Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength);
+    if (b.readUInt32BE(0) !== MAGIC) throw new Error(&#039;bad magic: not a serialized BloomFilter&#039;);
+    const k = b.readUInt32BE(4), m = b.readUInt32BE(8), count = b.readUInt32BE(12);
+    const f = new BloomFilter({ bits: m, hashes: k });
+    if (b.length !== HEADER_BYTES + f.bits.length) throw new Error(`corrupt payload: expected ${f.bits.length} bytes of bits`);
+    f.bits.set(b.subarray(HEADER_BYTES));
+    // Padding bits past m in the final byte must be zero, else the payload is corrupt.
+    const spare = f.bits.length * 8 - m;
+    if (spare &gt; 0 &amp;&amp; (f.bits[f.bits.length - 1] &gt;&gt;&gt; (8 - spare)) !== 0) throw new Error(&#039;corrupt payload: padding bits set&#039;);
+    f.count = count;
+    return f;
+  }
+}
+
+// --- counting Bloom filter -------------------------------------------------
+
+/**
+ * Each slot is a 4-bit counter (Fan et al., &quot;Summary Cache&quot;, 2000). Four bits
+ * overflow with probability ~1.37e-15 * m at optimal load. A counter that hits
+ * 15 becomes sticky: it is never decremented, because we no longer know its
+ * true value — decrementing it could create false negatives.
+ */
+class CountingBloomFilter {
+  constructor(opts = {}) {
+    let { bits: m, hashes: k } = opts;
+    if (m === undefined) {
+      ({ m, k } = optimalParams(opts.expectedItems ?? 1000, opts.falsePositiveRate ?? 0.01));
+    }
+    if (!Number.isInteger(m) || m &lt; 1 || m &gt; MAX_BITS) throw new RangeError(&#039;bits must be an integer in [1, 2^32-1]&#039;);
+    if (!Number.isInteger(k) || k &lt; 1 || k &gt; 64) throw new RangeError(&#039;hashes must be an integer in [1, 64]&#039;);
+    this.m = m;
+    this.k = k;
+    this.count = 0;
+    this.saturated = 0; // counters stuck at 15
+    this.counters = new Uint8Array(Math.ceil(m / 2));
+    this._pos = new Array(k);
+  }
+
+  _get(i) { const b = this.counters[i &gt;&gt;&gt; 1]; return (i &amp; 1) ? b &gt;&gt;&gt; 4 : b &amp; 0x0f; }
+  _set(i, v) {
+    const j = i &gt;&gt;&gt; 1, b = this.counters[j];
+    this.counters[j] = (i &amp; 1) ? (b &amp; 0x0f) | (v &lt;&lt; 4) : (b &amp; 0xf0) | v;
+  }
+
+  add(item) {
+    positions(toBytes(item), this.k, this.m, this._pos);
+    for (const p of this._pos) {
+      const c = this._get(p);
+      if (c &lt; 15) { this._set(p, c + 1); if (c + 1 === 15) this.saturated++; }
+    }
+    this.count++;
+  }
+
+  has(item) {
+    positions(toBytes(item), this.k, this.m, this._pos);
+    for (const p of this._pos) if (this._get(p) === 0) return false;
+    return true;
+  }
+
+  /**
+   * Remove an item previously added. Returns false (and changes nothing) if the
+   * filter says the item is definitely absent. Caller contract: only remove
+   * items you actually inserted; removing a false positive corrupts the filter
+   * by decrementing counters owned by other items (=&gt; false negatives).
+   */
+  remove(item) {
+    if (!this.has(item)) return false; // also refreshes this._pos
+    for (const p of this._pos) {
+      const c = this._get(p);
+      if (c &gt; 0 &amp;&amp; c &lt; 15) this._set(p, c - 1);
+    }
+    this.count--;
+    return true;
+  }
+
+  expectedFpr() { return theoreticalFpr(this.m, this.k, this.count); }
+
+  /** Collapse to a plain BloomFilter (counter &gt; 0 =&gt; bit set), e.g. to ship to readers. */
+  toBloomFilter() {
+    const f = new BloomFilter({ bits: this.m, hashes: this.k });
+    for (let i = 0; i &lt; this.m; i++) if (this._get(i) &gt; 0) f.bits[i &gt;&gt;&gt; 3] |= 1 &lt;&lt; (i &amp; 7);
+    f.count = this.count;
+    return f;
+  }
+}
+
+module.exports = { BloomFilter, CountingBloomFilter, optimalParams, theoreticalFpr, murmur3 };
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-bloom-filter-membership-demo_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">demo.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+// Deterministic walkthrough: sizing, measured vs theoretical FPR, overfill,
+// serialization round-trip, and deletes with a counting Bloom filter.
+const { BloomFilter, CountingBloomFilter, optimalParams, theoreticalFpr } = require(&#039;./bloom&#039;);
+
+const pct = (x) =&gt; (x * 100).toFixed(3) + &#039;%&#039;;
+const line = (s = &#039;&#039;) =&gt; console.log(s);
+
+function measure(filter, probes) {
+  let fp = 0;
+  for (let i = 0; i &lt; probes; i++) if (filter.has(`absent:${i}`)) fp++;
+  return fp / probes;
+}
+
+line(&#039;1) Sizing from n and p&#039;);
+line(&#039;   n=1,000,000 items at various target false-positive rates:&#039;);
+for (const p of [0.1, 0.01, 0.001, 0.0001]) {
+  const { m, k, bitsPerItem } = optimalParams(1_000_000, p);
+  line(`   p=${String(p).padEnd(6)} -&gt; m=${m.toLocaleString(&#039;en-US&#039;).padStart(10)} bits (${(m / 8 / 1024 / 1024).toFixed(2)} MiB), ` +
+       `k=${k}, ${bitsPerItem.toFixed(2)} bits/item`);
+}
+line(&#039;   Rule of thumb: every 10x lower FPR costs ~4.8 more bits per item.&#039;);
+line();
+
+line(&#039;2) Build a filter for n=20,000 at p=1% and measure the real FPR&#039;);
+const n = 20_000;
+const bf = new BloomFilter({ expectedItems: n, falsePositiveRate: 0.01 });
+for (let i = 0; i &lt; n; i++) bf.add(`user:${i}`);
+let falseNeg = 0;
+for (let i = 0; i &lt; n; i++) if (!bf.has(`user:${i}`)) falseNeg++;
+const probes = 200_000;
+const measured = measure(bf, probes);
+line(`   m=${bf.m} bits (${bf.bits.length} bytes), k=${bf.k}, fill=${pct(bf.popcount() / bf.m)} (optimal ~50%)`);
+line(`   false negatives over ${n} members: ${falseNeg} (must be 0)`);
+line(`   theoretical FPR (1-e^(-kn/m))^k = ${pct(bf.expectedFpr())}`);
+line(`   from fill ratio (X/m)^k         = ${pct(bf.currentFpr())}`);
+line(`   measured on ${probes.toLocaleString(&#039;en-US&#039;)} non-members  = ${pct(measured)}`);
+line(`   cardinality estimate from bits  = ${Math.round(bf.estimateCardinality())} (true ${n})`);
+line();
+
+line(&#039;3) What happens when you exceed the design capacity&#039;);
+for (const load of [1, 2, 4]) {
+  const f = new BloomFilter({ expectedItems: 5_000, falsePositiveRate: 0.01 });
+  for (let i = 0; i &lt; 5_000 * load; i++) f.add(`k${i}`);
+  line(`   ${load}x load: theoretical ${pct(theoreticalFpr(f.m, f.k, 5_000 * load)).padStart(8)}  ` +
+       `measured ${pct(measure(f, 50_000)).padStart(8)}`);
+}
+line(&#039;   Bloom filters cannot grow in place: rebuild bigger, or chain filters (scalable Bloom).&#039;);
+line();
+
+line(&#039;4) Serialize -&gt; ship -&gt; deserialize (e.g. an SSTable filter block)&#039;);
+const wire = bf.serialize();
+const copy = BloomFilter.deserialize(wire);
+let same = true;
+for (let i = 0; i &lt; 1000; i++) if (copy.has(`user:${i}`) !== true || copy.has(`absent:${i}`) !== bf.has(`absent:${i}`)) same = false;
+line(`   ${wire.length} bytes on the wire (16-byte header + bits); answers identical: ${same}`);
+const corrupt = Buffer.from(wire); corrupt.writeUInt32BE(0xdeadbeef, 0);
+try { BloomFilter.deserialize(corrupt); } catch (e) { line(`   corrupted header rejected: &quot;${e.message}&quot;`); }
+line();
+
+line(&#039;5) Counting Bloom filter: deletes&#039;);
+const cbf = new CountingBloomFilter({ expectedItems: 1_000, falsePositiveRate: 0.01 });
+[&#039;alice&#039;, &#039;bob&#039;, &#039;carol&#039;].forEach((u) =&gt; cbf.add(u));
+line(`   add alice,bob,carol -&gt; has(bob)=${cbf.has(&#039;bob&#039;)}`);
+cbf.remove(&#039;bob&#039;);
+line(`   remove bob          -&gt; has(bob)=${cbf.has(&#039;bob&#039;)}, has(alice)=${cbf.has(&#039;alice&#039;)}, has(carol)=${cbf.has(&#039;carol&#039;)}`);
+line(`   remove &quot;mallory&quot; (never added) -&gt; ${cbf.remove(&#039;mallory&#039;)} (refused: definitely absent)`);
+line(`   memory: ${cbf.counters.length} bytes vs ${cbf.toBloomFilter().bits.length} for a plain filter (4x, the price of deletes)`);
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-bloom-filter-membership-test_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">test.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const assert = require(&#039;node:assert&#039;);
+const { BloomFilter, CountingBloomFilter, optimalParams, theoreticalFpr, murmur3 } = require(&#039;./bloom&#039;);
+
+let failed = 0;
+function test(name, fn) {
+  try { fn(); console.log(`✓ ${name}`); }
+  catch (e) { failed++; console.log(`✗ ${name}\n  ${e.stack}`); }
+}
+
+test(&#039;murmur3 matches reference vectors&#039;, () =&gt; {
+  assert.strictEqual(murmur3(Buffer.from(&#039;&#039;), 0), 0);
+  assert.strictEqual(murmur3(Buffer.from(&#039;&#039;), 1), 0x514e28b7);
+  assert.strictEqual(murmur3(Buffer.from(&#039;hello&#039;), 0), 0x248bfa47);
+  assert.strictEqual(murmur3(Buffer.from(&#039;The quick brown fox jumps over the lazy dog&#039;), 0), 0x2e4ff723);
+});
+
+test(&#039;optimalParams matches closed-form sizing&#039;, () =&gt; {
+  // n=1e6, p=1% -&gt; 9,585,059 bits, k=7 (textbook values)
+  assert.deepStrictEqual(
+    (({ m, k }) =&gt; ({ m, k }))(optimalParams(1_000_000, 0.01)),
+    { m: 9_585_059, k: 7 });
+  const { m, k } = optimalParams(1000, 0.001);
+  assert.strictEqual(m, 14_378);
+  assert.strictEqual(k, 10);
+});
+
+test(&#039;optimalParams rejects invalid input&#039;, () =&gt; {
+  assert.throws(() =&gt; optimalParams(0, 0.01), RangeError);
+  assert.throws(() =&gt; optimalParams(10, 0), RangeError);
+  assert.throws(() =&gt; optimalParams(10, 1), RangeError);
+  assert.throws(() =&gt; optimalParams(1.5, 0.1), RangeError);
+  assert.throws(() =&gt; new BloomFilter({ bits: 0, hashes: 3 }), RangeError);
+  assert.throws(() =&gt; new BloomFilter({ bits: 100, hashes: 0 }), RangeError);
+});
+
+test(&#039;no false negatives&#039;, () =&gt; {
+  const f = new BloomFilter({ expectedItems: 5000, falsePositiveRate: 0.01 });
+  for (let i = 0; i &lt; 5000; i++) f.add(`item-${i}`);
+  for (let i = 0; i &lt; 5000; i++) assert.ok(f.has(`item-${i}`), `lost item-${i}`);
+});
+
+test(&#039;measured FPR tracks theoretical FPR at design load&#039;, () =&gt; {
+  const n = 10_000;
+  const f = new BloomFilter({ expectedItems: n, falsePositiveRate: 0.01 });
+  for (let i = 0; i &lt; n; i++) f.add(`member:${i}`);
+  const probes = 100_000;
+  let fp = 0;
+  for (let i = 0; i &lt; probes; i++) if (f.has(`other:${i}`)) fp++;
+  const measured = fp / probes, theory = f.expectedFpr();
+  assert.ok(theory &gt; 0.008 &amp;&amp; theory &lt; 0.0105, `theory ${theory}`);
+  // ~1000 expected hits -&gt; std dev ~3%; allow a generous 20% band.
+  assert.ok(Math.abs(measured - theory) / theory &lt; 0.2, `measured ${measured} vs theory ${theory}`);
+});
+
+test(&#039;FPR rises as predicted when overfilled&#039;, () =&gt; {
+  const f = new BloomFilter({ expectedItems: 2000, falsePositiveRate: 0.01 });
+  for (let i = 0; i &lt; 8000; i++) f.add(`x${i}`);
+  let fp = 0;
+  for (let i = 0; i &lt; 50_000; i++) if (f.has(`y${i}`)) fp++;
+  const measured = fp / 50_000, theory = theoreticalFpr(f.m, f.k, 8000);
+  assert.ok(theory &gt; 0.3, &#039;overfilled filter should be bad&#039;);
+  assert.ok(Math.abs(measured - theory) &lt; 0.03, `measured ${measured} vs theory ${theory}`);
+});
+
+test(&#039;bit layout: explicit Uint8Array packing, k=1 sets exactly one bit&#039;, () =&gt; {
+  const f = new BloomFilter({ bits: 64, hashes: 1 });
+  assert.strictEqual(f.bits.length, 8);
+  f.add(&#039;a&#039;);
+  assert.strictEqual(f.popcount(), 1);
+  const f2 = new BloomFilter({ bits: 13, hashes: 3 }); // non-multiple of 8
+  assert.strictEqual(f2.bits.length, 2);
+  for (let i = 0; i &lt; 100; i++) f2.add(`k${i}`);
+  assert.strictEqual(f2.bits[1] &gt;&gt;&gt; 5, 0, &#039;bits beyond m must never be set&#039;);
+});
+
+test(&#039;accepts strings, numbers, bigints and buffers; rejects objects&#039;, () =&gt; {
+  const f = new BloomFilter({ expectedItems: 100 });
+  f.add(&#039;s&#039;); f.add(42); f.add(7n); f.add(Buffer.from([1, 2, 3]));
+  assert.ok(f.has(&#039;s&#039;) &amp;&amp; f.has(42) &amp;&amp; f.has(7n) &amp;&amp; f.has(new Uint8Array([1, 2, 3])));
+  assert.throws(() =&gt; f.add({}), TypeError);
+  assert.throws(() =&gt; f.has(null), TypeError);
+});
+
+test(&#039;serialize/deserialize round-trips and validates&#039;, () =&gt; {
+  const f = new BloomFilter({ expectedItems: 1000, falsePositiveRate: 0.02 });
+  for (let i = 0; i &lt; 1000; i++) f.add(`k${i}`);
+  const buf = f.serialize();
+  const g = BloomFilter.deserialize(buf);
+  assert.strictEqual(g.m, f.m); assert.strictEqual(g.k, f.k); assert.strictEqual(g.count, f.count);
+  assert.deepStrictEqual(Buffer.from(g.bits), Buffer.from(f.bits));
+  for (let i = 0; i &lt; 2000; i++) assert.strictEqual(g.has(`k${i}`), f.has(`k${i}`));
+  assert.throws(() =&gt; BloomFilter.deserialize(buf.subarray(0, buf.length - 1)), /corrupt/);
+  const bad = Buffer.from(buf); bad[0] ^= 0xff;
+  assert.throws(() =&gt; BloomFilter.deserialize(bad), /magic/);
+  assert.throws(() =&gt; BloomFilter.deserialize(Buffer.alloc(3)), /short/);
+});
+
+test(&#039;union equals filter built from both sets&#039;, () =&gt; {
+  const a = new BloomFilter({ bits: 4096, hashes: 5 });
+  const b = new BloomFilter({ bits: 4096, hashes: 5 });
+  const both = new BloomFilter({ bits: 4096, hashes: 5 });
+  for (let i = 0; i &lt; 200; i++) { a.add(`a${i}`); both.add(`a${i}`); }
+  for (let i = 0; i &lt; 200; i++) { b.add(`b${i}`); both.add(`b${i}`); }
+  assert.deepStrictEqual(Buffer.from(a.union(b).bits), Buffer.from(both.bits));
+  assert.throws(() =&gt; a.union(new BloomFilter({ bits: 4096, hashes: 4 })), /identical/);
+});
+
+test(&#039;cardinality estimate is close to the true count&#039;, () =&gt; {
+  const f = new BloomFilter({ expectedItems: 10_000, falsePositiveRate: 0.01 });
+  for (let i = 0; i &lt; 6000; i++) f.add(`c${i}`);
+  const est = f.estimateCardinality();
+  assert.ok(Math.abs(est - 6000) / 6000 &lt; 0.03, `estimate ${est}`);
+});
+
+test(&#039;counting filter: remove restores absence without harming others&#039;, () =&gt; {
+  const c = new CountingBloomFilter({ expectedItems: 1000, falsePositiveRate: 0.01 });
+  for (let i = 0; i &lt; 500; i++) c.add(`u${i}`);
+  for (let i = 0; i &lt; 250; i++) assert.ok(c.remove(`u${i}`));
+  for (let i = 250; i &lt; 500; i++) assert.ok(c.has(`u${i}`), `false negative on u${i}`);
+  let stillThere = 0;
+  for (let i = 0; i &lt; 250; i++) if (c.has(`u${i}`)) stillThere++;
+  assert.ok(stillThere &lt; 10, `${stillThere} removed items still reported (should be ~FPR)`);
+  assert.strictEqual(c.count, 250);
+});
+
+test(&#039;counting filter: duplicate adds need matching removes; absent removes refused&#039;, () =&gt; {
+  const c = new CountingBloomFilter({ bits: 1000, hashes: 4 });
+  c.add(&#039;dup&#039;); c.add(&#039;dup&#039;);
+  assert.ok(c.remove(&#039;dup&#039;));
+  assert.ok(c.has(&#039;dup&#039;), &#039;one copy should remain&#039;);
+  assert.ok(c.remove(&#039;dup&#039;));
+  assert.ok(!c.has(&#039;dup&#039;));
+  assert.strictEqual(c.remove(&#039;never-added&#039;), false);
+});
+
+test(&#039;counting filter: 4-bit counters saturate and become sticky&#039;, () =&gt; {
+  const c = new CountingBloomFilter({ bits: 16, hashes: 1 });
+  for (let i = 0; i &lt; 20; i++) c.add(&#039;hot&#039;);
+  assert.ok(c.saturated &gt;= 1);
+  for (let i = 0; i &lt; 20; i++) c.remove(&#039;hot&#039;);
+  // Sticky counter: we lost the true value, so we must keep reporting &quot;maybe&quot;.
+  assert.ok(c.has(&#039;hot&#039;));
+});
+
+test(&#039;counting filter collapses to an equivalent plain filter&#039;, () =&gt; {
+  const c = new CountingBloomFilter({ expectedItems: 300 });
+  for (let i = 0; i &lt; 300; i++) c.add(`z${i}`);
+  const plain = c.toBloomFilter();
+  for (let i = 0; i &lt; 1000; i++) assert.strictEqual(plain.has(`z${i}`), c.has(`z${i}`));
+});
+
+if (failed) { console.log(`\n${failed} test(s) failed`); process.exit(1); }
+console.log(&#039;\nall tests passed&#039;);
+</code></pre>
+          </div>
+      </div>
+
+      <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
+        <div id="codelab-mount-bloom-filter-membership" class="build-lab-overlay__mount" data-build-id="bloom-filter-membership"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=04a1ea8061"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=3676a86b01"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=154eb461ef"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=b79de4edf4"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=262e2d34b8"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

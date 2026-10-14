@@ -28,5 +28,7 @@ window.Lazy = (() => {
     return Promise.all(files.map(load));
   }
 
+  window.loadScript = load;
   return { load, module };
 })();
+

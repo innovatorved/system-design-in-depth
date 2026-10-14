@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style) — Interactive Build Lab | System Design In Depth</title>
+  <meta name="description" content="Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style): Two replicas build XOR-composable Merkle trees over hash-partitioned token buckets. The trees are...">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style) — Interactive Build Lab | System Design In Depth">
+  <meta property="og:description" content="Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style): Two replicas build XOR-composable Merkle trees over hash-partitioned token buckets. The trees are...">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/build/merkle-anti-entropy/">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style) — Interactive Build Lab | System Design In Depth">
+  <meta name="twitter:description" content="Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style): Two replicas build XOR-composable Merkle trees over hash-partitioned token buckets. The trees are...">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/merkle-anti-entropy/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
+  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
+  <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
+  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="css/code-lab.css?v=2b9944bcbd">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=6e3af86ba6"></script>
+  <script src="js/manifest.js?v=2fe59c81f7"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style) — Interactive Build Lab",
+  "description": "Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style): Two replicas build XOR-composable Merkle trees over hash-partitioned token buckets. The trees are...",
+  "url": "https://system-design-in-depth.vedgupta.in/build/merkle-anti-entropy/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" style="display:flex; gap:0.4rem; margin-right:0.5rem;">
+        <a href="#/glossary" class="btn btn--sm btn--outline" style="font-size:11px; padding:4px 8px; text-decoration:none; white-space:nowrap;">📖 Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
+      <button class="sidebar__tab sidebar__tab--active" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div class="builds-sidebar"><div class="builds-sidebar__intro">
+    Full from-scratch Node.js implementations with Guided Interactive Labs, zero dependencies, and complete test suites.
+  </div><a class="unit-item unit-item--build " href="/build/load-balancer-from-scratch/" data-build="load-balancer-from-scratch">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/consistent-hashing-ring/" data-build="consistent-hashing-ring">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Consistent Hashing Ring with Virtual Nodes</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/sliding-window-rate-limiter/" data-build="sliding-window-rate-limiter">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lru-cache/" data-build="lru-cache">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LRU Cache (Doubly Linked List + Hash Map)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/ttl-cache-reaper/" data-build="ttl-cache-reaper">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">TTL Cache with a Redis-Style Adaptive Reaper</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/bloom-filter-membership/" data-build="bloom-filter-membership">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Bloom Filter Membership Testing</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/snowflake-id-generator/" data-build="snowflake-id-generator">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Snowflake 64-bit ID Generator</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/keyset-pagination-cursors/" data-build="keyset-pagination-cursors">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/write-ahead-log/" data-build="write-ahead-log">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Write-Ahead Log (WAL) &amp; Crash Recovery</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lsm-tree-kv-store/" data-build="lsm-tree-kv-store">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LSM-Tree Key/Value Store (WAL, Memtable, SSTables, Compaction)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lease-leader-election/" data-build="lease-leader-election">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Lease-Based Leader Election with Fencing Tokens</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/gossip-protocol/" data-build="gossip-protocol">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build unit-item--active" href="/build/merkle-anti-entropy/" data-build="merkle-anti-entropy">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/hyperloglog-cardinality/" data-build="hyperloglog-cardinality">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/tiny-search-engine/" data-build="tiny-search-engine">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+        <span class="unit-item__meta">8 files · Interactive Lab</span>
+      </div>
+    </a></div>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered-build="merkle-anti-entropy">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> From-Scratch Build</span>
+        </div>
+        <h1 class="lesson-header__title">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</h1>
+        <p class="build-summary">Two replicas build XOR-composable Merkle trees over hash-partitioned token buckets. The trees are diffed top-down through mismatched subtrees only, and the divergent ranges are repaired with last-write-wins and tombstones. The build counts hashes exchanged against a naive per-key compare, measures overstreaming by depth, and handles trees of different depths as well as empty replicas and ranges.</p>
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~35 min</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Advanced</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="#" data-nav="topic" data-slug="case-amazon-dynamo">Case: Amazon Dynamo, the paper</a>, <a href="#" data-nav="topic" data-slug="replication">Replication</a>, <a href="#" data-nav="topic" data-slug="gossip-protocol">Gossip protocol</a>, <a href="#" data-nav="topic" data-slug="consistent-hashing">Consistent hashing</a>, <a href="#" data-nav="topic" data-slug="consistency-models">Consistency models</a>, <a href="#" data-nav="topic" data-slug="end-to-end-checksums">End-to-end checksums</a>, <a href="#" data-nav="topic" data-slug="object-storage-durability-and-replication">Durability and replication</a></span>
+        </div>
+      </div>
+
+      <div class="build-view-tabs" role="tablist" aria-label="Build View Mode">
+        <button type="button" class="build-view-tab active" role="tab" aria-selected="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Architecture &amp; Reference Code</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="guided">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>Interactive Lab IDE</span>
+          <span class="build-view-tab__badge">0/4 Steps</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="sandbox">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Sandbox Mode</span>
+        </button>
+      </div>
+
+      <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
+        <div class="build-lab-card__top">
+          <div class="build-lab-card__intro">
+            <div class="build-lab-card__eyebrow">
+              <span>Interactive Build Lab</span>
+              <span class="build-lab-card__progress" id="build-lab-progress-badge">0/4 Steps Completed</span>
+            </div>
+            <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
+            <p class="build-lab-card__desc">
+              Complete 4 progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+            </p>
+            <div class="build-lab-progress-track" aria-hidden="true">
+              <div class="build-lab-progress-track__fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="build-lab-card__cta-col">
+            <button type="button" class="btn btn--primary build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="guided">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Launch Guided Lab</span>
+            </button>
+            <button type="button" class="btn btn--outline build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="sandbox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Open Full Solution</span>
+            </button>
+          </div>
+        </div>
+
+        
+          <div class="build-lab-steps-grid" id="build-lab-steps-grid">
+            
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="0">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">01</span>
+                    <span class="build-lab-step-card__target">merkle.js · newer</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Deterministic LWW Conflict Resolution &amp; Tombstone Precedence</div>
+                  <div class="build-lab-step-card__concept">Symmetric Last-Writer-Wins &amp; Delete-Wins Tie-Breaking</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 1 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="1">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">02</span>
+                    <span class="build-lab-step-card__target">merkle.js · MerkleTree.build</span>
+                  </div>
+                  <div class="build-lab-step-card__title">XOR-Composable Range-Partitioned Merkle Tree Construction</div>
+                  <div class="build-lab-step-card__concept">Order-Independent Bucket Hashing &amp; Bottom-Up XOR Tree Build</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>2 tests</span>
+                    <span class="build-lab-step-card__open">Step 2 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="2">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">03</span>
+                    <span class="build-lab-step-card__target">merkle.js · MerkleTree.update</span>
+                  </div>
+                  <div class="build-lab-step-card__title">O(depth) Incremental Leaf-to-Root Merkle Maintenance</div>
+                  <div class="build-lab-step-card__concept">XOR Delta Propagation Along the Root-to-Leaf Path</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>1 test</span>
+                    <span class="build-lab-step-card__open">Step 3 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="3">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">04</span>
+                    <span class="build-lab-step-card__target">merkle.js · diffTrees</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Top-Down Breadth-First Tree Diff &amp; Range Coalescing</div>
+                  <div class="build-lab-step-card__concept">Logarithmic Disagreement Localization &amp; Empty-Subtree Short-Circuiting</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>8 tests</span>
+                    <span class="build-lab-step-card__open">Step 4 →</span>
+                  </div>
+                </button>
+              
+          </div>
+        
+      </section>
+
+      <div id="build-walkthrough-pane">
+        <div class="build-run">
+          <div class="build-run__text">
+            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
+            <code>node demo.js</code> and <code>node test.js</code>.
+          </div>
+          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="merkle-anti-entropy">Copy setup script</button>
+        </div>
+
+        <div class="build-files"><a href="#build-file-merkle-anti-entropy-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-merkle-anti-entropy-README_md">README.md</a><a href="#build-file-merkle-anti-entropy-merkle_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-merkle-anti-entropy-merkle_js">merkle.js</a><a href="#build-file-merkle-anti-entropy-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-merkle-anti-entropy-demo_js">demo.js</a><a href="#build-file-merkle-anti-entropy-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-merkle-anti-entropy-test_js">test.js</a></div><article class="prose" id="build-file-merkle-anti-entropy-README_md"><h2>Merkle-Tree Anti-Entropy Repair</h2>
+
+<p>Two replicas that should hold the same key range have drifted apart. This build finds out <em>where</em> they differ</p>
+<p>without shipping every key, then repairs them. Keys are hash-partitioned into token buckets. Each replica builds a</p>
+<p>Merkle tree over those buckets, the trees are compared top-down (descending only into mismatched subtrees), and only</p>
+<p>the mismatched ranges are streamed and resolved with last-write-wins. The same approach is behind Dynamo's</p>
+<p>anti-entropy and Cassandra's <code>nodetool repair</code>.</p>
+
+<h2>The problem</h2>
+
+<p>Replication with sloppy quorums, hinted handoff and read repair still leaves gaps. Hints expire, nodes get replaced,</p>
+<p>disks lose files, and keys that are never read never get read-repaired. Some background process has to guarantee that</p>
+<p>replicas <strong>eventually converge</strong>. Comparing replicas key by key means sending a digest for every one of</p>
+<p>millions of keys every time, even when only a handful differ. A Merkle tree summarises the whole range in one root</p>
+<p>hash, and a mismatch can be narrowed down in <code>O(differences × depth)</code> hashes.</p>
+
+<p>Where it shows up: Amazon Dynamo (the 2007 paper), Apache Cassandra and ScyllaDB repair, Riak's Active Anti-Entropy,</p>
+<p>and more generally in content-addressed sync (Git, IPFS, ZFS scrubs, certificate-transparency logs).</p>
+
+<h2>Design</h2>
+
+<pre><code class="language-text">token = murmur3_32(key) in [0, 2^32)        tree over [lo, hi) with 2^depth equal-width leaf buckets
+
+entry digest = SHA-256(key, ts, value | tombstone)
+leaf hash    = XOR of digests of entries in the bucket       (empty range = 32 zero bytes)
+inner hash   = XOR of its two children  == XOR of every entry digest in its range</code></pre>
+
+<strong>Diff</strong> (<code>diffTrees</code>): send the root. For each mismatched node, send its two children in the next round. Stop at
+<p>the shallower tree's leaf depth, or as soon as either side's node is empty (nothing left to narrow down, so the whole</p>
+<p>range is streamed). Adjacent mismatched ranges are coalesced. The result reports <code>hashesExchanged</code>, <code>rounds</code> and a</p>
+<p>per-level <code>trace</code>.</p>
+
+<strong>Repair</strong> (<code>repair</code>): both replicas stream their entries in each mismatched range. For every key the winner is chosen
+<p>by timestamp, then <em>tombstone beats value</em>, then larger value. The winner is applied to whichever side lost. The rule</p>
+<p>is deterministic and symmetric, which makes LWW a join: the outcome doesn't depend on which replica</p>
+<p>starts the session.</p>
+
+<strong>Invariants</strong>
+
+<ul>
+<li><em>Range hash is independent of depth.</em> XOR is associative and commutative, so a node's hash depends only on the</li>
+  entries in its token range, not on how the range was subdivided. Trees of <strong>different depths</strong> therefore agree on
+  every level they share (tested level by level), and diffing works at <code>min(depthA, depthB)</code>.
+  Cassandra combines row hashes the same way, and so do Riak's tictac trees.
+<li><em>Single-key divergence costs <code>2·depth + 1</code> hashes:</em> the root, then two siblings per level (tested at depths 4, 10 and 15).</li>
+<li><em>Incremental maintenance:</em> one write XORs out the old digest and XORs in the new one along its leaf-to-root path,</li>
+  in O(depth). The test shows the result is identical to a full rebuild.
+<li><em>Deletes are data.</em> Tombstones take part in the hashes and win ties, so a stale replica can't resurrect a deleted</li>
+  key. Purging a tombstone before every replica has seen it <em>does</em> resurrect the key, and the demo shows it.
+<li><em>Bucket/range arithmetic is shared:</em> <code>bucketOf</code> and <code>rangeOf</code> use the same floor/ceil boundaries, so every</li>
+  token belongs to exactly one leaf in every tree over <code>[lo, hi)</code>.
+</ul>
+<h2>Complexity</h2>
+
+<table><thead><tr><th>Cost</th></tr></thead><tbody><tr><td>Build tree</td><td>O(n) digests + O(2^depth) node combines; memory (2^(depth+1) − 1) × 32 B (depth 16 ≈ 4 MB)</td></tr><tr><td>Diff, k divergent leaves</td><td>≤ 1 + 2·k·depth hashes (bounded by 2^(depth+1) − 1), depth + 1 round trips</td></tr><tr><td>Naive compare</td><td>one digest per key: n hashes, every session</td></tr><tr><td>Stream</td><td>about k × n / 2^depth entries per side (whole buckets)</td></tr></tbody></table>In <code>node demo.js</code>, with 50,000 keys and 33 divergent keys at depth 12, the diff exchanges 463 hashes compared with 50,003
+<p>for a naive per-key compare, and streams 815 entries.</p>
+
+<h2>Failure modes and trade-offs</h2>
+
+<ul>
+<li><strong>Overstreaming.</strong> The repair unit is a bucket, not a key. With 33 bad keys the demo streams 87,505 entries at</li>
+  depth 4 and 107 at depth 16. Deeper trees cost memory, more hashes and more round trips. Cassandra spent years
+  fighting this: row-level repair in ScyllaDB and subrange repair in Cassandra both exist because of it.
+<li><strong>Hot or churning data.</strong> A tree is a snapshot. Writes that land during the session show up as false mismatches.</li>
+  Real systems build from a consistent snapshot (Cassandra's validation compaction) or accept that some writes get
+  repaired next time.
+<li><strong>Topology changes.</strong> Trees are per token range. When ranges split or move (a node joins or leaves), the trees have to be</li>
+  rebuilt. The Dynamo paper names this as the main drawback.
+<li><strong>Tombstone GC vs repair cadence.</strong> If tombstones are purged before repair has reached every replica, deleted data</li>
+  comes back. Cassandra's rule: repair every node within <code>gc_grace_seconds</code> (10 days by default).
+<li><strong>XOR's weakness.</strong> XOR-combined hashes are only safe because each key appears once per range and the digests are</li>
+  cryptographic. A structured, adversarial set of entries could cancel out. Classic Merkle trees (<code>H(left‖right)</code>)
+  avoid this, but they lose the depth independence and O(depth) incremental updates.
+<li><strong>Clock-based LWW</strong> can silently drop a concurrent write when clocks skew. Dynamo used vector clocks and sibling</li>
+  values for that reason.
+</ul>
+<h2>How production systems do it</h2>
+
+<ul>
+<li><strong>Dynamo (2007):</strong> each node keeps a Merkle tree per key range it hosts and exchanges roots with the other</li>
+  replicas to detect divergence cheaply. This handles <em>permanent</em> failures, while hinted handoff covers
+  transient ones.
+<li><strong>Cassandra:</strong> <code>nodetool repair</code> triggers a <em>validation compaction</em> on each replica that reads the range and builds</li>
+  a Merkle tree. Trees are compared by the coordinator, and mismatched ranges are streamed as SSTable sections. Tree
+  depth is capped (historically 2^15 leaves per range, later sized by a memory budget), so large ranges overstream.
+  Incremental repair (marking SSTables repaired), subrange repair, and schedulers such as Cassandra Reaper keep it tractable.
+<li><strong>ScyllaDB</strong> row-level repair compares row hashes in small batches, which removes most overstreaming.</li>
+<li><strong>Riak KV</strong> Active Anti-Entropy keeps persistent hash trees updated on every write. Its later <em>tictac</em> trees use</li>
+  XOR-combinable hashes for exactly the incremental-update property used here.
+</ul>
+<h2>How to run</h2>
+
+<pre><code class="language-text">node demo.js   # divergence, descent trace, repair stats, depth trade-off, mixed depth, bootstrap, tombstone GC (~2.5 s)
+node test.js   # 14 tests, exits non-zero on failure</code></pre>
+
+<p>API: <code>new Replica(name)</code> with <code>put(k, v, ts)</code>, <code>delete(k, ts)</code>, <code>get(k)</code>. <code>MerkleTree.build(replica, { lo, hi, depth })</code></p>
+<p>and <code>tree.update(key, oldEntry, newEntry)</code>. <code>diffTrees(a, b)</code>. <code>repair(a, b, { lo, hi, depthA, depthB })</code>.</p>
+
+<h2>Extension exercises</h2>
+
+<ol>
+<li>Run the diff as a real message exchange (JSON over a socket pair), batching one level per round, and measure bytes on</li>
+   the wire against the hash counts.
+<li>Replace XOR with classic <code>H(left‖right)</code> trees. How do you then compare trees of different depths?</li>
+   (Hint: one side must rebuild or resample its leaves.)
+<li>Add <em>adaptive</em> leaves: split a bucket only when it holds more than B entries, so skewed token distributions don't</li>
+   overstream.
+<li>Implement three-replica repair: one coordinator diffs all pairs and streams each range once from the replica that</li>
+   holds the winning versions.
+<li>Swap LWW for version vectors with siblings, and show a case where LWW silently loses a concurrent write that vectors keep.</li>
+</ol></article>
+          <div class="code-block" id="build-file-merkle-anti-entropy-merkle_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">merkle.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+// Merkle-tree anti-entropy between two replicas of a token range (Dynamo / Cassandra &quot;repair&quot;).
+//
+//  * Keys are hash-partitioned: token = murmur3_32(key) in [0, 2^32). A tree covers a token range
+//    [lo, hi) split into 2^depth equal buckets (leaves).
+//  * Node hash = XOR of the SHA-256 digests of every entry in the node&#039;s range (Cassandra also XORs
+//    row hashes). XOR makes a range&#039;s hash independent of how finely it&#039;s subdivided, so trees
+//    of DIFFERENT depths agree on every level they share, and a single write updates a path in O(depth).
+//  * diff() descends level by level, only into children of mismatched nodes, counting hashes exchanged.
+//  * repair() streams the entries of mismatched ranges both ways and resolves them with last-write-wins
+//    (timestamp, then tombstone-beats-value, then larger value), so deletes propagate instead of resurrecting.
+const crypto = require(&#039;crypto&#039;);
+
+const TOKEN_SPACE = 2 ** 32;
+const MAX_DEPTH = 20;
+const ZERO = Buffer.alloc(32); // XOR identity = hash of an empty range
+
+function murmur3_32(str, seed = 0) {
+  const b = Buffer.from(str, &#039;utf8&#039;), len = b.length, c1 = 0xcc9e2d51, c2 = 0x1b873593;
+  let h = seed &gt;&gt;&gt; 0, i = 0, k;
+  for (; i + 4 &lt;= len; i += 4) {
+    k = b[i] | (b[i + 1] &lt;&lt; 8) | (b[i + 2] &lt;&lt; 16) | (b[i + 3] &lt;&lt; 24);
+    k = Math.imul(k, c1); k = (k &lt;&lt; 15) | (k &gt;&gt;&gt; 17); h ^= Math.imul(k, c2);
+    h = (h &lt;&lt; 13) | (h &gt;&gt;&gt; 19); h = (Math.imul(h, 5) + 0xe6546b64) | 0;
+  }
+  k = 0;
+  switch (len &amp; 3) { // fall-through by design
+    case 3: k ^= b[i + 2] &lt;&lt; 16; // falls through
+    case 2: k ^= b[i + 1] &lt;&lt; 8;  // falls through
+    case 1: k ^= b[i]; k = Math.imul(k, c1); k = (k &lt;&lt; 15) | (k &gt;&gt;&gt; 17); h ^= Math.imul(k, c2);
+  }
+  h ^= len; h ^= h &gt;&gt;&gt; 16; h = Math.imul(h, 0x85ebca6b); h ^= h &gt;&gt;&gt; 13; h = Math.imul(h, 0xc2b2ae35); h ^= h &gt;&gt;&gt; 16;
+  return h &gt;&gt;&gt; 0;
+}
+const tokenOf = (key) =&gt; murmur3_32(key);
+
+function entryDigest(key, e) {
+  return crypto.createHash(&#039;sha256&#039;).update(`${key}\0${e.ts}\0${e.value === null ? &#039;D&#039; : &#039;V&#039; + e.value}`).digest();
+}
+function xorInto(dst, src) { for (let i = 0; i &lt; 32; i++) dst[i] ^= src[i]; }
+
+// Deterministic, commutative conflict resolution: the same winner no matter who compares first.
+function newer(a, b) {
+  if (!a) return b; if (!b) return a;
+  if (a.ts !== b.ts) return a.ts &gt; b.ts ? a : b;
+  if ((a.value === null) !== (b.value === null)) return a.value === null ? a : b; // delete wins ties
+  return (a.value || &#039;&#039;) &gt;= (b.value || &#039;&#039;) ? a : b;
+}
+
+class Replica {
+  constructor(name) { this.name = name; this.data = new Map(); } // key -&gt; { value|null, ts, token }
+  put(key, value, ts) { this._apply(key, { value, ts }); }
+  delete(key, ts) { this._apply(key, { value: null, ts }); }
+  _apply(key, e) {
+    if (typeof key !== &#039;string&#039; || !key) throw new TypeError(&#039;key must be a non-empty string&#039;);
+    if (!Number.isFinite(e.ts)) throw new TypeError(&#039;ts must be a finite number&#039;);
+    if (e.value !== null &amp;&amp; typeof e.value !== &#039;string&#039;) throw new TypeError(&#039;value must be a string&#039;);
+    const cur = this.data.get(key), win = newer(cur, e);
+    if (win === e) this.data.set(key, { value: e.value, ts: e.ts, token: tokenOf(key) });
+    return win === e &amp;&amp; !(cur &amp;&amp; cur.ts === e.ts &amp;&amp; cur.value === e.value);
+  }
+  get(key) { const e = this.data.get(key); return e &amp;&amp; e.value !== null ? e.value : undefined; }
+  *entriesInRange(lo, hi) { for (const [k, e] of this.data) if (e.token &gt;= lo &amp;&amp; e.token &lt; hi) yield [k, e]; }
+}
+
+class MerkleTree {
+  // levels[0] = [root], levels[depth] = leaves; each node { hash: Buffer(32), count }
+  constructor({ lo = 0, hi = TOKEN_SPACE, depth = 10 } = {}) {
+    if (!Number.isInteger(depth) || depth &lt; 0 || depth &gt; MAX_DEPTH) throw new RangeError(`depth must be an integer in [0, ${MAX_DEPTH}]`);
+    if (!(Number.isInteger(lo) &amp;&amp; Number.isInteger(hi) &amp;&amp; lo &gt;= 0 &amp;&amp; hi &lt;= TOKEN_SPACE &amp;&amp; lo &lt; hi)) throw new RangeError(&#039;need 0 &lt;= lo &lt; hi &lt;= 2^32&#039;);
+    if (hi - lo &lt; 2 ** depth) throw new RangeError(&#039;range too small for this depth&#039;);
+    this.lo = lo; this.hi = hi; this.depth = depth;
+    this.levels = [];
+    for (let l = 0; l &lt;= depth; l++) this.levels.push(Array.from({ length: 2 ** l }, () =&gt; ({ hash: Buffer.alloc(32), count: 0 })));
+  }
+  static build(replica, opts) {
+    const t = new MerkleTree(opts), leaves = t.levels[t.depth];
+    for (const [k, e] of replica.entriesInRange(t.lo, t.hi)) { const n = leaves[t.bucketOf(e.token)]; xorInto(n.hash, entryDigest(k, e)); n.count++; }
+    for (let l = t.depth - 1; l &gt;= 0; l--) {
+      t.levels[l].forEach((n, i) =&gt; {
+        const a = t.levels[l + 1][2 * i], b = t.levels[l + 1][2 * i + 1];
+        n.hash = Buffer.from(a.hash); xorInto(n.hash, b.hash); n.count = a.count + b.count;
+      });
+    }
+    return t;
+  }
+  bucketOf(token) { return Math.floor(((token - this.lo) * 2 ** this.depth) / (this.hi - this.lo)); }
+  rangeOf(level, i) { // token range covered by node (level, i): same arithmetic in every tree over [lo, hi)
+    const span = this.hi - this.lo, n = 2 ** level;
+    return { lo: this.lo + Math.ceil((i * span) / n), hi: this.lo + Math.ceil(((i + 1) * span) / n) };
+  }
+  get root() { return this.levels[0][0]; }
+  // Incremental maintenance: XOR out the old digest and XOR in the new one along the leaf-to-root path.
+  update(key, oldEntry, newEntry) {
+    const token = tokenOf(key);
+    if (token &lt; this.lo || token &gt;= this.hi) return;
+    const delta = Buffer.alloc(32); let dc = 0;
+    if (oldEntry) { xorInto(delta, entryDigest(key, oldEntry)); dc--; }
+    if (newEntry) { xorInto(delta, entryDigest(key, newEntry)); dc++; }
+    for (let l = this.depth, i = this.bucketOf(token); l &gt;= 0; l--, i &gt;&gt;= 1) { const n = this.levels[l][i]; xorInto(n.hash, delta); n.count += dc; }
+  }
+}
+
+// Top-down comparison. One &quot;round&quot; is one level of the exchange; each compared node costs one hash on
+// the wire (the peer compares against its own copy locally). If either side&#039;s node is empty there is
+// nothing to narrow down: the whole range is streamed from the other side.
+function diffTrees(a, b) {
+  if (a.lo !== b.lo || a.hi !== b.hi) throw new Error(&#039;trees must cover the same token range&#039;);
+  const depth = Math.min(a.depth, b.depth), ranges = [];
+  let frontier = [0], hashesExchanged = 0, rounds = 0;
+  const trace = []; // per round: { level, compared, mismatched, streamedWhole }
+  for (let l = 0; frontier.length; l++) {
+    rounds++;
+    const next = [];
+    let mismatched = 0, streamedWhole = 0;
+    for (const i of frontier) {
+      hashesExchanged++;
+      const x = a.levels[l][i], y = b.levels[l][i];
+      if (x.count === y.count &amp;&amp; x.hash.equals(y.hash)) continue;
+      mismatched++;
+      if (l === depth || x.count === 0 || y.count === 0) { ranges.push(a.rangeOf(l, i)); streamedWhole++; }
+      else next.push(2 * i, 2 * i + 1);
+    }
+    trace.push({ level: l, compared: frontier.length, mismatched, streamedWhole });
+    frontier = next;
+  }
+  // coalesce adjacent ranges so repair streams contiguous spans
+  ranges.sort((p, q) =&gt; p.lo - q.lo);
+  const merged = [];
+  for (const r of ranges) { const last = merged[merged.length - 1]; if (last &amp;&amp; last.hi === r.lo) last.hi = r.hi; else merged.push({ ...r }); }
+  return { ranges: merged, hashesExchanged, rounds, comparedDepth: depth, trace };
+}
+
+// Full anti-entropy session between two replicas over [lo, hi).
+function repair(a, b, { lo = 0, hi = TOKEN_SPACE, depthA = 10, depthB = depthA } = {}) {
+  const ta = MerkleTree.build(a, { lo, hi, depth: depthA }), tb = MerkleTree.build(b, { lo, hi, depth: depthB });
+  const d = diffTrees(ta, tb);
+  let streamed = 0, updatedA = 0, updatedB = 0, differing = 0;
+  for (const r of d.ranges) {
+    const fromA = new Map(a.entriesInRange(r.lo, r.hi)), fromB = new Map(b.entriesInRange(r.lo, r.hi));
+    streamed += fromA.size + fromB.size;
+    for (const key of new Set([...fromA.keys(), ...fromB.keys()])) {
+      const ea = fromA.get(key), eb = fromB.get(key), win = newer(ea, eb);
+      if (ea &amp;&amp; eb &amp;&amp; ea.ts === eb.ts &amp;&amp; ea.value === eb.value) continue; // already in sync
+      differing++;
+      if (win !== ea) { a._apply(key, win); updatedA++; }
+      if (win !== eb) { b._apply(key, win); updatedB++; }
+    }
+  }
+  const naiveHashes = Math.max(countInRange(a, lo, hi), countInRange(b, lo, hi)); // one digest per key
+  return { ...d, naiveHashes, streamed, differing, updatedA, updatedB };
+}
+function countInRange(r, lo, hi) { let n = 0; for (const _ of r.entriesInRange(lo, hi)) n++; return n; }
+
+module.exports = { Replica, MerkleTree, diffTrees, repair, newer, tokenOf, murmur3_32, entryDigest, TOKEN_SPACE, ZERO };
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-merkle-anti-entropy-demo_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">demo.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+// Deterministic walkthrough of Merkle-tree anti-entropy between two replicas.
+const { Replica, MerkleTree, diffTrees, repair, TOKEN_SPACE } = require(&#039;./merkle&#039;);
+
+function mulberry32(seed) {
+  return () =&gt; { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed &gt;&gt;&gt; 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t &gt;&gt;&gt; 7), 61 | t)) ^ t; return ((t ^ (t &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296; };
+}
+const N = 50000;
+function replicas() {
+  const a = new Replica(&#039;A&#039;), b = new Replica(&#039;B&#039;);
+  for (let i = 0; i &lt; N; i++) { a.put(&#039;user:&#039; + i, &#039;profile-v1-&#039; + i, 1000); b.put(&#039;user:&#039; + i, &#039;profile-v1-&#039; + i, 1000); }
+  return [a, b];
+}
+function diverge(a, b, seed) { // B was partitioned away; hinted handoff expired before it came back
+  const rnd = mulberry32(seed);
+  for (let i = 0; i &lt; 25; i++) a.put(&#039;user:&#039; + Math.floor(rnd() * N), &#039;profile-v2&#039;, 2000 + i);
+  for (let i = 0; i &lt; 5; i++) a.delete(&#039;user:&#039; + Math.floor(rnd() * N), 3000 + i);
+  for (let i = 0; i &lt; 3; i++) b.put(&#039;user:new-&#039; + i, &#039;signup-on-B&#039;, 2500 + i);
+}
+const hex = (b) =&gt; b.toString(&#039;hex&#039;).slice(0, 16);
+const fmt = (n) =&gt; n.toLocaleString(&#039;en-US&#039;);
+
+console.log(`== 1. Two replicas of the same token range, ${fmt(N)} keys each; B misses 30 writes, A misses 3`);
+let [a, b] = replicas();
+diverge(a, b, 42);
+const ta = MerkleTree.build(a, { depth: 12 }), tb = MerkleTree.build(b, { depth: 12 });
+console.log(`   root(A) = ${hex(ta.root.hash)}... (${fmt(ta.root.count)} entries)`);
+console.log(`   root(B) = ${hex(tb.root.hash)}... (${fmt(tb.root.count)} entries)  -&gt; roots differ, descend`);
+
+console.log(&#039;\n== 2. Descend only into mismatched subtrees (depth 12 = 4,096 leaf buckets)&#039;);
+const d = diffTrees(ta, tb);
+console.log(&#039;   level  hashes sent  mismatched&#039;);
+for (const t of d.trace) if (t.level &lt;= 3 || t.level &gt;= 10) console.log(`   ${String(t.level).padStart(5)}  ${String(t.compared).padStart(11)}  ${String(t.mismatched).padStart(10)}`);
+  else if (t.level === 4) console.log(&#039;     ...&#039;);
+console.log(`   total: ${d.hashesExchanged} hashes in ${d.rounds} rounds -&gt; ${d.ranges.length} token range(s) to stream`);
+
+console.log(&#039;\n== 3. Repair: stream both sides of each mismatched range, last-write-wins, apply both ways&#039;);
+const r = repair(a, b, { depthA: 12 });
+console.log(`   hashes exchanged: ${r.hashesExchanged}   vs naive per-key digest compare: ${fmt(r.naiveHashes)}`);
+console.log(`   entries streamed: ${r.streamed} for ${r.differing} actually-different keys (overstreaming from bucket granularity)`);
+console.log(`   applied: ${r.updatedA} on A, ${r.updatedB} on B`);
+const again = repair(a, b, { depthA: 12 });
+console.log(`   second session: ${again.hashesExchanged} hash, ${again.ranges.length} ranges -&gt; replicas are in sync`);
+
+console.log(&#039;\n== 4. Tree depth trade-off (same divergence, fresh replicas each time)&#039;);
+console.log(&#039;   depth   leaves   tree bytes   hashes   streamed   differing&#039;);
+for (const depth of [4, 8, 12, 16]) {
+  [a, b] = replicas(); diverge(a, b, 42);
+  const x = repair(a, b, { depthA: depth });
+  const bytes = (2 ** (depth + 1) - 1) * 32;
+  console.log(`   ${String(depth).padStart(5)}  ${String(2 ** depth).padStart(7)}  ${fmt(bytes).padStart(11)}  ${String(x.hashesExchanged).padStart(7)}  ${String(x.streamed).padStart(9)}  ${String(x.differing).padStart(10)}`);
+}
+console.log(&#039;   deeper trees exchange more hashes and cost memory but stream far fewer in-sync rows&#039;);
+
+console.log(&#039;\n== 5. Replicas that built trees at different depths (A: 8, B: 14)&#039;);
+[a, b] = replicas(); diverge(a, b, 7);
+const mixed = repair(a, b, { depthA: 8, depthB: 14 });
+console.log(`   compared at depth ${mixed.comparedDepth} (XOR node hashes make levels comparable): ${mixed.hashesExchanged} hashes, ${mixed.differing} keys fixed`);
+
+console.log(&#039;\n== 6. A brand-new replica bootstrapping one quarter of the ring&#039;);
+[a] = replicas();
+const fresh = new Replica(&#039;C&#039;), lo = TOKEN_SPACE / 4, hi = TOKEN_SPACE / 2;
+const boot = repair(a, fresh, { lo, hi, depthA: 12 });
+console.log(`   range [2^30, 2^31): C&#039;s root is empty -&gt; ${boot.hashesExchanged} hash, stream the whole range: ${fmt(boot.updatedB)} keys copied`);
+
+console.log(&#039;\n== 7. Why tombstones must outlive repair (Cassandra gc_grace_seconds)&#039;);
+[a, b] = replicas();
+a.delete(&#039;user:123&#039;, 5000);
+const purged = new Replica(&#039;A-purged&#039;); for (const [k, e] of a.data) if (k !== &#039;user:123&#039;) purged.data.set(k, e); // tombstone GC&#039;d too early
+repair(purged, b);
+console.log(`   tombstone purged before repair: user:123 = ${JSON.stringify(purged.get(&#039;user:123&#039;))} on A again (resurrected!)`);
+repair(a, b);
+console.log(`   tombstone kept:                 user:123 = ${JSON.stringify(b.get(&#039;user:123&#039;))} on B (delete propagated)`);
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-merkle-anti-entropy-test_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">test.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const assert = require(&#039;node:assert/strict&#039;);
+const { Replica, MerkleTree, diffTrees, repair, newer, tokenOf, murmur3_32, TOKEN_SPACE } = require(&#039;./merkle&#039;);
+
+let failed = 0;
+function test(name, fn) {
+  try { fn(); console.log(&#039;✓ &#039; + name); }
+  catch (e) { failed++; console.log(&#039;✗ &#039; + name + &#039;\n    &#039; + (e &amp;&amp; e.stack || e)); }
+}
+function mulberry32(seed) {
+  return () =&gt; { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed &gt;&gt;&gt; 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t &gt;&gt;&gt; 7), 61 | t)) ^ t; return ((t ^ (t &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296; };
+}
+function twin(n, prefix = &#039;k&#039;) { // two identical replicas with n keys
+  const a = new Replica(&#039;A&#039;), b = new Replica(&#039;B&#039;);
+  for (let i = 0; i &lt; n; i++) { a.put(prefix + i, &#039;v&#039; + i, 1); b.put(prefix + i, &#039;v&#039; + i, 1); }
+  return [a, b];
+}
+function sameData(a, b) {
+  const strip = (r) =&gt; [...r.data].map(([k, e]) =&gt; [k, e.value, e.ts]).sort((x, y) =&gt; (x[0] &lt; y[0] ? -1 : 1));
+  assert.deepEqual(strip(a), strip(b));
+}
+
+test(&#039;murmur3_32 reference vectors (token function)&#039;, () =&gt; {
+  assert.equal(murmur3_32(&#039;&#039;, 0), 0);
+  assert.equal(murmur3_32(&#039;&#039;, 1), 0x514e28b7);
+  assert.equal(murmur3_32(&#039;hello&#039;), 0x248bfa47);
+  assert.equal(murmur3_32(&#039;The quick brown fox jumps over the lazy dog&#039;), 0x2e4ff723);
+});
+
+test(&#039;identical replicas: roots match, one hash exchanged, nothing to repair&#039;, () =&gt; {
+  const [a, b] = twin(5000);
+  const r = repair(a, b, { depthA: 12 });
+  assert.deepEqual(r.ranges, []);
+  assert.equal(r.hashesExchanged, 1); assert.equal(r.rounds, 1); assert.equal(r.streamed, 0);
+});
+
+test(&#039;one differing key: exactly one leaf range, 2*depth + 1 hashes, and it contains the key&#039;, () =&gt; {
+  const [a, b] = twin(20000);
+  b.put(&#039;k777&#039;, &#039;changed&#039;, 2);
+  for (const depth of [4, 10, 15]) {
+    const d = diffTrees(MerkleTree.build(a, { depth }), MerkleTree.build(b, { depth }));
+    assert.equal(d.ranges.length, 1);
+    assert.equal(d.hashesExchanged, 2 * depth + 1, &#039;depth &#039; + depth);
+    const t = tokenOf(&#039;k777&#039;);
+    assert.ok(d.ranges[0].lo &lt;= t &amp;&amp; t &lt; d.ranges[0].hi);
+    assert.equal(d.ranges[0].hi - d.ranges[0].lo, Math.round(TOKEN_SPACE / 2 ** depth));
+  }
+});
+
+test(&#039;XOR composition: a tree at depth d equals the top d levels of any deeper tree&#039;, () =&gt; {
+  const [a] = twin(3000);
+  const deep = MerkleTree.build(a, { depth: 12 });
+  for (const d of [0, 3, 7, 12]) {
+    const shallow = MerkleTree.build(a, { depth: d });
+    for (let l = 0; l &lt;= d; l++) shallow.levels[l].forEach((n, i) =&gt; {
+      assert.ok(n.hash.equals(deep.levels[l][i].hash)); assert.equal(n.count, deep.levels[l][i].count);
+    });
+  }
+  const leafCounts = deep.levels[12].reduce((s, n) =&gt; s + n.count, 0);
+  assert.equal(leafCounts, 3000); assert.equal(deep.root.count, 3000);
+});
+
+test(&#039;randomized divergence (missing, stale, deleted keys) converges; newer write wins on both sides&#039;, () =&gt; {
+  const rnd = mulberry32(7), [a, b] = twin(10000);
+  const expected = new Map();
+  for (let i = 0; i &lt; 300; i++) {
+    const key = &#039;k&#039; + Math.floor(rnd() * 12000), side = rnd() &lt; 0.5 ? a : b, ts = 2 + Math.floor(rnd() * 100), op = rnd();
+    if (op &lt; 0.6) side.put(key, &#039;w&#039; + i, ts); else side.delete(key, ts);
+    const cur = expected.get(key), e = { value: op &lt; 0.6 ? &#039;w&#039; + i : null, ts };
+    expected.set(key, cur ? newer(cur, e) : e);
+  }
+  const r = repair(a, b, { depthA: 10 });
+  assert.ok(r.differing &gt; 200 &amp;&amp; r.updatedA &gt; 0 &amp;&amp; r.updatedB &gt; 0);
+  sameData(a, b);
+  for (const [key, e] of expected) { // LWW is a join: the result is the max over ALL writes, wherever they landed
+    const got = a.data.get(key);
+    assert.deepEqual([got.value, got.ts], [e.value, e.ts], key);
+  }
+  assert.ok(MerkleTree.build(a, { depth: 10 }).root.hash.equals(MerkleTree.build(b, { depth: 10 }).root.hash));
+  assert.equal(repair(a, b).hashesExchanged, 1); // second session finds nothing
+});
+
+test(&#039;tombstones propagate: a delete is not resurrected by the stale replica&#039;, () =&gt; {
+  const [a, b] = twin(100);
+  a.delete(&#039;k5&#039;, 10);
+  b.put(&#039;k6&#039;, &#039;old&#039;, 0.5); // older than the existing ts=1 write: ignored locally
+  assert.equal(b.get(&#039;k6&#039;), &#039;v6&#039;);
+  repair(a, b);
+  assert.equal(a.get(&#039;k5&#039;), undefined); assert.equal(b.get(&#039;k5&#039;), undefined);
+  assert.equal(b.data.get(&#039;k5&#039;).value, null); // kept as a tombstone, so hashes agree
+  sameData(a, b);
+});
+
+test(&#039;trees of different depth are compared at the shallower depth and still converge&#039;, () =&gt; {
+  const [a, b] = twin(8000);
+  for (let i = 0; i &lt; 20; i++) a.put(&#039;extra&#039; + i, &#039;x&#039;, 5);
+  const r = repair(a, b, { depthA: 6, depthB: 14 });
+  assert.equal(r.comparedDepth, 6);
+  for (const g of r.ranges) assert.equal((g.hi - g.lo) % (TOKEN_SPACE / 64), 0); // depth-6 leaf granularity
+  assert.equal(r.updatedB, 20);
+  sameData(a, b);
+  const r2 = repair(a, b, { depthA: 14, depthB: 6 });
+  assert.equal(r2.hashesExchanged, 1);
+});
+
+test(&#039;empty replica: stop at the root and stream the whole range; both empty is in sync&#039;, () =&gt; {
+  const [a] = twin(2000), empty = new Replica(&#039;new-node&#039;);
+  const r = repair(a, empty, { depthA: 12 });
+  assert.equal(r.hashesExchanged, 1);
+  assert.deepEqual(r.ranges, [{ lo: 0, hi: TOKEN_SPACE }]);
+  assert.equal(r.updatedB, 2000);
+  sameData(a, empty);
+  const r0 = repair(new Replica(&#039;x&#039;), new Replica(&#039;y&#039;));
+  assert.equal(r0.hashesExchanged, 1); assert.deepEqual(r0.ranges, []);
+});
+
+test(&#039;empty sub-ranges short-circuit the descent&#039;, () =&gt; {
+  // keys only in the lower half of the token space on A; B is missing a quarter&#039;s worth of them
+  const a = new Replica(&#039;A&#039;), b = new Replica(&#039;B&#039;);
+  for (let i = 0, n = 0; n &lt; 4000; i++) {
+    const key = &#039;u&#039; + i, t = tokenOf(key);
+    if (t &gt;= TOKEN_SPACE / 2) continue;
+    n++; a.put(key, &#039;v&#039;, 1); if (t &gt;= TOKEN_SPACE / 4) b.put(key, &#039;v&#039;, 1);
+  }
+  const d = diffTrees(MerkleTree.build(a, { depth: 12 }), MerkleTree.build(b, { depth: 12 }));
+  // root(1) + level1 (2) + level2 (2): node [0, 1/4) is empty on B, so it is streamed wholesale
+  assert.equal(d.hashesExchanged, 5);
+  assert.deepEqual(d.ranges, [{ lo: 0, hi: TOKEN_SPACE / 4 }]);
+});
+
+test(&#039;Merkle exchange is far cheaper than a per-key compare when divergence is sparse&#039;, () =&gt; {
+  const [a, b] = twin(50000);
+  const rnd = mulberry32(3);
+  for (let i = 0; i &lt; 10; i++) b.put(&#039;k&#039; + Math.floor(rnd() * 50000), &#039;drift&#039;, 9);
+  const r = repair(a, b, { depthA: 14 });
+  assert.equal(r.naiveHashes, 50000);
+  assert.ok(r.hashesExchanged &lt;= 10 * 2 * 14 + 1, &#039;hashes &#039; + r.hashesExchanged);
+  assert.ok(r.hashesExchanged * 100 &lt; r.naiveHashes);
+  assert.equal(r.differing, 10);
+  sameData(a, b);
+});
+
+test(&#039;overstreaming trade-off: shallow trees stream many in-sync keys, deeper trees fewer&#039;, () =&gt; {
+  const results = [];
+  for (const depth of [2, 6, 10, 14]) {
+    const [a, b] = twin(20000);
+    for (let i = 0; i &lt; 16; i++) b.put(&#039;k&#039; + (i * 1237), &#039;drift&#039;, 3);
+    const r = repair(a, b, { depthA: depth });
+    assert.equal(r.differing, 16);
+    results.push(r);
+  }
+  for (let i = 1; i &lt; results.length; i++) assert.ok(results[i].streamed &lt; results[i - 1].streamed);
+  assert.ok(results[0].streamed &gt; 10000 &amp;&amp; results[3].streamed &lt; 100);
+  assert.ok(results[3].hashesExchanged &gt; results[0].hashesExchanged); // ...paid for in hashes
+});
+
+test(&#039;sub-range repair ignores keys outside [lo, hi); mismatched ranges and bad params throw&#039;, () =&gt; {
+  const [a, b] = twin(4000);
+  const lo = 1 &lt;&lt; 30, hi = 2 ** 31;
+  const inside = [...a.data.keys()].find((k) =&gt; tokenOf(k) &gt;= lo &amp;&amp; tokenOf(k) &lt; hi);
+  const outside = [...a.data.keys()].find((k) =&gt; tokenOf(k) &lt; lo);
+  b.put(inside, &#039;in&#039;, 5); b.put(outside, &#039;out&#039;, 5);
+  const r = repair(a, b, { lo, hi, depthA: 8 });
+  assert.equal(r.differing, 1);
+  for (const g of r.ranges) assert.ok(g.lo &gt;= lo &amp;&amp; g.hi &lt;= hi);
+  assert.equal(a.get(inside), &#039;in&#039;); assert.equal(a.get(outside), &#039;v&#039; + outside.slice(1));
+  assert.throws(() =&gt; diffTrees(MerkleTree.build(a, { lo, hi, depth: 4 }), MerkleTree.build(b, { depth: 4 })), /same token range/);
+  assert.throws(() =&gt; new MerkleTree({ depth: 21 }), RangeError);
+  assert.throws(() =&gt; new MerkleTree({ lo: 5, hi: 5 }), RangeError);
+  assert.throws(() =&gt; new MerkleTree({ lo: 0, hi: 8, depth: 4 }), /too small/);
+  assert.throws(() =&gt; a.put(&#039;&#039;, &#039;v&#039;, 1), TypeError);
+  assert.throws(() =&gt; a.put(&#039;k&#039;, &#039;v&#039;, NaN), TypeError);
+});
+
+test(&#039;incremental update of a tree equals a full rebuild&#039;, () =&gt; {
+  const [a] = twin(3000);
+  const t = MerkleTree.build(a, { depth: 9 });
+  const ops = [[&#039;k10&#039;, &#039;new&#039;, 5], [&#039;fresh-key&#039;, &#039;hello&#039;, 5], [&#039;k20&#039;, null, 6]];
+  for (const [key, value, ts] of ops) {
+    const old = a.data.get(key) ? { ...a.data.get(key) } : undefined;
+    if (value === null) a.delete(key, ts); else a.put(key, value, ts);
+    t.update(key, old, a.data.get(key));
+  }
+  const fresh = MerkleTree.build(a, { depth: 9 });
+  for (let l = 0; l &lt;= 9; l++) t.levels[l].forEach((n, i) =&gt; { assert.ok(n.hash.equals(fresh.levels[l][i].hash)); assert.equal(n.count, fresh.levels[l][i].count); });
+});
+
+test(&#039;conflict resolution is deterministic and symmetric on timestamp ties&#039;, () =&gt; {
+  const x = { value: &#039;apple&#039;, ts: 5 }, y = { value: &#039;banana&#039;, ts: 5 }, del = { value: null, ts: 5 };
+  assert.equal(newer(x, y), y); assert.equal(newer(y, x), y);
+  assert.equal(newer(x, del), del); assert.equal(newer(del, x), del);
+  const a = new Replica(&#039;A&#039;), b = new Replica(&#039;B&#039;);
+  a.put(&#039;k&#039;, &#039;apple&#039;, 5); b.put(&#039;k&#039;, &#039;banana&#039;, 5);
+  repair(a, b);
+  assert.equal(a.get(&#039;k&#039;), &#039;banana&#039;); assert.equal(b.get(&#039;k&#039;), &#039;banana&#039;);
+});
+
+if (failed) { console.log(`\n${failed} test(s) failed`); process.exit(1); }
+console.log(&#039;\nall tests passed&#039;);
+</code></pre>
+          </div>
+      </div>
+
+      <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
+        <div id="codelab-mount-merkle-anti-entropy" class="build-lab-overlay__mount" data-build-id="merkle-anti-entropy"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=04a1ea8061"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=3676a86b01"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=154eb461ef"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=b79de4edf4"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=262e2d34b8"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

@@ -39,6 +39,12 @@ function generateManifest() {
       vm.runInNewContext(buf.toString('utf8'), { window: win });
     }
   }
+  for (const extra of ['data/implementations_code.js', 'data/guided_labs.js', 'js/code-lab.js']) {
+    const abs = path.join(root, extra);
+    if (fs.existsSync(abs)) {
+      manifest[extra] = hashOf(fs.readFileSync(abs));
+    }
+  }
   const videos = new Set();
   for (const m of Object.values(win.MODULE_CONTENT)) for (const u of Object.values(m)) {
     if (u.video?.youtubeId) videos.add(u.video.youtubeId);

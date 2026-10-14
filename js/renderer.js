@@ -133,7 +133,10 @@ window.Renderer = (() => {
     github: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>',
     globe: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>',
     external: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
-    calendar: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+    calendar: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    terminal: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
+    target: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+    arrowLeft: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>'
   };
 
   /**
@@ -458,28 +461,48 @@ window.Renderer = (() => {
     if (!builds.length) return '';
     return `
       <div class="lesson-builds">
-        <h3 class="lesson-builds__title">${icons.code} Build it from scratch</h3>
+        <h3 class="lesson-builds__title">${icons.code} Build it from scratch — Interactive Lab &amp; Guide</h3>
         ${builds.map(([id, b]) => `
-          <a class="lesson-builds__item" href="#build/${id}" data-action="navigate-build" data-build-id="${id}">
+          <a class="lesson-builds__item" href="/build/${id}/" data-action="navigate-build" data-build-id="${id}">
             <span class="lesson-builds__name">${escapeHtml(b.title || id)}</span>
             ${b.summary ? `<span class="lesson-builds__summary">${escapeHtml(b.summary)}</span>` : ''}
+            <span class="lesson-builds__cta">${icons.terminal} Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
           </a>`).join('')}
       </div>`;
   }
 
   /**
    * Render a Build (Implementation) View
+   * Initially presents the Build Guide, Interactive Lab Overview Card & Steps, and Reference Code,
+   * with a one-click full-page Interactive Lab transition.
    */
   function renderBuild(buildId) {
     const impls = window.IMPLEMENTATIONS_DATA;
     if (!impls || !impls[buildId]) return '<p>Build not found.</p>';
 
     const build = impls[buildId];
+    const guided = window.GUIDED_LABS_DATA?.[buildId] || null;
+    const steps = Array.isArray(guided?.steps) ? guided.steps : [];
     const files = orderedBuildFiles(build.files);
     const lessons = [build.primarySlug, ...(build.relatedSlugs || [])].filter(Boolean)
       .map(s => ({ slug: s, title: findUnitTitle(s) })).filter(l => l.title);
     const demoFile = files.find(([f]) => /(^|\/)demo\.js$/i.test(f))?.[0];
     const testFile = files.find(([f]) => /(^|\/)test\.js$/i.test(f))?.[0];
+
+    let completedIds = [];
+    try {
+      const raw =
+        localStorage.getItem('sd-codelab-v1:' + buildId) ||
+        localStorage.getItem('codelab_progress_' + buildId) ||
+        localStorage.getItem('sd_codelab_' + buildId);
+      const saved = JSON.parse(raw || 'null');
+      if (Array.isArray(saved?.completedSteps)) completedIds = saved.completedSteps;
+    } catch (_) {}
+
+    const totalSteps = steps.length || 4;
+    const progressPct = Math.min(100, Math.round((completedIds.length / Math.max(1, totalSteps)) * 100));
+    const difficulty = guided?.difficulty || 'Intermediate';
+    const estMinutes = guided?.estimatedMinutes || 25;
 
     let html = `
       <nav class="breadcrumbs" aria-label="Breadcrumb">
@@ -490,23 +513,95 @@ window.Renderer = (() => {
 
       <div class="lesson-header">
         <div class="lesson-header__badge">
-          <span class="lesson-header__kind lesson-header__kind--build">${icons.code} Build</span>
+          <span class="lesson-header__kind lesson-header__kind--build">${icons.code} From-Scratch Build</span>
         </div>
         <h1 class="lesson-header__title">${escapeHtml(build.title || buildId.replace(/-/g, ' '))}</h1>
         ${build.summary ? `<p class="build-summary">${escapeHtml(build.summary)}</p>` : ''}
-        ${lessons.length ? `<div class="lesson-header__meta">${icons.book} Lesson${lessons.length > 1 ? 's' : ''}: ${lessons.map(l =>
-          `<a href="#" data-nav="topic" data-slug="${l.slug}">${escapeHtml(l.title)}</a>`).join(', ')}</div>` : ''}
-      </div>
-
-      <div class="build-run">
-        <div class="build-run__text">
-          <strong>Run it locally</strong> (Node 18+, no dependencies): save the files below into one folder, or paste the setup script into a terminal. Then run
-          ${[demoFile, testFile].filter(Boolean).map(f => '<code>node ' + escapeHtml(f) + '</code>').join(' and ')}.
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item">${icons.clock} ~${estMinutes} min</span>
+          <span class="lesson-header__meta-item">${icons.code} ${escapeHtml(difficulty)}</span>
+          ${lessons.length ? `<span class="lesson-header__meta-item">${icons.book} Lesson${lessons.length > 1 ? 's' : ''}: ${lessons.map(l =>
+            `<a href="#" data-nav="topic" data-slug="${l.slug}">${escapeHtml(l.title)}</a>`).join(', ')}</span>` : ''}
         </div>
-        <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="${buildId}">Copy setup script</button>
       </div>
 
-      <div class="build-files">${files.map(([f]) => `<a href="#build-file-${buildId}-${f.replace(/[^\w-]/g, '_')}" class="build-files__item" data-action="scroll-to-file" data-target="build-file-${buildId}-${f.replace(/[^\w-]/g, '_')}">${escapeHtml(f)}</a>`).join('')}</div>`;
+      <div class="build-view-tabs" role="tablist" aria-label="Build View Mode">
+        <button type="button" class="build-view-tab active" role="tab" aria-selected="true">
+          ${icons.book}
+          <span>Architecture &amp; Reference Code</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="guided">
+          ${icons.terminal}
+          <span>Interactive Lab IDE</span>
+          <span class="build-view-tab__badge">${completedIds.length}/${totalSteps} Steps</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="sandbox">
+          ${icons.code}
+          <span>Sandbox Mode</span>
+        </button>
+      </div>
+
+      <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
+        <div class="build-lab-card__top">
+          <div class="build-lab-card__intro">
+            <div class="build-lab-card__eyebrow">
+              <span>Interactive Build Lab</span>
+              <span class="build-lab-card__progress" id="build-lab-progress-badge">${completedIds.length}/${totalSteps} Steps Completed</span>
+            </div>
+            <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
+            <p class="build-lab-card__desc">
+              Complete ${totalSteps} progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+            </p>
+            <div class="build-lab-progress-track" aria-hidden="true">
+              <div class="build-lab-progress-track__fill" style="width:${progressPct}%"></div>
+            </div>
+          </div>
+          <div class="build-lab-card__cta-col">
+            <button type="button" class="btn btn--primary build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="guided">
+              ${icons.terminal}
+              <span>Launch Guided Lab</span>
+            </button>
+            <button type="button" class="btn btn--outline build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="sandbox">
+              ${icons.code}
+              <span>Open Full Solution</span>
+            </button>
+          </div>
+        </div>
+
+        ${steps.length ? `
+          <div class="build-lab-steps-grid" id="build-lab-steps-grid">
+            ${steps.map((s, idx) => {
+              const isDone = completedIds.includes(s.id);
+              const cleanTitle = (s.title || '').replace(/^Step\s*\d+:\s*/i, '');
+              return `
+                <button type="button" class="build-lab-step-card ${isDone ? 'is-done' : ''}" data-action="open-code-lab" data-lab-mode="guided" data-step-index="${idx}">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">${isDone ? icons.check : `0${idx + 1}`}</span>
+                    <span class="build-lab-step-card__target">${escapeHtml(s.targetFile || '')}${s.targetSymbol ? ` · ${escapeHtml(s.targetSymbol.split('/')[0].trim())}` : ''}</span>
+                  </div>
+                  <div class="build-lab-step-card__title">${escapeHtml(cleanTitle)}</div>
+                  <div class="build-lab-step-card__concept">${escapeHtml(s.concept || '')}</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>${(s.testNames || []).length} test${(s.testNames || []).length === 1 ? '' : 's'}</span>
+                    <span class="build-lab-step-card__open">Step ${idx + 1} →</span>
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+      </section>
+
+      <div id="build-walkthrough-pane">
+        <div class="build-run">
+          <div class="build-run__text">
+            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
+            ${[demoFile, testFile].filter(Boolean).map(f => '<code>node ' + escapeHtml(f) + '</code>').join(' and ')}.
+          </div>
+          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="${buildId}">Copy setup script</button>
+        </div>
+
+        <div class="build-files">${files.map(([f]) => `<a href="#build-file-${buildId}-${f.replace(/[^\w-]/g, '_')}" class="build-files__item" data-action="scroll-to-file" data-target="build-file-${buildId}-${f.replace(/[^\w-]/g, '_')}">${escapeHtml(f)}</a>`).join('')}</div>`;
 
     for (const [filename, content] of files) {
       const anchor = `build-file-${buildId}-${filename.replace(/[^\w-]/g, '_')}`;
@@ -524,6 +619,12 @@ window.Renderer = (() => {
       }
     }
 
+    html += `
+      </div>
+
+      <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
+        <div id="codelab-mount-${escapeHtml(buildId)}" class="build-lab-overlay__mount" data-build-id="${escapeHtml(buildId)}"></div>
+      </div>`;
     return html;
   }
 

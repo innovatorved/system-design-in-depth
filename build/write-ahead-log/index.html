@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Write-Ahead Log (WAL) &amp; Crash Recovery — Interactive Build Lab | System Design In Depth</title>
+  <meta name="description" content="Write-Ahead Log (WAL) &amp; Crash Recovery: A segmented, binary-framed write-ahead log length LSN CRC32 per record under a small key/value store, with...">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Write-Ahead Log (WAL) &amp; Crash Recovery — Interactive Build Lab | System Design In Depth">
+  <meta property="og:description" content="Write-Ahead Log (WAL) &amp; Crash Recovery: A segmented, binary-framed write-ahead log length LSN CRC32 per record under a small key/value store, with...">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/build/write-ahead-log/">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Write-Ahead Log (WAL) &amp; Crash Recovery — Interactive Build Lab | System Design In Depth">
+  <meta name="twitter:description" content="Write-Ahead Log (WAL) &amp; Crash Recovery: A segmented, binary-framed write-ahead log length LSN CRC32 per record under a small key/value store, with...">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/write-ahead-log/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
+  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
+  <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
+  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="css/code-lab.css?v=2b9944bcbd">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=6e3af86ba6"></script>
+  <script src="js/manifest.js?v=2fe59c81f7"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Write-Ahead Log (WAL) & Crash Recovery — Interactive Build Lab",
+  "description": "Write-Ahead Log (WAL) & Crash Recovery: A segmented, binary-framed write-ahead log length LSN CRC32 per record under a small key/value store, with...",
+  "url": "https://system-design-in-depth.vedgupta.in/build/write-ahead-log/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" style="display:flex; gap:0.4rem; margin-right:0.5rem;">
+        <a href="#/glossary" class="btn btn--sm btn--outline" style="font-size:11px; padding:4px 8px; text-decoration:none; white-space:nowrap;">📖 Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
+      <button class="sidebar__tab sidebar__tab--active" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div class="builds-sidebar"><div class="builds-sidebar__intro">
+    Full from-scratch Node.js implementations with Guided Interactive Labs, zero dependencies, and complete test suites.
+  </div><a class="unit-item unit-item--build " href="/build/load-balancer-from-scratch/" data-build="load-balancer-from-scratch">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/consistent-hashing-ring/" data-build="consistent-hashing-ring">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Consistent Hashing Ring with Virtual Nodes</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/sliding-window-rate-limiter/" data-build="sliding-window-rate-limiter">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lru-cache/" data-build="lru-cache">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LRU Cache (Doubly Linked List + Hash Map)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/ttl-cache-reaper/" data-build="ttl-cache-reaper">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">TTL Cache with a Redis-Style Adaptive Reaper</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/bloom-filter-membership/" data-build="bloom-filter-membership">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Bloom Filter Membership Testing</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/snowflake-id-generator/" data-build="snowflake-id-generator">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Snowflake 64-bit ID Generator</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/keyset-pagination-cursors/" data-build="keyset-pagination-cursors">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build unit-item--active" href="/build/write-ahead-log/" data-build="write-ahead-log">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Write-Ahead Log (WAL) &amp; Crash Recovery</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lsm-tree-kv-store/" data-build="lsm-tree-kv-store">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LSM-Tree Key/Value Store (WAL, Memtable, SSTables, Compaction)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lease-leader-election/" data-build="lease-leader-election">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Lease-Based Leader Election with Fencing Tokens</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/gossip-protocol/" data-build="gossip-protocol">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/merkle-anti-entropy/" data-build="merkle-anti-entropy">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/hyperloglog-cardinality/" data-build="hyperloglog-cardinality">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/tiny-search-engine/" data-build="tiny-search-engine">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+        <span class="unit-item__meta">8 files · Interactive Lab</span>
+      </div>
+    </a></div>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered-build="write-ahead-log">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">Write-Ahead Log (WAL) &amp; Crash Recovery</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> From-Scratch Build</span>
+        </div>
+        <h1 class="lesson-header__title">Write-Ahead Log (WAL) &amp; Crash Recovery</h1>
+        <p class="build-summary">A segmented, binary-framed write-ahead log (length + LSN + CRC32 per record) under a small key/value store, with fsync-before-ack, optional group commit, torn-tail detection and truncation on recovery, and snapshot checkpoints that delete covered log segments.</p>
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~35 min</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Advanced</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="#" data-nav="topic" data-slug="database-wal-and-recovery">Database WAL and recovery</a>, <a href="#" data-nav="topic" data-slug="memtable-wal-and-sstable">Memtable, WAL, and SSTable</a>, <a href="#" data-nav="topic" data-slug="log-structured-storage">Log-structured storage</a>, <a href="#" data-nav="topic" data-slug="end-to-end-checksums">End-to-end checksums</a>, <a href="#" data-nav="topic" data-slug="custom-binary-file-format">Custom binary file format</a>, <a href="#" data-nav="topic" data-slug="lsm-tree-storage-engine">LSM-tree storage engine</a>, <a href="#" data-nav="topic" data-slug="database-backups-and-restore">Backups and restore</a></span>
+        </div>
+      </div>
+
+      <div class="build-view-tabs" role="tablist" aria-label="Build View Mode">
+        <button type="button" class="build-view-tab active" role="tab" aria-selected="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Architecture &amp; Reference Code</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="guided">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>Interactive Lab IDE</span>
+          <span class="build-view-tab__badge">0/4 Steps</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="sandbox">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Sandbox Mode</span>
+        </button>
+      </div>
+
+      <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
+        <div class="build-lab-card__top">
+          <div class="build-lab-card__intro">
+            <div class="build-lab-card__eyebrow">
+              <span>Interactive Build Lab</span>
+              <span class="build-lab-card__progress" id="build-lab-progress-badge">0/4 Steps Completed</span>
+            </div>
+            <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
+            <p class="build-lab-card__desc">
+              Complete 4 progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+            </p>
+            <div class="build-lab-progress-track" aria-hidden="true">
+              <div class="build-lab-progress-track__fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="build-lab-card__cta-col">
+            <button type="button" class="btn btn--primary build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="guided">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Launch Guided Lab</span>
+            </button>
+            <button type="button" class="btn btn--outline build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="sandbox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Open Full Solution</span>
+            </button>
+          </div>
+        </div>
+
+        
+          <div class="build-lab-steps-grid" id="build-lab-steps-grid">
+            
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="0">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">01</span>
+                    <span class="build-lab-step-card__target">wal.js · encodeRecord</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Binary Record Framing &amp; IEEE CRC32 Checksums</div>
+                  <div class="build-lab-step-card__concept">Binary Record Layout &amp; Checksum Integrity</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 1 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="1">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">02</span>
+                    <span class="build-lab-step-card__target">wal.js · decodeSegment</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Segment Decoding &amp; Torn-Write / Bit-Rot Detection</div>
+                  <div class="build-lab-step-card__concept">Sequential Log Recovery &amp; Torn-Tail Truncation</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>5 tests</span>
+                    <span class="build-lab-step-card__open">Step 2 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="2">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">03</span>
+                    <span class="build-lab-step-card__target">wal.js · WriteAheadLog.flush</span>
+                  </div>
+                  <div class="build-lab-step-card__title">WriteAheadLog Flush, fsync Durability &amp; Group Commit</div>
+                  <div class="build-lab-step-card__concept">The fsync Durability Boundary &amp; Group Commit Coalescing</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>5 tests</span>
+                    <span class="build-lab-step-card__open">Step 3 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="3">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">04</span>
+                    <span class="build-lab-step-card__target">wal.js · DurableKV.checkpoint</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Atomic Checkpointing &amp; Log Segment Truncation</div>
+                  <div class="build-lab-step-card__concept">Write-Temp-fsync-Rename Snapshots &amp; Log Compaction</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 4 →</span>
+                  </div>
+                </button>
+              
+          </div>
+        
+      </section>
+
+      <div id="build-walkthrough-pane">
+        <div class="build-run">
+          <div class="build-run__text">
+            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
+            <code>node demo.js</code> and <code>node test.js</code>.
+          </div>
+          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="write-ahead-log">Copy setup script</button>
+        </div>
+
+        <div class="build-files"><a href="#build-file-write-ahead-log-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-write-ahead-log-README_md">README.md</a><a href="#build-file-write-ahead-log-wal_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-write-ahead-log-wal_js">wal.js</a><a href="#build-file-write-ahead-log-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-write-ahead-log-demo_js">demo.js</a><a href="#build-file-write-ahead-log-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-write-ahead-log-test_js">test.js</a></div><article class="prose" id="build-file-write-ahead-log-README_md"><h2>Write-Ahead Log (WAL) & Crash Recovery</h2>
+
+<h2>The problem</h2>
+
+<p>A process can die between any two instructions: power loss, OOM kill, a kernel panic. A</p>
+<p>store that updates its data structures in place can be caught half-way, with a B-tree page</p>
+<p>split done but not linked, or money debited but not credited. The write-ahead rule fixes</p>
+<p>this: **describe the change in an append-only log, make that log durable, and only then</p>
+<p>acknowledge the change or apply it anywhere else.** After a crash, replaying the log rebuilds</p>
+<p>the state.</p>
+
+<p>Where it shows up: PostgreSQL WAL, MySQL/InnoDB redo log, SQLite <code>-wal</code> mode, RocksDB/LevelDB</p>
+<code><em>.log</code>, etcd and every Raft implementation (the replicated log </em>is* a WAL), Kafka log
+<p>segments, ZooKeeper transaction logs, and filesystem journals (ext4/jbd2, NTFS <code>$LogFile</code>).</p>
+
+<h2>What this build does</h2>
+
+<code>wal.js</code> has two layers:
+
+<ul>
+<li><code>WriteAheadLog</code>: segmented binary log. <code>append()</code> buffers a record and assigns an LSN,</li>
+  <code>flush()</code> writes the buffer with one <code>write()</code> and one <code>fsync()</code>, <code>roll()</code> starts a new
+  segment, <code>truncateBefore(lsn)</code> deletes whole covered segments, <code>open()</code> scans and repairs.
+<li><code>DurableKV</code>: a Map-backed store on top. <code>put / del / batch</code> resolve with the LSN <strong>after</strong></li>
+  fsync. <code>checkpoint()</code> writes a snapshot and truncates the log.
+</ul>
+<h3>Record format (17-byte header, little-endian)</h3>
+
+<pre><code class="language-text">0        4        8                16   17
+ +--------+--------+----------------+----+------------------+
+ | len u32| crc u32|    lsn u64     |type| payload (len B)  |
+ +--------+--------+----------------+----+------------------+
+            crc32 covers  [lsn .. end of payload]</code></pre>
+
+<ul>
+<li><strong>len</strong> lets the reader find the next record, and it is sanity-checked (<code>maxRecordBytes</code>) so a</li>
+  corrupt length cannot make the reader allocate 4 GB or skip into garbage.
+<li><strong>crc</strong> (CRC-32/IEEE, implemented in <code>crc32Js</code>, with <code>zlib.crc32</code> used when the runtime has</li>
+  it) catches torn and bit-flipped records. The test checks the standard value
+  <code>crc32("123456789") = 0xCBF43926</code> and that the JS and zlib versions agree.
+<li><strong>lsn</strong> must go up by exactly one, and each segment is named after its first LSN</li>
+  (<code>wal-00000000000000000001.log</code>). A gap means a record went missing, and that counts as
+  corruption even when every CRC checks out.
+<li>A <strong>write batch is one record</strong>, so a multi-key update is atomic: its CRC either verifies</li>
+  or the whole batch is gone. RocksDB's <code>WriteBatch</code> works the same way.
+</ul>
+<h3>Invariants</h3>
+
+<ol>
+<li>A write is acknowledged (its promise resolves) only after the fsync covering its record returns.</li>
+<li>A write becomes visible to <code>get()</code> only once it is durable, so readers never see data a crash could take back.</li>
+<li>Recovery replays a <strong>prefix</strong> of the log. It stops at the first invalid record (torn</li>
+   header, torn payload, bad length, CRC mismatch, LSN gap) and truncates the file there, so
+   later appends never land after garbage.
+<li>The checkpoint order is **roll, then write the snapshot (tmp + fsync + rename + dir fsync),</li>
+   then delete segments**. A crash between any two steps leaves either the old snapshot with
+   the full log, or the new snapshot with redundant segments that are skipped by LSN.
+</ol>
+<h3>Recovery modes (for corruption that is <em>not</em> at the tail)</h3>
+
+<table><thead><tr><th>mode</th><th>bad tail of last segment</th><th>corruption in an earlier segment</th></tr></thead><tbody><tr><td><code>tolerate-tail</code> (default)</td><td>truncate</td><td>throw <code>WalCorruptionError</code> (operator decides)</td></tr><tr><td><code>point-in-time</code></td><td>truncate</td><td>cut there and delete all later segments</td></tr></tbody></table>A torn tail is the normal result of a crash. Corruption in the middle of the log means the
+<p>disk or a bug is at fault. Throwing forces someone to look instead of quietly losing</p>
+<p>acknowledged data.</p>
+
+<h3>Group commit</h3>
+
+<p>With <code>sync: 'group'</code>, every batch issued in the same event-loop tick (up to</p>
+<code>groupMaxRecords</code>) shares one write and one fsync. The demo shows 200 concurrent writers
+<p>needing 200 fsyncs with <code>always</code> and 4 with <code>group</code>. Latency per write goes up by at most</p>
+<p>one tick, and throughput goes up by roughly the batch size. PostgreSQL (<code>commit_delay</code>),</p>
+<p>InnoDB and the binlog all use the same trick.</p>
+
+<h2>Complexity</h2>
+
+<ul>
+<li>Append: O(record size) to encode, plus a buffer copy. The fsync is the real cost: roughly</li>
+  0.05–10 ms depending on the device, which is why group commit matters.
+<li>Recovery: O(log bytes since the last checkpoint), one sequential read of each segment.</li>
+<li>Checkpoint: O(state size) to serialise, which bounds replay time and disk usage.</li>
+<li>Space: live state + snapshot + log since the last checkpoint.</li>
+</ul>
+<h2>Failure modes & trade-offs</h2>
+
+<ul>
+<li><strong>fsync lies</strong>: some consumer disks and VMs acknowledge a flush that is still sitting in a</li>
+  volatile cache. No software fix exists. Use enterprise drives with power-loss protection.
+<li><strong>fsync errors are fatal</strong> (the 2018 "fsyncgate" issue in PostgreSQL): after a failed fsync,</li>
+  Linux may drop the dirty pages and a retry can "succeed" without the data. Here a flush
+  error rejects every waiter. A real database would crash and recover from the log.
+<li><strong>Directory fsync</strong>: creating, renaming or unlinking a segment is durable only once the</li>
+  directory is fsynced. <code>fsyncDir</code> does that on POSIX and is a no-op on Windows, where it is
+  not supported.
+<li><strong>CRC32 is not cryptographic.</strong> It detects accidental damage, not tampering. CRC-32C is</li>
+  what RocksDB, ext4 and iSCSI use, because CPUs have an instruction for it. IEEE CRC-32 is
+  used here so zlib can cross-check it.
+<li><strong>Stopping at the first bad record</strong> can throw away later records that are still valid.</li>
+  Skipping over a hole would replay history out of order, which is worse.
+<li><strong>Snapshots here are full JSON dumps.</strong> Real engines checkpoint incrementally (dirty pages</li>
+  in PostgreSQL, SSTable flushes in RocksDB) rather than rewriting all state.
+<li><strong>One JSON record per batch</strong> keeps the code simple. Binary op encoding would be smaller.</li>
+</ul>
+<h2>How production systems do it</h2>
+
+<ul>
+<li><strong>PostgreSQL</strong>: 16 MB WAL segments. Each record header carries total length, a pointer to</li>
+  the previous record, and a CRC-32C. <code>synchronous_commit</code> chooses when a commit waits for
+  the flush. A checkpoint records a REDO point and old segments are recycled.
+  <code>full_page_writes</code> guards against torn <em>data</em> pages, which a WAL alone cannot repair.
+<li><strong>RocksDB</strong>: 32 KB blocks. Each physical record has a checksum, a length and a type</li>
+  (FULL/FIRST/MIDDLE/LAST) so large batches can span blocks. <code>WALRecoveryMode</code> offers
+  <code>kTolerateCorruptedTailRecords</code>, <code>kAbsoluteConsistency</code>, <code>kPointInTimeRecovery</code> (the
+  default) and <code>kSkipAnyCorruptedRecords</code>. A WAL file becomes obsolete once its memtable is
+  flushed to an SSTable.
+<li><strong>SQLite WAL mode</strong>: frames carry cumulative checksums and a salt. Recovery keeps frames up to</li>
+  the last valid commit frame. A checkpoint copies pages back into the main database file.
+<li><strong>etcd</strong>: 64 MB segment files with a CRC per record, chained across records. <code>wal.Repair</code></li>
+  truncates a torn tail, and snapshots let old segments be released.
+<li><strong>Kafka</strong>: log segments with a CRC per record batch. After an unclean shutdown the broker</li>
+  re-validates segments and truncates at the first invalid batch. By default it relies on
+  replication rather than per-message fsync (<code>flush.messages</code>).
+<li><strong>InnoDB</strong>: <code>innodb_flush_log_at_trx_commit</code> = 1 (fsync at commit), 2 (write at commit,</li>
+  fsync once a second) or 0. This is the durability-versus-throughput knob in one setting.
+</ul>
+<h2>How to run</h2>
+
+<pre><code class="language-text">node demo.js   # narrative: acked writes, torn in-flight write, bit rot, group commit, checkpoint
+node test.js   # 16 tests; all files live under os.tmpdir() and are removed afterwards</code></pre>
+
+<h2>Extension exercises</h2>
+
+<ol>
+<li>Switch to <strong>CRC-32C</strong> (Castagnoli, polynomial 0x82F63B78) and add RocksDB-style <em>masking</em></li>
+   so the CRC of a record that contains CRCs is not trivially related to them.
+<li>Add <strong>block framing</strong> (32 KB blocks, FIRST/MIDDLE/LAST fragments). After a corrupt length,</li>
+   the reader can then resync at the next block boundary instead of losing the rest of the
+   segment.
+<li>Add a <strong>time window</strong> to group commit (for example, wait up to 2 ms or 64 records) and</li>
+   measure p50/p99 latency against throughput.
+<li>Write a <strong>fault-injecting fs shim</strong> that fails or short-writes the Nth <code>write</code>/<code>fsync</code>, and</li>
+   prove that no acknowledged write is ever lost.
+<li>Make checkpoints <strong>fuzzy</strong>: take the snapshot while writes continue, recording the LSN at</li>
+   which it started, as ARIES and PostgreSQL do.
+</ol></article>
+          <div class="code-block" id="build-file-write-ahead-log-wal_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">wal.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+/**
+ * Write-ahead log + durable key/value store.
+ *
+ * On-disk layout (one directory):
+ *   wal-00000000000000000001.log   log segments, named by the first LSN they hold
+ *   snapshot.json                  latest checkpoint {lsn, crc, data}
+ *
+ * Record framing (little-endian, 17-byte header):
+ *   off  size  field
+ *   0    4     payloadLen  (u32)
+ *   4    4     crc32       (u32, IEEE) over bytes [8 .. 17+payloadLen) = lsn|type|payload
+ *   8    8     lsn         (u64)
+ *   16   1     type        (1 = BATCH)
+ *   17   n     payload     (UTF-8 JSON array of ops)
+ *
+ * A write batch is ONE record, so it is atomic: either its CRC verifies and all
+ * of its ops are replayed, or it is discarded as part of a torn tail.
+ */
+const fs = require(&#039;fs&#039;);
+const path = require(&#039;path&#039;);
+const zlib = require(&#039;zlib&#039;);
+
+// ---------------------------------------------------------------- CRC32 ----
+// Table-driven CRC-32 (reflected polynomial 0xEDB88320, as in zlib/PNG/Ethernet).
+const CRC_TABLE = (() =&gt; {
+  const t = new Uint32Array(256);
+  for (let n = 0; n &lt; 256; n++) {
+    let c = n;
+    for (let k = 0; k &lt; 8; k++) c = c &amp; 1 ? 0xedb88320 ^ (c &gt;&gt;&gt; 1) : c &gt;&gt;&gt; 1;
+    t[n] = c &gt;&gt;&gt; 0;
+  }
+  return t;
+})();
+
+function crc32Js(buf) {
+  let c = 0xffffffff;
+  for (let i = 0; i &lt; buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) &amp; 0xff] ^ (c &gt;&gt;&gt; 8);
+  return (c ^ 0xffffffff) &gt;&gt;&gt; 0;
+}
+// zlib.crc32 exists from Node 20.15 / 22.2; use it when present (same algorithm).
+const crc32 = typeof zlib.crc32 === &#039;function&#039; ? (b) =&gt; zlib.crc32(b) &gt;&gt;&gt; 0 : crc32Js;
+
+// ------------------------------------------------------------- framing ----
+const HEADER = 17;
+const TYPE_BATCH = 1;
+const DEFAULT_MAX_RECORD = 1 &lt;&lt; 20; // 1 MiB: larger length fields are treated as corruption
+
+function encodeRecord(lsn, type, payload) {
+  const buf = Buffer.alloc(HEADER + payload.length);
+  buf.writeUInt32LE(payload.length, 0);
+  buf.writeBigUInt64LE(BigInt(lsn), 8);
+  buf.writeUInt8(type, 16);
+  payload.copy(buf, HEADER);
+  buf.writeUInt32LE(crc32(buf.subarray(8)), 4);
+  return buf;
+}
+
+/**
+ * Decode records from a segment buffer. Stops at the FIRST invalid record and
+ * reports where valid data ends; it never tries to &quot;skip over&quot; garbage, because
+ * after a bad length field every later byte boundary is a guess.
+ */
+function decodeSegment(buf, firstLsn, maxRecord = DEFAULT_MAX_RECORD) {
+  const records = [];
+  let off = 0;
+  let expect = firstLsn;
+  while (off &lt; buf.length) {
+    const rest = buf.length - off;
+    if (rest &lt; HEADER) return { records, validBytes: off, error: &#039;torn-header&#039; };
+    const len = buf.readUInt32LE(off);
+    if (len &gt; maxRecord) return { records, validBytes: off, error: &#039;bad-length&#039; };
+    if (rest &lt; HEADER + len) return { records, validBytes: off, error: &#039;torn-payload&#039; };
+    const body = buf.subarray(off + 8, off + HEADER + len);
+    if (crc32(body) !== buf.readUInt32LE(off + 4)) return { records, validBytes: off, error: &#039;crc-mismatch&#039; };
+    const lsn = Number(buf.readBigUInt64LE(off + 8));
+    if (lsn !== expect) return { records, validBytes: off, error: &#039;lsn-gap&#039; };
+    records.push({ lsn, type: buf.readUInt8(off + 16), payload: buf.subarray(off + HEADER, off + HEADER + len) });
+    off += HEADER + len;
+    expect++;
+  }
+  return { records, validBytes: off, error: null };
+}
+
+class WalCorruptionError extends Error {}
+
+const segName = (lsn) =&gt; `wal-${String(lsn).padStart(20, &#039;0&#039;)}.log`;
+const SEG_RE = /^wal-(\d{20})\.log$/;
+
+function fsyncDir(dir) {
+  // Makes creates/renames/unlinks durable on POSIX. Windows cannot open a
+  // directory for fsync, so this is best-effort there.
+  let fd;
+  try { fd = fs.openSync(dir, &#039;r&#039;); fs.fsyncSync(fd); } catch (_) { /* unsupported */ } finally { if (fd !== undefined) fs.closeSync(fd); }
+}
+
+// ----------------------------------------------------------------- WAL ----
+class WriteAheadLog {
+  /**
+   * @param {string} dir
+   * @param {object} [opts]
+   * @param {&#039;tolerate-tail&#039;|&#039;point-in-time&#039;} [opts.recoveryMode] what to do with
+   *   corruption in a NON-final segment: throw (tolerate-tail) or cut the log
+   *   there and drop everything after it (point-in-time). A bad tail of the
+   *   final segment is always truncated: that is what an interrupted write looks like.
+   * @param {number} [opts.segmentBytes] roll to a new segment past this size
+   */
+  constructor(dir, opts = {}) {
+    if (typeof dir !== &#039;string&#039; || !dir) throw new TypeError(&#039;dir must be a non-empty string&#039;);
+    this.dir = dir;
+    this.recoveryMode = opts.recoveryMode || &#039;tolerate-tail&#039;;
+    if (![&#039;tolerate-tail&#039;, &#039;point-in-time&#039;].includes(this.recoveryMode)) throw new RangeError(&#039;bad recoveryMode&#039;);
+    this.segmentBytes = opts.segmentBytes || 4 &lt;&lt; 20;
+    this.maxRecord = opts.maxRecordBytes || DEFAULT_MAX_RECORD;
+    this.fd = null;
+    this.segments = []; // [{startLsn, file}]
+    this.activeSize = 0;
+    this.pending = []; // encoded, not yet written
+    this.nextLsn = 1;
+    this.durableLsn = 0;
+    this.stats = { fsyncs: 0, bytesWritten: 0 };
+  }
+
+  _listSegments() {
+    return fs.readdirSync(this.dir)
+      .map((f) =&gt; SEG_RE.exec(f))
+      .filter(Boolean)
+      .map((m) =&gt; ({ startLsn: Number(m[1]), file: path.join(this.dir, m[0]) }))
+      .sort((a, b) =&gt; a.startLsn - b.startLsn);
+  }
+
+  /** Scan, validate and repair the log. Returns every valid record with lsn &gt;= minLsn. */
+  open({ minLsn = 1 } = {}) {
+    fs.mkdirSync(this.dir, { recursive: true });
+    const segs = this._listSegments();
+    const report = { records: [], truncated: null, removedSegments: [] };
+    let expect = segs.length ? segs[0].startLsn : minLsn;
+    if (segs.length &amp;&amp; segs[0].startLsn &gt; minLsn) {
+      throw new WalCorruptionError(`log starts at LSN ${segs[0].startLsn} but LSN ${minLsn} is needed`);
+    }
+    for (let i = 0; i &lt; segs.length; i++) {
+      const seg = segs[i];
+      const isLast = i === segs.length - 1;
+      if (seg.startLsn !== expect) {
+        throw new WalCorruptionError(`segment ${path.basename(seg.file)} starts at ${seg.startLsn}, expected ${expect}`);
+      }
+      const buf = fs.readFileSync(seg.file);
+      const res = decodeSegment(buf, seg.startLsn, this.maxRecord);
+      for (const r of res.records) if (r.lsn &gt;= minLsn) report.records.push(r);
+      expect = seg.startLsn + res.records.length;
+      if (!res.error) continue;
+      if (!isLast &amp;&amp; this.recoveryMode === &#039;tolerate-tail&#039;) {
+        throw new WalCorruptionError(`${res.error} at ${path.basename(seg.file)}:${res.validBytes} (not at the tail)`);
+      }
+      // Cut the log here: truncate this segment, delete any later ones.
+      fs.truncateSync(seg.file, res.validBytes);
+      report.truncated = { segment: path.basename(seg.file), offset: res.validBytes, droppedBytes: buf.length - res.validBytes, reason: res.error };
+      for (const later of segs.slice(i + 1)) { fs.unlinkSync(later.file); report.removedSegments.push(path.basename(later.file)); }
+      segs.length = i + 1;
+      fsyncDir(this.dir);
+      break;
+    }
+    if (expect &lt; minLsn) {
+      // Every surviving record is already covered by the snapshot: discard the
+      // old segments so the chain restarts cleanly at minLsn without a gap.
+      for (const s of segs) { fs.unlinkSync(s.file); report.removedSegments.push(path.basename(s.file)); }
+      segs.length = 0;
+      expect = minLsn;
+    }
+    this.nextLsn = expect;
+    this.durableLsn = this.nextLsn - 1;
+    this.segments = segs;
+    const last = segs[segs.length - 1];
+    if (last) {
+      this.fd = fs.openSync(last.file, &#039;a&#039;);
+      this.activeSize = fs.fstatSync(this.fd).size;
+    } else {
+      this._startSegment(this.nextLsn);
+    }
+    return report;
+  }
+
+  _startSegment(startLsn) {
+    if (this.fd !== null) fs.closeSync(this.fd);
+    const file = path.join(this.dir, segName(startLsn));
+    this.fd = fs.openSync(file, &#039;a&#039;);
+    this.segments.push({ startLsn, file });
+    this.activeSize = 0;
+    fsyncDir(this.dir);
+  }
+
+  /** Buffer a record in memory and assign its LSN. Not durable until flush(). */
+  append(type, payload) {
+    if (this.fd === null) throw new Error(&#039;log is not open&#039;);
+    if (!Buffer.isBuffer(payload)) throw new TypeError(&#039;payload must be a Buffer&#039;);
+    if (payload.length &gt; this.maxRecord) throw new RangeError(`record of ${payload.length} bytes exceeds maxRecordBytes`);
+    const lsn = this.nextLsn++;
+    this.pending.push(encodeRecord(lsn, type, payload));
+    return lsn;
+  }
+
+  /** Write all buffered records with one write() and one fsync(). Returns durable LSN. */
+  flush() {
+    if (!this.pending.length) return this.durableLsn;
+    const buf = Buffer.concat(this.pending);
+    const count = this.pending.length;
+    this.pending = [];
+    fs.writeSync(this.fd, buf);
+    fs.fsyncSync(this.fd); // the durability point: nothing is acknowledged before this returns
+    this.stats.fsyncs++;
+    this.stats.bytesWritten += buf.length;
+    this.activeSize += buf.length;
+    this.durableLsn += count;
+    if (this.activeSize &gt;= this.segmentBytes) this._startSegment(this.nextLsn);
+    return this.durableLsn;
+  }
+
+  /** Close the active segment and start a new one at nextLsn (flushes first). */
+  roll() {
+    this.flush();
+    const active = this.segments[this.segments.length - 1];
+    if (active.startLsn !== this.nextLsn) this._startSegment(this.nextLsn);
+  }
+
+  /** Delete whole segments whose records are all &lt; lsn. The active segment is never deleted. */
+  truncateBefore(lsn) {
+    const removed = [];
+    while (this.segments.length &gt; 1 &amp;&amp; this.segments[1].startLsn &lt;= lsn) {
+      const seg = this.segments.shift();
+      fs.unlinkSync(seg.file);
+      removed.push(path.basename(seg.file));
+    }
+    if (removed.length) fsyncDir(this.dir);
+    return removed;
+  }
+
+  close() { this.flush(); this._drop(); }
+  /** Close without flushing: buffered records are lost, exactly as in a crash. */
+  _drop() { if (this.fd !== null) fs.closeSync(this.fd); this.fd = null; this.pending = []; }
+}
+
+// ---------------------------------------------------------- DurableKV ----
+class DurableKV {
+  /**
+   * @param {string} dir
+   * @param {object} [opts] sync: &#039;always&#039; (fsync per write) | &#039;group&#039; (coalesce
+   *   writes issued in the same tick, or up to groupMaxRecords, into one fsync)
+   */
+  constructor(dir, opts = {}) {
+    this.sync = opts.sync || &#039;always&#039;;
+    if (![&#039;always&#039;, &#039;group&#039;].includes(this.sync)) throw new RangeError(&quot;sync must be &#039;always&#039; or &#039;group&#039;&quot;);
+    this.groupMaxRecords = opts.groupMaxRecords || 128;
+    this.dir = dir;
+    this.snapshotFile = path.join(dir, &#039;snapshot.json&#039;);
+    this.wal = new WriteAheadLog(dir, opts);
+    this.data = new Map();
+    this.waiters = []; // [{lsn, ops, resolve, reject}] awaiting fsync
+    this.flushScheduled = false;
+    this.lastCheckpointLsn = 0;
+  }
+
+  /** Load the checkpoint, replay the log tail, repair torn writes. */
+  open() {
+    fs.mkdirSync(this.dir, { recursive: true });
+    let snapLsn = 0;
+    if (fs.existsSync(this.snapshotFile)) {
+      const snap = JSON.parse(fs.readFileSync(this.snapshotFile, &#039;utf8&#039;));
+      const body = Buffer.from(JSON.stringify({ lsn: snap.lsn, data: snap.data }));
+      if (crc32(body) !== snap.crc) throw new WalCorruptionError(&#039;snapshot checksum mismatch&#039;);
+      this.data = new Map(snap.data);
+      snapLsn = snap.lsn;
+    }
+    this.lastCheckpointLsn = snapLsn;
+    const rep = this.wal.open({ minLsn: snapLsn + 1 });
+    for (const r of rep.records) if (r.type === TYPE_BATCH) this._apply(JSON.parse(r.payload.toString(&#039;utf8&#039;)));
+    return { snapshotLsn: snapLsn, replayed: rep.records.length, lastLsn: this.wal.durableLsn, truncated: rep.truncated, removedSegments: rep.removedSegments };
+  }
+
+  static _validate(ops) {
+    if (!Array.isArray(ops) || ops.length === 0) throw new TypeError(&#039;ops must be a non-empty array&#039;);
+    for (const op of ops) {
+      if (!op || (op.op !== &#039;put&#039; &amp;&amp; op.op !== &#039;del&#039;)) throw new TypeError(&quot;op must be &#039;put&#039; or &#039;del&#039;&quot;);
+      if (typeof op.key !== &#039;string&#039; || !op.key) throw new TypeError(&#039;key must be a non-empty string&#039;);
+      if (op.op === &#039;put&#039; &amp;&amp; op.value === undefined) throw new TypeError(&#039;put needs a value&#039;);
+    }
+  }
+
+  _apply(ops) { for (const o of ops) o.op === &#039;put&#039; ? this.data.set(o.key, o.value) : this.data.delete(o.key); }
+
+  /**
+   * Atomically log a batch. Resolves with its LSN once it is fsynced; only then
+   * does it become visible to get() (readers never see data a crash could lose).
+   */
+  batch(ops) {
+    DurableKV._validate(ops);
+    const norm = ops.map((o) =&gt; (o.op === &#039;put&#039; ? { op: &#039;put&#039;, key: o.key, value: o.value } : { op: &#039;del&#039;, key: o.key }));
+    const lsn = this.wal.append(TYPE_BATCH, Buffer.from(JSON.stringify(norm), &#039;utf8&#039;));
+    return new Promise((resolve, reject) =&gt; {
+      this.waiters.push({ lsn, ops: norm, resolve, reject });
+      if (this.sync === &#039;always&#039; || this.waiters.length &gt;= this.groupMaxRecords) this._flush();
+      else if (!this.flushScheduled) { this.flushScheduled = true; setImmediate(() =&gt; this._flush()); }
+    });
+  }
+  put(key, value) { return this.batch([{ op: &#039;put&#039;, key, value }]); }
+  del(key) { return this.batch([{ op: &#039;del&#039;, key }]); }
+  get(key) { return this.data.get(key); }
+  get size() { return this.data.size; }
+
+  _flush() {
+    this.flushScheduled = false;
+    if (!this.waiters.length) return;
+    const ws = this.waiters;
+    this.waiters = [];
+    try { this.wal.flush(); } catch (err) { ws.forEach((w) =&gt; w.reject(err)); return; }
+    for (const w of ws) { this._apply(w.ops); w.resolve(w.lsn); }
+  }
+
+  /**
+   * Checkpoint: roll the log, persist a snapshot atomically (tmp + fsync + rename),
+   * then delete segments the snapshot covers. A crash between any two steps is safe:
+   * old snapshot + old segments, or new snapshot + redundant segments (skipped by LSN).
+   */
+  checkpoint() {
+    this._flush();
+    this.wal.roll();
+    const lsn = this.wal.durableLsn;
+    const data = [...this.data];
+    const crc = crc32(Buffer.from(JSON.stringify({ lsn, data })));
+    const tmp = this.snapshotFile + &#039;.tmp&#039;;
+    const fd = fs.openSync(tmp, &#039;w&#039;);
+    try { fs.writeSync(fd, JSON.stringify({ lsn, crc, data })); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+    fs.renameSync(tmp, this.snapshotFile);
+    fsyncDir(this.dir);
+    this.lastCheckpointLsn = lsn;
+    return { lsn, removedSegments: this.wal.truncateBefore(lsn + 1) };
+  }
+
+  async close() { this._flush(); this.wal.close(); }
+
+  /** Test hook: die now. Unflushed group-commit writes are lost and their promises reject. */
+  simulateCrash() {
+    const ws = this.waiters;
+    this.waiters = [];
+    this.wal._drop();
+    ws.forEach((w) =&gt; w.reject(new Error(&#039;crashed before fsync&#039;)));
+  }
+}
+
+module.exports = { WriteAheadLog, DurableKV, WalCorruptionError, encodeRecord, decodeSegment, crc32, crc32Js, HEADER, TYPE_BATCH, segName };
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-write-ahead-log-demo_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">demo.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+// Walkthrough: durable writes, a torn write at crash time, recovery, group commit, checkpoint.
+const fs = require(&#039;fs&#039;);
+const os = require(&#039;os&#039;);
+const path = require(&#039;path&#039;);
+const { DurableKV, segName, encodeRecord, TYPE_BATCH, HEADER } = require(&#039;./wal&#039;);
+
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), &#039;wal-demo-&#039;));
+const logFiles = () =&gt; fs.readdirSync(dir).filter((f) =&gt; f.endsWith(&#039;.log&#039;)).map((f) =&gt; `${f} (${fs.statSync(path.join(dir, f)).size} B)`).join(&#039;, &#039;);
+
+(async () =&gt; {
+  try {
+    console.log(`WAL directory: ${dir}\n`);
+
+    console.log(&#039;1) Durable writes (sync=always: one fsync per acknowledged write)&#039;);
+    let kv = new DurableKV(dir);
+    kv.open();
+    await kv.put(&#039;user:1&#039;, { name: &#039;Ada&#039; });
+    await kv.put(&#039;user:2&#039;, { name: &#039;Linus&#039; });
+    await kv.batch([
+      { op: &#039;put&#039;, key: &#039;acct:ada&#039;, value: 70 },
+      { op: &#039;put&#039;, key: &#039;acct:linus&#039;, value: 30 },
+    ]); // one record =&gt; atomic transfer
+    const lsn = await kv.put(&#039;user:3&#039;, { name: &#039;Grace&#039; });
+    console.log(`   last LSN ${lsn}, fsyncs ${kv.wal.stats.fsyncs}, segments: ${logFiles()}`);
+
+    console.log(&#039;\n2) Process dies while write() of LSN 5 is in flight (never acknowledged)&#039;);
+    kv.simulateCrash();
+    const seg = path.join(dir, segName(1));
+    const inflight = encodeRecord(5, TYPE_BATCH, Buffer.from(JSON.stringify([{ op: &#039;put&#039;, key: &#039;user:5&#039;, value: { name: &#039;Edsger&#039; } }])));
+    fs.appendFileSync(seg, inflight.subarray(0, 30)); // only 30 of its bytes reached the disk
+    console.log(`   appended 30 of ${inflight.length} bytes of record 5 -&gt; torn tail`);
+
+    console.log(&#039;\n3) Recovery: validate length + LSN + CRC, stop at first bad record, truncate the tail&#039;);
+    kv = new DurableKV(dir);
+    let rep = kv.open();
+    console.log(`   replayed ${rep.replayed} records, last good LSN ${rep.lastLsn}`);
+    console.log(`   truncated: ${JSON.stringify(rep.truncated)}`);
+    console.log(`   user:3 = ${JSON.stringify(kv.get(&#039;user:3&#039;))}, user:5 = ${kv.get(&#039;user:5&#039;)}  (every acked write kept, torn one dropped)`);
+    console.log(`   acct:ada = ${kv.get(&#039;acct:ada&#039;)}, acct:linus = ${kv.get(&#039;acct:linus&#039;)}  (the batch is one record, so it is all-or-nothing)`);
+    console.log(`   next write gets LSN ${await kv.put(&#039;user:5&#039;, { name: &#039;Edsger&#039; })} (no gap, no duplicate)`);
+
+    console.log(&#039;\n4) Bit rot in the middle of the log&#039;);
+    await kv.put(&#039;user:6&#039;, { name: &#039;Barbara&#039; });
+    await kv.close();
+    const buf = fs.readFileSync(seg);
+    // Find the start of record 3 by walking the length fields.
+    let off = 0;
+    for (let i = 0; i &lt; 2; i++) off += HEADER + buf.readUInt32LE(off);
+    buf[off + HEADER + 3] ^= 0x20; // flip one bit inside record 3&#039;s payload
+    fs.writeFileSync(seg, buf);
+    kv = new DurableKV(dir);
+    rep = kv.open();
+    console.log(`   ${rep.truncated.reason} at offset ${rep.truncated.offset}: recovery stops there, ${rep.truncated.droppedBytes} B dropped, ${kv.size} keys left`);
+    console.log(&#039;   (later records had valid CRCs, but replaying past a hole would reorder history)&#039;);
+    await kv.close();
+
+    console.log(&#039;\n5) Group commit: 200 concurrent writers, one fsync per batch window&#039;);
+    for (const mode of [&#039;always&#039;, &#039;group&#039;]) {
+      const d = fs.mkdtempSync(path.join(os.tmpdir(), `wal-demo-${mode}-`));
+      const k = new DurableKV(d, { sync: mode, groupMaxRecords: 64 });
+      k.open();
+      const t0 = process.hrtime.bigint();
+      await Promise.all(Array.from({ length: 200 }, (_, i) =&gt; k.put(`key${i}`, i)));
+      const ms = Number(process.hrtime.bigint() - t0) / 1e6;
+      console.log(`   sync=${mode.padEnd(6)} fsyncs=${String(k.wal.stats.fsyncs).padStart(3)}  (${ms.toFixed(1)} ms on this disk)`);
+      await k.close();
+      fs.rmSync(d, { recursive: true, force: true });
+    }
+
+    console.log(&#039;\n6) Checkpoint + log truncation (segments roll every ~200 B here)&#039;);
+    fs.rmSync(dir, { recursive: true, force: true });
+    kv = new DurableKV(dir, { segmentBytes: 200 });
+    kv.open();
+    for (let i = 0; i &lt; 12; i++) await kv.put(`k${i}`, i);
+    console.log(`   before: ${logFiles()}`);
+    const cp = kv.checkpoint();
+    console.log(`   checkpoint at LSN ${cp.lsn}; deleted ${cp.removedSegments.length} segments`);
+    await kv.put(&#039;k0&#039;, &#039;new&#039;);
+    kv.simulateCrash();
+    kv = new DurableKV(dir);
+    rep = kv.open();
+    console.log(`   after crash: snapshot LSN ${rep.snapshotLsn} + ${rep.replayed} replayed record(s); k0=${kv.get(&#039;k0&#039;)}, k11=${kv.get(&#039;k11&#039;)}`);
+    console.log(`   remaining: ${logFiles()}`);
+    await kv.close();
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+})();
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-write-ahead-log-test_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">test.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const assert = require(&#039;node:assert&#039;);
+const fs = require(&#039;fs&#039;);
+const os = require(&#039;os&#039;);
+const path = require(&#039;path&#039;);
+const {
+  DurableKV, WriteAheadLog, WalCorruptionError, encodeRecord, decodeSegment, crc32, crc32Js, HEADER, segName,
+} = require(&#039;./wal&#039;);
+
+const tests = [];
+const test = (name, fn) =&gt; tests.push({ name, fn });
+const dirs = [];
+function tmp() { const d = fs.mkdtempSync(path.join(os.tmpdir(), &#039;wal-test-&#039;)); dirs.push(d); return d; }
+const seg1 = (dir) =&gt; path.join(dir, segName(1));
+async function openKV(dir, opts) { const kv = new DurableKV(dir, opts); const rep = kv.open(); return { kv, rep }; }
+async function fill(kv, n, prefix = &#039;k&#039;) { for (let i = 1; i &lt;= n; i++) await kv.put(`${prefix}${i}`, i); }
+const recSize = (key, value) =&gt; HEADER + Buffer.byteLength(JSON.stringify([{ op: &#039;put&#039;, key, value }]));
+
+test(&#039;CRC32 matches the standard check value and zlib&#039;, () =&gt; {
+  assert.strictEqual(crc32Js(Buffer.from(&#039;123456789&#039;)), 0xcbf43926);
+  assert.strictEqual(crc32(Buffer.from(&#039;123456789&#039;)), 0xcbf43926);
+  assert.strictEqual(crc32Js(Buffer.alloc(0)), 0);
+  for (let n = 0; n &lt; 50; n++) {
+    const b = Buffer.from(Array.from({ length: n * 7 }, (_, i) =&gt; (i * 31 + n) &amp; 0xff));
+    assert.strictEqual(crc32Js(b), crc32(b));
+  }
+});
+
+test(&#039;record framing: header layout and round trip&#039;, () =&gt; {
+  const payload = Buffer.from(&#039;{&quot;x&quot;:1}&#039;);
+  const rec = encodeRecord(42, 1, payload);
+  assert.strictEqual(rec.length, HEADER + payload.length);
+  assert.strictEqual(rec.readUInt32LE(0), payload.length);
+  assert.strictEqual(Number(rec.readBigUInt64LE(8)), 42);
+  assert.strictEqual(rec.readUInt32LE(4), crc32(rec.subarray(8)));
+  const out = decodeSegment(Buffer.concat([rec, encodeRecord(43, 1, payload)]), 42);
+  assert.strictEqual(out.error, null);
+  assert.deepStrictEqual(out.records.map((r) =&gt; r.lsn), [42, 43]);
+  assert.strictEqual(decodeSegment(rec, 41).error, &#039;lsn-gap&#039;);
+});
+
+test(&#039;writes survive a clean close and reopen&#039;, async () =&gt; {
+  const dir = tmp();
+  let { kv } = await openKV(dir);
+  await kv.put(&#039;a&#039;, 1); await kv.put(&#039;b&#039;, { nested: true }); await kv.del(&#039;a&#039;);
+  await kv.close();
+  ({ kv } = await openKV(dir));
+  assert.strictEqual(kv.get(&#039;a&#039;), undefined);
+  assert.deepStrictEqual(kv.get(&#039;b&#039;), { nested: true });
+  assert.strictEqual(kv.wal.durableLsn, 3);
+  await kv.close();
+});
+
+test(&#039;every acknowledged write survives a crash (sync=always)&#039;, async () =&gt; {
+  const dir = tmp();
+  let { kv } = await openKV(dir);
+  await fill(kv, 20);
+  kv.simulateCrash(); // no close, no final flush
+  let rep; ({ kv, rep } = await openKV(dir));
+  assert.strictEqual(rep.truncated, null);
+  assert.strictEqual(kv.size, 20);
+  assert.strictEqual(kv.get(&#039;k20&#039;), 20);
+  await kv.close();
+});
+
+test(&#039;torn payload at the tail is truncated and the log stays appendable&#039;, async () =&gt; {
+  const dir = tmp();
+  let { kv } = await openKV(dir);
+  await fill(kv, 5);
+  await kv.close();
+  const size = fs.statSync(seg1(dir)).size;
+  fs.truncateSync(seg1(dir), size - 3); // last record loses its final 3 bytes
+  let rep; ({ kv, rep } = await openKV(dir));
+  assert.strictEqual(rep.truncated.reason, &#039;torn-payload&#039;);
+  assert.strictEqual(rep.lastLsn, 4);
+  assert.strictEqual(kv.get(&#039;k5&#039;), undefined);
+  assert.strictEqual(fs.statSync(seg1(dir)).size, size - recSize(&#039;k5&#039;, 5));
+  assert.strictEqual(await kv.put(&#039;after&#039;, &#039;crash&#039;), 5); // LSN reused cleanly, no gap
+  await kv.close();
+  ({ kv, rep } = await openKV(dir));
+  assert.strictEqual(rep.truncated, null);
+  assert.strictEqual(kv.get(&#039;after&#039;), &#039;crash&#039;);
+  await kv.close();
+});
+
+test(&#039;torn header (fewer than 17 bytes of the last record) is detected&#039;, async () =&gt; {
+  const dir = tmp();
+  let { kv } = await openKV(dir);
+  await fill(kv, 3);
+  await kv.close();
+  const keep = recSize(&#039;k1&#039;, 1) + recSize(&#039;k2&#039;, 2) + 10;
+  fs.truncateSync(seg1(dir), keep);
+  let rep; ({ kv, rep } = await openKV(dir));
+  assert.strictEqual(rep.truncated.reason, &#039;torn-header&#039;);
+  assert.strictEqual(rep.truncated.droppedBytes, 10);
+  assert.strictEqual(kv.size, 2);
+  await kv.close();
+});
+
+test(&#039;a flipped bit stops recovery at that record, discarding everything after it&#039;, async () =&gt; {
+  const dir = tmp();
+  let { kv } = await openKV(dir);
+  await fill(kv, 6);
+  await kv.close();
+  const buf = fs.readFileSync(seg1(dir));
+  const off3 = recSize(&#039;k1&#039;, 1) + recSize(&#039;k2&#039;, 2); // start of record 3
+  buf[off3 + HEADER + 2] ^= 0x01;
+  fs.writeFileSync(seg1(dir), buf);
+  let rep; ({ kv, rep } = await openKV(dir));
+  assert.strictEqual(rep.truncated.reason, &#039;crc-mismatch&#039;);
+  assert.strictEqual(rep.truncated.offset, off3);
+  assert.deepStrictEqual([...kv.data.keys()], [&#039;k1&#039;, &#039;k2&#039;]); // 4..6 were valid but unreachable
+  await kv.close();
+});
+
+test(&#039;zero-filled tail and absurd length fields are corruption, not data&#039;, async () =&gt; {
+  const dir = tmp();
+  let { kv } = await openKV(dir);
+  await fill(kv, 2);
+  await kv.close();
+  fs.appendFileSync(seg1(dir), Buffer.alloc(64)); // preallocated-but-unwritten blocks
+  let rep; ({ kv, rep } = await openKV(dir));
+  assert.strictEqual(rep.truncated.reason, &#039;crc-mismatch&#039;);
+  assert.strictEqual(kv.size, 2);
+  await kv.close();
+  const junk = Buffer.alloc(HEADER); junk.writeUInt32LE(0xfffffff0, 0);
+  fs.appendFileSync(seg1(dir), junk);
+  ({ kv, rep } = await openKV(dir));
+  assert.strictEqual(rep.truncated.reason, &#039;bad-length&#039;);
+  await kv.close();
+});
+
+test(&#039;a multi-op batch is atomic: a torn batch applies none of its ops&#039;, async () =&gt; {
+  const dir = tmp();
+  let { kv } = await openKV(dir);
+  await kv.put(&#039;balance:alice&#039;, 100);
+  await kv.batch([{ op: &#039;put&#039;, key: &#039;balance:alice&#039;, value: 50 }, { op: &#039;put&#039;, key: &#039;balance:bob&#039;, value: 50 }]);
+  await kv.close();
+  fs.truncateSync(seg1(dir), fs.statSync(seg1(dir)).size - 1);
+  ({ kv } = await openKV(dir));
+  assert.strictEqual(kv.get(&#039;balance:alice&#039;), 100);
+  assert.strictEqual(kv.get(&#039;balance:bob&#039;), undefined);
+  await kv.close();
+});
+
+test(&#039;group commit coalesces concurrent writes into one fsync&#039;, async () =&gt; {
+  const always = (await openKV(tmp(), { sync: &#039;always&#039; })).kv;
+  await Promise.all(Array.from({ length: 50 }, (_, i) =&gt; always.put(`k${i}`, i)));
+  assert.strictEqual(always.wal.stats.fsyncs, 50);
+  await always.close();
+
+  const group = (await openKV(tmp(), { sync: &#039;group&#039;, groupMaxRecords: 1000 })).kv;
+  const lsns = await Promise.all(Array.from({ length: 50 }, (_, i) =&gt; group.put(`k${i}`, i)));
+  assert.strictEqual(group.wal.stats.fsyncs, 1);
+  assert.deepStrictEqual(lsns, Array.from({ length: 50 }, (_, i) =&gt; i + 1));
+  const capped = (await openKV(tmp(), { sync: &#039;group&#039;, groupMaxRecords: 16 })).kv;
+  await Promise.all(Array.from({ length: 50 }, (_, i) =&gt; capped.put(`k${i}`, i)));
+  assert.strictEqual(capped.wal.stats.fsyncs, 4); // 16+16+16 at the cap, 2 on the next tick
+  await group.close(); await capped.close();
+});
+
+test(&#039;group commit: writes not yet fsynced are invisible, rejected and lost on crash&#039;, async () =&gt; {
+  const dir = tmp();
+  let { kv } = await openKV(dir, { sync: &#039;group&#039; });
+  await kv.put(&#039;durable&#039;, 1);
+  const p = kv.put(&#039;pending&#039;, 2);
+  assert.strictEqual(kv.get(&#039;pending&#039;), undefined); // not visible before fsync
+  kv.simulateCrash();
+  await assert.rejects(p, /crashed before fsync/);
+  ({ kv } = await openKV(dir));
+  assert.strictEqual(kv.get(&#039;durable&#039;), 1);
+  assert.strictEqual(kv.get(&#039;pending&#039;), undefined);
+  await kv.close();
+});
+
+test(&#039;checkpoint snapshots state, deletes covered segments, replays only the tail&#039;, async () =&gt; {
+  const dir = tmp();
+  let { kv } = await openKV(dir);
+  await fill(kv, 10);
+  const cp = kv.checkpoint();
+  assert.strictEqual(cp.lsn, 10);
+  assert.deepStrictEqual(cp.removedSegments, [segName(1)]);
+  await kv.put(&#039;k1&#039;, &#039;overwritten&#039;); await kv.del(&#039;k2&#039;);
+  kv.simulateCrash();
+  let rep; ({ kv, rep } = await openKV(dir));
+  assert.strictEqual(rep.snapshotLsn, 10);
+  assert.strictEqual(rep.replayed, 2);
+  assert.strictEqual(kv.get(&#039;k1&#039;), &#039;overwritten&#039;);
+  assert.strictEqual(kv.get(&#039;k2&#039;), undefined);
+  assert.strictEqual(kv.get(&#039;k10&#039;), 10);
+  assert.strictEqual(await kv.put(&#039;next&#039;, 1), 13);
+  await kv.close();
+});
+
+test(&#039;crash between log roll and snapshot write is harmless&#039;, async () =&gt; {
+  const dir = tmp();
+  let { kv } = await openKV(dir);
+  await fill(kv, 4);
+  kv.wal.roll(); // step 1 of checkpoint happened, then we &quot;crash&quot;
+  kv.simulateCrash();
+  let rep; ({ kv, rep } = await openKV(dir));
+  assert.strictEqual(rep.snapshotLsn, 0);
+  assert.strictEqual(kv.size, 4);
+  await kv.close();
+});
+
+test(&#039;mid-log corruption: tolerate-tail refuses, point-in-time cuts and drops later segments&#039;, async () =&gt; {
+  const dir = tmp();
+  let { kv } = await openKV(dir, { segmentBytes: 100 }); // ~3 records per segment
+  await fill(kv, 12);
+  await kv.close();
+  const segs = fs.readdirSync(dir).filter((f) =&gt; f.endsWith(&#039;.log&#039;)).sort();
+  assert.ok(segs.length &gt;= 3, `expected several segments, got ${segs.length}`);
+  const victim = path.join(dir, segs[1]);
+  const buf = fs.readFileSync(victim); buf[HEADER + 1] ^= 0xff; fs.writeFileSync(victim, buf);
+  assert.throws(() =&gt; new DurableKV(dir).open(), WalCorruptionError);
+  let rep; ({ kv, rep } = await openKV(dir, { recoveryMode: &#039;point-in-time&#039; }));
+  assert.strictEqual(rep.truncated.segment, segs[1]);
+  assert.strictEqual(rep.removedSegments.length, segs.length - 2);
+  const firstOfVictim = Number(segs[1].slice(4, 24));
+  assert.strictEqual(kv.size, firstOfVictim - 1);
+  await kv.close();
+});
+
+test(&#039;a corrupted snapshot is reported, never silently used&#039;, async () =&gt; {
+  const dir = tmp();
+  const { kv } = await openKV(dir);
+  await fill(kv, 3); kv.checkpoint(); await kv.close();
+  const f = path.join(dir, &#039;snapshot.json&#039;);
+  fs.writeFileSync(f, fs.readFileSync(f, &#039;utf8&#039;).replace(&#039;&quot;k1&quot;,1&#039;, &#039;&quot;k1&quot;,9&#039;));
+  assert.throws(() =&gt; new DurableKV(dir).open(), /snapshot checksum/);
+});
+
+test(&#039;invalid input is rejected before anything is logged&#039;, async () =&gt; {
+  const { kv } = await openKV(tmp(), { maxRecordBytes: 64 });
+  assert.throws(() =&gt; kv.batch([]), TypeError);
+  assert.throws(() =&gt; kv.batch([{ op: &#039;upsert&#039;, key: &#039;a&#039; }]), TypeError);
+  assert.throws(() =&gt; kv.put(&#039;&#039;, 1), TypeError);
+  assert.throws(() =&gt; kv.put(&#039;a&#039;, undefined), TypeError);
+  assert.throws(() =&gt; kv.put(&#039;big&#039;, &#039;x&#039;.repeat(100)), RangeError);
+  assert.strictEqual(kv.wal.nextLsn, 1);
+  assert.throws(() =&gt; new DurableKV(tmp(), { sync: &#039;sometimes&#039; }), RangeError);
+  assert.throws(() =&gt; new WriteAheadLog(&#039;&#039;), TypeError);
+  assert.throws(() =&gt; new WriteAheadLog(tmp()).append(1, Buffer.alloc(1)), /not open/);
+  await kv.close();
+});
+
+(async () =&gt; {
+  let failed = 0;
+  for (const t of tests) {
+    try { await t.fn(); console.log(`✓ ${t.name}`); } catch (err) { failed++; console.log(`✗ ${t.name}\n  ${err.stack}`); }
+  }
+  for (const d of dirs) fs.rmSync(d, { recursive: true, force: true });
+  console.log(`\n${tests.length - failed}/${tests.length} passed`);
+  process.exit(failed ? 1 : 0);
+})();
+</code></pre>
+          </div>
+      </div>
+
+      <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
+        <div id="codelab-mount-write-ahead-log" class="build-lab-overlay__mount" data-build-id="write-ahead-log"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=04a1ea8061"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=3676a86b01"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=154eb461ef"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=b79de4edf4"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=262e2d34b8"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

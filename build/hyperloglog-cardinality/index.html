@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization) — Interactive Build Lab | System Design In Depth</title>
+  <meta name="description" content="HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization): A HyperLogLog with precision 4–16, a 64-bit hash, max-rank registers, the harmonic-mean...">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization) — Interactive Build Lab | System Design In Depth">
+  <meta property="og:description" content="HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization): A HyperLogLog with precision 4–16, a 64-bit hash, max-rank registers, the harmonic-mean...">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/build/hyperloglog-cardinality/">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization) — Interactive Build Lab | System Design In Depth">
+  <meta name="twitter:description" content="HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization): A HyperLogLog with precision 4–16, a 64-bit hash, max-rank registers, the harmonic-mean...">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/hyperloglog-cardinality/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
+  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
+  <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
+  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="css/code-lab.css?v=2b9944bcbd">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=6e3af86ba6"></script>
+  <script src="js/manifest.js?v=2fe59c81f7"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization) — Interactive Build Lab",
+  "description": "HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization): A HyperLogLog with precision 4–16, a 64-bit hash, max-rank registers, the harmonic-mean...",
+  "url": "https://system-design-in-depth.vedgupta.in/build/hyperloglog-cardinality/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" style="display:flex; gap:0.4rem; margin-right:0.5rem;">
+        <a href="#/glossary" class="btn btn--sm btn--outline" style="font-size:11px; padding:4px 8px; text-decoration:none; white-space:nowrap;">📖 Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
+      <button class="sidebar__tab sidebar__tab--active" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div class="builds-sidebar"><div class="builds-sidebar__intro">
+    Full from-scratch Node.js implementations with Guided Interactive Labs, zero dependencies, and complete test suites.
+  </div><a class="unit-item unit-item--build " href="/build/load-balancer-from-scratch/" data-build="load-balancer-from-scratch">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/consistent-hashing-ring/" data-build="consistent-hashing-ring">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Consistent Hashing Ring with Virtual Nodes</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/sliding-window-rate-limiter/" data-build="sliding-window-rate-limiter">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lru-cache/" data-build="lru-cache">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LRU Cache (Doubly Linked List + Hash Map)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/ttl-cache-reaper/" data-build="ttl-cache-reaper">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">TTL Cache with a Redis-Style Adaptive Reaper</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/bloom-filter-membership/" data-build="bloom-filter-membership">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Bloom Filter Membership Testing</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/snowflake-id-generator/" data-build="snowflake-id-generator">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Snowflake 64-bit ID Generator</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/keyset-pagination-cursors/" data-build="keyset-pagination-cursors">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/write-ahead-log/" data-build="write-ahead-log">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Write-Ahead Log (WAL) &amp; Crash Recovery</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lsm-tree-kv-store/" data-build="lsm-tree-kv-store">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LSM-Tree Key/Value Store (WAL, Memtable, SSTables, Compaction)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lease-leader-election/" data-build="lease-leader-election">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Lease-Based Leader Election with Fencing Tokens</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/gossip-protocol/" data-build="gossip-protocol">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/merkle-anti-entropy/" data-build="merkle-anti-entropy">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build unit-item--active" href="/build/hyperloglog-cardinality/" data-build="hyperloglog-cardinality">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/tiny-search-engine/" data-build="tiny-search-engine">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+        <span class="unit-item__meta">8 files · Interactive Lab</span>
+      </div>
+    </a></div>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered-build="hyperloglog-cardinality">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> From-Scratch Build</span>
+        </div>
+        <h1 class="lesson-header__title">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</h1>
+        <p class="build-summary">A HyperLogLog with precision 4–16, a 64-bit hash, max-rank registers, the harmonic-mean estimator with alpha_m and linear counting (plus Ertl&#039;s improved estimator), exact cross-precision merge and 6-bit packed serialization. Tests check the 1.04/sqrt(m) error bound on up to 1M seeded distinct items.</p>
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~35 min</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Advanced</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="#" data-nav="topic" data-slug="hyperloglog-cardinality-estimation">HyperLogLog cardinality estimation</a>, <a href="#" data-nav="topic" data-slug="mergeable-sketches-for-analytics">Mergeable sketches for analytics</a>, <a href="#" data-nav="topic" data-slug="counting-at-scale">Counting at scale</a>, <a href="#" data-nav="topic" data-slug="view-counting-at-scale">View counting at scale</a>, <a href="#" data-nav="topic" data-slug="impression-counting-system-design">Impression counting</a>, <a href="#" data-nav="topic" data-slug="bucketed-time-window-aggregation">Bucketed time-window aggregation</a>, <a href="#" data-nav="topic" data-slug="count-min-sketch">Count-min sketch</a></span>
+        </div>
+      </div>
+
+      <div class="build-view-tabs" role="tablist" aria-label="Build View Mode">
+        <button type="button" class="build-view-tab active" role="tab" aria-selected="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Architecture &amp; Reference Code</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="guided">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>Interactive Lab IDE</span>
+          <span class="build-view-tab__badge">0/4 Steps</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="sandbox">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Sandbox Mode</span>
+        </button>
+      </div>
+
+      <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
+        <div class="build-lab-card__top">
+          <div class="build-lab-card__intro">
+            <div class="build-lab-card__eyebrow">
+              <span>Interactive Build Lab</span>
+              <span class="build-lab-card__progress" id="build-lab-progress-badge">0/4 Steps Completed</span>
+            </div>
+            <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
+            <p class="build-lab-card__desc">
+              Complete 4 progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+            </p>
+            <div class="build-lab-progress-track" aria-hidden="true">
+              <div class="build-lab-progress-track__fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="build-lab-card__cta-col">
+            <button type="button" class="btn btn--primary build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="guided">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Launch Guided Lab</span>
+            </button>
+            <button type="button" class="btn btn--outline build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="sandbox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Open Full Solution</span>
+            </button>
+          </div>
+        </div>
+
+        
+          <div class="build-lab-steps-grid" id="build-lab-steps-grid">
+            
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="0">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">01</span>
+                    <span class="build-lab-step-card__target">hll.js · HyperLogLog.addHash</span>
+                  </div>
+                  <div class="build-lab-step-card__title">64-Bit Hash Substream Addressing &amp; Leading-Zero Rank</div>
+                  <div class="build-lab-step-card__concept">Stochastic Averaging &amp; Leading-Zero Rank Extraction</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>6 tests</span>
+                    <span class="build-lab-step-card__open">Step 1 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="1">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">02</span>
+                    <span class="build-lab-step-card__target">hll.js · HyperLogLog.estimate</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Harmonic Mean Raw Estimator &amp; Small-Range Linear Counting</div>
+                  <div class="build-lab-step-card__concept">Flajolet et al. Harmonic Mean &amp; Linear Counting Correction</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 2 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="2">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">03</span>
+                    <span class="build-lab-step-card__target">hll.js · HyperLogLog._ertl</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Ertl Improved Poisson Maximum-Likelihood Estimator</div>
+                  <div class="build-lab-step-card__concept">Ertl (2017) Register Histogram Estimator (Redis HLL)</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>1 test</span>
+                    <span class="build-lab-step-card__open">Step 3 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="3">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">04</span>
+                    <span class="build-lab-step-card__target">hll.js · HyperLogLog.withPrecision</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Exact Precision Folding &amp; Cross-Precision Union Merge</div>
+                  <div class="build-lab-step-card__concept">Lossless Precision Reduction (p -&gt; q) &amp; Commutative Sketch Union</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>4 tests</span>
+                    <span class="build-lab-step-card__open">Step 4 →</span>
+                  </div>
+                </button>
+              
+          </div>
+        
+      </section>
+
+      <div id="build-walkthrough-pane">
+        <div class="build-run">
+          <div class="build-run__text">
+            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
+            <code>node demo.js</code> and <code>node test.js</code>.
+          </div>
+          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="hyperloglog-cardinality">Copy setup script</button>
+        </div>
+
+        <div class="build-files"><a href="#build-file-hyperloglog-cardinality-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-hyperloglog-cardinality-README_md">README.md</a><a href="#build-file-hyperloglog-cardinality-hll_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-hyperloglog-cardinality-hll_js">hll.js</a><a href="#build-file-hyperloglog-cardinality-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-hyperloglog-cardinality-demo_js">demo.js</a><a href="#build-file-hyperloglog-cardinality-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-hyperloglog-cardinality-test_js">test.js</a></div><article class="prose" id="build-file-hyperloglog-cardinality-README_md"><h2>HyperLogLog Cardinality Estimation</h2>
+
+<p>A from-scratch HyperLogLog sketch in Node. It includes a 64-bit hash (two seeded MurmurHash3 halves), precision</p>
+<code>p</code> from 4 to 16, max-rank registers, the harmonic-mean estimator with <code>alpha_m</code>, linear counting for small
+<p>cardinalities, Ertl's improved estimator as an alternative, lossless merge (including across different precisions),</p>
+<p>and 6-bit packed serialization. Tests check the error against <code>3 x 1.04/sqrt(m)</code> on 100k and 1M seeded distinct items.</p>
+
+<h2>The problem</h2>
+
+<p>"How many distinct users/IPs/search terms/devices?" An exact answer needs memory proportional to the number of distinct</p>
+<p>items (a hash set of 100M ids is gigabytes), and exact sets from different shards or days can't be combined without</p>
+<p>shipping all of them. HyperLogLog answers within about 1% using <strong>12 KB</strong>, and sketches merge with a register-wise max.</p>
+<p>That means per-shard, per-minute or per-partition sketches can be rolled up to any window or grouping later.</p>
+
+<p>Where it shows up: Redis <code>PFADD</code>/<code>PFCOUNT</code>/<code>PFMERGE</code>, BigQuery <code>APPROX_COUNT_DISTINCT</code> and <code>HLL_COUNT.*</code>,</p>
+<p>Trino/Presto <code>approx_distinct</code>, Elasticsearch/OpenSearch <code>cardinality</code> aggregations, Druid and Apache DataSketches,</p>
+<p>Snowflake/Redshift approximate distinct, and the <code>postgresql-hll</code> extension.</p>
+
+<h2>Design</h2>
+
+<pre><code class="language-text">item ─► 64-bit hash ─► [ top p bits: register index j ][ remaining 64-p bits ]
+                                                          └─► rank = leading zeros + 1   (1 .. 64-p+1)
+registers[j] = max(registers[j], rank)</code></pre>
+
+<p>The intuition: in a stream of uniformly random bit strings, seeing a run of <code>r-1</code> leading zeros suggests about <code>2^r</code></p>
+<p>distinct values. One register would be hopelessly noisy, so HLL splits the stream into <code>m = 2^p</code> sub-streams by</p>
+<p>the top bits and combines them with a <strong>harmonic mean</strong>, which resists outliers:</p>
+
+<pre><code class="language-text">E_raw = alpha_m * m^2 / sum_j 2^(-M[j])
+alpha_16 = 0.673, alpha_32 = 0.697, alpha_64 = 0.709, alpha_m = 0.7213 / (1 + 1.079/m) for m &gt;= 128
+if E_raw &lt;= 2.5m and V registers are still zero:  E = m * ln(m / V)     (linear counting)</code></pre>
+
+<p>With a 64-bit hash, the 32-bit large-range correction from the original paper isn't needed: hash collisions stay negligible</p>
+<p>far beyond any realistic cardinality (Heule et al. 2013).</p>
+
+<strong>Hash.</strong> <code>hash64</code> runs MurmurHash3_x86_32 twice with independent seeds to produce <code>hi</code> and <code>lo</code>. The test suite checks
+<p>the implementation against the reference vectors and checks that all 64 output bits are balanced. Rank extraction</p>
+<p>crosses from <code>hi</code> into <code>lo</code> when the low <code>32-p</code> bits of <code>hi</code> are all zero, so ranks up to <code>64-p+1</code> really</p>
+<p>occur. There is a unit test for each boundary.</p>
+
+<strong>Invariants</strong>
+
+<ul>
+<li>Registers only grow. <code>add</code> is idempotent, so duplicates never change the sketch (tested).</li>
+<li><code>merge</code> is register-wise max: commutative, associative and idempotent. <code>a ∪ b</code> is <strong>bit-identical</strong> to a sketch</li>
+  built from the union stream (tested with overlapping sets).
+<li>Sketches only merge if they share a hash seed. Merging different precisions first folds the finer sketch down.</li>
+  <code>withPrecision(q)</code> is <em>exact</em>: the <code>p-q</code> index bits that get dropped become the first bits of the remainder
+  (new rank = their leading zeros + 1, or <code>(p-q) + old rank</code> if they're all zero). The tests show the result equals a
+  sketch built directly at <code>q</code>.
+<li>Serialization: <code>magic "HLL1" | version | p | seed u32 | registers packed 6 bits each</code> (p=14 → 12,298 bytes).</li>
+  Decoding rejects bad magic, bad length, invalid p and ranks above <code>64-p+1</code>.
+</ul>
+<h2>Accuracy and complexity</h2>
+
+<p>Relative standard error is <code>1.04 / sqrt(m)</code>. That's 26% at p=4, 3.25% at p=10, 0.81% at p=14 and 0.41% at p=16.</p>
+<p>The tests assert:</p>
+<ul>
+<li>every p in 4..16 is within 3σ at n = 100k and n = 1M</li>
+<li>RMS error over 30 independent seeds is within [0.5σ, 1.5σ] of 1.04/sqrt(m), and the mean bias is small</li>
+</ul>
+<table><thead><tr><th>Operation</th><th>Time</th><th>Space</th></tr></thead><tbody><tr><td><code>add</code></td><td>O(len(item)) hash + O(1) register update</td><td>—</td></tr><tr><td><code>estimate</code> / <code>merge</code> / <code>withPrecision</code></td><td>O(m)</td><td>m bytes in memory, 0.75·m bytes serialized</td></tr></tbody></table><strong>Transition-zone bias.</strong> Just after the linear-counting switch-over (about 2.5m < n < 5m), the classic estimator is
+<p>biased upward. At p=8 the demo measures about +2.3% at n = 2.6m, against about +0.8% for Ertl. That's why the 3σ test skips</p>
+<p>the classic estimator for p=15 at n=100k (n ≈ 3m) and checks only <code>estimate('ertl')</code> there. A separate test</p>
+<p>averages 300 runs to show the bump exists and that Ertl's estimator reduces it.</p>
+
+<h2>Failure modes and trade-offs</h2>
+
+<ul>
+<li><strong>Small p is noisy.</strong> p=4 gives ±26%. Most systems use p=12–14. Error depends only on m, not on n.</li>
+<li><strong>No deletes, no exact intersection.</strong> Intersection by inclusion-exclusion (<code>|A|+|B|-|A∪B|</code>) takes on the absolute</li>
+  error of the large sets, which is terrible when the overlap is small. Use MinHash or Theta sketches for set
+  similarity.
+<li><strong>Hash quality and hash agreement are correctness.</strong> A biased hash biases the estimate. Sketches built with a</li>
+  different hash or seed merge into garbage, which is why the seed is serialized and checked.
+<li><strong>Adversarial input.</strong> Anyone who knows the hash can craft items with huge ranks and inflate the count. Use a secret</li>
+  seed when inputs are attacker-controlled.
+<li><strong>Memory at low cardinality.</strong> A dense sketch costs 12 KB even for 3 items. Production systems start with a sparse</li>
+  encoding.
+</ul>
+<h2>How production systems do it</h2>
+
+<ul>
+<li><strong>Redis</strong> uses p = 14 (16,384 registers, 0.81% standard error), with 6-bit registers in a 12 KB dense</li>
+  encoding, a run-length <em>sparse</em> encoding for small sets that is promoted automatically, and MurmurHash64A. Since
+  Redis 5 it estimates with Ertl's improved algorithm, the same one as <code>estimate('ertl')</code>. <code>PFCOUNT</code> caches the
+  last estimate in the header.
+<li><strong>Google HLL++</strong> (BigQuery, and the ZetaSQL/<code>HLL_COUNT</code> functions) uses a 64-bit hash, empirical</li>
+  bias-correction tables for n < 5m, and a sparse representation at a higher precision (p' = 25) that gives
+  near-exact small counts.
+<li><strong>Apache DataSketches</strong> (Druid, Spark, Hive) ships HLL_4/6/8 register widths, plus Theta and CPC sketches for better</li>
+  accuracy per byte and for set operations.
+<li><strong>Elasticsearch</strong> <code>cardinality</code> uses HLL++ and is close to exact below a <code>precision_threshold</code>. <strong>Trino</strong> <code>approx_distinct</code></li>
+  (the Airlift HLL) defaults to a 2.3% standard error and switches between sparse and dense representations.
+</ul>
+<h2>How to run</h2>
+
+<pre><code class="language-text">node demo.js   # register updates, 1M-item accuracy, precision table, merge, fold, estimator comparison (~1.5 s)
+node test.js   # 14 tests, exits non-zero on failure</code></pre>
+
+<p>API: <code>new HyperLogLog(p = 14, { seed })</code>, <code>add(item)</code>, <code>addHash(hi, lo)</code>, <code>estimate('classic' | 'ertl')</code>,</p>
+<code>count()</code>, <code>standardError()</code>, <code>merge(other)</code>, <code>HyperLogLog.union(...s)</code>, <code>withPrecision(q)</code>, <code>serialize()</code>,
+<code>HyperLogLog.deserialize(buf)</code>, <code>clone()</code>, <code>equals()</code>.
+
+<h2>Extension exercises</h2>
+
+<ol>
+<li>Add a sparse representation (a sorted list of <code>(index, rank)</code> pairs at a higher precision, as in HLL++) that</li>
+   converts to dense once it would be larger than 0.75·m bytes. Measure error for n < 1000.
+<li>Replace <code>hash64</code> with a true 64-bit hash (xxHash64 or MurmurHash64A using BigInt or 16-bit limb multiplication)</li>
+   and benchmark throughput against the two-halves approach.
+<li>Build a sliding-window unique counter: one sketch per minute in a ring buffer, merged on query. What does a</li>
+   24-hour query cost?
+<li>Implement 4-bit registers with an offset (like DataSketches HLL_4) and compare memory and error.</li>
+<li>Estimate <code>|A ∩ B|</code> by inclusion-exclusion across a range of overlap ratios and plot where it becomes useless.</li>
+   Then compare with a MinHash (k=256) estimate.
+</ol></article>
+          <div class="code-block" id="build-file-hyperloglog-cardinality-hll_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">hll.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+// HyperLogLog cardinality sketch (Flajolet, Fusy, Gandouet, Meunier 2007) with the 64-bit-hash
+// simplifications from Heule, Nunkesser, Hall 2013 (&quot;HyperLogLog in Practice&quot;): no large-range
+// correction is needed, and linear counting handles the small range.
+//
+// Hash: 64 bits built from two independently seeded MurmurHash3_x86_32 passes (hi, lo).
+//   bits 63..(64-p)  -&gt; register index j   (top p bits of hi)
+//   remaining 64-p   -&gt; rank = (leading zeros of the remainder) + 1, in 1..(64-p+1)
+// Each register keeps the max rank it has seen; ranks fit in 6 bits for every p in 4..16.
+
+const MIN_P = 4, MAX_P = 16;
+const MAGIC = 0x484c4c31; // &quot;HLL1&quot;
+const HEADER = 10;        // magic u32 | version u8 | p u8 | seed u32
+
+// ---------------------------------------------------------------- hashing
+function murmur3_32(bytes, len, seed) {
+  const c1 = 0xcc9e2d51, c2 = 0x1b873593;
+  let h = seed &gt;&gt;&gt; 0, i = 0;
+  const blocks = len &amp; ~3;
+  for (; i &lt; blocks; i += 4) {
+    let k = bytes[i] | (bytes[i + 1] &lt;&lt; 8) | (bytes[i + 2] &lt;&lt; 16) | (bytes[i + 3] &lt;&lt; 24);
+    k = Math.imul(k, c1); k = (k &lt;&lt; 15) | (k &gt;&gt;&gt; 17); k = Math.imul(k, c2);
+    h ^= k; h = (h &lt;&lt; 13) | (h &gt;&gt;&gt; 19); h = (Math.imul(h, 5) + 0xe6546b64) | 0;
+  }
+  let k = 0;
+  switch (len &amp; 3) { // intentional fall-through, as in the reference implementation
+    case 3: k ^= bytes[i + 2] &lt;&lt; 16; // falls through
+    case 2: k ^= bytes[i + 1] &lt;&lt; 8;  // falls through
+    case 1: k ^= bytes[i]; k = Math.imul(k, c1); k = (k &lt;&lt; 15) | (k &gt;&gt;&gt; 17); k = Math.imul(k, c2); h ^= k;
+  }
+  h ^= len;
+  h ^= h &gt;&gt;&gt; 16; h = Math.imul(h, 0x85ebca6b); h ^= h &gt;&gt;&gt; 13; h = Math.imul(h, 0xc2b2ae35); h ^= h &gt;&gt;&gt; 16;
+  return h &gt;&gt;&gt; 0;
+}
+
+const encoder = new TextEncoder();
+let scratch = new Uint8Array(256);
+function toBytes(item) { // -&gt; [bytes, length]; reuses a scratch buffer for strings (hot path)
+  if (item instanceof Uint8Array) return [item, item.length];
+  if (typeof item === &#039;number&#039; || typeof item === &#039;bigint&#039;) item = String(item);
+  if (typeof item !== &#039;string&#039;) throw new TypeError(&#039;item must be a string, number, bigint or Uint8Array&#039;);
+  if (item.length * 3 &gt; scratch.length) scratch = new Uint8Array(item.length * 3);
+  return [scratch, encoder.encodeInto(item, scratch).written];
+}
+const SEED_LO = 0x5bd1e995;
+function hash64(item, seed = 0) { // -&gt; { hi, lo } unsigned 32-bit halves
+  const [b, n] = toBytes(item);
+  return { hi: murmur3_32(b, n, seed), lo: murmur3_32(b, n, (seed ^ SEED_LO) &gt;&gt;&gt; 0) };
+}
+
+// ---------------------------------------------------------------- estimator constants
+function alpha(m) { // bias correction for the harmonic mean (FFGM07, section 4)
+  if (m === 16) return 0.673;
+  if (m === 32) return 0.697;
+  if (m === 64) return 0.709;
+  return 0.7213 / (1 + 1.079 / m);
+}
+function sigma(x) { // x + sum_k 2^(k-1) x^(2^k); diverges at x = 1 (empty sketch -&gt; estimate 0)
+  if (x === 1) return Infinity;
+  let y = 1, z = x, prev;
+  do { x *= x; prev = z; z += x * y; y += y; } while (z !== prev);
+  return z;
+}
+function tau(x) {
+  if (x === 0 || x === 1) return 0;
+  let y = 1, z = 1 - x, prev;
+  do { x = Math.sqrt(x); prev = z; y *= 0.5; z -= (1 - x) * (1 - x) * y; } while (z !== prev);
+  return z / 3;
+}
+const POW2NEG = Float64Array.from({ length: 66 }, (_, r) =&gt; Math.pow(2, -r));
+
+class HyperLogLog {
+  constructor(p = 14, { seed = 0 } = {}) {
+    if (!Number.isInteger(p) || p &lt; MIN_P || p &gt; MAX_P) throw new RangeError(`precision p must be an integer in [${MIN_P}, ${MAX_P}]`);
+    if (!Number.isInteger(seed) || seed &lt; 0 || seed &gt; 0xffffffff) throw new RangeError(&#039;seed must be a uint32&#039;);
+    this.p = p; this.m = 1 &lt;&lt; p; this.seed = seed;
+    this.registers = new Uint8Array(this.m);
+  }
+
+  add(item) { const h = hash64(item, this.seed); return this.addHash(h.hi, h.lo); }
+
+  // Returns true if a register changed (useful for &quot;did cardinality possibly grow?&quot;).
+  addHash(hi, lo) {
+    const p = this.p, j = hi &gt;&gt;&gt; (32 - p);
+    // remainder = low (32-p) bits of hi followed by 32 bits of lo  (64-p bits total)
+    const hiRest = (hi &lt;&lt; p) &gt;&gt;&gt; 0; // left-aligned; low p bits are zero padding
+    let rank;
+    if (hiRest !== 0) rank = Math.clz32(hiRest) + 1;              // first 1 lies in the hi part
+    else rank = (32 - p) + (lo === 0 ? 32 : Math.clz32(lo)) + 1;  // all hi bits zero: continue into lo
+    if (rank &gt; this.registers[j]) { this.registers[j] = rank; return true; }
+    return false;
+  }
+
+  // estimate(&quot;classic&quot;) [default]: the FFGM07 harmonic mean with alpha_m, switching to linear counting
+  // when E &lt;= 5m/2 and some register is still empty. estimate(&quot;ertl&quot;): see _ertl() below.
+  estimate(method = &quot;classic&quot;) {
+    if (method === &quot;ertl&quot;) return this._ertl();
+    if (method !== &quot;classic&quot;) throw new RangeError(&quot;method must be \&quot;classic\&quot; or \&quot;ertl\&quot;&quot;);
+    const m = this.m, R = this.registers;
+    let sum = 0, zeros = 0;
+    for (let j = 0; j &lt; m; j++) { sum += POW2NEG[R[j]]; if (R[j] === 0) zeros++; }
+    const raw = alpha(m) * m * m / sum;
+    if (raw &lt;= 2.5 * m &amp;&amp; zeros &gt; 0) return m * Math.log(m / zeros); // linear counting (small range)
+    return raw; // 64-bit hash: collisions are negligible far past 2^32, so no large-range correction
+  }
+  count(method) { return Math.round(this.estimate(method)); }
+
+  // Ertl 2017, &quot;New cardinality estimation algorithms for HyperLogLog sketches&quot; (used by Redis &gt;= 5).
+  // Works on the register-value histogram C[0..q+1] and needs no empirical tables. It removes the
+  // bias bump that the classic estimator shows just past its linear-counting switch-over (n ~ 2.5m..5m).
+  _ertl() {
+    const m = this.m, q = 64 - this.p, C = new Float64Array(q + 2);
+    for (let j = 0; j &lt; m; j++) C[this.registers[j]]++;
+    let z = m * tau(1 - C[q + 1] / m);
+    for (let k = q; k &gt;= 1; k--) z = 0.5 * (z + C[k]);
+    z += m * sigma(C[0] / m);
+    return m * m / (2 * Math.LN2 * z); // alpha_inf = 1 / (2 ln 2)
+  }
+  standardError() { return 1.04 / Math.sqrt(this.m); }
+
+  _assertCompatible(other) {
+    if (!(other instanceof HyperLogLog)) throw new TypeError(&#039;can only merge another HyperLogLog&#039;);
+    if (other.seed !== this.seed) throw new Error(&#039;cannot merge sketches built with different hash seeds&#039;);
+  }
+  // Union: register-wise max. Commutative, associative, idempotent, so it is safe to merge
+  // partial sketches from shards, time buckets or retries in any order. Sketches with different
+  // precision are merged by first folding the finer one down to the coarser precision.
+  merge(other) {
+    this._assertCompatible(other);
+    if (other.p &lt; this.p) { const folded = this.withPrecision(other.p); this.p = folded.p; this.m = folded.m; this.registers = folded.registers; }
+    const src = other.p === this.p ? other.registers : other.withPrecision(this.p).registers;
+    for (let j = 0; j &lt; this.m; j++) if (src[j] &gt; this.registers[j]) this.registers[j] = src[j];
+    return this;
+  }
+  static union(...sketches) {
+    if (!sketches.length) throw new Error(&#039;union needs at least one sketch&#039;);
+    return sketches.reduce((acc, s) =&gt; acc.merge(s), sketches[0].clone());
+  }
+
+  // Exact precision reduction: result equals a sketch built directly at precision q from the same items.
+  // The d = p - q low index bits move to the front of the remainder:
+  //   those bits != 0  -&gt; new rank = leading zeros within the d bits + 1   (old rank no longer matters)
+  //   those bits == 0  -&gt; new rank = d + old rank
+  withPrecision(q) {
+    if (!Number.isInteger(q) || q &lt; MIN_P || q &gt; this.p) throw new RangeError(`target precision must be in [${MIN_P}, ${this.p}]`);
+    const out = new HyperLogLog(q, { seed: this.seed }), d = this.p - q;
+    if (d === 0) { out.registers.set(this.registers); return out; }
+    for (let j = 0; j &lt; this.m; j++) {
+      const r = this.registers[j];
+      if (r === 0) continue; // no item landed here
+      const low = j &amp; ((1 &lt;&lt; d) - 1), nj = j &gt;&gt;&gt; d;
+      const nr = low !== 0 ? Math.clz32(low) - (32 - d) + 1 : d + r;
+      if (nr &gt; out.registers[nj]) out.registers[nj] = nr;
+    }
+    return out;
+  }
+
+  clone() { const c = new HyperLogLog(this.p, { seed: this.seed }); c.registers.set(this.registers); return c; }
+  equals(other) { return other instanceof HyperLogLog &amp;&amp; other.p === this.p &amp;&amp; other.seed === this.seed &amp;&amp; Buffer.compare(Buffer.from(this.registers), Buffer.from(other.registers)) === 0; }
+
+  // Dense 6-bit packed encoding (as in Redis&#039; dense representation): p=14 -&gt; 12 KB + header.
+  serialize() {
+    const out = Buffer.alloc(HEADER + Math.ceil(this.m * 6 / 8));
+    out.writeUInt32LE(MAGIC, 0); out.writeUInt8(1, 4); out.writeUInt8(this.p, 5); out.writeUInt32LE(this.seed, 6);
+    for (let j = 0; j &lt; this.m; j++) {
+      const bit = j * 6, byte = HEADER + (bit &gt;&gt; 3), shift = bit &amp; 7, v = this.registers[j];
+      out[byte] |= (v &lt;&lt; shift) &amp; 0xff;
+      if (shift &gt; 2) out[byte + 1] |= v &gt;&gt; (8 - shift); // register straddles a byte boundary
+    }
+    return out;
+  }
+  static deserialize(buf) {
+    if (!(buf instanceof Uint8Array) || buf.length &lt; HEADER) throw new Error(&#039;not an HLL buffer&#039;);
+    const b = Buffer.from(buf.buffer, buf.byteOffset, buf.length);
+    if (b.readUInt32LE(0) !== MAGIC || b.readUInt8(4) !== 1) throw new Error(&#039;bad HLL magic/version&#039;);
+    const s = new HyperLogLog(b.readUInt8(5), { seed: b.readUInt32LE(6) }); // validates p
+    if (b.length !== HEADER + Math.ceil(s.m * 6 / 8)) throw new Error(`bad HLL length ${b.length} for p=${s.p}`);
+    const maxRank = 64 - s.p + 1;
+    for (let j = 0; j &lt; s.m; j++) {
+      const bit = j * 6, byte = HEADER + (bit &gt;&gt; 3), shift = bit &amp; 7;
+      let v = b[byte] &gt;&gt; shift;
+      if (shift &gt; 2) v |= b[byte + 1] &lt;&lt; (8 - shift);
+      v &amp;= 0x3f;
+      if (v &gt; maxRank) throw new Error(`register ${j} holds impossible rank ${v}`);
+      s.registers[j] = v;
+    }
+    return s;
+  }
+}
+
+module.exports = { HyperLogLog, hash64, murmur3_32, alpha, MIN_P, MAX_P };
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-hyperloglog-cardinality-demo_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">demo.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+// Deterministic HyperLogLog walkthrough: registers, accuracy vs precision, merging, serialization.
+const { HyperLogLog, hash64 } = require(&#039;./hll&#039;);
+
+function mulberry32(seed) {
+  return () =&gt; { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed &gt;&gt;&gt; 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t &gt;&gt;&gt; 7), 61 | t)) ^ t; return ((t ^ (t &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296; };
+}
+const pct = (x) =&gt; (x * 100).toFixed(2) + &#039;%&#039;;
+const bin = (x, w) =&gt; (x &gt;&gt;&gt; 0).toString(2).padStart(32, &#039;0&#039;).slice(0, w);
+
+console.log(&#039;== 1. One item -&gt; one register update (p = 4, so 16 registers)&#039;);
+const tiny = new HyperLogLog(4);
+for (const item of [&#039;alice&#039;, &#039;bob&#039;, &#039;carol&#039;]) {
+  const { hi, lo } = hash64(item);
+  const j = hi &gt;&gt;&gt; 28;
+  tiny.addHash(hi, lo);
+  console.log(`   ${item.padEnd(6)} hash=${bin(hi, 32)}...  index=${bin(hi, 4)} (${j})  rest=${bin(hi &lt;&lt; 4, 12)}...  -&gt; register[${j}] = ${tiny.registers[j]}`);
+}
+console.log(&#039;   rank = leading zeros of the remaining 60 bits + 1; each register keeps its max rank&#039;);
+
+console.log(&#039;\n== 2. 1,000,000 distinct visitors (plus 1,000,000 repeat visits) into a p=14 sketch&#039;);
+const rnd = mulberry32(2026), sketch = new HyperLogLog(14), exact = new Set();
+for (let i = 0; i &lt; 2000000; i++) {
+  const user = &#039;user-&#039; + (i &lt; 1000000 ? i : Math.floor(rnd() * 1000000)); // second half = repeats
+  sketch.add(user);
+  exact.add(user);
+}
+const est = sketch.estimate();
+console.log(`   exact distinct = ${exact.size.toLocaleString(&#039;en-US&#039;)}   HLL estimate = ${Math.round(est).toLocaleString(&#039;en-US&#039;)}   error = ${pct((est - exact.size) / exact.size)}`);
+console.log(`   expected standard error 1.04/sqrt(16384) = ${pct(sketch.standardError())}; sketch = ${sketch.serialize().length} bytes vs tens of MB for the exact Set`);
+
+console.log(&#039;\n== 3. Precision trade-off at n = 1,000,000 (one pass, same hashes into every sketch)&#039;);
+const bank = []; for (let p = 4; p &lt;= 16; p += 2) bank.push(new HyperLogLog(p));
+for (let i = 0; i &lt; 1000000; i++) { const { hi, lo } = hash64(&#039;user-&#039; + i); for (const s of bank) s.addHash(hi, lo); }
+console.log(&#039;    p   registers   bytes    1.04/sqrt(m)   actual error   within 3σ?&#039;);
+for (const s of bank) {
+  const e = (s.estimate() - 1e6) / 1e6;
+  console.log(`   ${String(s.p).padStart(2)}  ${String(s.m).padStart(9)}  ${String(s.serialize().length).padStart(6)}   ${pct(s.standardError()).padStart(12)}   ${pct(e).padStart(12)}   ${Math.abs(e) &lt; 3 * s.standardError() ? &#039;yes&#039; : &#039;NO&#039;}`);
+}
+
+console.log(&#039;\n== 4. Merging: daily-unique sketches -&gt; 3-day uniques without re-reading events&#039;);
+const days = [[0, 400000], [300000, 700000], [650000, 900000]]; // overlapping user-id ranges
+const daily = days.map(([a, b]) =&gt; { const h = new HyperLogLog(14); for (let u = a; u &lt; b; u++) h.add(&#039;user-&#039; + u); return h; });
+daily.forEach((h, d) =&gt; console.log(`   day ${d + 1}: users ${days[d][0]}..${days[d][1] - 1}  estimate ${h.count().toLocaleString(&#039;en-US&#039;)}`));
+const threeDay = HyperLogLog.union(...daily);
+console.log(`   union (register-wise max): ${threeDay.count().toLocaleString(&#039;en-US&#039;)}  (exact 900,000; sum of dailies would say ${daily.reduce((a, h) =&gt; a + h.count(), 0).toLocaleString(&#039;en-US&#039;)})`);
+const inter = daily[0].estimate() + daily[1].estimate() - HyperLogLog.union(daily[0], daily[1]).estimate();
+console.log(`   day1 AND day2 by inclusion-exclusion: ${Math.round(inter).toLocaleString(&#039;en-US&#039;)} (exact 100,000) - intersections inherit the error of the big sets`);
+
+console.log(&#039;\n== 5. Different precisions merge by exact folding; serialization is 6 bits per register&#039;);
+const coarse = new HyperLogLog(10); for (let u = 900000; u &lt; 1000000; u++) coarse.add(&#039;user-&#039; + u);
+const mixed = threeDay.clone().merge(coarse);
+console.log(`   p=14 sketch merged with p=10 sketch -&gt; p=${mixed.p}, estimate ${mixed.count().toLocaleString(&#039;en-US&#039;)} (exact 1,000,000; σ at p=10 is ${pct(mixed.standardError())})`);
+const wire = threeDay.serialize(), back = HyperLogLog.deserialize(wire);
+console.log(`   serialized p=14 sketch: ${wire.length} bytes; round-trip identical: ${back.equals(threeDay)}`);
+
+console.log(&#039;\n== 6. Estimator choice around the linear-counting switch-over (p=8, mean of 200 runs)&#039;);
+console.log(&#039;   n/m    classic bias   ertl bias&#039;);
+for (const ratio of [1, 2, 2.6, 3.5, 5, 10]) {
+  const n = Math.round(ratio * 256); let c = 0, e = 0;
+  for (let r = 0; r &lt; 200; r++) {
+    const h = new HyperLogLog(8);
+    for (let i = 0; i &lt; n; i++) h.add(`run${r}-${i}`);
+    c += (h.estimate() - n) / n; e += (h.estimate(&#039;ertl&#039;) - n) / n;
+  }
+  console.log(`   ${ratio.toFixed(1).padStart(4)}   ${pct(c / 200).padStart(12)}   ${pct(e / 200).padStart(9)}`);
+}
+console.log(&#039;   classic HLL overestimates just past 2.5m; HLL++ patches this with empirical bias tables, Ertl (Redis) analytically&#039;);
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-hyperloglog-cardinality-test_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">test.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const assert = require(&#039;node:assert/strict&#039;);
+const { HyperLogLog, hash64, murmur3_32, alpha } = require(&#039;./hll&#039;);
+
+let failed = 0;
+function test(name, fn) {
+  try { fn(); console.log(&#039;✓ &#039; + name); }
+  catch (e) { failed++; console.log(&#039;✗ &#039; + name + &#039;\n    &#039; + (e &amp;&amp; e.stack || e)); }
+}
+function mulberry32(seed) {
+  return () =&gt; { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed &gt;&gt;&gt; 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t &gt;&gt;&gt; 7), 61 | t)) ^ t; return ((t ^ (t &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296; };
+}
+// Seeded generator of DISTINCT items: a random 64-bit-ish prefix per run plus a counter.
+function distinctItems(seed) {
+  const r = mulberry32(seed), tag = Math.floor(r() * 2 ** 32).toString(36);
+  return (i) =&gt; `${tag}-${i}`;
+}
+const relErr = (est, n) =&gt; Math.abs(est - n) / n;
+
+test(&#039;murmur3_32 matches reference test vectors&#039;, () =&gt; {
+  const enc = (s) =&gt; { const b = Buffer.from(s, &#039;utf8&#039;); return [b, b.length]; };
+  assert.equal(murmur3_32(...enc(&#039;&#039;), 0), 0);
+  assert.equal(murmur3_32(...enc(&#039;&#039;), 1), 0x514e28b7);
+  assert.equal(murmur3_32(...enc(&#039;hello&#039;), 0), 0x248bfa47);
+  assert.equal(murmur3_32(...enc(&#039;The quick brown fox jumps over the lazy dog&#039;), 0), 0x2e4ff723);
+  assert.equal(murmur3_32(...enc(&#039;abc&#039;), 0), 0xb3dd93fa);
+});
+
+test(&#039;64-bit hash: every one of the 64 bits is set ~50% of the time&#039;, () =&gt; {
+  const n = 100000, counts = new Array(64).fill(0);
+  for (let i = 0; i &lt; n; i++) {
+    const { hi, lo } = hash64(&#039;bit-balance-&#039; + i);
+    for (let b = 0; b &lt; 32; b++) { counts[b] += (hi &gt;&gt;&gt; b) &amp; 1; counts[32 + b] += (lo &gt;&gt;&gt; b) &amp; 1; }
+  }
+  for (const c of counts) assert.ok(Math.abs(c / n - 0.5) &lt; 0.01, &#039;bit frequency &#039; + c / n); // 6.3 sigma
+});
+
+test(&#039;precision and seed validation&#039;, () =&gt; {
+  for (const p of [3, 17, 10.5, &#039;12&#039;, NaN]) assert.throws(() =&gt; new HyperLogLog(p), RangeError);
+  assert.throws(() =&gt; new HyperLogLog(12, { seed: -1 }), RangeError);
+  assert.throws(() =&gt; new HyperLogLog(12).add({}), TypeError);
+  assert.equal(new HyperLogLog(4).m, 16);
+  assert.equal(new HyperLogLog(16).m, 65536);
+  assert.equal(alpha(16), 0.673);
+  assert.ok(Math.abs(alpha(1 &lt;&lt; 14) - 0.7213 / (1 + 1.079 / 16384)) &lt; 1e-15);
+});
+
+test(&#039;rank extraction: index from the top p bits, rank = leading zeros of the rest + 1&#039;, () =&gt; {
+  const h = new HyperLogLog(4);
+  h.addHash(0xf8000000, 0); assert.equal(h.registers[15], 1);       // 1111 | 1...
+  h.addHash(0x10800000, 0); assert.equal(h.registers[1], 5);        // 0001 | 0000 1...
+  h.addHash(0x20000000, 0x80000000); assert.equal(h.registers[2], 29); // 28 zero bits in hi, then 1
+  h.addHash(0x30000000, 0); assert.equal(h.registers[3], 61);       // remainder all zero: 64-p+1
+  assert.equal(h.addHash(0x10800000, 0), false);                    // same rank again: no change
+});
+
+test(&#039;empty sketch estimates 0; small cardinalities are near-exact via linear counting&#039;, () =&gt; {
+  assert.equal(new HyperLogLog(14).count(), 0);
+  for (const n of [1, 10, 100, 1000]) {
+    const h = new HyperLogLog(14), gen = distinctItems(n);
+    for (let i = 0; i &lt; n; i++) h.add(gen(i));
+    assert.ok(Math.abs(h.count() - n) &lt;= Math.max(1, n * 0.02), `n=${n} est=${h.count()}`);
+  }
+});
+
+test(&#039;duplicates do not change the sketch&#039;, () =&gt; {
+  const h = new HyperLogLog(12), gen = distinctItems(5);
+  for (let i = 0; i &lt; 5000; i++) h.add(gen(i));
+  const snapshot = h.clone();
+  for (let rep = 0; rep &lt; 3; rep++) for (let i = 0; i &lt; 5000; i++) h.add(gen(i));
+  assert.ok(h.equals(snapshot));
+});
+
+// The classic estimator has a known bias bump just past its linear-counting switch-over (2.5m &lt; n &lt; ~5m),
+// the region HLL++ patches with empirical tables. At n=100k that zone contains p=15 (n = 3.05m), so the
+// classic check skips it there; Ertl&#039;s estimator has no such zone and is checked for every p.
+test(&#039;100k and 1M distinct items: error within 3 standard errors for p = 4..16&#039;, () =&gt; {
+  const sketches = []; for (let p = 4; p &lt;= 16; p++) sketches.push(new HyperLogLog(p));
+  const gen = distinctItems(2024);
+  let n = 0;
+  for (const checkpoint of [100000, 1000000]) {
+    for (; n &lt; checkpoint; n++) { const { hi, lo } = hash64(gen(n)); for (const s of sketches) s.addHash(hi, lo); }
+    for (const s of sketches) {
+      const bound = 3 * s.standardError(), transition = n &gt; 2 * s.m &amp;&amp; n &lt; 5 * s.m;
+      for (const method of transition ? [&#039;ertl&#039;] : [&#039;classic&#039;, &#039;ertl&#039;]) {
+        const err = relErr(s.estimate(method), n);
+        assert.ok(err &lt; bound, `${method} p=${s.p} n=${n} rel.err=${err.toFixed(4)} &gt; 3σ=${bound.toFixed(4)}`);
+      }
+    }
+  }
+});
+
+test(&#039;RMS error over 30 independent seeds matches 1.04/sqrt(m) (p=10, n=50k)&#039;, () =&gt; {
+  const p = 10, n = 50000, runs = 30, sigma = 1.04 / Math.sqrt(1 &lt;&lt; p);
+  let sq = 0, bias = 0;
+  for (let s = 0; s &lt; runs; s++) {
+    const h = new HyperLogLog(p, { seed: s + 1 }), gen = distinctItems(100 + s);
+    for (let i = 0; i &lt; n; i++) h.add(gen(i));
+    const e = (h.estimate() - n) / n; sq += e * e; bias += e;
+  }
+  const rms = Math.sqrt(sq / runs);
+  assert.ok(rms &gt; 0.5 * sigma &amp;&amp; rms &lt; 1.5 * sigma, `rms ${rms.toFixed(4)} vs sigma ${sigma.toFixed(4)}`);
+  assert.ok(Math.abs(bias / runs) &lt; 2 * sigma / Math.sqrt(runs) + 0.005, &#039;mean bias &#039; + (bias / runs));
+});
+
+test(&#039;transition zone: classic estimator is biased near n = 2.5m, Ertl estimator is not&#039;, () =&gt; {
+  const p = 8, m = 1 &lt;&lt; p, n = Math.round(2.6 * m), runs = 300;
+  let classic = 0, ertl = 0;
+  for (let s = 0; s &lt; runs; s++) {
+    const h = new HyperLogLog(p), gen = distinctItems(5000 + s);
+    for (let i = 0; i &lt; n; i++) h.add(gen(i));
+    classic += (h.estimate() - n) / n; ertl += (h.estimate(&#039;ertl&#039;) - n) / n;
+  }
+  classic /= runs; ertl /= runs; // standard error of each mean is ~ 6.5% / sqrt(300) = 0.4%
+  assert.ok(classic &gt; 0.008, &#039;classic mean bias &#039; + classic);
+  assert.ok(Math.abs(ertl) &lt; 0.008 &amp;&amp; Math.abs(ertl) &lt; classic / 2, &#039;ertl mean bias &#039; + ertl);
+  assert.throws(() =&gt; new HyperLogLog(8).estimate(&#039;hllpp&#039;), RangeError);
+  assert.equal(new HyperLogLog(8).estimate(&#039;ertl&#039;), 0);
+});
+
+test(&#039;merge equals the sketch of the union (overlapping sets), and is commutative and idempotent&#039;, () =&gt; {
+  const gen = distinctItems(9), a = new HyperLogLog(12), b = new HyperLogLog(12), all = new HyperLogLog(12);
+  for (let i = 0; i &lt; 60000; i++) { a.add(gen(i)); all.add(gen(i)); }
+  for (let i = 40000; i &lt; 100000; i++) { b.add(gen(i)); all.add(gen(i)); }
+  const ab = a.clone().merge(b), ba = b.clone().merge(a);
+  assert.ok(ab.equals(all) &amp;&amp; ba.equals(all));
+  assert.ok(ab.clone().merge(b).equals(ab));
+  assert.ok(HyperLogLog.union(a, b, a).equals(all));
+  assert.ok(relErr(ab.estimate(), 100000) &lt; 3 * ab.standardError());
+  assert.throws(() =&gt; a.clone().merge(new HyperLogLog(12, { seed: 1 })), /seeds/);
+  assert.throws(() =&gt; a.merge({}), TypeError);
+});
+
+test(&#039;precision folding is exact, so sketches of different p can be merged&#039;, () =&gt; {
+  const gen = distinctItems(77), fine = new HyperLogLog(14);
+  const direct = {}; for (const q of [4, 8, 11, 14]) direct[q] = new HyperLogLog(q);
+  for (let i = 0; i &lt; 200000; i++) { const { hi, lo } = hash64(gen(i)); fine.addHash(hi, lo); for (const q in direct) direct[q].addHash(hi, lo); }
+  for (const q of [4, 8, 11, 14]) assert.ok(fine.withPrecision(q).equals(direct[q]), &#039;fold to p=&#039; + q);
+  const merged = new HyperLogLog(11).merge(fine); // coarse.merge(fine)
+  assert.ok(merged.equals(direct[11]));
+  const merged2 = fine.clone().merge(new HyperLogLog(8)); // fine.merge(coarse) folds itself down
+  assert.equal(merged2.p, 8); assert.ok(merged2.equals(direct[8]));
+  assert.throws(() =&gt; fine.withPrecision(15), RangeError);
+});
+
+test(&#039;serialization round-trips exactly with 6-bit packing for every p&#039;, () =&gt; {
+  for (let p = 4; p &lt;= 16; p++) {
+    const h = new HyperLogLog(p, { seed: 42 }), gen = distinctItems(p);
+    for (let i = 0; i &lt; 3000; i++) h.add(gen(i));
+    h.addHash(0, 0); // register 0 gets the maximum rank 64-p+1
+    const buf = h.serialize();
+    assert.equal(buf.length, 10 + Math.ceil((1 &lt;&lt; p) * 6 / 8));
+    const back = HyperLogLog.deserialize(buf);
+    assert.ok(back.equals(h), &#039;p=&#039; + p);
+    assert.equal(back.registers[0], 64 - p + 1);
+  }
+  assert.equal(new HyperLogLog(14).serialize().length, 12298); // 12 KB, like Redis&#039; dense encoding
+});
+
+test(&#039;deserialize rejects bad magic, wrong length, bad precision and impossible ranks&#039;, () =&gt; {
+  const good = new HyperLogLog(10).serialize();
+  const bad = (mut) =&gt; { const b = Buffer.from(good); mut(b); return b; };
+  assert.throws(() =&gt; HyperLogLog.deserialize(bad((b) =&gt; { b[0] ^= 1; })), /magic/);
+  assert.throws(() =&gt; HyperLogLog.deserialize(good.subarray(0, good.length - 1)), /length/);
+  assert.throws(() =&gt; HyperLogLog.deserialize(bad((b) =&gt; { b[5] = 20; })), RangeError);
+  assert.throws(() =&gt; HyperLogLog.deserialize(bad((b) =&gt; { b[10] = 0x3f; })), /impossible rank/); // 63 &gt; 55
+  assert.throws(() =&gt; HyperLogLog.deserialize(&#039;nope&#039;), /not an HLL/);
+});
+
+test(&#039;numbers, bigints, strings and bytes are accepted; equal encodings hash identically&#039;, () =&gt; {
+  const a = new HyperLogLog(10), b = new HyperLogLog(10);
+  a.add(12345); b.add(&#039;12345&#039;); assert.ok(a.equals(b));
+  a.add(10n); b.add(Buffer.from(&#039;10&#039;)); assert.ok(a.equals(b));
+  a.add(&#039;ünïcødé-&#039; + &#039;x&#039;.repeat(500)); assert.equal(a.count(), 3);
+});
+
+if (failed) { console.log(`\n${failed} test(s) failed`); process.exit(1); }
+console.log(&#039;\nall tests passed&#039;);
+</code></pre>
+          </div>
+      </div>
+
+      <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
+        <div id="codelab-mount-hyperloglog-cardinality" class="build-lab-overlay__mount" data-build-id="hyperloglog-cardinality"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=04a1ea8061"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=3676a86b01"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=154eb461ef"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=b79de4edf4"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=262e2d34b8"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

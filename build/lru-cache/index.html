@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>LRU Cache (Doubly Linked List + Hash Map) — Interactive Build Lab | System Design In Depth</title>
+  <meta name="description" content="LRU Cache (Doubly Linked List + Hash Map): An O1 LRU cache built from a Map and an intrusive doubly linked list, with entry- and size-based bounds, optional...">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="LRU Cache (Doubly Linked List + Hash Map) — Interactive Build Lab | System Design In Depth">
+  <meta property="og:description" content="LRU Cache (Doubly Linked List + Hash Map): An O1 LRU cache built from a Map and an intrusive doubly linked list, with entry- and size-based bounds, optional...">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/build/lru-cache/">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LRU Cache (Doubly Linked List + Hash Map) — Interactive Build Lab | System Design In Depth">
+  <meta name="twitter:description" content="LRU Cache (Doubly Linked List + Hash Map): An O1 LRU cache built from a Map and an intrusive doubly linked list, with entry- and size-based bounds, optional...">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/lru-cache/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
+  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
+  <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
+  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="css/code-lab.css?v=2b9944bcbd">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=6e3af86ba6"></script>
+  <script src="js/manifest.js?v=2fe59c81f7"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "LRU Cache (Doubly Linked List + Hash Map) — Interactive Build Lab",
+  "description": "LRU Cache (Doubly Linked List + Hash Map): An O1 LRU cache built from a Map and an intrusive doubly linked list, with entry- and size-based bounds, optional...",
+  "url": "https://system-design-in-depth.vedgupta.in/build/lru-cache/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" style="display:flex; gap:0.4rem; margin-right:0.5rem;">
+        <a href="#/glossary" class="btn btn--sm btn--outline" style="font-size:11px; padding:4px 8px; text-decoration:none; white-space:nowrap;">📖 Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
+      <button class="sidebar__tab sidebar__tab--active" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div class="builds-sidebar"><div class="builds-sidebar__intro">
+    Full from-scratch Node.js implementations with Guided Interactive Labs, zero dependencies, and complete test suites.
+  </div><a class="unit-item unit-item--build " href="/build/load-balancer-from-scratch/" data-build="load-balancer-from-scratch">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/consistent-hashing-ring/" data-build="consistent-hashing-ring">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Consistent Hashing Ring with Virtual Nodes</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/sliding-window-rate-limiter/" data-build="sliding-window-rate-limiter">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build unit-item--active" href="/build/lru-cache/" data-build="lru-cache">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LRU Cache (Doubly Linked List + Hash Map)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/ttl-cache-reaper/" data-build="ttl-cache-reaper">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">TTL Cache with a Redis-Style Adaptive Reaper</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/bloom-filter-membership/" data-build="bloom-filter-membership">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Bloom Filter Membership Testing</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/snowflake-id-generator/" data-build="snowflake-id-generator">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Snowflake 64-bit ID Generator</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/keyset-pagination-cursors/" data-build="keyset-pagination-cursors">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/write-ahead-log/" data-build="write-ahead-log">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Write-Ahead Log (WAL) &amp; Crash Recovery</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lsm-tree-kv-store/" data-build="lsm-tree-kv-store">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LSM-Tree Key/Value Store (WAL, Memtable, SSTables, Compaction)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lease-leader-election/" data-build="lease-leader-election">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Lease-Based Leader Election with Fencing Tokens</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/gossip-protocol/" data-build="gossip-protocol">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/merkle-anti-entropy/" data-build="merkle-anti-entropy">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/hyperloglog-cardinality/" data-build="hyperloglog-cardinality">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/tiny-search-engine/" data-build="tiny-search-engine">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+        <span class="unit-item__meta">8 files · Interactive Lab</span>
+      </div>
+    </a></div>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered-build="lru-cache">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">LRU Cache (Doubly Linked List + Hash Map)</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> From-Scratch Build</span>
+        </div>
+        <h1 class="lesson-header__title">LRU Cache (Doubly Linked List + Hash Map)</h1>
+        <p class="build-summary">An O(1) LRU cache built from a Map and an intrusive doubly linked list, with entry- and size-based bounds, optional per-entry TTL, hit/miss stats and an eviction callback. Tests check it against a naive reference model under randomized operations.</p>
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~30 min</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Intermediate</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="#" data-nav="topic" data-slug="cache-eviction-policies">Cache eviction policies</a>, <a href="#" data-nav="topic" data-slug="ttl-expiration-and-cache-reapers">TTL expiration and cache reapers</a>, <a href="#" data-nav="topic" data-slug="caching-layers">Caching layers</a>, <a href="#" data-nav="topic" data-slug="distributed-cache-design">Distributed cache design</a>, <a href="#" data-nav="topic" data-slug="cache-concurrency-control">Cache concurrency control</a></span>
+        </div>
+      </div>
+
+      <div class="build-view-tabs" role="tablist" aria-label="Build View Mode">
+        <button type="button" class="build-view-tab active" role="tab" aria-selected="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Architecture &amp; Reference Code</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="guided">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>Interactive Lab IDE</span>
+          <span class="build-view-tab__badge">0/4 Steps</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="sandbox">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Sandbox Mode</span>
+        </button>
+      </div>
+
+      <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
+        <div class="build-lab-card__top">
+          <div class="build-lab-card__intro">
+            <div class="build-lab-card__eyebrow">
+              <span>Interactive Build Lab</span>
+              <span class="build-lab-card__progress" id="build-lab-progress-badge">0/4 Steps Completed</span>
+            </div>
+            <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
+            <p class="build-lab-card__desc">
+              Complete 4 progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+            </p>
+            <div class="build-lab-progress-track" aria-hidden="true">
+              <div class="build-lab-progress-track__fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="build-lab-card__cta-col">
+            <button type="button" class="btn btn--primary build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="guided">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Launch Guided Lab</span>
+            </button>
+            <button type="button" class="btn btn--outline build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="sandbox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Open Full Solution</span>
+            </button>
+          </div>
+        </div>
+
+        
+          <div class="build-lab-steps-grid" id="build-lab-steps-grid">
+            
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="0">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">01</span>
+                    <span class="build-lab-step-card__target">lru.js · LRUCache._unlink</span>
+                  </div>
+                  <div class="build-lab-step-card__title">O(1) Doubly Linked List Primitives &amp; Recency Promotion</div>
+                  <div class="build-lab-step-card__concept">Sentinel-Bounded Intrusive Doubly Linked List (_unlink, _pushFront, _moveToFront, get)</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>6 tests</span>
+                    <span class="build-lab-step-card__open">Step 1 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="1">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">02</span>
+                    <span class="build-lab-step-card__target">lru.js · LRUCache.set</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Dual-Bounded Insertion (maxEntries &amp; maxSize) &amp; Eviction Loop</div>
+                  <div class="build-lab-step-card__concept">Byte/Weight-Aware Caching, Oversized Item Rejection &amp; Tail Eviction</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 2 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="2">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">03</span>
+                    <span class="build-lab-step-card__target">lru.js · LRUCache._live</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Lazy &amp; Active TTL Expiration (prune)</div>
+                  <div class="build-lab-step-card__concept">Exclusive Deadline Expiration (_live) &amp; Active Linked-List Sweep (prune)</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 3 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="3">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">04</span>
+                    <span class="build-lab-step-card__target">lru.js · LRUCache._remove</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Exception-Safe Eviction Callbacks &amp; Hit-Rate Telemetry</div>
+                  <div class="build-lab-step-card__concept">Fault-Isolated onEvict Notifications (_remove) &amp; Cache Telemetry</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>4 tests</span>
+                    <span class="build-lab-step-card__open">Step 4 →</span>
+                  </div>
+                </button>
+              
+          </div>
+        
+      </section>
+
+      <div id="build-walkthrough-pane">
+        <div class="build-run">
+          <div class="build-run__text">
+            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
+            <code>node demo.js</code> and <code>node test.js</code>.
+          </div>
+          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="lru-cache">Copy setup script</button>
+        </div>
+
+        <div class="build-files"><a href="#build-file-lru-cache-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lru-cache-README_md">README.md</a><a href="#build-file-lru-cache-lru_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lru-cache-lru_js">lru.js</a><a href="#build-file-lru-cache-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lru-cache-demo_js">demo.js</a><a href="#build-file-lru-cache-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lru-cache-test_js">test.js</a></div><article class="prose" id="build-file-lru-cache-README_md"><h2>LRU Cache (Doubly Linked List + Hash Map)</h2>
+
+<p>A bounded in-memory cache that, when full, throws away the entry that was used least recently.</p>
+<p>Every operation is O(1).</p>
+
+<h2>The problem and where it shows up</h2>
+
+<p>Memory is finite, and access patterns are usually skewed: a small hot set gets most of the reads.</p>
+<p>An eviction policy decides what to drop when the cache is full. Least-recently-used is the usual</p>
+<p>default because recency is a cheap, decent predictor of reuse. You find it in:</p>
+
+<ul>
+<li><strong>Application caches</strong> in the process: Guava/Caffeine (Java), <code>lru-cache</code> (npm), <code>functools.lru_cache</code> (Python).</li>
+<li><strong>Database buffer pools</strong>: InnoDB's buffer pool is an LRU list split into young and old sublists. PostgreSQL uses clock-sweep, which approximates LRU.</li>
+<li><strong>Block caches</strong>: RocksDB's <code>LRUCache</code> (sharded, size-aware, with a high-priority pool for index/filter blocks).</li>
+<li><strong>CDN and reverse-proxy caches</strong>: Nginx <code>proxy_cache</code> evicts by LRU once <code>max_size</code> is hit, and Varnish uses LRU for its malloc/file storage.</li>
+<li><strong>OS page cache</strong>: Linux keeps active and inactive LRU lists (two-list approximation).</li>
+</ul>
+<h2>Design</h2>
+
+<pre><code class="language-text">map: key -&gt; node                 (O(1) lookup)
+
+head &lt;-&gt; [MRU] &lt;-&gt; ... &lt;-&gt; [LRU] &lt;-&gt; tail     (O(1) reorder / evict)
+ ^ sentinel                         sentinel ^</code></pre>
+
+<ul>
+<li><code>get(k)</code>: look up the node in the Map and splice it to the front.</li>
+<li><code>set(k, v)</code>: insert at the front (or update in place and move to front), then pop from the back until the bounds hold.</li>
+<li>Sentinel head and tail nodes mean <code>_unlink</code> and <code>_pushFront</code> never need null checks.</li>
+<li>The Map holds node references, so removing an arbitrary node (for <code>delete</code> or expiry) is O(1). A singly linked list can't do this.</li>
+</ul>
+<h3>Invariants (checked by <code>_checkInvariants()</code> and the tests)</h3>
+
+<ol>
+<li>Every list node is in the Map under its own key, and every Map entry is in the list.</li>
+<li><code>node.next.prev === node</code> for every node.</li>
+<li><code>size <= maxEntries</code> and <code>calculatedSize <= maxSize</code> after every public call returns.</li>
+<li>List order is exactly recency order: the result of <code>get</code> / <code>set</code>. <code>peek</code>, <code>has</code> and <code>keys</code> do not change it.</li>
+</ol>
+<h3>Features</h3>
+
+<table><thead><tr><th>Option</th><th>Meaning</th></tr></thead><tbody><tr><td><code>maxEntries</code></td><td>Entry count bound</td></tr><tr><td><code>maxSize</code> + <code>sizeOf(value, key)</code></td><td>Weight bound, e.g. bytes. Per-entry <code>size</code> override on <code>set</code></td></tr><tr><td><code>ttlMs</code></td><td>Default TTL. <code>set(k, v, { ttlMs })</code> overrides it. <code>0</code> = never expires</td></tr><tr><td><code>now</code></td><td>Injectable clock, so tests and the demo never sleep</td></tr><tr><td><code>onEvict(key, value, reason)</code></td><td><code>capacity</code>, <code>expired</code>, <code>deleted</code>, <code>replaced</code>, <code>cleared</code></td></tr><tr><td><code>stats()</code></td><td>hits, misses, sets, evictions, expirations, rejected, hitRate</td></tr></tbody></table><strong>Expiry</strong> is <em>lazy</em>: an expired entry is removed when you touch it. There's also an explicit
+<code>prune()</code> sweep, the same split as Redis's passive and active expiry. When capacity eviction reaches an
+<p>expired tail node, it reports it as <code>expired</code>, not <code>capacity</code>.</p>
+
+<strong>Oversized items</strong> (<code>size > maxSize</code>) are rejected (<code>set</code> returns <code>false</code>). Accepting one would flush
+<p>the entire cache and still not fit it. Any older value under the same key is removed, so readers</p>
+<p>never see data the writer meant to replace.</p>
+
+<h2>Complexity</h2>
+
+<table><thead><tr><th>Operation</th><th>Time</th><th>Notes</th></tr></thead><tbody><tr><td>get / set / delete / has / peek</td><td>O(1) amortised</td><td>Map ops + constant pointer swaps</td></tr><tr><td>eviction per set</td><td>O(k)</td><td>k = entries evicted. Amortised O(1) because each entry is evicted once</td></tr><tr><td>prune / keys / clear</td><td>O(n)</td></tr><tr><td>Space</td><td>O(n)</td><td>One Map entry + one node (key, value, size, expiresAt, 2 pointers) per item</td></tr></tbody></table>The per-entry overhead is roughly 100+ bytes in V8, which matters when values are small. Production
+<p>caches often store entries in flat arrays indexed by integer slots to avoid per-node objects</p>
+<p>(<code>lru-cache</code> v7+ does this).</p>
+
+<h2>Failure modes and trade-offs</h2>
+
+<ul>
+<li><strong>Scan pollution</strong>: a one-off sequential scan (a batch job or a crawler) pushes the whole hot set out.</li>
+  LRU has no notion of frequency. Fixes: segmented LRU / midpoint insertion (InnoDB inserts new pages
+  at the 3/8 point), 2Q, ARC, or W-TinyLFU (Caffeine), which admits a new item only if it's
+  estimated to be more popular than the victim.
+<li><strong>Lock contention</strong>: every <code>get</code> <em>writes</em> (it reorders the list). A multithreaded LRU needs a lock</li>
+  on reads. Caffeine buffers reorders in ring buffers and replays them in batches. RocksDB and
+  memcached shard the cache so each shard has its own lock.
+<li><strong>Stale reads with TTL-only invalidation</strong>: TTL bounds staleness but doesn't remove it. Pair with</li>
+  explicit invalidation on writes if correctness matters.
+<li><strong>Thundering herd on miss</strong>: when a hot key expires, many callers miss together and all hit the</li>
+  database. Use single-flight (request coalescing) or refresh-ahead. Not implemented here.
+<li><strong>Size estimation lies</strong>: <code>sizeOf</code> is only as accurate as you make it. JS object size is hard to</li>
+  measure, so a byte bound on objects is approximate.
+<li><strong>Callback reentrancy</strong>: <code>onEvict</code> runs synchronously after internal state is consistent, and</li>
+  exceptions it throws are swallowed. Calling back into the cache from it works, but it can cascade.
+</ul>
+<h2>How production systems do it</h2>
+
+<ul>
+<li><strong>Redis</strong> (<code>maxmemory-policy allkeys-lru</code> / <code>volatile-lru</code>) keeps no linked list. Each object stores</li>
+  a 24-bit LRU clock. On eviction Redis <em>samples</em> <code>maxmemory-samples</code> keys (default 5) and evicts the
+  oldest of the sample, using an eviction pool that carries candidates between rounds. It's approximate
+  LRU with zero per-access list maintenance. <code>allkeys-lfu</code> uses a probabilistic log counter instead.
+<li><strong>Memcached</strong> uses a per-slab-class LRU. The modern "segmented LRU" splits it into HOT, WARM and COLD</li>
+  sublists maintained by a background thread, and items are bumped at most once every 60 s to
+  limit lock traffic.
+<li><strong>Caffeine</strong> (Java) uses W-TinyLFU: a small admission window LRU, a Count-Min-style frequency sketch,</li>
+  and a segmented main LRU (probation and protected). Its hit rates are close to optimal on most traces.
+<li><strong>RocksDB block cache</strong> uses a sharded LRU (<code>num_shard_bits</code>) with a charge per block, plus a</li>
+  newer HyperClockCache that avoids a global list mutex entirely.
+<li><strong>Linux page cache</strong> uses active/inactive two-list LRU approximation, and more recently MGLRU</li>
+  (multi-generational LRU).
+</ul>
+<h2>How to run</h2>
+
+<pre><code class="language-bash">node demo.js   # narrative walkthrough: promotion, size eviction, TTL, stats on a skewed workload
+node test.js   # 16 assertion-based tests, including a randomized comparison with a reference model</code></pre>
+
+<p>Node ≥ 18, no dependencies.</p>
+
+<h2>Extension exercises</h2>
+
+<ol>
+<li><strong>Sampled LRU à la Redis</strong>: drop the list. Store <code>lastAccess</code> per entry and, on eviction, sample</li>
+   5 random keys and evict the oldest. Measure the hit-rate loss against exact LRU on the demo's workload.
+<li><strong>Scan resistance</strong>: implement midpoint insertion (new entries go into an "old" sublist and are</li>
+   promoted only on a second hit). Show that a 10k-key scan no longer destroys the hot set.
+<li><strong>TinyLFU admission</strong>: add a 4-bit Count-Min sketch and admit a new key only if its estimated</li>
+   frequency is higher than the LRU victim's.
+<li><strong>Single-flight loader</strong>: add <code>async fetch(key, loader)</code> so concurrent misses for the same key</li>
+   share one loader promise, with negative caching for errors.
+<li><strong>Sharded cache</strong>: hash keys into N independent <code>LRUCache</code>s and discuss how that changes global</li>
+   LRU ordering, and why real systems accept that.
+</ol></article>
+          <div class="code-block" id="build-file-lru-cache-lru_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">lru.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+/**
+ * LRU cache: Map (key -&gt; node) + intrusive doubly linked list (recency order).
+ *
+ *   head (sentinel) &lt;-&gt; MRU &lt;-&gt; ... &lt;-&gt; LRU &lt;-&gt; tail (sentinel)
+ *
+ * Every operation that &quot;uses&quot; a key splices its node to the front in O(1);
+ * eviction pops from the back in O(1). Sentinels remove all null checks.
+ *
+ * Bounds (either or both):
+ *   maxEntries - maximum number of entries
+ *   maxSize    - maximum total &quot;size&quot; (bytes, weight...) as computed by sizeOf
+ * Optional TTL: per-cache default ttlMs, overridable per set(). Expiry is lazy
+ * (checked on access) plus an explicit prune() sweep, like Redis&#039; passive +
+ * active expiry.
+ */
+
+class Node {
+  constructor(key, value, size, expiresAt) {
+    this.key = key;
+    this.value = value;
+    this.size = size;
+    this.expiresAt = expiresAt; // Infinity = never
+    this.prev = null;
+    this.next = null;
+  }
+}
+
+function isPositiveIntOrInf(n) {
+  return n === Infinity || (Number.isInteger(n) &amp;&amp; n &gt; 0);
+}
+
+class LRUCache {
+  /**
+   * @param {object} opts
+   * @param {number} [opts.maxEntries=Infinity]
+   * @param {number} [opts.maxSize=Infinity]
+   * @param {(value:any, key:any) =&gt; number} [opts.sizeOf] default: 1 per entry
+   * @param {number} [opts.ttlMs=0]  0 = no default TTL
+   * @param {() =&gt; number} [opts.now=Date.now] injectable clock (ms)
+   * @param {(key, value, reason) =&gt; void} [opts.onEvict]
+   *        reason: &#039;capacity&#039; | &#039;expired&#039; | &#039;deleted&#039; | &#039;replaced&#039; | &#039;cleared&#039;
+   */
+  constructor(opts = {}) {
+    const {
+      maxEntries = Infinity,
+      maxSize = Infinity,
+      sizeOf = () =&gt; 1,
+      ttlMs = 0,
+      now = Date.now,
+      onEvict = null,
+    } = opts;
+    if (!isPositiveIntOrInf(maxEntries)) throw new RangeError(&#039;maxEntries must be a positive integer&#039;);
+    if (!(maxSize === Infinity || (typeof maxSize === &#039;number&#039; &amp;&amp; maxSize &gt; 0))) {
+      throw new RangeError(&#039;maxSize must be a positive number&#039;);
+    }
+    if (maxEntries === Infinity &amp;&amp; maxSize === Infinity) {
+      throw new RangeError(&#039;at least one of maxEntries / maxSize must be bounded&#039;);
+    }
+    if (typeof sizeOf !== &#039;function&#039;) throw new TypeError(&#039;sizeOf must be a function&#039;);
+    if (!(typeof ttlMs === &#039;number&#039; &amp;&amp; ttlMs &gt;= 0)) throw new RangeError(&#039;ttlMs must be &gt;= 0&#039;);
+    if (typeof now !== &#039;function&#039;) throw new TypeError(&#039;now must be a function&#039;);
+    if (onEvict !== null &amp;&amp; typeof onEvict !== &#039;function&#039;) throw new TypeError(&#039;onEvict must be a function&#039;);
+
+    this.maxEntries = maxEntries;
+    this.maxSize = maxSize;
+    this.sizeOf = sizeOf;
+    this.ttlMs = ttlMs;
+    this.now = now;
+    this.onEvict = onEvict;
+
+    this.map = new Map();
+    this.head = new Node(null, null, 0, Infinity);
+    this.tail = new Node(null, null, 0, Infinity);
+    this.head.next = this.tail;
+    this.tail.prev = this.head;
+    this.totalSize = 0;
+    this._stats = { hits: 0, misses: 0, sets: 0, evictions: 0, expirations: 0, rejected: 0 };
+  }
+
+  // ---- linked-list primitives (all O(1)) ----
+  _unlink(node) {
+    node.prev.next = node.next;
+    node.next.prev = node.prev;
+    node.prev = node.next = null;
+  }
+  _pushFront(node) {
+    node.prev = this.head;
+    node.next = this.head.next;
+    this.head.next.prev = node;
+    this.head.next = node;
+  }
+  _moveToFront(node) {
+    if (this.head.next === node) return;
+    this._unlink(node);
+    this._pushFront(node);
+  }
+
+  /** Remove a node from both structures and fire the callback. */
+  _remove(node, reason) {
+    this._unlink(node);
+    this.map.delete(node.key);
+    this.totalSize -= node.size;
+    if (reason === &#039;capacity&#039;) this._stats.evictions++;
+    else if (reason === &#039;expired&#039;) this._stats.expirations++;
+    if (this.onEvict) {
+      // A throwing callback must not corrupt the cache: state is already consistent.
+      try { this.onEvict(node.key, node.value, reason); } catch (_) { /* swallow */ }
+    }
+  }
+
+  _isExpired(node, t = this.now()) {
+    return node.expiresAt &lt;= t;
+  }
+
+  /** Returns a live node or undefined, expiring lazily. Does not touch recency. */
+  _live(key) {
+    const node = this.map.get(key);
+    if (!node) return undefined;
+    if (this._isExpired(node)) {
+      this._remove(node, &#039;expired&#039;);
+      return undefined;
+    }
+    return node;
+  }
+
+  get size() { return this.map.size; }
+  get calculatedSize() { return this.totalSize; }
+
+  /** Read and promote to MRU. */
+  get(key) {
+    const node = this._live(key);
+    if (!node) { this._stats.misses++; return undefined; }
+    this._stats.hits++;
+    this._moveToFront(node);
+    return node.value;
+  }
+
+  /** Read without promoting and without counting stats. */
+  peek(key) {
+    const node = this._live(key);
+    return node ? node.value : undefined;
+  }
+
+  has(key) { return this._live(key) !== undefined; }
+
+  /**
+   * Insert or replace. Returns true if stored, false if the item alone exceeds maxSize.
+   * @param {object} [o] { ttlMs, size }  per-entry overrides
+   */
+  set(key, value, o = {}) {
+    const ttl = o.ttlMs !== undefined ? o.ttlMs : this.ttlMs;
+    if (!(typeof ttl === &#039;number&#039; &amp;&amp; ttl &gt;= 0)) throw new RangeError(&#039;ttlMs must be &gt;= 0&#039;);
+    const size = o.size !== undefined ? o.size : this.sizeOf(value, key);
+    if (!(typeof size === &#039;number&#039; &amp;&amp; Number.isFinite(size) &amp;&amp; size &gt;= 0)) {
+      throw new RangeError(&#039;size must be a finite number &gt;= 0&#039;);
+    }
+
+    const existing = this.map.get(key);
+    if (size &gt; this.maxSize) {
+      // Storing it would evict everything and still not fit. Reject, and drop any
+      // stale older value so a reader never sees data the writer tried to replace.
+      if (existing) this._remove(existing, &#039;replaced&#039;);
+      this._stats.rejected++;
+      return false;
+    }
+    this._stats.sets++;
+    const expiresAt = ttl &gt; 0 ? this.now() + ttl : Infinity;
+
+    if (existing) {
+      const oldValue = existing.value;
+      this.totalSize += size - existing.size;
+      existing.value = value;
+      existing.size = size;
+      existing.expiresAt = expiresAt;
+      this._moveToFront(existing);
+      if (this.onEvict &amp;&amp; oldValue !== value) {
+        try { this.onEvict(key, oldValue, &#039;replaced&#039;); } catch (_) { /* swallow */ }
+      }
+    } else {
+      const node = new Node(key, value, size, expiresAt);
+      this.map.set(key, node);
+      this._pushFront(node);
+      this.totalSize += size;
+    }
+    this._evictIfNeeded();
+    return true;
+  }
+
+  /** Evict from the LRU end until both bounds hold. Expired tail entries go first. */
+  _evictIfNeeded() {
+    while (this.map.size &gt; this.maxEntries || this.totalSize &gt; this.maxSize) {
+      const lru = this.tail.prev;
+      // The just-inserted node is at the head and always fits (size &lt;= maxSize),
+      // so this loop terminates before reaching it.
+      this._remove(lru, this._isExpired(lru) ? &#039;expired&#039; : &#039;capacity&#039;);
+    }
+  }
+
+  delete(key) {
+    const node = this.map.get(key);
+    if (!node) return false;
+    this._remove(node, &#039;deleted&#039;);
+    return true;
+  }
+
+  clear() {
+    for (let n = this.head.next; n !== this.tail;) {
+      const next = n.next;
+      this._remove(n, &#039;cleared&#039;);
+      n = next;
+    }
+  }
+
+  /** Active expiry sweep: O(n). Returns number removed. */
+  prune() {
+    const t = this.now();
+    let removed = 0;
+    for (let n = this.head.next; n !== this.tail;) {
+      const next = n.next;
+      if (this._isExpired(n, t)) { this._remove(n, &#039;expired&#039;); removed++; }
+      n = next;
+    }
+    return removed;
+  }
+
+  /** Remaining TTL in ms (Infinity if none, undefined if absent). */
+  ttl(key) {
+    const node = this._live(key);
+    if (!node) return undefined;
+    return node.expiresAt === Infinity ? Infinity : node.expiresAt - this.now();
+  }
+
+  /** Keys from most- to least-recently used (skips expired, no promotion). */
+  *keys() {
+    const t = this.now();
+    for (let n = this.head.next; n !== this.tail; n = n.next) {
+      if (!this._isExpired(n, t)) yield n.key;
+    }
+  }
+
+  *entries() {
+    const t = this.now();
+    for (let n = this.head.next; n !== this.tail; n = n.next) {
+      if (!this._isExpired(n, t)) yield [n.key, n.value];
+    }
+  }
+
+  stats() {
+    const s = this._stats;
+    const lookups = s.hits + s.misses;
+    return { ...s, entries: this.map.size, size: this.totalSize, hitRate: lookups ? s.hits / lookups : 0 };
+  }
+
+  /** Debug helper: verify list/map agreement. Throws on corruption. */
+  _checkInvariants() {
+    let count = 0, size = 0;
+    for (let n = this.head.next; n !== this.tail; n = n.next) {
+      if (n.next.prev !== n) throw new Error(&#039;broken back-link at &#039; + String(n.key));
+      if (this.map.get(n.key) !== n) throw new Error(&#039;map/list mismatch at &#039; + String(n.key));
+      count++; size += n.size;
+    }
+    if (count !== this.map.size) throw new Error(&#039;count mismatch&#039;);
+    if (size !== this.totalSize) throw new Error(&#039;size mismatch&#039;);
+    if (count &gt; this.maxEntries || size &gt; this.maxSize) throw new Error(&#039;bound violated&#039;);
+    return true;
+  }
+}
+
+module.exports = { LRUCache };
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-lru-cache-demo_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">demo.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const { LRUCache } = require(&#039;./lru&#039;);
+
+// Deterministic fake clock: time only moves when we say so.
+let t = 0;
+const now = () =&gt; t;
+const order = (c) =&gt; &#039;[&#039; + [...c.keys()].join(&#039;, &#039;) + &#039;]  (MRU -&gt; LRU)&#039;;
+
+console.log(&#039;=== 1. Entry-bounded LRU (maxEntries = 3) ===&#039;);
+const evicted = [];
+const c = new LRUCache({ maxEntries: 3, now, onEvict: (k, _v, why) =&gt; evicted.push(`${k}:${why}`) });
+c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2); c.set(&#039;c&#039;, 3);
+console.log(&#039;after set a,b,c       &#039;, order(c));
+c.get(&#039;a&#039;);
+console.log(&#039;after get a           &#039;, order(c), &#039;-&gt; a promoted to MRU&#039;);
+c.set(&#039;d&#039;, 4);
+console.log(&#039;after set d           &#039;, order(c), &#039;-&gt; b was LRU, evicted&#039;);
+c.peek(&#039;c&#039;);
+console.log(&#039;after peek c          &#039;, order(c), &#039;-&gt; peek does not promote&#039;);
+console.log(&#039;evictions so far:&#039;, evicted.join(&#039;, &#039;));
+
+console.log(&#039;\n=== 2. Size-aware eviction (maxSize = 100 bytes) ===&#039;);
+const bytes = new LRUCache({ maxSize: 100, sizeOf: (v) =&gt; Buffer.byteLength(v), now });
+bytes.set(&#039;small1&#039;, &#039;x&#039;.repeat(20));
+bytes.set(&#039;small2&#039;, &#039;x&#039;.repeat(20));
+bytes.set(&#039;small3&#039;, &#039;x&#039;.repeat(20));
+console.log(`3 x 20B entries: size=${bytes.calculatedSize}B`, order(bytes));
+bytes.set(&#039;big&#039;, &#039;x&#039;.repeat(70));
+console.log(`insert 70B &#039;big&#039;: size=${bytes.calculatedSize}B`, order(bytes), &#039;-&gt; two LRU entries evicted to fit&#039;);
+const ok = bytes.set(&#039;huge&#039;, &#039;x&#039;.repeat(150));
+console.log(`insert 150B &#039;huge&#039; -&gt; stored=${ok} (larger than the whole cache; rejected instead of flushing it)`);
+
+console.log(&#039;\n=== 3. TTL with an injected clock ===&#039;);
+const ttl = new LRUCache({ maxEntries: 10, ttlMs: 1000, now });
+ttl.set(&#039;session&#039;, &#039;alice&#039;);
+ttl.set(&#039;config&#039;, { v: 7 }, { ttlMs: 0 }); // per-entry override: never expires
+t = 400;
+console.log(`t=${t}ms  get(session) = ${ttl.get(&#039;session&#039;)}, ttl remaining = ${ttl.ttl(&#039;session&#039;)}ms`);
+t = 1000;
+console.log(`t=${t}ms get(session) = ${ttl.get(&#039;session&#039;)}  (expired exactly at deadline: lazy expiry on access)`);
+ttl.set(&#039;a&#039;, 1, { ttlMs: 50 }); ttl.set(&#039;b&#039;, 2, { ttlMs: 50 });
+t = 1100;
+console.log(`t=${t}ms prune() removed ${ttl.prune()} expired entries; remaining keys: ${[...ttl.keys()].join(&#039;, &#039;)}`);
+
+console.log(&#039;\n=== 4. Stats on a skewed workload ===&#039;);
+// Seeded PRNG (mulberry32) so the numbers are reproducible run to run.
+function mulberry32(seed) {
+  return () =&gt; {
+    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+    let x = Math.imul(seed ^ (seed &gt;&gt;&gt; 15), 1 | seed);
+    x = (x + Math.imul(x ^ (x &gt;&gt;&gt; 7), 61 | x)) ^ x;
+    return ((x ^ (x &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296;
+  };
+}
+const rand = mulberry32(42);
+const hot = new LRUCache({ maxEntries: 100, now });
+for (let i = 0; i &lt; 20000; i++) {
+  // 80% of requests hit 50 hot keys, 20% spread across 5000 cold keys.
+  const key = rand() &lt; 0.8 ? &#039;hot&#039; + Math.floor(rand() * 50) : &#039;cold&#039; + Math.floor(rand() * 5000);
+  if (hot.get(key) === undefined) hot.set(key, i); // cache-aside fill on miss
+}
+const s = hot.stats();
+console.log(`20k requests, 100-slot cache: hits=${s.hits} misses=${s.misses} evictions=${s.evictions} hitRate=${(s.hitRate * 100).toFixed(1)}%`);
+console.log(&#039;invariants hold:&#039;, hot._checkInvariants());
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-lru-cache-test_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">test.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const assert = require(&#039;node:assert/strict&#039;);
+const { LRUCache } = require(&#039;./lru&#039;);
+
+let failed = 0, passed = 0;
+function test(name, fn) {
+  try { fn(); passed++; console.log(&#039;✓ &#039; + name); }
+  catch (e) { failed++; console.log(&#039;✗ &#039; + name + &#039;\n    &#039; + (e &amp;&amp; e.stack || e)); }
+}
+const clock = () =&gt; { const c = { t: 0 }; c.now = () =&gt; c.t; return c; };
+
+test(&#039;evicts least-recently-used entry when entry bound exceeded&#039;, () =&gt; {
+  const c = new LRUCache({ maxEntries: 2 });
+  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2); c.set(&#039;c&#039;, 3);
+  assert.equal(c.has(&#039;a&#039;), false);
+  assert.deepEqual([...c.keys()], [&#039;c&#039;, &#039;b&#039;]);
+});
+
+test(&#039;get promotes to MRU; peek and has do not&#039;, () =&gt; {
+  const c = new LRUCache({ maxEntries: 3 });
+  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2); c.set(&#039;c&#039;, 3);
+  c.peek(&#039;a&#039;); c.has(&#039;a&#039;);
+  assert.deepEqual([...c.keys()], [&#039;c&#039;, &#039;b&#039;, &#039;a&#039;]);
+  c.get(&#039;a&#039;);
+  assert.deepEqual([...c.keys()], [&#039;a&#039;, &#039;c&#039;, &#039;b&#039;]);
+  c.set(&#039;d&#039;, 4); // b is now LRU
+  assert.equal(c.has(&#039;b&#039;), false);
+});
+
+test(&#039;overwriting a key updates value, promotes it, and does not grow count&#039;, () =&gt; {
+  const c = new LRUCache({ maxEntries: 2 });
+  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2); c.set(&#039;a&#039;, 10);
+  assert.equal(c.size, 2);
+  assert.equal(c.get(&#039;a&#039;), 10);
+  c.set(&#039;c&#039;, 3);
+  assert.equal(c.has(&#039;b&#039;), false, &#039;b should be LRU after a was overwritten&#039;);
+});
+
+test(&#039;size-aware eviction keeps total size within maxSize&#039;, () =&gt; {
+  const c = new LRUCache({ maxSize: 10, sizeOf: (v) =&gt; v.length });
+  c.set(&#039;a&#039;, &#039;xxxx&#039;); c.set(&#039;b&#039;, &#039;xxxx&#039;);
+  assert.equal(c.calculatedSize, 8);
+  c.set(&#039;c&#039;, &#039;xxxxx&#039;); // 13 &gt; 10 -&gt; evict a (LRU) -&gt; 9
+  assert.deepEqual([...c.keys()], [&#039;c&#039;, &#039;b&#039;]);
+  assert.equal(c.calculatedSize, 9);
+  c.set(&#039;b&#039;, &#039;x&#039;); // shrink in place
+  assert.equal(c.calculatedSize, 6);
+  c._checkInvariants();
+});
+
+test(&#039;item larger than maxSize is rejected and removes a stale older value&#039;, () =&gt; {
+  const c = new LRUCache({ maxSize: 5, sizeOf: (v) =&gt; v.length });
+  c.set(&#039;k&#039;, &#039;abc&#039;); c.set(&#039;other&#039;, &#039;z&#039;);
+  assert.equal(c.set(&#039;k&#039;, &#039;abcdefgh&#039;), false);
+  assert.equal(c.has(&#039;k&#039;), false);
+  assert.equal(c.get(&#039;other&#039;), &#039;z&#039;, &#039;rejection must not flush other entries&#039;);
+  assert.equal(c.stats().rejected, 1);
+});
+
+test(&#039;both bounds enforced at once&#039;, () =&gt; {
+  const c = new LRUCache({ maxEntries: 3, maxSize: 100, sizeOf: (v) =&gt; v });
+  c.set(&#039;a&#039;, 10); c.set(&#039;b&#039;, 10); c.set(&#039;c&#039;, 10); c.set(&#039;d&#039;, 10);
+  assert.equal(c.size, 3);
+  c.set(&#039;e&#039;, 90); // 30+90=120 &gt; 100 -&gt; evict b (110), then c (100)
+  assert.deepEqual([...c.keys()], [&#039;e&#039;, &#039;d&#039;]);
+  assert.equal(c.calculatedSize, 100);
+  c._checkInvariants();
+});
+
+test(&#039;TTL: entry expires exactly at deadline, lazily on access&#039;, () =&gt; {
+  const k = clock();
+  const c = new LRUCache({ maxEntries: 5, ttlMs: 100, now: k.now });
+  c.set(&#039;a&#039;, 1);
+  k.t = 99; assert.equal(c.get(&#039;a&#039;), 1);
+  assert.equal(c.ttl(&#039;a&#039;), 1);
+  k.t = 100; assert.equal(c.get(&#039;a&#039;), undefined);
+  assert.equal(c.size, 0);
+  assert.equal(c.stats().expirations, 1);
+});
+
+test(&#039;TTL: per-entry override, 0 means never expire, re-set refreshes deadline&#039;, () =&gt; {
+  const k = clock();
+  const c = new LRUCache({ maxEntries: 5, ttlMs: 100, now: k.now });
+  c.set(&#039;forever&#039;, 1, { ttlMs: 0 });
+  c.set(&#039;short&#039;, 2, { ttlMs: 10 });
+  c.set(&#039;refresh&#039;, 3);
+  k.t = 90; c.set(&#039;refresh&#039;, 4);
+  k.t = 150;
+  assert.equal(c.get(&#039;forever&#039;), 1);
+  assert.equal(c.ttl(&#039;forever&#039;), Infinity);
+  assert.equal(c.get(&#039;short&#039;), undefined);
+  assert.equal(c.get(&#039;refresh&#039;), 4);
+});
+
+test(&#039;prune() sweeps expired entries and keys() skips them&#039;, () =&gt; {
+  const k = clock();
+  const c = new LRUCache({ maxEntries: 10, now: k.now });
+  for (let i = 0; i &lt; 6; i++) c.set(&#039;e&#039; + i, i, { ttlMs: i % 2 ? 10 : 0 });
+  k.t = 10;
+  assert.deepEqual([...c.keys()].sort(), [&#039;e0&#039;, &#039;e2&#039;, &#039;e4&#039;]);
+  assert.equal(c.prune(), 3);
+  assert.equal(c.size, 3);
+  c._checkInvariants();
+});
+
+test(&#039;onEvict receives key, value and reason for every removal path&#039;, () =&gt; {
+  const k = clock();
+  const log = [];
+  const c = new LRUCache({ maxEntries: 2, now: k.now, onEvict: (key, v, r) =&gt; log.push([key, v, r]) });
+  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2); c.set(&#039;c&#039;, 3);  // a capacity
+  c.set(&#039;b&#039;, 20);                               // b replaced (old value 2)
+  c.delete(&#039;c&#039;);                                // c deleted
+  c.set(&#039;x&#039;, 9, { ttlMs: 5 }); k.t = 5; c.get(&#039;x&#039;); // x expired
+  c.clear();                                    // b cleared
+  assert.deepEqual(log, [[&#039;a&#039;, 1, &#039;capacity&#039;], [&#039;b&#039;, 2, &#039;replaced&#039;], [&#039;c&#039;, 3, &#039;deleted&#039;], [&#039;x&#039;, 9, &#039;expired&#039;], [&#039;b&#039;, 20, &#039;cleared&#039;]]);
+});
+
+test(&#039;a throwing onEvict callback does not corrupt the cache&#039;, () =&gt; {
+  const c = new LRUCache({ maxEntries: 1, onEvict: () =&gt; { throw new Error(&#039;boom&#039;); } });
+  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2);
+  assert.equal(c.get(&#039;b&#039;), 2);
+  c._checkInvariants();
+});
+
+test(&#039;stats track hits, misses, evictions and hitRate&#039;, () =&gt; {
+  const c = new LRUCache({ maxEntries: 2 });
+  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2);
+  c.get(&#039;a&#039;); c.get(&#039;a&#039;); c.get(&#039;zzz&#039;); c.set(&#039;c&#039;, 3);
+  const s = c.stats();
+  assert.equal(s.hits, 2); assert.equal(s.misses, 1); assert.equal(s.evictions, 1);
+  assert.equal(s.hitRate, 2 / 3);
+});
+
+test(&#039;falsy values and non-string keys are stored correctly&#039;, () =&gt; {
+  const c = new LRUCache({ maxEntries: 10 });
+  const objKey = {};
+  c.set(0, 0); c.set(&#039;&#039;, &#039;&#039;); c.set(objKey, null); c.set(NaN, false);
+  assert.equal(c.get(0), 0); assert.equal(c.get(&#039;&#039;), &#039;&#039;);
+  assert.equal(c.get(objKey), null); assert.equal(c.has(objKey), true);
+  assert.equal(c.get(NaN), false);
+  assert.equal(c.stats().misses, 0);
+});
+
+test(&#039;randomized ops agree with a naive reference model&#039;, () =&gt; {
+  let seed = 7;
+  const rnd = (n) =&gt; { seed = (seed * 1103515245 + 12345) &gt;&gt;&gt; 0; return seed % n; };
+  const c = new LRUCache({ maxEntries: 8 });
+  let ref = []; // array of [key, value], index 0 = MRU
+  for (let i = 0; i &lt; 5000; i++) {
+    const key = rnd(20), op = rnd(3);
+    const idx = ref.findIndex(([k]) =&gt; k === key);
+    if (op === 0) {
+      c.set(key, i);
+      if (idx &gt;= 0) ref.splice(idx, 1);
+      ref.unshift([key, i]);
+      if (ref.length &gt; 8) ref.pop();
+    } else if (op === 1) {
+      const expect = idx &gt;= 0 ? ref[idx][1] : undefined;
+      assert.equal(c.get(key), expect);
+      if (idx &gt;= 0) ref.unshift(ref.splice(idx, 1)[0]);
+    } else {
+      assert.equal(c.delete(key), idx &gt;= 0);
+      if (idx &gt;= 0) ref.splice(idx, 1);
+    }
+  }
+  assert.deepEqual([...c.keys()], ref.map(([k]) =&gt; k));
+  c._checkInvariants();
+});
+
+test(&#039;rejects invalid configuration and inputs&#039;, () =&gt; {
+  assert.throws(() =&gt; new LRUCache({}), RangeError);
+  assert.throws(() =&gt; new LRUCache({ maxEntries: 0 }), RangeError);
+  assert.throws(() =&gt; new LRUCache({ maxEntries: 1.5 }), RangeError);
+  assert.throws(() =&gt; new LRUCache({ maxSize: -1 }), RangeError);
+  assert.throws(() =&gt; new LRUCache({ maxEntries: 2, ttlMs: -5 }), RangeError);
+  const c = new LRUCache({ maxSize: 10, sizeOf: () =&gt; NaN });
+  assert.throws(() =&gt; c.set(&#039;a&#039;, 1), RangeError);
+  assert.throws(() =&gt; c.set(&#039;a&#039;, 1, { size: 1, ttlMs: -1 }), RangeError);
+});
+
+test(&#039;get/set are O(1): 200k ops on a 50k cache stay fast&#039;, () =&gt; {
+  const c = new LRUCache({ maxEntries: 50000 });
+  const start = process.hrtime.bigint();
+  for (let i = 0; i &lt; 200000; i++) { c.set(i, i); c.get(i - 1000); }
+  const ms = Number(process.hrtime.bigint() - start) / 1e6;
+  assert.equal(c.size, 50000);
+  assert.ok(ms &lt; 2000, `took ${ms}ms`);
+});
+
+console.log(`\n${passed} passed, ${failed} failed`);
+if (failed) process.exit(1);
+</code></pre>
+          </div>
+      </div>
+
+      <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
+        <div id="codelab-mount-lru-cache" class="build-lab-overlay__mount" data-build-id="lru-cache"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=04a1ea8061"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=3676a86b01"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=154eb461ef"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=b79de4edf4"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=262e2d34b8"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

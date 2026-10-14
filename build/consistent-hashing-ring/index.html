@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Consistent Hashing Ring with Virtual Nodes — Interactive Build Lab | System Design In Depth</title>
+  <meta name="description" content="Consistent Hashing Ring with Virtual Nodes: A 32-bit consistent hash ring with weighted virtual nodes, binary-search lookup, exact per-node ownership and...">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Consistent Hashing Ring with Virtual Nodes — Interactive Build Lab | System Design In Depth">
+  <meta property="og:description" content="Consistent Hashing Ring with Virtual Nodes: A 32-bit consistent hash ring with weighted virtual nodes, binary-search lookup, exact per-node ownership and...">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/build/consistent-hashing-ring/">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Consistent Hashing Ring with Virtual Nodes — Interactive Build Lab | System Design In Depth">
+  <meta name="twitter:description" content="Consistent Hashing Ring with Virtual Nodes: A 32-bit consistent hash ring with weighted virtual nodes, binary-search lookup, exact per-node ownership and...">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/consistent-hashing-ring/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
+  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
+  <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
+  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="css/code-lab.css?v=2b9944bcbd">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=6e3af86ba6"></script>
+  <script src="js/manifest.js?v=2fe59c81f7"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Consistent Hashing Ring with Virtual Nodes — Interactive Build Lab",
+  "description": "Consistent Hashing Ring with Virtual Nodes: A 32-bit consistent hash ring with weighted virtual nodes, binary-search lookup, exact per-node ownership and...",
+  "url": "https://system-design-in-depth.vedgupta.in/build/consistent-hashing-ring/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" style="display:flex; gap:0.4rem; margin-right:0.5rem;">
+        <a href="#/glossary" class="btn btn--sm btn--outline" style="font-size:11px; padding:4px 8px; text-decoration:none; white-space:nowrap;">📖 Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
+      <button class="sidebar__tab sidebar__tab--active" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div class="builds-sidebar"><div class="builds-sidebar__intro">
+    Full from-scratch Node.js implementations with Guided Interactive Labs, zero dependencies, and complete test suites.
+  </div><a class="unit-item unit-item--build " href="/build/load-balancer-from-scratch/" data-build="load-balancer-from-scratch">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build unit-item--active" href="/build/consistent-hashing-ring/" data-build="consistent-hashing-ring">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Consistent Hashing Ring with Virtual Nodes</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/sliding-window-rate-limiter/" data-build="sliding-window-rate-limiter">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lru-cache/" data-build="lru-cache">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LRU Cache (Doubly Linked List + Hash Map)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/ttl-cache-reaper/" data-build="ttl-cache-reaper">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">TTL Cache with a Redis-Style Adaptive Reaper</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/bloom-filter-membership/" data-build="bloom-filter-membership">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Bloom Filter Membership Testing</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/snowflake-id-generator/" data-build="snowflake-id-generator">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Snowflake 64-bit ID Generator</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/keyset-pagination-cursors/" data-build="keyset-pagination-cursors">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/write-ahead-log/" data-build="write-ahead-log">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Write-Ahead Log (WAL) &amp; Crash Recovery</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lsm-tree-kv-store/" data-build="lsm-tree-kv-store">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LSM-Tree Key/Value Store (WAL, Memtable, SSTables, Compaction)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lease-leader-election/" data-build="lease-leader-election">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Lease-Based Leader Election with Fencing Tokens</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/gossip-protocol/" data-build="gossip-protocol">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/merkle-anti-entropy/" data-build="merkle-anti-entropy">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/hyperloglog-cardinality/" data-build="hyperloglog-cardinality">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/tiny-search-engine/" data-build="tiny-search-engine">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+        <span class="unit-item__meta">8 files · Interactive Lab</span>
+      </div>
+    </a></div>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered-build="consistent-hashing-ring">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">Consistent Hashing Ring with Virtual Nodes</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> From-Scratch Build</span>
+        </div>
+        <h1 class="lesson-header__title">Consistent Hashing Ring with Virtual Nodes</h1>
+        <p class="build-summary">A 32-bit consistent hash ring with weighted virtual nodes, binary-search lookup, exact per-node ownership and Dynamo-style preference lists of distinct nodes. It also measures how many keys move when membership changes, compared with hash % N.</p>
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~30 min</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Intermediate</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="#" data-nav="topic" data-slug="consistent-hashing">Consistent hashing</a>, <a href="#" data-nav="topic" data-slug="consistent-hashing-load-balancing">Consistent-hashing load balancing</a>, <a href="#" data-nav="topic" data-slug="sharding-and-partitioning">Sharding and partitioning</a>, <a href="#" data-nav="topic" data-slug="distributed-hash-tables">Distributed hash tables</a>, <a href="#" data-nav="topic" data-slug="replication">Replication</a>, <a href="#" data-nav="topic" data-slug="case-amazon-dynamo">Case: Amazon Dynamo, the paper</a>, <a href="#" data-nav="topic" data-slug="range-partitioning-vs-consistent-hashing-storage">Range partitioning vs consistent hashing for storage</a></span>
+        </div>
+      </div>
+
+      <div class="build-view-tabs" role="tablist" aria-label="Build View Mode">
+        <button type="button" class="build-view-tab active" role="tab" aria-selected="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Architecture &amp; Reference Code</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="guided">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>Interactive Lab IDE</span>
+          <span class="build-view-tab__badge">0/4 Steps</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="sandbox">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Sandbox Mode</span>
+        </button>
+      </div>
+
+      <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
+        <div class="build-lab-card__top">
+          <div class="build-lab-card__intro">
+            <div class="build-lab-card__eyebrow">
+              <span>Interactive Build Lab</span>
+              <span class="build-lab-card__progress" id="build-lab-progress-badge">0/4 Steps Completed</span>
+            </div>
+            <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
+            <p class="build-lab-card__desc">
+              Complete 4 progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+            </p>
+            <div class="build-lab-progress-track" aria-hidden="true">
+              <div class="build-lab-progress-track__fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="build-lab-card__cta-col">
+            <button type="button" class="btn btn--primary build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="guided">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Launch Guided Lab</span>
+            </button>
+            <button type="button" class="btn btn--outline build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="sandbox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Open Full Solution</span>
+            </button>
+          </div>
+        </div>
+
+        
+          <div class="build-lab-steps-grid" id="build-lab-steps-grid">
+            
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="0">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">01</span>
+                    <span class="build-lab-step-card__target">ring.js · HashRing._rebuild</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Virtual Node Ring Construction &amp; Deterministic Collision Tie-Breaking</div>
+                  <div class="build-lab-step-card__concept">32-Bit Hash Ring, Virtual Nodes, and Deterministic Rebuild</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>4 tests</span>
+                    <span class="build-lab-step-card__open">Step 1 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="1">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">02</span>
+                    <span class="build-lab-step-card__target">ring.js · HashRing._successor</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Clockwise Lower-Bound Binary Search &amp; Key Lookup</div>
+                  <div class="build-lab-step-card__concept">O(log V) Binary Search with Ring Wrap-Around</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>5 tests</span>
+                    <span class="build-lab-step-card__open">Step 2 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="2">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">03</span>
+                    <span class="build-lab-step-card__target">ring.js · HashRing.ownership</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Hash Space Ownership &amp; Weighted Nodes</div>
+                  <div class="build-lab-step-card__concept">Arc-Length Calculation on [0, 2^32) &amp; Proportional Weighting</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 3 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="3">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">04</span>
+                    <span class="build-lab-step-card__target">ring.js · HashRing.getNodes</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Dynamo-Style Replication Preference Lists</div>
+                  <div class="build-lab-step-card__concept">Clockwise Distinct-Node Walking for Fault-Tolerant Replication</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 4 →</span>
+                  </div>
+                </button>
+              
+          </div>
+        
+      </section>
+
+      <div id="build-walkthrough-pane">
+        <div class="build-run">
+          <div class="build-run__text">
+            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
+            <code>node demo.js</code> and <code>node test.js</code>.
+          </div>
+          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="consistent-hashing-ring">Copy setup script</button>
+        </div>
+
+        <div class="build-files"><a href="#build-file-consistent-hashing-ring-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-consistent-hashing-ring-README_md">README.md</a><a href="#build-file-consistent-hashing-ring-ring_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-consistent-hashing-ring-ring_js">ring.js</a><a href="#build-file-consistent-hashing-ring-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-consistent-hashing-ring-demo_js">demo.js</a><a href="#build-file-consistent-hashing-ring-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-consistent-hashing-ring-test_js">test.js</a></div><article class="prose" id="build-file-consistent-hashing-ring-README_md"><h2>Consistent Hashing Ring with Virtual Nodes</h2>
+
+<p>Maps keys to nodes so that adding or removing a node moves only about <code>1/N</code> of the keys, not nearly all of them.</p>
+
+<pre><code class="language-js">const ring = new HashRing({ vnodesPerWeight: 128 });
+ring.addNode(&#039;A&#039;).addNode(&#039;B&#039;).addNode(&#039;C&#039;, { weight: 2 });
+ring.getNode(&#039;user:42&#039;);        // &#039;C&#039;
+ring.getNodes(&#039;user:42&#039;, 3);    // [&#039;C&#039;, &#039;A&#039;, &#039;B&#039;], a replica preference list of distinct nodes
+ring.ownership();               // { A: 0.25.., B: 0.24.., C: 0.51.. }, exact share of the hash space</code></pre>
+
+<h2>The problem and where it shows up</h2>
+
+<p>With <code>node = hash(key) % N</code>, changing N from 4 to 5 remaps about <code>1 - 1/5 = 80%</code> of keys (the demo measures</p>
+<p>79.7%). For a cache fleet that is a mass cold-miss event. For a datastore it is a mass data migration.</p>
+<p>Consistent hashing puts both keys and nodes on a circle, and a key belongs to the next node clockwise.</p>
+<p>A membership change only affects the arcs next to the changed node. It's used in:</p>
+
+<ul>
+<li><strong>Amazon Dynamo / DynamoDB-lineage stores and Riak</strong>: partitioning and replica preference lists.</li>
+<li><strong>Apache Cassandra</strong>: token ring. Each node owns <code>num_tokens</code> vnodes (the default dropped from 256 to 16</li>
+  in 4.0, with a token-allocation algorithm to keep balance).
+<li><strong>Memcached clients</strong> (libketama, spymemcached): client-side key-to-server selection.</li>
+<li><strong>Load balancers</strong>: Envoy <code>RING_HASH</code> and <code>MAGLEV</code>, NGINX <code>hash ... consistent</code>, HAProxy <code>hash-type consistent</code>,</li>
+  for session affinity and cache locality.
+<li><strong>Discord, Akamai and others</strong>: routing users or objects to shards and cache servers.</li>
+</ul>
+<h2>Design</h2>
+
+<pre><code class="language-text">0 / 2^32
+         A#7 .   . B#2
+     C#1 .           . A#3        key k: h = md5(k)[0..4] as uint32
+        .      ring     .          owner = first vnode with point &gt;= h (wrap to index 0)
+     B#9 .           . C#4
+          C#0 .   . A#1</code></pre>
+
+<ul>
+<li><strong>Hash space</strong>: uint32. The default hash is the first 4 bytes of MD5, as libketama does. Any <code>(string) => uint32</code> can be injected; the tests use one that places points at chosen positions.</li>
+<li><strong>Virtual nodes</strong>: node <code>X</code> of weight <code>w</code> gets <code>round(vnodesPerWeight * w)</code> points (at least 1), at <code>hash("X#0") ... hash("X#k-1")</code>.</li>
+  Many small arcs per node average out the randomness of arc lengths.
+<li><strong>Storage</strong>: two parallel sorted arrays, <code>points[]</code> and <code>owners[]</code>. Lookup is a lower-bound binary search,</li>
+  and a hash past the last point wraps to index 0. A point exactly equal to the key hash owns the key.
+<li><strong>Collisions</strong>: if two vnodes hash to the same point, the node with the smaller id wins. Ties are</li>
+  broken the same way everywhere, so every process builds a byte-identical ring (tested).
+<li><strong>Preference list</strong> (<code>getNodes(key, n)</code>): walk clockwise from the key's position and skip vnodes whose</li>
+  physical node was already chosen. This returns <code>min(n, size)</code> distinct nodes, which is the Dynamo
+  "skip positions to ensure distinct physical nodes" rule.
+<li><strong>Ownership</strong>: the arc <code>(points[i-1], points[i]]</code> belongs to <code>owners[i]</code>, and index 0 also owns the wrap</li>
+  arc. <code>ownership()</code> sums the arcs exactly, so it doesn't need sampling.
+<li><strong>Movement stats</strong>: <code>assignments(keys)</code> snapshots key→node. <code>movementStats(before, after)</code> returns</li>
+  the moved count, the fraction, and the <code>from->to</code> flow matrix.
+</ul>
+<h3>Invariants (all tested)</h3>
+
+<ol>
+<li>Adding node X: every key that moves, moves <strong>to X</strong>.</li>
+<li>Removing node X: every key that moves, moves <strong>from X</strong>. The number moved equals X's key count.</li>
+<li>Reweighting X only moves keys to or from X, because X's vnode set grows or shrinks as a prefix <code>X#0..k</code>.</li>
+<li>Preference lists contain distinct nodes, and element 0 is <code>getNode(key)</code>.</li>
+<li>Removing a replica keeps the other replicas in the same relative order. Only the tail changes.</li>
+<li>Ownership shares sum to 1. Binary search agrees with a linear scan.</li>
+</ol>
+<h2>Complexity</h2>
+
+<table><thead><tr><th>Operation</th><th>Time</th><th>Space</th></tr></thead><tbody><tr><td><code>getNode</code></td><td>O(log V)</td></tr><tr><td><code>getNodes(key, n)</code></td><td>O(log V + steps). Steps are coupon-collector-like, ≈ N·(H_N − H_{N−n}), which is a handful for small n. Worst case O(V)</td><td>O(n)</td></tr><tr><td><code>addNode</code> / <code>removeNode</code> / <code>setWeight</code></td><td>O(V log V) full rebuild</td><td>O(V)</td></tr><tr><td><code>ownership</code></td><td>O(V)</td><td>O(N)</td></tr></tbody></table>V = total vnodes, N = physical nodes. The rebuild is deliberately simple. Membership changes are rare
+<p>compared with lookups, and an incremental sorted merge would be O(V).</p>
+
+<h3>Balance vs vnodes (from <code>demo.js</code>, 4 nodes, 100k keys)</h3>
+
+<table><thead><tr><th>vnodes/node</th><th>largest share (ideal 25%)</th><th>CV of key counts</th></tr></thead><tbody><tr><td>1</td><td>55.5%</td><td>0.94</td></tr><tr><td>32</td><td>28.1%</td><td>0.12</td></tr><tr><td>128</td><td>27.4%</td><td>0.09</td></tr><tr><td>512</td><td>25.7%</td><td>0.02</td></tr></tbody></table>Imbalance falls roughly as <code>1/sqrt(vnodes)</code>. The cost is memory and a slightly longer binary search.
+
+<h2>Failure modes and trade-offs</h2>
+
+<ul>
+<li><strong>Too few vnodes</strong>: hot nodes get 2x their share. <strong>Too many</strong>: memory, rebuild time, and (in Cassandra)</li>
+  repair and streaming overhead per token range. That is why Cassandra reduced its default.
+<li><strong>Hot keys are not fixed by hashing</strong>: a single viral key still lands on one node. Mitigate with key</li>
+  salting or splitting, replica reads, or a local cache in front.
+<li><strong>Membership disagreement</strong>: if clients hold different rings (for example, one hasn't seen a node leave),</li>
+  the same key routes to different nodes. Real systems spread ring state by gossip or a coordination service,
+  and tolerate a convergence window (hinted handoff, read repair).
+<li><strong>Cascading failure</strong>: when a node dies, its whole load moves to its clockwise successors. With vnodes it</li>
+  is spread over many successors, which is one of the main reasons for vnodes.
+<li><strong>Replicas in the same failure domain</strong>: distinct <em>nodes</em> aren't distinct <em>racks/AZs</em>. Production preference</li>
+  lists also skip nodes in an already-used rack (Cassandra's <code>NetworkTopologyStrategy</code>).
+<li><strong>Weights are approximate</strong>: shares converge to the weight ratio only as vnodes grow (the demo's 2x node gets 52.2%, not 50%).</li>
+</ul>
+<h2>How production systems do it</h2>
+
+<ul>
+<li><strong>libketama</strong> (memcached): each server gets about 160 points weighted by memory. Each MD5 digest yields</li>
+  <strong>4</strong> 32-bit points, so it runs 40 digests per server.
+<li><strong>Cassandra</strong>: Murmur3Partitioner with a signed 64-bit token space. Since 4.0, <code>num_tokens: 16</code> plus</li>
+  <code>allocate_tokens_for_local_replication_factor</code> places tokens to minimize imbalance instead of choosing them at random.
+<li><strong>Dynamo (2007 paper)</strong>: evolved from random tokens per node (strategy 1) to Q equal-sized fixed partitions</li>
+  with tokens assigned to nodes (strategy 3), which decouples partitioning from placement and makes
+  bootstrap and recovery simpler. Preference lists skip positions so replicas land on distinct physical nodes.
+<li><strong>Envoy</strong>: <code>RING_HASH</code> (configurable <code>minimum_ring_size</code>, default 1024) or <code>MAGLEV</code> (a 65537-entry lookup</li>
+  table, O(1) lookup, near-perfect balance, slightly more disruption on change).
+<li><strong>Jump consistent hash</strong> (Google, 2014): no ring and no memory, O(log N), perfect balance, but only for</li>
+  numbered buckets that are added or removed at the end.
+<li><strong>Rendezvous (HRW) hashing</strong>: score every node with <code>hash(key, node)</code> and take the max. O(N) per lookup,</li>
+  no vnodes needed, and a natural top-k preference list.
+</ul>
+<h2>How to run</h2>
+
+<pre><code class="language-bash">node demo.js   # balance vs vnodes, key movement vs hash % N, weights, preference lists
+node test.js   # 15 tests: wrap-around, exact ownership, movement invariants, replicas, collisions</code></pre>
+
+<p>Node ≥ 18, no dependencies (uses <code>node:crypto</code> MD5). Both finish in a couple of seconds.</p>
+
+<h2>Extension exercises</h2>
+
+<ol>
+<li><strong>Rack-aware preference lists</strong>: give nodes a <code>zone</code> and make <code>getNodes</code> skip nodes whose zone is already used,</li>
+   falling back to reusing zones only when there are fewer zones than replicas.
+<li><strong>Incremental add/remove</strong>: replace the full rebuild with an O(V) sorted merge or filter, and benchmark both at 10k vnodes.</li>
+<li><strong>Bounded loads</strong> (Google/Vimeo, 2017): cap each node at <code>(1+ε) * average</code> load and send overflow clockwise. Measure the max load under a Zipf workload.</li>
+<li><strong>Rendezvous vs ring</strong>: implement HRW, then compare movement, balance and lookup cost at N = 5, 50 and 500.</li>
+<li><strong>Ketama-compatible mode</strong>: 4 points per MD5 digest and weight-proportional point counts. Check your ring matches a known libketama server list.</li>
+</ol></article>
+          <div class="code-block" id="build-file-consistent-hashing-ring-ring_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">ring.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+/**
+ * Consistent hash ring with virtual nodes and weights.
+ *
+ * The hash space is the 32-bit circle [0, 2^32). Each physical node owns
+ * round(vnodesPerWeight * weight) points (&quot;virtual nodes&quot;) on the circle. A key is
+ * owned by the first point clockwise from hash(key) (wrapping past 2^32 - 1 to 0).
+ *
+ * Storage: two parallel sorted arrays (points: Uint32 hash, owners: node id), so a
+ * lookup is a single lower-bound binary search: O(log V), V = total virtual nodes.
+ */
+const crypto = require(&#039;node:crypto&#039;);
+
+const SPACE = 2 ** 32;
+
+/** Default hash: first 4 bytes of MD5, big-endian (the same idea as libketama). */
+function md5Hash32(str) {
+  return crypto.createHash(&#039;md5&#039;).update(str).digest().readUInt32BE(0);
+}
+
+class HashRing {
+  /**
+   * @param {object} [opts]
+   * @param {number} [opts.vnodesPerWeight=128] virtual nodes for a node of weight 1
+   * @param {(s: string) =&gt; number} [opts.hash] must return an integer in [0, 2^32)
+   */
+  constructor({ vnodesPerWeight = 128, hash = md5Hash32 } = {}) {
+    if (!Number.isInteger(vnodesPerWeight) || vnodesPerWeight &lt; 1) {
+      throw new RangeError(&#039;vnodesPerWeight must be a positive integer&#039;);
+    }
+    if (typeof hash !== &#039;function&#039;) throw new TypeError(&#039;hash must be a function&#039;);
+    this.vnodesPerWeight = vnodesPerWeight;
+    this.hash = hash;
+    this.nodes = new Map(); // id -&gt; { weight, vnodes }
+    this.points = [];       // sorted ascending
+    this.owners = [];       // owners[i] owns points[i]
+  }
+
+  _hashOf(str) {
+    const h = this.hash(str);
+    if (!Number.isInteger(h) || h &lt; 0 || h &gt;= SPACE) throw new RangeError(`hash returned ${h}, expected uint32`);
+    return h;
+  }
+
+  get size() { return this.nodes.size; }
+  get vnodeCount() { return this.points.length; }
+
+  /** Add a node. Weight scales its number of virtual nodes (and so its share of keys). */
+  addNode(id, { weight = 1 } = {}) {
+    if (typeof id !== &#039;string&#039; || id.length === 0) throw new TypeError(&#039;node id must be a non-empty string&#039;);
+    if (this.nodes.has(id)) throw new Error(`node ${id} already exists`);
+    if (typeof weight !== &#039;number&#039; || !Number.isFinite(weight) || weight &lt;= 0) {
+      throw new RangeError(&#039;weight must be a positive finite number&#039;);
+    }
+    const vnodes = Math.max(1, Math.round(this.vnodesPerWeight * weight));
+    this.nodes.set(id, { weight, vnodes });
+    this._rebuild();
+    return this;
+  }
+
+  removeNode(id) {
+    if (!this.nodes.delete(id)) return false;
+    this._rebuild();
+    return true;
+  }
+
+  setWeight(id, weight) {
+    if (!this.nodes.has(id)) throw new Error(`unknown node ${id}`);
+    this.nodes.delete(id);
+    return this.addNode(id, { weight });
+  }
+
+  /**
+   * Rebuild the sorted arrays: O(V log V). Membership changes are rare compared with lookups,
+   * so a full rebuild keeps the code simple. Hash collisions between vnodes are broken
+   * deterministically by node id, so every process builds an identical ring.
+   */
+  _rebuild() {
+    const entries = [];
+    for (const [id, { vnodes }] of this.nodes) {
+      for (let i = 0; i &lt; vnodes; i++) entries.push([this._hashOf(`${id}#${i}`), id]);
+    }
+    entries.sort((a, b) =&gt; a[0] - b[0] || (a[1] &lt; b[1] ? -1 : a[1] &gt; b[1] ? 1 : 0));
+    // Drop exact duplicate points (keep the first owner by id): a point can only have one owner.
+    this.points = [];
+    this.owners = [];
+    for (const [p, id] of entries) {
+      if (this.points.length &amp;&amp; this.points[this.points.length - 1] === p) continue;
+      this.points.push(p);
+      this.owners.push(id);
+    }
+  }
+
+  /** Index of the first point &gt;= h, wrapping to 0. Classic lower-bound binary search. */
+  _successor(h) {
+    let lo = 0, hi = this.points.length; // search in [lo, hi)
+    while (lo &lt; hi) {
+      const mid = (lo + hi) &gt;&gt;&gt; 1;
+      if (this.points[mid] &lt; h) lo = mid + 1; else hi = mid;
+    }
+    return lo === this.points.length ? 0 : lo;
+  }
+
+  _keyHash(key) {
+    if (typeof key !== &#039;string&#039;) throw new TypeError(&#039;key must be a string&#039;);
+    return this._hashOf(key);
+  }
+
+  /** Owner of key, or null if the ring is empty. */
+  getNode(key) {
+    const h = this._keyHash(key);
+    if (this.points.length === 0) return null;
+    return this.owners[this._successor(h)];
+  }
+
+  /**
+   * Preference list (Dynamo-style): walk clockwise from the key, collecting the first n
+   * DISTINCT physical nodes. Virtual nodes of an already-chosen node are skipped, so replicas
+   * never land twice on the same machine. Returns min(n, size) nodes; the first is the owner.
+   */
+  getNodes(key, n) {
+    if (!Number.isInteger(n) || n &lt; 1) throw new RangeError(&#039;n must be a positive integer&#039;);
+    const h = this._keyHash(key);
+    const want = Math.min(n, this.nodes.size);
+    const out = [];
+    if (want === 0) return out;
+    const seen = new Set();
+    const start = this._successor(h);
+    for (let step = 0; step &lt; this.points.length &amp;&amp; out.length &lt; want; step++) {
+      const id = this.owners[(start + step) % this.points.length];
+      if (!seen.has(id)) { seen.add(id); out.push(id); }
+    }
+    return out;
+  }
+
+  /**
+   * Exact fraction of the hash circle owned by each node. The arc (points[i-1], points[i]]
+   * belongs to owners[i]; the first point also owns the wrap-around arc from the last point.
+   */
+  ownership() {
+    const share = Object.fromEntries([...this.nodes.keys()].map((id) =&gt; [id, 0]));
+    const P = this.points, n = P.length;
+    for (let i = 0; i &lt; n; i++) {
+      const prev = i === 0 ? P[n - 1] - SPACE : P[i - 1];
+      share[this.owners[i]] += (P[i] - prev) / SPACE;
+    }
+    return share;
+  }
+
+  /** Count keys per node for a given key list. */
+  distribution(keys) {
+    const counts = Object.fromEntries([...this.nodes.keys()].map((id) =&gt; [id, 0]));
+    for (const k of keys) counts[this.getNode(k)]++;
+    return counts;
+  }
+
+  /** Snapshot key -&gt; owner, for comparing before/after a membership change. */
+  assignments(keys) {
+    const m = new Map();
+    for (const k of keys) m.set(k, this.getNode(k));
+    return m;
+  }
+}
+
+/**
+ * Compare two assignment maps (from ring.assignments or any key -&gt; node map).
+ * Returns { total, moved, fraction, flows: { &quot;a-&gt;b&quot;: count } }.
+ */
+function movementStats(before, after) {
+  let moved = 0, total = 0;
+  const flows = {};
+  for (const [k, from] of before) {
+    if (!after.has(k)) continue;
+    total++;
+    const to = after.get(k);
+    if (from !== to) {
+      moved++;
+      const f = `${from}-&gt;${to}`;
+      flows[f] = (flows[f] || 0) + 1;
+    }
+  }
+  return { total, moved, fraction: total ? moved / total : 0, flows };
+}
+
+/** Coefficient of variation (stddev / mean) of a counts object: 0 = perfectly even. */
+function imbalance(counts) {
+  const v = Object.values(counts);
+  const mean = v.reduce((a, b) =&gt; a + b, 0) / v.length;
+  const variance = v.reduce((a, b) =&gt; a + (b - mean) ** 2, 0) / v.length;
+  return Math.sqrt(variance) / mean;
+}
+
+module.exports = { HashRing, movementStats, imbalance, md5Hash32 };
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-consistent-hashing-ring-demo_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">demo.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const { HashRing, movementStats, imbalance, md5Hash32 } = require(&#039;./ring&#039;);
+
+const KEYS = Array.from({ length: 100_000 }, (_, i) =&gt; `user:${i}`);
+const pct = (x) =&gt; (100 * x).toFixed(1) + &#039;%&#039;;
+const fmt = (counts) =&gt; Object.entries(counts).map(([k, v]) =&gt; `${k}=${v}`).join(&#039;  &#039;);
+
+console.log(&#039;=== 1. Why virtual nodes: balance vs number of points per node ===&#039;);
+for (const v of [1, 8, 32, 128, 512]) {
+  const r = new HashRing({ vnodesPerWeight: v });
+  [&#039;A&#039;, &#039;B&#039;, &#039;C&#039;, &#039;D&#039;].forEach((n) =&gt; r.addNode(n));
+  const own = r.ownership();
+  const max = Math.max(...Object.values(own));
+  console.log(`vnodes/node=${String(v).padStart(3)}  ring points=${String(r.vnodeCount).padStart(4)}  ` +
+    `largest share=${pct(max).padStart(6)} (ideal 25.0%)  CV of key counts=${imbalance(r.distribution(KEYS)).toFixed(3)}`);
+}
+
+console.log(&#039;\n=== 2. Adding a node moves ~1/N of keys, and only onto the new node ===&#039;);
+const ring = new HashRing({ vnodesPerWeight: 128 });
+[&#039;A&#039;, &#039;B&#039;, &#039;C&#039;, &#039;D&#039;].forEach((n) =&gt; ring.addNode(n));
+const before = ring.assignments(KEYS);
+ring.addNode(&#039;E&#039;);
+const afterAdd = ring.assignments(KEYS);
+const add = movementStats(before, afterAdd);
+console.log(`4 -&gt; 5 nodes: moved ${add.moved}/${add.total} = ${pct(add.fraction)} (ideal 1/5 = 20.0%)`);
+console.log(&#039;flows:&#039;, fmt(add.flows));
+
+// Contrast: naive hash(key) % N.
+const modN = (n) =&gt; new Map(KEYS.map((k) =&gt; [k, &#039;n&#039; + (md5Hash32(k) % n)]));
+const mod = movementStats(modN(4), modN(5));
+console.log(`hash % N, 4 -&gt; 5 nodes: moved ${pct(mod.fraction)} (theory 1 - 1/5 = 80%)`);
+
+console.log(&#039;\n=== 3. Removing a node moves only its keys, spread across the survivors ===&#039;);
+ring.removeNode(&#039;B&#039;);
+const rem = movementStats(afterAdd, ring.assignments(KEYS));
+console.log(`remove B: moved ${pct(rem.fraction)}; flows: ${fmt(rem.flows)}`);
+
+console.log(&#039;\n=== 4. Weights: a 2x machine gets ~2x the keys ===&#039;);
+const w = new HashRing({ vnodesPerWeight: 128 });
+w.addNode(&#039;small-1&#039;).addNode(&#039;small-2&#039;).addNode(&#039;big&#039;, { weight: 2 });
+const own = w.ownership();
+console.log(&#039;ownership of hash space:&#039;, Object.entries(own).map(([k, v]) =&gt; `${k}=${pct(v)}`).join(&#039;  &#039;), &#039;(ideal 25/25/50)&#039;);
+console.log(&#039;keys:&#039;, fmt(w.distribution(KEYS)));
+
+console.log(&#039;\n=== 5. Replica preference list (N=3, distinct physical nodes) ===&#039;);
+const rep = new HashRing({ vnodesPerWeight: 64 });
+[&#039;n1&#039;, &#039;n2&#039;, &#039;n3&#039;, &#039;n4&#039;, &#039;n5&#039;].forEach((n) =&gt; rep.addNode(n));
+for (const k of [&#039;cart:alice&#039;, &#039;cart:bob&#039;, &#039;session:42&#039;]) {
+  console.log(`${k.padEnd(11)} -&gt; [${rep.getNodes(k, 3).join(&#039;, &#039;)}]  (first = coordinator; walk skips repeat vnodes)`);
+}
+const k = &#039;cart:alice&#039;;
+const prefBefore = rep.getNodes(k, 3);
+rep.removeNode(prefBefore[0]);
+console.log(`remove ${prefBefore[0]} -&gt; [${rep.getNodes(k, 3).join(&#039;, &#039;)}]  (the two survivors keep their order; a new third joins)`);
+
+console.log(&#039;\n=== 6. Lookup cost ===&#039;);
+console.log(`${ring.vnodeCount} points -&gt; each lookup is a binary search of &lt;= ${Math.ceil(Math.log2(ring.vnodeCount + 1))} comparisons`);
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-consistent-hashing-ring-test_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">test.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const assert = require(&#039;node:assert/strict&#039;);
+const { HashRing, movementStats, imbalance } = require(&#039;./ring&#039;);
+
+let failed = 0, passed = 0;
+function test(name, fn) {
+  try { fn(); passed++; console.log(&#039;✓ &#039; + name); }
+  catch (e) { failed++; console.log(&#039;✗ &#039; + name + &#039;\n    &#039; + (e &amp;&amp; e.stack || e)); }
+}
+const KEYS = Array.from({ length: 20000 }, (_, i) =&gt; `k${i}`);
+const ringOf = (ids, opts) =&gt; { const r = new HashRing(opts); ids.forEach((id) =&gt; r.addNode(id)); return r; };
+
+// Controllable hash for exact-position tests: &quot;name@123&quot; hashes to 123.
+const posHash = (s) =&gt; {
+  const m = /@(\d+)/.exec(s);
+  if (m) return Number(m[1]);
+  // vnode ids look like &quot;A#0&quot;: place node X&#039;s i-th vnode at table[X][i]
+  const [id, i] = s.split(&#039;#&#039;);
+  return { A: [100, 300], B: [200, 400] }[id][Number(i)];
+};
+
+test(&#039;empty ring returns null / [] and ownership is empty&#039;, () =&gt; {
+  const r = new HashRing();
+  assert.equal(r.getNode(&#039;x&#039;), null);
+  assert.deepEqual(r.getNodes(&#039;x&#039;, 3), []);
+  assert.deepEqual(r.ownership(), {});
+});
+
+test(&#039;key maps to first vnode clockwise, inclusive, with wrap-around past the top&#039;, () =&gt; {
+  const r = ringOf([&#039;A&#039;, &#039;B&#039;], { vnodesPerWeight: 2, hash: posHash }); // A:100,300  B:200,400
+  assert.equal(r.getNode(&#039;k@0&#039;), &#039;A&#039;);
+  assert.equal(r.getNode(&#039;k@100&#039;), &#039;A&#039;);   // exactly on a point -&gt; that point
+  assert.equal(r.getNode(&#039;k@101&#039;), &#039;B&#039;);
+  assert.equal(r.getNode(&#039;k@350&#039;), &#039;B&#039;);
+  assert.equal(r.getNode(&#039;k@401&#039;), &#039;A&#039;);   // past the last point -&gt; wraps to first
+  assert.equal(r.getNode(`k@${2 ** 32 - 1}`), &#039;A&#039;);
+});
+
+test(&#039;ownership is the exact arc length and sums to 1&#039;, () =&gt; {
+  const r = ringOf([&#039;A&#039;, &#039;B&#039;], { vnodesPerWeight: 2, hash: posHash });
+  const own = r.ownership();
+  const S = 2 ** 32;
+  assert.equal(own.B, 200 / S);             // (100,200] + (300,400]
+  assert.equal(own.A, (S - 200) / S);        // (0..100] + (200,300] + wrap (400, 2^32)
+  const big = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;]);
+  const sum = Object.values(big.ownership()).reduce((x, y) =&gt; x + y, 0);
+  assert.ok(Math.abs(sum - 1) &lt; 1e-12);
+});
+
+test(&#039;binary search agrees with a linear scan on random hashes&#039;, () =&gt; {
+  const r = ringOf([&#039;n1&#039;, &#039;n2&#039;, &#039;n3&#039;, &#039;n4&#039;, &#039;n5&#039;, &#039;n6&#039;], { vnodesPerWeight: 50 });
+  let seed = 3;
+  for (let i = 0; i &lt; 5000; i++) {
+    seed = (seed * 1664525 + 1013904223) &gt;&gt;&gt; 0;
+    const idx = r._successor(seed);
+    let lin = r.points.findIndex((p) =&gt; p &gt;= seed);
+    if (lin === -1) lin = 0;
+    assert.equal(idx, lin);
+  }
+  // Points really are sorted and unique.
+  for (let i = 1; i &lt; r.points.length; i++) assert.ok(r.points[i] &gt; r.points[i - 1]);
+});
+
+test(&#039;virtual nodes improve balance (more vnodes -&gt; lower imbalance)&#039;, () =&gt; {
+  const ids = [&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;];
+  const cv1 = imbalance(ringOf(ids, { vnodesPerWeight: 1 }).distribution(KEYS));
+  const cv256 = imbalance(ringOf(ids, { vnodesPerWeight: 256 }).distribution(KEYS));
+  assert.ok(cv256 &lt; cv1, `${cv256} !&lt; ${cv1}`);
+  assert.ok(cv256 &lt; 0.1, `cv with 256 vnodes = ${cv256}`);
+});
+
+test(&#039;adding a node moves ~1/N keys and ONLY onto the new node&#039;, () =&gt; {
+  const r = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;]);
+  const before = r.assignments(KEYS);
+  r.addNode(&#039;e&#039;);
+  const s = movementStats(before, r.assignments(KEYS));
+  for (const flow of Object.keys(s.flows)) assert.ok(flow.endsWith(&#039;-&gt;e&#039;), flow);
+  assert.ok(s.fraction &gt; 0.12 &amp;&amp; s.fraction &lt; 0.28, `moved ${s.fraction}`);
+});
+
+test(&#039;removing a node moves ONLY its keys; others stay put&#039;, () =&gt; {
+  const r = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;]);
+  const before = r.assignments(KEYS);
+  const ownedByC = [...before.values()].filter((n) =&gt; n === &#039;c&#039;).length;
+  assert.equal(r.removeNode(&#039;c&#039;), true);
+  assert.equal(r.removeNode(&#039;c&#039;), false);
+  const s = movementStats(before, r.assignments(KEYS));
+  for (const flow of Object.keys(s.flows)) assert.ok(flow.startsWith(&#039;c-&gt;&#039;), flow);
+  assert.equal(s.moved, ownedByC);
+});
+
+test(&#039;weights: share of hash space is proportional to weight&#039;, () =&gt; {
+  const r = new HashRing({ vnodesPerWeight: 256 });
+  r.addNode(&#039;w1&#039;, { weight: 1 }).addNode(&#039;w3&#039;, { weight: 3 });
+  const own = r.ownership();
+  assert.ok(Math.abs(own.w3 - 0.75) &lt; 0.05, `w3 share ${own.w3}`);
+  assert.equal(r.nodes.get(&#039;w3&#039;).vnodes, 768);
+  // Fractional weights round to at least one vnode.
+  r.addNode(&#039;tiny&#039;, { weight: 0.0001 });
+  assert.equal(r.nodes.get(&#039;tiny&#039;).vnodes, 1);
+});
+
+test(&#039;setWeight only moves keys to/from the reweighted node&#039;, () =&gt; {
+  const r = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;]);
+  const before = r.assignments(KEYS);
+  r.setWeight(&#039;b&#039;, 2);
+  const s1 = movementStats(before, r.assignments(KEYS));
+  for (const f of Object.keys(s1.flows)) assert.ok(f.endsWith(&#039;-&gt;b&#039;), f);
+  const mid = r.assignments(KEYS);
+  r.setWeight(&#039;b&#039;, 0.5);
+  const s2 = movementStats(mid, r.assignments(KEYS));
+  for (const f of Object.keys(s2.flows)) assert.ok(f.startsWith(&#039;b-&gt;&#039;), f);
+});
+
+test(&#039;preference list: distinct nodes, owner first, capped at cluster size&#039;, () =&gt; {
+  const r = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;], { vnodesPerWeight: 64 });
+  for (const k of KEYS.slice(0, 2000)) {
+    const pl = r.getNodes(k, 3);
+    assert.equal(pl.length, 3);
+    assert.equal(new Set(pl).size, 3);
+    assert.equal(pl[0], r.getNode(k));
+  }
+  assert.equal(r.getNodes(&#039;x&#039;, 10).length, 5);
+  assert.throws(() =&gt; r.getNodes(&#039;x&#039;, 0), RangeError);
+});
+
+test(&#039;preference list follows ring order and skips repeat vnodes&#039;, () =&gt; {
+  // A:100,300  B:200,400. From 50, clockwise: A(100) B(200) A(300) B(400).
+  const r = ringOf([&#039;A&#039;, &#039;B&#039;], { vnodesPerWeight: 2, hash: posHash });
+  assert.deepEqual(r.getNodes(&#039;k@50&#039;, 2), [&#039;A&#039;, &#039;B&#039;]);
+  assert.deepEqual(r.getNodes(&#039;k@250&#039;, 2), [&#039;A&#039;, &#039;B&#039;]);   // 300 is A, then 400 is B
+  assert.deepEqual(r.getNodes(&#039;k@350&#039;, 2), [&#039;B&#039;, &#039;A&#039;]);   // 400 B, wrap to 100 A
+});
+
+test(&#039;removing a replica keeps survivors in the same relative order&#039;, () =&gt; {
+  const r = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;, &#039;f&#039;], { vnodesPerWeight: 32 });
+  for (const k of KEYS.slice(0, 500)) {
+    const pl = r.getNodes(k, 3);
+    const r2 = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;, &#039;f&#039;].filter((n) =&gt; n !== pl[1]), { vnodesPerWeight: 32 });
+    const pl2 = r2.getNodes(k, 3);
+    assert.deepEqual(pl2.slice(0, 2), [pl[0], pl[2]]);
+  }
+});
+
+test(&#039;deterministic: same membership in any insertion order -&gt; identical ring&#039;, () =&gt; {
+  const r1 = ringOf([&#039;x&#039;, &#039;y&#039;, &#039;z&#039;]);
+  const r2 = ringOf([&#039;z&#039;, &#039;x&#039;, &#039;y&#039;]);
+  assert.deepEqual(r1.points, r2.points);
+  assert.deepEqual(r1.owners, r2.owners);
+});
+
+test(&#039;vnode hash collisions are resolved deterministically by node id&#039;, () =&gt; {
+  const collide = (s) =&gt; (s.startsWith(&#039;k@&#039;) ? Number(s.slice(2)) : 500); // every vnode at 500
+  const r = new HashRing({ vnodesPerWeight: 3, hash: collide });
+  r.addNode(&#039;zeta&#039;).addNode(&#039;alpha&#039;);
+  assert.deepEqual(r.points, [500]);
+  assert.deepEqual(r.owners, [&#039;alpha&#039;]);
+  assert.equal(r.getNode(&#039;k@7&#039;), &#039;alpha&#039;);
+});
+
+test(&#039;rejects invalid input&#039;, () =&gt; {
+  const r = new HashRing();
+  assert.throws(() =&gt; new HashRing({ vnodesPerWeight: 0 }), RangeError);
+  assert.throws(() =&gt; r.addNode(&#039;&#039;), TypeError);
+  assert.throws(() =&gt; r.addNode(&#039;a&#039;, { weight: 0 }), RangeError);
+  assert.throws(() =&gt; r.addNode(&#039;a&#039;, { weight: NaN }), RangeError);
+  r.addNode(&#039;a&#039;);
+  assert.throws(() =&gt; r.addNode(&#039;a&#039;), /already exists/);
+  assert.throws(() =&gt; r.getNode(42), TypeError);
+  assert.throws(() =&gt; r.setWeight(&#039;nope&#039;, 2), /unknown node/);
+  const bad = new HashRing({ hash: () =&gt; -1 });
+  assert.throws(() =&gt; bad.addNode(&#039;a&#039;), RangeError);
+});
+
+console.log(`\n${passed} passed, ${failed} failed`);
+if (failed) process.exit(1);
+</code></pre>
+          </div>
+      </div>
+
+      <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
+        <div id="codelab-mount-consistent-hashing-ring" class="build-lab-overlay__mount" data-build-id="consistent-hashing-ring"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=04a1ea8061"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=3676a86b01"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=154eb461ef"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=b79de4edf4"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=262e2d34b8"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

@@ -11,6 +11,8 @@ window.App = (() => {
   let activeTab = 'curriculum';  // curriculum | builds
   let sidebarOpen = false;
   let activeSimulator = null;
+  let activeCodeLab = null;
+  let currentBuildParams = new URLSearchParams();
   let landingCleanup = null;  // live demo on the landing page
   const collapsedModules = new Set();
 
@@ -97,13 +99,28 @@ window.App = (() => {
       return;
     }
 
+    // Upgrade legacy #build/<slug> hash to clean /build/<slug>/ path
     if (hash.startsWith('build/')) {
+      const [rawBuildSlug, queryStr] = hash.slice(6).split('?');
+      currentSlug = rawBuildSlug.replace(/\/+$/, '');
+      currentBuildParams = new URLSearchParams(queryStr || window.location.search);
+      history.replaceState(null, '', '/build/' + currentSlug + '/' + (queryStr ? '?' + queryStr : window.location.search));
       currentView = 'build';
-      currentSlug = hash.slice(6);
       activeTab = 'builds';
       syncSidebarTabs();
       return;
     }
+
+    // Clean URL build route: build/<slug> or /build/<slug>/
+    if (path.startsWith('build/')) {
+      currentView = 'build';
+      currentSlug = path.slice(6).replace(/\/+$/, '');
+      currentBuildParams = new URLSearchParams(window.location.search);
+      activeTab = 'builds';
+      syncSidebarTabs();
+      return;
+    }
+
     if (hash === '/review' || hash === 'review' || hash === '/paths' || hash === 'paths' || hash === '/cards' || hash === 'cards') {
       window.location.hash = '';
       return;
@@ -180,13 +197,11 @@ window.App = (() => {
 
   function navigateToBuild(buildId, event) {
     if (event && event.preventDefault) event.preventDefault();
-    if (window.location.pathname !== '/') {
-      history.pushState(null, '', '/#build/' + buildId);
-      parseRoute();
-      renderCurrentView();
-    } else {
-      window.location.hash = 'build/' + buildId;
-    }
+    if (!buildId) return;
+    history.pushState(null, '', '/build/' + buildId + '/');
+    parseRoute();
+    renderCurrentView();
+    updateSidebarActive();
     closeSidebar();
     window.scrollTo(0, 0);
   }
@@ -250,12 +265,18 @@ window.App = (() => {
       activeSimulator.unmount(reader);
       activeSimulator = null;
     }
+    if (activeCodeLab) {
+      if (window.CodeLab?.unmount) window.CodeLab.unmount(activeCodeLab);
+      else if (activeCodeLab.destroy) activeCodeLab.destroy();
+      activeCodeLab = null;
+    }
     if (landingCleanup) {
       landingCleanup();
       landingCleanup = null;
     }
     // Landing page is full-width (sidebar hidden until opened)
     document.body.classList.toggle('view-landing', currentView === 'home' && !!window.Landing);
+    document.body.classList.toggle('view-build', currentView === 'build');
 
     switch (currentView) {
       case 'home':
@@ -393,27 +414,161 @@ window.App = (() => {
         }
         break;
       case 'build':
+        reader.removeAttribute('data-prerendered');
+        const isPrerenderedBuild = reader.getAttribute('data-prerendered-build') === currentSlug;
         const renderBuildView = () => {
-          reader.innerHTML = window.Renderer.renderBuild(currentSlug);
-          initMermaid();
-          const sidebarContent = document.getElementById('sidebar-content');
-          if (activeTab === 'builds' && sidebarContent) {
-            renderBuildsSidebar(sidebarContent);
+          document.body.classList.remove('codelab-fullscreen-lock');
+          if (reader.getAttribute('data-prerendered-build') === currentSlug) {
+            reader.removeAttribute('data-prerendered-build');
+          } else {
+            reader.removeAttribute('data-prerendered-build');
+            reader.innerHTML = window.Renderer.renderBuild(currentSlug);
           }
+          initMermaid();
+
+          const impls = window.IMPLEMENTATIONS_DATA;
+          const build = impls?.[currentSlug];
+          const overlayEl = document.getElementById('build-lab-overlay');
+          const mountEl = document.getElementById('codelab-mount-' + currentSlug);
+          const requestedMode = currentBuildParams.get('mode');
+          const requestedLang = currentBuildParams.get('lang');
+          const requestedLab = currentBuildParams.get('lab');
+          const requestedStep = currentBuildParams.get('step');
+
+          const syncOverviewProgress = () => {
+            const sb = document.getElementById('sidebar-content');
+            if (activeTab === 'builds' && sb) renderBuildsSidebar(sb);
+            let completedIds = [];
+            try {
+              const raw = localStorage.getItem('sd-codelab-v1:' + currentSlug) || localStorage.getItem('sd_codelab_' + currentSlug);
+              const saved = JSON.parse(raw || 'null');
+              if (Array.isArray(saved?.completedSteps)) {
+                completedIds = saved.completedSteps;
+              } else {
+                const legacy = JSON.parse(localStorage.getItem('codelab_progress_' + currentSlug) || '[]');
+                if (Array.isArray(legacy)) completedIds = legacy;
+              }
+            } catch (_) {}
+            const steps = window.GUIDED_LABS_DATA?.[currentSlug]?.steps || [];
+            const badge = document.getElementById('build-lab-progress-badge');
+            if (badge && steps.length) {
+              badge.textContent = `${completedIds.length}/${steps.length} Steps Completed`;
+            }
+            const tabBadge = reader.querySelector('.build-view-tab__badge');
+            if (tabBadge && steps.length) {
+              tabBadge.textContent = `${completedIds.length}/${steps.length} Steps`;
+            }
+            const trackFill = reader.querySelector('.build-lab-progress-track__fill');
+            if (trackFill && steps.length) {
+              const pct = Math.round((completedIds.length / steps.length) * 100);
+              trackFill.style.width = `${pct}%`;
+            }
+            const cards = reader.querySelectorAll('.build-lab-step-card[data-step-index]');
+            cards.forEach(card => {
+              const idx = parseInt(card.getAttribute('data-step-index'), 10);
+              const step = steps[idx];
+              if (!step) return;
+              const isDone = completedIds.includes(step.id);
+              card.classList.toggle('is-done', isDone);
+              const numEl = card.querySelector('.build-lab-step-card__num');
+              if (numEl) {
+                numEl.innerHTML = isDone
+                  ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>'
+                  : `0${idx + 1}`;
+              }
+            });
+          };
+
+          syncOverviewProgress();
+
+          const closeBuildLab = () => {
+            if (!overlayEl) return;
+            overlayEl.classList.remove('is-open');
+            overlayEl.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('codelab-fullscreen-lock');
+            syncOverviewProgress();
+          };
+
+          const openBuildLab = (opts = {}) => {
+            if (!overlayEl || !mountEl || !window.CodeLab) return;
+            overlayEl.classList.add('is-open');
+            overlayEl.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('codelab-fullscreen-lock');
+
+            if (!activeCodeLab) {
+              const mountOpts = {
+                labId: currentSlug,
+                title: build?.title || currentSlug,
+                summary: build?.summary || '',
+                backLabel: 'Back to Build Guide',
+                onClose: closeBuildLab,
+                onStepComplete: syncOverviewProgress,
+                onLabComplete: syncOverviewProgress
+              };
+              if (opts.mode === 'guided' || opts.mode === 'sandbox') {
+                mountOpts.mode = opts.mode;
+              }
+              if (opts.lang === 'js' || opts.lang === 'ts') {
+                mountOpts.language = opts.lang;
+              }
+              activeCodeLab = window.CodeLab.mount(mountEl, mountOpts);
+              if (typeof opts.stepIndex === 'number' && !Number.isNaN(opts.stepIndex) && activeCodeLab?.selectStep) {
+                setTimeout(() => activeCodeLab.selectStep(opts.stepIndex, true), 80);
+              }
+            } else if (typeof activeCodeLab.configure === 'function') {
+              activeCodeLab.configure(opts);
+            } else if (activeCodeLab.editor) {
+              setTimeout(() => activeCodeLab.editor.layout(), 60);
+            }
+            setTimeout(() => {
+              const ed = activeCodeLab?._editor || activeCodeLab?.editor;
+              if (ed && typeof ed.layout === 'function') ed.layout();
+            }, 250);
+          };
+
+          reader.querySelectorAll('[data-action="open-code-lab"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const mode = btn.getAttribute('data-lab-mode') || 'guided';
+              const stepAttr = btn.getAttribute('data-step-index');
+              const stepIndex = stepAttr !== null ? parseInt(stepAttr, 10) : undefined;
+              openBuildLab({ mode, lang: requestedLang || undefined, stepIndex });
+            });
+          });
+
+          if (requestedLab === 'open' || requestedMode === 'guided' || requestedMode === 'sandbox') {
+            const stepIdx = requestedStep !== null ? parseInt(requestedStep, 10) : undefined;
+            openBuildLab({
+              mode: requestedMode || 'guided',
+              lang: requestedLang || undefined,
+              stepIndex: Number.isNaN(stepIdx) ? undefined : stepIdx
+            });
+          }
+
           if (window.Analytics) {
-            const impls = window.IMPLEMENTATIONS_DATA;
-            const build = impls?.[currentSlug];
             const title = build?.title || currentSlug;
-            window.Analytics.trackPageView(title + ' (Build) | System Design In Depth', '/#build/' + currentSlug, window.location.href);
+            window.Analytics.trackPageView(title + ' — Interactive Build Lab | System Design In Depth', '/build/' + currentSlug + '/', window.location.href);
             window.Analytics.trackBuildView({ buildId: currentSlug, title });
           }
         };
 
-        if ((!window.IMPLEMENTATIONS_DATA || !window.IMPLEMENTATIONS_DATA[currentSlug]) && window.loadScript) {
-          reader.innerHTML = '<div class="prose"><p style="padding:2rem 0;color:var(--fg-muted);">Loading implementation code...</p></div>';
-          window.loadScript('data/implementations_code.js').then(renderBuildView).catch(err => {
-            console.error('[Failed to load implementations code]', err);
-            reader.innerHTML = '<div class="prose"><p>Error loading implementation code.</p></div>';
+        const neededBuildScripts = [];
+        if (!window.IMPLEMENTATIONS_DATA || !window.IMPLEMENTATIONS_DATA[currentSlug]) {
+          neededBuildScripts.push('data/implementations_code.js');
+        }
+        if (!window.GUIDED_LABS_DATA) {
+          neededBuildScripts.push('data/guided_labs.js');
+        }
+        if (!window.CodeLab) {
+          neededBuildScripts.push('js/code-lab.js');
+        }
+
+        if (neededBuildScripts.length > 0 && window.loadScript) {
+          if (!isPrerenderedBuild) {
+            reader.innerHTML = '<div class="prose"><p style="padding:2rem 0;color:var(--fg-muted);">Loading Interactive IDE Lab &amp; Reference Build...</p></div>';
+          }
+          Promise.all(neededBuildScripts.map(s => window.loadScript(s))).then(renderBuildView).catch(err => {
+            console.error('[Failed to load build lab scripts]', err);
+            renderBuildView();
           });
         } else {
           renderBuildView();
@@ -531,13 +686,29 @@ window.App = (() => {
       return;
     }
 
-    let html = '<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">From-Scratch Builds</div>';
+    let html = '<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (15)</div>';
 
     for (const [id, build] of Object.entries(impls)) {
       const active = currentView === 'build' && currentSlug === id;
-      html += `<a class="unit-item${active ? ' active' : ''}" data-build="${id}" href="/#build/${id}">
-        <span class="unit-item__status unit-item__status--${active ? 'active' : 'pending'}">${window.Renderer.icons.code}</span>
+      let doneSteps = 0;
+      try {
+        const raw = localStorage.getItem('sd-codelab-v1:' + id) || localStorage.getItem('sd_codelab_' + id);
+        const savedNew = JSON.parse(raw || 'null');
+        if (Array.isArray(savedNew?.completedSteps)) {
+          doneSteps = savedNew.completedSteps.length;
+        } else {
+          const savedLegacy = JSON.parse(localStorage.getItem('codelab_progress_' + id) || '[]');
+          if (Array.isArray(savedLegacy)) doneSteps = savedLegacy.length;
+        }
+      } catch (_) {}
+      const isComplete = doneSteps >= 4;
+      const statusClass = isComplete ? 'completed' : active ? 'active' : 'pending';
+      const statusIcon = isComplete ? window.Renderer.icons.check : window.Renderer.icons.code;
+
+      html += `<a class="unit-item${active ? ' active' : ''}" data-build="${id}" href="/build/${id}/">
+        <span class="unit-item__status unit-item__status--${statusClass}">${statusIcon}</span>
         <span class="unit-item__title">${build.title || id.replace(/-/g, ' ')}</span>
+        ${doneSteps > 0 ? `<span style="margin-left:auto;font-size:10px;font-family:var(--font-mono);color:${isComplete ? '#22c55e' : 'var(--fg-faint)'};">${doneSteps}/4</span>` : ''}
       </a>`;
     }
 
@@ -1189,6 +1360,7 @@ window.App = (() => {
       // 5. Build & code actions
       const buildBtn = target.closest('[data-action="navigate-build"]');
       if (buildBtn) {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
         const buildId = buildBtn.getAttribute('data-build-id');
         if (buildId) {
           e.preventDefault();
@@ -1263,6 +1435,24 @@ window.App = (() => {
         e.preventDefault();
         window.print();
         return;
+      }
+
+      // 9. Intercept internal /build/<slug>/ and /topic/<slug>/ links for SPA navigation
+      const anchor = target.closest('a[href]');
+      if (anchor && !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0 || anchor.target === '_blank')) {
+        const href = anchor.getAttribute('href') || '';
+        const buildMatch = href.match(/^\/build\/([^/#?]+)\/?$/);
+        if (buildMatch) {
+          e.preventDefault();
+          navigateToBuild(buildMatch[1], e);
+          return;
+        }
+        const topicMatch = href.match(/^\/topic\/([^/#?]+)\/?$/);
+        if (topicMatch) {
+          e.preventDefault();
+          navigateTo(topicMatch[1], e);
+          return;
+        }
       }
     });
 

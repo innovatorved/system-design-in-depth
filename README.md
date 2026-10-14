@@ -66,23 +66,29 @@ Interactive sandboxes let you tweak parameters, simulate network partitions, ind
 - **Resilience & Traffic:** Cache Stampede Defense (XFetch), Circuit Breakers, Retry Storms, SLO Burn Rate Alerts, Little's Law Queuing.
 - **Algorithms & Data Structures:** Consistent Hashing Ring, Sliding Window Rate Limiter, Cache Eviction (LRU/LFU/FIFO), Bloom Filter, HyperLogLog, Count-Min Sketch, BM25 Scoring, CRDT Conflict Resolution, Geohash Explorer.
 
-### 15 From-Scratch Reference Builds
-Standalone Node.js reference implementations with comprehensive automated test suites:
-1. `load-balancer-from-scratch` — Layer 7 Load Balancer
-2. `consistent-hashing-ring` — Consistent Hashing Ring with Virtual Nodes
-3. `sliding-window-rate-limiter` — Sliding Window Rate Limiter (Log, Counter, Token Bucket)
-4. `lru-cache` — LRU Cache (Doubly Linked List + Hash Map)
-5. `ttl-cache-reaper` — TTL Cache with Redis-Style Adaptive Reaper
-6. `bloom-filter-membership` — Bloom Filter Membership Testing
-7. `snowflake-id-generator` — Snowflake 64-bit Unique ID Generator
-8. `keyset-pagination-cursors` — Keyset (Cursor) Pagination vs SQL OFFSET
-9. `write-ahead-log` — Write-Ahead Log (WAL) & Crash Recovery
-10. `lsm-tree-kv-store` — LSM-Tree KV Store (WAL, Memtable, SSTables, Compaction)
-11. `lease-leader-election` — Lease-Based Leader Election with Fencing Tokens
-12. `gossip-protocol` — Push-Pull Anti-Entropy & SWIM Failure Detection
-13. `merkle-anti-entropy` — Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)
-14. `hyperloglog-cardinality` — HyperLogLog Cardinality Sketch
-15. `tiny-search-engine` — Tiny Search Engine (Inverted Index, Compression & BM25)
+### 15 Interactive System Design Build Labs (`/build/<slug>/`)
+Every reference implementation runs directly in the browser at `/build/<slug>/` via **`@innovatorved/code-lab`** ([Package Docs](projects/code-lab/README.md) · [Architecture Spec](projects/code-lab/ARCHITECTURE.md))—a zero-dependency Monaco IDE workbench and sandboxed Web Worker Virtual Node.js v22 runtime supporting both **Guided Step-by-Step Mode** (`JavaScript` & `TypeScript`) and **Freeform Sandbox Mode**:
+
+1. [`/build/load-balancer-from-scratch/`](build/load-balancer-from-scratch/) — Layer 7 Load Balancer (`node:http` reverse proxy, Round-Robin, Least-Connections, P2C, active/passive health checks)
+2. [`/build/consistent-hashing-ring/`](build/consistent-hashing-ring/) — Consistent Hashing Ring with Virtual Nodes & Bounded Load
+3. [`/build/sliding-window-rate-limiter/`](build/sliding-window-rate-limiter/) — Sliding Window Rate Limiter (Log, Counter, Token Bucket)
+4. [`/build/lru-cache/`](build/lru-cache/) — Intrusive Doubly-Linked List + Hash Map LRU Cache
+5. [`/build/ttl-cache-reaper/`](build/ttl-cache-reaper/) — TTL Cache with Lazy Expiration & Redis-Style Adaptive Reaper
+6. [`/build/bloom-filter-membership/`](build/bloom-filter-membership/) — Kirsch-Mitzenmacher Double-Hashing Bloom Filter
+7. [`/build/snowflake-id-generator/`](build/snowflake-id-generator/) — Snowflake 64-bit Time-Ordered ID Generator
+8. [`/build/keyset-pagination-cursors/`](build/keyset-pagination-cursors/) — Opaque Keyset (Seek) Pagination Cursors vs SQL `OFFSET`
+9. [`/build/write-ahead-log/`](build/write-ahead-log/) — Write-Ahead Log (WAL) with CRC-32 Framing & Torn-Tail Recovery
+10. [`/build/lsm-tree-kv-store/`](build/lsm-tree-kv-store/) — LSM-Tree KV Store (WAL, Memtable, Sparse-Indexed SSTables, Compaction)
+11. [`/build/lease-leader-election/`](build/lease-leader-election/) — Lease-Based Leader Election with Monotonic Fencing Tokens
+12. [`/build/gossip-protocol/`](build/gossip-protocol/) — Push-Pull Anti-Entropy & SWIM Suspicion Failure Detection
+13. [`/build/merkle-anti-entropy/`](build/merkle-anti-entropy/) — Merkle-Tree Anti-Entropy Replica Synchronization
+14. [`/build/hyperloglog-cardinality/`](build/hyperloglog-cardinality/) — HyperLogLog Cardinality Estimator with Small/Large Range Corrections
+15. [`/build/tiny-search-engine/`](build/tiny-search-engine/) — Inverted Index Search Engine with Variable-Byte Posting Lists & BM25F
+
+### `@innovatorved/code-lab` (`projects/code-lab/`)
+The interactive build labs are powered by [`@innovatorved/code-lab`](projects/code-lab/), an embeddable `<code-lab>` Web Component, `CodeLab.mount()` SDK, and headless Virtual Node.js runtime (`CodeLabRuntime`):
+- **[Usage & SDK Reference (`projects/code-lab/README.md`)](projects/code-lab/README.md)** — Embedding via `<code-lab>`, `CodeLab.mount()`, instance methods, and headless `executeInVirtualRuntime`.
+- **[Engineering & Runtime Specification (`projects/code-lab/ARCHITECTURE.md`)](projects/code-lab/ARCHITECTURE.md)** — Warm Web Worker pooling, `resourceTracker` async settle loop, 10-pass TypeScript/ESM transpiler (`transpileTS`), POSIX VFS + loopback `node:http`/`node:net`, module resolution, and guided lab authoring template.
 
 ---
 

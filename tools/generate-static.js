@@ -100,6 +100,7 @@ const context = {
     ARCHIVE_CONTENT: {},
     QUESTION_BANK: {},
     IMPLEMENTATIONS_DATA: {},
+    GUIDED_LABS_DATA: {},
     CURRICULUM_DATA: null,
     SIMULATORS: {},
     Progress: {
@@ -139,6 +140,9 @@ context.Math.random = function() {
 vm.runInNewContext(fs.readFileSync(path.join(root, 'data/curriculum.js'), 'utf8'), context);
 if (fs.existsSync(path.join(root, 'data/implementations_code.js'))) {
   vm.runInNewContext(fs.readFileSync(path.join(root, 'data/implementations_code.js'), 'utf8'), context);
+}
+if (fs.existsSync(path.join(root, 'data/guided_labs.js'))) {
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'data/guided_labs.js'), 'utf8'), context);
 }
 
 for (const dir of ['data/content', 'data/archive', 'data/questions']) {
@@ -222,6 +226,35 @@ function renderStaticSidebar(curriculum, currentSlug) {
     }
   }
   return html;
+}
+
+function renderStaticBuildsSidebar(implementations, currentBuildId) {
+  let html = '<div class="builds-sidebar">';
+  html += `<div class="builds-sidebar__intro">
+    Full from-scratch Node.js implementations with Guided Interactive Labs, zero dependencies, and complete test suites.
+  </div>`;
+  for (const [id, item] of Object.entries(implementations)) {
+    const isActive = id === currentBuildId ? 'unit-item--active' : '';
+    const fileCount = item.files ? Object.keys(item.files).length : 0;
+    html += `<a class="unit-item unit-item--build ${isActive}" href="/build/${id}/" data-build="${id}">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">${escapeHtml(item.title)}</span>
+        <span class="unit-item__meta">${fileCount} files · Interactive Lab</span>
+      </div>
+    </a>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function makeBuildDescription(buildId, build) {
+  const summary = cleanText(build.summary || '');
+  const base = summary
+    ? `${build.title}: ${summary}`
+    : `Build ${build.title} from scratch in Node.js and TypeScript with an interactive browser IDE, guided steps, and automated unit tests.`;
+  if (base.length <= 160) return base;
+  return base.slice(0, 157).replace(/\s+\S*$/, '') + '...';
 }
 
 const curriculum = context.window.CURRICULUM_DATA;
@@ -397,8 +430,10 @@ for (const { unit, mod } of units) {
     `<div class="main__content" id="reader" data-prerendered="${slug}">\n${lessonHtml}\n    </div>$1`
   );
 
-  // Strip implementation code data script from static topic HTML
+  // Strip implementation code and interactive lab scripts from static topic HTML (loaded on demand)
   page = stripScriptTag(page, 'data/implementations_code.js');
+  page = stripScriptTag(page, 'data/guided_labs.js');
+  page = stripScriptTag(page, 'js/code-lab.js');
 
   // Strip unused simulator scripts for this unit slug
   const neededSimFile = slugToSimFile[slug];
@@ -424,6 +459,155 @@ for (const { unit, mod } of units) {
   generatedCount++;
 }
 
+// 4b. Generate Static Pages for Interactive Build Labs (/build/<buildId>/index.html)
+const implementations = context.window.IMPLEMENTATIONS_DATA || {};
+const buildEntries = Object.entries(implementations);
+let generatedBuildsCount = 0;
+
+console.log(`Starting SSG generation for ${buildEntries.length} interactive build labs...`);
+
+for (const [buildId, build] of buildEntries) {
+  const desc = makeBuildDescription(buildId, build);
+  const title = `${build.title} — Interactive Build Lab | System Design In Depth`;
+  const canonicalUrl = `${baseUrl}/build/${buildId}/`;
+
+  // Prerender full build page HTML inside VM
+  const buildHtml = context.window.Renderer.renderBuild(buildId);
+
+  let page = template;
+
+  // Replace Title
+  page = page.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(title)}</title>`);
+
+  // Replace Meta Description
+  page = page.replace(
+    /<meta\s+name="description"\s+content="[^"]*">/i,
+    `<meta name="description" content="${escapeAttr(desc)}">`
+  );
+
+  // Replace Canonical Link
+  page = page.replace(
+    /<link\s+rel="canonical"\s+href="[^"]*">/i,
+    `<link rel="canonical" href="${canonicalUrl}">`
+  );
+
+  // Replace OpenGraph
+  page = page.replace(/<meta\s+property="og:type"\s+content="[^"]*">/i, '<meta property="og:type" content="article">');
+  page = page.replace(
+    /<meta\s+property="og:title"\s+content="[^"]*">/i,
+    `<meta property="og:title" content="${escapeAttr(title)}">`
+  );
+  page = page.replace(
+    /<meta\s+property="og:description"\s+content="[^"]*">/i,
+    `<meta property="og:description" content="${escapeAttr(desc)}">`
+  );
+  page = page.replace(
+    /<meta\s+property="og:url"\s+content="[^"]*">/i,
+    `<meta property="og:url" content="${canonicalUrl}">`
+  );
+  if (/<meta\s+property="og:image"/i.test(page)) {
+    page = page.replace(
+      /<meta\s+property="og:image"\s+content="[^"]*">/i,
+      `<meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+    );
+  } else {
+    page = page.replace(
+      /<meta\s+property="og:url"\s+content="[^"]*">/i,
+      `<meta property="og:url" content="${canonicalUrl}">\n  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+    );
+  }
+
+  // Replace Twitter Card
+  if (/<meta\s+name="twitter:card"/i.test(page)) {
+    page = page.replace(
+      /<meta\s+name="twitter:card"\s+content="[^"]*">/i,
+      `<meta name="twitter:card" content="summary_large_image">`
+    );
+  }
+  page = page.replace(
+    /<meta\s+name="twitter:title"\s+content="[^"]*">/i,
+    `<meta name="twitter:title" content="${escapeAttr(title)}">`
+  );
+  page = page.replace(
+    /<meta\s+name="twitter:description"\s+content="[^"]*">/i,
+    `<meta name="twitter:description" content="${escapeAttr(desc)}">`
+  );
+  if (/<meta\s+name="twitter:image"/i.test(page)) {
+    page = page.replace(
+      /<meta\s+name="twitter:image"\s+content="[^"]*">/i,
+      `<meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+    );
+  } else {
+    page = page.replace(
+      /<meta\s+name="twitter:description"\s+content="[^"]*">/i,
+      `<meta name="twitter:description" content="${escapeAttr(desc)}">\n  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+    );
+  }
+
+  // JSON-LD TechArticle Structured Data
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    'headline': `${build.title} — Interactive Build Lab`,
+    'description': desc,
+    'url': canonicalUrl,
+    'author': {
+      '@type': 'Person',
+      'name': 'Ved Gupta',
+      'url': 'https://vedgupta.in'
+    },
+    'publisher': {
+      '@type': 'Organization',
+      'name': 'System Design In Depth',
+      'url': baseUrl
+    }
+  };
+
+  const jsonLdTag = `\n  <script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n  </script>`;
+  page = page.replace('</head>', `${jsonLdTag}\n</head>`);
+
+  // Activate Builds tab in sidebar and pre-render Builds sidebar list
+  page = page.replace(
+    'class="sidebar__tab sidebar__tab--active" data-tab="curriculum"',
+    'class="sidebar__tab" data-tab="curriculum"'
+  );
+  page = page.replace(
+    'class="sidebar__tab" data-tab="builds"',
+    'class="sidebar__tab sidebar__tab--active" data-tab="builds"'
+  );
+  const buildsSidebarHtml = renderStaticBuildsSidebar(implementations, buildId);
+  page = page.replace(
+    /<div class="sidebar__content" id="sidebar-content"><\/div>/i,
+    `<div class="sidebar__content" id="sidebar-content">\n${buildsSidebarHtml}\n    </div>`
+  );
+
+  // Replace #reader content with prerendered build page
+  page = page.replace(
+    /<div class="main__content" id="reader">[\s\S]*?<\/div>(\s*<\/main>)/i,
+    `<div class="main__content" id="reader" data-prerendered-build="${buildId}">\n${buildHtml}\n    </div>$1`
+  );
+
+  // Strip unused simulator scripts from static build pages
+  for (const sFile of simulatorFiles) {
+    page = stripScriptTag(page, sFile);
+  }
+
+  // Write file to build/<buildId>/index.html
+  const buildDir = path.join(root, 'build', buildId);
+  fs.mkdirSync(buildDir, { recursive: true });
+  fs.writeFileSync(path.join(buildDir, 'index.html'), page, 'utf8');
+
+  // Add to sitemap
+  sitemapUrls.push({
+    loc: canonicalUrl,
+    priority: '0.8',
+    changefreq: 'weekly',
+    lastmod: defaultLastmod
+  });
+
+  generatedBuildsCount++;
+}
+
 // 5. Generate sitemap.xml
 let sitemapXml = '<?xml version="1.0" encoding="UTF-8"?>\n';
 sitemapXml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
@@ -440,4 +624,5 @@ sitemapXml += '</urlset>\n';
 fs.writeFileSync(path.join(root, 'sitemap.xml'), sitemapXml, 'utf8');
 console.log(`✓ Generated sitemap.xml with ${sitemapUrls.length} entries`);
 
-console.log(`\nSSG Completed: ${generatedCount} units generated successfully.`);
+console.log(`\nSSG Completed: ${generatedCount} units and ${generatedBuildsCount} build labs generated successfully.`);
+

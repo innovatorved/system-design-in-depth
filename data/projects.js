@@ -128,5 +128,27 @@ window.PROJECTS_DATA = [
       'UNIX-pipe friendly speech transcription and synthesis',
       'Native Apple Silicon Metal acceleration'
     ]
+  },
+  {
+    id: 'code-lab',
+    name: 'code-lab',
+    title: 'CodeLab — Browser-Native System Design IDE & Sandbox',
+    description: 'Zero-server, browser-native interactive JS/TS IDE workbench (<code-lab>), guided challenge engine, and Virtual Node.js Web Worker runtime (in-memory POSIX FS, HTTP loopback, crypto, CRC32).',
+    stars: 'Latest',
+    starsCount: 60,
+    forks: 0,
+    language: 'TypeScript',
+    languageColor: '#3178c6',
+    pinned: true,
+    category: 'Developer Tools',
+    githubUrl: 'https://github.com/innovatorved/code-lab',
+    liveUrl: 'https://system-design-in-depth.vedgupta.in/build/load-balancer-from-scratch/',
+    tags: ['Monaco Editor', 'Web Worker Sandbox', 'Virtual Node.js', 'Web Component', 'TypeScript'],
+    highlights: [
+      '100% in-browser Virtual Node.js runtime (fs, http, crypto, zlib, assert)',
+      'Monaco Editor workbench with Guided Challenge & Reference Sandbox modes',
+      'Live Virtual Disk (WAL/SSTable hex inspector) & HTTP loopback tracer'
+    ]
   }
 ];
+

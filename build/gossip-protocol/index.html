@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection — Interactive Build Lab | System Design In Depth</title>
+  <meta name="description" content="Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection: A seeded simulation of push-pull anti-entropy over a versioned key/value map with Lamport-clock...">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection — Interactive Build Lab | System Design In Depth">
+  <meta property="og:description" content="Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection: A seeded simulation of push-pull anti-entropy over a versioned key/value map with Lamport-clock...">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/build/gossip-protocol/">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection — Interactive Build Lab | System Design In Depth">
+  <meta name="twitter:description" content="Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection: A seeded simulation of push-pull anti-entropy over a versioned key/value map with Lamport-clock...">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/gossip-protocol/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
+  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
+  <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
+  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="css/code-lab.css?v=2b9944bcbd">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=6e3af86ba6"></script>
+  <script src="js/manifest.js?v=2fe59c81f7"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Gossip: Push-Pull Anti-Entropy & SWIM Failure Detection — Interactive Build Lab",
+  "description": "Gossip: Push-Pull Anti-Entropy & SWIM Failure Detection: A seeded simulation of push-pull anti-entropy over a versioned key/value map with Lamport-clock...",
+  "url": "https://system-design-in-depth.vedgupta.in/build/gossip-protocol/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" style="display:flex; gap:0.4rem; margin-right:0.5rem;">
+        <a href="#/glossary" class="btn btn--sm btn--outline" style="font-size:11px; padding:4px 8px; text-decoration:none; white-space:nowrap;">📖 Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
+      <button class="sidebar__tab sidebar__tab--active" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div class="builds-sidebar"><div class="builds-sidebar__intro">
+    Full from-scratch Node.js implementations with Guided Interactive Labs, zero dependencies, and complete test suites.
+  </div><a class="unit-item unit-item--build " href="/build/load-balancer-from-scratch/" data-build="load-balancer-from-scratch">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/consistent-hashing-ring/" data-build="consistent-hashing-ring">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Consistent Hashing Ring with Virtual Nodes</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/sliding-window-rate-limiter/" data-build="sliding-window-rate-limiter">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lru-cache/" data-build="lru-cache">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LRU Cache (Doubly Linked List + Hash Map)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/ttl-cache-reaper/" data-build="ttl-cache-reaper">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">TTL Cache with a Redis-Style Adaptive Reaper</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/bloom-filter-membership/" data-build="bloom-filter-membership">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Bloom Filter Membership Testing</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/snowflake-id-generator/" data-build="snowflake-id-generator">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Snowflake 64-bit ID Generator</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/keyset-pagination-cursors/" data-build="keyset-pagination-cursors">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/write-ahead-log/" data-build="write-ahead-log">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Write-Ahead Log (WAL) &amp; Crash Recovery</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lsm-tree-kv-store/" data-build="lsm-tree-kv-store">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LSM-Tree Key/Value Store (WAL, Memtable, SSTables, Compaction)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lease-leader-election/" data-build="lease-leader-election">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Lease-Based Leader Election with Fencing Tokens</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build unit-item--active" href="/build/gossip-protocol/" data-build="gossip-protocol">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/merkle-anti-entropy/" data-build="merkle-anti-entropy">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/hyperloglog-cardinality/" data-build="hyperloglog-cardinality">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/tiny-search-engine/" data-build="tiny-search-engine">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+        <span class="unit-item__meta">8 files · Interactive Lab</span>
+      </div>
+    </a></div>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered-build="gossip-protocol">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> From-Scratch Build</span>
+        </div>
+        <h1 class="lesson-header__title">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</h1>
+        <p class="build-summary">A seeded simulation of push-pull anti-entropy over a versioned key/value map with Lamport-clock last-writer-wins, fanout and message loss, which measures rounds to convergence against log N. It also includes a SWIM failure detector with indirect pings, suspicion, incarnation-based refutation and piggybacked dissemination.</p>
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~35 min</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Advanced</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="#" data-nav="topic" data-slug="gossip-protocol">Gossip protocol</a>, <a href="#" data-nav="topic" data-slug="metadata-service-and-node-discovery">Metadata service and node discovery</a>, <a href="#" data-nav="topic" data-slug="clocks-and-ordering">Clocks and ordering</a>, <a href="#" data-nav="topic" data-slug="replication">Replication</a>, <a href="#" data-nav="topic" data-slug="consistency-models">Consistency models</a>, <a href="#" data-nav="topic" data-slug="case-amazon-dynamo">Case: Amazon Dynamo, the paper</a>, <a href="#" data-nav="topic" data-slug="distributed-hash-tables">Distributed hash tables</a></span>
+        </div>
+      </div>
+
+      <div class="build-view-tabs" role="tablist" aria-label="Build View Mode">
+        <button type="button" class="build-view-tab active" role="tab" aria-selected="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Architecture &amp; Reference Code</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="guided">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>Interactive Lab IDE</span>
+          <span class="build-view-tab__badge">0/4 Steps</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="sandbox">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Sandbox Mode</span>
+        </button>
+      </div>
+
+      <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
+        <div class="build-lab-card__top">
+          <div class="build-lab-card__intro">
+            <div class="build-lab-card__eyebrow">
+              <span>Interactive Build Lab</span>
+              <span class="build-lab-card__progress" id="build-lab-progress-badge">0/4 Steps Completed</span>
+            </div>
+            <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
+            <p class="build-lab-card__desc">
+              Complete 4 progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+            </p>
+            <div class="build-lab-progress-track" aria-hidden="true">
+              <div class="build-lab-progress-track__fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="build-lab-card__cta-col">
+            <button type="button" class="btn btn--primary build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="guided">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Launch Guided Lab</span>
+            </button>
+            <button type="button" class="btn btn--outline build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="sandbox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Open Full Solution</span>
+            </button>
+          </div>
+        </div>
+
+        
+          <div class="build-lab-steps-grid" id="build-lab-steps-grid">
+            
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="0">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">01</span>
+                    <span class="build-lab-step-card__target">gossip.js · KVNode.merge</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Lamport Clock &amp; Commutative LWW State Merge</div>
+                  <div class="build-lab-step-card__concept">Last-Writer-Wins (LWW) Join-Semilattice &amp; Lamport Logical Clocks</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>5 tests</span>
+                    <span class="build-lab-step-card__open">Step 1 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="1">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">02</span>
+                    <span class="build-lab-step-card__target">gossip.js · GossipCluster._exchange</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Epidemic SYN / ACK / ACK2 Push-Pull Exchange</div>
+                  <div class="build-lab-step-card__concept">Digest-Based Anti-Entropy &amp; O(log N) Epidemic Convergence</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>6 tests</span>
+                    <span class="build-lab-step-card__open">Step 2 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="2">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">03</span>
+                    <span class="build-lab-step-card__target">gossip.js · SwimCluster._apply</span>
+                  </div>
+                  <div class="build-lab-step-card__title">SWIM Incarnation Numbers, Suspicion Precedence &amp; Self-Refutation</div>
+                  <div class="build-lab-step-card__concept">SWIM State Machine Precedence &amp; Incarnation Refutation</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>2 tests</span>
+                    <span class="build-lab-step-card__open">Step 3 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="3">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">04</span>
+                    <span class="build-lab-step-card__target">gossip.js · SwimCluster._probe</span>
+                  </div>
+                  <div class="build-lab-step-card__title">SWIM Direct Ping &amp; Indirect Ping-Req Probing</div>
+                  <div class="build-lab-step-card__concept">Randomized Round-Robin Probing &amp; K-Helper Indirect Probes</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>4 tests</span>
+                    <span class="build-lab-step-card__open">Step 4 →</span>
+                  </div>
+                </button>
+              
+          </div>
+        
+      </section>
+
+      <div id="build-walkthrough-pane">
+        <div class="build-run">
+          <div class="build-run__text">
+            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
+            <code>node demo.js</code> and <code>node test.js</code>.
+          </div>
+          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="gossip-protocol">Copy setup script</button>
+        </div>
+
+        <div class="build-files"><a href="#build-file-gossip-protocol-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-gossip-protocol-README_md">README.md</a><a href="#build-file-gossip-protocol-gossip_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-gossip-protocol-gossip_js">gossip.js</a><a href="#build-file-gossip-protocol-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-gossip-protocol-demo_js">demo.js</a><a href="#build-file-gossip-protocol-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-gossip-protocol-test_js">test.js</a></div><article class="prose" id="build-file-gossip-protocol-README_md"><h2>Gossip: Push-Pull Anti-Entropy & SWIM Failure Detection</h2>
+
+<h2>The problem</h2>
+
+<p>A cluster of hundreds or thousands of nodes needs shared, slowly changing knowledge: who is</p>
+<p>a member, who is alive, which node owns which token range, the schema version, feature</p>
+<p>flags. A central registry becomes a bottleneck and a single point of failure. Broadcasting</p>
+<p>every change to everyone costs O(N) per sender and falls apart under loss.</p>
+<strong>Gossip</strong> has each node talk to a few random peers per round. An update then reaches all
+<p>N nodes in O(log N) rounds, with O(1) work per node per round, and it tolerates lost</p>
+<p>messages and crashed nodes without any extra machinery.</p>
+
+<p>The second half of the problem is <strong>failure detection</strong>. Heartbeating everyone to everyone</p>
+<p>costs O(N²) messages. SWIM gets constant load per member and O(1) expected detection time,</p>
+<p>and rides the gossip channel to spread its verdicts.</p>
+
+<p>Where it shows up: Cassandra/ScyllaDB (ring state, schema, phi-accrual detector), HashiCorp</p>
+<p>memberlist (Consul, Nomad, Serf), Amazon Dynamo (membership), Redis Cluster (cluster bus</p>
+<p>PFAIL/FAIL), Akka Cluster, Uber Ringpop, and Bitcoin/Ethereum transaction relay.</p>
+
+<h2>Design</h2>
+
+<code>gossip.js</code> is one simulation with synchronous rounds, a lossy <code>Network</code>, and a seeded
+<code>mulberry32</code> PRNG, so every run is reproducible.
+
+<h3>Part 1: anti-entropy of versioned state (<code>GossipCluster</code>)</h3>
+
+<ul>
+<li>Each entry is <code>{value, version, writer}</code>. <code>version</code> comes from the writer's <strong>Lamport clock</strong>:</li>
+  <code>set()</code> increments it, and <code>merge()</code> does <code>clock = max(clock, received)</code>. A write made after
+  seeing version 41 therefore gets version 42 or more, and supersedes what the writer saw.
+<li><strong>Merge = last-writer-wins on (version, writer)</strong>. It is a total order, so merge is</li>
+  commutative, associative and idempotent (a state-based CRDT). Replicas converge whatever
+  the order, duplication or loss of messages. Ties (concurrent writes with equal versions)
+  are broken by writer id. That is deterministic, and it deliberately loses one of the writes.
+<li><strong>Push-pull exchange</strong> uses the same three steps as Cassandra's gossip:</li>
+  1. <code>SYN</code>: p sends a digest (key, version, writer), with no values.
+  2. <code>ACK</code>: q replies with entries newer than p's, and the keys where p is newer.
+  3. <code>ACK2</code>: p sends the requested entries.
+  Peers that are already in sync exchange only digests. Modes <code>push</code> (send full state) and
+  <code>pull</code> (digest, then deltas) exist for comparison.
+<li><strong>Round model</strong>: in each round every live node contacts <code>fanout</code> random peers, and messages</li>
+  are built from start-of-round snapshots. A rumour therefore moves at most one hop per
+  exchange per round, which is the model the O(log N) results assume.
+</ul>
+<h3>Measured rounds to convergence (one update, fanout 1, no loss; <code>node demo.js</code>)</h3>
+
+<table><thead><tr><th>N</th><th>push-pull</th><th>pull</th><th>push</th><th>log3 N</th><th>log2 N</th><th>log2 N + ln N</th></tr></thead><tbody><tr><td>16</td><td>4.1</td><td>6.3</td><td>7.3</td><td>2.5</td><td>4.0</td><td>6.8</td></tr><tr><td>256</td><td>7.6</td><td>11.8</td><td>14.8</td><td>5.0</td><td>8.0</td><td>13.5</td></tr><tr><td>4096</td><td>11.0</td><td>15.2</td><td>21.2</td><td>7.6</td><td>12.0</td><td>20.3</td></tr></tbody></table>Push matches Pittel's log2 N + ln N + O(1). Push-pull is much faster, consistent with Karp et
+<p>al.'s log3 N + O(log log N). At N = 256, fanout 3 takes 4.2 rounds instead of 7.6, and 30%</p>
+<p>message loss raises the count from 7.6 to 15.7 rounds but still converges.</p>
+
+<h3>Part 2: SWIM failure detector (<code>SwimCluster</code>)</h3>
+
+<strong>Why SWIM instead of phi-accrual:</strong> phi-accrual (Cassandra, Akka) turns heartbeat
+<p>inter-arrival statistics into a suspicion level, but it still needs heartbeats from every</p>
+<p>monitored peer. SWIM decouples detection from dissemination. It has constant per-member</p>
+<p>load, needs no per-peer timing history, and verifies failures through other members instead</p>
+<p>of trusting one lossy path. It is the protocol behind memberlist and Consul.</p>
+
+<p>Each protocol period, every live member:</p>
+
+<ol>
+<li><strong>Probes</strong> the next target in a shuffled round-robin list. Round-robin bounds the time</li>
+   until a member is probed to 2N-1 periods; random choice gives an expected e/(e-1) ≈ 1.6
+   periods to first detection but no worst-case bound.
+<li>If the ping or its ack is lost, it sends a <strong>ping-req</strong> through <code>k</code> random helpers</li>
+   (default 3). Any helper's ack counts.
+<li>If everything fails, it marks the target <strong>SUSPECT</strong> (with the target's known</li>
+   incarnation) instead of DEAD.
+<li>A suspect that hears about its own suspicion <strong>refutes</strong> it: it increments its</li>
+   incarnation and spreads <code>ALIVE(inc+1)</code>.
+<li>A suspicion that nobody refutes within <code>suspicionRounds</code> (default 2·⌈log2(N+1)⌉) becomes</li>
+   <strong>DEAD</strong> at that observer.
+</ol>
+<p>Precedence rules (the unit test covers each one): <code>ALIVE(i)</code> replaces SUSPECT/DEAD only</p>
+<p>if i > current; <code>SUSPECT(i)</code> replaces <code>ALIVE(j)</code> if i ≥ j; DEAD replaces anything that is not</p>
+<p>already DEAD with i ≥ current. Updates are <strong>piggybacked</strong> (up to 6 per message) on</p>
+<p>ping/ack/ping-req traffic, freshest first, and each one is sent <code>4·⌈log10(N+1)⌉</code> times, which</p>
+<p>is memberlist's retransmit rule.</p>
+
+<p>False DEAD declarations about healthy members (32 nodes, 100 periods, 3 seeds):</p>
+
+<table><thead><tr><th>loss</th><th>ping only</th><th>+ indirect (k=3)</th><th>+ indirect + suspicion</th></tr></thead><tbody><tr><td>2%</td><td>9797</td><td>0</td><td>0</td></tr><tr><td>5%</td><td>13370</td><td>179</td><td>0</td></tr><tr><td>10%</td><td>13255</td><td>2010</td><td>1</td></tr></tbody></table><h2>Complexity</h2>
+
+<ul>
+<li>Anti-entropy: O(fanout) exchanges per node per round. Digest size is O(keys), and deltas</li>
+  are O(changed keys). Spreading one update takes O(log N) rounds and O(N log N) messages
+  in total.
+<li>SWIM: an expected O(1) messages per member per period (1 ping, plus k·4 when a ping</li>
+  fails). First detection takes an expected ~1.6 periods. Full dissemination takes
+  O(log N) periods after the suspicion timeout.
+<li>Memory: O(keys) per node for the KV state, and O(N) per node for the membership table.</li>
+</ul>
+<h2>Failure modes & trade-offs</h2>
+
+<ul>
+<li><strong>Digest cost grows with state.</strong> Sending every key's version each round is fine for</li>
+  cluster metadata and wasteful for large data sets. Dynamo and Cassandra repair use
+  <strong>Merkle trees</strong> for bulk data instead.
+<li><strong>LWW silently drops concurrent writes.</strong> For data where that matters, use version vectors</li>
+  or CRDTs with richer merges (OR-sets, counters).
+<li><strong>Lamport versions only work if clocks are persisted.</strong> A node that restarts at clock 0</li>
+  writes versions that lose to its old ones. Cassandra pairs a <em>generation</em> (boot timestamp)
+  with a per-boot version for exactly this reason.
+<li><strong>Suspicion timeout trade-off</strong>: a longer timeout means fewer false positives and slower</li>
+  detection of real crashes. Lifeguard adapts timeouts to a member's own health (its
+  "local health multiplier").
+<li><strong>Piggyback capacity</strong>: under heavy churn the update queue outgrows the 6-updates-per-message</li>
+  budget, refutations arrive late, and false positives rise (the "ping only" column shows
+  this feedback loop). memberlist limits updates by UDP packet size.
+<li><strong>Partitions</strong>: SWIM on each side will declare the other side dead. Gossip does not solve</li>
+  split brain. Pair it with consensus for anything that needs a single decision.
+</ul>
+<h2>How production systems do it</h2>
+
+<ul>
+<li><strong>Cassandra</strong>: once a second, each node gossips with one random live peer, maybe one</li>
+  unreachable peer, and maybe a seed, using GossipDigestSyn / Ack / Ack2. Endpoint state is
+  versioned by (generation, version). Failure detection is <strong>phi-accrual</strong>
+  (<code>phi_convict_threshold</code>, default 8).
+<li><strong>HashiCorp memberlist</strong> (Consul, Nomad, Serf): SWIM + Lifeguard over UDP, with a 1 s probe</li>
+  interval, 3 indirect checks, suspicion multiplier 4 and retransmit multiplier 4. It also
+  runs a periodic <strong>TCP push-pull full-state sync</strong> (30 s by default), which is the
+  anti-entropy half of this build.
+<li><strong>Amazon Dynamo</strong>: gossip-based membership and token-map propagation, with seed nodes to</li>
+  prevent logical partitions, and Merkle-tree anti-entropy between replicas.
+<li><strong>Redis Cluster</strong>: nodes ping random peers over the cluster bus and mark unresponsive ones</li>
+  <code>PFAIL</code> (like SUSPECT). A node becomes <code>FAIL</code> only when a majority of masters report it.
+<li><strong>Akka Cluster</strong>: membership state gossiped with vector clocks, and a phi-accrual detector</li>
+  on each node's heartbeat.
+</ul>
+<h2>How to run</h2>
+
+<pre><code class="language-text">node demo.js   # convergence trace, rounds vs log N table, SWIM crash detection, false-positive table
+node test.js   # 17 tests: merge laws, Lamport clock, exchange protocol, log N scaling, SWIM rules</code></pre>
+
+<h2>Extension exercises</h2>
+
+<ol>
+<li>Add <strong>phi-accrual</strong> as an alternative detector (a sliding window of heartbeat</li>
+   intervals, phi = -log10(1 - CDF(Δt))) and compare detection time and false positives
+   against SWIM on the same seeds.
+<li>Let <code>GossipCluster</code> choose peers from <code>SwimCluster</code>'s live view, so dead nodes stop</li>
+   wasting fanout.
+<li>Replace full digests with a <strong>Merkle tree</strong> per node, and measure bytes exchanged against</li>
+   the number of keys when only 1% of the keys differ.
+<li>Swap LWW registers for an <strong>OR-set CRDT</strong>, and show that concurrent add/remove no longer</li>
+   loses an add.
+<li>Add <strong>Lifeguard's local health multiplier</strong>: a node that is missing acks itself stretches</li>
+   its own probe timeout and suspicion timeout. Measure false positives when one node is
+   overloaded.
+</ol></article>
+          <div class="code-block" id="build-file-gossip-protocol-gossip_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">gossip.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+/**
+ * Gossip, in two parts, over one simulated lossy network (synchronous rounds, seeded PRNG):
+ *
+ *  1. GossipCluster: push-pull anti-entropy of a versioned key/value map. Each entry
+ *     carries (version, writer), where version comes from the writer&#039;s Lamport clock.
+ *     Merge is last-writer-wins on (version, writer), which is commutative, associative and
+ *     idempotent, so replicas converge whatever the order, duplication or loss of messages.
+ *     An exchange is Cassandra&#039;s three messages: SYN(digest) -&gt; ACK(deltas + requests) -&gt; ACK2(deltas).
+ *
+ *  2. SwimCluster: SWIM failure detection (Das, Gupta, Motivala 2002) with the Lifeguard-style
+ *     suspicion subprotocol that memberlist and Consul use: ping, then k indirect ping-reqs,
+ *     then SUSPECT; a suspect can refute by bumping its incarnation, otherwise it is declared
+ *     DEAD after a timeout. Membership updates are piggybacked on probe traffic and
+ *     retransmitted O(log N) times (infection-style dissemination).
+ */
+
+/** Mulberry32: small, fast, seedable PRNG with good enough statistics for simulations. */
+function mulberry32(seed) {
+  let a = seed &gt;&gt;&gt; 0;
+  return () =&gt; {
+    a = (a + 0x6d2b79f5) &gt;&gt;&gt; 0;
+    let t = a;
+    t = Math.imul(t ^ (t &gt;&gt;&gt; 15), t | 1);
+    t ^= t + Math.imul(t ^ (t &gt;&gt;&gt; 7), t | 61);
+    return ((t ^ (t &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296;
+  };
+}
+
+/** Pick k distinct items from arr, excluding `exclude`, without modifying arr. */
+function sample(rng, arr, k, exclude = new Set()) {
+  const pool = arr.filter((x) =&gt; !exclude.has(x));
+  for (let i = pool.length - 1; i &gt; 0; i--) { const j = Math.floor(rng() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  return pool.slice(0, k);
+}
+
+/** k distinct random picks from arr other than arr[self]; rejection sampling, O(k) for k &lt;&lt; n. */
+function pickOthers(rng, arr, k, self) {
+  const chosen = new Set();
+  while (chosen.size &lt; k) { const i = Math.floor(rng() * arr.length); if (i !== self) chosen.add(i); }
+  return [...chosen].map((i) =&gt; arr[i]);
+}
+
+// ------------------------------------------------------------- network ----
+class Network {
+  constructor({ rng, lossRate = 0 }) {
+    if (!(lossRate &gt;= 0 &amp;&amp; lossRate &lt; 1)) throw new RangeError(&#039;lossRate must be in [0, 1)&#039;);
+    this.rng = rng; this.lossRate = lossRate;
+    this.crashed = new Set(); this.isolated = new Set();
+    this.sent = 0; this.dropped = 0;
+  }
+  up(id) { return !this.crashed.has(id); }
+  /** One datagram. False if an endpoint is down or isolated, or the packet is lost. */
+  send(from, to) {
+    this.sent++;
+    const ok = this.up(from) &amp;&amp; this.up(to) &amp;&amp; !this.isolated.has(from) &amp;&amp; !this.isolated.has(to) &amp;&amp; this.rng() &gt;= this.lossRate;
+    if (!ok) this.dropped++;
+    return ok;
+  }
+}
+
+// ------------------------------------------------------ anti-entropy KV ----
+const newer = (a, b) =&gt; !b || a.version &gt; b.version || (a.version === b.version &amp;&amp; a.writer &gt; b.writer);
+
+class KVNode {
+  constructor(id) { this.id = id; this.clock = 0; this.state = new Map(); }
+  set(key, value) {
+    if (typeof key !== &#039;string&#039; || !key) throw new TypeError(&#039;key must be a non-empty string&#039;);
+    this.clock++; // Lamport: a local event
+    this.state.set(key, { value, version: this.clock, writer: this.id });
+  }
+  get(key) { return this.state.get(key)?.value; }
+  digest() { const d = new Map(); for (const [k, e] of this.state) d.set(k, { version: e.version, writer: e.writer }); return d; }
+  /** Entries we hold that are newer than the given digest. */
+  deltaFor(digest) { const out = []; for (const [k, e] of this.state) if (newer(e, digest.get(k))) out.push([k, e]); return out; }
+  /** Keys the digest has newer than we do (we want them). */
+  wants(digest) { const out = []; for (const [k, d] of digest) if (newer(d, this.state.get(k))) out.push(k); return out; }
+  merge(entries) {
+    let changed = 0;
+    for (const [k, e] of entries) {
+      this.clock = Math.max(this.clock, e.version); // Lamport: receive rule
+      if (newer(e, this.state.get(k))) { this.state.set(k, { ...e }); changed++; }
+    }
+    return changed;
+  }
+}
+
+class GossipCluster {
+  /**
+   * @param {object} o
+   * @param {number} o.n            node count (&gt;= 2)
+   * @param {number} [o.fanout=1]   peers contacted by each node per round
+   * @param {&#039;push&#039;|&#039;pull&#039;|&#039;push-pull&#039;} [o.mode=&#039;push-pull&#039;]
+   * @param {number} [o.lossRate=0] probability that any single message is dropped
+   * @param {number} [o.seed=1]
+   */
+  constructor({ n, fanout = 1, mode = &#039;push-pull&#039;, lossRate = 0, seed = 1 }) {
+    if (!Number.isInteger(n) || n &lt; 2) throw new RangeError(&#039;n must be an integer &gt;= 2&#039;);
+    if (!Number.isInteger(fanout) || fanout &lt; 1 || fanout &gt;= n) throw new RangeError(&#039;fanout must be an integer in [1, n-1]&#039;);
+    if (![&#039;push&#039;, &#039;pull&#039;, &#039;push-pull&#039;].includes(mode)) throw new RangeError(&#039;bad mode&#039;);
+    this.rng = mulberry32(seed);
+    this.net = new Network({ rng: this.rng, lossRate });
+    this.fanout = fanout; this.mode = mode;
+    this.ids = Array.from({ length: n }, (_, i) =&gt; `n${String(i).padStart(4, &#039;0&#039;)}`);
+    this.nodes = new Map(this.ids.map((id) =&gt; [id, new KVNode(id)]));
+    this.rounds = 0; this.entriesSent = 0;
+  }
+  node(id) { return this.nodes.get(id); }
+
+  /**
+   * One exchange initiated by p towards q. Messages are built from the start-of-round
+   * snapshots (sp, sq), and merges go into the live nodes. That is the synchronous-round
+   * model the O(log N) results assume: a rumour moves at most one hop per exchange, per round.
+   */
+  _exchange(p, q, sp, sq) {
+    const { net } = this;
+    if (this.mode === &#039;push&#039;) {                 // p -&gt; q : p&#039;s whole state
+      if (!net.send(p.id, q.id)) return;
+      const d = sp.deltaFor(new Map()); this.entriesSent += d.length; q.merge(d);
+      return;
+    }
+    if (!net.send(p.id, q.id)) return;          // SYN: p&#039;s digest (keys + versions, no values)
+    const synDigest = sp.digest();
+    const toP = sq.deltaFor(synDigest);
+    const request = this.mode === &#039;push-pull&#039; ? sq.wants(synDigest) : [];
+    if (!net.send(q.id, p.id)) return;          // ACK: deltas for p + keys q wants
+    this.entriesSent += toP.length; p.merge(toP);
+    if (!request.length) return;
+    if (!net.send(p.id, q.id)) return;          // ACK2: what q asked for
+    const toQ = request.map((k) =&gt; [k, sp.state.get(k)]);
+    this.entriesSent += toQ.length; q.merge(toQ);
+  }
+
+  round() {
+    this.rounds++;
+    const snap = new Map();
+    for (const [id, nd] of this.nodes) { const c = new KVNode(id); c.state = new Map(nd.state); snap.set(id, c); }
+    for (let i = 0; i &lt; this.ids.length; i++) {
+      const id = this.ids[i];
+      if (!this.net.up(id)) continue;
+      for (const peer of pickOthers(this.rng, this.ids, this.fanout, i)) {
+        this._exchange(this.nodes.get(id), this.nodes.get(peer), snap.get(id), snap.get(peer));
+      }
+    }
+  }
+
+  /** Every live node holds exactly the same (version, writer) for every key. */
+  converged() {
+    const live = this.ids.filter((id) =&gt; this.net.up(id)).map((id) =&gt; this.nodes.get(id));
+    const ref = live[0].state;
+    return live.every((nd) =&gt; nd.state.size === ref.size &amp;&amp; [...ref].every(([k, e]) =&gt; { const o = nd.state.get(k); return o &amp;&amp; o.version === e.version &amp;&amp; o.writer === e.writer; }));
+  }
+
+  runUntilConverged(maxRounds = 1000) {
+    const start = this.rounds;
+    while (!this.converged()) { if (this.rounds - start &gt;= maxRounds) return -1; this.round(); }
+    return this.rounds - start;
+  }
+}
+
+/** Rounds for a single update written at one node to reach all N nodes, over several trials. */
+function measureConvergence({ n, fanout = 1, mode = &#039;push-pull&#039;, lossRate = 0, trials = 20, seed = 1 }) {
+  const rounds = [];
+  for (let t = 0; t &lt; trials; t++) {
+    const c = new GossipCluster({ n, fanout, mode, lossRate, seed: seed * 1000 + t });
+    c.node(c.ids[0]).set(&#039;rumor&#039;, t);
+    rounds.push(c.runUntilConverged());
+  }
+  rounds.sort((a, b) =&gt; a - b);
+  return { n, mean: rounds.reduce((s, x) =&gt; s + x, 0) / trials, p50: rounds[Math.floor(trials / 2)], max: rounds[trials - 1] };
+}
+
+// ------------------------------------------------------ SWIM detector ----
+const ALIVE = &#039;alive&#039;; const SUSPECT = &#039;suspect&#039;; const DEAD = &#039;dead&#039;;
+
+class SwimNode {
+  constructor(id, ids) {
+    this.id = id; this.incarnation = 0;
+    this.members = new Map(ids.map((m) =&gt; [m, { status: ALIVE, inc: 0, since: 0 }]));
+    this.updates = new Map(); // id -&gt; {id, status, inc, tx}
+    this.probeOrder = []; this.refutations = 0;
+  }
+  view(id) { return this.members.get(id); }
+}
+
+class SwimCluster {
+  /**
+   * @param {object} o
+   * @param {number} o.n
+   * @param {number} [o.indirectK=3]       helpers asked to ping-req after a failed direct ping
+   * @param {number} [o.suspicionRounds]   periods a node stays SUSPECT before DEAD (0 = no suspicion)
+   * @param {number} [o.retransmitMult=4]  retransmit each update retransmitMult*ceil(log10(n+1)) times (memberlist&#039;s rule)
+   * @param {number} [o.maxPiggyback=6]    updates carried per message
+   */
+  constructor({ n, seed = 1, lossRate = 0, indirectK = 3, suspicionRounds, retransmitMult = 4, maxPiggyback = 6 }) {
+    if (!Number.isInteger(n) || n &lt; 3) throw new RangeError(&#039;SWIM needs n &gt;= 3&#039;);
+    if (!Number.isInteger(indirectK) || indirectK &lt; 0) throw new RangeError(&#039;indirectK must be an integer &gt;= 0&#039;);
+    this.rng = mulberry32(seed);
+    this.net = new Network({ rng: this.rng, lossRate });
+    this.ids = Array.from({ length: n }, (_, i) =&gt; `m${String(i).padStart(3, &#039;0&#039;)}`);
+    this.nodes = new Map(this.ids.map((id) =&gt; [id, new SwimNode(id, this.ids)]));
+    this.k = indirectK; this.maxPiggyback = maxPiggyback;
+    this.suspicionRounds = suspicionRounds === undefined ? 2 * Math.ceil(Math.log2(n + 1)) : suspicionRounds;
+    this.txLimit = retransmitMult * Math.ceil(Math.log10(n + 1));
+    this.round = 0;
+    this.log = []; // {round, observer, subject, status, inc}
+  }
+
+  crash(id) { this.net.crashed.add(id); }
+
+  _enqueue(node, id, status, inc) { node.updates.set(id, { id, status, inc, tx: 0 }); }
+
+  /** A message from a to b that also carries a&#039;s freshest membership updates. */
+  _send(a, b) {
+    if (!this.net.send(a.id, b.id)) return false;
+    const batch = [...a.updates.values()].sort((x, y) =&gt; x.tx - y.tx).slice(0, this.maxPiggyback);
+    for (const u of batch) { if (++u.tx &gt;= this.txLimit) a.updates.delete(u.id); }
+    for (const u of batch) this._apply(b, u);
+    return true;
+  }
+
+  /** SWIM precedence rules; returns true if the update changed our view. */
+  _apply(node, { id, status, inc }) {
+    if (id === node.id) {
+      // Someone thinks we are suspect/dead: refute with a higher incarnation.
+      if (status !== ALIVE &amp;&amp; inc &gt;= node.incarnation) {
+        node.incarnation = inc + 1; node.refutations++;
+        node.members.set(id, { status: ALIVE, inc: node.incarnation, since: this.round });
+        this._enqueue(node, id, ALIVE, node.incarnation);
+      }
+      return false;
+    }
+    const cur = node.members.get(id);
+    const accept =
+      status === ALIVE ? inc &gt; cur.inc :
+      status === SUSPECT ? (cur.status === ALIVE &amp;&amp; inc &gt;= cur.inc) || (cur.status === SUSPECT &amp;&amp; inc &gt; cur.inc) :
+      /* DEAD */ cur.status !== DEAD &amp;&amp; inc &gt;= cur.inc;
+    if (!accept) return false;
+    node.members.set(id, { status, inc, since: this.round });
+    this._enqueue(node, id, status, inc);
+    if (status !== ALIVE || cur.status !== ALIVE) this.log.push({ round: this.round, observer: node.id, subject: id, status, inc });
+    return true;
+  }
+
+  _nextTarget(node) {
+    // Round-robin over a shuffled member list: every member is probed within 2N-1 periods
+    // (worst case), versus an unbounded wait with purely random target choice.
+    for (let tries = 0; tries &lt; 2; tries++) {
+      while (node.probeOrder.length) {
+        const t = node.probeOrder.pop();
+        if (node.view(t) &amp;&amp; node.view(t).status !== DEAD) return t;
+      }
+      node.probeOrder = sample(this.rng, this.ids, this.ids.length, new Set([node.id]));
+    }
+    return null;
+  }
+
+  _probe(node) {
+    const tId = this._nextTarget(node);
+    if (!tId) return;
+    const t = this.nodes.get(tId);
+    if (this._send(node, t) &amp;&amp; this._send(t, node)) return;                     // ping / ack
+    const candidates = this.ids.filter((h) =&gt; h !== node.id &amp;&amp; h !== tId &amp;&amp; node.view(h).status !== DEAD);
+    for (const hId of sample(this.rng, candidates, this.k)) {                  // ping-req via k helpers
+      const h = this.nodes.get(hId);
+      if (this._send(node, h) &amp;&amp; this._send(h, t) &amp;&amp; this._send(t, h) &amp;&amp; this._send(h, node)) return;
+    }
+    const v = node.view(tId);
+    if (v.status === ALIVE) {
+      const status = this.suspicionRounds === 0 ? DEAD : SUSPECT;
+      this._apply(node, { id: tId, status, inc: v.inc });
+    }
+  }
+
+  step() {
+    this.round++;
+    const live = this.ids.filter((id) =&gt; this.net.up(id));
+    for (const id of sample(this.rng, live, live.length)) this._probe(this.nodes.get(id));
+    // Suspicion timeouts: each node independently confirms suspects that never refuted.
+    for (const id of live) {
+      const node = this.nodes.get(id);
+      for (const [m, v] of node.members) {
+        if (v.status === SUSPECT &amp;&amp; this.round - v.since &gt;= this.suspicionRounds) this._apply(node, { id: m, status: DEAD, inc: v.inc });
+      }
+    }
+  }
+
+  /** How many live nodes currently see `id` with the given status. */
+  countViews(id, status) { return this.ids.filter((o) =&gt; o !== id &amp;&amp; this.net.up(o) &amp;&amp; this.nodes.get(o).view(id).status === status).length; }
+
+  /** DEAD declarations (observer, subject) about members that never crashed. */
+  falsePositives() {
+    const bad = this.log.filter((e) =&gt; e.status === DEAD &amp;&amp; this.net.up(e.subject));
+    return { declarations: bad.length, subjects: new Set(bad.map((e) =&gt; e.subject)).size };
+  }
+}
+
+module.exports = { mulberry32, Network, KVNode, GossipCluster, measureConvergence, SwimCluster, ALIVE, SUSPECT, DEAD };
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-gossip-protocol-demo_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">demo.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+// Deterministic walkthrough: anti-entropy convergence, scaling vs log N, and SWIM failure detection.
+const { GossipCluster, measureConvergence, SwimCluster, SUSPECT, DEAD } = require(&#039;./gossip&#039;);
+
+console.log(&#039;1) Push-pull anti-entropy on 12 nodes (fanout 1, 10% message loss)&#039;);
+const c = new GossipCluster({ n: 12, lossRate: 0.1, seed: 7 });
+const [a, , , d] = c.ids.map((id) =&gt; c.node(id));
+a.set(&#039;config/leader&#039;, &#039;n0000&#039;);
+d.set(&#039;config/leader&#039;, &#039;n0003&#039;);   // concurrent write, same Lamport version 1 -&gt; writer id breaks the tie
+d.set(&#039;feature/dark-mode&#039;, true);  // version 2 at n0003
+const have = (key) =&gt; c.ids.map((id) =&gt; (c.node(id).state.has(key) ? &#039;#&#039; : &#039;.&#039;)).join(&#039;&#039;);
+while (!c.converged()) {
+  c.round();
+  console.log(`   round ${String(c.rounds).padStart(2)}  leader:${have(&#039;config/leader&#039;)}  dark-mode:${have(&#039;feature/dark-mode&#039;)}  winner so far @n0000=${c.node(&#039;n0000&#039;).get(&#039;config/leader&#039;)}`);
+}
+console.log(`   converged: every node says leader=${c.node(&#039;n0011&#039;).get(&#039;config/leader&#039;)}; ${c.net.sent} msgs sent, ${c.net.dropped} dropped, ${c.entriesSent} entries shipped\n`);
+
+console.log(&#039;2) Rounds for one update to reach everyone (20 seeded trials each, fanout 1, no loss)&#039;);
+console.log(&#039;       N   push-pull   pull    push   | log3 N  log2 N  log2 N + ln N&#039;);
+for (const n of [16, 64, 256, 1024, 4096]) {
+  const trials = n &gt;= 4096 ? 5 : 20;
+  const pp = measureConvergence({ n, mode: &#039;push-pull&#039;, trials });
+  const pl = measureConvergence({ n, mode: &#039;pull&#039;, trials });
+  const ps = measureConvergence({ n, mode: &#039;push&#039;, trials });
+  const f = (x) =&gt; x.toFixed(1).padStart(6);
+  console.log(`   ${String(n).padStart(5)}  ${f(pp.mean)}    ${f(pl.mean)}  ${f(ps.mean)}   | ${f(Math.log(n) / Math.log(3))}  ${f(Math.log2(n))}  ${f(Math.log2(n) + Math.log(n))}`);
+}
+console.log(&#039;   Each column grows by a roughly constant step per 4x nodes, so it is O(log N). Push alone tracks&#039;);
+console.log(&#039;   log2 N + ln N (Pittel 1987); push-pull tracks log3 N + O(log log N) (Karp et al. 2000).&#039;);
+console.log(&#039;   Fanout and loss at N=256 (push-pull):&#039;);
+for (const [fanout, lossRate] of [[1, 0], [2, 0], [3, 0], [1, 0.1], [1, 0.3]]) {
+  const r = measureConvergence({ n: 256, fanout, lossRate });
+  console.log(`     fanout=${fanout} loss=${String(lossRate * 100).padStart(2)}%  -&gt; mean ${r.mean.toFixed(1)} rounds (max ${r.max})`);
+}
+
+console.log(&#039;\n3) SWIM failure detector, 32 members, 5% loss: m005 crashes at round 0&#039;);
+const s = new SwimCluster({ n: 32, seed: 3, lossRate: 0.05 });
+s.crash(&#039;m005&#039;);
+let lastLine = &#039;&#039;;
+for (let r = 0; r &lt; 30; r++) {
+  s.step();
+  const line = `suspect=${s.countViews(&#039;m005&#039;, SUSPECT)} dead=${s.countViews(&#039;m005&#039;, DEAD)} of 31`;
+  if (line !== lastLine) console.log(`   round ${String(s.round).padStart(2)}  views of m005: ${line}`);
+  lastLine = line;
+  if (s.countViews(&#039;m005&#039;, DEAD) === 31) break;
+}
+console.log(`   suspicion timeout = ${s.suspicionRounds} periods, piggyback retransmit limit = ${s.txLimit}`);
+const fp = s.falsePositives();
+const refutes = [...s.nodes.values()].reduce((sum, nd) =&gt; sum + nd.refutations, 0);
+console.log(`   healthy members falsely declared dead: ${fp.declarations}; suspicions refuted: ${refutes}\n`);
+
+console.log(&#039;4) False DEAD declarations about healthy members, 32 nodes x 100 periods x 3 seeds&#039;);
+console.log(&#039;   loss   ping-only   +indirect(k=3)   +indirect+suspicion&#039;);
+for (const lossRate of [0.02, 0.05, 0.1]) {
+  const cols = [[0, 0], [3, 0], [3, undefined]].map(([indirectK, suspicionRounds]) =&gt; {
+    let total = 0;
+    for (const seed of [1, 2, 3]) {
+      const sw = new SwimCluster({ n: 32, seed, lossRate, indirectK, suspicionRounds });
+      for (let r = 0; r &lt; 100; r++) sw.step();
+      total += sw.falsePositives().declarations;
+    }
+    return String(total).padStart(9);
+  });
+  console.log(`   ${String(lossRate * 100).padStart(3)}%  ${cols[0]}   ${cols[1]}        ${cols[2]}`);
+}
+console.log(&#039;   Indirect probes route around one lossy path; suspicion gives a live node time to refute.&#039;);
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-gossip-protocol-test_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">test.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const assert = require(&#039;node:assert&#039;);
+const { mulberry32, KVNode, GossipCluster, measureConvergence, SwimCluster, ALIVE, SUSPECT, DEAD } = require(&#039;./gossip&#039;);
+
+let failed = 0; let count = 0;
+function test(name, fn) {
+  count++;
+  try { fn(); console.log(`✓ ${name}`); } catch (err) { failed++; console.log(`✗ ${name}\n  ${err.stack}`); }
+}
+
+test(&#039;seeded PRNG is deterministic and in [0, 1)&#039;, () =&gt; {
+  const a = mulberry32(42); const b = mulberry32(42); const c = mulberry32(43);
+  const xs = Array.from({ length: 1000 }, a);
+  assert.deepStrictEqual(xs, Array.from({ length: 1000 }, b));
+  assert.notStrictEqual(xs[0], c());
+  assert.ok(xs.every((x) =&gt; x &gt;= 0 &amp;&amp; x &lt; 1));
+  const mean = xs.reduce((s, x) =&gt; s + x, 0) / xs.length;
+  assert.ok(Math.abs(mean - 0.5) &lt; 0.05);
+});
+
+test(&#039;LWW merge: higher version wins, ties broken by writer id, merge is idempotent&#039;, () =&gt; {
+  const n = new KVNode(&#039;z&#039;);
+  n.merge([[&#039;k&#039;, { value: &#039;a&#039;, version: 3, writer: &#039;a&#039; }]]);
+  n.merge([[&#039;k&#039;, { value: &#039;old&#039;, version: 2, writer: &#039;zz&#039; }]]);
+  assert.strictEqual(n.get(&#039;k&#039;), &#039;a&#039;);
+  n.merge([[&#039;k&#039;, { value: &#039;b&#039;, version: 3, writer: &#039;b&#039; }]]);
+  assert.strictEqual(n.get(&#039;k&#039;), &#039;b&#039;);
+  assert.strictEqual(n.merge([[&#039;k&#039;, { value: &#039;b&#039;, version: 3, writer: &#039;b&#039; }]]), 0); // idempotent
+});
+
+test(&#039;merge is order-independent (commutative/associative) over random updates&#039;, () =&gt; {
+  const rnd = mulberry32(9);
+  // (version, writer) identifies one write, so the same pair always carries the same value.
+  const updates = Array.from({ length: 200 }, () =&gt; {
+    const key = `k${Math.floor(rnd() * 10)}`; const version = Math.floor(rnd() * 20); const writer = `w${Math.floor(rnd() * 3)}`;
+    return [key, { value: `${key}@${version}/${writer}`, version, writer }];
+  });
+  const ref = new KVNode(&#039;r&#039;); ref.merge(updates);
+  for (let t = 0; t &lt; 5; t++) {
+    const shuffled = [...updates].sort(() =&gt; rnd() - 0.5);
+    const x = new KVNode(&#039;x&#039;);
+    for (let i = 0; i &lt; shuffled.length; i += 7) x.merge(shuffled.slice(i, i + 7));
+    assert.deepStrictEqual([...x.state].sort(), [...ref.state].sort());
+  }
+});
+
+test(&#039;Lamport clock: a write after seeing a newer remote version supersedes it&#039;, () =&gt; {
+  const a = new KVNode(&#039;a&#039;);
+  a.merge([[&#039;cfg&#039;, { value: &#039;remote&#039;, version: 41, writer: &#039;b&#039; }]]);
+  a.set(&#039;cfg&#039;, &#039;local&#039;);
+  assert.strictEqual(a.state.get(&#039;cfg&#039;).version, 42);
+  const b = new KVNode(&#039;b&#039;); b.merge([[&#039;cfg&#039;, { value: &#039;remote&#039;, version: 41, writer: &#039;b&#039; }]]);
+  b.merge([...a.state]);
+  assert.strictEqual(b.get(&#039;cfg&#039;), &#039;local&#039;);
+});
+
+test(&#039;push-pull exchange moves data both ways; in-sync peers exchange digests only&#039;, () =&gt; {
+  const c = new GossipCluster({ n: 2, seed: 1 });
+  const [a, b] = c.ids.map((id) =&gt; c.node(id));
+  a.set(&#039;x&#039;, 1); b.set(&#039;y&#039;, 2);
+  c._exchange(a, b, a, b);
+  assert.strictEqual(c.net.sent, 3);          // SYN, ACK, ACK2
+  assert.deepStrictEqual([a.get(&#039;y&#039;), b.get(&#039;x&#039;)], [2, 1]);
+  const before = c.entriesSent;
+  c._exchange(a, b, a, b);
+  assert.strictEqual(c.entriesSent, before);   // nothing to ship
+  assert.strictEqual(c.net.sent, 5);           // SYN + ACK, no ACK2 needed
+});
+
+test(&#039;concurrent writes to one key converge to the same winner everywhere&#039;, () =&gt; {
+  const c = new GossipCluster({ n: 50, seed: 3 });
+  c.ids.forEach((id, i) =&gt; { c.node(id).set(&#039;leader&#039;, id); if (i % 5 === 0) c.node(id).set(`own-${id}`, i); });
+  assert.ok(c.runUntilConverged(100) &gt; 0);
+  const winners = new Set(c.ids.map((id) =&gt; c.node(id).get(&#039;leader&#039;)));
+  assert.strictEqual(winners.size, 1);
+  assert.strictEqual([...winners][0], c.ids[c.ids.length - 1]); // all version 1: highest writer id wins
+  assert.strictEqual(c.node(c.ids[7]).state.size, 11);
+});
+
+test(&#039;rounds to convergence grow like log N (push-pull, fanout 1)&#039;, () =&gt; {
+  const r64 = measureConvergence({ n: 64, trials: 20 });
+  const r1024 = measureConvergence({ n: 1024, trials: 20 });
+  // Theory: log3 N + O(log log N) for push-pull. 16x the nodes adds only a few rounds.
+  assert.ok(r1024.mean &lt;= Math.log2(1024) + 1, `N=1024 took ${r1024.mean}`);
+  assert.ok(r1024.mean - r64.mean &lt; 5, `${r64.mean} -&gt; ${r1024.mean}`);
+  assert.ok(r1024.mean &gt; Math.log(1024) / Math.log(3), &#039;sanity: no faster than log3 N in practice&#039;);
+});
+
+test(&#039;push-pull beats push-only and pull-only; higher fanout needs fewer rounds&#039;, () =&gt; {
+  const pp = measureConvergence({ n: 256, mode: &#039;push-pull&#039; }).mean;
+  const push = measureConvergence({ n: 256, mode: &#039;push&#039; }).mean;
+  const pull = measureConvergence({ n: 256, mode: &#039;pull&#039; }).mean;
+  assert.ok(pp &lt; pull &amp;&amp; pull &lt; push, `pp ${pp}, pull ${pull}, push ${push}`);
+  // push-only needs about log2 N + ln N rounds (Pittel 1987)
+  assert.ok(Math.abs(push - (Math.log2(256) + Math.log(256))) &lt; 3, `push ${push}`);
+  const f1 = measureConvergence({ n: 256, fanout: 1 }).mean;
+  const f3 = measureConvergence({ n: 256, fanout: 3 }).mean;
+  assert.ok(f3 &lt; f1);
+});
+
+test(&#039;message loss slows convergence but does not prevent it&#039;, () =&gt; {
+  const clean = measureConvergence({ n: 128, lossRate: 0 }).mean;
+  const lossy = measureConvergence({ n: 128, lossRate: 0.3 }).mean;
+  assert.ok(lossy &gt; clean);
+  const c = new GossipCluster({ n: 128, lossRate: 0.3, seed: 5 });
+  c.node(c.ids[0]).set(&#039;k&#039;, &#039;v&#039;);
+  assert.ok(c.runUntilConverged(200) &gt; 0);
+  assert.ok(c.net.dropped &gt; 0);
+});
+
+test(&#039;crashed nodes do not block convergence of the live ones; runs are reproducible&#039;, () =&gt; {
+  const run = () =&gt; {
+    const c = new GossipCluster({ n: 40, seed: 11, lossRate: 0.1 });
+    for (let i = 0; i &lt; 10; i++) c.net.crashed.add(c.ids[30 + i]);
+    c.node(c.ids[0]).set(&#039;k&#039;, 1);
+    return [c.runUntilConverged(), c.net.sent, c.node(c.ids[35]).get(&#039;k&#039;)];
+  };
+  const a = run();
+  assert.ok(a[0] &gt; 0);
+  assert.strictEqual(a[2], undefined);
+  assert.deepStrictEqual(run(), a);
+});
+
+test(&#039;SWIM: healthy lossless cluster never suspects anyone&#039;, () =&gt; {
+  const s = new SwimCluster({ n: 20, seed: 1 });
+  for (let r = 0; r &lt; 60; r++) s.step();
+  assert.strictEqual(s.log.length, 0);
+  assert.ok(s.ids.every((id) =&gt; s.countViews(id, ALIVE) === 19));
+});
+
+test(&#039;SWIM: a crashed member is suspected quickly and declared dead by everyone&#039;, () =&gt; {
+  const s = new SwimCluster({ n: 32, seed: 2, lossRate: 0.05 });
+  s.crash(&#039;m007&#039;);
+  let firstSuspect = -1; let allDead = -1;
+  for (let r = 0; r &lt; 60 &amp;&amp; allDead &lt; 0; r++) {
+    s.step();
+    if (firstSuspect &lt; 0 &amp;&amp; s.countViews(&#039;m007&#039;, SUSPECT) + s.countViews(&#039;m007&#039;, DEAD) &gt; 0) firstSuspect = s.round;
+    if (s.countViews(&#039;m007&#039;, DEAD) === 31) allDead = s.round;
+  }
+  assert.ok(firstSuspect &gt; 0 &amp;&amp; firstSuspect &lt;= 4, `first suspicion at ${firstSuspect}`); // expected ~e/(e-1) periods
+  assert.ok(allDead &gt;= s.suspicionRounds &amp;&amp; allDead &lt;= s.suspicionRounds + 8, `all dead at ${allDead}`);
+});
+
+test(&#039;SWIM: a briefly unreachable member refutes suspicion by bumping its incarnation&#039;, () =&gt; {
+  const s = new SwimCluster({ n: 16, seed: 4 });
+  s.net.isolated.add(&#039;m003&#039;);
+  s.step(); s.step();
+  assert.ok(s.countViews(&#039;m003&#039;, SUSPECT) &gt; 0);
+  s.net.isolated.delete(&#039;m003&#039;);
+  for (let r = 0; r &lt; 20; r++) s.step();
+  const me = s.nodes.get(&#039;m003&#039;);
+  assert.ok(me.incarnation &gt;= 1 &amp;&amp; me.refutations &gt;= 1);
+  assert.strictEqual(s.countViews(&#039;m003&#039;, ALIVE), 15);
+  assert.ok(s.ids.filter((id) =&gt; id !== &#039;m003&#039;).every((id) =&gt; s.nodes.get(id).view(&#039;m003&#039;).inc === me.incarnation));
+  assert.strictEqual(s.falsePositives().declarations, 0);
+});
+
+test(&#039;SWIM precedence: suspect(i) beats alive(i); alive needs a higher incarnation; dead is sticky&#039;, () =&gt; {
+  const s = new SwimCluster({ n: 3, seed: 1 });
+  const a = s.nodes.get(&#039;m000&#039;);
+  assert.ok(s._apply(a, { id: &#039;m001&#039;, status: SUSPECT, inc: 0 }));
+  assert.ok(!s._apply(a, { id: &#039;m001&#039;, status: ALIVE, inc: 0 }));
+  assert.ok(s._apply(a, { id: &#039;m001&#039;, status: ALIVE, inc: 1 }));
+  assert.ok(!s._apply(a, { id: &#039;m001&#039;, status: SUSPECT, inc: 0 }));   // stale suspicion
+  assert.ok(s._apply(a, { id: &#039;m001&#039;, status: DEAD, inc: 1 }));
+  assert.ok(!s._apply(a, { id: &#039;m001&#039;, status: SUSPECT, inc: 5 }));
+  assert.ok(!s._apply(a, { id: &#039;m001&#039;, status: DEAD, inc: 1 }));      // idempotent
+  s._apply(a, { id: &#039;m000&#039;, status: SUSPECT, inc: 0 });              // about ourselves
+  assert.strictEqual(a.incarnation, 1);
+  assert.strictEqual(a.updates.get(&#039;m000&#039;).status, ALIVE);
+});
+
+test(&#039;SWIM: indirect probes + suspicion cut false positives under packet loss&#039;, () =&gt; {
+  const falseDeaths = (indirectK, suspicionRounds) =&gt; {
+    let total = 0;
+    for (const seed of [1, 2, 3]) {
+      const s = new SwimCluster({ n: 32, seed, lossRate: 0.05, indirectK, suspicionRounds });
+      for (let r = 0; r &lt; 60; r++) s.step();
+      total += s.falsePositives().declarations;
+    }
+    return total;
+  };
+  const naive = falseDeaths(0, 0);      // ping once, declare dead on the first miss
+  const indirect = falseDeaths(3, 0);
+  const full = falseDeaths(3, undefined);
+  assert.ok(naive &gt; indirect &amp;&amp; indirect &gt; full, `${naive} &gt; ${indirect} &gt; ${full}`);
+  assert.strictEqual(full, 0);
+});
+
+test(&#039;SWIM round-robin probing visits every other member once per cycle&#039;, () =&gt; {
+  const s = new SwimCluster({ n: 10, seed: 6 });
+  const a = s.nodes.get(&#039;m000&#039;);
+  const seen = Array.from({ length: 9 }, () =&gt; s._nextTarget(a));
+  assert.strictEqual(new Set(seen).size, 9);
+  assert.ok(!seen.includes(&#039;m000&#039;));
+});
+
+test(&#039;invalid parameters are rejected&#039;, () =&gt; {
+  assert.throws(() =&gt; new GossipCluster({ n: 1 }), RangeError);
+  assert.throws(() =&gt; new GossipCluster({ n: 4, fanout: 4 }), RangeError);
+  assert.throws(() =&gt; new GossipCluster({ n: 4, mode: &#039;shout&#039; }), RangeError);
+  assert.throws(() =&gt; new GossipCluster({ n: 4, lossRate: 1 }), RangeError);
+  assert.throws(() =&gt; new SwimCluster({ n: 2 }), RangeError);
+  assert.throws(() =&gt; new SwimCluster({ n: 5, indirectK: -1 }), RangeError);
+  assert.throws(() =&gt; new KVNode(&#039;a&#039;).set(&#039;&#039;, 1), TypeError);
+});
+
+console.log(`\n${count - failed}/${count} passed`);
+process.exit(failed ? 1 : 0);
+</code></pre>
+          </div>
+      </div>
+
+      <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
+        <div id="codelab-mount-gossip-protocol" class="build-lab-overlay__mount" data-build-id="gossip-protocol"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=04a1ea8061"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=3676a86b01"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=154eb461ef"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=b79de4edf4"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=262e2d34b8"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

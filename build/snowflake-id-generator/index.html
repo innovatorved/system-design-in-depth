@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Snowflake 64-bit ID Generator — Interactive Build Lab | System Design In Depth</title>
+  <meta name="description" content="Snowflake 64-bit ID Generator: A BigInt Snowflake generator using the 41/10/12 layout. It supports a custom epoch, waits for the next millisecond when the...">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Snowflake 64-bit ID Generator — Interactive Build Lab | System Design In Depth">
+  <meta property="og:description" content="Snowflake 64-bit ID Generator: A BigInt Snowflake generator using the 41/10/12 layout. It supports a custom epoch, waits for the next millisecond when the...">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/build/snowflake-id-generator/">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Snowflake 64-bit ID Generator — Interactive Build Lab | System Design In Depth">
+  <meta name="twitter:description" content="Snowflake 64-bit ID Generator: A BigInt Snowflake generator using the 41/10/12 layout. It supports a custom epoch, waits for the next millisecond when the...">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/snowflake-id-generator/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
+  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
+  <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
+  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="css/code-lab.css?v=2b9944bcbd">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=6e3af86ba6"></script>
+  <script src="js/manifest.js?v=2fe59c81f7"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Snowflake 64-bit ID Generator — Interactive Build Lab",
+  "description": "Snowflake 64-bit ID Generator: A BigInt Snowflake generator using the 41/10/12 layout. It supports a custom epoch, waits for the next millisecond when the...",
+  "url": "https://system-design-in-depth.vedgupta.in/build/snowflake-id-generator/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" style="display:flex; gap:0.4rem; margin-right:0.5rem;">
+        <a href="#/glossary" class="btn btn--sm btn--outline" style="font-size:11px; padding:4px 8px; text-decoration:none; white-space:nowrap;">📖 Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
+      <button class="sidebar__tab sidebar__tab--active" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div class="builds-sidebar"><div class="builds-sidebar__intro">
+    Full from-scratch Node.js implementations with Guided Interactive Labs, zero dependencies, and complete test suites.
+  </div><a class="unit-item unit-item--build " href="/build/load-balancer-from-scratch/" data-build="load-balancer-from-scratch">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/consistent-hashing-ring/" data-build="consistent-hashing-ring">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Consistent Hashing Ring with Virtual Nodes</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/sliding-window-rate-limiter/" data-build="sliding-window-rate-limiter">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lru-cache/" data-build="lru-cache">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LRU Cache (Doubly Linked List + Hash Map)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/ttl-cache-reaper/" data-build="ttl-cache-reaper">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">TTL Cache with a Redis-Style Adaptive Reaper</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/bloom-filter-membership/" data-build="bloom-filter-membership">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Bloom Filter Membership Testing</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build unit-item--active" href="/build/snowflake-id-generator/" data-build="snowflake-id-generator">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Snowflake 64-bit ID Generator</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/keyset-pagination-cursors/" data-build="keyset-pagination-cursors">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/write-ahead-log/" data-build="write-ahead-log">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Write-Ahead Log (WAL) &amp; Crash Recovery</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lsm-tree-kv-store/" data-build="lsm-tree-kv-store">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LSM-Tree Key/Value Store (WAL, Memtable, SSTables, Compaction)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lease-leader-election/" data-build="lease-leader-election">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Lease-Based Leader Election with Fencing Tokens</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/gossip-protocol/" data-build="gossip-protocol">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/merkle-anti-entropy/" data-build="merkle-anti-entropy">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/hyperloglog-cardinality/" data-build="hyperloglog-cardinality">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/tiny-search-engine/" data-build="tiny-search-engine">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+        <span class="unit-item__meta">8 files · Interactive Lab</span>
+      </div>
+    </a></div>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered-build="snowflake-id-generator">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">Snowflake 64-bit ID Generator</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> From-Scratch Build</span>
+        </div>
+        <h1 class="lesson-header__title">Snowflake 64-bit ID Generator</h1>
+        <p class="build-summary">A BigInt Snowflake generator using the 41/10/12 layout. It supports a custom epoch, waits for the next millisecond when the sequence overflows, detects clock rollback with a configurable tolerance, and can decode an id back into its timestamp, worker and sequence.</p>
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~25 min</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Intermediate</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="#" data-nav="topic" data-slug="snowflake-id-design">Snowflake ID design</a>, <a href="#" data-nav="topic" data-slug="uuid-objectid-and-snowflake">UUID, ObjectId, and Snowflake</a>, <a href="#" data-nav="topic" data-slug="distributed-id-generation">Distributed ID generation</a>, <a href="#" data-nav="topic" data-slug="clock-skew-and-id-ordering">Clock skew and ID ordering</a>, <a href="#" data-nav="topic" data-slug="clocks-and-ordering">Clocks and ordering</a></span>
+        </div>
+      </div>
+
+      <div class="build-view-tabs" role="tablist" aria-label="Build View Mode">
+        <button type="button" class="build-view-tab active" role="tab" aria-selected="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Architecture &amp; Reference Code</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="guided">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>Interactive Lab IDE</span>
+          <span class="build-view-tab__badge">0/4 Steps</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="sandbox">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Sandbox Mode</span>
+        </button>
+      </div>
+
+      <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
+        <div class="build-lab-card__top">
+          <div class="build-lab-card__intro">
+            <div class="build-lab-card__eyebrow">
+              <span>Interactive Build Lab</span>
+              <span class="build-lab-card__progress" id="build-lab-progress-badge">0/4 Steps Completed</span>
+            </div>
+            <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
+            <p class="build-lab-card__desc">
+              Complete 4 progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+            </p>
+            <div class="build-lab-progress-track" aria-hidden="true">
+              <div class="build-lab-progress-track__fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="build-lab-card__cta-col">
+            <button type="button" class="btn btn--primary build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="guided">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Launch Guided Lab</span>
+            </button>
+            <button type="button" class="btn btn--outline build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="sandbox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Open Full Solution</span>
+            </button>
+          </div>
+        </div>
+
+        
+          <div class="build-lab-steps-grid" id="build-lab-steps-grid">
+            
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="0">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">01</span>
+                    <span class="build-lab-step-card__target">snowflake.js · compose</span>
+                  </div>
+                  <div class="build-lab-step-card__title">64-Bit BigInt Bitwise Composition &amp; Decoding (41 / 10 / 12 Layout)</div>
+                  <div class="build-lab-step-card__concept">Signed 64-Bit BigInt Layout: [0][41-bit deltaMs][10-bit workerId][12-bit sequence]</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>5 tests</span>
+                    <span class="build-lab-step-card__open">Step 1 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="1">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">02</span>
+                    <span class="build-lab-step-card__target">snowflake.js · SnowflakeGenerator.nextId</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Same-Millisecond Sequence Increment &amp; Overflow Spin-Wait</div>
+                  <div class="build-lab-step-card__concept">4096 IDs/ms Sequence Counter &amp; tilNextMillis Busy-Wait</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>4 tests</span>
+                    <span class="build-lab-step-card__open">Step 2 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="2">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">03</span>
+                    <span class="build-lab-step-card__target">snowflake.js · SnowflakeGenerator.nextId</span>
+                  </div>
+                  <div class="build-lab-step-card__title">NTP Clock Rollback Protection (Slew Tolerance vs Hard Refusal)</div>
+                  <div class="build-lab-step-card__concept">Handling Non-Monotonic Wall Clocks (Wait Small Drift, Throw ClockRollbackError on Large Jump)</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 3 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="3">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">04</span>
+                    <span class="build-lab-step-card__target">snowflake.js · SnowflakeGenerator.nextId</span>
+                  </div>
+                  <div class="build-lab-step-card__title">41-Bit Timestamp Exhaustion Guard &amp; Input Validation</div>
+                  <div class="build-lab-step-card__concept">69.7-Year Epoch Horizon Guard &amp; Strict BigInt Precision Validation</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>2 tests</span>
+                    <span class="build-lab-step-card__open">Step 4 →</span>
+                  </div>
+                </button>
+              
+          </div>
+        
+      </section>
+
+      <div id="build-walkthrough-pane">
+        <div class="build-run">
+          <div class="build-run__text">
+            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
+            <code>node demo.js</code> and <code>node test.js</code>.
+          </div>
+          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="snowflake-id-generator">Copy setup script</button>
+        </div>
+
+        <div class="build-files"><a href="#build-file-snowflake-id-generator-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-snowflake-id-generator-README_md">README.md</a><a href="#build-file-snowflake-id-generator-snowflake_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-snowflake-id-generator-snowflake_js">snowflake.js</a><a href="#build-file-snowflake-id-generator-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-snowflake-id-generator-demo_js">demo.js</a><a href="#build-file-snowflake-id-generator-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-snowflake-id-generator-test_js">test.js</a></div><article class="prose" id="build-file-snowflake-id-generator-README_md"><h2>Snowflake 64-bit ID Generator</h2>
+
+<p>This lab generates unique 64-bit ids at millions per second per process. The</p>
+<p>ids sort roughly by creation time, and generating one needs no coordination</p>
+<p>with other processes. Workers only need to agree on a worker id when they start.</p>
+
+<h2>Where it shows up</h2>
+
+<ul>
+<li><strong>Primary keys for sharded databases</strong>: auto-increment only works on a single</li>
+  primary, and random UUIDv4 keys fragment B-tree indexes.
+  Time-ordered ids append to the right edge of the index.
+<li><strong>Public object ids</strong>: tweets, Discord messages, Instagram media, Mastodon statuses.</li>
+<li><strong>Event and log ids</strong>: they sort by time without needing a separate timestamp</li>
+  column, and you can pull the creation time back out of the id.
+<li><strong>Cursor pagination</strong>: an id that is ordered by time works as a stable</li>
+  cursor on its own (see the <code>keyset-pagination</code> lesson).
+</ul>
+<h2>Layout</h2>
+
+<pre><code class="language-text">63 | 62 ....................................... 22 | 21 ...... 12 | 11 ...... 0
+  0 |      41 bits: ms since custom epoch           | 10: worker   | 12: sequence
+    |      2^41 ms ≈ 69.7 years                     | 1024 workers | 4096 ids/ms</code></pre>
+
+<code>id = (now - epoch) << 22 | workerId << 12 | sequence</code>. The top bit stays 0, so
+<p>ids fit a signed int64 (Java <code>long</code>, Postgres <code>BIGINT</code>). Everything here is</p>
+<code>BigInt</code>, because JS <code>Number</code> is exact only up to 2^53. Demo step 6 shows a
+<p>real id losing its low bits. Send ids to clients as decimal strings. Twitter's</p>
+<p>API added <code>id_str</code> for this reason.</p>
+
+<h2>Algorithm and invariants</h2>
+
+<pre><code class="language-text">now = clock()
+if now &lt; last:                              # clock went backwards
+    if last - now &gt; tolerance: throw ClockRollbackError
+    spin until clock() &gt;= last
+if now == last:
+    seq = (seq + 1) &amp; 4095
+    if seq == 0: spin until clock() &gt; last  # 4096 ids already issued this ms
+else:
+    seq = 0
+last = now
+return compose(now, worker, seq)</code></pre>
+
+<ol>
+<li><strong>Unique per worker.</strong> For a fixed <code>(timestamp, worker)</code>, the sequence</li>
+   values are distinct. The timestamp never goes backwards, because a rollback
+   is either waited out or refused.
+<li><strong>Strictly increasing per worker.</strong> The timestamp is non-decreasing and the</li>
+   sequence increases within a millisecond.
+<li><strong>Unique globally, <em>if</em> worker ids are unique among live processes.</strong> This</li>
+   is the one piece of coordination the scheme needs. Worker ids are usually
+   handed out by ZooKeeper or etcd leases, a DB table, or a Kubernetes
+   StatefulSet ordinal.
+<li><strong>K-sorted across workers.</strong> Ids are ordered by millisecond. Within the same</li>
+   millisecond, the worker id breaks ties, not the true issue order (demo
+   step 3). Clock skew between machines blurs ordering by that many milliseconds.
+</ol>
+<strong>Custom epoch.</strong> A recent epoch gives you the full ~69.7 years going forward.
+<p>Counting from 1970 would run out in 2039 (demo step 5). Once chosen, the epoch</p>
+<p>can never change, because every decoder needs it.</p>
+
+<strong>Clock rollback.</strong> NTP can <em>step</em> a clock backwards, and restoring a VM from a
+<p>snapshot can move it back by hours. Issuing ids with a past timestamp could</p>
+<p>repeat <code>(ts, seq)</code> pairs that were already handed out. A small drift (at most</p>
+<code>rollbackToleranceMs</code>, default 5) is waited out. A larger drift throws
+<code>ClockRollbackError</code>, and the caller should fail over or alert. Twitter's
+<p>original implementation refused all rollbacks.</p>
+
+<h2>Complexity</h2>
+
+<ul>
+<li><code>nextId</code>: O(1) amortized. In the worst case it spins for up to 1 ms when the</li>
+  sequence overflows, or up to <code>tolerance</code> ms on a rollback.
+<li><code>decode</code> / <code>compose</code>: O(1). Space: O(1) per generator.</li>
+<li>Throughput ceiling: 4096 ids/ms per worker, about 4.1M/s. Across all 1024</li>
+  workers that is about 4.2 billion ids/s.
+</ul>
+<h2>Failure modes and trade-offs</h2>
+
+<ul>
+<li><strong>Duplicate worker ids.</strong> Two processes sharing a worker id will collide</li>
+  within the same millisecond. This is the most common real-world bug. Use
+  leases that expire, and fence them.
+<li><strong>Restart inside the same millisecond.</strong> A process that restarts and reuses</li>
+  its worker id right away could reissue ids from its last millisecond. Keep a
+  persisted high-water mark, or wait for at least one tolerance window on startup.
+<li><strong>Busy-waiting.</strong> The spin burns CPU. An async generator could <code>await</code> the</li>
+  next tick instead, at the cost of latency jitter.
+<li><strong>Information leakage.</strong> Ids reveal creation time, which shard or worker</li>
+  issued them, and roughly how many ids that worker issues. Don't expose them
+  where that is sensitive.
+<li><strong>Low traffic means sequence 0 most of the time.</strong> If you shard by</li>
+  <code>id % N</code>, the shards will be badly skewed. Hash the id first.
+<li><strong>Bit budget.</strong> More worker bits leave fewer sequence bits or less lifetime.</li>
+  Choose the split for your fleet size and peak rate per worker.
+</ul>
+<h2>How production systems do it</h2>
+
+<ul>
+<li><strong>Twitter Snowflake (2010)</strong>: a Scala Thrift service using this exact 41/10/12</li>
+  split, where the 10 bits were 5 datacenter plus 5 worker. It used the epoch
+  <code>1288834974657</code>, claimed its configured worker id in ZooKeeper at startup, and refused to issue ids
+  while the clock was behind the last timestamp.
+<li><strong>Discord</strong>: 42-bit ms timestamp from epoch 2015-01-01, 5-bit worker, 5-bit</li>
+  process, 12-bit increment. Anyone can decode message creation times from the ids.
+<li><strong>Instagram</strong>: generates ids inside PostgreSQL with PL/pgSQL. The layout is</li>
+  41-bit ms, 13-bit logical shard id, and 10-bit per-shard sequence
+  (<code>nextval % 1024</code>), so an id also encodes where its row lives.
+<li><strong>Sonyflake</strong>: 39 bits of 10 ms units (about 174 years), 8-bit sequence and</li>
+  16-bit machine id. It trades throughput (256 ids per 10 ms) for lifetime and
+  number of machines.
+<li><strong>Baidu UidGenerator</strong>: seconds-resolution timestamp. Its <code>CachedUidGenerator</code></li>
+  pre-fills a ring buffer and "borrows" future seconds to absorb bursts.
+<li><strong>UUIDv7 (RFC 9562, 2024)</strong>: a 48-bit Unix-ms timestamp plus random bits in</li>
+  128 bits. It sorts by time like Snowflake but needs no worker id, at the cost
+  of being twice as wide.
+</ul>
+<h2>How to run</h2>
+
+<pre><code class="language-bash">node demo.js   # layout, overflow at 4096/ms, k-sorting across workers, rollback, epochs, BigInt
+node test.js   # 14 tests: exact bit layout, overflow boundary, rollback tolerance edges, validation</code></pre>
+
+<h2>Extension exercises</h2>
+
+<ol>
+<li>Add a <strong>lease-based worker id allocator</strong>. It claims <code>workerId</code> from a shared</li>
+   table with a TTL and renews it. What must the generator do if renewal fails?
+<li>Persist a <strong>high-water mark</strong> (last ms) to a file in <code>os.tmpdir()</code> every</li>
+   second. On startup, refuse to issue ids until <code>clock() > mark</code>. Test it with
+   a simulated restart.
+<li>Make the layout configurable, for example Sonyflake's 39/8/16 with 10 ms</li>
+   ticks. Keep <code>decode</code> and <code>compose</code> consistent, and add a test that the
+   lifetime is about 174 years.
+<li>Implement "borrow the future": within the tolerance, keep issuing ids at</li>
+   <code>lastMs</code> instead of waiting. When is this safe, and what breaks if the process
+   restarts before real time catches up?
+<li>Write a UUIDv7 generator with a monotonic counter (RFC 9562 method 1) and</li>
+   compare index-insert locality against UUIDv4 in a simple sorted-array model.
+</ol></article>
+          <div class="code-block" id="build-file-snowflake-id-generator-snowflake_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">snowflake.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+/**
+ * Snowflake 64-bit ID generator (Twitter layout).
+ *
+ *   bit 63      62 ........... 22  21 ...... 12  11 ...... 0
+ *   [ 0 ]  [ 41-bit ms since epoch ][ 10-bit worker ][ 12-bit seq ]
+ *
+ * The sign bit is always 0, so ids fit in a signed int64 (Java long, Postgres
+ * BIGINT). Ids from one worker strictly increase. Ids from different workers
+ * are &quot;k-sorted&quot;: they are ordered by millisecond, and only ids issued in the
+ * same millisecond on different workers can be out of order.
+ *
+ * JavaScript numbers are only exact up to 2^53, and a real Snowflake id is
+ * ~2^60, so everything is BigInt. Serialize ids as decimal strings in JSON.
+ */
+
+const TIMESTAMP_BITS = 41n;
+const WORKER_BITS = 10n;
+const SEQUENCE_BITS = 12n;
+
+const MAX_WORKER = (1n &lt;&lt; WORKER_BITS) - 1n;       // 1023
+const MAX_SEQUENCE = (1n &lt;&lt; SEQUENCE_BITS) - 1n;   // 4095
+const MAX_TIMESTAMP = (1n &lt;&lt; TIMESTAMP_BITS) - 1n; // ~69.7 years of ms
+const WORKER_SHIFT = SEQUENCE_BITS;                // 12
+const TIMESTAMP_SHIFT = SEQUENCE_BITS + WORKER_BITS; // 22
+
+const TWITTER_EPOCH = 1288834974657; // 2010-11-04T01:42:54.657Z
+const DEFAULT_EPOCH = Date.UTC(2020, 0, 1);
+
+class ClockRollbackError extends Error {
+  constructor(driftMs, toleranceMs) {
+    super(`clock moved backwards by ${driftMs}ms (tolerance ${toleranceMs}ms); refusing to generate ids`);
+    this.name = &#039;ClockRollbackError&#039;;
+    this.driftMs = driftMs;
+  }
+}
+
+function toEpochMs(epoch) {
+  const ms = epoch instanceof Date ? epoch.getTime() : epoch;
+  if (!Number.isSafeInteger(ms) || ms &lt; 0) throw new RangeError(&#039;epoch must be a non-negative integer ms timestamp or a Date&#039;);
+  return ms;
+}
+
+class SnowflakeGenerator {
+  /**
+   * @param {object} opts
+   * @param {number} opts.workerId              0..1023, must be unique per live process
+   * @param {number|Date} [opts.epoch]          custom epoch (default 2020-01-01T00:00:00Z)
+   * @param {() =&gt; number} [opts.clock]         integer ms wall clock (default Date.now)
+   * @param {number} [opts.rollbackToleranceMs] wait out backwards jumps up to this size (default 5)
+   * @param {number} [opts.maxSpin]             safety cap on clock polls while waiting (default 1e7)
+   */
+  constructor({ workerId, epoch = DEFAULT_EPOCH, clock = Date.now, rollbackToleranceMs = 5, maxSpin = 1e7 } = {}) {
+    if (!Number.isInteger(workerId) || workerId &lt; 0 || BigInt(workerId) &gt; MAX_WORKER) {
+      throw new RangeError(`workerId must be an integer in [0, ${MAX_WORKER}]`);
+    }
+    if (!Number.isInteger(rollbackToleranceMs) || rollbackToleranceMs &lt; 0) throw new RangeError(&#039;rollbackToleranceMs must be an integer &gt;= 0&#039;);
+    if (typeof clock !== &#039;function&#039;) throw new TypeError(&#039;clock must be a function&#039;);
+    this.epoch = toEpochMs(epoch);
+    this.workerId = BigInt(workerId);
+    this.clock = clock;
+    this.rollbackToleranceMs = rollbackToleranceMs;
+    this.maxSpin = maxSpin;
+    const now = this._now();
+    if (now &lt; this.epoch) throw new RangeError(&#039;epoch is in the future&#039;);
+    this.lastMs = -1; // last timestamp used, in absolute ms
+    this.sequence = 0n;
+    this.stats = { issued: 0, sequenceOverflowWaits: 0, rollbacksWaited: 0, rollbacksRejected: 0 };
+  }
+
+  _now() {
+    const t = this.clock();
+    if (!Number.isSafeInteger(t)) throw new TypeError(&#039;clock() must return an integer number of ms&#039;);
+    return t;
+  }
+
+  /** Poll the clock until it returns a value &gt; ms. Busy-waits, like Twitter&#039;s tilNextMillis. */
+  _waitUntilAfter(ms) {
+    let t = this._now();
+    for (let spins = 0; t &lt;= ms; spins++) {
+      if (spins &gt;= this.maxSpin) throw new Error(`clock did not advance past ${ms} after ${this.maxSpin} polls`);
+      t = this._now();
+    }
+    return t;
+  }
+
+  /** Returns the next id as a BigInt. */
+  nextId() {
+    let now = this._now();
+
+    if (now &lt; this.lastMs) {
+      const drift = this.lastMs - now;
+      if (drift &gt; this.rollbackToleranceMs) {
+        this.stats.rollbacksRejected++;
+        throw new ClockRollbackError(drift, this.rollbackToleranceMs);
+      }
+      // Small step back (e.g. an NTP slew/step): wait for the clock to reach
+      // lastMs again. Reusing lastMs with seq+1 would also be safe; waiting
+      // keeps &quot;timestamp in id ≈ real time&quot;.
+      this.stats.rollbacksWaited++;
+      now = this._waitUntilAfter(this.lastMs - 1);
+    }
+
+    if (now === this.lastMs) {
+      this.sequence = (this.sequence + 1n) &amp; MAX_SEQUENCE;
+      if (this.sequence === 0n) {
+        // 4096 ids already issued this millisecond: block until the next one.
+        this.stats.sequenceOverflowWaits++;
+        now = this._waitUntilAfter(this.lastMs);
+      }
+    } else {
+      this.sequence = 0n;
+    }
+
+    const delta = BigInt(now - this.epoch);
+    if (delta &gt; MAX_TIMESTAMP) throw new RangeError(&#039;timestamp overflowed 41 bits: epoch exhausted (~69.7 years)&#039;);
+    this.lastMs = now;
+    this.stats.issued++;
+    return (delta &lt;&lt; TIMESTAMP_SHIFT) | (this.workerId &lt;&lt; WORKER_SHIFT) | this.sequence;
+  }
+
+  /** Decimal string form; safe to put in JSON. */
+  nextIdString() { return this.nextId().toString(); }
+
+  /** Decode using this generator&#039;s epoch. */
+  decode(id) { return decode(id, { epoch: this.epoch }); }
+}
+
+function toBigIntId(id) {
+  let v;
+  if (typeof id === &#039;bigint&#039;) v = id;
+  else if (typeof id === &#039;string&#039; &amp;&amp; /^\d+$/.test(id)) v = BigInt(id);
+  else if (typeof id === &#039;number&#039;) {
+    // Accepting a Number would silently lose precision above 2^53.
+    if (!Number.isSafeInteger(id)) throw new RangeError(&#039;numeric id exceeds 2^53; pass a BigInt or decimal string&#039;);
+    v = BigInt(id);
+  } else throw new TypeError(&#039;id must be a BigInt, decimal string or safe integer&#039;);
+  if (v &lt; 0n || v &gt;= 1n &lt;&lt; 63n) throw new RangeError(&#039;id must be in [0, 2^63)&#039;);
+  return v;
+}
+
+/** Split an id into its fields. */
+function decode(id, { epoch = DEFAULT_EPOCH } = {}) {
+  const v = toBigIntId(id);
+  const epochMs = toEpochMs(epoch);
+  const deltaMs = Number(v &gt;&gt; TIMESTAMP_SHIFT);
+  const timestampMs = epochMs + deltaMs;
+  return {
+    timestampMs,
+    date: new Date(timestampMs),
+    workerId: Number((v &gt;&gt; WORKER_SHIFT) &amp; MAX_WORKER),
+    sequence: Number(v &amp; MAX_SEQUENCE),
+  };
+}
+
+/** Build an id from its parts (useful for tests and for range scans). */
+function compose({ timestampMs, workerId = 0, sequence = 0 }, { epoch = DEFAULT_EPOCH } = {}) {
+  const delta = BigInt(timestampMs - toEpochMs(epoch));
+  if (delta &lt; 0n || delta &gt; MAX_TIMESTAMP) throw new RangeError(&#039;timestamp outside the 41-bit window for this epoch&#039;);
+  if (workerId &lt; 0 || BigInt(workerId) &gt; MAX_WORKER) throw new RangeError(&#039;workerId out of range&#039;);
+  if (sequence &lt; 0 || BigInt(sequence) &gt; MAX_SEQUENCE) throw new RangeError(&#039;sequence out of range&#039;);
+  return (delta &lt;&lt; TIMESTAMP_SHIFT) | (BigInt(workerId) &lt;&lt; WORKER_SHIFT) | BigInt(sequence);
+}
+
+/**
+ * Smallest id that could be issued at or after `timestampMs`, by any worker.
+ * Enables &quot;WHERE id &gt;= lowerBoundFor(t)&quot; time-range queries on the primary key.
+ */
+function lowerBoundFor(timestampMs, opts) { return compose({ timestampMs, workerId: 0, sequence: 0 }, opts); }
+
+module.exports = {
+  SnowflakeGenerator, ClockRollbackError, decode, compose, lowerBoundFor,
+  TWITTER_EPOCH, DEFAULT_EPOCH,
+  LAYOUT: { TIMESTAMP_BITS: 41, WORKER_BITS: 10, SEQUENCE_BITS: 12, TIMESTAMP_SHIFT: 22, WORKER_SHIFT: 12 },
+};
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-snowflake-id-generator-demo_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">demo.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+// Deterministic walkthrough using simulated clocks (no real waiting).
+const { SnowflakeGenerator, decode, lowerBoundFor, TWITTER_EPOCH, DEFAULT_EPOCH } = require(&#039;./snowflake&#039;);
+
+const line = (s = &#039;&#039;) =&gt; console.log(s);
+const T0 = Date.UTC(2026, 8, 30, 12, 0, 0); // 2026-09-30T12:00:00Z
+
+/** A clock that advances 1 ms every `callsPerMs` reads (models a machine&#039;s throughput). */
+function throughputClock(start, callsPerMs) {
+  let calls = 0;
+  const c = () =&gt; start + Math.floor(calls++ / callsPerMs);
+  return c;
+}
+
+line(&#039;1) Bit layout&#039;);
+const g = new SnowflakeGenerator({ workerId: 37, clock: () =&gt; T0 });
+const id = g.nextId();
+const bin = id.toString(2).padStart(64, &#039;0&#039;);
+line(`   id = ${id}`);
+line(`   ${bin[0]} ${bin.slice(1, 42)} ${bin.slice(42, 52)} ${bin.slice(52)}`);
+line(&#039;   &#039; + &#039;^&#039;.padEnd(2) + &#039;^ 41-bit ms since epoch&#039;.padEnd(42) + &#039;^ worker&#039;.padEnd(11) + &#039;^ sequence&#039;);
+line(&#039;   (the first ^ is the sign bit, always 0 so the id fits a signed int64)&#039;);
+const d = g.decode(id);
+line(`   decode -&gt; ${d.date.toISOString()}, worker=${d.workerId}, seq=${d.sequence}`);
+line();
+
+line(&#039;2) Sequence overflow: a burst of 10,000 ids when the CPU could do ~10,000 clock reads/ms&#039;);
+const burst = new SnowflakeGenerator({ workerId: 1, clock: throughputClock(T0, 10_000) });
+const perMs = new Map();
+let prev = -1n, monotonic = true;
+for (let i = 0; i &lt; 10_000; i++) {
+  const x = burst.nextId();
+  if (x &lt;= prev) monotonic = false;
+  prev = x;
+  const ms = decode(x).timestampMs - T0;
+  perMs.set(ms, (perMs.get(ms) || 0) + 1);
+}
+line(`   ids per ms: ${[...perMs].map(([ms, n]) =&gt; `+${ms}ms:${n}`).join(&#039;  &#039;)}`);
+line(`   overflow waits: ${burst.stats.sequenceOverflowWaits}; strictly increasing: ${monotonic}`);
+line(&#039;   A 12-bit sequence caps a worker at 4096 ids/ms (~4.1M/s); the 4097th waits for the next ms.&#039;);
+line();
+
+line(&#039;3) Two workers: globally k-sorted, not strictly ordered&#039;);
+let shared = T0;
+const a = new SnowflakeGenerator({ workerId: 1, clock: () =&gt; shared });
+const b = new SnowflakeGenerator({ workerId: 2, clock: () =&gt; shared });
+const issued = [];
+for (let step = 0; step &lt; 6; step++) {
+  issued.push({ who: &#039;B&#039;, id: b.nextId() });
+  issued.push({ who: &#039;A&#039;, id: a.nextId() });
+  if (step % 2 === 1) shared++;
+}
+const sorted = [...issued].sort((x, y) =&gt; (x.id &lt; y.id ? -1 : 1));
+line(`   issue order: ${issued.map((x) =&gt; x.who).join(&#039; &#039;)}`);
+line(`   sorted by id: ${sorted.map((x) =&gt; x.who).join(&#039; &#039;)}   (within a ms, worker id decides)`);
+line();
+
+line(&#039;4) Clock rollback handling (tolerance 5 ms)&#039;);
+let wall = T0;
+let polls = 0;
+const rb = new SnowflakeGenerator({
+  workerId: 9, rollbackToleranceMs: 5,
+  // Every clock read lets 0.5 ms of simulated time pass.
+  clock: () =&gt; { polls++; const t = Math.floor(wall); wall += 0.5; return t; },
+});
+const first = rb.nextId();
+wall -= 3; // NTP steps the clock back 3 ms
+const before = polls;
+const afterSmall = rb.nextId();
+line(`   step back 3 ms  -&gt; waited ${polls - before} clock polls until time caught up; ids still increasing: ${afterSmall &gt; first}`);
+wall -= 50; // big jump back: e.g. VM restored from snapshot
+try { rb.nextId(); } catch (e) {
+  line(`   step back 50 ms -&gt; ${e.name}: ${e.message}`);
+}
+line(&#039;   Refusing is the safe choice: issuing ids in the past risks duplicates with ids already handed out.&#039;);
+line();
+
+line(&#039;5) Custom epoch: how long 41 bits of milliseconds last&#039;);
+for (const [name, ep] of [[&#039;Unix 1970&#039;, 0], [&#039;Twitter 2010-11-04&#039;, TWITTER_EPOCH], [&#039;default 2020-01-01&#039;, DEFAULT_EPOCH]]) {
+  const end = new Date(ep + 2 ** 41 - 1);
+  line(`   ${name.padEnd(20)} -&gt; ids run out at ${end.toISOString()}`);
+}
+line();
+
+line(&#039;6) Why BigInt and string serialization matter&#039;);
+const bigGen = new SnowflakeGenerator({ workerId: 1023, clock: () =&gt; T0 });
+bigGen.nextId();
+const big = bigGen.nextId(); // sequence 1 -&gt; low bit set
+line(`   BigInt id       : ${big}`);
+line(`   as JS Number    : ${Number(big)}  &lt;- ${BigInt(Number(big)) === big ? &#039;exact&#039; : &#039;precision lost above 2^53&#039;}`);
+line(`   JSON-safe string: &quot;${big.toString()}&quot; (Twitter&#039;s API added &quot;id_str&quot; for exactly this reason)`);
+line();
+
+line(&#039;7) Time-range queries on the primary key&#039;);
+const lo = lowerBoundFor(T0), hi = lowerBoundFor(T0 + 60_000);
+line(`   &quot;created in the first minute after 12:00&quot; == WHERE id &gt;= ${lo} AND id &lt; ${hi}`);
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-snowflake-id-generator-test_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">test.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const assert = require(&#039;node:assert&#039;);
+const {
+  SnowflakeGenerator, ClockRollbackError, decode, compose, lowerBoundFor, TWITTER_EPOCH, DEFAULT_EPOCH,
+} = require(&#039;./snowflake&#039;);
+
+let failed = 0;
+function test(name, fn) {
+  try { fn(); console.log(`✓ ${name}`); }
+  catch (e) { failed++; console.log(`✗ ${name}\n  ${e.stack}`); }
+}
+
+const T0 = Date.UTC(2026, 0, 1);
+
+/** Returns `start` for the first `perMs` reads, then start+1, and so on. */
+function steppingClock(start, perMs) {
+  let n = 0;
+  return () =&gt; start + Math.floor(n++ / perMs);
+}
+
+test(&#039;bit layout: 41/10/12 fields at shifts 22 and 12&#039;, () =&gt; {
+  const epoch = T0;
+  const g = new SnowflakeGenerator({ workerId: 1, epoch, clock: () =&gt; epoch + 1 });
+  assert.strictEqual(g.nextId(), (1n &lt;&lt; 22n) | (1n &lt;&lt; 12n) | 0n);
+  assert.strictEqual(g.nextId(), (1n &lt;&lt; 22n) | (1n &lt;&lt; 12n) | 1n);
+  const max = compose({ timestampMs: epoch + 2 ** 41 - 1, workerId: 1023, sequence: 4095 }, { epoch });
+  assert.strictEqual(max, (1n &lt;&lt; 63n) - 1n, &#039;all 63 payload bits set, sign bit clear&#039;);
+});
+
+test(&#039;decode inverts compose&#039;, () =&gt; {
+  for (const [ts, w, s] of [[T0, 0, 0], [T0 + 123456789, 513, 4095], [T0 + 7, 1023, 1]]) {
+    const id = compose({ timestampMs: ts, workerId: w, sequence: s });
+    assert.deepStrictEqual((({ timestampMs, workerId, sequence }) =&gt; [timestampMs, workerId, sequence])(decode(id)), [ts, w, s]);
+  }
+});
+
+test(&#039;Twitter epoch: id &gt;&gt; 22 is milliseconds since 2010-11-04T01:42:54.657Z&#039;, () =&gt; {
+  assert.strictEqual(new Date(TWITTER_EPOCH).toISOString(), &#039;2010-11-04T01:42:54.657Z&#039;);
+  const ts = Date.UTC(2019, 11, 31, 19, 26, 16, 771);
+  const g = new SnowflakeGenerator({ workerId: 0, epoch: TWITTER_EPOCH, clock: () =&gt; ts });
+  const id = g.nextId();
+  assert.strictEqual(id, BigInt(ts - TWITTER_EPOCH) &lt;&lt; 22n);
+  assert.strictEqual(decode(id.toString(), { epoch: TWITTER_EPOCH }).date.toISOString(), &#039;2019-12-31T19:26:16.771Z&#039;);
+});
+
+test(&#039;ids from one worker are unique and strictly increasing&#039;, () =&gt; {
+  const g = new SnowflakeGenerator({ workerId: 5, clock: steppingClock(T0, 3) });
+  let prev = -1n;
+  const seen = new Set();
+  for (let i = 0; i &lt; 50_000; i++) {
+    const id = g.nextId();
+    assert.ok(id &gt; prev);
+    seen.add(id);
+    prev = id;
+  }
+  assert.strictEqual(seen.size, 50_000);
+});
+
+test(&#039;sequence overflow waits for the next millisecond&#039;, () =&gt; {
+  // Clock stays on T0 for 10k reads: only 4096 ids fit, the 4097th must roll to T0+1.
+  const g = new SnowflakeGenerator({ workerId: 0, clock: steppingClock(T0, 10_000) });
+  const ids = Array.from({ length: 4097 }, () =&gt; g.nextId());
+  const last = decode(ids[4095]), next = decode(ids[4096]);
+  assert.strictEqual(last.timestampMs, T0);
+  assert.strictEqual(last.sequence, 4095);
+  assert.strictEqual(next.timestampMs, T0 + 1);
+  assert.strictEqual(next.sequence, 0);
+  assert.strictEqual(g.stats.sequenceOverflowWaits, 1);
+});
+
+test(&#039;sequence resets to 0 when the millisecond changes&#039;, () =&gt; {
+  let t = T0;
+  const g = new SnowflakeGenerator({ workerId: 0, clock: () =&gt; t });
+  g.nextId(); g.nextId();
+  t += 1;
+  assert.strictEqual(decode(g.nextId()).sequence, 0);
+});
+
+test(&#039;small clock rollback (within tolerance) is waited out; ids stay increasing&#039;, () =&gt; {
+  let t = T0 + 100;
+  let reads = 0;
+  const g = new SnowflakeGenerator({ workerId: 3, rollbackToleranceMs: 5, clock: () =&gt; { reads++; return t; } });
+  const a = g.nextId();
+  t -= 4;
+  // Simulate time passing while the generator polls.
+  const orig = g.clock;
+  g.clock = () =&gt; { const v = orig(); t += 1; return v; };
+  const b = g.nextId();
+  assert.ok(b &gt; a);
+  assert.ok(decode(b).timestampMs &gt;= decode(a).timestampMs);
+  assert.strictEqual(g.stats.rollbacksWaited, 1);
+});
+
+test(&#039;rollback exactly at tolerance waits; one beyond throws ClockRollbackError&#039;, () =&gt; {
+  let t = T0 + 100;
+  const g = new SnowflakeGenerator({ workerId: 3, rollbackToleranceMs: 5, clock: () =&gt; t });
+  g.nextId();
+  t = T0 + 95; // exactly 5 ms back: tolerated, waits while time advances
+  const orig = g.clock;
+  g.clock = () =&gt; { const v = orig(); if (t &lt; T0 + 100) t += 1; return v; };
+  assert.strictEqual(decode(g.nextId()).timestampMs, T0 + 100);
+  assert.strictEqual(g.stats.rollbacksWaited, 1);
+  g.clock = orig;
+  t = T0 + 94; // 6 ms back
+  assert.throws(() =&gt; g.nextId(), (e) =&gt; e instanceof ClockRollbackError &amp;&amp; e.driftMs === 6);
+  assert.strictEqual(g.stats.rollbacksRejected, 1);
+  const g2 = new SnowflakeGenerator({ workerId: 3, rollbackToleranceMs: 0, clock: () =&gt; t });
+  t = T0 + 100; g2.nextId();
+  t = T0 + 99;
+  assert.throws(() =&gt; g2.nextId(), ClockRollbackError, &#039;tolerance 0 rejects any rollback&#039;);
+});
+
+test(&#039;a clock that never advances surfaces an error instead of hanging&#039;, () =&gt; {
+  const g = new SnowflakeGenerator({ workerId: 0, clock: () =&gt; T0, maxSpin: 1000 });
+  for (let i = 0; i &lt; 4096; i++) g.nextId();
+  assert.throws(() =&gt; g.nextId(), /did not advance/);
+});
+
+test(&#039;different workers never collide within the same millisecond&#039;, () =&gt; {
+  const t = T0;
+  const all = new Set();
+  for (let w = 0; w &lt; 8; w++) {
+    const g = new SnowflakeGenerator({ workerId: w * 127, clock: () =&gt; t });
+    for (let i = 0; i &lt; 500; i++) all.add(g.nextId());
+  }
+  assert.strictEqual(all.size, 8 * 500);
+});
+
+test(&#039;custom epoch: Date or ms accepted; future epoch rejected; decode honors epoch&#039;, () =&gt; {
+  const epoch = new Date(&#039;2024-01-01T00:00:00Z&#039;);
+  const g = new SnowflakeGenerator({ workerId: 1, epoch, clock: () =&gt; epoch.getTime() + 1000 });
+  const id = g.nextId();
+  assert.strictEqual(id &gt;&gt; 22n, 1000n);
+  assert.strictEqual(g.decode(id).date.toISOString(), &#039;2024-01-01T00:00:01.000Z&#039;);
+  assert.strictEqual(decode(id, { epoch }).timestampMs, epoch.getTime() + 1000);
+  assert.throws(() =&gt; new SnowflakeGenerator({ workerId: 1, epoch: T0 + 10, clock: () =&gt; T0 }), /future/);
+});
+
+test(&#039;41-bit timestamp exhaustion is detected&#039;, () =&gt; {
+  const epoch = 0;
+  const g = new SnowflakeGenerator({ workerId: 1, epoch, clock: () =&gt; 2 ** 41 });
+  assert.throws(() =&gt; g.nextId(), /41 bits/);
+  assert.strictEqual(new Date(DEFAULT_EPOCH + 2 ** 41 - 1).getUTCFullYear(), 2089);
+});
+
+test(&#039;input validation&#039;, () =&gt; {
+  assert.throws(() =&gt; new SnowflakeGenerator({ workerId: 1024 }), RangeError);
+  assert.throws(() =&gt; new SnowflakeGenerator({ workerId: -1 }), RangeError);
+  assert.throws(() =&gt; new SnowflakeGenerator({ workerId: 1.5 }), RangeError);
+  assert.throws(() =&gt; new SnowflakeGenerator({}), RangeError);
+  assert.throws(() =&gt; new SnowflakeGenerator({ workerId: 1, clock: () =&gt; 1.5 }), TypeError);
+  assert.throws(() =&gt; decode(2 ** 60), /2\^53/, &#039;unsafe Number ids must be rejected&#039;);
+  assert.throws(() =&gt; decode(&#039;-5&#039;), TypeError);
+  assert.throws(() =&gt; decode(1n &lt;&lt; 63n), RangeError);
+  assert.throws(() =&gt; compose({ timestampMs: T0, sequence: 4096 }), RangeError);
+});
+
+test(&#039;lowerBoundFor enables time-range scans over ids&#039;, () =&gt; {
+  let t = T0;
+  const g = new SnowflakeGenerator({ workerId: 1023, clock: () =&gt; t });
+  const early = g.nextId();
+  t += 10;
+  const mid = g.nextId();
+  t += 10;
+  const late = g.nextId();
+  const lo = lowerBoundFor(T0 + 5), hi = lowerBoundFor(T0 + 15);
+  assert.ok(!(early &gt;= lo &amp;&amp; early &lt; hi));
+  assert.ok(mid &gt;= lo &amp;&amp; mid &lt; hi);
+  assert.ok(!(late &gt;= lo &amp;&amp; late &lt; hi));
+});
+
+if (failed) { console.log(`\n${failed} test(s) failed`); process.exit(1); }
+console.log(&#039;\nall tests passed&#039;);
+</code></pre>
+          </div>
+      </div>
+
+      <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
+        <div id="codelab-mount-snowflake-id-generator" class="build-lab-overlay__mount" data-build-id="snowflake-id-generator"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=04a1ea8061"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=3676a86b01"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=154eb461ef"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=b79de4edf4"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=262e2d34b8"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

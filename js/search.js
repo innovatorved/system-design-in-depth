@@ -34,6 +34,26 @@ window.Search = (() => {
         }
       }
     }
+    if (window.IMPLEMENTATIONS_DATA) {
+      for (const [id, b] of Object.entries(window.IMPLEMENTATIONS_DATA)) {
+        index.push({
+          slug: id,
+          title: b.title || id.replace(/-/g, ' '),
+          kind: 'build-lab',
+          moduleTitle: 'Interactive Build Lab (JS & TS)',
+          moduleNumber: 'Lab',
+          partTitle: '15 Builds',
+          tags: ['build', 'lab', 'interactive', 'code', id],
+          excerpt: b.summary || '',
+          searchText: [
+            b.title,
+            id.replace(/-/g, ' '),
+            'interactive build lab code js ts',
+            b.summary || ''
+          ].join(' ').toLowerCase()
+        });
+      }
+    }
   }
 
   function search(query) {
@@ -87,18 +107,20 @@ window.Search = (() => {
 
     const kindIcons = {
       lesson: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
-      system: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>'
+      system: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+      'build-lab': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>'
     };
 
     container.innerHTML = results.map((r, i) => {
       const icon = kindIcons[r.kind] || kindIcons.lesson;
-      return `<div class="search-result${i === focusedIdx ? ' focused' : ''}" data-slug="${r.slug}" data-idx="${i}">
+      const metaLabel = r.kind === 'build-lab' ? r.moduleTitle : `Module ${r.moduleNumber}: ${r.moduleTitle}`;
+      return `<div class="search-result${i === focusedIdx ? ' focused' : ''}" data-slug="${r.slug}" data-kind="${r.kind}" data-idx="${i}">
         <div class="search-result__icon">${icon}</div>
         <div class="search-result__info">
           <div class="search-result__title">${highlightText(r.title, query)}</div>
-          <div class="search-result__module">Module ${r.moduleNumber}: ${r.moduleTitle}</div>
+          <div class="search-result__module">${metaLabel}</div>
         </div>
-        <span class="search-result__kind">${r.kind}</span>
+        <span class="search-result__kind">${r.kind === 'build-lab' ? 'build' : r.kind}</span>
       </div>`;
     }).join('');
 
@@ -106,6 +128,7 @@ window.Search = (() => {
     container.querySelectorAll('.search-result').forEach(el => {
       el.addEventListener('click', () => {
         const slug = el.dataset.slug;
+        const kind = el.dataset.kind;
         const input = document.getElementById('search-input');
         const query = input ? input.value : '';
         const title = el.querySelector('.search-result__title')?.textContent || slug;
@@ -121,7 +144,9 @@ window.Search = (() => {
         }
 
         close();
-        if (window.App && window.App.navigateTo) {
+        if (kind === 'build-lab' && window.App?.navigateToBuild) {
+          window.App.navigateToBuild(slug);
+        } else if (window.App?.navigateTo) {
           window.App.navigateTo(slug);
         }
       });
@@ -132,7 +157,7 @@ window.Search = (() => {
     const modal = document.getElementById('search-modal');
     const input = document.getElementById('search-input');
     if (!modal || !input) return;
-    if (index.length === 0) buildIndex();
+    buildIndex();
     isOpen = true;
     focusedIdx = -1;
     modal.classList.add('open');
@@ -170,6 +195,7 @@ window.Search = (() => {
         e.preventDefault();
         const el = results[focusedIdx];
         const slug = el?.dataset.slug;
+        const kind = el?.dataset.kind;
         if (slug) {
           const input = document.getElementById('search-input');
           const query = input ? input.value : '';
@@ -185,7 +211,9 @@ window.Search = (() => {
           }
 
           close();
-          if (window.App && window.App.navigateTo) {
+          if (kind === 'build-lab' && window.App?.navigateToBuild) {
+            window.App.navigateToBuild(slug);
+          } else if (window.App?.navigateTo) {
             window.App.navigateTo(slug);
           }
         }

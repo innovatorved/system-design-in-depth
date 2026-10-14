@@ -55,6 +55,17 @@ if (!curriculum || !curriculum.parts) {
   process.exit(1);
 }
 
+// Load implementations_code.js for build lab validation
+const implFile = path.join(dataDir, 'implementations_code.js');
+if (fs.existsSync(implFile)) {
+  try {
+    eval(fs.readFileSync(implFile, 'utf8'));
+  } catch (e) {
+    reportError(`Failed to load implementations_code.js: ${e.message}`);
+  }
+}
+const allBuildIds = new Set(Object.keys(global.window.IMPLEMENTATIONS_DATA || {}));
+
 // 1. Validate curriculum structure
 const allSlugs = new Set();
 const allModuleIds = new Set();
@@ -259,6 +270,22 @@ function checkInternalLinks(str, sourceLabel) {
       internalLinkErrors++;
     }
   }
+
+  // 4. Build links: href="/build/slug/" or legacy href="#build/slug"
+  const buildHtmlRegex = /href=\\?["'](?:\/build\/|#build\/)([^/#?"'\\]+)\/?\\?["']/g;
+  while ((match = buildHtmlRegex.exec(str)) !== null) {
+    internalLinksChecked++;
+    const fullLink = match[0];
+    const targetBuildId = match[1];
+    if (fullLink.includes('#build/')) {
+      reportError(`${sourceLabel}: legacy #build/ link found (use /build/${targetBuildId}/): '${fullLink}'`);
+      internalLinkErrors++;
+    }
+    if (!allBuildIds.has(targetBuildId)) {
+      reportError(`${sourceLabel}: broken build link target '${targetBuildId}' in '${fullLink}'`);
+      internalLinkErrors++;
+    }
+  }
 }
 
 checkInternalLinks(JSON.stringify(curriculum), 'data/curriculum.js');
@@ -277,7 +304,7 @@ for (const pageFile of ['index.html', '404.html', 'projects/index.html']) {
 }
 
 if (internalLinkErrors === 0 && legacyWikiLinks === 0) {
-  reportSuccess(`Internal links: ${internalLinksChecked} internal links verified against valid curriculum slugs (including 404.html)`);
+  reportSuccess(`Internal links: ${internalLinksChecked} internal links verified against valid curriculum & build slugs (including 404.html)`);
 }
 
 // Programmatic Mermaid Diagram & YouTube Video Count Check against README.md
@@ -418,6 +445,7 @@ try {
 
 // 3. Static Pages & SEO Validation
 const topicBaseDir = path.join(__dirname, '..', 'topic');
+const buildBaseDir = path.join(__dirname, '..', 'build');
 const sitemapFile = path.join(__dirname, '..', 'sitemap.xml');
 let missingStaticCount = 0;
 let invalidCanonicalCount = 0;
@@ -459,10 +487,55 @@ if (fs.existsSync(topicBaseDir)) {
   }
 
   if (missingStaticCount === 0 && invalidCanonicalCount === 0 && emptyReaderCount === 0 && lowWordCount === 0) {
-    reportSuccess(`Static pages: all ${allSlugs.size} topic pages prerendered with canonical URLs & >= 300 words`);
+    reportSuccess(`Static topic pages: all ${allSlugs.size} topic pages prerendered with canonical URLs & >= 300 words`);
   }
 } else {
   reportError('Static pages directory not found: topic/');
+}
+
+let missingBuildStaticCount = 0;
+let invalidBuildCanonicalCount = 0;
+let emptyBuildReaderCount = 0;
+let lowBuildWordCount = 0;
+
+if (fs.existsSync(buildBaseDir)) {
+  for (const buildId of allBuildIds) {
+    const pagePath = path.join(buildBaseDir, buildId, 'index.html');
+    if (!fs.existsSync(pagePath)) {
+      missingBuildStaticCount++;
+      reportError(`Missing static build page: build/${buildId}/index.html`);
+      continue;
+    }
+    const html = fs.readFileSync(pagePath, 'utf8');
+    const expectedCanonical = `<link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/${buildId}/">`;
+    if (!html.includes(expectedCanonical)) {
+      invalidBuildCanonicalCount++;
+      reportError(`Invalid or missing canonical URL in build/${buildId}/index.html`);
+    }
+    if (!html.includes(`data-prerendered-build="${buildId}"`)) {
+      emptyBuildReaderCount++;
+      reportError(`Empty or un-prerendered reader container in build/${buildId}/index.html`);
+    }
+
+    const readerMatch = html.match(/id="reader"[^>]*>([\s\S]*?)<\/div>\s*<\/main>/);
+    if (!readerMatch) {
+      emptyBuildReaderCount++;
+      reportError(`Missing #reader container in build/${buildId}/index.html`);
+    } else {
+      const readerText = readerMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      const words = readerText ? readerText.split(/\s+/).length : 0;
+      if (words < 300) {
+        lowBuildWordCount++;
+        reportError(`Static build page build/${buildId}/index.html body text has only ${words} words (< 300 required)`);
+      }
+    }
+  }
+
+  if (missingBuildStaticCount === 0 && invalidBuildCanonicalCount === 0 && emptyBuildReaderCount === 0 && lowBuildWordCount === 0) {
+    reportSuccess(`Static build pages: all ${allBuildIds.size} interactive build lab pages prerendered with canonical URLs & >= 300 words`);
+  }
+} else {
+  reportError('Static build pages directory not found: build/');
 }
 
 // 4. Sitemap Validation
@@ -476,14 +549,21 @@ if (fs.existsSync(sitemapFile)) {
       reportError(`Sitemap missing topic URL: ${slug}`);
     }
   }
+  for (const buildId of allBuildIds) {
+    const expectedLoc = `<loc>https://system-design-in-depth.vedgupta.in/build/${buildId}/</loc>`;
+    if (!sitemapContent.includes(expectedLoc)) {
+      missingSitemapUrls++;
+      reportError(`Sitemap missing build URL: ${buildId}`);
+    }
+  }
   if (missingSitemapUrls === 0) {
-    reportSuccess(`Sitemap: contains all ${allSlugs.size} topic URLs with trailing slashes`);
+    reportSuccess(`Sitemap: contains all ${allSlugs.size} topic URLs and ${allBuildIds.size} build URLs with trailing slashes`);
   }
 } else {
   reportError('sitemap.xml not found');
 }
 
-// 5. OpenGraph Image & 203-Page Metadata / H1 Uniqueness Check
+// 5. OpenGraph Image & 218-Page Metadata / H1 Uniqueness Check
 const ogImagePath = path.join(__dirname, '..', 'assets', 'og-image.png');
 if (!fs.existsSync(ogImagePath)) {
   reportError('Missing OpenGraph image: assets/og-image.png');
@@ -495,7 +575,8 @@ const allHtmlFiles = [
   'index.html',
   '404.html',
   'projects/index.html',
-  ...Array.from(allSlugs).map(s => `topic/${s}/index.html`)
+  ...Array.from(allSlugs).map(s => `topic/${s}/index.html`),
+  ...Array.from(allBuildIds).map(b => `build/${b}/index.html`)
 ];
 const seenTitles = new Map();
 const seenDescs = new Map();

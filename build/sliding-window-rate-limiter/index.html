@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Sliding Window Rate Limiter (Log, Counter, Token Bucket) — Interactive Build Lab | System Design In Depth</title>
+  <meta name="description" content="Sliding Window Rate Limiter (Log, Counter, Token Bucket): Three per-key rate limiters with the same interface: an exact sliding log, an O1 sliding-window...">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Sliding Window Rate Limiter (Log, Counter, Token Bucket) — Interactive Build Lab | System Design In Depth">
+  <meta property="og:description" content="Sliding Window Rate Limiter (Log, Counter, Token Bucket): Three per-key rate limiters with the same interface: an exact sliding log, an O1 sliding-window...">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/build/sliding-window-rate-limiter/">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sliding Window Rate Limiter (Log, Counter, Token Bucket) — Interactive Build Lab | System Design In Depth">
+  <meta name="twitter:description" content="Sliding Window Rate Limiter (Log, Counter, Token Bucket): Three per-key rate limiters with the same interface: an exact sliding log, an O1 sliding-window...">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/sliding-window-rate-limiter/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=9fe9777039">
+  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
+  <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
+  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="css/code-lab.css?v=2b9944bcbd">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=6e3af86ba6"></script>
+  <script src="js/manifest.js?v=2fe59c81f7"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Sliding Window Rate Limiter (Log, Counter, Token Bucket) — Interactive Build Lab",
+  "description": "Sliding Window Rate Limiter (Log, Counter, Token Bucket): Three per-key rate limiters with the same interface: an exact sliding log, an O1 sliding-window...",
+  "url": "https://system-design-in-depth.vedgupta.in/build/sliding-window-rate-limiter/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" style="display:flex; gap:0.4rem; margin-right:0.5rem;">
+        <a href="#/glossary" class="btn btn--sm btn--outline" style="font-size:11px; padding:4px 8px; text-decoration:none; white-space:nowrap;">📖 Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
+      <button class="sidebar__tab sidebar__tab--active" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div class="builds-sidebar"><div class="builds-sidebar__intro">
+    Full from-scratch Node.js implementations with Guided Interactive Labs, zero dependencies, and complete test suites.
+  </div><a class="unit-item unit-item--build " href="/build/load-balancer-from-scratch/" data-build="load-balancer-from-scratch">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/consistent-hashing-ring/" data-build="consistent-hashing-ring">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Consistent Hashing Ring with Virtual Nodes</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build unit-item--active" href="/build/sliding-window-rate-limiter/" data-build="sliding-window-rate-limiter">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lru-cache/" data-build="lru-cache">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LRU Cache (Doubly Linked List + Hash Map)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/ttl-cache-reaper/" data-build="ttl-cache-reaper">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">TTL Cache with a Redis-Style Adaptive Reaper</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/bloom-filter-membership/" data-build="bloom-filter-membership">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Bloom Filter Membership Testing</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/snowflake-id-generator/" data-build="snowflake-id-generator">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Snowflake 64-bit ID Generator</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/keyset-pagination-cursors/" data-build="keyset-pagination-cursors">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/write-ahead-log/" data-build="write-ahead-log">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Write-Ahead Log (WAL) &amp; Crash Recovery</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lsm-tree-kv-store/" data-build="lsm-tree-kv-store">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">LSM-Tree Key/Value Store (WAL, Memtable, SSTables, Compaction)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/lease-leader-election/" data-build="lease-leader-election">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Lease-Based Leader Election with Fencing Tokens</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/gossip-protocol/" data-build="gossip-protocol">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/merkle-anti-entropy/" data-build="merkle-anti-entropy">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/hyperloglog-cardinality/" data-build="hyperloglog-cardinality">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+        <span class="unit-item__meta">4 files · Interactive Lab</span>
+      </div>
+    </a><a class="unit-item unit-item--build " href="/build/tiny-search-engine/" data-build="tiny-search-engine">
+      <span class="unit-item__status unit-item__status--build">⚡</span>
+      <div class="unit-item__build-info">
+        <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+        <span class="unit-item__meta">8 files · Interactive Lab</span>
+      </div>
+    </a></div>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered-build="sliding-window-rate-limiter">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> From-Scratch Build</span>
+        </div>
+        <h1 class="lesson-header__title">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</h1>
+        <p class="build-summary">Three per-key rate limiters with the same interface: an exact sliding log, an O(1) sliding-window counter and an integer-exact token bucket. All take an injectable clock and compute a Retry-After that tests confirm is correct to the millisecond.</p>
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~30 min</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Intermediate</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="#" data-nav="topic" data-slug="sliding-window-rate-limiter">Sliding window rate limiter</a>, <a href="#" data-nav="topic" data-slug="rate-limiter-placement-and-keys">Rate limiter placement and keys</a>, <a href="#" data-nav="topic" data-slug="rate-limiting-and-abuse-prevention-case-study">Design: rate limiting and abuse prevention</a>, <a href="#" data-nav="topic" data-slug="security-and-abuse-prevention">Security and abuse prevention</a>, <a href="#" data-nav="topic" data-slug="load-shedding">Load shedding</a>, <a href="#" data-nav="topic" data-slug="backpressure">Backpressure</a></span>
+        </div>
+      </div>
+
+      <div class="build-view-tabs" role="tablist" aria-label="Build View Mode">
+        <button type="button" class="build-view-tab active" role="tab" aria-selected="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Architecture &amp; Reference Code</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="guided">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>Interactive Lab IDE</span>
+          <span class="build-view-tab__badge">0/4 Steps</span>
+        </button>
+        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="sandbox">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Sandbox Mode</span>
+        </button>
+      </div>
+
+      <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
+        <div class="build-lab-card__top">
+          <div class="build-lab-card__intro">
+            <div class="build-lab-card__eyebrow">
+              <span>Interactive Build Lab</span>
+              <span class="build-lab-card__progress" id="build-lab-progress-badge">0/4 Steps Completed</span>
+            </div>
+            <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
+            <p class="build-lab-card__desc">
+              Complete 4 progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+            </p>
+            <div class="build-lab-progress-track" aria-hidden="true">
+              <div class="build-lab-progress-track__fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="build-lab-card__cta-col">
+            <button type="button" class="btn btn--primary build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="guided">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Launch Guided Lab</span>
+            </button>
+            <button type="button" class="btn btn--outline build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="sandbox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Open Full Solution</span>
+            </button>
+          </div>
+        </div>
+
+        
+          <div class="build-lab-steps-grid" id="build-lab-steps-grid">
+            
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="0">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">01</span>
+                    <span class="build-lab-step-card__target">limiter.js · SlidingLogLimiter.consume</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Exact Sliding Window Log Limiter</div>
+                  <div class="build-lab-step-card__concept">Per-Request Timestamp Log, Exact Retry-After Calculation &amp; Multi-Unit Cost</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>4 tests</span>
+                    <span class="build-lab-step-card__open">Step 1 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="1">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">02</span>
+                    <span class="build-lab-step-card__target">limiter.js · SlidingWindowCounter.consume</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Cloudflare-Style Sliding Window Counter Approximation</div>
+                  <div class="build-lab-step-card__concept">O(1) Weighted Previous + Current Fixed Window Approximation &amp; Exact Wait Solver</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>4 tests</span>
+                    <span class="build-lab-step-card__open">Step 2 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="2">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">03</span>
+                    <span class="build-lab-step-card__target">limiter.js · TokenBucketLimiter.consume</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Drift-Free Integer Token Bucket</div>
+                  <div class="build-lab-step-card__concept">Scaled Integer Token Arithmetic (No IEEE-754 Drift) &amp; Monotonic Clock Guard</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>4 tests</span>
+                    <span class="build-lab-step-card__open">Step 3 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="3">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">04</span>
+                    <span class="build-lab-step-card__target">limiter.js · toHeaders</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Idle Key Sweeping &amp; IETF / RFC 9110 RateLimit Headers</div>
+                  <div class="build-lab-step-card__concept">Memory Hygiene (sweep) &amp; Standard HTTP RateLimit / Retry-After Headers</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>3 tests</span>
+                    <span class="build-lab-step-card__open">Step 4 →</span>
+                  </div>
+                </button>
+              
+          </div>
+        
+      </section>
+
+      <div id="build-walkthrough-pane">
+        <div class="build-run">
+          <div class="build-run__text">
+            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
+            <code>node demo.js</code> and <code>node test.js</code>.
+          </div>
+          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="sliding-window-rate-limiter">Copy setup script</button>
+        </div>
+
+        <div class="build-files"><a href="#build-file-sliding-window-rate-limiter-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-sliding-window-rate-limiter-README_md">README.md</a><a href="#build-file-sliding-window-rate-limiter-limiter_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-sliding-window-rate-limiter-limiter_js">limiter.js</a><a href="#build-file-sliding-window-rate-limiter-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-sliding-window-rate-limiter-demo_js">demo.js</a><a href="#build-file-sliding-window-rate-limiter-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-sliding-window-rate-limiter-test_js">test.js</a></div><article class="prose" id="build-file-sliding-window-rate-limiter-README_md"><h2>Sliding Window Rate Limiter: Log, Counter, Token Bucket</h2>
+
+<p>Three per-key limiters with one result shape, so you can swap them and compare:</p>
+
+<pre><code class="language-js">const r = limiter.consume(&#039;api-key:123&#039;, cost = 1);
+// { allowed, limit, remaining, retryAfterMs, resetMs }
+res.set(toHeaders(r)); // RateLimit-Limit / -Remaining / -Reset, Retry-After on 429</code></pre>
+
+<h2>The problem and where it shows up</h2>
+
+<p>A rate limiter caps how much work one principal can cause per unit of time. It protects</p>
+<p>shared capacity, enforces pricing tiers, and slows abuse such as credential stuffing and scraping.</p>
+<p>You'll find it in API gateways (Kong, AWS API Gateway usage plans), edge proxies (Envoy</p>
+<code>local_ratelimit</code> and the global <code>ratelimit</code> service, NGINX <code>limit_req</code>), CDNs (Cloudflare Rate
+<p>Limiting), and public APIs (GitHub's <code>x-ratelimit-*</code> headers, Stripe's per-account limits).</p>
+
+<p>The naive <strong>fixed window</strong> ("reset the counter every minute") admits up to <strong>2x the limit</strong> in a short</p>
+<p>burst that straddles a boundary. <code>demo.js</code> section 1 shows 20 requests admitted in 2 s against a</p>
+<p>10/min limit. All three algorithms here avoid that.</p>
+
+<h2>The three algorithms</h2>
+
+<h3>1. Sliding log (<code>SlidingLogLimiter</code>): exact</h3>
+<p>Store one timestamp per admitted unit and count the ones in <code>(now - W, now]</code>.</p>
+<ul>
+<li><strong>Invariant</strong>: in <em>every</em> interval of length W, admitted ≤ limit. A randomized test checks all windows.</li>
+<li><strong>Retry-After</strong> is exact. For a request of cost <code>c</code> with <code>n</code> entries logged, the <code>k = n + c - limit</code></li>
+  oldest entries must leave, and the k-th oldest leaves at <code>log[k-1] + W</code>.
+<li>Cost: O(limit) memory per key, which gets expensive for "10 000 / hour" limits across millions of keys.</li>
+</ul>
+<h3>2. Sliding-window counter (<code>SlidingWindowCounter</code>): O(1) approximation</h3>
+<p>Keep only the counts for the current and previous fixed windows:</p>
+
+<pre><code class="language-text">estimate = prev * (1 - elapsed / W) + curr        admit if estimate + cost &lt;= limit</code></pre>
+
+<p>This assumes the previous window's hits were spread uniformly. <strong>Retry-After</strong> is solved in closed form</p>
+<p>for two cases. (A) Room opens later in this window as <code>prev</code> decays:</p>
+<code>f >= 1 - (L - curr - cost) / prev</code>. (B) <code>curr</code> alone is too full, so wait into the next window, where
+<code>prev := curr</code>: <code>g >= 1 - (L - cost) / curr</code>. The result is rounded up to whole ms and nudged
+<p>forward if floating-point error left it a hair short. A randomized test checks that it is never early and never late.</p>
+<ul>
+<li><strong>Error</strong>: when traffic in the previous window was <em>not</em> uniform (bunched at its end), the counter</li>
+  under-estimates and over-admits. In the demo's Poisson workload it admits about 0.6% more overall, and its worst
+  true 60 s window reaches 113 against a limit of 100. Cloudflare has reported very low error on real traffic.
+  The trade is exactness for 3 numbers per key.
+</ul>
+<h3>3. Token bucket (<code>TokenBucketLimiter</code>): burst plus sustained rate</h3>
+<p>Tokens refill continuously at <code>refillRate / refillIntervalMs</code>, up to <code>capacity</code>. A request spends <code>cost</code> tokens.</p>
+<ul>
+<li><strong>Invariant</strong>: over any interval T, admitted ≤ <code>capacity + rate * T</code> (randomized test).</li>
+<li>Tokens are stored as integer <em>units</em> (<code>tokens * refillIntervalMs</code>) and each ms adds <code>refillRate</code></li>
+  units, so integer clocks give exact arithmetic. A test runs 30 000 ms at 0.3 tok/ms and expects exactly 9000.
+<li>Retry-After = <code>ceil(missingUnits / refillRate)</code> ms. A clock that moves backwards adds nothing.</li>
+<li>Semantics differ from a window: a bucket allows an immediate burst of <code>capacity</code>, then smooths to the rate.</li>
+</ul>
+<h3>Shared behaviour</h3>
+<ul>
+<li><strong>Per-key state</strong> lives in a <code>Map</code>. <code>sweep()</code> drops keys whose state carries no information (empty</li>
+  log, both counters zero, full bucket), so memory is bounded by the <em>active</em> keys.
+<li><strong>Denied requests don't consume quota.</strong> Some systems do count them, to penalize clients that ignore 429s.</li>
+<li><strong><code>cost > limit</code></strong> can never succeed and returns <code>retryAfterMs: Infinity</code> (no Retry-After header).</li>
+<li><strong>Injectable clock</strong> (<code>now</code>): tests and the demo never sleep.</li>
+<li><strong>Validation</strong>: non-positive or non-integer limits, costs and windows, and empty keys, all throw.</li>
+</ul>
+<h2>Complexity</h2>
+
+<table><thead><tr><th>consume time</th><th>memory / key</th><th>exact?</th></tr></thead><tbody><tr><td>Sliding log</td><td>O(expired) trim + O(limit) array shift</td><td>O(limit)</td><td>yes</td></tr><tr><td>Sliding-window counter</td><td>O(1)</td><td>3 numbers</td><td>no (uniformity assumption)</td></tr><tr><td>Token bucket</td><td>O(1)</td><td>2 numbers</td><td>yes, for its own semantics</td></tr></tbody></table><h2>Failure modes and trade-offs</h2>
+
+<ul>
+<li><strong>Distributed enforcement</strong>: these are single-process. With N gateway replicas, each enforcing</li>
+  L gives an effective limit of N*L. Options: a central store (Redis + Lua script for atomic
+  check-and-increment), sticky routing by key, or splitting the budget per node (L/N, which is unfair when load is uneven).
+<li><strong>Race conditions</strong> in a central store: a non-atomic GET-then-SET lets concurrent requests all pass.</li>
+  Use <code>INCR</code> + <code>EXPIRE</code> or a Lua script. For the log, use a sorted set with <code>ZREMRANGEBYSCORE</code> + <code>ZCARD</code> + <code>ZADD</code> in <code>MULTI</code>/Lua.
+<li><strong>Clock skew</strong> across nodes shifts windows. Use the store's clock (<code>TIME</code> in Redis Lua), not each client's.</li>
+<li><strong>Key choice</strong>: per-IP punishes NAT and CGNAT users. Per-user needs authentication before limiting.</li>
+  Hot keys in a shared store become a hotspot.
+<li><strong>Fail open vs fail closed</strong> when the limiter store is down. Most APIs fail open, so an outage of</li>
+  the limiter doesn't become an outage of the API. Login endpoints often fail closed.
+<li><strong>Memory</strong>: an attacker rotating keys creates unbounded state. Sweep idle keys, cap the tracked-key</li>
+  count, or use a probabilistic structure (a Count-Min sketch) for coarse limits.
+</ul>
+<h2>How production systems do it</h2>
+
+<ul>
+<li><strong>NGINX <code>limit_req</code></strong> uses a leaky bucket per key in a shared-memory zone (<code>rate=10r/s</code>,</li>
+  <code>burst=</code>, <code>nodelay</code>). Requests within <code>burst</code> are queued and <em>delayed</em> to the rate unless <code>nodelay</code> is
+  set. Anything beyond the burst is rejected (503 by default, configurable via <code>limit_req_status</code>).
+<li><strong>Envoy</strong> does token-bucket local rate limiting per listener or route (<code>local_ratelimit</code>). Global limits go</li>
+  through an external gRPC Rate Limit Service (Lyft's <code>ratelimit</code>, backed by Redis) that uses fixed windows keyed by descriptors.
+<li><strong>Cloudflare</strong> described the sliding-window counter in its 2017 blog post on rate limiting,</li>
+  choosing it for O(1) memory per key at edge scale.
+<li><strong>Stripe</strong> runs several limiters in Redis, including a request rate limiter (token bucket) and a</li>
+  concurrent-requests limiter, and adds load shedders that prioritize critical traffic.
+<li><strong>Redis patterns</strong>: <code>INCR</code>+<code>EXPIRE</code> (fixed window), sorted sets (sliding log), and GCRA (<code>redis-cell</code></li>
+  module's <code>CL.THROTTLE</code>), which is a token bucket stored as a single "theoretical arrival time".
+<li><strong>Headers</strong>: <code>Retry-After</code> is defined in RFC 9110 (delay-seconds or HTTP-date). <code>RateLimit-*</code> come</li>
+  from the IETF httpapi <em>RateLimit header fields</em> draft. GitHub uses its own <code>x-ratelimit-*</code> names.
+</ul>
+<h2>How to run</h2>
+
+<pre><code class="language-bash">node demo.js   # boundary burst, exact Retry-After, per-key isolation, counter accuracy vs log
+node test.js   # 15 tests, including randomized &quot;never exceeds limit in any window&quot; checks</code></pre>
+
+<p>Node ≥ 18, no dependencies, simulated clock (runs in well under a second).</p>
+
+<h2>Extension exercises</h2>
+
+<ol>
+<li><strong>GCRA</strong>: implement a token bucket as a single <code>tat</code> (theoretical arrival time) per key and prove it</li>
+   makes the same decisions as <code>TokenBucketLimiter</code> on random traffic.
+<li><strong>Redis-backed log</strong>: port <code>SlidingLogLimiter</code> to a Lua script over a sorted set. Explain why the</li>
+   <code>ZREMRANGEBYSCORE</code>/<code>ZCARD</code>/<code>ZADD</code> sequence must be atomic.
+<li><strong>Multi-tier limits</strong>: enforce 10/s <em>and</em> 1000/h on the same key. When the second tier denies, the</li>
+   first must not have been charged, so check both before committing either.
+<li><strong>Ring-buffer log</strong>: replace the array plus <code>splice</code> with a fixed ring of <code>limit</code> slots, making trim O(expired).</li>
+<li><strong>Adversarial counter</strong>: build the input pattern that maximizes the counter's over-admission (bunch the</li>
+   previous window's hits at its end) and derive the worst-case bound.
+</ol></article>
+          <div class="code-block" id="build-file-sliding-window-rate-limiter-limiter_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">limiter.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+/**
+ * Three per-key rate limiters that share one result shape:
+ *
+ *   SlidingLogLimiter     exact: store every admitted timestamp, count those in (now - W, now].
+ *   SlidingWindowCounter  approximate: two fixed-window counters, previous one weighted by overlap.
+ *   TokenBucketLimiter    bursts up to `capacity`, sustained rate `refillRate / refillIntervalMs`.
+ *
+ * consume(key, cost = 1) -&gt; {
+ *   allowed, limit, remaining, retryAfterMs, resetMs
+ * }
+ *   retryAfterMs: 0 when allowed; otherwise the earliest wait after which the SAME request
+ *                 would be allowed (Infinity if cost can never fit).
+ *   resetMs:      time until the key&#039;s quota is fully restored.
+ *
+ * Denied requests are NOT recorded (they don&#039;t consume quota). All clocks are injectable.
+ */
+
+function checkPosInt(name, v) {
+  if (!Number.isInteger(v) || v &lt;= 0) throw new RangeError(`${name} must be a positive integer`);
+}
+function checkClock(now) {
+  if (typeof now !== &#039;function&#039;) throw new TypeError(&#039;now must be a function returning ms&#039;);
+}
+function checkCost(cost) {
+  if (!Number.isInteger(cost) || cost &lt;= 0) throw new RangeError(&#039;cost must be a positive integer&#039;);
+}
+function checkKey(key) {
+  if (typeof key !== &#039;string&#039; || key.length === 0) throw new TypeError(&#039;key must be a non-empty string&#039;);
+}
+
+// ---------------------------------------------------------------------------
+// 1. Sliding log: exact, O(limit) memory per key.
+// ---------------------------------------------------------------------------
+class SlidingLogLimiter {
+  constructor({ limit, windowMs, now = Date.now } = {}) {
+    checkPosInt(&#039;limit&#039;, limit);
+    checkPosInt(&#039;windowMs&#039;, windowMs);
+    checkClock(now);
+    this.limit = limit;
+    this.windowMs = windowMs;
+    this.now = now;
+    this.logs = new Map(); // key -&gt; sorted array of admitted timestamps (one entry per unit of cost)
+  }
+
+  /** Drop timestamps that are out of the window. A hit at ts counts while now &lt; ts + W. */
+  _trim(log, t) {
+    const cutoff = t - this.windowMs;
+    let i = 0;
+    while (i &lt; log.length &amp;&amp; log[i] &lt;= cutoff) i++;
+    // splice shifts the array, O(limit) worst case; a ring buffer would make this O(expired).
+    if (i &gt; 0) log.splice(0, i);
+    return log;
+  }
+
+  consume(key, cost = 1) {
+    checkKey(key); checkCost(cost);
+    const t = this.now();
+    const log = this._trim(this.logs.get(key) || [], t);
+    const base = { limit: this.limit };
+
+    if (cost &gt; this.limit) {
+      this._store(key, log);
+      return { ...base, allowed: false, remaining: this.limit - log.length, retryAfterMs: Infinity, resetMs: this._reset(log, t) };
+    }
+    if (log.length + cost &lt;= this.limit) {
+      for (let i = 0; i &lt; cost; i++) log.push(t);
+      this._store(key, log);
+      return { ...base, allowed: true, remaining: this.limit - log.length, retryAfterMs: 0, resetMs: this._reset(log, t) };
+    }
+    // Need k = n + cost - limit oldest entries to leave; the k-th oldest leaves at log[k-1] + W.
+    const k = log.length + cost - this.limit;
+    const retryAfterMs = log[k - 1] + this.windowMs - t;
+    this._store(key, log);
+    return { ...base, allowed: false, remaining: this.limit - log.length, retryAfterMs, resetMs: this._reset(log, t) };
+  }
+
+  _reset(log, t) { return log.length ? log[log.length - 1] + this.windowMs - t : 0; }
+  _store(key, log) { if (log.length) this.logs.set(key, log); else this.logs.delete(key); }
+
+  /** Remove idle keys (memory hygiene). Returns number removed. */
+  sweep() {
+    const t = this.now();
+    let n = 0;
+    for (const [k, log] of this.logs) if (this._trim(log, t).length === 0) { this.logs.delete(k); n++; }
+    return n;
+  }
+  reset(key) { this.logs.delete(key); }
+  get trackedKeys() { return this.logs.size; }
+}
+
+// ---------------------------------------------------------------------------
+// 2. Sliding-window counter (a.k.a. &quot;sliding window approximation&quot;, Cloudflare).
+//    estimate = prevCount * (1 - elapsed/W) + currCount
+//    O(1) memory per key; assumes the previous window&#039;s hits were spread uniformly.
+// ---------------------------------------------------------------------------
+class SlidingWindowCounter {
+  constructor({ limit, windowMs, now = Date.now } = {}) {
+    checkPosInt(&#039;limit&#039;, limit);
+    checkPosInt(&#039;windowMs&#039;, windowMs);
+    checkClock(now);
+    this.limit = limit;
+    this.windowMs = windowMs;
+    this.now = now;
+    this.state = new Map(); // key -&gt; { start, prev, curr }
+  }
+
+  /** Roll fixed windows forward so that `start` is the window containing t. */
+  _roll(s, t) {
+    const W = this.windowMs;
+    const start = Math.floor(t / W) * W;
+    if (start === s.start) return s;
+    s.prev = start - s.start === W ? s.curr : 0; // skipped &gt;= 1 whole window -&gt; previous is empty
+    s.curr = 0;
+    s.start = start;
+    return s;
+  }
+
+  _estimate(s, t) {
+    const weight = 1 - (t - s.start) / this.windowMs; // share of previous window still inside (t-W, t]
+    return s.prev * weight + s.curr;
+  }
+
+  consume(key, cost = 1) {
+    checkKey(key); checkCost(cost);
+    const t = this.now();
+    const W = this.windowMs, L = this.limit;
+    const s = this._roll(this.state.get(key) || { start: Math.floor(t / W) * W, prev: 0, curr: 0 }, t);
+    const est = this._estimate(s, t);
+    const base = { limit: L };
+
+    if (cost &lt;= L &amp;&amp; est + cost &lt;= L) {
+      s.curr += cost;
+      this.state.set(key, s);
+      return { ...base, allowed: true, remaining: Math.max(0, Math.floor(L - est - cost)), retryAfterMs: 0, resetMs: this._resetMs(s, t) };
+    }
+    this.state.set(key, s);
+    return { ...base, allowed: false, remaining: Math.max(0, Math.floor(L - est)), retryAfterMs: this._retryAfter(s, t, cost), resetMs: this._resetMs(s, t) };
+  }
+
+  /**
+   * Solve for the earliest t&#039; &gt;= t with estimate(t&#039;) + cost &lt;= limit.
+   * Case A (still in this window): prev*(1-f) + curr + cost &lt;= L  =&gt;  f &gt;= 1 - (L-curr-cost)/prev
+   * Case B (next window, prev := curr, curr := 0): curr*(1-g) + cost &lt;= L  =&gt;  g &gt;= 1 - (L-cost)/curr
+   */
+  _retryAfter(s, t, cost) {
+    const W = this.windowMs, L = this.limit;
+    if (cost &gt; L) return Infinity;
+    const slack = L - s.curr - cost;
+    let at;
+    if (slack &gt;= 0 &amp;&amp; s.prev &gt; 0) {
+      at = s.start + W * (1 - slack / s.prev);
+    } else {
+      at = s.start + W + W * Math.max(0, 1 - (L - cost) / s.curr);
+    }
+    // Round up to whole ms; nudge forward if float error leaves us a hair short.
+    let wait = Math.max(1, Math.ceil(at - t));
+    while (!this._fitsAt(s, t + wait, cost)) wait++;
+    return wait;
+  }
+
+  _fitsAt(s, t2, cost) {
+    const copy = this._roll({ ...s }, t2);
+    return this._estimate(copy, t2) + cost &lt;= this.limit;
+  }
+
+  _resetMs(s, t) {
+    if (s.curr &gt; 0) return s.start + 2 * this.windowMs - t; // curr fully decays at end of next window
+    if (s.prev &gt; 0) return s.start + this.windowMs - t;
+    return 0;
+  }
+
+  sweep() {
+    const t = this.now();
+    let n = 0;
+    for (const [k, s] of this.state) {
+      this._roll(s, t);
+      if (s.prev === 0 &amp;&amp; s.curr === 0) { this.state.delete(k); n++; }
+    }
+    return n;
+  }
+  reset(key) { this.state.delete(key); }
+  get trackedKeys() { return this.state.size; }
+}
+
+// ---------------------------------------------------------------------------
+// 3. Token bucket. Internally tokens are stored in &quot;units&quot; = tokens * refillIntervalMs
+//    so that integer clocks give exact integer arithmetic (no 0.1 + 0.2 drift).
+// ---------------------------------------------------------------------------
+class TokenBucketLimiter {
+  /**
+   * @param {number} capacity           max burst (tokens)
+   * @param {number} refillRate         tokens added per refillIntervalMs
+   * @param {number} refillIntervalMs   default 1000 (i.e. refillRate is tokens/second)
+   */
+  constructor({ capacity, refillRate, refillIntervalMs = 1000, now = Date.now } = {}) {
+    checkPosInt(&#039;capacity&#039;, capacity);
+    checkPosInt(&#039;refillRate&#039;, refillRate);
+    checkPosInt(&#039;refillIntervalMs&#039;, refillIntervalMs);
+    checkClock(now);
+    this.capacity = capacity;
+    this.refillRate = refillRate;
+    this.interval = refillIntervalMs;
+    this.now = now;
+    this.maxUnits = capacity * refillIntervalMs;
+    this.buckets = new Map(); // key -&gt; { units, last }
+  }
+
+  _refill(b, t) {
+    if (t &gt; b.last) {
+      // Each ms adds refillRate units (= refillRate / interval tokens).
+      b.units = Math.min(this.maxUnits, b.units + (t - b.last) * this.refillRate);
+      b.last = t;
+    } // a clock that goes backwards simply adds nothing
+    return b;
+  }
+
+  consume(key, cost = 1) {
+    checkKey(key); checkCost(cost);
+    const t = this.now();
+    const b = this._refill(this.buckets.get(key) || { units: this.maxUnits, last: t }, t);
+    this.buckets.set(key, b);
+    const need = cost * this.interval;
+    const base = { limit: this.capacity };
+
+    if (cost &gt; this.capacity) {
+      return { ...base, allowed: false, remaining: Math.floor(b.units / this.interval), retryAfterMs: Infinity, resetMs: this._resetMs(b) };
+    }
+    if (b.units &gt;= need) {
+      b.units -= need;
+      return { ...base, allowed: true, remaining: Math.floor(b.units / this.interval), retryAfterMs: 0, resetMs: this._resetMs(b) };
+    }
+    const retryAfterMs = Math.ceil((need - b.units) / this.refillRate);
+    return { ...base, allowed: false, remaining: Math.floor(b.units / this.interval), retryAfterMs, resetMs: this._resetMs(b) };
+  }
+
+  _resetMs(b) { return Math.ceil((this.maxUnits - b.units) / this.refillRate); }
+
+  /** Full buckets carry no information; drop them. */
+  sweep() {
+    const t = this.now();
+    let n = 0;
+    for (const [k, b] of this.buckets) {
+      if (this._refill(b, t).units &gt;= this.maxUnits) { this.buckets.delete(k); n++; }
+    }
+    return n;
+  }
+  reset(key) { this.buckets.delete(key); }
+  get trackedKeys() { return this.buckets.size; }
+}
+
+/**
+ * HTTP headers for a result. Retry-After is delay-seconds (RFC 9110 §10.2.3), rounded UP so a
+ * client that obeys it is never early. RateLimit-* follow the IETF httpapi ratelimit-headers draft.
+ */
+function toHeaders(result) {
+  const h = {
+    &#039;RateLimit-Limit&#039;: String(result.limit),
+    &#039;RateLimit-Remaining&#039;: String(result.remaining),
+    &#039;RateLimit-Reset&#039;: String(Math.ceil(result.resetMs / 1000)),
+  };
+  if (!result.allowed &amp;&amp; Number.isFinite(result.retryAfterMs)) {
+    h[&#039;Retry-After&#039;] = String(Math.max(1, Math.ceil(result.retryAfterMs / 1000)));
+  }
+  return h;
+}
+
+module.exports = { SlidingLogLimiter, SlidingWindowCounter, TokenBucketLimiter, toHeaders };
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-sliding-window-rate-limiter-demo_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">demo.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const { SlidingLogLimiter, SlidingWindowCounter, TokenBucketLimiter, toHeaders } = require(&#039;./limiter&#039;);
+
+let t = 0;
+const now = () =&gt; t;
+const W = 60_000; // 1 minute
+const L = 10;     // 10 requests per minute
+
+console.log(&#039;Policy: 10 requests / 60 s per API key. The clock is simulated, so nothing sleeps.\n&#039;);
+
+// ---------------------------------------------------------------------------
+console.log(&#039;=== 1. The boundary-burst problem with fixed windows ===&#039;);
+// A naive fixed window resets at every minute boundary.
+const fixed = { start: 0, count: 0 };
+const fixedAllow = () =&gt; {
+  const s = Math.floor(t / W) * W;
+  if (s !== fixed.start) { fixed.start = s; fixed.count = 0; }
+  return fixed.count &lt; L ? (fixed.count++, true) : false;
+};
+const log = new SlidingLogLimiter({ limit: L, windowMs: W, now });
+const ctr = new SlidingWindowCounter({ limit: L, windowMs: W, now });
+const tb = new TokenBucketLimiter({ capacity: L, refillRate: L, refillIntervalMs: W, now });
+const tally = { fixed: 0, log: 0, ctr: 0, tb: 0 };
+for (const at of [59_000, 61_000]) {        // 10 requests just before, then just after, the boundary
+  t = at;
+  for (let i = 0; i &lt; 10; i++) {
+    tally.fixed += fixedAllow();
+    tally.log += log.consume(&#039;k&#039;).allowed;
+    tally.ctr += ctr.consume(&#039;k&#039;).allowed;
+    tally.tb += tb.consume(&#039;k&#039;).allowed;
+  }
+}
+console.log(&#039;20 requests between t=59s and t=61s (2 seconds):&#039;);
+console.log(`  fixed window         admitted ${tally.fixed}  &lt;- 2x the limit inside 2 s`);
+console.log(`  sliding log          admitted ${tally.log}  &lt;- exact`);
+console.log(`  sliding-window ctr   admitted ${tally.ctr}  &lt;- prev window weighted 59/60, so ~0 room`);
+console.log(`  token bucket         admitted ${tally.tb}  &lt;- burst of 10, plus refill (10/min * 2 s = 0.33 token)`);
+
+// ---------------------------------------------------------------------------
+console.log(&#039;\n=== 2. Retry-After is exact ===&#039;);
+t = 0;
+const l2 = new SlidingLogLimiter({ limit: 3, windowMs: 10_000, now });
+for (const at of [0, 2_000, 4_000]) { t = at; l2.consume(&#039;alice&#039;); }
+t = 5_000;
+const denied = l2.consume(&#039;alice&#039;);
+console.log(`hits at 0s, 2s, 4s; request at 5s -&gt; allowed=${denied.allowed}, retryAfterMs=${denied.retryAfterMs}`);
+console.log(&#039;headers:&#039;, JSON.stringify(toHeaders(denied)));
+t = 5_000 + denied.retryAfterMs - 1;
+console.log(`at t=${t}ms (1 ms early):  allowed=${l2.consume(&#039;alice&#039;).allowed}`);
+t = 5_000 + denied.retryAfterMs;
+console.log(`at t=${t}ms (on time):    allowed=${l2.consume(&#039;alice&#039;).allowed}  (the 0s hit left the window)`);
+
+const tb2 = new TokenBucketLimiter({ capacity: 5, refillRate: 2, refillIntervalMs: 1000, now }); // 2 tokens/s
+t = 0;
+tb2.consume(&#039;bob&#039;, 5);
+const r = tb2.consume(&#039;bob&#039;, 3);
+console.log(`token bucket (cap 5, 2 tok/s): drain 5, ask for 3 -&gt; retryAfterMs=${r.retryAfterMs} (3 tokens / 2 per s = 1500 ms)`);
+t = r.retryAfterMs;
+console.log(`  after waiting: allowed=${tb2.consume(&#039;bob&#039;, 3).allowed}`);
+console.log(`  cost 6 &gt; capacity 5 -&gt; retryAfterMs=${tb2.consume(&#039;bob&#039;, 6).retryAfterMs} (can never succeed; reject outright)`);
+
+// ---------------------------------------------------------------------------
+console.log(&#039;\n=== 3. Per-key isolation ===&#039;);
+t = 0;
+const perKey = new SlidingWindowCounter({ limit: 2, windowMs: 1000, now });
+const row = (k) =&gt; [1, 2, 3].map(() =&gt; (perKey.consume(k).allowed ? &#039;Y&#039; : &#039;n&#039;)).join(&#039;&#039;);
+console.log(`user:1 -&gt; ${row(&#039;user:1&#039;)}   user:2 -&gt; ${row(&#039;user:2&#039;)}   (each key has its own budget)`);
+t = 5000;
+console.log(`tracked keys=${perKey.trackedKeys}; after 5 s idle, sweep() removed ${perKey.sweep()} -&gt; ${perKey.trackedKeys}`);
+
+// ---------------------------------------------------------------------------
+console.log(&#039;\n=== 4. How close is the O(1) counter to the exact log? ===&#039;);
+function mulberry32(seed) {
+  return () =&gt; {
+    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+    let x = Math.imul(seed ^ (seed &gt;&gt;&gt; 15), 1 | seed);
+    x = (x + Math.imul(x ^ (x &gt;&gt;&gt; 7), 61 | x)) ^ x;
+    return ((x ^ (x &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296;
+  };
+}
+const rand = mulberry32(2024);
+t = 0;
+const exact = new SlidingLogLimiter({ limit: 100, windowMs: W, now });
+const approx = new SlidingWindowCounter({ limit: 100, windowMs: W, now });
+let n = 0;
+const admittedExact = [], admittedApprox = [];
+while (t &lt; 60 * W) {                         // one simulated hour
+  t += Math.max(1, Math.round(-Math.log(1 - rand()) * 500)); // Poisson arrivals, mean 500 ms (~120/min)
+  n++;
+  if (exact.consume(&#039;k&#039;).allowed) admittedExact.push(t);
+  if (approx.consume(&#039;k&#039;).allowed) admittedApprox.push(t);
+}
+// Worst true sliding-window count among the counter&#039;s admissions (two-pointer scan).
+function maxInWindow(ts) {
+  let best = 0;
+  for (let i = 0, j = 0; j &lt; ts.length; j++) {
+    while (ts[i] &lt;= ts[j] - W) i++;
+    best = Math.max(best, j - i + 1);
+  }
+  return best;
+}
+console.log(`${n} Poisson requests over 1 h at ~1.2x the 100/min limit:`);
+console.log(`  sliding log admitted ${admittedExact.length}, worst 60 s window = ${maxInWindow(admittedExact)} (never above 100)`);
+console.log(`  counter     admitted ${admittedApprox.length}, worst 60 s window = ${maxInWindow(admittedApprox)}`);
+const extra = (100 * (admittedApprox.length / admittedExact.length - 1)).toFixed(1);
+console.log(`Counter admitted ${extra}% more overall, and some true 60 s window went over the limit. It stores 3 numbers`);
+console.log(&#039;per key instead of up to 100 timestamps. It is wrong exactly when the previous window was NOT uniform.&#039;);
+</code></pre>
+          </div>
+          <div class="code-block" id="build-file-sliding-window-rate-limiter-test_js">
+            <div class="code-block__header">
+              <span class="code-block__lang">test.js</span>
+              <button class="code-block__copy" data-action="copy-code">Copy</button>
+            </div>
+            <pre><code>&#039;use strict&#039;;
+const assert = require(&#039;node:assert/strict&#039;);
+const { SlidingLogLimiter, SlidingWindowCounter, TokenBucketLimiter, toHeaders } = require(&#039;./limiter&#039;);
+
+let failed = 0, passed = 0;
+function test(name, fn) {
+  try { fn(); passed++; console.log(&#039;✓ &#039; + name); }
+  catch (e) { failed++; console.log(&#039;✗ &#039; + name + &#039;\n    &#039; + (e &amp;&amp; e.stack || e)); }
+}
+function clock(start = 0) { const c = { t: start }; c.now = () =&gt; c.t; return c; }
+function lcg(seed) { return () =&gt; (seed = (seed * 1103515245 + 12345) &gt;&gt;&gt; 0) / 2 ** 32; }
+
+// ---- sliding log ---------------------------------------------------------
+test(&#039;sliding log: admits exactly `limit` in a window, denies the next&#039;, () =&gt; {
+  const c = clock();
+  const l = new SlidingLogLimiter({ limit: 3, windowMs: 1000, now: c.now });
+  const r = [1, 2, 3, 4].map(() =&gt; l.consume(&#039;k&#039;));
+  assert.deepEqual(r.map((x) =&gt; x.allowed), [true, true, true, false]);
+  assert.deepEqual(r.map((x) =&gt; x.remaining), [2, 1, 0, 0]);
+});
+
+test(&#039;sliding log: retryAfterMs is exact to the millisecond (and denials are not recorded)&#039;, () =&gt; {
+  const c = clock();
+  const l = new SlidingLogLimiter({ limit: 2, windowMs: 1000, now: c.now });
+  c.t = 100; l.consume(&#039;k&#039;); c.t = 300; l.consume(&#039;k&#039;);
+  c.t = 500; const d = l.consume(&#039;k&#039;);
+  assert.equal(d.allowed, false);
+  assert.equal(d.retryAfterMs, 600);      // hit at 100 leaves at 1100
+  c.t = 1099; assert.equal(l.consume(&#039;k&#039;).allowed, false);
+  c.t = 1100; assert.equal(l.consume(&#039;k&#039;).allowed, true);
+});
+
+test(&#039;sliding log: multi-unit cost needs several entries to expire&#039;, () =&gt; {
+  const c = clock();
+  const l = new SlidingLogLimiter({ limit: 5, windowMs: 1000, now: c.now });
+  for (const at of [0, 100, 200, 300, 400]) { c.t = at; l.consume(&#039;k&#039;); }
+  c.t = 500;
+  const d = l.consume(&#039;k&#039;, 3);            // need 3 to leave: the one at 200 leaves at 1200
+  assert.equal(d.retryAfterMs, 700);
+  c.t = 1200; assert.equal(l.consume(&#039;k&#039;, 3).allowed, true);
+  assert.equal(l.consume(&#039;k&#039;, 6).retryAfterMs, Infinity);
+});
+
+test(&#039;sliding log: randomized traffic never exceeds limit in ANY window&#039;, () =&gt; {
+  const c = clock(); const rnd = lcg(1);
+  const W = 1000, L = 7;
+  const l = new SlidingLogLimiter({ limit: L, windowMs: W, now: c.now });
+  const admitted = [];
+  for (let i = 0; i &lt; 20000; i++) {
+    c.t += Math.floor(rnd() * 60);
+    if (l.consume(&#039;k&#039;).allowed) admitted.push(c.t);
+  }
+  for (let i = 0, j = 0; j &lt; admitted.length; j++) {
+    while (admitted[i] &lt;= admitted[j] - W) i++;
+    assert.ok(j - i + 1 &lt;= L, `window ending ${admitted[j]} had ${j - i + 1}`);
+  }
+});
+
+// ---- sliding window counter ---------------------------------------------
+test(&#039;counter: estimate weights previous window by remaining overlap&#039;, () =&gt; {
+  const c = clock();
+  const l = new SlidingWindowCounter({ limit: 10, windowMs: 1000, now: c.now });
+  c.t = 900; for (let i = 0; i &lt; 8; i++) l.consume(&#039;k&#039;); // prev window: 8
+  c.t = 1250;                                            // est = 8 * 0.75 = 6 -&gt; room for 4
+  const ok = [1, 2, 3, 4, 5].map(() =&gt; l.consume(&#039;k&#039;).allowed);
+  assert.deepEqual(ok, [true, true, true, true, false]);
+});
+
+test(&#039;counter: retryAfterMs lands on the first allowed ms (both solve cases)&#039;, () =&gt; {
+  // Case A: room appears later in the current window as prev decays.
+  let c = clock();
+  let l = new SlidingWindowCounter({ limit: 10, windowMs: 1000, now: c.now });
+  c.t = 999; for (let i = 0; i &lt; 10; i++) l.consume(&#039;k&#039;);
+  c.t = 1000; const a = l.consume(&#039;k&#039;);
+  assert.equal(a.allowed, false);
+  assert.equal(a.retryAfterMs, 100);    // 10*(1-f)+1 &lt;= 10  -&gt;  f &gt;= 0.1
+  c.t = 1000 + a.retryAfterMs - 1; assert.equal(l.consume(&#039;k&#039;).allowed, false);
+  c.t = 1000 + a.retryAfterMs; assert.equal(l.consume(&#039;k&#039;).allowed, true);
+
+  // Case B: current window already full, must wait into the next window.
+  c = clock();
+  l = new SlidingWindowCounter({ limit: 4, windowMs: 1000, now: c.now });
+  c.t = 0; for (let i = 0; i &lt; 4; i++) l.consume(&#039;k&#039;);
+  c.t = 10; const b = l.consume(&#039;k&#039;);
+  assert.equal(b.retryAfterMs, 1240);   // next window: 4*(1-g)+1 &lt;= 4 -&gt; g &gt;= .25 -&gt; t=1250
+  c.t = 1249; assert.equal(l.consume(&#039;k&#039;).allowed, false);
+  c.t = 1250; assert.equal(l.consume(&#039;k&#039;).allowed, true);
+});
+
+test(&#039;counter: randomized retryAfter is always tight (never early, never late)&#039;, () =&gt; {
+  const c = clock(); const rnd = lcg(99);
+  const l = new SlidingWindowCounter({ limit: 13, windowMs: 700, now: c.now });
+  let checked = 0;
+  for (let i = 0; i &lt; 3000; i++) {
+    c.t += Math.floor(rnd() * 40);
+    const r = l.consume(&#039;k&#039;);
+    if (!r.allowed &amp;&amp; Number.isFinite(r.retryAfterMs)) {
+      const probe = new SlidingWindowCounter({ limit: 13, windowMs: 700, now: () =&gt; c.t + r.retryAfterMs - 1 });
+      probe.state.set(&#039;k&#039;, { ...l.state.get(&#039;k&#039;) });
+      if (r.retryAfterMs &gt; 1) assert.equal(probe.consume(&#039;k&#039;).allowed, false, &#039;retryAfter was late&#039;);
+      probe.now = () =&gt; c.t + r.retryAfterMs;
+      probe.state.set(&#039;k&#039;, { ...l.state.get(&#039;k&#039;) });
+      assert.equal(probe.consume(&#039;k&#039;).allowed, true, &#039;retryAfter was early&#039;);
+      checked++;
+    }
+  }
+  assert.ok(checked &gt; 100);
+});
+
+test(&#039;counter: idle for 2+ windows resets both counters&#039;, () =&gt; {
+  const c = clock();
+  const l = new SlidingWindowCounter({ limit: 2, windowMs: 1000, now: c.now });
+  l.consume(&#039;k&#039;); l.consume(&#039;k&#039;);
+  c.t = 2500;
+  const r = l.consume(&#039;k&#039;);
+  assert.equal(r.allowed, true);
+  assert.equal(l.state.get(&#039;k&#039;).prev, 0);
+});
+
+// ---- token bucket -------------------------------------------------------
+test(&#039;token bucket: burst to capacity then sustained refill rate&#039;, () =&gt; {
+  const c = clock();
+  const b = new TokenBucketLimiter({ capacity: 5, refillRate: 1, refillIntervalMs: 100, now: c.now });
+  assert.equal([...Array(7)].filter(() =&gt; b.consume(&#039;k&#039;).allowed).length, 5);
+  c.t = 250; // 2.5 tokens accrued
+  assert.equal([...Array(5)].filter(() =&gt; b.consume(&#039;k&#039;).allowed).length, 2);
+  const d = b.consume(&#039;k&#039;);
+  assert.equal(d.retryAfterMs, 50); // 0.5 token left, need 1 more half
+  c.t = 300; assert.equal(b.consume(&#039;k&#039;).allowed, true);
+  c.t = 1_000_000; assert.equal(b.consume(&#039;k&#039;).remaining, 4, &#039;never exceeds capacity&#039;);
+});
+
+test(&#039;token bucket: integer arithmetic has no floating drift&#039;, () =&gt; {
+  const c = clock();
+  const b = new TokenBucketLimiter({ capacity: 2, refillRate: 3, refillIntervalMs: 10, now: c.now }); // 0.3 tok/ms
+  // capacity 2 so the cap never discards tokens (residual &lt; 1 token + 0.3 per step)
+  b.consume(&#039;k&#039;, 2);
+  let admitted = 0;
+  for (let i = 0; i &lt; 30000; i++) { c.t++; if (b.consume(&#039;k&#039;).allowed) admitted++; }
+  assert.equal(admitted, 9000); // 30000 ms * 0.3 tokens/ms exactly
+});
+
+test(&#039;token bucket: admitted &lt;= capacity + rate*T for any interval (randomized)&#039;, () =&gt; {
+  const c = clock(); const rnd = lcg(5);
+  const cap = 4, rate = 2, I = 100; // 0.02 tokens/ms
+  const b = new TokenBucketLimiter({ capacity: cap, refillRate: rate, refillIntervalMs: I, now: c.now });
+  const adm = [];
+  for (let i = 0; i &lt; 4000; i++) { c.t += Math.floor(rnd() * 30); if (b.consume(&#039;k&#039;).allowed) adm.push(c.t); }
+  for (let i = 0; i &lt; adm.length; i += 7) {
+    for (let j = i; j &lt; Math.min(adm.length, i + 200); j++) {
+      const T = adm[j] - adm[i];
+      assert.ok(j - i + 1 &lt;= cap + (T * rate) / I + 1e-9, `interval ${T}ms had ${j - i + 1}`);
+    }
+  }
+  assert.equal(b.consume(&#039;k&#039;, cap + 1).retryAfterMs, Infinity);
+});
+
+test(&#039;token bucket: clock going backwards adds no tokens&#039;, () =&gt; {
+  const c = clock(1000);
+  const b = new TokenBucketLimiter({ capacity: 2, refillRate: 1, refillIntervalMs: 10, now: c.now });
+  b.consume(&#039;k&#039;, 2);
+  c.t = 500; assert.equal(b.consume(&#039;k&#039;).allowed, false);
+  c.t = 1010; assert.equal(b.consume(&#039;k&#039;).allowed, true);
+});
+
+// ---- shared behaviour ----------------------------------------------------
+const makers = {
+  log: (now) =&gt; new SlidingLogLimiter({ limit: 2, windowMs: 1000, now }),
+  counter: (now) =&gt; new SlidingWindowCounter({ limit: 2, windowMs: 1000, now }),
+  bucket: (now) =&gt; new TokenBucketLimiter({ capacity: 2, refillRate: 2, refillIntervalMs: 1000, now }),
+};
+
+test(&#039;all algorithms: keys are isolated and sweep() frees idle keys&#039;, () =&gt; {
+  for (const [name, make] of Object.entries(makers)) {
+    const c = clock();
+    const l = make(c.now);
+    l.consume(&#039;a&#039;); l.consume(&#039;a&#039;);
+    assert.equal(l.consume(&#039;a&#039;).allowed, false, name);
+    assert.equal(l.consume(&#039;b&#039;).allowed, true, name + &#039;: b unaffected by a&#039;);
+    assert.equal(l.trackedKeys, 2, name);
+    c.t = 10_000;
+    assert.equal(l.sweep(), 2, name);
+    assert.equal(l.trackedKeys, 0, name);
+  }
+});
+
+test(&#039;all algorithms: reject invalid config, keys and costs&#039;, () =&gt; {
+  assert.throws(() =&gt; new SlidingLogLimiter({ limit: 0, windowMs: 1 }), RangeError);
+  assert.throws(() =&gt; new SlidingWindowCounter({ limit: 1, windowMs: 1.5 }), RangeError);
+  assert.throws(() =&gt; new TokenBucketLimiter({ capacity: 1, refillRate: -1 }), RangeError);
+  assert.throws(() =&gt; new SlidingLogLimiter({ limit: 1, windowMs: 1, now: 5 }), TypeError);
+  for (const make of Object.values(makers)) {
+    const l = make(() =&gt; 0);
+    assert.throws(() =&gt; l.consume(&#039;&#039;), TypeError);
+    assert.throws(() =&gt; l.consume(42), TypeError);
+    assert.throws(() =&gt; l.consume(&#039;k&#039;, 0), RangeError);
+    assert.throws(() =&gt; l.consume(&#039;k&#039;, 1.5), RangeError);
+  }
+});
+
+test(&#039;toHeaders: Retry-After rounds up to whole seconds, only on denial&#039;, () =&gt; {
+  const h = toHeaders({ allowed: false, limit: 10, remaining: 0, retryAfterMs: 1001, resetMs: 30_500 });
+  assert.equal(h[&#039;Retry-After&#039;], &#039;2&#039;);
+  assert.equal(h[&#039;RateLimit-Reset&#039;], &#039;31&#039;);
+  assert.equal(toHeaders({ allowed: false, limit: 1, remaining: 0, retryAfterMs: 20, resetMs: 20 })[&#039;Retry-After&#039;], &#039;1&#039;);
+  assert.equal(toHeaders({ allowed: true, limit: 10, remaining: 9, retryAfterMs: 0, resetMs: 0 })[&#039;Retry-After&#039;], undefined);
+  assert.equal(toHeaders({ allowed: false, limit: 1, remaining: 0, retryAfterMs: Infinity, resetMs: 0 })[&#039;Retry-After&#039;], undefined);
+});
+
+console.log(`\n${passed} passed, ${failed} failed`);
+if (failed) process.exit(1);
+</code></pre>
+          </div>
+      </div>
+
+      <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
+        <div id="codelab-mount-sliding-window-rate-limiter" class="build-lab-overlay__mount" data-build-id="sliding-window-rate-limiter"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=4eb40c96bd"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=04a1ea8061"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=3676a86b01"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=154eb461ef"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=b79de4edf4"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=262e2d34b8"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

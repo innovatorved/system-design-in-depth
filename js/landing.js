@@ -112,7 +112,7 @@ window.Landing = (() => {
       <section class="landing-section" id="landing-builds">
         <h2 class="landing-section__title">${c.builds} from-scratch builds</h2>
         <div class="landing-builds">
-          ${builds.map(([id, b]) => `<a class="landing-build" href="#build/${esc(id)}">${esc(shortTitle(b.title) || id)}<span aria-hidden="true">→</span></a>`).join('')}
+          ${builds.map(([id, b]) => `<a class="landing-build" href="/build/${esc(id)}/" data-action="navigate-build" data-build-id="${esc(id)}">${esc(shortTitle(b.title) || id)}<span aria-hidden="true">→</span></a>`).join('')}
         </div>
       </section>`;
   }
