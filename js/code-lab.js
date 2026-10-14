@@ -6536,7 +6536,14 @@ declare module 'buffer' { export { Buffer }; }
     database: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
     globe: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
     package: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.5 9.4-9-5.19"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>',
-    chevronsUpDown: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>'
+    chevronsUpDown: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>',
+    chevronDown: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
+    chevronRight: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+    folder: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+    plus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+    edit: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+    trash: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+    box: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>'
   };
 
   // ── CodeLabWorkbench Instance Class ──────────────────────────────────────
@@ -6589,6 +6596,11 @@ declare module 'buffer' { export { Buffer }; }
       if (this.activeStepIndex >= this.steps.length || this.activeStepIndex < 0) this.activeStepIndex = 0;
 
       this.completedSteps = new Set(this.savedState.completedSteps || []);
+      this.folders = new Set(this.savedState?.folders || []);
+      this.collapsedFolders = new Set(this.savedState?.collapsedFolders || []);
+      this.creatingItem = null; // { type: 'file' | 'folder', parentFolder: string } | null
+      this.renamingItem = null;
+      this._draggedFile = null;
       this.guideTab = 'steps'; // 'steps' | 'readme'
       this.drawerTab = 'tests'; // 'tests' | 'terminal' | 'inspector'
       this.isFullscreen = false;
@@ -6602,7 +6614,32 @@ declare module 'buffer' { export { Buffer }; }
 
       // Initialize working files for current mode & language
       this.files = this._computeInitialFiles();
-      this.activeFile = this._pickDefaultFile();
+
+      // Auto-populate folders from nested files
+      Object.keys(this.files).forEach(f => {
+        const parts = f.split('/');
+        for (let i = 1; i < parts.length; i++) {
+          this.folders.add(parts.slice(0, i).join('/'));
+        }
+      });
+
+      // Decouple openTabs from files
+      if (Array.isArray(this.savedState?.openTabs)) {
+        this.openTabs = this.savedState.openTabs.filter(f => this.files[f] !== undefined);
+      } else {
+        this.openTabs = this._orderedFileNames();
+      }
+
+      if (this.openTabs.length > 0) {
+        if (this.savedState?.activeFile && this.openTabs.includes(this.savedState.activeFile)) {
+          this.activeFile = this.savedState.activeFile;
+        } else {
+          const defaultPick = this._pickDefaultFile();
+          this.activeFile = (defaultPick && this.openTabs.includes(defaultPick)) ? defaultPick : this.openTabs[0];
+        }
+      } else {
+        this.activeFile = null;
+      }
 
       // Execution state
       this.lastTestResults = [];
@@ -6665,7 +6702,11 @@ declare module 'buffer' { export { Buffer }; }
           lang: this.lang,
           activeStepIndex: this.activeStepIndex,
           completedSteps: completedArr,
-          customFiles
+          customFiles,
+          openTabs: Array.isArray(this.openTabs) ? [...this.openTabs] : undefined,
+          activeFile: this.activeFile,
+          folders: Array.from(this.folders || []),
+          collapsedFolders: Array.from(this.collapsedFolders || [])
         };
         this.savedState = state;
         localStorage.setItem(this._storageKey(), JSON.stringify(state));
@@ -6836,17 +6877,20 @@ declare module 'buffer' { export { Buffer }; }
 
     _updateRunStateUI() {
       const stopBtn = this.container.querySelector('#cl-stop-btn');
-      const runBtn = this.container.querySelector('[data-cl-action="run-demo"]');
-      const testBtn = this.container.querySelector('[data-cl-action="run-tests"]');
       if (stopBtn) {
         stopBtn.style.display = this.isRunning ? 'inline-flex' : 'none';
       }
-      if (runBtn) runBtn.disabled = this.isRunning;
-      if (testBtn) testBtn.disabled = this.isRunning;
+      this.container.querySelectorAll('[data-cl-action="run-demo"], [data-cl-action="run-tests"], [data-cl-action="verify-step"]').forEach(btn => {
+        btn.disabled = this.isRunning;
+      });
     }
 
     // ── Render Workbench DOM ───────────────────────────────────────────────
     _renderShell() {
+      if (this.themeOption !== 'auto') {
+        this.container.setAttribute('data-theme', this.themeOption);
+        this.container.classList.add(`codelab-workbench--${this.themeOption}`);
+      }
       const themeAttr = this.themeOption !== 'auto' ? `data-theme="${escapeHtml(this.themeOption)}"` : '';
       const brandLabel = (this.title && this.title !== this.labId) ? this.title : 'CodeLab';
       this.container.innerHTML = `
@@ -6860,9 +6904,6 @@ declare module 'buffer' { export { Buffer }; }
                   <span>${escapeHtml(this.backLabel)}</span>
                 </button>
               ` : ''}
-              <button type="button" class="codelab-btn codelab-btn--icon" data-cl-action="toggle-guide" title="Toggle Guide Panel" aria-label="Toggle Guide Panel">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
-              </button>
               <span class="codelab-brand ${this.onClose ? 'codelab-brand--with-back' : ''}" title="${escapeHtml(brandLabel)}">
                 <span class="codelab-brand__dot"></span>
                 <span>${escapeHtml(brandLabel)}</span>
@@ -6884,8 +6925,6 @@ declare module 'buffer' { export { Buffer }; }
               </div>
             </div>
 
-            <div class="codelab-topbar__center" id="cl-step-pills"></div>
-
             <div class="codelab-topbar__right">
               <button type="button" class="codelab-btn codelab-btn--stop" id="cl-stop-btn" data-cl-action="stop-run" title="Stop Running Execution" style="display:none">
                 ${CL_ICONS.stop}
@@ -6896,18 +6935,17 @@ declare module 'buffer' { export { Buffer }; }
                 <span>Run Demo</span>
                 <span class="codelab-btn__kbd">⇧⌘↵</span>
               </button>
-              <button type="button" class="codelab-btn codelab-btn--test" data-cl-action="run-tests" title="Run Test Suite (⌘+Enter)">
+              <button type="button" class="codelab-btn codelab-btn--test" id="cl-primary-exec-btn" data-cl-action="${this.mode === 'guided' ? 'verify-step' : 'run-tests'}" title="${this.mode === 'guided' ? 'Verify Current Step (⌘+Enter)' : 'Run Test Suite (⌘+Enter)'}">
                 ${CL_ICONS.check}
-                <span>Run Tests</span>
+                <span>${this.mode === 'guided' ? 'Verify Step' : 'Run Tests'}</span>
                 <span class="codelab-btn__kbd">⌘↵</span>
               </button>
               <span class="codelab-toolbar__sep" aria-hidden="true"></span>
-              <button type="button" class="codelab-btn" data-cl-action="show-diff" title="Compare with Reference Solution">
-                ${CL_ICONS.lightbulb}
-                <span>Solution</span>
+              <button type="button" class="codelab-btn codelab-btn--icon" data-cl-action="toggle-guide" title="Toggle Guide Panel" aria-label="Toggle Guide Panel">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
               </button>
-              <button type="button" class="codelab-btn codelab-btn--icon" data-cl-action="reset-lab" title="Reset Lab Code" aria-label="Reset Lab Code">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <button type="button" class="codelab-btn codelab-btn--icon" data-cl-action="toggle-drawer" title="Toggle Terminal Drawer" aria-label="Toggle Terminal Drawer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15h18"/></svg>
               </button>
               <button type="button" class="codelab-btn codelab-btn--icon" data-cl-action="toggle-fullscreen" title="Toggle Fullscreen IDE (Esc to exit)" aria-label="Toggle Fullscreen IDE">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
@@ -6929,6 +6967,7 @@ declare module 'buffer' { export { Buffer }; }
                   <span>Architecture Brief</span>
                 </button>
               </div>
+              <div class="codelab-guide__stepper" id="cl-step-pills"></div>
               <div class="codelab-guide__content" id="cl-guide-content"></div>
               <div class="codelab-guide__footer" id="cl-guide-footer"></div>
             </aside>
@@ -6943,6 +6982,10 @@ declare module 'buffer' { export { Buffer }; }
                 <div class="codelab-explorer" aria-label="Workspace Files">
                   <div class="codelab-explorer__header">
                     <span>Workspace</span>
+                    <div class="codelab-explorer__actions">
+                      <button type="button" class="codelab-explorer__btn" data-cl-action="new-file-root" title="New File" aria-label="New File">${CL_ICONS.plus}</button>
+                      <button type="button" class="codelab-explorer__btn" data-cl-action="new-folder-root" title="New Folder" aria-label="New Folder">${CL_ICONS.folder}</button>
+                    </div>
                     <span id="cl-explorer-lang">${this.lang.toUpperCase()}</span>
                   </div>
                   <div class="codelab-explorer__list" id="cl-explorer-list"></div>
@@ -6958,6 +7001,7 @@ declare module 'buffer' { export { Buffer }; }
                       <textarea class="codelab-fallback-editor" id="cl-fallback-editor" spellcheck="false" aria-label="Code Editor"></textarea>
                     </div>
                     <div class="codelab-md-preview prose" id="cl-md-preview" style="display:none"></div>
+                    <div class="codelab-empty-editor" id="cl-empty-editor" style="display:none"></div>
                   </div>
                 </div>
               </div>
@@ -7024,15 +7068,34 @@ declare module 'buffer' { export { Buffer }; }
       this._renderFileLists();
       this._renderDrawerBody();
       this._updateStatusBar();
+      this._updateRunStateUI();
     }
 
     _renderStepPills() {
       const host = this.container.querySelector('#cl-step-pills');
       if (!host) return;
-      if (!this.steps.length) {
+      if (!this.steps.length || this.guideTab === 'readme' || this.mode === 'sandbox') {
         host.innerHTML = '';
+        host.style.display = 'none';
         return;
       }
+      host.style.display = '';
+
+      const existingPills = host.querySelectorAll('.codelab-step-pill');
+      if (existingPills.length === this.steps.length) {
+        existingPills.forEach((pill, idx) => {
+          const step = this.steps[idx];
+          const passed = step && this.completedSteps.has(step.id);
+          const active = idx === this.activeStepIndex;
+          pill.classList.toggle('active', active);
+          pill.classList.toggle('passed', !!passed);
+          pill.setAttribute('aria-selected', String(active));
+          const numSpan = pill.querySelector('.codelab-step-pill__num');
+          if (numSpan) numSpan.textContent = passed ? '✓' : String(idx + 1);
+        });
+        return;
+      }
+
       host.innerHTML = `<div class="codelab-step-pills" role="tablist" aria-label="Guided Steps">
         ${this.steps.map((step, idx) => {
           const passed = this.completedSteps.has(step.id);
@@ -7057,12 +7120,35 @@ declare module 'buffer' { export { Buffer }; }
         btn.setAttribute('aria-selected', String(isActive));
       });
 
+      this._renderStepPills();
+
       if (this.guideTab === 'readme' || !this.steps.length) {
         const readmeContent = this.files['README.md'] || this.referenceFiles['README.md'] || this.summary || 'No architecture brief available.';
         contentEl.innerHTML = `<div class="codelab-guide-prose">${renderSimpleMarkdown(readmeContent)}</div>`;
         footerEl.innerHTML = `
-          <span style="font-size:11.5px;color:var(--cl-fg-muted);">100% In-Browser Web Worker Sandbox</span>
-          ${this.steps.length ? `<button type="button" class="codelab-btn" data-cl-guidetab="steps">Back to Steps →</button>` : ''}
+          <div class="codelab-guide__footer-row codelab-guide__footer-row--secondary">
+            <button type="button" class="codelab-btn codelab-btn--subtle" data-cl-action="run-tests" title="Run full test suite (⌘+Enter)">
+              ${CL_ICONS.check}
+              <span>All Tests</span>
+            </button>
+            <button type="button" class="codelab-btn codelab-btn--subtle" data-cl-action="show-diff" title="Compare with Reference Solution">
+              ${CL_ICONS.lightbulb}
+              <span>Solution</span>
+            </button>
+            <button type="button" class="codelab-btn codelab-btn--subtle" data-cl-action="reset-lab" title="Reset Lab Code to Starter State">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>Reset</span>
+            </button>
+          </div>
+          ${this.steps.length ? `
+            <div class="codelab-guide__footer-row">
+              <button type="button" class="codelab-btn" data-cl-guidetab="steps" style="width:100%;">Back to Steps →</button>
+            </div>
+          ` : `
+            <div class="codelab-guide__footer-row">
+              <span style="font-size:11.5px;color:var(--cl-fg-muted);">100% In-Browser Web Worker Sandbox</span>
+            </div>
+          `}
         `;
         return;
       }
@@ -7138,13 +7224,78 @@ declare module 'buffer' { export { Buffer }; }
       const hasPrev = this.activeStepIndex > 0;
       const hasNext = this.activeStepIndex < this.steps.length - 1;
       footerEl.innerHTML = `
-        <button type="button" class="codelab-btn" data-cl-step="${this.activeStepIndex - 1}" ${!hasPrev ? 'disabled' : ''}>← Prev</button>
-        <button type="button" class="codelab-btn codelab-btn--test" data-cl-action="verify-step">
-          ${CL_ICONS.check}
-          <span>Verify Step ${this.activeStepIndex + 1}</span>
-        </button>
-        <button type="button" class="codelab-btn" data-cl-step="${this.activeStepIndex + 1}" ${!hasNext ? 'disabled' : ''}>Next →</button>
+        <div class="codelab-guide__footer-row">
+          <button type="button" class="codelab-btn" data-cl-step="${this.activeStepIndex - 1}" ${!hasPrev ? 'disabled' : ''}>← Prev</button>
+          <button type="button" class="codelab-btn codelab-btn--test" data-cl-action="verify-step">
+            ${CL_ICONS.check}
+            <span>Verify Step ${this.activeStepIndex + 1}</span>
+          </button>
+          <button type="button" class="codelab-btn" data-cl-step="${this.activeStepIndex + 1}" ${!hasNext ? 'disabled' : ''}>Next →</button>
+        </div>
+        <div class="codelab-guide__footer-row codelab-guide__footer-row--secondary">
+          <button type="button" class="codelab-btn codelab-btn--subtle" data-cl-action="run-tests" title="Run full test suite across all steps (⌘+Enter)">
+            ${CL_ICONS.check}
+            <span>All Tests</span>
+          </button>
+          <button type="button" class="codelab-btn codelab-btn--subtle" data-cl-action="show-diff" title="Compare with Reference Solution">
+            ${CL_ICONS.lightbulb}
+            <span>Solution</span>
+          </button>
+          <button type="button" class="codelab-btn codelab-btn--subtle" data-cl-action="reset-lab" title="Reset Lab Code to Starter State">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <span>Reset</span>
+          </button>
+        </div>
       `;
+    }
+
+    _buildFileTree() {
+      const rootNode = {
+        name: '',
+        fullPath: '',
+        folders: new Map(),
+        files: new Map()
+      };
+
+      const getOrCreateDirNode = (dirPath) => {
+        if (!dirPath) return rootNode;
+        const segments = dirPath.split('/');
+        let current = rootNode;
+        let runningPath = '';
+        for (const seg of segments) {
+          runningPath = runningPath ? `${runningPath}/${seg}` : seg;
+          if (!current.folders.has(seg)) {
+            current.folders.set(seg, {
+              name: seg,
+              fullPath: runningPath,
+              folders: new Map(),
+              files: new Map()
+            });
+          }
+          current = current.folders.get(seg);
+        }
+        return current;
+      };
+
+      if (this.folders) {
+        for (const folder of this.folders) {
+          if (folder) getOrCreateDirNode(folder);
+        }
+      }
+
+      for (const filePath of this._orderedFileNames()) {
+        const lastSlash = filePath.lastIndexOf('/');
+        if (lastSlash === -1) {
+          rootNode.files.set(filePath, filePath);
+        } else {
+          const dirPath = filePath.slice(0, lastSlash);
+          const baseName = filePath.slice(lastSlash + 1);
+          const dirNode = getOrCreateDirNode(dirPath);
+          dirNode.files.set(baseName, filePath);
+        }
+      }
+
+      return rootNode;
     }
 
     _renderFileLists() {
@@ -7154,27 +7305,166 @@ declare module 'buffer' { export { Buffer }; }
       if (explorerLangEl) explorerLangEl.textContent = this.lang.toUpperCase();
       if (!explorerEl || !tabsEl) return;
 
-      const files = this._orderedFileNames();
-      explorerEl.innerHTML = files.map(f => {
-        const isActive = f === this.activeFile;
-        const badge = f.endsWith('.md') ? 'DOC' : f.endsWith('.json') ? 'PKG' : /(^|\/)test\./i.test(f) ? 'TEST' : /(^|\/)demo\./i.test(f) ? 'DEMO' : 'SRC';
-        return `
-          <button type="button" class="codelab-file-item ${isActive ? 'active' : ''}" data-cl-file="${escapeHtml(f)}">
-            <span>${escapeHtml(f)}</span>
-            <span class="codelab-file-badge">${badge}</span>
-          </button>
-        `;
-      }).join('');
+      const treeRoot = this._buildFileTree();
+      let treeHtml = '';
 
-      const tabsHtml = files.map(f => {
+      const renderNode = (node, depth) => {
+        const sortedFolders = Array.from(node.folders.values()).sort((a, b) => a.name.localeCompare(b.name));
+        for (const fNode of sortedFolders) {
+          const isCollapsed = this.collapsedFolders.has(fNode.fullPath);
+          const indent = depth * 14 + 10;
+          treeHtml += `
+            <div class="codelab-folder-item ${isCollapsed ? 'collapsed' : 'expanded'}" data-cl-folder="${escapeHtml(fNode.fullPath)}" data-cl-drop-folder="${escapeHtml(fNode.fullPath)}" data-depth="${depth}" style="padding-left: ${indent}px;">
+              <button type="button" class="codelab-chevron" data-cl-action="toggle-folder" data-cl-folder="${escapeHtml(fNode.fullPath)}" title="${isCollapsed ? 'Expand folder' : 'Collapse folder'}" aria-label="${isCollapsed ? 'Expand folder' : 'Collapse folder'}">
+                ${isCollapsed ? CL_ICONS.chevronRight : CL_ICONS.chevronDown}
+              </button>
+              <span class="codelab-folder-icon">${CL_ICONS.folder}</span>
+              <span class="codelab-folder-name" title="${escapeHtml(fNode.name)}">${escapeHtml(fNode.name)}</span>
+              <div class="codelab-node-actions">
+                <button type="button" class="codelab-node-action" data-cl-action="new-file-folder" data-cl-folder="${escapeHtml(fNode.fullPath)}" title="New File in ${escapeHtml(fNode.name)}">${CL_ICONS.plus}</button>
+                <button type="button" class="codelab-node-action" data-cl-action="new-folder-folder" data-cl-folder="${escapeHtml(fNode.fullPath)}" title="New Folder in ${escapeHtml(fNode.name)}">${CL_ICONS.folder}</button>
+                <button type="button" class="codelab-node-action" data-cl-action="delete-folder" data-cl-folder="${escapeHtml(fNode.fullPath)}" title="Delete Folder">${CL_ICONS.trash}</button>
+              </div>
+            </div>
+          `;
+
+          if (this.creatingItem && this.creatingItem.parentFolder === fNode.fullPath && !isCollapsed) {
+            const createIndent = (depth + 1) * 14 + 10;
+            treeHtml += `
+              <div class="codelab-tree-create-row" style="padding-left: ${createIndent}px;">
+                <span class="codelab-tree-create-icon">${this.creatingItem.type === 'folder' ? CL_ICONS.folder : CL_ICONS.file}</span>
+                <input type="text" id="cl-tree-create-input" class="codelab-tree-input" placeholder="${this.creatingItem.type === 'folder' ? 'folder-name' : 'filename.' + this.lang}" autocomplete="off" spellcheck="false" />
+              </div>
+            `;
+          }
+
+          if (!isCollapsed) {
+            renderNode(fNode, depth + 1);
+          }
+        }
+
+        const sortedFiles = Array.from(node.files.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+        for (const [baseName, fullPath] of sortedFiles) {
+          const isActive = fullPath === this.activeFile;
+          const badge = fullPath.endsWith('.md') ? 'DOC' : fullPath.endsWith('.json') ? 'PKG' : /(^|\/)test\./i.test(fullPath) ? 'TEST' : /(^|\/)demo\./i.test(fullPath) ? 'DEMO' : 'SRC';
+          const ext = fullPath.endsWith('.ts') ? 'ts' : fullPath.endsWith('.js') ? 'js' : fullPath.endsWith('.json') ? 'json' : fullPath.endsWith('.md') ? 'md' : 'txt';
+          const fileIcon = ext === 'json' ? CL_ICONS.database : ext === 'md' ? CL_ICONS.book : CL_ICONS.file;
+          const indent = depth * 14 + 10;
+          treeHtml += `
+            <button type="button" class="codelab-file-item ${isActive ? 'active' : ''}" draggable="true" data-cl-file="${escapeHtml(fullPath)}" data-depth="${depth}" style="padding-left: ${indent}px;">
+              <span class="codelab-file-icon">${fileIcon}</span>
+              <span class="codelab-file-name" title="${escapeHtml(baseName)}">${escapeHtml(baseName)}</span>
+              <span class="codelab-file-badge">${badge}</span>
+            </button>
+          `;
+        }
+      };
+
+      if (this.creatingItem && this.creatingItem.parentFolder === '') {
+        treeHtml += `
+          <div class="codelab-tree-create-row" style="padding-left: 10px;">
+            <span class="codelab-tree-create-icon">${this.creatingItem.type === 'folder' ? CL_ICONS.folder : CL_ICONS.file}</span>
+            <input type="text" id="cl-tree-create-input" class="codelab-tree-input" placeholder="${this.creatingItem.type === 'folder' ? 'folder-name' : 'filename.' + this.lang}" autocomplete="off" spellcheck="false" />
+          </div>
+        `;
+      }
+
+      renderNode(treeRoot, 0);
+      explorerEl.innerHTML = treeHtml;
+
+      // Attach file drag events
+      explorerEl.querySelectorAll('.codelab-file-item').forEach(el => {
+        el.addEventListener('dragstart', ev => {
+          this._draggedFile = el.dataset.clFile;
+          if (ev.dataTransfer) {
+            ev.dataTransfer.setData('text/plain', el.dataset.clFile || '');
+            ev.dataTransfer.effectAllowed = 'move';
+          }
+        });
+        el.addEventListener('dragend', () => {
+          this._draggedFile = null;
+        });
+      });
+
+      // Attach folder drop events
+      explorerEl.querySelectorAll('.codelab-folder-item').forEach(el => {
+        el.addEventListener('dragover', ev => {
+          ev.preventDefault();
+          if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
+          el.classList.add('drag-over');
+        });
+        el.addEventListener('dragleave', () => {
+          el.classList.remove('drag-over');
+        });
+        el.addEventListener('drop', ev => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          el.classList.remove('drag-over');
+          const fileToMove = this._draggedFile || (ev.dataTransfer && ev.dataTransfer.getData('text/plain'));
+          const folder = el.dataset.clFolder;
+          if (fileToMove && folder !== undefined) {
+            this.moveFile(fileToMove, folder);
+          }
+        });
+      });
+
+      // Explorer container drop target (for moving to workspace root)
+      explorerEl.addEventListener('dragover', ev => {
+        ev.preventDefault();
+      });
+      explorerEl.addEventListener('drop', ev => {
+        if (ev.target.closest && ev.target.closest('.codelab-folder-item')) return;
+        ev.preventDefault();
+        const fileToMove = this._draggedFile || (ev.dataTransfer && ev.dataTransfer.getData('text/plain'));
+        if (fileToMove) {
+          this.moveFile(fileToMove, '');
+        }
+      });
+
+      // Tree inline creation input listeners
+      const treeInput = explorerEl.querySelector('#cl-tree-create-input');
+      if (treeInput) {
+        treeInput.focus();
+        treeInput.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            e.stopPropagation();
+            this.creatingItem = null;
+            this._renderFileLists();
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = (treeInput.value || '').trim();
+            const item = this.creatingItem;
+            this.creatingItem = null;
+            if (val && item) {
+              const full = item.parentFolder ? `${item.parentFolder}/${val}` : val;
+              if (item.type === 'folder') {
+                this.createFolder(full);
+              } else {
+                this.createFile(full);
+              }
+            } else {
+              this._renderFileLists();
+            }
+          }
+        });
+        treeInput.addEventListener('blur', () => {
+          if (this.creatingItem) {
+            this.creatingItem = null;
+            this._renderFileLists();
+          }
+        });
+      }
+
+      // Tabs rendering
+      const openTabs = Array.isArray(this.openTabs) ? this.openTabs : [];
+      const tabsHtml = openTabs.map(f => {
         const isActive = f === this.activeFile;
-        const isUserFile = this._isUserCreatedFile(f);
         const ext = f.endsWith('.ts') ? 'ts' : f.endsWith('.js') ? 'js' : f.endsWith('.json') ? 'json' : f.endsWith('.md') ? 'md' : 'txt';
         return `
           <button type="button" role="tab" aria-selected="${isActive}" class="codelab-tab ${isActive ? 'active' : ''}" data-cl-file="${escapeHtml(f)}">
             <span class="codelab-tab__ext codelab-tab__ext--${ext}">${ext.toUpperCase()}</span>
             <span>${escapeHtml(f)}</span>
-            ${isUserFile ? `<span class="codelab-tab__close" data-cl-delete-file="${escapeHtml(f)}" title="Delete ${escapeHtml(f)}" role="button" aria-label="Delete ${escapeHtml(f)}">×</span>` : ''}
+            <span class="codelab-tab__close" data-action="close-tab" data-cl-file="${escapeHtml(f)}" title="Close ${escapeHtml(f)}" role="button" aria-label="Close ${escapeHtml(f)}">×</span>
           </button>
         `;
       }).join('');
@@ -7231,35 +7521,275 @@ declare module 'buffer' { export { Buffer }; }
       }
     }
 
-    createFile(rawName) {
+    _renderTabs() {
+      this._renderFileLists();
+    }
+
+    createFolder(folderPath) {
+      let clean = String(folderPath).trim().replace(/^\/+|\/+$/g, '');
+      if (!clean) return;
+      const parts = clean.split('/');
+      let cur = '';
+      for (const p of parts) {
+        cur = cur ? `${cur}/${p}` : p;
+        this.folders.add(cur);
+      }
+      this._saveState();
+      this._renderFileLists();
+    }
+
+    toggleFolder(folderPath) {
+      const clean = String(folderPath).trim().replace(/^\/+|\/+$/g, '');
+      if (!clean) return;
+      if (this.collapsedFolders.has(clean)) {
+        this.collapsedFolders.delete(clean);
+      } else {
+        this.collapsedFolders.add(clean);
+      }
+      this._saveState();
+      this._renderFileLists();
+    }
+
+    moveFile(srcPath, dest) {
+      if (!srcPath || this.files[srcPath] === undefined) return;
+      const baseName = srcPath.split('/').pop();
+      const cleanDest = String(dest || '').trim().replace(/^\/+|\/+$/g, '');
+      const isDestFolder = cleanDest === '' || this.folders.has(cleanDest) || (!cleanDest.split('/').pop().includes('.') && this.files[cleanDest] === undefined);
+      const targetPath = isDestFolder
+        ? (cleanDest ? `${cleanDest}/${baseName}` : baseName)
+        : cleanDest;
+
+      if (targetPath === srcPath) return;
+      if (this.files[targetPath] !== undefined) return;
+
+      const parts = targetPath.split('/');
+      let cur = '';
+      for (let i = 0; i < parts.length - 1; i++) {
+        cur = cur ? `${cur}/${parts[i]}` : parts[i];
+        this.folders.add(cur);
+        this.collapsedFolders.delete(cur);
+      }
+
+      const content = this.files[srcPath];
+      delete this.files[srcPath];
+      this.files[targetPath] = content;
+
+      const oldModel = this.models.get(srcPath);
+      if (oldModel) {
+        oldModel.dispose();
+        this.models.delete(srcPath);
+      }
+      this._getOrCreateModel(targetPath);
+
+      if (Array.isArray(this.openTabs)) {
+        const idx = this.openTabs.indexOf(srcPath);
+        if (idx !== -1) {
+          this.openTabs.splice(idx, 1, targetPath);
+        }
+      }
+
+      if (this.activeFile === srcPath) {
+        this.activeFile = targetPath;
+      }
+
+      this._saveState();
+      this._syncActiveFileToView();
+    }
+
+    renameFile(oldPath, newPath) {
+      this.moveFile(oldPath, newPath);
+    }
+
+    renameFolder(oldFolder, newFolder) {
+      const oldPrefix = String(oldFolder).trim().replace(/^\/+|\/+$/g, '');
+      const newPrefix = String(newFolder).trim().replace(/^\/+|\/+$/g, '');
+      if (!oldPrefix || !newPrefix || oldPrefix === newPrefix) return;
+
+      const updatedFolders = new Set();
+      for (const f of this.folders) {
+        if (f === oldPrefix) {
+          updatedFolders.add(newPrefix);
+        } else if (f.startsWith(oldPrefix + '/')) {
+          updatedFolders.add(newPrefix + f.slice(oldPrefix.length));
+        } else {
+          updatedFolders.add(f);
+        }
+      }
+      const parts = newPrefix.split('/');
+      let cur = '';
+      for (const p of parts) {
+        cur = cur ? `${cur}/${p}` : p;
+        updatedFolders.add(cur);
+      }
+      this.folders = updatedFolders;
+
+      const updatedCollapsed = new Set();
+      for (const cf of this.collapsedFolders) {
+        if (cf === oldPrefix) {
+          updatedCollapsed.add(newPrefix);
+        } else if (cf.startsWith(oldPrefix + '/')) {
+          updatedCollapsed.add(newPrefix + cf.slice(oldPrefix.length));
+        } else {
+          updatedCollapsed.add(cf);
+        }
+      }
+      this.collapsedFolders = updatedCollapsed;
+
+      const fileRenames = [];
+      for (const filePath of Object.keys(this.files)) {
+        if (filePath.startsWith(oldPrefix + '/')) {
+          const newFilePath = newPrefix + filePath.slice(oldPrefix.length);
+          fileRenames.push({ oldPath: filePath, newPath: newFilePath, content: this.files[filePath] });
+        }
+      }
+
+      for (const { oldPath, newPath, content } of fileRenames) {
+        delete this.files[oldPath];
+        this.files[newPath] = content;
+
+        const oldModel = this.models.get(oldPath);
+        if (oldModel) {
+          oldModel.dispose();
+          this.models.delete(oldPath);
+        }
+        this._getOrCreateModel(newPath);
+
+        if (Array.isArray(this.openTabs)) {
+          const idx = this.openTabs.indexOf(oldPath);
+          if (idx !== -1) {
+            this.openTabs.splice(idx, 1, newPath);
+          }
+        }
+
+        if (this.activeFile === oldPath) {
+          this.activeFile = newPath;
+        }
+      }
+
+      this._saveState();
+      this._syncActiveFileToView();
+    }
+
+    deleteFolder(folderPath) {
+      const clean = String(folderPath).trim().replace(/^\/+|\/+$/g, '');
+      if (!clean) return;
+
+      for (const f of Array.from(this.folders)) {
+        if (f === clean || f.startsWith(clean + '/')) {
+          this.folders.delete(f);
+        }
+      }
+
+      for (const cf of Array.from(this.collapsedFolders)) {
+        if (cf === clean || cf.startsWith(clean + '/')) {
+          this.collapsedFolders.delete(cf);
+        }
+      }
+
+      const matchingFiles = Object.keys(this.files).filter(f => f.startsWith(clean + '/'));
+      for (const f of matchingFiles) {
+        delete this.files[f];
+        const model = this.models.get(f);
+        if (model) {
+          model.dispose();
+          this.models.delete(f);
+        }
+        if (Array.isArray(this.openTabs)) {
+          const idx = this.openTabs.indexOf(f);
+          if (idx !== -1) {
+            this.openTabs.splice(idx, 1);
+          }
+        }
+      }
+
+      if (this.activeFile && this.activeFile.startsWith(clean + '/')) {
+        this.activeFile = this.openTabs && this.openTabs.length > 0 ? this.openTabs[0] : null;
+      }
+
+      this._saveState();
+      this._syncActiveFileToView();
+    }
+
+    createFile(rawName, initialContent = null) {
       let clean = String(rawName).trim().replace(/^\/+/, '');
       if (!clean) return;
-      if (!/\.(js|ts|json|md)$/i.test(clean)) {
+      if (!/\.(js|ts|json|md|txt)$/i.test(clean) && !clean.includes('.')) {
         clean += `.${this.lang}`;
       }
-      if (!this.files[clean]) {
+      if (this.files[clean] !== undefined) {
+        this.openFile(clean);
+        return;
+      }
+      const parts = clean.split('/');
+      let cur = '';
+      for (let i = 0; i < parts.length - 1; i++) {
+        cur = cur ? `${cur}/${parts[i]}` : parts[i];
+        this.folders.add(cur);
+      }
+      if (typeof initialContent === 'string') {
+        this.files[clean] = initialContent;
+      } else {
         this.files[clean] = clean.endsWith('.json')
           ? '{\n  "name": "' + this.labId + '",\n  "dependencies": {}\n}\n'
           : `'use strict';\n\n// ${clean}\n`;
-        this._saveState();
-        this._getOrCreateModel(clean);
       }
+      this._saveState();
+      this._getOrCreateModel(clean);
       this.openFile(clean);
     }
 
+    closeTab(filename) {
+      if (!Array.isArray(this.openTabs) || !this.openTabs.includes(filename)) {
+        return;
+      }
+      const idx = this.openTabs.indexOf(filename);
+      this.openTabs.splice(idx, 1);
+
+      if (this.activeFile === filename) {
+        if (this.openTabs.length > 0) {
+          const nextIdx = Math.min(idx, this.openTabs.length - 1);
+          this.activeFile = this.openTabs[nextIdx];
+        } else {
+          this.activeFile = null;
+        }
+      }
+
+      this._saveState();
+      this._syncActiveFileToView();
+    }
+
     deleteFile(filename) {
-      if (!this._isUserCreatedFile(filename)) return;
+      if (!filename || this.files[filename] === undefined) return;
       delete this.files[filename];
       const model = this.models.get(filename);
       if (model) {
         model.dispose();
         this.models.delete(filename);
       }
+      let tabIdx = -1;
+      if (Array.isArray(this.openTabs)) {
+        tabIdx = this.openTabs.indexOf(filename);
+        if (tabIdx !== -1) {
+          this.openTabs.splice(tabIdx, 1);
+        }
+      }
       this._saveState();
       if (this.activeFile === filename) {
-        this.activeFile = this._pickDefaultFile();
+        if (this.openTabs && this.openTabs.length > 0) {
+          this.activeFile = this.openTabs[Math.max(0, Math.min(tabIdx, this.openTabs.length - 1))];
+        } else {
+          this.activeFile = null;
+        }
       }
       this._syncActiveFileToView();
+    }
+
+    toggleGuide() {
+      const shell = this.container.querySelector('.codelab');
+      const guide = this.container.querySelector('.codelab-guide');
+      if (shell) shell.classList.toggle('guide-collapsed');
+      if (guide) guide.classList.toggle('collapsed');
+      if (this.editor) setTimeout(() => this.editor.layout(), 50);
     }
 
     _renderDrawerBody() {
@@ -7425,7 +7955,7 @@ declare module 'buffer' { export { Buffer }; }
       const monacoHost = this.container.querySelector('#cl-monaco-host');
 
       if (fallbackEl) {
-        fallbackEl.value = this.files[this.activeFile] || '';
+        fallbackEl.value = (this.activeFile && this.files[this.activeFile]) ? this.files[this.activeFile] : '';
         this._updateFallbackGutter();
 
         fallbackEl.addEventListener('scroll', () => {
@@ -7434,7 +7964,7 @@ declare module 'buffer' { export { Buffer }; }
         });
 
         fallbackEl.addEventListener('input', () => {
-          if (!this.editor && !this.activeFile.endsWith('.md')) {
+          if (!this.editor && this.activeFile && !this.activeFile.endsWith('.md')) {
             this.files[this.activeFile] = fallbackEl.value;
             this._updateFallbackGutter();
             this._saveState();
@@ -7449,16 +7979,22 @@ declare module 'buffer' { export { Buffer }; }
             const end = fallbackEl.selectionEnd;
             fallbackEl.value = fallbackEl.value.substring(0, start) + '  ' + fallbackEl.value.substring(end);
             fallbackEl.selectionStart = fallbackEl.selectionEnd = start + 2;
-            this.files[this.activeFile] = fallbackEl.value;
-            this._updateFallbackGutter();
-            this._saveState();
-            this._notifyCodeChange(this.activeFile, fallbackEl.value);
+            if (this.activeFile) {
+              this.files[this.activeFile] = fallbackEl.value;
+              this._updateFallbackGutter();
+              this._saveState();
+              this._notifyCodeChange(this.activeFile, fallbackEl.value);
+            }
           } else if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'Enter') {
             e.preventDefault();
             this.runDemo();
           } else if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
             e.preventDefault();
-            this.runTests();
+            if (this.mode === 'guided') {
+              this.verifyCurrentStep();
+            } else {
+              this.runTests();
+            }
           }
         });
       }
@@ -7473,7 +8009,7 @@ declare module 'buffer' { export { Buffer }; }
         // Create models for all code files
         this._syncAllModels();
 
-        const currentModel = this._getOrCreateModel(this.activeFile);
+        const currentModel = this.activeFile ? this._getOrCreateModel(this.activeFile) : null;
         this.editor = m.editor.create(monacoHost, {
           model: currentModel,
           theme: isDark ? 'codelab-dark' : 'codelab-light',
@@ -7494,7 +8030,11 @@ declare module 'buffer' { export { Buffer }; }
 
         // Keyboard shortcuts inside Monaco
         this.editor.addCommand(m.KeyMod.CtrlCmd | m.KeyCode.Enter, () => {
-          this.runTests();
+          if (this.mode === 'guided') {
+            this.verifyCurrentStep();
+          } else {
+            this.runTests();
+          }
         });
         this.editor.addCommand(m.KeyMod.CtrlCmd | m.KeyMod.Shift | m.KeyCode.Enter, () => {
           this.runDemo();
@@ -7523,7 +8063,7 @@ declare module 'buffer' { export { Buffer }; }
         }
       }).catch(() => {
         // Fallback editor remains visible if offline / CDN blocked
-        if (fallbackWrap && !this.activeFile.endsWith('.md')) {
+        if (fallbackWrap && this.activeFile && !this.activeFile.endsWith('.md')) {
           fallbackWrap.style.display = 'flex';
           this._updateFallbackGutter();
         }
@@ -7539,7 +8079,7 @@ declare module 'buffer' { export { Buffer }; }
     }
 
     _getOrCreateModel(filename) {
-      if (!this.monaco) return null;
+      if (!filename || !this.monaco) return null;
       const uri = this.monaco.Uri.parse(`file:///${this.labId}/${filename}`);
       let model = this.monaco.editor.getModel(uri);
       const lang = filename.endsWith('.ts') ? 'typescript' : filename.endsWith('.json') ? 'json' : filename.endsWith('.md') ? 'markdown' : 'javascript';
@@ -7566,12 +8106,33 @@ declare module 'buffer' { export { Buffer }; }
     }
 
     _syncActiveFileToView() {
-      const isMd = this.activeFile.endsWith('.md');
       const monacoHost = this.container.querySelector('#cl-monaco-host');
       const fallbackWrap = this.container.querySelector('#cl-fallback-wrap');
       const fallbackEl = this.container.querySelector('#cl-fallback-editor');
       const mdPreview = this.container.querySelector('#cl-md-preview');
+      const emptyEl = this.container.querySelector('#cl-empty-editor');
 
+      if (!this.activeFile || !this.openTabs || this.openTabs.length === 0) {
+        if (monacoHost) monacoHost.style.display = 'none';
+        if (fallbackWrap) fallbackWrap.style.display = 'none';
+        if (mdPreview) mdPreview.style.display = 'none';
+        if (this.editor) {
+          try { this.editor.setModel(null); } catch (_) {}
+        }
+        if (emptyEl) {
+          emptyEl.style.display = 'flex';
+          this._renderEmptyEditorContent(emptyEl);
+        }
+        this._renderFileLists();
+        this._updateStatusBar();
+        return;
+      }
+
+      if (emptyEl) {
+        emptyEl.style.display = 'none';
+      }
+
+      const isMd = this.activeFile.endsWith('.md');
       if (isMd) {
         if (monacoHost) monacoHost.style.display = 'none';
         if (fallbackWrap) fallbackWrap.style.display = 'none';
@@ -7603,12 +8164,68 @@ declare module 'buffer' { export { Buffer }; }
       this._updateStatusBar();
     }
 
+    _renderEmptyEditorContent(emptyEl) {
+      if (!emptyEl) return;
+      const fileBtns = this._orderedFileNames().map(f => {
+        const ext = f.endsWith('.ts') ? 'ts' : f.endsWith('.js') ? 'js' : f.endsWith('.json') ? 'json' : f.endsWith('.md') ? 'md' : 'txt';
+        return `
+          <button type="button" class="codelab-empty-file-btn" data-cl-file="${escapeHtml(f)}" title="Open ${escapeHtml(f)}">
+            <span class="codelab-tab__ext codelab-tab__ext--${ext}">${ext.toUpperCase()}</span>
+            <span>${escapeHtml(f)}</span>
+          </button>
+        `;
+      }).join('');
+
+      emptyEl.innerHTML = `
+        <div class="codelab-empty-editor__inner">
+          <div class="codelab-empty-editor__icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <h2 class="codelab-empty-editor__title">No Open Editors</h2>
+          <p class="codelab-empty-editor__subtitle">Select a file from the explorer on the left or click a workspace file below to open.</p>
+          <div class="codelab-empty-editor__files" role="group" aria-label="Workspace Files">
+            ${fileBtns}
+          </div>
+          <div class="codelab-empty-editor__actions">
+            <button type="button" class="codelab-btn codelab-btn--run" data-cl-action="run-demo" title="Run demo.js (⇧⌘↵)">
+              ${CL_ICONS.play}
+              <span>Run Demo</span>
+              <span class="codelab-btn__kbd">⇧⌘↵</span>
+            </button>
+            <button type="button" class="codelab-btn codelab-btn--test" data-cl-action="run-tests" title="Run Test Suite (⌘↵)">
+              ${CL_ICONS.check}
+              <span>Run Tests</span>
+              <span class="codelab-btn__kbd">⌘↵</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
     // ── Event Delegation & Interactive Splitters ───────────────────────────
     _bindEvents() {
       this._bindSplitters();
 
       this._escHandler = e => {
         if (e.key === 'Escape') {
+          if (this.creatingItem) {
+            this.creatingItem = null;
+            this._renderFileLists();
+            return;
+          }
+          if (this.renamingItem) {
+            this.renamingItem = null;
+            this._renderFileLists();
+            return;
+          }
+          if (this.isCreatingFile) {
+            this.isCreatingFile = false;
+            this._renderFileLists();
+            return;
+          }
           const modalSlot = this.container.querySelector('#cl-modal-slot');
           if (modalSlot && modalSlot.innerHTML.trim() !== '') {
             this.closeModal();
@@ -7623,7 +8240,42 @@ declare module 'buffer' { export { Buffer }; }
         document.addEventListener('keydown', this._escHandler);
       }
 
+      this.container.addEventListener('keydown', e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            this.runDemo();
+          } else if (this.mode === 'guided') {
+            this.verifyCurrentStep();
+          } else {
+            this.runTests();
+          }
+        }
+      });
+
+      const handleTabMiddleClick = e => {
+        if (e.button === 1) {
+          const tabEl = e.target.closest('.codelab-tab');
+          if (tabEl && tabEl.dataset.clFile) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.closeTab(tabEl.dataset.clFile);
+          }
+        }
+      };
+      this.container.addEventListener('auxclick', handleTabMiddleClick);
+      this.container.addEventListener('mousedown', handleTabMiddleClick);
+
       this.container.addEventListener('click', e => {
+        const closeBtn = e.target.closest('[data-action="close-tab"], .codelab-tab__close');
+        if (closeBtn) {
+          e.stopPropagation();
+          const tabEl = closeBtn.closest('.codelab-tab') || closeBtn;
+          const fname = closeBtn.dataset.clFile || tabEl.dataset.clFile;
+          if (fname) this.closeTab(fname);
+          return;
+        }
+
         const deleteBtn = e.target.closest('[data-cl-delete-file]');
         if (deleteBtn) {
           e.stopPropagation();
@@ -7711,10 +8363,38 @@ declare module 'buffer' { export { Buffer }; }
           } else if (action === 'new-file') {
             this.isCreatingFile = true;
             this._renderFileLists();
+          } else if (action === 'new-file-root') {
+            this.creatingItem = { type: 'file', parentFolder: '' };
+            this._renderFileLists();
+          } else if (action === 'new-folder-root') {
+            this.creatingItem = { type: 'folder', parentFolder: '' };
+            this._renderFileLists();
+          } else if (action === 'new-file-folder') {
+            const folder = actionBtn.dataset.clFolder || '';
+            this.collapsedFolders.delete(folder);
+            this.creatingItem = { type: 'file', parentFolder: folder };
+            this._renderFileLists();
+          } else if (action === 'new-folder-folder') {
+            const folder = actionBtn.dataset.clFolder || '';
+            this.collapsedFolders.delete(folder);
+            this.creatingItem = { type: 'folder', parentFolder: folder };
+            this._renderFileLists();
+          } else if (action === 'delete-folder') {
+            const folder = actionBtn.dataset.clFolder;
+            if (folder) this.deleteFolder(folder);
+          } else if (action === 'rename-folder') {
+            const folder = actionBtn.dataset.clFolder;
+            if (folder) {
+              const newName = typeof window !== 'undefined' && window.prompt ? window.prompt('New folder name:', folder) : null;
+              if (newName && newName.trim() && newName.trim() !== folder) {
+                this.renameFolder(folder, newName.trim());
+              }
+            }
+          } else if (action === 'toggle-folder') {
+            const folder = actionBtn.dataset.clFolder || (actionBtn.closest('[data-cl-folder]')?.dataset.clFolder);
+            if (folder) this.toggleFolder(folder);
           } else if (action === 'toggle-guide') {
-            const shell = this.container.querySelector('.codelab');
-            if (shell) shell.classList.toggle('guide-collapsed');
-            if (this.editor) setTimeout(() => this.editor.layout(), 50);
+            this.toggleGuide();
           } else if (action === 'toggle-drawer') {
             const drawer = this.container.querySelector('#cl-drawer');
             if (drawer) drawer.classList.toggle('is-minimized');
@@ -7727,6 +8407,14 @@ declare module 'buffer' { export { Buffer }; }
             const box = this.container.querySelector('#cl-hint-box');
             if (box) box.classList.toggle('open');
           }
+          return;
+        }
+
+        const folderItem = e.target.closest('.codelab-folder-item');
+        if (folderItem && !e.target.closest('.codelab-node-action, [data-cl-action]')) {
+          const folder = folderItem.dataset.clFolder;
+          if (folder) this.toggleFolder(folder);
+          return;
         }
       });
     }
@@ -7832,8 +8520,13 @@ declare module 'buffer' { export { Buffer }; }
     }
 
     openFile(filename, symbolToFind = '') {
-      if (!this.files[filename]) return;
+      if (!this.files || this.files[filename] === undefined) return;
+      if (!Array.isArray(this.openTabs)) this.openTabs = [];
+      if (!this.openTabs.includes(filename)) {
+        this.openTabs.push(filename);
+      }
       this.activeFile = filename;
+      this._saveState();
       this._syncActiveFileToView();
 
       if (symbolToFind && this.editor && this.monaco) {
@@ -7872,6 +8565,7 @@ declare module 'buffer' { export { Buffer }; }
       if (this.mode === newMode) return;
       this.mode = newMode;
       this.files = this._computeInitialFiles();
+      this.openTabs = this._orderedFileNames();
       this.activeFile = this._pickDefaultFile();
       this._saveState();
 
@@ -7880,6 +8574,19 @@ declare module 'buffer' { export { Buffer }; }
         btn.classList.toggle('active', isActive);
         btn.setAttribute('aria-selected', String(isActive));
       });
+
+      const primaryBtn = this.container.querySelector('#cl-primary-exec-btn');
+      if (primaryBtn) {
+        if (this.mode === 'guided') {
+          primaryBtn.setAttribute('data-cl-action', 'verify-step');
+          primaryBtn.setAttribute('title', 'Verify Current Step (⌘+Enter)');
+          primaryBtn.innerHTML = `${CL_ICONS.check}<span>Verify Step</span><span class="codelab-btn__kbd">⌘↵</span>`;
+        } else {
+          primaryBtn.setAttribute('data-cl-action', 'run-tests');
+          primaryBtn.setAttribute('title', 'Run Test Suite (⌘+Enter)');
+          primaryBtn.innerHTML = `${CL_ICONS.check}<span>Run Tests</span><span class="codelab-btn__kbd">⌘↵</span>`;
+        }
+      }
 
       this._syncAllModels();
       this._syncActiveFileToView();
@@ -7891,6 +8598,7 @@ declare module 'buffer' { export { Buffer }; }
       if (this.lang === newLang) return;
       this.lang = newLang;
       this.files = this._computeInitialFiles();
+      this.openTabs = this._orderedFileNames();
       this.activeFile = this._pickDefaultFile();
       this._saveState();
 
@@ -7938,7 +8646,18 @@ declare module 'buffer' { export { Buffer }; }
     }
 
     resetLab() {
+      this.completedSteps = new Set();
+      this.folders = new Set();
+      this.collapsedFolders = new Set();
       this.files = this._getBaseFilesForModeAndLang(this.mode, this.lang);
+      for (const filePath of Object.keys(this.files)) {
+        const parts = filePath.split('/');
+        for (let i = 1; i < parts.length; i++) {
+          this.folders.add(parts.slice(0, i).join('/'));
+        }
+      }
+      this.openTabs = this._orderedFileNames();
+      this.activeFile = this._pickDefaultFile();
       const key = `${this.mode}:${this.lang}`;
       if (this.savedState.customFiles) {
         delete this.savedState.customFiles[key];
@@ -7946,6 +8665,7 @@ declare module 'buffer' { export { Buffer }; }
       this._saveState();
       this._syncAllModels();
       this._syncActiveFileToView();
+      this._renderStepPills();
       this.terminalLogs.push({ type: 'system', text: `↺ Reset workspace files to clean ${this.mode} (${this.lang.toUpperCase()}) state.` });
       this._renderDrawerBody();
     }
