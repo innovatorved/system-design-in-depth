@@ -59,10 +59,7 @@
     send_page_view: false // Handled dynamically on SPA route changes by js/analytics.js
   });
 
-  // 5. Cloudflare Web Analytics token placeholder
-  window.CF_BEACON_TOKEN = window.CF_BEACON_TOKEN || '';
-
-  // 6. DOM-dependent initializations before first paint
+  // 5. DOM-dependent initializations before first paint
   document.addEventListener('DOMContentLoaded', () => {
     if (!document.documentElement.classList.contains('no-shell')) {
       document.body.classList.add('view-landing');

@@ -306,25 +306,43 @@ window.App = (() => {
           reader.innerHTML = window.Renderer.renderLesson(currentSlug);
         }
         
-        if (window.Simulators && window.Simulators.getSimulatorForUnit) {
-          const simData = window.Simulators.getSimulatorForUnit(currentSlug);
-          if (simData && simData.sim) {
-            try {
-              const existingSim = reader.querySelector('.sim-card');
-              if (!existingSim && simData.html) {
-                const hook = reader.querySelector('.lesson__body');
-                if (hook) {
+        const handleSimulator = () => {
+          if (window.Simulators && window.Simulators.getSimulatorForUnit) {
+            const simData = window.Simulators.getSimulatorForUnit(currentSlug);
+            if (simData && simData.sim) {
+              try {
+                const placeholder = reader.querySelector(`.sim-card-placeholder[data-sim-slug="${currentSlug}"]`);
+                if (placeholder) {
                   const wrapper = document.createElement('div');
                   wrapper.innerHTML = simData.html;
-                  hook.appendChild(wrapper.firstElementChild || wrapper);
+                  placeholder.replaceWith(wrapper.firstElementChild || wrapper);
+                } else {
+                  const existingSim = reader.querySelector('.sim-card');
+                  if (!existingSim && simData.html) {
+                    const hook = reader.querySelector('.lesson__body') || reader.querySelector('.prose') || reader;
+                    if (hook) {
+                      const wrapper = document.createElement('div');
+                      wrapper.innerHTML = simData.html;
+                      hook.appendChild(wrapper.firstElementChild || wrapper);
+                    }
+                  }
                 }
+                simData.sim.mount(reader);
+                activeSimulator = simData.sim;
+              } catch (err) {
+                console.error('[Simulator mount error]', err);
               }
-              simData.sim.mount(reader);
-              activeSimulator = simData.sim;
-            } catch (err) {
-              console.error('[Simulator mount error]', err);
             }
           }
+        };
+
+        const simFile = window.SIMULATOR_SCRIPT_MAP?.[currentSlug];
+        if (simFile && window.loadScript) {
+          window.loadScript(simFile).then(handleSimulator).catch(err => {
+            console.error('[Failed to load simulator script]', simFile, err);
+          });
+        } else {
+          handleSimulator();
         }
         
         initMermaid();
@@ -375,14 +393,30 @@ window.App = (() => {
         }
         break;
       case 'build':
-        reader.innerHTML = window.Renderer.renderBuild(currentSlug);
-        initMermaid();
-        if (window.Analytics) {
-          const impls = window.IMPLEMENTATIONS_DATA;
-          const build = impls?.[currentSlug];
-          const title = build?.title || currentSlug;
-          window.Analytics.trackPageView(title + ' (Build) | System Design In Depth', '/#build/' + currentSlug, window.location.href);
-          window.Analytics.trackBuildView({ buildId: currentSlug, title });
+        const renderBuildView = () => {
+          reader.innerHTML = window.Renderer.renderBuild(currentSlug);
+          initMermaid();
+          const sidebarContent = document.getElementById('sidebar-content');
+          if (activeTab === 'builds' && sidebarContent) {
+            renderBuildsSidebar(sidebarContent);
+          }
+          if (window.Analytics) {
+            const impls = window.IMPLEMENTATIONS_DATA;
+            const build = impls?.[currentSlug];
+            const title = build?.title || currentSlug;
+            window.Analytics.trackPageView(title + ' (Build) | System Design In Depth', '/#build/' + currentSlug, window.location.href);
+            window.Analytics.trackBuildView({ buildId: currentSlug, title });
+          }
+        };
+
+        if ((!window.IMPLEMENTATIONS_DATA || !window.IMPLEMENTATIONS_DATA[currentSlug]) && window.loadScript) {
+          reader.innerHTML = '<div class="prose"><p style="padding:2rem 0;color:var(--fg-muted);">Loading implementation code...</p></div>';
+          window.loadScript('data/implementations_code.js').then(renderBuildView).catch(err => {
+            console.error('[Failed to load implementations code]', err);
+            reader.innerHTML = '<div class="prose"><p>Error loading implementation code.</p></div>';
+          });
+        } else {
+          renderBuildView();
         }
         break;
     }
@@ -489,7 +523,15 @@ window.App = (() => {
 
   function renderBuildsSidebar(container) {
     const impls = window.IMPLEMENTATIONS_DATA;
-    if (!impls) { container.innerHTML = '<p style="padding:16px;color:var(--fg-muted)">Loading...</p>'; return; }
+    if (!impls) {
+      container.innerHTML = '<p style="padding:16px;color:var(--fg-muted)">Loading builds...</p>';
+      if (window.loadScript) {
+        window.loadScript('data/implementations_code.js').then(() => {
+          renderBuildsSidebar(container);
+        });
+      }
+      return;
+    }
 
     let html = '<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">From-Scratch Builds</div>';
 
@@ -797,7 +839,25 @@ window.App = (() => {
     }
   }
 
+  function attachMermaidAccessibility() {
+    const diagrams = document.querySelectorAll('.mermaid');
+    const topicTitleEl = document.querySelector('.lesson-header__title');
+    const topicTitle = topicTitleEl ? topicTitleEl.textContent.trim() : 'System Architecture';
+    diagrams.forEach(el => {
+      const svg = el.querySelector('svg');
+      if (svg) {
+        if (!svg.hasAttribute('role')) {
+          svg.setAttribute('role', 'img');
+        }
+        if (!svg.hasAttribute('aria-label')) {
+          svg.setAttribute('aria-label', `System Architecture Diagram for ${topicTitle}`);
+        }
+      }
+    });
+  }
+
   function attachMermaidZoomControls() {
+    attachMermaidAccessibility();
     const diagrams = document.querySelectorAll('.mermaid');
     diagrams.forEach(el => {
       const svg = el.querySelector('svg');

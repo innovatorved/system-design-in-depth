@@ -1,0 +1,22 @@
+name: Weekly Scheduled Link and Video Check
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Runs every Sunday at 00:00 UTC
+  workflow_dispatch:     # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  check-links-and-videos:
+    name: Check Links and Video Embeds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run link and video verification script
+        run: node tools/check-links-and-videos.js

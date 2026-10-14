@@ -150,21 +150,46 @@ for (const dir of ['data/content', 'data/archive', 'data/questions']) {
 }
 
 // 3. Load Simulators & Rendering Engines
-for (const s of [
+const simulatorFiles = [
   'js/simulators.js',
   'js/simulators-extra.js',
   'js/simulators-advanced.js',
   'js/simulators-distributed.js',
   'js/simulators-ops.js',
-  'js/simulators-data.js',
-  'js/exercises.js',
-  'js/quiz.js',
-  'js/renderer.js'
-]) {
+  'js/simulators-data.js'
+];
+
+const slugToSimFile = {};
+
+for (const sFile of simulatorFiles) {
+  const p = path.join(root, sFile);
+  if (fs.existsSync(p)) {
+    const beforeKeys = Object.keys(context.window.SIMULATORS);
+    vm.runInNewContext(fs.readFileSync(p, 'utf8'), context);
+    const afterKeys = Object.keys(context.window.SIMULATORS);
+    const newKeys = afterKeys.filter(k => !beforeKeys.includes(k));
+    for (const simKey of newKeys) {
+      const sim = context.window.SIMULATORS[simKey];
+      if (sim && Array.isArray(sim.slugs)) {
+        for (const slug of sim.slugs) {
+          slugToSimFile[slug] = sFile;
+        }
+      }
+    }
+  }
+}
+
+for (const s of ['js/exercises.js', 'js/quiz.js', 'js/renderer.js']) {
   const p = path.join(root, s);
   if (fs.existsSync(p)) {
     vm.runInNewContext(fs.readFileSync(p, 'utf8'), context);
   }
+}
+
+function stripScriptTag(html, scriptPath) {
+  const escaped = scriptPath.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+  const regex = new RegExp("^[ \\t]*<script\\b[^>]*src=[\x27\"]" + escaped + "(?:\\?[^\x27\"]*)?[\x27\"][^>]*>\\s*</script>\\n?", "gm");
+  return html.replace(regex, "");
 }
 
 function renderStaticSidebar(curriculum, currentSlug) {
@@ -298,8 +323,25 @@ for (const { unit, mod } of units) {
     /<meta\s+property="og:url"\s+content="[^"]*">/i,
     `<meta property="og:url" content="${canonicalUrl}">`
   );
+  if (/<meta\s+property="og:image"/i.test(page)) {
+    page = page.replace(
+      /<meta\s+property="og:image"\s+content="[^"]*">/i,
+      `<meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+    );
+  } else {
+    page = page.replace(
+      /<meta\s+property="og:url"\s+content="[^"]*">/i,
+      `<meta property="og:url" content="${canonicalUrl}">\n  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+    );
+  }
 
   // Replace Twitter Card
+  if (/<meta\s+name="twitter:card"/i.test(page)) {
+    page = page.replace(
+      /<meta\s+name="twitter:card"\s+content="[^"]*">/i,
+      `<meta name="twitter:card" content="summary_large_image">`
+    );
+  }
   page = page.replace(
     /<meta\s+name="twitter:title"\s+content="[^"]*">/i,
     `<meta name="twitter:title" content="${escapeAttr(title)}">`
@@ -308,6 +350,17 @@ for (const { unit, mod } of units) {
     /<meta\s+name="twitter:description"\s+content="[^"]*">/i,
     `<meta name="twitter:description" content="${escapeAttr(desc)}">`
   );
+  if (/<meta\s+name="twitter:image"/i.test(page)) {
+    page = page.replace(
+      /<meta\s+name="twitter:image"\s+content="[^"]*">/i,
+      `<meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+    );
+  } else {
+    page = page.replace(
+      /<meta\s+name="twitter:description"\s+content="[^"]*">/i,
+      `<meta name="twitter:description" content="${escapeAttr(desc)}">\n  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+    );
+  }
 
   // JSON-LD TechArticle Structured Data
   const jsonLd = {
@@ -343,6 +396,17 @@ for (const { unit, mod } of units) {
     /<div class="main__content" id="reader">[\s\S]*?<\/div>(\s*<\/main>)/i,
     `<div class="main__content" id="reader" data-prerendered="${slug}">\n${lessonHtml}\n    </div>$1`
   );
+
+  // Strip implementation code data script from static topic HTML
+  page = stripScriptTag(page, 'data/implementations_code.js');
+
+  // Strip unused simulator scripts for this unit slug
+  const neededSimFile = slugToSimFile[slug];
+  for (const sFile of simulatorFiles) {
+    if (sFile !== neededSimFile) {
+      page = stripScriptTag(page, sFile);
+    }
+  }
 
   // Write file to topic/<slug>/index.html
   const topicDir = path.join(root, 'topic', slug);

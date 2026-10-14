@@ -34,7 +34,7 @@ window.SIMULATORS = window.SIMULATORS || {};
           <p class="simulator-card__description">Simulate request routing across 4 shard buckets. Adjust skew to see the impact of hot partitions.</p>
           <div class="simulator-card__grid" style="grid-template-columns: 1fr 1fr;">
             <div>
-              <label class="simulator-card__label">Skew (Zipf α: <span id="hp-skew-val">0.0</span>)</label>
+              <label class="simulator-card__label" for="hp-skew">Skew (Zipf α: <span id="hp-skew-val">0.0</span>)</label>
               <input type="range" id="hp-skew" min="0" max="2.5" step="0.1" value="0.0" style="width:100%">
             </div>
             <div style="display:flex; align-items:flex-end;">
@@ -141,11 +141,11 @@ window.SIMULATORS = window.SIMULATORS || {};
           </div>
           <div class="simulator-card__grid" style="grid-template-columns: 1fr 1fr;">
             <div>
-              <label class="simulator-card__label">Arrival Rate (req/s): <span id="ql-arr-val">10</span></label>
+              <label class="simulator-card__label" for="ql-arr">Arrival Rate (req/s): <span id="ql-arr-val">10</span></label>
               <input type="range" id="ql-arr" min="1" max="50" step="1" value="10" style="width:100%">
             </div>
             <div>
-              <label class="simulator-card__label">Service Rate (req/s): <span id="ql-srv-val">12</span></label>
+              <label class="simulator-card__label" for="ql-srv">Service Rate (req/s): <span id="ql-srv-val">12</span></label>
               <input type="range" id="ql-srv" min="1" max="50" step="1" value="12" style="width:100%">
             </div>
           </div>
@@ -266,11 +266,11 @@ window.SIMULATORS = window.SIMULATORS || {};
           
           <div class="simulator-card__grid" style="grid-template-columns: 1fr 1fr;">
             <div>
-              <label class="simulator-card__label">Simulated Error Rate: <span id="cb-err-val">10%</span></label>
+              <label class="simulator-card__label" for="cb-err">Simulated Error Rate: <span id="cb-err-val">10%</span></label>
               <input type="range" id="cb-err" min="0" max="100" step="5" value="10" style="width:100%">
             </div>
             <div>
-              <label class="simulator-card__label">Trip Threshold: <span id="cb-thr-val">50%</span></label>
+              <label class="simulator-card__label" for="cb-thr">Trip Threshold: <span id="cb-thr-val">50%</span></label>
               <input type="range" id="cb-thr" min="10" max="100" step="10" value="50" style="width:100%">
             </div>
           </div>
@@ -407,7 +407,7 @@ window.SIMULATORS = window.SIMULATORS || {};
           </div>
           <div class="simulator-card__grid" style="grid-template-columns: 1fr 1fr;">
             <div>
-              <label class="simulator-card__label">Strategy</label>
+              <label class="simulator-card__label" for="rs-strat">Strategy</label>
               <select id="rs-strat" class="simulator-card__input" style="width:100%; padding:8px; border-radius:4px; border:1px solid var(--border); background:var(--bg-input); color:var(--text);">
                 <option value="immediate">Immediate Retry (Storm)</option>
                 <option value="exp">Exponential Backoff</option>
@@ -573,11 +573,11 @@ window.SIMULATORS = window.SIMULATORS || {};
           </div>
           <div class="simulator-card__grid">
             <div>
-              <label class="simulator-card__label">Unique Items to Stream:</label>
+              <label class="simulator-card__label" for="hll-items">Unique Items to Stream:</label>
               <input type="number" id="hll-items" value="10000" step="1000" class="simulator-card__input" style="width:100%">
             </div>
             <div>
-              <label class="simulator-card__label">Registers (m):</label>
+              <label class="simulator-card__label" for="hll-m">Registers (m):</label>
               <select id="hll-m" class="simulator-card__input" style="width:100%">
                 <option value="16">16 (low acc)</option>
                 <option value="64">64</option>
@@ -860,11 +860,11 @@ window.SIMULATORS = window.SIMULATORS || {};
           </div>
           <div class="simulator-card__grid" style="grid-template-columns: 1fr;">
             <div>
-              <label class="simulator-card__label">Arrival Rate / Throughput λ: <span id="ll-lam-val">100</span> req/s</label>
+              <label class="simulator-card__label" for="ll-lam">Arrival Rate / Throughput λ: <span id="ll-lam-val">100</span> req/s</label>
               <input type="range" id="ll-lam" min="10" max="1000" step="10" value="100" style="width:100%">
             </div>
             <div>
-              <label class="simulator-card__label">Average Latency W: <span id="ll-w-val">50</span> ms</label>
+              <label class="simulator-card__label" for="ll-w">Average Latency W: <span id="ll-w-val">50</span> ms</label>
               <input type="range" id="ll-w" min="1" max="1000" step="10" value="50" style="width:100%">
             </div>
           </div>

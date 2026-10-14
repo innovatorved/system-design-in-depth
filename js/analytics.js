@@ -20,29 +20,6 @@ window.Analytics = (() => {
   }
 
   /**
-   * Cloudflare Web Analytics initialization (beacon.min.js)
-   * Supports automatic injection by Cloudflare Pages/proxy or explicit token via window.CF_BEACON_TOKEN.
-   */
-  let cfBeaconInjected = false;
-  function initCloudflareAnalytics() {
-    if (cfBeaconInjected || document.querySelector('script[src*="cloudflareinsights.com/beacon"]')) {
-      return;
-    }
-    const token = window.CF_BEACON_TOKEN;
-    if (token) {
-      cfBeaconInjected = true;
-      const script = document.createElement('script');
-      script.defer = true;
-      script.src = 'https://static.cloudflareinsights.com/beacon.min.js';
-      script.setAttribute('data-cf-beacon', JSON.stringify({ token: token, spa: true }));
-      document.head.appendChild(script);
-      if (window.SD_ANALYTICS_DEBUG) {
-        console.log('⚡ [Cloudflare Analytics] Beacon loaded with token:', token);
-      }
-    }
-  }
-
-  /**
    * Safe event dispatching to GA4 (gtag.js / dataLayer)
    */
   function trackEvent(eventName, params = {}) {
@@ -237,15 +214,22 @@ window.Analytics = (() => {
     });
   }
 
-  function trackSearchQuery(query, resultCount) {
-    if (!query || query.trim().length < 2) return;
+  function trackSearch(query, resultCount = 0, trigger = 'input') {
+    if (!query || String(query).trim().length < 2) return;
+    if (trigger !== 'submit' && trigger !== 'select') return;
+
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => {
       trackEvent('search', {
-        search_term: query.trim(),
-        results_count: resultCount
+        search_term: String(query).trim(),
+        results_count: resultCount,
+        trigger: trigger
       });
-    }, 600);
+    }, 300);
+  }
+
+  function trackSearchQuery(query, resultCount, trigger = 'input') {
+    trackSearch(query, resultCount, trigger);
   }
 
   function trackSearchResultClick({ query, slug, title, position }) {
@@ -255,6 +239,7 @@ window.Analytics = (() => {
       selected_title: title,
       result_position: position
     });
+    trackSearch(query, 1, 'select');
   }
 
   /**
@@ -394,8 +379,16 @@ window.Analytics = (() => {
    * Setup global automatic event delegation
    */
   function init() {
-    // Initialize Cloudflare Web Analytics beacon if configured
-    initCloudflareAnalytics();
+    // Listen for Enter key submit on search input
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const input = document.getElementById('search-input');
+        if (input && document.activeElement === input && input.value.trim().length >= 2) {
+          const results = document.querySelectorAll('.search-result');
+          trackSearch(input.value, results.length, 'submit');
+        }
+      }
+    });
 
     // Scroll depth tracking with throttling
     let scrollThrottle = null;
@@ -491,6 +484,7 @@ window.Analytics = (() => {
     trackAudioSpeedChange,
     trackAudioComplete,
     trackSearchOpen,
+    trackSearch,
     trackSearchQuery,
     trackSearchResultClick,
     trackDiagramOpen,

@@ -583,12 +583,12 @@ window.MODULE_CONTENT["learning-apis-services"] = {
     },
     "videos": [
       {
-        "youtubeId": "XNEIkivvaV4",
-        "title": "DevOneConf 2018 - Acacio Cruz - Google - Load-shedding",
-        "channel": "DevOne",
+        "youtubeId": "YXkOdWBwqaA",
+        "title": "Rate Limiter System Design: Token Bucket, Leaky Bucket, Scaling",
+        "channel": "ByteByteGo",
         "role": "deep-dive",
-        "why": "A Google SRE perspective on load shedding: criticality classes, rejecting at the right layer and graceful degradation.",
-        "length": "42:43"
+        "why": "A clear architectural breakdown of rate limiting algorithms, token bucket, leaky bucket, and handling traffic spikes with load shedding.",
+        "length": "10:15"
       },
       {
         "youtubeId": "8iMlUcmyHAc",

@@ -42,7 +42,7 @@ Most system design materials are either high-level cheat sheets for interviews o
 
 ---
 
-## Curriculum Overview (6 Tracks, 200 Units)
+## Curriculum Overview (6 Tracks, 18 Modules, 200 Units)
 
 The curriculum is structured into **6 core engineering tracks** following strict conceptual prerequisites:
 

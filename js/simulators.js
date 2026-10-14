@@ -27,19 +27,19 @@ window.Simulators = (() => {
   
           <div class="simulator-card__grid">
             <div>
-              <label class="simulator-card__label">DAILY ACTIVE USERS (DAU)</label>
+              <label class="simulator-card__label" for="cap-dau">DAILY ACTIVE USERS (DAU)</label>
               <input type="number" id="cap-dau" value="50000000" step="1000000" class="simulator-card__input" data-sim-input="capacity">
             </div>
             <div>
-              <label class="simulator-card__label">READS PER USER / DAY</label>
+              <label class="simulator-card__label" for="cap-reads">READS PER USER / DAY</label>
               <input type="number" id="cap-reads" value="20" step="1" class="simulator-card__input" data-sim-input="capacity">
             </div>
             <div>
-              <label class="simulator-card__label">WRITES PER USER / DAY</label>
+              <label class="simulator-card__label" for="cap-writes">WRITES PER USER / DAY</label>
               <input type="number" id="cap-writes" value="2" step="1" class="simulator-card__input" data-sim-input="capacity">
             </div>
             <div>
-              <label class="simulator-card__label">PAYLOAD SIZE (KB)</label>
+              <label class="simulator-card__label" for="cap-payload">PAYLOAD SIZE (KB)</label>
               <input type="number" id="cap-payload" value="100" step="10" class="simulator-card__input" data-sim-input="capacity">
             </div>
           </div>

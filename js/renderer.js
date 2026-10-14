@@ -2,6 +2,119 @@
    Renderer — Content rendering for lessons, builds, and overview
    ═══════════════════════════════════════════════════════════════ */
 
+window.loadScript = window.loadScript || function loadScript(src) {
+  const baseSrc = src.split('?')[0];
+  window._loadedScripts = window._loadedScripts || {};
+  if (window._loadedScripts[baseSrc]) {
+    return Promise.resolve();
+  }
+
+  const activeScripts = Array.from(document.querySelectorAll('script[src]')).filter(s => s.getAttribute('type') !== 'text/plain');
+  const existingActive = activeScripts.find(s => {
+    const sSrc = s.getAttribute('src') || '';
+    return sSrc === src || sSrc.split('?')[0] === baseSrc;
+  });
+
+  if (existingActive) {
+    if (existingActive.dataset.loaded === 'true') {
+      window._loadedScripts[baseSrc] = true;
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      existingActive.addEventListener('load', () => {
+        existingActive.dataset.loaded = 'true';
+        window._loadedScripts[baseSrc] = true;
+        resolve();
+      }, { once: true });
+      existingActive.addEventListener('error', reject, { once: true });
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    const versionedSrc = (src.includes('?') || !window.ASSET_VERSION) ? src : `${src}?v=${window.ASSET_VERSION}`;
+    s.src = versionedSrc;
+    s.onload = () => {
+      s.dataset.loaded = 'true';
+      window._loadedScripts[baseSrc] = true;
+      resolve();
+    };
+    s.onerror = (e) => reject(e);
+    document.body.appendChild(s);
+  });
+};
+
+window.SIMULATOR_SCRIPT_MAP = {
+  "back-of-the-envelope-capacity-planning": "js/simulators.js",
+  "consistent-hashing-load-balancing": "js/simulators.js",
+  "consistent-hashing": "js/simulators.js",
+  "range-partitioning-vs-consistent-hashing-storage": "js/simulators.js",
+  "sliding-window-rate-limiter": "js/simulators.js",
+  "rate-limiting-and-abuse-prevention-case-study": "js/simulators.js",
+  "rate-limiter-placement-and-keys": "js/simulators.js",
+  "cache-eviction-policies": "js/simulators-extra.js",
+  "tail-latency": "js/simulators-extra.js",
+  "non-functional-requirements": "js/simulators-extra.js",
+  "feed-generation-push-pull-hybrid": "js/simulators-extra.js",
+  "fanout-patterns": "js/simulators-extra.js",
+  "social-feed-system-design-case-study": "js/simulators-extra.js",
+  "replication": "js/simulators-extra.js",
+  "consistency-models": "js/simulators-extra.js",
+  "cap-and-pacelc": "js/simulators-extra.js",
+  "consensus": "js/simulators-extra.js",
+  "leader-election": "js/simulators-extra.js",
+  "bloom-filters": "js/simulators-extra.js",
+  "seen-filtering-bloom-vs-exact-sets": "js/simulators-extra.js",
+  "lsm-read-path-bloom-and-sparse-index": "js/simulators-extra.js",
+  "lsm-tree-storage-engine": "js/simulators-extra.js",
+  "b-tree": "js/simulators-extra.js",
+  "memtable-wal-and-sstable": "js/simulators-extra.js",
+  "compaction-and-amplification": "js/simulators-extra.js",
+  "storage-engine-tradeoffs": "js/simulators-extra.js",
+  "sharding-and-partitioning": "js/simulators-advanced.js",
+  "hot-partitions": "js/simulators-advanced.js",
+  "queue-lag": "js/simulators-advanced.js",
+  "backpressure": "js/simulators-advanced.js",
+  "partitioned-log-system-design": "js/simulators-advanced.js",
+  "circuit-breakers-and-timeouts": "js/simulators-advanced.js",
+  "cache-availability-and-database-fallback": "js/simulators-advanced.js",
+  "retries-timeouts-idempotency": "js/simulators-advanced.js",
+  "geohash-prefix-spatial-index": "js/simulators-advanced.js",
+  "geospatial-grid-systems-h3-s2-geohash": "js/simulators-advanced.js",
+  "nearby-geospatial-search-system-design": "js/simulators-advanced.js",
+  "hyperloglog-cardinality-estimation": "js/simulators-advanced.js",
+  "view-counting-at-scale": "js/simulators-advanced.js",
+  "bm25-production-ranking": "js/simulators-advanced.js",
+  "tf-idf-relevance-scoring": "js/simulators-advanced.js",
+  "inverted-index-and-posting-lists": "js/simulators-advanced.js",
+  "collaborative-editing-system-design": "js/simulators-advanced.js",
+  "concurrency-vs-parallelism": "js/simulators-advanced.js",
+  "load-shedding": "js/simulators-advanced.js",
+  "case-amazon-dynamo": "js/simulators-distributed.js",
+  "clocks-and-ordering": "js/simulators-distributed.js",
+  "clock-skew-and-id-ordering": "js/simulators-distributed.js",
+  "count-min-sketch": "js/simulators-distributed.js",
+  "top-k-heavy-hitters": "js/simulators-distributed.js",
+  "gossip-protocol": "js/simulators-distributed.js",
+  "load-balancers": "js/simulators-ops.js",
+  "api-gateway-vs-load-balancer": "js/simulators-ops.js",
+  "cache-concurrency-control": "js/simulators-ops.js",
+  "ttl-expiration-and-cache-reapers": "js/simulators-ops.js",
+  "snowflake-id-design": "js/simulators-ops.js",
+  "uuid-objectid-and-snowflake": "js/simulators-ops.js",
+  "distributed-id-generation": "js/simulators-ops.js",
+  "slos-and-error-budgets": "js/simulators-ops.js",
+  "observability-slo-case-study": "js/simulators-ops.js",
+  "mvcc": "js/simulators-data.js",
+  "database-locking-and-isolation": "js/simulators-data.js",
+  "adaptive-bitrate-and-cdn-decider": "js/simulators-data.js",
+  "video-transcoding-pipeline": "js/simulators-data.js",
+  "ray-casting-point-in-polygon": "js/simulators-data.js",
+  "geofencing-point-in-polygon": "js/simulators-data.js",
+  "database-wal-and-recovery": "js/simulators-data.js",
+  "disaster-recovery": "js/simulators-data.js"
+};
+
 window.Renderer = (() => {
   // SVG Icons
   const icons = {
@@ -265,7 +378,13 @@ window.Renderer = (() => {
     // Interactive Visual Simulator (if applicable for unit)
     if (window.Simulators && window.Simulators.getSimulatorForUnit) {
       const simData = window.Simulators.getSimulatorForUnit(slug);
-      if (simData) html += simData.html;
+      if (simData) {
+        html += simData.html;
+      } else if (window.SIMULATOR_SCRIPT_MAP?.[slug]) {
+        html += `<div class="sim-card-placeholder" data-sim-slug="${slug}"></div>`;
+      }
+    } else if (window.SIMULATOR_SCRIPT_MAP?.[slug]) {
+      html += `<div class="sim-card-placeholder" data-sim-slug="${slug}"></div>`;
     }
 
     // Interactive Practice / Challenge Exercise
@@ -495,7 +614,7 @@ window.Renderer = (() => {
     const cards = videos.filter(v => v?.youtubeId).map(renderMoreVideoCard).join('');
     return cards ? `
       <div class="video-more">
-        <h3 class="video-more__heading">More videos on this topic</h3>
+        <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">${cards}</div>
       </div>` : '';
   }
@@ -939,12 +1058,13 @@ window.Renderer = (() => {
     const isPinned = project.pinned;
     const hasLive = Boolean(project.liveUrl);
     const tagsHtml = (project.tags || []).slice(0, 5).map(t => `<span class="project-card__tag">${escapeHtml(t)}</span>`).join('');
+    const safeName = escapeAttr(project.name);
 
     return `
       <div class="project-card" id="project-${project.id}" data-project-id="${project.id}">
         <div class="project-card__top">
           <div class="project-card__title-group">
-            <a href="${project.githubUrl}" target="_blank" rel="noopener noreferrer" class="project-card__title-link" data-repo-placement="card_title">
+            <a href="${project.githubUrl}" target="_blank" rel="noopener noreferrer" class="project-card__title-link" aria-label="${safeName} repository" data-repo-placement="card_title">
               <h3 class="project-card__title">${escapeHtml(project.name)}</h3>
             </a>
             ${project.title ? `<span class="project-card__subtitle">· ${escapeHtml(project.title)}</span>` : ''}
@@ -969,13 +1089,13 @@ window.Renderer = (() => {
           </div>
 
           <div class="project-card__actions">
-            <a href="${project.githubUrl}" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--secondary project-card__btn" data-repo-placement="card_footer_github">
+            <a href="${project.githubUrl}" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--secondary project-card__btn" aria-label="${safeName} GitHub repository" data-repo-placement="card_footer_github">
               ${icons.github}
               <span>GitHub</span>
               ${icons.external}
             </a>
             ${hasLive ? `
-              <a href="${project.liveUrl}" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--primary project-card__btn" data-repo-placement="card_footer_demo">
+              <a href="${project.liveUrl}" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--primary project-card__btn" aria-label="${safeName} live demo" data-repo-placement="card_footer_demo">
                 ${icons.globe}
                 <span>Live Demo</span>
                 ${icons.external}
@@ -1008,11 +1128,9 @@ window.Renderer = (() => {
           <span class="lesson-header__kind lesson-header__kind--build">${icons.code} Open Source</span>
           <span class="tag">${projects.length} Repos</span>
         </div>
-        <h1 class="lesson-header__title">Projects</h1>
+        <h1 class="lesson-header__title">System Design Projects &amp; Architecture Case Studies</h1>
         <div class="lesson-header__actions" style="margin-top: var(--space-3); display: flex; gap: var(--space-3); flex-wrap: wrap;">
           <a href="/" data-nav="home" class="btn btn--sm btn--secondary">
-            <span>← Back to Curriculum</span>
-          </a>
         </div>
       </div>
 

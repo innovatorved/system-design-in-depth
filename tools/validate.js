@@ -207,6 +207,71 @@ if (validFurtherReading === unitsCount) {
     reportSuccess(`Further reading: ${validFurtherReading}/${unitsCount} units have 2-4 items`);
 }
 
+// Internal Link Validation Check
+let internalLinkErrors = 0;
+let internalLinksChecked = 0;
+let legacyWikiLinks = 0;
+
+function checkInternalLinks(str, sourceLabel) {
+  if (typeof str !== 'string') return;
+
+  // 1. Markdown links: [text](/topic/slug) or [text](/wiki/slug)
+  const mdRegex = /\[([^\]]+)\]\((?:\/(?:topic|wiki)\/)([^/#?)\s]+)\/?\)/g;
+  let match;
+  while ((match = mdRegex.exec(str)) !== null) {
+    internalLinksChecked++;
+    const fullLink = match[0];
+    const targetSlug = match[2];
+    if (fullLink.includes('/wiki/')) {
+      reportError(`${sourceLabel}: legacy /wiki/ markdown link found: '${fullLink}'`);
+      legacyWikiLinks++;
+    }
+    if (!allSlugs.has(targetSlug)) {
+      reportError(`${sourceLabel}: broken internal link target '${targetSlug}' in markdown link '${fullLink}'`);
+      internalLinkErrors++;
+    }
+  }
+
+  // 2. HTML links: <a href="/topic/slug"> or href="/wiki/slug"
+  const htmlRegex = /href=\\?["'](?:\/(?:topic|wiki)\/)([^/#?"'\\]+)\/?\\?["']/g;
+  while ((match = htmlRegex.exec(str)) !== null) {
+    internalLinksChecked++;
+    const fullLink = match[0];
+    const targetSlug = match[1];
+    if (fullLink.includes('/wiki/')) {
+      reportError(`${sourceLabel}: legacy /wiki/ HTML link found: '${fullLink}'`);
+      legacyWikiLinks++;
+    }
+    if (!allSlugs.has(targetSlug)) {
+      reportError(`${sourceLabel}: broken internal link target '${targetSlug}' in HTML link '${fullLink}'`);
+      internalLinkErrors++;
+    }
+  }
+
+  // 3. Wikilinks: [[wiki/slug]] or [[wiki/slug|label]]
+  const wikiRegex = /\[\[wiki\/([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+  while ((match = wikiRegex.exec(str)) !== null) {
+    internalLinksChecked++;
+    const fullLink = match[0];
+    const targetSlug = match[1];
+    if (!allSlugs.has(targetSlug)) {
+      reportError(`${sourceLabel}: broken internal wikilink target '${targetSlug}' in '${fullLink}'`);
+      internalLinkErrors++;
+    }
+  }
+}
+
+checkInternalLinks(JSON.stringify(curriculum), 'data/curriculum.js');
+
+for (const [modId, units] of Object.entries(moduleContent)) {
+  for (const [unitSlug, unitData] of Object.entries(units)) {
+    checkInternalLinks(JSON.stringify(unitData), `data/content/${modId}.js (${unitSlug})`);
+  }
+}
+
+if (internalLinkErrors === 0 && legacyWikiLinks === 0) {
+  reportSuccess(`Internal links: ${internalLinksChecked} internal links verified against valid curriculum slugs`);
+}
 
 // Question bank files
 const questionsDir = path.join(dataDir, 'questions');
@@ -332,6 +397,70 @@ if (fs.existsSync(sitemapFile)) {
   }
 } else {
   reportError('sitemap.xml not found');
+}
+
+// 5. OpenGraph Image & 203-Page Metadata / H1 Uniqueness Check
+const ogImagePath = path.join(__dirname, '..', 'assets', 'og-image.png');
+if (!fs.existsSync(ogImagePath)) {
+  reportError('Missing OpenGraph image: assets/og-image.png');
+} else {
+  reportSuccess('OpenGraph image: assets/og-image.png exists');
+}
+
+const allHtmlFiles = [
+  'index.html',
+  '404.html',
+  'projects/index.html',
+  ...Array.from(allSlugs).map(s => `topic/${s}/index.html`)
+];
+const seenTitles = new Map();
+const seenDescs = new Map();
+let metaErrors = 0;
+
+for (const relPath of allHtmlFiles) {
+  const fullPath = path.join(__dirname, '..', relPath);
+  if (!fs.existsSync(fullPath)) continue;
+  const html = fs.readFileSync(fullPath, 'utf8');
+
+  const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+  const descMatch = html.match(/<meta\s+name="description"\s+content="([^"]+)"/i);
+  const ogImgMatch = html.match(/<meta\s+property="og:image"\s+content="https:\/\/system-design-in-depth\.vedgupta\.in\/assets\/og-image\.png"/i);
+  const twImgMatch = html.match(/<meta\s+name="twitter:image"\s+content="https:\/\/system-design-in-depth\.vedgupta\.in\/assets\/og-image\.png"/i);
+  const h1Count = (html.match(/<h1[\s>]/gi) || []).length;
+
+  if (!titleMatch) {
+    reportError(`${relPath}: missing <title>`);
+    metaErrors++;
+  } else if (seenTitles.has(titleMatch[1])) {
+    reportError(`${relPath}: duplicate <title> with ${seenTitles.get(titleMatch[1])}`);
+    metaErrors++;
+  } else {
+    seenTitles.set(titleMatch[1], relPath);
+  }
+
+  if (!descMatch) {
+    reportError(`${relPath}: missing <meta name="description">`);
+    metaErrors++;
+  } else if (seenDescs.has(descMatch[1])) {
+    reportError(`${relPath}: duplicate <meta name="description"> with ${seenDescs.get(descMatch[1])}`);
+    metaErrors++;
+  } else {
+    seenDescs.set(descMatch[1], relPath);
+  }
+
+  if (!ogImgMatch || !twImgMatch) {
+    reportError(`${relPath}: missing absolute og:image or twitter:image tag`);
+    metaErrors++;
+  }
+
+  if (h1Count !== 1) {
+    reportError(`${relPath}: expected exactly 1 <h1> tag, found ${h1Count}`);
+    metaErrors++;
+  }
+}
+
+if (metaErrors === 0) {
+  reportSuccess(`Metadata & H1: all ${allHtmlFiles.length} pages have unique <title>, unique description, 1 <h1>, and og:image`);
 }
 
 console.log(`\n${errorCount} errors, ${warningCount} warnings`);

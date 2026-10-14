@@ -28,15 +28,83 @@ window.Progress = (() => {
 
   // ── Persistence ──────────────────────────────────────────
 
+  function validateAndSanitize(parsed) {
+    const def = defaultState();
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return def;
+    }
+
+    const clean = { ...def };
+
+    if (Array.isArray(parsed.completed)) {
+      clean.completed = parsed.completed.filter(item => typeof item === 'string' && item.trim().length > 0);
+    }
+    if (typeof parsed.lastVisited === 'string') {
+      clean.lastVisited = parsed.lastVisited;
+    }
+    if (typeof parsed.startedAt === 'string') {
+      clean.startedAt = parsed.startedAt;
+    }
+    if (parsed.timeOnUnit && typeof parsed.timeOnUnit === 'object' && !Array.isArray(parsed.timeOnUnit)) {
+      const cleanTime = {};
+      for (const [k, v] of Object.entries(parsed.timeOnUnit)) {
+        if (typeof k === 'string' && typeof v === 'number' && !isNaN(v) && v >= 0) {
+          cleanTime[k] = v;
+        }
+      }
+      clean.timeOnUnit = cleanTime;
+    }
+    if (parsed.quiz && typeof parsed.quiz === 'object' && !Array.isArray(parsed.quiz)) {
+      const cleanQuiz = {};
+      for (const [k, v] of Object.entries(parsed.quiz)) {
+        if (typeof k === 'string' && v && typeof v === 'object' && !Array.isArray(v)) {
+          cleanQuiz[k] = {
+            attempts: typeof v.attempts === 'number' && !isNaN(v.attempts) && v.attempts >= 0 ? v.attempts : 0,
+            correct: Boolean(v.correct),
+            lastAt: typeof v.lastAt === 'string' ? v.lastAt : null
+          };
+        }
+      }
+      clean.quiz = cleanQuiz;
+    }
+    if (parsed.srs && typeof parsed.srs === 'object' && !Array.isArray(parsed.srs)) {
+      const cleanSrs = {};
+      for (const [k, v] of Object.entries(parsed.srs)) {
+        if (typeof k === 'string' && v && typeof v === 'object' && !Array.isArray(v)) {
+          cleanSrs[k] = v;
+        }
+      }
+      clean.srs = cleanSrs;
+    }
+    if (parsed.streak && typeof parsed.streak === 'object' && !Array.isArray(parsed.streak)) {
+      clean.streak = {
+        current: typeof parsed.streak.current === 'number' && !isNaN(parsed.streak.current) && parsed.streak.current >= 0 ? parsed.streak.current : 0,
+        longest: typeof parsed.streak.longest === 'number' && !isNaN(parsed.streak.longest) && parsed.streak.longest >= 0 ? parsed.streak.longest : 0,
+        lastActiveDay: typeof parsed.streak.lastActiveDay === 'string' ? parsed.streak.lastActiveDay : null
+      };
+    }
+    if (parsed.notes && typeof parsed.notes === 'object' && !Array.isArray(parsed.notes)) {
+      const cleanNotes = {};
+      for (const [k, v] of Object.entries(parsed.notes)) {
+        if (typeof k === 'string' && typeof v === 'string') {
+          cleanNotes[k] = v;
+        }
+      }
+      clean.notes = cleanNotes;
+    }
+    if (Array.isArray(parsed.bookmarks)) {
+      clean.bookmarks = parsed.bookmarks.filter(item => typeof item === 'string' && item.trim().length > 0);
+    }
+
+    return clean;
+  }
+
   function load() {
     try {
       const raw = localStorage.getItem(V2_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        state = Object.assign(defaultState(), parsed);
-        state.version = 2;
-        if (!Array.isArray(state.completed)) state.completed = [];
-        if (!Array.isArray(state.bookmarks)) state.bookmarks = [];
+        state = validateAndSanitize(parsed);
       } else {
         // Migrate from v1 if it exists
         migrateFromV1();
@@ -51,9 +119,9 @@ window.Progress = (() => {
       const raw = localStorage.getItem(V1_KEY);
       if (!raw) return;
       const v1 = JSON.parse(raw);
-      state.completed = Array.isArray(v1.completed) ? [...v1.completed] : [];
-      state.lastVisited = v1.lastVisited || null;
-      state.startedAt = v1.startedAt || null;
+      state.completed = Array.isArray(v1.completed) ? v1.completed.filter(item => typeof item === 'string') : [];
+      state.lastVisited = typeof v1.lastVisited === 'string' ? v1.lastVisited : null;
+      state.startedAt = typeof v1.startedAt === 'string' ? v1.startedAt : null;
       save();
       // Never delete v1 — keep it as a backup
     } catch {
@@ -279,13 +347,10 @@ window.Progress = (() => {
   function importData(json) {
     try {
       const parsed = JSON.parse(json);
-      if (!parsed || parsed.version !== 2) {
+      if (!parsed || (parsed.version && parsed.version !== 2)) {
         throw new Error('Invalid progress data: expected version 2');
       }
-      if (!Array.isArray(parsed.completed)) {
-        throw new Error('Invalid progress data: completed must be an array');
-      }
-      state = Object.assign(defaultState(), parsed);
+      state = validateAndSanitize(parsed);
       save();
       updateProgressUI();
       return { success: true };
@@ -330,6 +395,10 @@ window.Progress = (() => {
 
   return {
     // v1 API (backward compatible)
+    load,
+    save,
+    loadProgress: load,
+    saveProgress: save,
     isCompleted,
     toggleComplete,
     markComplete,
