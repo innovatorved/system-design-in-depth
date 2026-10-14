@@ -37,7 +37,7 @@ Most system design materials are either high-level cheat sheets for interviews o
 
 - **Zero frameworks, zero build step** — Pure HTML/CSS/JavaScript running statically on any browser or server.
 - **Hands-on exploration** — Every abstract theorem is accompanied by a runnable visual simulator or algorithmic build.
-- **Deep academic & industry grounding** — Over 180 architecture diagrams, concrete failure mode breakdowns, and primary literature citations.
+- **Deep academic & industry grounding** — 200 architecture diagrams, 469 curated YouTube videos, concrete failure mode breakdowns, and primary literature citations.
 - **100% Free & Open Source** — No signup, no paywall, no ads.
 
 ---

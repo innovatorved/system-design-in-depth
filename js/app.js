@@ -473,8 +473,6 @@ window.App = (() => {
       renderCurriculumSidebar(container);
     } else if (activeTab === 'builds') {
       renderBuildsSidebar(container);
-    } else if (activeTab === 'projects') {
-      renderProjectsSidebar(container);
     }
 
     updateSidebarActive();
@@ -541,46 +539,6 @@ window.App = (() => {
         <span class="unit-item__status unit-item__status--${active ? 'active' : 'pending'}">${window.Renderer.icons.code}</span>
         <span class="unit-item__title">${build.title || id.replace(/-/g, ' ')}</span>
       </a>`;
-    }
-
-    container.innerHTML = html;
-  }
-
-  function renderProjectsSidebar(container) {
-    const projects = window.PROJECTS_DATA || [];
-    if (!projects.length) {
-      container.innerHTML = '<p style="padding:16px;color:var(--fg-muted)">Loading...</p>';
-      return;
-    }
-
-    let html = `
-      <div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">
-        <span>Projects</span>
-      </div>
-    `;
-
-    for (const project of projects) {
-      const active = (currentView === 'projects' && currentSlug === project.id);
-      const isPinned = project.pinned;
-      html += `
-        <a class="unit-item project-unit-item${active ? ' active' : ''}" data-project="${project.id}" href="/projects#project-${project.id}">
-          <span class="unit-item__status" style="color: ${isPinned ? 'var(--accent)' : 'var(--fg-muted)'}; display:flex; align-items:center;">
-            ${isPinned ? window.Renderer.icons.pin : window.Renderer.icons.code}
-          </span>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg);">
-              ${project.name}
-            </div>
-            <div style="font-size:10px;color:var(--fg-muted);display:flex;align-items:center;gap:6px;margin-top:2px;">
-              <span style="display:inline-flex;align-items:center;gap:3px;">
-                <span style="width:6px;height:6px;border-radius:50%;background:${project.languageColor || 'var(--accent)'};display:inline-block;"></span>
-                ${project.language}
-              </span>
-              ${project.stars ? `<span>· ${project.stars} ★</span>` : ''}
-            </div>
-          </div>
-        </a>
-      `;
     }
 
     container.innerHTML = html;

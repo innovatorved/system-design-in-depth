@@ -269,8 +269,92 @@ for (const [modId, units] of Object.entries(moduleContent)) {
   }
 }
 
+for (const pageFile of ['index.html', '404.html', 'projects/index.html']) {
+  const fullPagePath = path.join(__dirname, '..', pageFile);
+  if (fs.existsSync(fullPagePath)) {
+    checkInternalLinks(fs.readFileSync(fullPagePath, 'utf8'), pageFile);
+  }
+}
+
 if (internalLinkErrors === 0 && legacyWikiLinks === 0) {
-  reportSuccess(`Internal links: ${internalLinksChecked} internal links verified against valid curriculum slugs`);
+  reportSuccess(`Internal links: ${internalLinksChecked} internal links verified against valid curriculum slugs (including 404.html)`);
+}
+
+// Programmatic Mermaid Diagram & YouTube Video Count Check against README.md
+const archiveDir = path.join(dataDir, 'archive');
+if (fs.existsSync(archiveDir)) {
+  const archiveFiles = fs.readdirSync(archiveDir).filter(f => f.endsWith('.js'));
+  archiveFiles.forEach(f => {
+    try {
+      eval(fs.readFileSync(path.join(archiveDir, f), 'utf8'));
+    } catch (e) {
+      reportError(`Failed to load archive/${f}: ${e.message}`);
+    }
+  });
+}
+const archiveContent = global.window.ARCHIVE_CONTENT || {};
+
+let contentMermaidCount = 0;
+for (const mod of Object.values(moduleContent)) {
+  for (const unit of Object.values(mod)) {
+    if (unit && unit.content) {
+      contentMermaidCount += (unit.content.match(/class=["']mermaid["']/g) || []).length;
+    }
+  }
+}
+let archiveMermaidCount = 0;
+for (const entry of Object.values(archiveContent)) {
+  const text = typeof entry === 'string' ? entry : (entry && entry.content ? entry.content : '');
+  if (text) {
+    archiveMermaidCount += (text.match(/class=["']mermaid["']|```mermaid/g) || []).length;
+  }
+}
+const totalMermaidCount = contentMermaidCount + archiveMermaidCount;
+
+const uniqueVideoIds = new Set();
+let totalVideoEntries = 0;
+curriculum.parts.forEach(p => p.modules.forEach(m => m.units.forEach(u => {
+  if (u.video && u.video.youtubeId) {
+    uniqueVideoIds.add(u.video.youtubeId);
+    totalVideoEntries++;
+  }
+})));
+for (const mod of Object.values(moduleContent)) {
+  for (const unit of Object.values(mod)) {
+    if (!unit) continue;
+    if (unit.video && unit.video.youtubeId) {
+      uniqueVideoIds.add(unit.video.youtubeId);
+      totalVideoEntries++;
+    }
+    if (Array.isArray(unit.videos)) {
+      unit.videos.forEach(v => {
+        if (v && v.youtubeId) {
+          uniqueVideoIds.add(v.youtubeId);
+          totalVideoEntries++;
+        }
+      });
+    }
+    if (Array.isArray(unit.furtherReading)) {
+      unit.furtherReading.forEach(r => {
+        if (r && r.url && (r.url.includes('youtube.com') || r.url.includes('youtu.be'))) {
+          const ytMatch = r.url.match(/(?:v=|\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+          if (ytMatch) uniqueVideoIds.add(ytMatch[1]);
+        }
+      });
+    }
+  }
+}
+
+const readmePath = path.join(__dirname, '..', 'README.md');
+if (fs.existsSync(readmePath)) {
+  const readmeText = fs.readFileSync(readmePath, 'utf8');
+  if (!readmeText.includes(`${totalMermaidCount} architecture diagrams`)) {
+    reportError(`README.md diagram count mismatch: expected '${totalMermaidCount} architecture diagrams'`);
+  }
+  if (!readmeText.includes(`${uniqueVideoIds.size} curated YouTube videos`)) {
+    reportError(`README.md video count mismatch: expected '${uniqueVideoIds.size} curated YouTube videos'`);
+  }
+  reportSuccess(`Programmatic stats: ${totalMermaidCount} Mermaid diagrams (${contentMermaidCount} content + ${archiveMermaidCount} archive), ${uniqueVideoIds.size} unique YouTube videos (${totalVideoEntries} total entries) — matches README.md`);
 }
 
 // Question bank files
