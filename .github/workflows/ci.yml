@@ -24,7 +24,8 @@ jobs:
       - name: Validate curriculum and asset stamps
         run: node tools/validate.js
 
-      - name: Verify static pages and sitemap are in sync with curriculum
+      - name: Verify static pages, sitemap, and dist build are in sync
         run: |
           node tools/generate-static.js
           git diff --exit-code topic/ sitemap.xml
+          node tools/build.js
