@@ -29,7 +29,7 @@ Data Flow & Dependency Structure:
 | M1 | Static HTML Asset Stamping in `system-design-in-depth` | Update `tools/stamp-assets.js` to discover all HTML files, sync with `tools/generate-static.js`, update `tools/validate.js`, verify 0 errors/warnings | none | DONE |
 | M2 | Bundled Standalone Sample UI in `@innovatorved/code-lab` | Create `src/sample.html`, update `tools/bundle.js` to emit `dist/sample.html`, update `package.json` exports/files, verify `bun run test:all` (103/103 pass) | none | DONE |
 | M3 | SPA Build-Switching Verification & E2E Validation | Execute headless automated SPA navigation tests and full suite verification ensuring zero legacy tab markup | M1, M2 | DONE |
-| M4 | Commit, Build & Cloudflare Pages Deployment Sync | Commit git changes in both repositories, build production distribution artifacts, and deploy both to Cloudflare Pages | M3 | IN_PROGRESS (0abe063d-89f8-4b3b-9cb4-1f565f6c9876) |
+| M4 | Commit, Build & Cloudflare Pages Deployment Sync | Commit git changes in both repositories, build production distribution artifacts, and deploy both to Cloudflare Pages | M3 | DONE |
 
 ## Interface Contracts
 ### `tools/stamp-assets.js` ↔ `tools/validate.js`
