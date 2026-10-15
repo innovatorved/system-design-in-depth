@@ -558,8 +558,20 @@ window.App = (() => {
         if (!window.GUIDED_LABS_DATA) {
           neededBuildScripts.push('data/guided_labs.js');
         }
+        if (!document.querySelector('link[href*="@innovatorved/code-lab"]')) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@1.3.1/dist/code-lab.css';
+          link.crossOrigin = 'anonymous';
+          link.setAttribute('onerror', "this.onerror=null;this.href='https://unpkg.com/@innovatorved/code-lab@1.3.1/dist/code-lab.css'");
+          link.onerror = function () {
+            this.onerror = null;
+            this.href = 'https://unpkg.com/@innovatorved/code-lab@1.3.1/dist/code-lab.css';
+          };
+          document.head.appendChild(link);
+        }
         if (!window.CodeLab) {
-          neededBuildScripts.push('js/code-lab.js');
+          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@1.3.1/dist/code-lab.js');
         }
 
         if (neededBuildScripts.length > 0 && window.loadScript) {

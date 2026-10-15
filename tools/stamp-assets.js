@@ -39,7 +39,7 @@ function generateManifest() {
       vm.runInNewContext(buf.toString('utf8'), { window: win });
     }
   }
-  for (const extra of ['data/implementations_code.js', 'data/guided_labs.js', 'js/code-lab.js']) {
+  for (const extra of ['data/implementations_code.js', 'data/guided_labs.js']) {
     const abs = path.join(root, extra);
     if (fs.existsSync(abs)) {
       manifest[extra] = hashOf(fs.readFileSync(abs));

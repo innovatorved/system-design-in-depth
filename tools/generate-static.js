@@ -433,7 +433,6 @@ for (const { unit, mod } of units) {
   // Strip implementation code and interactive lab scripts from static topic HTML (loaded on demand)
   page = stripScriptTag(page, 'data/implementations_code.js');
   page = stripScriptTag(page, 'data/guided_labs.js');
-  page = stripScriptTag(page, 'js/code-lab.js');
 
   // Strip unused simulator scripts for this unit slug
   const neededSimFile = slugToSimFile[slug];

@@ -8,13 +8,31 @@ window.Lazy = (() => {
   const manifest = () => window.LAZY_MANIFEST || {};
   const pending = new Map();
 
-  function load(path) {
+  function load(path, fallbackPath) {
     if (pending.has(path)) return pending.get(path);
+    const resolvedFallback = fallbackPath || (
+      path.startsWith('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab')
+        ? path.replace('https://cdn.jsdelivr.net/npm/', 'https://unpkg.com/')
+        : null
+    );
     const p = new Promise((resolve, reject) => {
       const s = document.createElement('script');
       s.src = path + (manifest()[path] ? '?v=' + manifest()[path] : '');
+      if (/^https?:\/\//.test(path)) s.crossOrigin = 'anonymous';
       s.onload = () => resolve();
-      s.onerror = () => { pending.delete(path); reject(new Error('Failed to load ' + path)); };
+      s.onerror = () => {
+        if (resolvedFallback) {
+          const fb = document.createElement('script');
+          fb.src = resolvedFallback;
+          if (/^https?:\/\//.test(resolvedFallback)) fb.crossOrigin = 'anonymous';
+          fb.onload = () => resolve();
+          fb.onerror = () => { pending.delete(path); reject(new Error('Failed to load ' + path + ' (and fallback ' + resolvedFallback + ')')); };
+          document.head.appendChild(fb);
+          return;
+        }
+        pending.delete(path);
+        reject(new Error('Failed to load ' + path));
+      };
       document.head.appendChild(s);
     });
     pending.set(path, p);

@@ -69,7 +69,7 @@ Interactive sandboxes let you tweak parameters, simulate network partitions, ind
 - **Algorithms & Data Structures:** Consistent Hashing Ring, Sliding Window Rate Limiter, Cache Eviction (LRU/LFU/FIFO), Bloom Filter, HyperLogLog, Count-Min Sketch, BM25 Scoring, CRDT Conflict Resolution, Geohash Explorer.
 
 ### 15 Interactive System Design Build Labs (`/build/<slug>/`)
-Each reference implementation runs in the browser at `/build/<slug>/` using **`@innovatorved/code-lab`** ([README](projects/code-lab/README.md) · [Architecture](projects/code-lab/ARCHITECTURE.md)), an in-browser editor and Web Worker Node.js runtime (currently in active development) with guided steps and a sandbox mode:
+Each reference implementation runs in the browser at `/build/<slug>/` using **`@innovatorved/code-lab`** ([GitHub](https://github.com/innovatorved/code-lab) · [Docs Wiki](https://github.com/innovatorved/code-lab/wiki) · [npm](https://www.npmjs.com/package/@innovatorved/code-lab)), an in-browser editor and Web Worker Node.js/Bun runtime with guided steps and a sandbox mode:
 
 1. [`/build/load-balancer-from-scratch/`](build/load-balancer-from-scratch/) — Layer 7 Load Balancer (`node:http` reverse proxy, Round-Robin, Least-Connections, P2C, active/passive health checks)
 2. [`/build/consistent-hashing-ring/`](build/consistent-hashing-ring/) — Consistent Hashing Ring with Virtual Nodes & Bounded Load
@@ -87,10 +87,11 @@ Each reference implementation runs in the browser at `/build/<slug>/` using **`@
 14. [`/build/hyperloglog-cardinality/`](build/hyperloglog-cardinality/) — HyperLogLog Cardinality Estimator with Small/Large Range Corrections
 15. [`/build/tiny-search-engine/`](build/tiny-search-engine/) — Inverted Index Search Engine with Variable-Byte Posting Lists & BM25F
 
-### `@innovatorved/code-lab` (`projects/code-lab/`)
-The build labs run on [`@innovatorved/code-lab`](projects/code-lab/) (early development), a standalone `<code-lab>` custom element and Web Worker runtime:
-- **[README (`projects/code-lab/README.md`)](projects/code-lab/README.md)** — Setup, options, and runtime usage.
-- **[Architecture (`projects/code-lab/ARCHITECTURE.md`)](projects/code-lab/ARCHITECTURE.md)** — How the Web Worker runtime, VFS, and TypeScript transpiler work.
+### `@innovatorved/code-lab`
+The interactive build labs run on [`@innovatorved/code-lab`](https://github.com/innovatorved/code-lab) (`v1.3.1`), a standalone `<code-lab>` custom element and Web Worker Node.js/Bun runtime loaded via CDN:
+- **[GitHub Repository (`innovatorved/code-lab`)](https://github.com/innovatorved/code-lab)** — Source code, issues, and release history.
+- **[Documentation Wiki](https://github.com/innovatorved/code-lab/wiki)** — Quick start, workbench configuration, POSIX shell & coreutils, and runtime APIs.
+- **[npm Package (`@innovatorved/code-lab`)](https://www.npmjs.com/package/@innovatorved/code-lab)** — Published UMD, ESM, and stylesheet bundles on npm / jsDelivr / unpkg.
 
 ---
 
