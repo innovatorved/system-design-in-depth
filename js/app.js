@@ -700,7 +700,9 @@ window.App = (() => {
   function renderBuildsSidebar(container) {
     const impls = window.IMPLEMENTATIONS_DATA;
     if (!impls) {
-      container.innerHTML = '<p style="padding:16px;color:var(--fg-muted)">Loading builds...</p>';
+      if (!container.querySelector('[data-build]')) {
+        container.innerHTML = '<p style="padding:16px;color:var(--fg-muted)">Loading builds...</p>';
+      }
       if (window.loadScript) {
         window.loadScript('data/implementations_code.js').then(() => {
           renderBuildsSidebar(container);

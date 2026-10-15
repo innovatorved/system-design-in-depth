@@ -229,22 +229,16 @@ function renderStaticSidebar(curriculum, currentSlug) {
 }
 
 function renderStaticBuildsSidebar(implementations, currentBuildId) {
-  let html = '<div class="builds-sidebar">';
-  html += `<div class="builds-sidebar__intro">
-    Full from-scratch Node.js implementations with Guided Interactive Labs, zero dependencies, and complete test suites.
-  </div>`;
+  let html = '<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (15)</div>';
   for (const [id, item] of Object.entries(implementations)) {
-    const isActive = id === currentBuildId ? 'unit-item--active' : '';
-    const fileCount = item.files ? Object.keys(item.files).length : 0;
-    html += `<a class="unit-item unit-item--build ${isActive}" href="/build/${id}/" data-build="${id}">
-      <span class="unit-item__status unit-item__status--build">⚡</span>
-      <div class="unit-item__build-info">
-        <span class="unit-item__title">${escapeHtml(item.title)}</span>
-        <span class="unit-item__meta">${fileCount} files · Interactive Lab</span>
-      </div>
-    </a>`;
+    const active = id === currentBuildId;
+    const statusClass = active ? 'active' : 'pending';
+    const statusIcon = context.window.Renderer.icons.code;
+    html += `<a class="unit-item${active ? ' active' : ''}" data-build="${escapeAttr(id)}" href="/build/${escapeAttr(id)}/">
+        <span class="unit-item__status unit-item__status--${statusClass}">${statusIcon}</span>
+        <span class="unit-item__title">${escapeHtml(item.title || id.replace(/-/g, ' '))}</span>
+      </a>`;
   }
-  html += '</div>';
   return html;
 }
 
@@ -567,12 +561,12 @@ for (const [buildId, build] of buildEntries) {
 
   // Activate Builds tab in sidebar and pre-render Builds sidebar list
   page = page.replace(
-    'class="sidebar__tab sidebar__tab--active" data-tab="curriculum"',
-    'class="sidebar__tab" data-tab="curriculum"'
+    'class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true"',
+    'class="sidebar__tab" data-tab="curriculum" role="tab" aria-selected="false"'
   );
   page = page.replace(
-    'class="sidebar__tab" data-tab="builds"',
-    'class="sidebar__tab sidebar__tab--active" data-tab="builds"'
+    'class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false"',
+    'class="sidebar__tab active" data-tab="builds" role="tab" aria-selected="true"'
   );
   const buildsSidebarHtml = renderStaticBuildsSidebar(implementations, buildId);
   page = page.replace(
