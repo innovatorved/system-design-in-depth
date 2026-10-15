@@ -11,10 +11,10 @@ This project incorporates, links to, or interfaces with the following third-part
 - **Copyright:** (c) 2014 - 2026 Knut Sveidqvist and contributors
 - **Usage:** Dynamic diagram rendering via CDN (`https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs`).
 
-### `@innovatorved/code-lab` (`v2.0.0`)
+### `@innovatorved/code-lab` (`v2.0.1`)
 - **License:** MIT License
 - **Copyright:** (c) 2026 Ved Gupta (`https://github.com/innovatorved/code-lab`)
-- **Usage:** Interactive browser-native IDE, POSIX shell, public GitHub repository cloner, and Web Worker Node.js/Bun runtime loaded via CDN (`https://code-lab-3dr.pages.dev/dist/` with `https://cdn.jsdelivr.net/gh/innovatorved/code-lab@v2.0.0/`, `https://cdn.jsdelivr.net/npm/@innovatorved/code-lab/`, and `https://unpkg.com/@innovatorved/code-lab/` fallbacks).
+- **Usage:** Interactive browser-native IDE, POSIX shell, public GitHub repository cloner, and Web Worker Node.js/Bun runtime loaded via CDN (`https://code-lab-3dr.pages.dev/dist/` with `https://cdn.jsdelivr.net/gh/innovatorved/code-lab@v2.0.1/`, `https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@2.0.1/`, and `https://unpkg.com/@innovatorved/code-lab@2.0.1/` fallbacks).
 
 ### Geist Fonts
 - **License:** SIL Open Font License 1.1
