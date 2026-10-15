@@ -132,9 +132,9 @@ window.PROJECTS_DATA = [
   {
     id: 'code-lab',
     name: 'code-lab',
-    title: 'CodeLab — Browser-Native System Design IDE, POSIX Shell & Node/Bun Runtime',
-    description: 'Zero-server, browser-native JS/TS IDE (<code-lab>) with public GitHub repository cloning (git clone), a full POSIX shell (pipes, redirects, 55+ UNIX coreutils), Node.js v22 + Bun v1.1 runtime (Bun.serve, bun:sqlite, bun:test), and live HTTP & Virtual Disk inspectors.',
-    stars: 'v1.4.0',
+    title: 'code-lab — Browser IDE, POSIX Shell & Node/Bun Virtual Runtime',
+    description: 'Zero-server, browser-native JS/TS IDE with public GitHub repository cloning (git clone), a full POSIX shell (pipes, redirects, 55+ UNIX coreutils), Node.js v22 + Bun v1.1 runtime, and modular Guided Lab extensions.',
+    stars: 'v2.0.0',
     starsCount: 60,
     forks: 0,
     language: 'TypeScript',

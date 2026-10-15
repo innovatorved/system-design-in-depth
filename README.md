@@ -88,7 +88,7 @@ Each reference implementation runs in the browser at `/build/<slug>/` using **`@
 15. [`/build/tiny-search-engine/`](build/tiny-search-engine/) — Inverted Index Search Engine with Variable-Byte Posting Lists & BM25F
 
 ### `@innovatorved/code-lab`
-The interactive build labs run on [`@innovatorved/code-lab`](https://github.com/innovatorved/code-lab) (`v1.4.0`), a standalone `<code-lab>` custom element, public GitHub repository cloner (`git clone`), and Web Worker Node.js/Bun runtime loaded via CDN:
+The interactive build labs run on [`@innovatorved/code-lab`](https://github.com/innovatorved/code-lab) (`v2.0.0`), a standalone browser IDE, public GitHub repository cloner (`git clone`), modular guided lab engine, and Web Worker Node.js/Bun runtime:
 - **[Live Cloud IDE & GitHub Repo Explorer (`code-lab-3dr.pages.dev`)](https://code-lab-3dr.pages.dev)** — Enter any public GitHub repository URL (`owner/repo`) to clone and run it directly in the browser.
 - **[GitHub Repository (`innovatorved/code-lab`)](https://github.com/innovatorved/code-lab)** — Source code, issues, and release history.
 - **[Documentation Wiki](https://github.com/innovatorved/code-lab/wiki)** — Quick start, workbench configuration, POSIX shell & coreutils, and runtime APIs.

@@ -11,11 +11,13 @@ window.Lazy = (() => {
   function load(path, fallbackPath) {
     if (pending.has(path)) return pending.get(path);
     const resolvedFallback = fallbackPath || (
-      path.startsWith('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab')
-        ? path.replace('https://cdn.jsdelivr.net/npm/', 'https://unpkg.com/')
-        : path.startsWith('https://cdn.jsdelivr.net/gh/innovatorved/code-lab@')
-          ? 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@1.3.2/dist/code-lab.js'
-          : null
+      path.startsWith('https://code-lab-3dr.pages.dev')
+        ? 'https://cdn.jsdelivr.net/gh/innovatorved/code-lab@v2.0.0/dist/code-lab.js'
+        : path.startsWith('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab')
+          ? path.replace('https://cdn.jsdelivr.net/npm/', 'https://unpkg.com/')
+          : path.startsWith('https://cdn.jsdelivr.net/gh/innovatorved/code-lab@')
+            ? 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@2.0.0/dist/code-lab.js'
+            : null
     );
     const p = new Promise((resolve, reject) => {
       const s = document.createElement('script');
@@ -30,7 +32,7 @@ window.Lazy = (() => {
           fb.onload = () => resolve();
           fb.onerror = () => {
             const unpkgFb = document.createElement('script');
-            unpkgFb.src = 'https://unpkg.com/@innovatorved/code-lab@1.3.2/dist/code-lab.js';
+            unpkgFb.src = 'https://unpkg.com/@innovatorved/code-lab@2.0.0/dist/code-lab.js';
             unpkgFb.crossOrigin = 'anonymous';
             unpkgFb.onload = () => resolve();
             unpkgFb.onerror = () => {
