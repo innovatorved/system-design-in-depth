@@ -13,7 +13,9 @@ window.Lazy = (() => {
     const resolvedFallback = fallbackPath || (
       path.startsWith('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab')
         ? path.replace('https://cdn.jsdelivr.net/npm/', 'https://unpkg.com/')
-        : null
+        : path.startsWith('https://cdn.jsdelivr.net/gh/innovatorved/code-lab@')
+          ? 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@1.3.2/dist/code-lab.js'
+          : null
     );
     const p = new Promise((resolve, reject) => {
       const s = document.createElement('script');
@@ -27,18 +29,15 @@ window.Lazy = (() => {
           if (/^https?:\/\//.test(resolvedFallback)) fb.crossOrigin = 'anonymous';
           fb.onload = () => resolve();
           fb.onerror = () => {
-            const ghMatch = path.match(/^https:\/\/cdn\.jsdelivr\.net\/npm\/@innovatorved\/code-lab@([^/]+)\/(.+)$/);
-            if (ghMatch) {
-              const ghFb = document.createElement('script');
-              ghFb.src = `https://cdn.jsdelivr.net/gh/innovatorved/code-lab@v${ghMatch[1]}/${ghMatch[2]}`;
-              ghFb.crossOrigin = 'anonymous';
-              ghFb.onload = () => resolve();
-              ghFb.onerror = () => { pending.delete(path); reject(new Error('Failed to load ' + path + ' (and fallbacks)')); };
-              document.head.appendChild(ghFb);
-              return;
-            }
-            pending.delete(path);
-            reject(new Error('Failed to load ' + path + ' (and fallback ' + resolvedFallback + ')'));
+            const unpkgFb = document.createElement('script');
+            unpkgFb.src = 'https://unpkg.com/@innovatorved/code-lab@1.3.2/dist/code-lab.js';
+            unpkgFb.crossOrigin = 'anonymous';
+            unpkgFb.onload = () => resolve();
+            unpkgFb.onerror = () => {
+              pending.delete(path);
+              reject(new Error('Failed to load ' + path + ' (and fallbacks)'));
+            };
+            document.head.appendChild(unpkgFb);
           };
           document.head.appendChild(fb);
           return;

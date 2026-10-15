@@ -133,8 +133,8 @@ window.PROJECTS_DATA = [
     id: 'code-lab',
     name: 'code-lab',
     title: 'CodeLab — Browser-Native System Design IDE, POSIX Shell & Node/Bun Runtime',
-    description: 'Zero-server, browser-native JS/TS IDE (<code-lab>) with a full POSIX shell (pipes, redirects, 40+ UNIX coreutils), Node.js v22 + Bun v1.1 runtime (Bun.serve, bun:sqlite, bun:test), and live HTTP & Virtual Disk inspectors.',
-    stars: 'v1.3.2',
+    description: 'Zero-server, browser-native JS/TS IDE (<code-lab>) with public GitHub repository cloning (git clone), a full POSIX shell (pipes, redirects, 55+ UNIX coreutils), Node.js v22 + Bun v1.1 runtime (Bun.serve, bun:sqlite, bun:test), and live HTTP & Virtual Disk inspectors.',
+    stars: 'v1.4.0',
     starsCount: 60,
     forks: 0,
     language: 'TypeScript',
@@ -142,12 +142,12 @@ window.PROJECTS_DATA = [
     pinned: true,
     category: 'Developer Tools',
     githubUrl: 'https://github.com/innovatorved/code-lab',
-    liveUrl: '/build/load-balancer-from-scratch/?mode=sandbox',
-    tags: ['Monaco Editor', 'POSIX Shell', 'Virtual Node.js & Bun', 'Web Worker Sandbox', 'Web Component'],
+    liveUrl: 'https://code-lab-3dr.pages.dev',
+    tags: ['Monaco Editor', 'POSIX Shell & Git Clone', 'Virtual Node.js & Bun', 'Web Worker Sandbox', 'Web Component'],
     highlights: [
-      '100% browser-native Node.js v22 (24 modules) + Bun v1.1 (Bun.serve, bun:sqlite, bun:test)',
-      'Interactive PTY terminal & POSIX shell with pipes, redirects, background jobs, curl, git, npm & bun',
-      'Live HTTP Client, Network Waterfall, Port Forwarder & Virtual Disk hex inspector'
+      'Clone & run any public GitHub repository (git clone owner/repo) directly in the browser with zero auth',
+      '100% browser-native Node.js v22 (28 modules) + Bun v1.1 (Bun.serve, bun:sqlite, bun:test)',
+      'Interactive PTY terminal & POSIX shell with pipes, redirects, background jobs, curl, git, jq, npm & bun'
     ]
   }
 ];

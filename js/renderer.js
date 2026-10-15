@@ -1242,7 +1242,7 @@ window.Renderer = (() => {
         <h1 class="lesson-header__title">System Design Projects &amp; Architecture Case Studies</h1>
         <div class="lesson-header__actions" style="margin-top: var(--space-3); display: flex; gap: var(--space-3); flex-wrap: wrap;">
           <a href="/" data-nav="home" class="btn btn--sm btn--secondary">← Back to Curriculum</a>
-          <a href="/build/load-balancer-from-scratch/?mode=sandbox" class="btn btn--sm btn--primary">${icons.code} Launch CodeLab Live Playground</a>
+          <a href="https://code-lab-3dr.pages.dev" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--primary">${icons.code} Launch CodeLab Cloud IDE</a>
         </div>
       </div>
 
