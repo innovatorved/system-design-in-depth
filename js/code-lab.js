@@ -1,15 +1,13 @@
 /**
  * ============================================================
- * @innovatorved/code-lab v1.1.0 — Standalone Browser Code IDE & Virtual Runtime
+ * @innovatorved/code-lab v1.2.0 — Standalone Browser Code IDE & Virtual Runtime
  * ============================================================
  * Features:
- *   - Sandboxed Web Worker Execution Engine with Watchdog Timer & Instant Stop
- *   - TypeScript/JSX Compiler & CommonJS/ESM Module Bundler
- *   - Virtual File System (fs, path, crypto, events, http, timers)
- *   - Built-in Assertion & Test Runner Framework (describe, it, expect, assert)
- *   - Multi-file Tabbed Monaco IDE + Offline Line-Numbered Fallback Editor
- *   - Resizable Split Panes, Step-by-Step Guided Mode, Fullscreen & Light/Dark Themes
- *   - Embeddable via <code-lab>, CodeLab.create(container, options), or ESM imports
+ *   - Sandboxed Web Worker Execution Engine with Multi-Instance Isolation & Watchdog Timer
+ *   - TypeScript/ESM Compiler & CommonJS/NPM Module Bundler
+ *   - 24 Virtual Node.js Built-in Modules (fs, net, http, stream, crypto, events, test, console, etc.)
+ *   - VS Code Workbench: Hierarchical File Tree, Decoupled Tabs, Command Palette (Cmd+Shift+P), Quick Open (Cmd+P), Breadcrumbs, Context Menus & Solution Diff Viewer
+ *   - Third-Party Imperative SDK (getFiles, setFiles, getFile, setFile, on, off, use, exportWorkspace)
  * ============================================================
  */
 (function (root) {
@@ -4644,23 +4642,235 @@ function __initVirtualRuntime(rootScope) {
       resourceTracker.activeImmediates.delete(id);
     }
 
-    function checkConsoleFlood(isErr = false) {
+    const consoleTimers = new Map();
+    const consoleCounts = new Map();
+    let groupDepth = 0;
+
+    function formatConsoleArgs(args) {
+      if (args.length === 0) return '';
+      if (args.length > 1 && typeof args[0] === 'string' && /%[sdifjoO%]/.test(args[0])) {
+        const first = args[0];
+        let idx = 1;
+        let out = '';
+        for (let i = 0; i < first.length; i++) {
+          if (first[i] === '%' && i + 1 < first.length) {
+            const next = first[i + 1];
+            if (next === '%') {
+              out += '%';
+              i++;
+              continue;
+            }
+            if (idx < args.length) {
+              const arg = args[idx];
+              if (next === 's') { out += String(arg); idx++; i++; continue; }
+              if (next === 'd') { out += Number(arg); idx++; i++; continue; }
+              if (next === 'i') { out += parseInt(arg, 10); idx++; i++; continue; }
+              if (next === 'f') { out += parseFloat(arg); idx++; i++; continue; }
+              if (next === 'j') {
+                try { out += JSON.stringify(arg); } catch (_) { out += '[Circular]'; }
+                idx++; i++; continue;
+              }
+              if (next === 'o' || next === 'O') {
+                out += utilInspect(arg);
+                idx++; i++; continue;
+              }
+            }
+          }
+          out += first[i];
+        }
+        while (idx < args.length) {
+          out += ' ' + formatConsoleArg(args[idx++]);
+        }
+        return out;
+      }
+      return args.map(formatConsoleArg).join(' ');
+    }
+
+    function formatTableCell(val) {
+      if (val === undefined) return '';
+      if (val === null) return 'null';
+      if (typeof val === 'string') return `'${val}'`;
+      if (typeof val === 'number' || typeof val === 'boolean' || typeof val === 'bigint') return String(val);
+      return utilInspect(val, { depth: 0 });
+    }
+
+    function formatConsoleTable(tabularData, properties) {
+      if (tabularData === null || typeof tabularData !== 'object') {
+        return null;
+      }
+      const entries = Array.isArray(tabularData)
+        ? tabularData.map((v, i) => [String(i), v])
+        : Object.entries(tabularData);
+      if (entries.length === 0) {
+        return '(empty table)';
+      }
+      const propFilter = Array.isArray(properties) ? new Set(properties.map(String)) : null;
+      const cols = [];
+      const colSet = new Set();
+      let hasPrimitiveRow = false;
+
+      for (const [, row] of entries) {
+        if (row !== null && typeof row === 'object' && !VirtualBuffer.isBuffer(row) && !(row instanceof Date) && !(row instanceof RegExp)) {
+          for (const k of Object.keys(row)) {
+            if (!propFilter || propFilter.has(k)) {
+              if (!colSet.has(k)) {
+                colSet.add(k);
+                cols.push(k);
+              }
+            }
+          }
+        } else {
+          hasPrimitiveRow = true;
+        }
+      }
+
+      const headers = ['(index)', ...cols, ...(hasPrimitiveRow ? ['Values'] : [])];
+      const matrix = entries.map(([idxKey, row]) => {
+        const isRowObj = row !== null && typeof row === 'object' && !VirtualBuffer.isBuffer(row) && !(row instanceof Date) && !(row instanceof RegExp);
+        const cells = [String(idxKey)];
+        for (const col of cols) {
+          cells.push(isRowObj && Object.prototype.hasOwnProperty.call(row, col) ? formatTableCell(row[col]) : '');
+        }
+        if (hasPrimitiveRow) {
+          cells.push(isRowObj ? '' : formatTableCell(row));
+        }
+        return cells;
+      });
+
+      const widths = headers.map((h, colIdx) => {
+        let maxW = h.length;
+        for (const r of matrix) {
+          if (r[colIdx].length > maxW) maxW = r[colIdx].length;
+        }
+        return maxW;
+      });
+
+      const borderTop = '┌─' + widths.map((w) => '─'.repeat(w)).join('─┬─') + '─┐';
+      const borderMid = '├─' + widths.map((w) => '─'.repeat(w)).join('─┼─') + '─┤';
+      const borderBot = '└─' + widths.map((w) => '─'.repeat(w)).join('─┴─') + '─┘';
+      const formatRow = (cells) => '│ ' + cells.map((c, i) => c.padEnd(widths[i], ' ')).join(' │ ') + ' │';
+
+      return [
+        borderTop,
+        formatRow(headers),
+        borderMid,
+        ...matrix.map(formatRow),
+        borderBot
+      ].join('\n');
+    }
+
+    function applyGroupIndent(text) {
+      if (groupDepth <= 0) return text;
+      const pad = '  '.repeat(groupDepth);
+      return String(text).split('\n').map((line) => pad + line).join('\n');
+    }
+
+    function checkConsoleFlood(isErr = false, targetChunks = null, targetCb = null) {
       if (outputTruncated) return false;
       consoleCallsCount++;
       if (consoleCallsCount > maxConsoleCalls) {
-        triggerTruncation(isErr ? stderrChunks : stdoutChunks, isErr ? onStderr : onStdout);
+        triggerTruncation(
+          targetChunks || (isErr ? stderrChunks : stdoutChunks),
+          targetCb !== null ? targetCb : (isErr ? onStderr : onStdout)
+        );
         return false;
       }
       return true;
     }
 
-    const sandboxConsole = {
-      log: (...args) => { if (checkConsoleFlood(false)) emitStdout(args.map(formatConsoleArg).join(' ') + '\n'); },
-      info: (...args) => { if (checkConsoleFlood(false)) emitStdout(args.map(formatConsoleArg).join(' ') + '\n'); },
-      debug: (...args) => { if (checkConsoleFlood(false)) emitStdout(args.map(formatConsoleArg).join(' ') + '\n'); },
-      warn: (...args) => { if (checkConsoleFlood(true)) emitStderr(args.map(formatConsoleArg).join(' ') + '\n'); },
-      error: (...args) => { if (checkConsoleFlood(true)) emitStderr(args.map(formatConsoleArg).join(' ') + '\n'); }
-    };
+    function createConsole(writeOut, writeErr) {
+      const c = {
+        log: (...args) => {
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(formatConsoleArgs(args)) + '\n');
+        },
+        info: (...args) => {
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(formatConsoleArgs(args)) + '\n');
+        },
+        debug: (...args) => {
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(formatConsoleArgs(args)) + '\n');
+        },
+        warn: (...args) => {
+          if (checkConsoleFlood(true)) writeErr(applyGroupIndent(formatConsoleArgs(args)) + '\n');
+        },
+        error: (...args) => {
+          if (checkConsoleFlood(true)) writeErr(applyGroupIndent(formatConsoleArgs(args)) + '\n');
+        },
+        dir: (obj, opts) => {
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(utilInspect(obj, opts)) + '\n');
+        },
+        table: (tabularData, properties) => {
+          const tableStr = formatConsoleTable(tabularData, properties);
+          if (tableStr === null) {
+            c.log(tabularData);
+          } else if (checkConsoleFlood(false)) {
+            writeOut(applyGroupIndent(tableStr) + '\n');
+          }
+        },
+        time: (label = 'default') => {
+          consoleTimers.set(String(label), performance.now());
+        },
+        timeLog: (label = 'default', ...data) => {
+          const key = String(label);
+          if (!consoleTimers.has(key)) {
+            if (checkConsoleFlood(true)) writeErr(applyGroupIndent(`Warning: No such label '${key}' for console.timeLog()`) + '\n');
+            return;
+          }
+          const elapsed = (performance.now() - consoleTimers.get(key)).toFixed(2);
+          const extra = data.length > 0 ? ' ' + formatConsoleArgs(data) : '';
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(`${key}: ${elapsed}ms${extra}`) + '\n');
+        },
+        timeEnd: (label = 'default') => {
+          const key = String(label);
+          if (!consoleTimers.has(key)) {
+            if (checkConsoleFlood(true)) writeErr(applyGroupIndent(`Warning: No such label '${key}' for console.timeEnd()`) + '\n');
+            return;
+          }
+          const elapsed = (performance.now() - consoleTimers.get(key)).toFixed(2);
+          consoleTimers.delete(key);
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(`${key}: ${elapsed}ms`) + '\n');
+        },
+        count: (label = 'default') => {
+          const key = String(label);
+          const next = (consoleCounts.get(key) || 0) + 1;
+          consoleCounts.set(key, next);
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(`${key}: ${next}`) + '\n');
+        },
+        countReset: (label = 'default') => {
+          consoleCounts.delete(String(label));
+        },
+        assert: (condition, ...data) => {
+          if (!condition) {
+            const msg = data.length > 0 ? 'Assertion failed: ' + formatConsoleArgs(data) : 'Assertion failed';
+            if (checkConsoleFlood(true)) writeErr(applyGroupIndent(msg) + '\n');
+          }
+        },
+        group: (...label) => {
+          if (label.length > 0) c.log(...label);
+          groupDepth = Math.min(groupDepth + 1, 20);
+        },
+        groupCollapsed: (...label) => {
+          if (label.length > 0) c.log(...label);
+          groupDepth = Math.min(groupDepth + 1, 20);
+        },
+        groupEnd: () => {
+          groupDepth = Math.max(0, groupDepth - 1);
+        },
+        trace: (...data) => {
+          if (!checkConsoleFlood(true)) return;
+          const header = data.length > 0 ? 'Trace: ' + formatConsoleArgs(data) : 'Trace';
+          const err = new Error();
+          const rawLines = String(err.stack || '').split('\n').slice(2);
+          const stackPart = rawLines.length > 0 ? '\n' + rawLines.join('\n') : '';
+          writeErr(applyGroupIndent(header + stackPart) + '\n');
+        },
+        clear: () => {
+          if (typeof options.onConsoleClear === 'function') options.onConsoleClear();
+        }
+      };
+      return c;
+    }
+
+    const sandboxConsole = createConsole(emitStdout, emitStderr);
 
     const hrtimeFn = function hrtime(prev) {
       const ns = BigInt(Math.round(performance.now() * 1e6));
@@ -5133,21 +5343,52 @@ function __initVirtualRuntime(rootScope) {
             break;
           }
         }
-        const subConsole = {
-          log: (...a) => { out += a.map(formatConsoleArg).join(' ') + '\n'; },
-          info: (...a) => { out += a.map(formatConsoleArg).join(' ') + '\n'; },
-          debug: (...a) => { out += a.map(formatConsoleArg).join(' ') + '\n'; },
-          warn: (...a) => { err += a.map(formatConsoleArg).join(' ') + '\n'; },
-          error: (...a) => { err += a.map(formatConsoleArg).join(' ') + '\n'; }
+        let subTruncated = false;
+        const appendSubOut = (text) => {
+          if (subTruncated || outputTruncated) return;
+          const s = String(text);
+          if (out.length + s.length > maxOutputBytes || totalOutputBytes + s.length > maxOutputBytes) {
+            const rem = Math.max(0, Math.min(maxOutputBytes - out.length, maxOutputBytes - totalOutputBytes));
+            if (rem > 0) {
+              const slice = s.slice(0, rem);
+              out += slice;
+              totalOutputBytes += slice.length;
+            }
+            out += TRUNCATION_NOTICE;
+            subTruncated = true;
+            triggerTruncation(stdoutChunks, onStdout);
+            return;
+          }
+          out += s;
+          totalOutputBytes += s.length;
         };
+        const appendSubErr = (text) => {
+          if (subTruncated || outputTruncated) return;
+          const s = String(text);
+          if (err.length + s.length > maxOutputBytes || totalOutputBytes + s.length > maxOutputBytes) {
+            const rem = Math.max(0, Math.min(maxOutputBytes - err.length, maxOutputBytes - totalOutputBytes));
+            if (rem > 0) {
+              const slice = s.slice(0, rem);
+              err += slice;
+              totalOutputBytes += slice.length;
+            }
+            err += TRUNCATION_NOTICE;
+            subTruncated = true;
+            triggerTruncation(stderrChunks, onStderr);
+            return;
+          }
+          err += s;
+          totalOutputBytes += s.length;
+        };
+        const subConsole = createConsole(appendSubOut, appendSubErr);
         const subProcess = Object.assign(new EventEmitter(), sandboxProcess, {
           env,
           argv: scriptArgIdx >= 0
             ? ['node', VirtualPath.resolve(cwd, args[scriptArgIdx]), ...args.slice(scriptArgIdx + 1)]
             : ['node'],
           cwd: () => cwd,
-          stdout: { write: (s) => { out += String(s); return true; } },
-          stderr: { write: (s) => { err += String(s); return true; } },
+          stdout: { write: (s) => { appendSubOut(s); return true; }, isTTY: false },
+          stderr: { write: (s) => { appendSubErr(s); return true; }, isTTY: false },
           exit: (c = 0) => {
             status = Number(c) || 0;
             throw new ProcessExitSignal(status);
@@ -5353,6 +5594,8 @@ function __initVirtualRuntime(rootScope) {
       'node:child_process': vchildProcess,
       process: sandboxProcess,
       'node:process': sandboxProcess,
+      console: sandboxConsole,
+      'node:console': sandboxConsole,
       assert: assert,
       'node:assert': assert,
       'assert/strict': assert.strict,
@@ -5811,15 +6054,20 @@ _hostRuntime.createWorkerRuntimeSource = createWorkerRuntimeSource;
 
 let _cachedWorkerUrl = null;
 let _warmWorker = null;
-let _activeWorkerJob = null;
+let _warmWorkerBusy = false;
+const _activeWorkerJobs = new Map();
 
-function _ensureWarmWorker() {
-  if (_warmWorker) return _warmWorker;
+function _ensureWorkerUrl() {
   if (!_cachedWorkerUrl) {
     const blob = new Blob([createWorkerRuntimeSource()], { type: 'application/javascript' });
     _cachedWorkerUrl = URL.createObjectURL(blob);
   }
-  _warmWorker = new Worker(_cachedWorkerUrl);
+  return _cachedWorkerUrl;
+}
+
+function _ensureWarmWorker() {
+  if (_warmWorker) return _warmWorker;
+  _warmWorker = new Worker(_ensureWorkerUrl());
   return _warmWorker;
 }
 
@@ -5828,14 +6076,19 @@ function _destroyWarmWorker() {
     try { _warmWorker.terminate(); } catch (_) {}
     _warmWorker = null;
   }
+  _warmWorkerBusy = false;
 }
 
-_hostRuntime.cancelWorkerExecution = function cancelWorkerExecution(reason = 'Execution cancelled') {
-  if (!_activeWorkerJob) return false;
-  const job = _activeWorkerJob;
-  _activeWorkerJob = null;
-  job.cancel(reason);
-  return true;
+_hostRuntime.cancelWorkerExecution = function cancelWorkerExecution(reason = 'Execution cancelled', instanceId) {
+  let cancelledAny = false;
+  for (const [jobId, job] of Array.from(_activeWorkerJobs.entries())) {
+    if (!instanceId || job.instanceId === instanceId) {
+      _activeWorkerJobs.delete(jobId);
+      job.cancel(reason);
+      cancelledAny = true;
+    }
+  }
+  return cancelledAny;
 };
 
 _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
@@ -5843,31 +6096,56 @@ _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
     return _hostRuntime.executeInVirtualRuntime(options);
   }
 
-  // If a previous execution is still in-flight, cancel it immediately and recreate the warm worker
-  if (_activeWorkerJob) {
-    _hostRuntime.cancelWorkerExecution('Execution cancelled by new run');
+  const requestId = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const instanceId = options.instanceId || (options.concurrent ? requestId : 'default');
+
+  // If a previous execution for this same instanceId is still in-flight, cancel only that instance's job
+  if (!options.concurrent) {
+    _hostRuntime.cancelWorkerExecution('Execution cancelled by new run', instanceId);
   }
 
   return new Promise((resolve) => {
     let worker;
+    let isWarmWorker = false;
     try {
-      worker = _ensureWarmWorker();
+      if (!_warmWorkerBusy) {
+        worker = _ensureWarmWorker();
+        _warmWorkerBusy = true;
+        isWarmWorker = true;
+      } else {
+        worker = new Worker(_ensureWorkerUrl());
+        isWarmWorker = false;
+      }
     } catch (_) {
+      if (isWarmWorker) _warmWorkerBusy = false;
       resolve(_hostRuntime.executeInVirtualRuntime(options));
       return;
     }
 
-    const requestId = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const timeoutMs = options.timeoutMs || 15000;
     let settled = false;
+
+    function releaseWorker(terminateWorker) {
+      _activeWorkerJobs.delete(requestId);
+      if (isWarmWorker) {
+        if (terminateWorker) {
+          _destroyWarmWorker();
+        } else {
+          _warmWorkerBusy = false;
+          if (_warmWorker) {
+            _warmWorker.onmessage = null;
+            _warmWorker.onerror = null;
+          }
+        }
+      } else {
+        try { worker.terminate(); } catch (_) {}
+      }
+    }
 
     const timer = setTimeout(() => {
       if (settled) return;
       settled = true;
-      if (_activeWorkerJob && _activeWorkerJob.requestId === requestId) {
-        _activeWorkerJob = null;
-      }
-      _destroyWarmWorker();
+      releaseWorker(true);
       resolve({
         ok: false,
         timedOut: true,
@@ -5882,13 +6160,14 @@ _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
       });
     }, timeoutMs + 500);
 
-    _activeWorkerJob = {
+    _activeWorkerJobs.set(requestId, {
       requestId,
+      instanceId,
       cancel(reason = 'Execution cancelled by new run') {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
-        _destroyWarmWorker();
+        releaseWorker(true);
         resolve({
           ok: false,
           cancelled: true,
@@ -5902,7 +6181,7 @@ _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
           error: { message: reason }
         });
       }
-    };
+    });
 
     worker.onmessage = (event) => {
       const msg = event.data || {};
@@ -5917,18 +6196,14 @@ _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
-        if (_activeWorkerJob && _activeWorkerJob.requestId === requestId) {
-          _activeWorkerJob = null;
-        }
-        // Keep `_warmWorker` alive for instant reuse on subsequent runs!
+        // Release `_warmWorker` for instant reuse, or terminate ephemeral concurrent worker
+        releaseWorker(false);
         resolve(msg.result);
       } else if (msg.type === 'error') {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
-        if (_activeWorkerJob && _activeWorkerJob.requestId === requestId) {
-          _activeWorkerJob = null;
-        }
+        releaseWorker(false);
         resolve({
           ok: false,
           exitCode: 1,
@@ -5947,10 +6222,7 @@ _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      if (_activeWorkerJob && _activeWorkerJob.requestId === requestId) {
-        _activeWorkerJob = null;
-      }
-      _destroyWarmWorker();
+      releaseWorker(true);
       resolve(_hostRuntime.executeInVirtualRuntime(options));
     };
 
@@ -6543,8 +6815,35 @@ declare module 'buffer' { export { Buffer }; }
     plus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
     edit: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
     trash: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
-    box: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>'
+    box: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>',
+    search: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+    diff: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><path d="M8 8H4v8h4"/><path d="M16 8h4v8h-4"/></svg>',
+    command: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>',
+    download: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
   };
+
+  let _workbenchInstanceCounter = 0;
+  const _fallbackStorage = new Map();
+
+  function safeStorageGet(key) {
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage !== null) {
+        return localStorage.getItem(key);
+      }
+    } catch (_) {}
+    return _fallbackStorage.has(key) ? _fallbackStorage.get(key) : null;
+  }
+
+  function safeStorageSet(key, value) {
+    const str = String(value);
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage !== null) {
+        localStorage.setItem(key, str);
+        return;
+      }
+    } catch (_) {}
+    _fallbackStorage.set(key, str);
+  }
 
   // ── CodeLabWorkbench Instance Class ──────────────────────────────────────
   class CodeLabWorkbench {
@@ -6554,6 +6853,7 @@ declare module 'buffer' { export { Buffer }; }
         throw new Error('CodeLabWorkbench requires a valid DOM container element.');
       }
       this.options = options || {};
+      this.instanceId = options.instanceId || (`cl-${++_workbenchInstanceCounter}`);
       this.labId = options.id || options.labId || options.buildId || 'custom-lab';
       this.title = options.title || this.labId;
       this.summary = options.summary || '';
@@ -6562,6 +6862,7 @@ declare module 'buffer' { export { Buffer }; }
       this.explicitEntry = options.entry || null;
       this.explicitTestEntry = options.testEntry || null;
       this.backLabel = options.backLabel || 'Back to Build Guide';
+      this._eventListeners = new Map();
 
       // Callbacks
       this.onStepComplete = typeof options.onStepComplete === 'function' ? options.onStepComplete : null;
@@ -6587,7 +6888,7 @@ declare module 'buffer' { export { Buffer }; }
       };
       this.steps = options.steps || this.guidedConfig?.steps || [];
 
-      // Load saved user state from localStorage
+      // Load saved user state from localStorage (with in-memory fallback)
       this.savedState = this._loadState();
 
       this.mode = options.mode || this.savedState.mode || (this.steps.length > 0 ? 'guided' : 'sandbox');
@@ -6606,6 +6907,13 @@ declare module 'buffer' { export { Buffer }; }
       this.isFullscreen = false;
       this.isRunning = false;
       this.isCreatingFile = false;
+      this.contextMenuOpen = false;
+      this._contextMenuItems = [];
+      this.paletteOpen = false;
+      this.paletteMode = 'commands';
+      this.paletteSelectedIndex = 0;
+      this._paletteFilteredItems = [];
+      this._diffState = null;
       this._stepDecorations = [];
       this.cursorPos = { lineNumber: 1, column: 1 };
       this.lastRunDurationMs = null;
@@ -6658,12 +6966,33 @@ declare module 'buffer' { export { Buffer }; }
       this._renderShell();
       this._bindEvents();
       this._initEditor();
+
+      if (Array.isArray(options.plugins)) {
+        for (const plugin of options.plugins) {
+          this.use(plugin);
+        }
+      }
     }
 
     _emitEvent(name, detail) {
+      const shortName = String(name).replace(/^codelab:/, '');
+      const fullName = shortName === name ? `codelab:${name}` : name;
+      if (this._eventListeners) {
+        for (const key of new Set([name, shortName, fullName])) {
+          const handlers = this._eventListeners.get(key);
+          if (handlers) {
+            for (const fn of Array.from(handlers)) {
+              try { fn(detail); } catch (_) {}
+            }
+          }
+        }
+      }
       if (!this.container || typeof CustomEvent === 'undefined') return;
       try {
-        this.container.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
+        this.container.dispatchEvent(new CustomEvent(fullName, { detail, bubbles: true, composed: true }));
+        if (shortName !== fullName) {
+          this.container.dispatchEvent(new CustomEvent(shortName, { detail, bubbles: true, composed: true }));
+        }
       } catch (_) {}
     }
 
@@ -6683,8 +7012,11 @@ declare module 'buffer' { export { Buffer }; }
     }
 
     _loadState() {
+      if (this.options && this.options.persistState === false) {
+        return {};
+      }
       try {
-        const raw = localStorage.getItem(this._storageKey()) || localStorage.getItem('sd_codelab_' + this.labId);
+        const raw = safeStorageGet(this._storageKey()) || safeStorageGet('sd_codelab_' + this.labId);
         return raw ? JSON.parse(raw) : {};
       } catch {
         return {};
@@ -6694,7 +7026,7 @@ declare module 'buffer' { export { Buffer }; }
     _saveState() {
       try {
         const key = `${this.mode}:${this.lang}`;
-        const customFiles = this.savedState.customFiles || {};
+        const customFiles = (this.savedState && this.savedState.customFiles) || {};
         customFiles[key] = { ...this.files };
         const completedArr = Array.from(this.completedSteps);
         const state = {
@@ -6709,10 +7041,14 @@ declare module 'buffer' { export { Buffer }; }
           collapsedFolders: Array.from(this.collapsedFolders || [])
         };
         this.savedState = state;
-        localStorage.setItem(this._storageKey(), JSON.stringify(state));
+        if (this.options && this.options.persistState === false) {
+          return;
+        }
+        const serialized = JSON.stringify(state);
+        safeStorageSet(this._storageKey(), serialized);
         // Sync with host app sidebar & build overview progress trackers
-        localStorage.setItem('codelab_progress_' + this.labId, JSON.stringify(completedArr));
-        localStorage.setItem('sd_codelab_' + this.labId, JSON.stringify(state));
+        safeStorageSet('codelab_progress_' + this.labId, JSON.stringify(completedArr));
+        safeStorageSet('sd_codelab_' + this.labId, serialized);
       } catch {}
     }
 
@@ -6994,6 +7330,7 @@ declare module 'buffer' { export { Buffer }; }
                 <!-- Editor Column -->
                 <div class="codelab-editor-col">
                   <div class="codelab-tabs codelab-file-tabs" id="cl-file-tabs" role="tablist" aria-label="Open Files"></div>
+                  <div class="codelab-breadcrumbs" id="cl-breadcrumbs" aria-label="Editor Breadcrumbs"></div>
                   <div class="codelab-editor-wrap">
                     <div class="codelab-monaco-host" id="cl-monaco-host"></div>
                     <div class="codelab-fallback-wrap" id="cl-fallback-wrap" style="display:none">
@@ -7058,17 +7395,83 @@ declare module 'buffer' { export { Buffer }; }
             </div>
           </footer>
 
-          <!-- Solution & Packages Modal Container -->
+          <!-- Solution, Diff, Command Palette & Packages Modal Container -->
           <div id="cl-modal-slot"></div>
+          <div id="cl-context-menu-slot"></div>
         </div>
       `;
 
       this._renderStepPills();
       this._renderGuidePane();
       this._renderFileLists();
+      this._renderBreadcrumbs();
       this._renderDrawerBody();
       this._updateStatusBar();
       this._updateRunStateUI();
+    }
+
+    _detectActiveSymbol(filePath) {
+      if (!filePath || !this.files || typeof this.files[filePath] !== 'string') return '';
+      if (this.mode === 'guided' && this.steps && this.steps.length > 0) {
+        const step = this.steps[this.activeStepIndex];
+        if (step) {
+          const rawTarget = step.targetFile || '';
+          const stepTarget = this.lang === 'ts' && rawTarget ? rawTarget.replace(/\.js$/, '.ts') : rawTarget;
+          if ((!stepTarget || stepTarget === filePath) && (step.targetSymbol || step.symbol)) {
+            return String(step.targetSymbol || step.symbol);
+          }
+        }
+      }
+      const code = this.files[filePath];
+      const classMatch = code.match(/\bclass\s+([A-Za-z_$][A-Za-z0-9_$]*)/);
+      if (classMatch) return classMatch[1];
+      const fnMatch = code.match(/\b(?:async\s+)?function\s+([A-Za-z_$][A-Za-z0-9_$]*)/);
+      if (fnMatch) return fnMatch[1];
+      return '';
+    }
+
+    _renderBreadcrumbs() {
+      const host = this.container.querySelector('#cl-breadcrumbs');
+      if (!host) return;
+
+      let pathHtml = `<button type="button" class="codelab-breadcrumb__item codelab-breadcrumb__root" data-action="command-palette-files" data-cl-action="command-palette-files" title="Quick Open File (⌘P)">workspace</button>`;
+
+      if (this.activeFile) {
+        const segments = this.activeFile.split('/');
+        for (let i = 0; i < segments.length - 1; i++) {
+          const folderPath = segments.slice(0, i + 1).join('/');
+          pathHtml += `<span class="codelab-breadcrumb__sep" aria-hidden="true">›</span>`;
+          pathHtml += `<button type="button" class="codelab-breadcrumb__item codelab-breadcrumb__folder" data-cl-breadcrumb-folder="${escapeHtml(folderPath)}" data-folder="${escapeHtml(folderPath)}">${escapeHtml(segments[i])}</button>`;
+        }
+        const fileName = segments[segments.length - 1];
+        pathHtml += `<span class="codelab-breadcrumb__sep" aria-hidden="true">›</span>`;
+        pathHtml += `<button type="button" class="codelab-breadcrumb__item codelab-breadcrumb__file active" data-cl-breadcrumb-file="${escapeHtml(this.activeFile)}" data-file="${escapeHtml(this.activeFile)}">${escapeHtml(fileName)}</button>`;
+
+        const symbol = this._detectActiveSymbol(this.activeFile);
+        if (symbol) {
+          pathHtml += `<span class="codelab-breadcrumb__sep" aria-hidden="true">›</span>`;
+          pathHtml += `<span class="codelab-breadcrumb__symbol" data-cl-breadcrumb-symbol="${escapeHtml(symbol)}">ƒ ${escapeHtml(symbol)}</span>`;
+        }
+      }
+
+      host.innerHTML = `
+        <div class="codelab-breadcrumbs__path">${pathHtml}</div>
+        <div class="codelab-breadcrumbs__actions">
+          <button type="button" class="codelab-breadcrumb__btn" data-action="compare-diff" data-cl-action="compare-diff" title="Compare Active File with Solution">
+            ${CL_ICONS.diff}
+            <span>Compare Diff</span>
+          </button>
+          <button type="button" class="codelab-breadcrumb__btn" data-action="command-palette" data-cl-action="command-palette" title="Open Command Palette (⌘⇧P)">
+            ${CL_ICONS.command}
+            <span>Command Palette</span>
+            <kbd class="codelab-breadcrumb__kbd">⌘⇧P</kbd>
+          </button>
+          <button type="button" class="codelab-breadcrumb__btn" data-action="export-workspace" data-cl-action="export-workspace" title="Export Workspace Snapshot">
+            ${CL_ICONS.download}
+            <span>Export</span>
+          </button>
+        </div>
+      `;
     }
 
     _renderStepPills() {
@@ -7314,7 +7717,7 @@ declare module 'buffer' { export { Buffer }; }
           const isCollapsed = this.collapsedFolders.has(fNode.fullPath);
           const indent = depth * 14 + 10;
           treeHtml += `
-            <div class="codelab-folder-item ${isCollapsed ? 'collapsed' : 'expanded'}" data-cl-folder="${escapeHtml(fNode.fullPath)}" data-cl-drop-folder="${escapeHtml(fNode.fullPath)}" data-depth="${depth}" style="padding-left: ${indent}px;">
+            <div class="codelab-folder-item ${isCollapsed ? 'collapsed' : 'expanded'}" data-cl-folder="${escapeHtml(fNode.fullPath)}" data-folder="${escapeHtml(fNode.fullPath)}" data-cl-drop-folder="${escapeHtml(fNode.fullPath)}" data-depth="${depth}" style="padding-left: ${indent}px;">
               <button type="button" class="codelab-chevron" data-cl-action="toggle-folder" data-cl-folder="${escapeHtml(fNode.fullPath)}" title="${isCollapsed ? 'Expand folder' : 'Collapse folder'}" aria-label="${isCollapsed ? 'Expand folder' : 'Collapse folder'}">
                 ${isCollapsed ? CL_ICONS.chevronRight : CL_ICONS.chevronDown}
               </button>
@@ -7351,7 +7754,7 @@ declare module 'buffer' { export { Buffer }; }
           const fileIcon = ext === 'json' ? CL_ICONS.database : ext === 'md' ? CL_ICONS.book : CL_ICONS.file;
           const indent = depth * 14 + 10;
           treeHtml += `
-            <button type="button" class="codelab-file-item ${isActive ? 'active' : ''}" draggable="true" data-cl-file="${escapeHtml(fullPath)}" data-depth="${depth}" style="padding-left: ${indent}px;">
+            <button type="button" class="codelab-file-item ${isActive ? 'active' : ''}" draggable="true" data-cl-file="${escapeHtml(fullPath)}" data-file="${escapeHtml(fullPath)}" data-depth="${depth}" style="padding-left: ${indent}px;">
               <span class="codelab-file-icon">${fileIcon}</span>
               <span class="codelab-file-name" title="${escapeHtml(baseName)}">${escapeHtml(baseName)}</span>
               <span class="codelab-file-badge">${badge}</span>
@@ -7461,7 +7864,7 @@ declare module 'buffer' { export { Buffer }; }
         const isActive = f === this.activeFile;
         const ext = f.endsWith('.ts') ? 'ts' : f.endsWith('.js') ? 'js' : f.endsWith('.json') ? 'json' : f.endsWith('.md') ? 'md' : 'txt';
         return `
-          <button type="button" role="tab" aria-selected="${isActive}" class="codelab-tab ${isActive ? 'active' : ''}" data-cl-file="${escapeHtml(f)}">
+          <button type="button" role="tab" aria-selected="${isActive}" class="codelab-tab ${isActive ? 'active' : ''}" data-cl-file="${escapeHtml(f)}" data-tab-file="${escapeHtml(f)}">
             <span class="codelab-tab__ext codelab-tab__ext--${ext}">${ext.toUpperCase()}</span>
             <span>${escapeHtml(f)}</span>
             <span class="codelab-tab__close" data-action="close-tab" data-cl-file="${escapeHtml(f)}" title="Close ${escapeHtml(f)}" role="button" aria-label="Close ${escapeHtml(f)}">×</span>
@@ -7735,7 +8138,23 @@ declare module 'buffer' { export { Buffer }; }
       }
       this._saveState();
       this._getOrCreateModel(clean);
+      this._emitEvent('codelab:file-create', { labId: this.labId, filename: clean, content: this.files[clean] });
       this.openFile(clean);
+    }
+
+    duplicateFile(filename) {
+      if (!filename || this.files[filename] === undefined) return null;
+      const dotIdx = filename.lastIndexOf('.');
+      const base = dotIdx > 0 ? filename.slice(0, dotIdx) : filename;
+      const ext = dotIdx > 0 ? filename.slice(dotIdx) : '';
+      let candidate = `${base}.copy${ext}`;
+      let counter = 2;
+      while (this.files[candidate] !== undefined) {
+        candidate = `${base}.copy${counter}${ext}`;
+        counter++;
+      }
+      this.createFile(candidate, this.files[filename]);
+      return candidate;
     }
 
     closeTab(filename) {
@@ -7754,6 +8173,23 @@ declare module 'buffer' { export { Buffer }; }
         }
       }
 
+      this._saveState();
+      this._syncActiveFileToView();
+    }
+
+    closeOtherTabs(keepFilename) {
+      if (!Array.isArray(this.openTabs)) return;
+      if (keepFilename && this.files[keepFilename] !== undefined) {
+        this.openTabs = [keepFilename];
+        this.activeFile = keepFilename;
+      }
+      this._saveState();
+      this._syncActiveFileToView();
+    }
+
+    closeAllTabs() {
+      this.openTabs = [];
+      this.activeFile = null;
       this._saveState();
       this._syncActiveFileToView();
     }
@@ -7781,6 +8217,7 @@ declare module 'buffer' { export { Buffer }; }
           this.activeFile = null;
         }
       }
+      this._emitEvent('codelab:file-delete', { labId: this.labId, filename });
       this._syncActiveFileToView();
     }
 
@@ -8039,11 +8476,25 @@ declare module 'buffer' { export { Buffer }; }
         this.editor.addCommand(m.KeyMod.CtrlCmd | m.KeyMod.Shift | m.KeyCode.Enter, () => {
           this.runDemo();
         });
+        if (m.KeyCode.KeyP) {
+          this.editor.addCommand(m.KeyMod.CtrlCmd | m.KeyMod.Shift | m.KeyCode.KeyP, () => {
+            this.openCommandPalette('commands');
+          });
+          this.editor.addCommand(m.KeyMod.CtrlCmd | m.KeyCode.KeyP, () => {
+            this.openCommandPalette('files');
+          });
+        }
+        if (m.KeyCode.F1) {
+          this.editor.addCommand(m.KeyCode.F1, () => {
+            this.openCommandPalette('commands');
+          });
+        }
 
         this.editor.onDidChangeCursorPosition(e => {
           if (e && e.position) {
             this.cursorPos = { ln: e.position.lineNumber, col: e.position.column };
             this._updateStatusBar();
+            this._renderBreadcrumbs();
           }
         });
 
@@ -8076,6 +8527,7 @@ declare module 'buffer' { export { Buffer }; }
       }
       this._emitEvent('codelab:change', { labId: this.labId, filename, code });
       this._updateStatusBar();
+      this._renderBreadcrumbs();
     }
 
     _getOrCreateModel(filename) {
@@ -8124,6 +8576,7 @@ declare module 'buffer' { export { Buffer }; }
           this._renderEmptyEditorContent(emptyEl);
         }
         this._renderFileLists();
+        this._renderBreadcrumbs();
         this._updateStatusBar();
         return;
       }
@@ -8161,6 +8614,7 @@ declare module 'buffer' { export { Buffer }; }
         }
       }
       this._renderFileLists();
+      this._renderBreadcrumbs();
       this._updateStatusBar();
     }
 
@@ -8211,6 +8665,11 @@ declare module 'buffer' { export { Buffer }; }
 
       this._escHandler = e => {
         if (e.key === 'Escape') {
+          const ctxSlot = this.container.querySelector('#cl-context-menu-slot');
+          if (ctxSlot && ctxSlot.innerHTML.trim() !== '') {
+            this.closeContextMenu();
+            return;
+          }
           if (this.creatingItem) {
             this.creatingItem = null;
             this._renderFileLists();
@@ -8241,6 +8700,17 @@ declare module 'buffer' { export { Buffer }; }
       }
 
       this.container.addEventListener('keydown', e => {
+        const keyLower = (e.key || '').toLowerCase();
+        if (e.key === 'F1' || ((e.metaKey || e.ctrlKey) && e.shiftKey && keyLower === 'p')) {
+          e.preventDefault();
+          this.openCommandPalette('commands');
+          return;
+        }
+        if ((e.metaKey || e.ctrlKey) && !e.shiftKey && keyLower === 'p') {
+          e.preventDefault();
+          this.openCommandPalette('files');
+          return;
+        }
         if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
           e.preventDefault();
           if (e.shiftKey) {
@@ -8250,6 +8720,60 @@ declare module 'buffer' { export { Buffer }; }
           } else {
             this.runTests();
           }
+        }
+      });
+
+      this.container.addEventListener('contextmenu', e => {
+        const tabEl = e.target.closest('.codelab-tab');
+        if (tabEl && (tabEl.dataset.clFile || tabEl.dataset.tabFile)) {
+          e.preventDefault();
+          const fname = tabEl.dataset.clFile || tabEl.dataset.tabFile;
+          const x = e.clientX || 120;
+          const y = e.clientY || 80;
+          this.openContextMenu(x, y, [
+            { label: 'Close', shortcut: '⌘W', action: 'close-tab', target: fname },
+            { label: 'Close Others', action: 'close-other-tabs', target: fname },
+            { label: 'Close All', action: 'close-all-tabs', target: fname },
+            { divider: true },
+            { label: 'Compare with Solution', action: 'compare-solution', target: fname },
+            { label: 'Compare with Starter', action: 'compare-starter', target: fname }
+          ]);
+          return;
+        }
+
+        const fileEl = e.target.closest('.codelab-file-item');
+        if (fileEl && (fileEl.dataset.clFile || fileEl.dataset.file)) {
+          e.preventDefault();
+          const fname = fileEl.dataset.clFile || fileEl.dataset.file;
+          const x = e.clientX || 120;
+          const y = e.clientY || 120;
+          this.openContextMenu(x, y, [
+            { label: 'Open File', action: 'open-file', target: fname },
+            { label: 'Rename...', shortcut: 'F2', action: 'rename-file', target: fname },
+            { label: 'Duplicate File', action: 'duplicate-file', target: fname },
+            { divider: true },
+            { label: 'Compare with Solution', action: 'compare-solution', target: fname },
+            { label: 'Compare with Starter', action: 'compare-starter', target: fname },
+            { divider: true },
+            { label: 'Download File', action: 'download-file', target: fname },
+            { label: 'Delete File', action: 'delete-file', target: fname, danger: true }
+          ]);
+          return;
+        }
+
+        const folderEl = e.target.closest('.codelab-folder-item');
+        if (folderEl && (folderEl.dataset.clFolder || folderEl.dataset.folder)) {
+          e.preventDefault();
+          const folder = folderEl.dataset.clFolder || folderEl.dataset.folder;
+          const x = e.clientX || 120;
+          const y = e.clientY || 120;
+          this.openContextMenu(x, y, [
+            { label: 'New File in Folder...', action: 'new-file-in-folder', target: folder },
+            { label: 'New Subfolder...', action: 'new-subfolder', target: folder },
+            { divider: true },
+            { label: 'Rename Folder...', action: 'rename-folder-ctx', target: folder },
+            { label: 'Delete Folder', action: 'delete-folder-ctx', target: folder, danger: true }
+          ]);
         }
       });
 
@@ -8267,6 +8791,69 @@ declare module 'buffer' { export { Buffer }; }
       this.container.addEventListener('mousedown', handleTabMiddleClick);
 
       this.container.addEventListener('click', e => {
+        const ctxBtn = e.target.closest('[data-ctx-action]');
+        if (ctxBtn) {
+          e.stopPropagation();
+          const act = ctxBtn.dataset.ctxAction;
+          const target = ctxBtn.dataset.ctxTarget || '';
+          this.closeContextMenu();
+          if (act === 'open-file' && target) this.openFile(target);
+          else if (act === 'rename-file' && target) this.startInlineRename('file', target);
+          else if (act === 'duplicate-file' && target) this.duplicateFile(target);
+          else if (act === 'compare-solution' && target) {
+            this.openFile(target);
+            this.showDiffModal(target, 'solution');
+          } else if (act === 'compare-starter' && target) {
+            this.openFile(target);
+            this.showDiffModal(target, 'starter');
+          } else if (act === 'download-file' && target) this.downloadFile(target);
+          else if (act === 'delete-file' && target) this.deleteFile(target);
+          else if (act === 'new-file-in-folder') this.startInlineCreate('file', target);
+          else if (act === 'new-subfolder') this.startInlineCreate('folder', target);
+          else if (act === 'rename-folder-ctx' && target) this.startInlineRename('folder', target);
+          else if (act === 'delete-folder-ctx' && target) this.deleteFolder(target);
+          else if (act === 'close-tab' && target) this.closeTab(target);
+          else if (act === 'close-other-tabs' && target) this.closeOtherTabs(target);
+          else if (act === 'close-all-tabs') this.closeAllTabs();
+          return;
+        }
+
+        // Dismiss context menu on outside click
+        const ctxSlot = this.container.querySelector('#cl-context-menu-slot');
+        if (ctxSlot && ctxSlot.innerHTML.trim() !== '' && !e.target.closest('.codelab-context-menu')) {
+          this.closeContextMenu();
+        }
+
+        const paletteItem = e.target.closest('[data-palette-idx]');
+        if (paletteItem) {
+          e.stopPropagation();
+          const idx = Number(paletteItem.dataset.paletteIdx);
+          this._executePaletteSelection(idx);
+          return;
+        }
+
+        if (e.target.classList && e.target.classList.contains('codelab-palette-backdrop')) {
+          this.closeModal();
+          return;
+        }
+
+        const bcFolder = e.target.closest('[data-cl-breadcrumb-folder]');
+        if (bcFolder) {
+          const folder = bcFolder.dataset.clBreadcrumbFolder;
+          if (folder) {
+            this.collapsedFolders.delete(folder);
+            this._renderFileLists();
+          }
+          return;
+        }
+
+        const bcFile = e.target.closest('[data-cl-breadcrumb-file]');
+        if (bcFile) {
+          const fname = bcFile.dataset.clBreadcrumbFile;
+          if (fname) this.openFile(fname);
+          return;
+        }
+
         const closeBtn = e.target.closest('[data-action="close-tab"], .codelab-tab__close');
         if (closeBtn) {
           e.stopPropagation();
@@ -8332,15 +8919,32 @@ declare module 'buffer' { export { Buffer }; }
           return;
         }
 
-        const actionBtn = e.target.closest('[data-cl-action]');
+        const actionBtn = e.target.closest('[data-cl-action], [data-action]');
         if (actionBtn) {
-          const action = actionBtn.dataset.clAction;
+          const action = actionBtn.dataset.clAction || actionBtn.dataset.action;
           if (action === 'run-demo') this.runDemo();
           else if (action === 'run-tests') this.runTests();
           else if (action === 'stop-run') this.stopExecution();
           else if (action === 'verify-step') this.verifyCurrentStep();
           else if (action === 'show-diff') this.showSolutionModal();
-          else if (action === 'open-packages') this.showPackagesModal();
+          else if (action === 'compare-diff') {
+            const target = actionBtn.dataset.diffTarget || 'solution';
+            const file = actionBtn.dataset.diffFile || this.activeFile || this._pickDefaultFile();
+            this.showDiffModal(file, target);
+          } else if (action === 'diff-mode') {
+            this.diffViewMode = actionBtn.dataset.diffMode === 'split' ? 'split' : 'unified';
+            const target = actionBtn.dataset.diffTarget || this._lastDiffTarget || 'solution';
+            const file = actionBtn.dataset.diffFile || this._lastDiffFile || this.activeFile || this._pickDefaultFile();
+            this.showDiffModal(file, target);
+          } else if (action === 'apply-diff-solution') {
+            this.applyReferenceSolution();
+          } else if (action === 'command-palette') {
+            this.openCommandPalette('commands');
+          } else if (action === 'command-palette-files') {
+            this.openCommandPalette('files');
+          } else if (action === 'export-workspace') {
+            this.exportWorkspace({ download: true });
+          } else if (action === 'open-packages') this.showPackagesModal();
           else if (action === 'add-package') {
             const input = this.container.querySelector('#cl-pkg-input');
             if (input && input.value.trim()) {
@@ -8417,6 +9021,337 @@ declare module 'buffer' { export { Buffer }; }
           return;
         }
       });
+    }
+
+    // ── Right-Click Context Menu ────────────────────────────────────────────
+    openContextMenu(x, y, items = []) {
+      const slot = this.container.querySelector('#cl-context-menu-slot');
+      if (!slot) return;
+      const safeX = Math.max(8, Number(x) || 80);
+      const safeY = Math.max(8, Number(y) || 80);
+      this._contextMenuItems = items;
+
+      const itemsHtml = items.map(item => {
+        if (item.divider) {
+          return '<div class="codelab-context-menu__divider" role="separator"></div>';
+        }
+        return `
+          <button type="button" class="codelab-context-menu__item ${item.danger ? 'is-danger' : ''}" role="menuitem" data-ctx-action="${escapeHtml(item.action || '')}" data-ctx-target="${escapeHtml(item.target || '')}">
+            <span class="codelab-context-menu__label">${escapeHtml(item.label || '')}</span>
+            ${item.shortcut ? `<span class="codelab-context-menu__kbd">${escapeHtml(item.shortcut)}</span>` : ''}
+          </button>
+        `;
+      }).join('');
+
+      slot.innerHTML = `
+        <div class="codelab-context-menu" role="menu" aria-label="Context Menu" style="left:${safeX}px;top:${safeY}px;">
+          ${itemsHtml}
+        </div>
+      `;
+    }
+
+    closeContextMenu() {
+      const slot = this.container.querySelector('#cl-context-menu-slot');
+      if (slot) slot.innerHTML = '';
+      this._contextMenuItems = null;
+    }
+
+    // ── VS Code Command Palette & Quick Open ────────────────────────────────
+    _getPaletteCommands() {
+      return [
+        { id: 'run-demo', label: 'CodeLab: Run Demo Script', shortcut: '⇧⌘↵', action: () => this.runDemo() },
+        { id: 'run-tests', label: 'CodeLab: Run Unit Tests', shortcut: '⌘↵', action: () => this.runTests() },
+        { id: 'verify-step', label: 'CodeLab: Verify Current Guided Step', shortcut: '⌘↵', action: () => this.verifyCurrentStep() },
+        { id: 'compare-solution', label: 'CodeLab: Compare Active File with Reference Solution (Diff)', action: () => this.showDiffModal(this.activeFile || this._pickDefaultFile(), 'solution') },
+        { id: 'compare-starter', label: 'CodeLab: Compare Active File with Starter Template (Diff)', action: () => this.showDiffModal(this.activeFile || this._pickDefaultFile(), 'starter') },
+        { id: 'apply-solution', label: 'CodeLab: Apply Reference Solution to Active File', action: () => this.applyReferenceSolution() },
+        { id: 'new-file', label: 'File: New File...', action: () => this.startInlineCreate('file', '') },
+        { id: 'new-folder', label: 'File: New Folder...', action: () => this.startInlineCreate('folder', '') },
+        { id: 'rename-active', label: 'File: Rename Active File...', shortcut: 'F2', action: () => { if (this.activeFile) this.startInlineRename('file', this.activeFile); } },
+        { id: 'delete-active', label: 'File: Delete Active File', action: () => { if (this.activeFile) this.deleteFile(this.activeFile); } },
+        { id: 'export-workspace', label: 'Workspace: Export Workspace as JSON', action: () => this.exportWorkspace({ download: true }) },
+        { id: 'reset-workspace', label: 'Workspace: Reset Workspace to Clean State', action: () => this.resetLab() },
+        { id: 'switch-lang', label: 'Language: Switch JavaScript / TypeScript', action: () => this.setLanguage(this.lang === 'js' ? 'ts' : 'js') },
+        { id: 'switch-mode', label: 'Mode: Switch Guided / Sandbox Mode', action: () => this.setMode(this.mode === 'guided' ? 'sandbox' : 'guided') },
+        { id: 'toggle-guide', label: 'View: Toggle Guide Sidebar', action: () => this.toggleGuide() },
+        { id: 'toggle-drawer', label: 'View: Toggle Bottom Drawer (Tests / Terminal / VFS)', action: () => {
+          const drawer = this.container.querySelector('#cl-drawer');
+          if (drawer) drawer.classList.toggle('is-minimized');
+          if (this.editor) setTimeout(() => this.editor.layout(), 50);
+        } },
+        { id: 'toggle-fullscreen', label: 'View: Toggle Fullscreen Workbench', action: () => this.toggleFullscreen() },
+        { id: 'open-packages', label: 'Packages: Manage NPM Dependencies & Runtime', action: () => this.showPackagesModal() }
+      ];
+    }
+
+    openCommandPalette(mode = 'commands') {
+      const slot = this.container.querySelector('#cl-modal-slot');
+      if (!slot) return;
+      this.paletteMode = mode === 'files' ? 'files' : 'commands';
+      this.paletteSelectedIndex = 0;
+      const initialVal = this.paletteMode === 'commands' ? '> ' : '';
+
+      slot.innerHTML = `
+        <div class="codelab-palette-backdrop">
+          <div class="codelab-palette" role="dialog" aria-modal="true" aria-label="Command Palette">
+            <div class="codelab-palette__header">
+              <span class="codelab-palette__icon">${CL_ICONS.search}</span>
+              <input id="cl-palette-input" class="codelab-palette__input" type="text" value="${escapeHtml(initialVal)}" placeholder="${this.paletteMode === 'commands' ? 'Type a command or remove > to search files…' : 'Search files by name (type > for commands)…'}" autocomplete="off" spellcheck="false" aria-label="Command Palette Input" />
+              <span class="codelab-palette__hint">ESC to close</span>
+            </div>
+            <div id="cl-palette-list" class="codelab-palette__list" role="listbox"></div>
+          </div>
+        </div>
+      `;
+
+      this._renderPaletteList(initialVal);
+
+      const input = slot.querySelector('#cl-palette-input');
+      if (input) {
+        input.focus();
+        try {
+          input.setSelectionRange(initialVal.length, initialVal.length);
+        } catch (_) {}
+
+        input.addEventListener('input', () => {
+          this.paletteSelectedIndex = 0;
+          this._renderPaletteList(input.value);
+        });
+
+        input.addEventListener('keydown', e => {
+          const items = this._currentPaletteItems || [];
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (items.length > 0) {
+              this.paletteSelectedIndex = (this.paletteSelectedIndex + 1) % items.length;
+              this._renderPaletteList(input.value);
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (items.length > 0) {
+              this.paletteSelectedIndex = (this.paletteSelectedIndex - 1 + items.length) % items.length;
+              this._renderPaletteList(input.value);
+            }
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            this._executePaletteSelection(this.paletteSelectedIndex);
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            this.closeModal();
+          }
+        });
+      }
+    }
+
+    _renderPaletteList(rawValue = '') {
+      const listEl = this.container.querySelector('#cl-palette-list');
+      if (!listEl) return;
+      const trimmed = String(rawValue || '').trim();
+      const isCommandQuery = trimmed.startsWith('>') || (this.paletteMode === 'commands' && rawValue.startsWith('>'));
+      const query = (trimmed.startsWith('>') ? trimmed.slice(1) : trimmed).trim().toLowerCase();
+
+      let items = [];
+      if (isCommandQuery) {
+        const cmds = this._getPaletteCommands();
+        items = cmds
+          .filter(c => !query || c.label.toLowerCase().includes(query) || c.id.toLowerCase().includes(query))
+          .map(c => ({
+            type: 'command',
+            id: c.id,
+            label: c.label,
+            shortcut: c.shortcut || '',
+            action: c.action
+          }));
+      } else {
+        const files = this._orderedFileNames();
+        items = files
+          .filter(f => !query || f.toLowerCase().includes(query))
+          .map(f => ({
+            type: 'file',
+            id: f,
+            label: f,
+            shortcut: f === this.activeFile ? 'Active' : '',
+            action: () => this.openFile(f)
+          }));
+      }
+
+      this._currentPaletteItems = items;
+      if (this.paletteSelectedIndex >= items.length) {
+        this.paletteSelectedIndex = 0;
+      }
+
+      if (items.length === 0) {
+        listEl.innerHTML = `<div class="codelab-palette__empty">No matching ${isCommandQuery ? 'commands' : 'files'} found</div>`;
+        return;
+      }
+
+      listEl.innerHTML = items.map((item, idx) => `
+        <button type="button" class="codelab-palette__item ${idx === this.paletteSelectedIndex ? 'is-selected' : ''}" role="option" aria-selected="${idx === this.paletteSelectedIndex}" data-palette-idx="${idx}" data-palette-id="${escapeHtml(item.id)}">
+          <span class="codelab-palette__item-label">${escapeHtml(item.label)}</span>
+          ${item.shortcut ? `<span class="codelab-palette__item-kbd">${escapeHtml(item.shortcut)}</span>` : ''}
+        </button>
+      `).join('');
+    }
+
+    _executePaletteSelection(index) {
+      const items = this._currentPaletteItems || [];
+      const item = items[index];
+      if (!item) return;
+      this.closeModal();
+      if (typeof item.action === 'function') {
+        item.action();
+      }
+    }
+
+    // ── Inline & Side-by-Side Diff Viewer ───────────────────────────────────
+    _computeLineDiff(oldText, newText) {
+      const oldLines = String(oldText || '').split('\n');
+      const newLines = String(newText || '').split('\n');
+      const m = oldLines.length;
+      const n = newLines.length;
+
+      // LCS dynamic programming matrix
+      const dp = Array.from({ length: m + 1 }, () => new Int32Array(n + 1));
+      for (let i = m - 1; i >= 0; i--) {
+        for (let j = n - 1; j >= 0; j--) {
+          if (oldLines[i] === newLines[j]) {
+            dp[i][j] = 1 + dp[i + 1][j + 1];
+          } else {
+            dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+          }
+        }
+      }
+
+      const hunks = [];
+      let i = 0;
+      let j = 0;
+      let oldLineNum = 1;
+      let newLineNum = 1;
+      let added = 0;
+      let removed = 0;
+
+      while (i < m && j < n) {
+        if (oldLines[i] === newLines[j]) {
+          hunks.push({ type: 'same', text: oldLines[i], oldLine: oldLineNum++, newLine: newLineNum++ });
+          i++;
+          j++;
+        } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+          hunks.push({ type: 'del', text: oldLines[i], oldLine: oldLineNum++, newLine: null });
+          removed++;
+          i++;
+        } else {
+          hunks.push({ type: 'add', text: newLines[j], oldLine: null, newLine: newLineNum++ });
+          added++;
+          j++;
+        }
+      }
+      while (i < m) {
+        hunks.push({ type: 'del', text: oldLines[i++], oldLine: oldLineNum++, newLine: null });
+        removed++;
+      }
+      while (j < n) {
+        hunks.push({ type: 'add', text: newLines[j++], oldLine: null, newLine: newLineNum++ });
+        added++;
+      }
+
+      return { hunks, added, removed };
+    }
+
+    showDiffModal(targetFile = null, compareTarget = 'solution') {
+      const slot = this.container.querySelector('#cl-modal-slot');
+      if (!slot) return;
+
+      const file = targetFile || this.activeFile || this._pickDefaultFile();
+      const isStarter = compareTarget === 'starter';
+      const baseFiles = this._getBaseFilesForModeAndLang(isStarter ? 'guided' : 'sandbox', this.lang);
+      const refCode = baseFiles[file] !== undefined ? baseFiles[file] : '';
+      const currentCode = this.files[file] !== undefined ? this.files[file] : '';
+
+      // When comparing with starter: old = starter, new = current editor code
+      // When comparing with solution: old = current editor code, new = reference solution
+      const leftText = isStarter ? refCode : currentCode;
+      const rightText = isStarter ? currentCode : refCode;
+      const leftLabel = isStarter ? `Starter (${file})` : `Current Editor (${file})`;
+      const rightLabel = isStarter ? `Current Editor (${file})` : `Reference Solution (${file})`;
+
+      const diff = this._computeLineDiff(leftText, rightText);
+      const viewMode = this.diffViewMode === 'split' ? 'split' : 'unified';
+      this._lastDiffFile = file;
+      this._lastDiffTarget = compareTarget;
+
+      let diffBodyHtml = '';
+      if (viewMode === 'unified') {
+        diffBodyHtml = `
+          <div class="codelab-diff-unified">
+            ${diff.hunks.map(h => {
+              const cls = h.type === 'add' ? 'codelab-diff-line--add' : h.type === 'del' ? 'codelab-diff-line--del' : 'codelab-diff-line--same';
+              const prefix = h.type === 'add' ? '+' : h.type === 'del' ? '-' : ' ';
+              return `
+                <div class="codelab-diff-line ${cls}">
+                  <span class="codelab-diff-gutter">${h.oldLine || ''}</span>
+                  <span class="codelab-diff-gutter">${h.newLine || ''}</span>
+                  <span class="codelab-diff-prefix">${prefix}</span>
+                  <span class="codelab-diff-code">${escapeHtml(h.text)}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else {
+        const leftRows = diff.hunks.filter(h => h.type !== 'add');
+        const rightRows = diff.hunks.filter(h => h.type !== 'del');
+        diffBodyHtml = `
+          <div class="codelab-diff-split">
+            <div class="codelab-diff-pane">
+              <div class="codelab-diff-pane__title">${escapeHtml(leftLabel)}</div>
+              ${leftRows.map(h => `
+                <div class="codelab-diff-line ${h.type === 'del' ? 'codelab-diff-line--del' : 'codelab-diff-line--same'}">
+                  <span class="codelab-diff-gutter">${h.oldLine || ''}</span>
+                  <span class="codelab-diff-prefix">${h.type === 'del' ? '-' : ' '}</span>
+                  <span class="codelab-diff-code">${escapeHtml(h.text)}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div class="codelab-diff-pane">
+              <div class="codelab-diff-pane__title">${escapeHtml(rightLabel)}</div>
+              ${rightRows.map(h => `
+                <div class="codelab-diff-line ${h.type === 'add' ? 'codelab-diff-line--add' : 'codelab-diff-line--same'}">
+                  <span class="codelab-diff-gutter">${h.newLine || ''}</span>
+                  <span class="codelab-diff-prefix">${h.type === 'add' ? '+' : ' '}</span>
+                  <span class="codelab-diff-code">${escapeHtml(h.text)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      slot.innerHTML = `
+        <div class="codelab-modal-backdrop">
+          <div class="codelab-modal codelab-diff-modal" role="dialog" aria-modal="true" aria-label="Diff Viewer — ${escapeHtml(file)}">
+            <div class="codelab-modal__header">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;">${CL_ICONS.diff}<span>Diff — ${escapeHtml(file)} (${isStarter ? 'vs Starter' : 'vs Solution'})</span></span>
+                <span class="codelab-diff-stats">
+                  <span class="codelab-diff-stat--add">+${diff.added}</span>
+                  <span class="codelab-diff-stat--del">-${diff.removed}</span>
+                </span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div class="codelab-seg" role="group" aria-label="Diff View Mode">
+                  <button type="button" class="codelab-seg__btn ${viewMode === 'unified' ? 'active' : ''}" data-cl-action="diff-mode" data-diff-mode="unified" data-diff-file="${escapeHtml(file)}" data-diff-target="${escapeHtml(compareTarget)}">Unified</button>
+                  <button type="button" class="codelab-seg__btn ${viewMode === 'split' ? 'active' : ''}" data-cl-action="diff-mode" data-diff-mode="split" data-diff-file="${escapeHtml(file)}" data-diff-target="${escapeHtml(compareTarget)}">Split</button>
+                </div>
+                <button type="button" class="codelab-btn codelab-btn--test" data-cl-action="apply-diff-solution">Apply Reference Solution</button>
+                <button type="button" class="codelab-btn" data-cl-action="close-modal">Close (Esc)</button>
+              </div>
+            </div>
+            <div class="codelab-modal__body codelab-diff-body">
+              ${diffBodyHtml}
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     _bindSplitters() {
@@ -8517,6 +9452,7 @@ declare module 'buffer' { export { Buffer }; }
           this.openFile(targetFile, step.targetSymbol || `TODO (Step ${idx + 1})`);
         }
       }
+      this._renderBreadcrumbs();
     }
 
     openFile(filename, symbolToFind = '') {
@@ -8528,6 +9464,7 @@ declare module 'buffer' { export { Buffer }; }
       this.activeFile = filename;
       this._saveState();
       this._syncActiveFileToView();
+      this._emitEvent('codelab:file-open', { labId: this.labId, filename });
 
       if (symbolToFind && this.editor && this.monaco) {
         const model = this.editor.getModel();
@@ -8638,7 +9575,7 @@ declare module 'buffer' { export { Buffer }; }
 
     stopExecution() {
       if (typeof root.CodeLabRuntime?.cancelWorkerExecution === 'function') {
-        root.CodeLabRuntime.cancelWorkerExecution();
+        root.CodeLabRuntime.cancelWorkerExecution('Execution stopped by user', this.instanceId);
       }
       this.isRunning = false;
       this._setRuntimeStatus('idle', 'Ready · Node v22 VFS');
@@ -8673,7 +9610,20 @@ declare module 'buffer' { export { Buffer }; }
     showPackagesModal() {
       const slot = this.container.querySelector('#cl-modal-slot');
       if (!slot) return;
-      const pkgs = this._detectPackages();
+      const rawDetected = this._detectPackages();
+      const rawPkgs = Array.isArray(rawDetected)
+        ? rawDetected
+        : (rawDetected && Array.isArray(rawDetected.npmPackages) ? rawDetected.npmPackages : []);
+      const pkgs = rawPkgs.map(p => {
+        if (typeof p === 'string') {
+          const atIdx = p.lastIndexOf('@');
+          if (atIdx > 0) {
+            return { name: p.slice(0, atIdx), version: p.slice(atIdx + 1) || 'latest' };
+          }
+          return { name: p, version: (rawDetected && rawDetected.pkgJsonDeps && rawDetected.pkgJsonDeps[p]) || 'latest' };
+        }
+        return p;
+      });
       const builtins = [
         'node:fs', 'node:path', 'node:crypto', 'node:events', 'node:http',
         'node:net', 'node:stream', 'node:buffer', 'node:util', 'node:test', 'node:assert'
@@ -8781,6 +9731,9 @@ declare module 'buffer' { export { Buffer }; }
             <div class="codelab-modal__header">
               <span style="display:inline-flex;align-items:center;gap:6px;">${CL_ICONS.lightbulb}<span>Reference Solution — ${escapeHtml(targetFile)}</span></span>
               <div style="display:flex;gap:8px;">
+                <button type="button" class="codelab-btn" data-cl-action="compare-diff" data-diff-target="solution" data-diff-file="${escapeHtml(targetFile)}">
+                  ${CL_ICONS.diff}<span>Compare Diff</span>
+                </button>
                 <button type="button" class="codelab-btn codelab-btn--test" data-cl-action="apply-solution">
                   Apply Solution to Editor
                 </button>
@@ -8816,22 +9769,26 @@ declare module 'buffer' { export { Buffer }; }
     // ── Execution Engine (Web Worker + Virtual Node Runtime) ───────────────
     async _executeRuntime(execOptions) {
       const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const payload = { ...execOptions, instanceId: this.instanceId };
       try {
-        if (typeof root.CodeLabRuntime?.preloadNpmPackages === 'function' && execOptions && execOptions.files) {
-          const detected = this._detectPackages();
-          if (detected.length > 0) {
-            this._setRuntimeStatus('fetching', `Fetching ${detected.map(d => d.name).join(', ')}...`);
+        if (typeof root.CodeLabRuntime?.preloadNpmPackages === 'function' && payload && payload.files) {
+          const rawDetected = this._detectPackages();
+          const detectedList = Array.isArray(rawDetected)
+            ? rawDetected
+            : (rawDetected && Array.isArray(rawDetected.npmPackages) ? rawDetected.npmPackages : []);
+          if (detectedList.length > 0) {
+            this._setRuntimeStatus('fetching', `Fetching ${detectedList.map(d => typeof d === 'string' ? d : d.name).join(', ')}...`);
           }
-          await root.CodeLabRuntime.preloadNpmPackages(execOptions.files, pkgName => {
+          await root.CodeLabRuntime.preloadNpmPackages(payload.files, pkgName => {
             this._setRuntimeStatus('fetching', `Fetching ${pkgName} from esm.sh...`);
           });
         }
-        this._setRuntimeStatus('running', `Running ${execOptions.entry || execOptions.mode || 'script'}...`);
+        this._setRuntimeStatus('running', `Running ${payload.entry || payload.mode || 'script'}...`);
         let res;
         if (typeof root.CodeLabRuntime?.executeInWorker === 'function') {
-          res = await root.CodeLabRuntime.executeInWorker(execOptions);
+          res = await root.CodeLabRuntime.executeInWorker(payload);
         } else if (typeof root.CodeLabRuntime?.executeInVirtualRuntime === 'function') {
-          res = await root.CodeLabRuntime.executeInVirtualRuntime(execOptions);
+          res = await root.CodeLabRuntime.executeInVirtualRuntime(payload);
         } else {
           throw new Error('CodeLabRuntime is not loaded.');
         }
@@ -9070,6 +10027,173 @@ declare module 'buffer' { export { Buffer }; }
       this._renderDrawerBody();
     }
 
+    // ── Workspace Export / Import & Imperative Third-Party SDK APIs ────────
+    downloadFile(filename) {
+      if (!filename || this.files[filename] === undefined) return false;
+      const content = this.files[filename];
+      try {
+        if (typeof Blob !== 'undefined' && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function' && typeof document !== 'undefined') {
+          const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename.split('/').pop() || filename;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 500);
+        }
+      } catch (_) {}
+      return content;
+    }
+
+    exportWorkspace(options = {}) {
+      const snapshot = {
+        labId: this.labId,
+        title: this.title,
+        mode: this.mode,
+        language: this.lang,
+        activeFile: this.activeFile,
+        openTabs: Array.isArray(this.openTabs) ? [...this.openTabs] : [],
+        folders: Array.from(this.folders),
+        files: { ...this.files },
+        completedSteps: Array.from(this.completedSteps),
+        exportedAt: new Date().toISOString()
+      };
+      if (options && options.download) {
+        try {
+          if (typeof Blob !== 'undefined' && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function' && typeof document !== 'undefined') {
+            const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${this.labId || 'workspace'}.codelab.json`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 500);
+          }
+        } catch (_) {}
+      }
+      return snapshot;
+    }
+
+    importWorkspace(snapshotOrJson) {
+      const data = typeof snapshotOrJson === 'string' ? JSON.parse(snapshotOrJson) : snapshotOrJson;
+      if (!data || typeof data !== 'object') return false;
+      if (data.mode === 'guided' || data.mode === 'sandbox') {
+        this.mode = data.mode;
+      }
+      if (data.language === 'js' || data.language === 'ts') {
+        this.lang = data.language;
+      }
+      if (data.files && typeof data.files === 'object') {
+        this.setFiles(data.files);
+      }
+      if (Array.isArray(data.folders)) {
+        for (const f of data.folders) {
+          if (f) this.folders.add(f);
+        }
+      }
+      if (Array.isArray(data.openTabs)) {
+        this.openTabs = data.openTabs.filter(f => this.files[f] !== undefined);
+      }
+      if (data.activeFile && this.files[data.activeFile] !== undefined) {
+        this.activeFile = data.activeFile;
+      }
+      this._saveState();
+      this._syncAllModels();
+      this._syncActiveFileToView();
+      return true;
+    }
+
+    getFiles() {
+      return { ...this.files };
+    }
+
+    setFiles(filesMap) {
+      if (!filesMap || typeof filesMap !== 'object') return;
+      for (const model of this.models.values()) {
+        try { model.dispose(); } catch (_) {}
+      }
+      this.models.clear();
+      this.files = {};
+      this.folders = new Set();
+      for (const [rawPath, content] of Object.entries(filesMap)) {
+        const clean = String(rawPath).trim().replace(/^\/+/, '');
+        if (!clean) continue;
+        this.files[clean] = String(content ?? '');
+        const parts = clean.split('/');
+        for (let i = 1; i < parts.length; i++) {
+          this.folders.add(parts.slice(0, i).join('/'));
+        }
+      }
+      this.openTabs = this._orderedFileNames();
+      if (!this.activeFile || this.files[this.activeFile] === undefined) {
+        this.activeFile = this._pickDefaultFile();
+      }
+      this._saveState();
+      this._syncAllModels();
+      this._syncActiveFileToView();
+    }
+
+    getFile(path) {
+      const clean = String(path || '').trim().replace(/^\/+/, '');
+      return this.files[clean];
+    }
+
+    setFile(path, content) {
+      const clean = String(path || '').trim().replace(/^\/+/, '');
+      if (!clean) return;
+      const isNew = this.files[clean] === undefined;
+      const parts = clean.split('/');
+      for (let i = 1; i < parts.length; i++) {
+        this.folders.add(parts.slice(0, i).join('/'));
+      }
+      this.files[clean] = String(content ?? '');
+      this._saveState();
+      this._getOrCreateModel(clean);
+      if (isNew) {
+        this._emitEvent('codelab:file-create', { labId: this.labId, filename: clean, content: this.files[clean] });
+      }
+      this._notifyCodeChange(clean, this.files[clean]);
+      this._syncActiveFileToView();
+    }
+
+    getOpenTabs() {
+      return Array.isArray(this.openTabs) ? [...this.openTabs] : [];
+    }
+
+    reset() {
+      return this.resetLab();
+    }
+
+    on(eventName, handler) {
+      if (!eventName || typeof handler !== 'function') return () => {};
+      const key = String(eventName).trim();
+      if (!this._eventListeners.has(key)) {
+        this._eventListeners.set(key, new Set());
+      }
+      this._eventListeners.get(key).add(handler);
+      return () => this.off(key, handler);
+    }
+
+    off(eventName, handler) {
+      if (!eventName) return;
+      const key = String(eventName).trim();
+      const set = this._eventListeners.get(key);
+      if (set) {
+        if (handler) set.delete(handler);
+        else set.clear();
+      }
+    }
+
+    use(plugin, pluginOptions = {}) {
+      if (!plugin) return this;
+      if (typeof plugin === 'function') {
+        plugin(this, pluginOptions);
+      } else if (typeof plugin === 'object' && typeof plugin.install === 'function') {
+        plugin.install(this, pluginOptions);
+      }
+      return this;
+    }
+
     destroy() {
       if (this._escHandler && typeof document !== 'undefined') {
         document.removeEventListener('keydown', this._escHandler);
@@ -9085,6 +10209,9 @@ declare module 'buffer' { export { Buffer }; }
         model.dispose();
       }
       this.models.clear();
+      if (this._eventListeners) {
+        this._eventListeners.clear();
+      }
     }
   }
 
@@ -9127,6 +10254,29 @@ declare module 'buffer' { export { Buffer }; }
           ...(attrFiles ? { files: attrFiles } : {})
         });
       }
+
+      getFiles() { return this._instance ? this._instance.getFiles() : {}; }
+      setFiles(filesMap) { if (this._instance) this._instance.setFiles(filesMap); }
+      getFile(path) { return this._instance ? this._instance.getFile(path) : undefined; }
+      setFile(path, content) { if (this._instance) this._instance.setFile(path, content); }
+      createFile(path, content) { if (this._instance) this._instance.createFile(path, content); }
+      deleteFile(path) { if (this._instance) this._instance.deleteFile(path); }
+      renameFile(oldPath, newPath) { if (this._instance) this._instance.renameFile(oldPath, newPath); }
+      createFolder(path) { if (this._instance) this._instance.createFolder(path); }
+      deleteFolder(path) { if (this._instance) this._instance.deleteFolder(path); }
+      renameFolder(oldPath, newPath) { if (this._instance) this._instance.renameFolder(oldPath, newPath); }
+      openFile(path, sym) { if (this._instance) this._instance.openFile(path, sym); }
+      closeTab(path) { if (this._instance) this._instance.closeTab(path); }
+      getOpenTabs() { return this._instance ? this._instance.getOpenTabs() : []; }
+      runDemo() { return this._instance ? this._instance.runDemo() : Promise.resolve(); }
+      runTests(filter) { return this._instance ? this._instance.runTests(filter) : Promise.resolve(); }
+      stopExecution() { if (this._instance) this._instance.stopExecution(); }
+      reset() { if (this._instance) this._instance.reset(); }
+      exportWorkspace(opts) { return this._instance ? this._instance.exportWorkspace(opts) : null; }
+      importWorkspace(snap) { return this._instance ? this._instance.importWorkspace(snap) : false; }
+      on(ev, fn) { return this._instance ? this._instance.on(ev, fn) : () => {}; }
+      off(ev, fn) { if (this._instance) this._instance.off(ev, fn); }
+      use(plugin, opts) { if (this._instance) this._instance.use(plugin, opts); return this; }
 
       disconnectedCallback() {
         if (this._instance) {

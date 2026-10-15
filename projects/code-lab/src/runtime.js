@@ -4625,23 +4625,235 @@ function __initVirtualRuntime(rootScope) {
       resourceTracker.activeImmediates.delete(id);
     }
 
-    function checkConsoleFlood(isErr = false) {
+    const consoleTimers = new Map();
+    const consoleCounts = new Map();
+    let groupDepth = 0;
+
+    function formatConsoleArgs(args) {
+      if (args.length === 0) return '';
+      if (args.length > 1 && typeof args[0] === 'string' && /%[sdifjoO%]/.test(args[0])) {
+        const first = args[0];
+        let idx = 1;
+        let out = '';
+        for (let i = 0; i < first.length; i++) {
+          if (first[i] === '%' && i + 1 < first.length) {
+            const next = first[i + 1];
+            if (next === '%') {
+              out += '%';
+              i++;
+              continue;
+            }
+            if (idx < args.length) {
+              const arg = args[idx];
+              if (next === 's') { out += String(arg); idx++; i++; continue; }
+              if (next === 'd') { out += Number(arg); idx++; i++; continue; }
+              if (next === 'i') { out += parseInt(arg, 10); idx++; i++; continue; }
+              if (next === 'f') { out += parseFloat(arg); idx++; i++; continue; }
+              if (next === 'j') {
+                try { out += JSON.stringify(arg); } catch (_) { out += '[Circular]'; }
+                idx++; i++; continue;
+              }
+              if (next === 'o' || next === 'O') {
+                out += utilInspect(arg);
+                idx++; i++; continue;
+              }
+            }
+          }
+          out += first[i];
+        }
+        while (idx < args.length) {
+          out += ' ' + formatConsoleArg(args[idx++]);
+        }
+        return out;
+      }
+      return args.map(formatConsoleArg).join(' ');
+    }
+
+    function formatTableCell(val) {
+      if (val === undefined) return '';
+      if (val === null) return 'null';
+      if (typeof val === 'string') return `'${val}'`;
+      if (typeof val === 'number' || typeof val === 'boolean' || typeof val === 'bigint') return String(val);
+      return utilInspect(val, { depth: 0 });
+    }
+
+    function formatConsoleTable(tabularData, properties) {
+      if (tabularData === null || typeof tabularData !== 'object') {
+        return null;
+      }
+      const entries = Array.isArray(tabularData)
+        ? tabularData.map((v, i) => [String(i), v])
+        : Object.entries(tabularData);
+      if (entries.length === 0) {
+        return '(empty table)';
+      }
+      const propFilter = Array.isArray(properties) ? new Set(properties.map(String)) : null;
+      const cols = [];
+      const colSet = new Set();
+      let hasPrimitiveRow = false;
+
+      for (const [, row] of entries) {
+        if (row !== null && typeof row === 'object' && !VirtualBuffer.isBuffer(row) && !(row instanceof Date) && !(row instanceof RegExp)) {
+          for (const k of Object.keys(row)) {
+            if (!propFilter || propFilter.has(k)) {
+              if (!colSet.has(k)) {
+                colSet.add(k);
+                cols.push(k);
+              }
+            }
+          }
+        } else {
+          hasPrimitiveRow = true;
+        }
+      }
+
+      const headers = ['(index)', ...cols, ...(hasPrimitiveRow ? ['Values'] : [])];
+      const matrix = entries.map(([idxKey, row]) => {
+        const isRowObj = row !== null && typeof row === 'object' && !VirtualBuffer.isBuffer(row) && !(row instanceof Date) && !(row instanceof RegExp);
+        const cells = [String(idxKey)];
+        for (const col of cols) {
+          cells.push(isRowObj && Object.prototype.hasOwnProperty.call(row, col) ? formatTableCell(row[col]) : '');
+        }
+        if (hasPrimitiveRow) {
+          cells.push(isRowObj ? '' : formatTableCell(row));
+        }
+        return cells;
+      });
+
+      const widths = headers.map((h, colIdx) => {
+        let maxW = h.length;
+        for (const r of matrix) {
+          if (r[colIdx].length > maxW) maxW = r[colIdx].length;
+        }
+        return maxW;
+      });
+
+      const borderTop = '┌─' + widths.map((w) => '─'.repeat(w)).join('─┬─') + '─┐';
+      const borderMid = '├─' + widths.map((w) => '─'.repeat(w)).join('─┼─') + '─┤';
+      const borderBot = '└─' + widths.map((w) => '─'.repeat(w)).join('─┴─') + '─┘';
+      const formatRow = (cells) => '│ ' + cells.map((c, i) => c.padEnd(widths[i], ' ')).join(' │ ') + ' │';
+
+      return [
+        borderTop,
+        formatRow(headers),
+        borderMid,
+        ...matrix.map(formatRow),
+        borderBot
+      ].join('\n');
+    }
+
+    function applyGroupIndent(text) {
+      if (groupDepth <= 0) return text;
+      const pad = '  '.repeat(groupDepth);
+      return String(text).split('\n').map((line) => pad + line).join('\n');
+    }
+
+    function checkConsoleFlood(isErr = false, targetChunks = null, targetCb = null) {
       if (outputTruncated) return false;
       consoleCallsCount++;
       if (consoleCallsCount > maxConsoleCalls) {
-        triggerTruncation(isErr ? stderrChunks : stdoutChunks, isErr ? onStderr : onStdout);
+        triggerTruncation(
+          targetChunks || (isErr ? stderrChunks : stdoutChunks),
+          targetCb !== null ? targetCb : (isErr ? onStderr : onStdout)
+        );
         return false;
       }
       return true;
     }
 
-    const sandboxConsole = {
-      log: (...args) => { if (checkConsoleFlood(false)) emitStdout(args.map(formatConsoleArg).join(' ') + '\n'); },
-      info: (...args) => { if (checkConsoleFlood(false)) emitStdout(args.map(formatConsoleArg).join(' ') + '\n'); },
-      debug: (...args) => { if (checkConsoleFlood(false)) emitStdout(args.map(formatConsoleArg).join(' ') + '\n'); },
-      warn: (...args) => { if (checkConsoleFlood(true)) emitStderr(args.map(formatConsoleArg).join(' ') + '\n'); },
-      error: (...args) => { if (checkConsoleFlood(true)) emitStderr(args.map(formatConsoleArg).join(' ') + '\n'); }
-    };
+    function createConsole(writeOut, writeErr) {
+      const c = {
+        log: (...args) => {
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(formatConsoleArgs(args)) + '\n');
+        },
+        info: (...args) => {
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(formatConsoleArgs(args)) + '\n');
+        },
+        debug: (...args) => {
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(formatConsoleArgs(args)) + '\n');
+        },
+        warn: (...args) => {
+          if (checkConsoleFlood(true)) writeErr(applyGroupIndent(formatConsoleArgs(args)) + '\n');
+        },
+        error: (...args) => {
+          if (checkConsoleFlood(true)) writeErr(applyGroupIndent(formatConsoleArgs(args)) + '\n');
+        },
+        dir: (obj, opts) => {
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(utilInspect(obj, opts)) + '\n');
+        },
+        table: (tabularData, properties) => {
+          const tableStr = formatConsoleTable(tabularData, properties);
+          if (tableStr === null) {
+            c.log(tabularData);
+          } else if (checkConsoleFlood(false)) {
+            writeOut(applyGroupIndent(tableStr) + '\n');
+          }
+        },
+        time: (label = 'default') => {
+          consoleTimers.set(String(label), performance.now());
+        },
+        timeLog: (label = 'default', ...data) => {
+          const key = String(label);
+          if (!consoleTimers.has(key)) {
+            if (checkConsoleFlood(true)) writeErr(applyGroupIndent(`Warning: No such label '${key}' for console.timeLog()`) + '\n');
+            return;
+          }
+          const elapsed = (performance.now() - consoleTimers.get(key)).toFixed(2);
+          const extra = data.length > 0 ? ' ' + formatConsoleArgs(data) : '';
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(`${key}: ${elapsed}ms${extra}`) + '\n');
+        },
+        timeEnd: (label = 'default') => {
+          const key = String(label);
+          if (!consoleTimers.has(key)) {
+            if (checkConsoleFlood(true)) writeErr(applyGroupIndent(`Warning: No such label '${key}' for console.timeEnd()`) + '\n');
+            return;
+          }
+          const elapsed = (performance.now() - consoleTimers.get(key)).toFixed(2);
+          consoleTimers.delete(key);
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(`${key}: ${elapsed}ms`) + '\n');
+        },
+        count: (label = 'default') => {
+          const key = String(label);
+          const next = (consoleCounts.get(key) || 0) + 1;
+          consoleCounts.set(key, next);
+          if (checkConsoleFlood(false)) writeOut(applyGroupIndent(`${key}: ${next}`) + '\n');
+        },
+        countReset: (label = 'default') => {
+          consoleCounts.delete(String(label));
+        },
+        assert: (condition, ...data) => {
+          if (!condition) {
+            const msg = data.length > 0 ? 'Assertion failed: ' + formatConsoleArgs(data) : 'Assertion failed';
+            if (checkConsoleFlood(true)) writeErr(applyGroupIndent(msg) + '\n');
+          }
+        },
+        group: (...label) => {
+          if (label.length > 0) c.log(...label);
+          groupDepth = Math.min(groupDepth + 1, 20);
+        },
+        groupCollapsed: (...label) => {
+          if (label.length > 0) c.log(...label);
+          groupDepth = Math.min(groupDepth + 1, 20);
+        },
+        groupEnd: () => {
+          groupDepth = Math.max(0, groupDepth - 1);
+        },
+        trace: (...data) => {
+          if (!checkConsoleFlood(true)) return;
+          const header = data.length > 0 ? 'Trace: ' + formatConsoleArgs(data) : 'Trace';
+          const err = new Error();
+          const rawLines = String(err.stack || '').split('\n').slice(2);
+          const stackPart = rawLines.length > 0 ? '\n' + rawLines.join('\n') : '';
+          writeErr(applyGroupIndent(header + stackPart) + '\n');
+        },
+        clear: () => {
+          if (typeof options.onConsoleClear === 'function') options.onConsoleClear();
+        }
+      };
+      return c;
+    }
+
+    const sandboxConsole = createConsole(emitStdout, emitStderr);
 
     const hrtimeFn = function hrtime(prev) {
       const ns = BigInt(Math.round(performance.now() * 1e6));
@@ -5114,21 +5326,52 @@ function __initVirtualRuntime(rootScope) {
             break;
           }
         }
-        const subConsole = {
-          log: (...a) => { out += a.map(formatConsoleArg).join(' ') + '\n'; },
-          info: (...a) => { out += a.map(formatConsoleArg).join(' ') + '\n'; },
-          debug: (...a) => { out += a.map(formatConsoleArg).join(' ') + '\n'; },
-          warn: (...a) => { err += a.map(formatConsoleArg).join(' ') + '\n'; },
-          error: (...a) => { err += a.map(formatConsoleArg).join(' ') + '\n'; }
+        let subTruncated = false;
+        const appendSubOut = (text) => {
+          if (subTruncated || outputTruncated) return;
+          const s = String(text);
+          if (out.length + s.length > maxOutputBytes || totalOutputBytes + s.length > maxOutputBytes) {
+            const rem = Math.max(0, Math.min(maxOutputBytes - out.length, maxOutputBytes - totalOutputBytes));
+            if (rem > 0) {
+              const slice = s.slice(0, rem);
+              out += slice;
+              totalOutputBytes += slice.length;
+            }
+            out += TRUNCATION_NOTICE;
+            subTruncated = true;
+            triggerTruncation(stdoutChunks, onStdout);
+            return;
+          }
+          out += s;
+          totalOutputBytes += s.length;
         };
+        const appendSubErr = (text) => {
+          if (subTruncated || outputTruncated) return;
+          const s = String(text);
+          if (err.length + s.length > maxOutputBytes || totalOutputBytes + s.length > maxOutputBytes) {
+            const rem = Math.max(0, Math.min(maxOutputBytes - err.length, maxOutputBytes - totalOutputBytes));
+            if (rem > 0) {
+              const slice = s.slice(0, rem);
+              err += slice;
+              totalOutputBytes += slice.length;
+            }
+            err += TRUNCATION_NOTICE;
+            subTruncated = true;
+            triggerTruncation(stderrChunks, onStderr);
+            return;
+          }
+          err += s;
+          totalOutputBytes += s.length;
+        };
+        const subConsole = createConsole(appendSubOut, appendSubErr);
         const subProcess = Object.assign(new EventEmitter(), sandboxProcess, {
           env,
           argv: scriptArgIdx >= 0
             ? ['node', VirtualPath.resolve(cwd, args[scriptArgIdx]), ...args.slice(scriptArgIdx + 1)]
             : ['node'],
           cwd: () => cwd,
-          stdout: { write: (s) => { out += String(s); return true; } },
-          stderr: { write: (s) => { err += String(s); return true; } },
+          stdout: { write: (s) => { appendSubOut(s); return true; }, isTTY: false },
+          stderr: { write: (s) => { appendSubErr(s); return true; }, isTTY: false },
           exit: (c = 0) => {
             status = Number(c) || 0;
             throw new ProcessExitSignal(status);
@@ -5334,6 +5577,8 @@ function __initVirtualRuntime(rootScope) {
       'node:child_process': vchildProcess,
       process: sandboxProcess,
       'node:process': sandboxProcess,
+      console: sandboxConsole,
+      'node:console': sandboxConsole,
       assert: assert,
       'node:assert': assert,
       'assert/strict': assert.strict,
@@ -5792,15 +6037,20 @@ _hostRuntime.createWorkerRuntimeSource = createWorkerRuntimeSource;
 
 let _cachedWorkerUrl = null;
 let _warmWorker = null;
-let _activeWorkerJob = null;
+let _warmWorkerBusy = false;
+const _activeWorkerJobs = new Map();
 
-function _ensureWarmWorker() {
-  if (_warmWorker) return _warmWorker;
+function _ensureWorkerUrl() {
   if (!_cachedWorkerUrl) {
     const blob = new Blob([createWorkerRuntimeSource()], { type: 'application/javascript' });
     _cachedWorkerUrl = URL.createObjectURL(blob);
   }
-  _warmWorker = new Worker(_cachedWorkerUrl);
+  return _cachedWorkerUrl;
+}
+
+function _ensureWarmWorker() {
+  if (_warmWorker) return _warmWorker;
+  _warmWorker = new Worker(_ensureWorkerUrl());
   return _warmWorker;
 }
 
@@ -5809,14 +6059,19 @@ function _destroyWarmWorker() {
     try { _warmWorker.terminate(); } catch (_) {}
     _warmWorker = null;
   }
+  _warmWorkerBusy = false;
 }
 
-_hostRuntime.cancelWorkerExecution = function cancelWorkerExecution(reason = 'Execution cancelled') {
-  if (!_activeWorkerJob) return false;
-  const job = _activeWorkerJob;
-  _activeWorkerJob = null;
-  job.cancel(reason);
-  return true;
+_hostRuntime.cancelWorkerExecution = function cancelWorkerExecution(reason = 'Execution cancelled', instanceId) {
+  let cancelledAny = false;
+  for (const [jobId, job] of Array.from(_activeWorkerJobs.entries())) {
+    if (!instanceId || job.instanceId === instanceId) {
+      _activeWorkerJobs.delete(jobId);
+      job.cancel(reason);
+      cancelledAny = true;
+    }
+  }
+  return cancelledAny;
 };
 
 _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
@@ -5824,31 +6079,56 @@ _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
     return _hostRuntime.executeInVirtualRuntime(options);
   }
 
-  // If a previous execution is still in-flight, cancel it immediately and recreate the warm worker
-  if (_activeWorkerJob) {
-    _hostRuntime.cancelWorkerExecution('Execution cancelled by new run');
+  const requestId = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const instanceId = options.instanceId || (options.concurrent ? requestId : 'default');
+
+  // If a previous execution for this same instanceId is still in-flight, cancel only that instance's job
+  if (!options.concurrent) {
+    _hostRuntime.cancelWorkerExecution('Execution cancelled by new run', instanceId);
   }
 
   return new Promise((resolve) => {
     let worker;
+    let isWarmWorker = false;
     try {
-      worker = _ensureWarmWorker();
+      if (!_warmWorkerBusy) {
+        worker = _ensureWarmWorker();
+        _warmWorkerBusy = true;
+        isWarmWorker = true;
+      } else {
+        worker = new Worker(_ensureWorkerUrl());
+        isWarmWorker = false;
+      }
     } catch (_) {
+      if (isWarmWorker) _warmWorkerBusy = false;
       resolve(_hostRuntime.executeInVirtualRuntime(options));
       return;
     }
 
-    const requestId = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const timeoutMs = options.timeoutMs || 15000;
     let settled = false;
+
+    function releaseWorker(terminateWorker) {
+      _activeWorkerJobs.delete(requestId);
+      if (isWarmWorker) {
+        if (terminateWorker) {
+          _destroyWarmWorker();
+        } else {
+          _warmWorkerBusy = false;
+          if (_warmWorker) {
+            _warmWorker.onmessage = null;
+            _warmWorker.onerror = null;
+          }
+        }
+      } else {
+        try { worker.terminate(); } catch (_) {}
+      }
+    }
 
     const timer = setTimeout(() => {
       if (settled) return;
       settled = true;
-      if (_activeWorkerJob && _activeWorkerJob.requestId === requestId) {
-        _activeWorkerJob = null;
-      }
-      _destroyWarmWorker();
+      releaseWorker(true);
       resolve({
         ok: false,
         timedOut: true,
@@ -5863,13 +6143,14 @@ _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
       });
     }, timeoutMs + 500);
 
-    _activeWorkerJob = {
+    _activeWorkerJobs.set(requestId, {
       requestId,
+      instanceId,
       cancel(reason = 'Execution cancelled by new run') {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
-        _destroyWarmWorker();
+        releaseWorker(true);
         resolve({
           ok: false,
           cancelled: true,
@@ -5883,7 +6164,7 @@ _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
           error: { message: reason }
         });
       }
-    };
+    });
 
     worker.onmessage = (event) => {
       const msg = event.data || {};
@@ -5898,18 +6179,14 @@ _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
-        if (_activeWorkerJob && _activeWorkerJob.requestId === requestId) {
-          _activeWorkerJob = null;
-        }
-        // Keep `_warmWorker` alive for instant reuse on subsequent runs!
+        // Release `_warmWorker` for instant reuse, or terminate ephemeral concurrent worker
+        releaseWorker(false);
         resolve(msg.result);
       } else if (msg.type === 'error') {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
-        if (_activeWorkerJob && _activeWorkerJob.requestId === requestId) {
-          _activeWorkerJob = null;
-        }
+        releaseWorker(false);
         resolve({
           ok: false,
           exitCode: 1,
@@ -5928,10 +6205,7 @@ _hostRuntime.executeInWorker = async function executeInWorker(options = {}) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      if (_activeWorkerJob && _activeWorkerJob.requestId === requestId) {
-        _activeWorkerJob = null;
-      }
-      _destroyWarmWorker();
+      releaseWorker(true);
       resolve(_hostRuntime.executeInVirtualRuntime(options));
     };
 

@@ -133,6 +133,7 @@ new CodeLabWorkbench(container: HTMLElement | string, options?: CodeLabOptions)
 | `testEntry` / `testFile` | `string` | `'test.js'` / `'test.ts'` | Test suite file executed by `runTests()`. |
 | `backLabel` | `string` | `'Back to Build Guide'` | Label for the back button when `onClose` is provided. |
 | `monacoUrl` | `string` | jsDelivr `monaco-editor@0.52.2` | Custom base URL for the Monaco AMD loader. |
+| `persistState` | `boolean` | `true` | Persist workspace files and step progress in `localStorage` (automatically falls back to in-memory `Map` in sandboxed cross-origin iframes). |
 | `onClose` | `() => void` | `null` | Renders the top-left back button and fires when clicked. |
 | `onStepComplete` | `(step: CodeLabStep, stepIndex: number) => void` | `null` | Fired when all `testNames` for a step pass. |
 | `onLabComplete` | `(labId: string) => void` | `null` | Fired when all steps in `steps` are completed. |
@@ -153,39 +154,65 @@ new CodeLabWorkbench(container: HTMLElement | string, options?: CodeLabOptions)
 | `hint` | `string` | No | Collapsible markdown hint for the step. |
 | `testNames` | `string[]` | No | Exact test names (e.g., `["Suite > test name"]`) that must pass to mark the step complete. |
 
-### Instance Methods
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+| :--- | :--- |
+| `Cmd/Ctrl + Enter` | Run Demo Entry (`runDemo()`) |
+| `Cmd/Ctrl + Shift + Enter` | Verify Current Step / Run Tests (`verifyCurrentStep()`) |
+| `Cmd/Ctrl + Shift + P` or `F1` | Open VS Code Command Palette (`openCommandPalette('commands')`) |
+| `Cmd/Ctrl + P` | Quick Open File Picker (`openCommandPalette('files')`) |
+| `Escape` | Close Command Palette / Context Menu / Modal or Exit Fullscreen |
+
+### Instance Methods & Third-Party Imperative SDK
+
+All methods are available on both `CodeLabWorkbench` instances and `<code-lab>` Custom Elements:
 
 | Method | Signature | Description |
 | :--- | :--- | :--- |
-| `runDemo` | `runDemo(): Promise<void>` | Executes the demo entry file (`mode: 'run'`) in the Web Worker and streams output to the Terminal tab. |
+| `runDemo` | `runDemo(): Promise<void>` | Executes the demo entry file (`mode: 'run'`) in the isolated Web Worker and streams output to the Terminal tab. |
 | `runTests` | `runTests(filterTestNames?: string \| string[] \| null): Promise<void>` | Executes the test suite (`mode: 'test'`) and updates the Test Suite tab and step completion state. |
 | `verifyCurrentStep` | `verifyCurrentStep(): Promise<void>` | Runs the test suite and advances to the next step if the current step's `testNames` all pass. |
-| `stopExecution` / `cancelExecution` | `stopExecution(): void` | Terminates the active Web Worker execution immediately (`exitCode: 130`). |
-| `selectStep` | `selectStep(idx: number, shouldJump?: boolean): void` | Switches to step `idx` (`0`-based). If `shouldJump` is `true` (default), opens `targetFile` and highlights `targetSymbol`. |
-| `openFile` | `openFile(filename: string, symbolToFind?: string): void` | Opens `filename` in the editor and optionally jumps to `symbolToFind`. |
-| `createFile` | `createFile(rawName: string): void` | Creates a new file in the workspace (appends `.js`/`.ts` if no extension is given) and opens it. |
-| `deleteFile` | `deleteFile(filename: string): void` | Deletes a user-created file and disposes its Monaco model. |
-| `setMode` | `setMode(newMode: 'guided' \| 'sandbox'): void` | Switches between `'guided'` and `'sandbox'` modes. |
-| `setLanguage` | `setLanguage(newLang: 'js' \| 'ts'): void` | Switches between JavaScript (`'js'`) and TypeScript (`'ts'`). |
-| `configure` | `configure(opts: { mode?: 'guided' \| 'sandbox'; lang?: 'js' \| 'ts'; stepIndex?: number }): void` | Batch-updates mode, language, and active step on an existing workbench instance. |
-| `showPackagesModal` | `showPackagesModal(): void` | Opens the NPM Packages & Node.js Built-ins modal. |
-| `addNpmPackage` | `addNpmPackage(rawSpec: string): void` | Adds a package specifier (e.g. `'zod'` or `'lru-cache@10.0.0'`) to `package.json`. |
-| `showSolutionModal` | `showSolutionModal(): void` | Opens the reference solution modal for the active file. |
-| `applyReferenceSolution` | `applyReferenceSolution(): void` | Overwrites the active file with the reference solution and runs the test suite. |
-| `resetLab` | `resetLab(): void` | Resets workspace files for the current `mode` and `lang` to their initial state. |
+| `stopExecution` / `cancelExecution` | `stopExecution(): void` | Terminates only this instance's active Web Worker execution immediately (`exitCode: 130`). |
+| `openCommandPalette` | `openCommandPalette(mode?: 'commands' \| 'files'): void` | Opens the fuzzy-searchable Command Palette (`>`) or Quick Open file picker. |
+| `showDiffModal` | `showDiffModal(targetFile?: string, compareTarget?: 'solution' \| 'starter'): void` | Opens the interactive Unified / Side-by-Side LCS Diff Viewer comparing user code against reference solution or starter template. |
+| `getFiles` | `getFiles(): Record<string, string>` | Returns a shallow clone of all current workspace files. |
+| `setFiles` | `setFiles(filesMap: Record<string, string>, opts?: { merge?: boolean }): this` | Replaces or merges workspace files, updates Monaco models, and emits `codelab:change`. |
+| `getFile` | `getFile(path: string): string \| null` | Reads the current content of a single file in the virtual workspace. |
+| `setFile` | `setFile(path: string, content: string, opts?: { open?: boolean }): this` | Writes or creates a file in the virtual workspace and optionally opens it in a tab. |
+| `deleteFile` | `deleteFile(filename: string): boolean` | Deletes a file (or `deleteFolder(prefix)` for recursive directory deletion) and disposes its Monaco model. |
+| `duplicateFile` | `duplicateFile(path: string): string \| null` | Duplicates `file.js` to `file.copy.js` and opens the copy. |
+| `getOpenTabs` | `getOpenTabs(): string[]` | Returns the ordered list of currently open editor tab paths (decoupled from workspace files). |
+| `closeTab` / `closeOtherTabs` / `closeAllTabs` | `closeTab(filename: string): void` | Closes one, all other, or all open editor tabs without deleting the underlying files from disk. |
+| `exportWorkspace` | `exportWorkspace(opts?: { download?: boolean }): Record<string, any>` | Exports a complete JSON snapshot of the workspace (and optionally triggers a browser file download). |
+| `importWorkspace` | `importWorkspace(snapshotOrJson: string \| object): boolean` | Restores workspace files and active state from an exported snapshot. |
+| `downloadFile` | `downloadFile(path?: string): { filename: string; content: string } \| null` | Downloads a single workspace file. |
+| `on` / `off` | `on(event: string, handler: (detail: any) => void): () => void` | Subscribes/unsubscribes to workbench events (`'change'`, `'run'`, `'test-result'`, `'step-complete'`, `'lab-complete'`). Returns an unsubscribe function. |
+| `use` | `use(plugin: (wb: CodeLabWorkbench, opts?: any) => any, opts?: any): this` | Registers a third-party plugin inside an error boundary; any returned `{ dispose() }` or function is cleaned up on `destroy()`. |
+| `selectStep` | `selectStep(idx: number, shouldJump?: boolean): void` | Switches to step `idx` (`0`-based) and centers `targetSymbol`. |
+| `openFile` | `openFile(filename: string, symbolToFind?: string): void` | Opens `filename` in an editor tab and optionally jumps to `symbolToFind`. |
+| `createFile` / `createFolder` | `createFile(rawName: string): void` | Creates a new file or nested directory in the hierarchical file explorer. |
+| `renameFile` / `renameFolder` / `movePath` | `renameFile(oldPath: string, newPath: string): boolean` | Renames or moves files and folders (also supported via drag-and-drop in the explorer). |
+| `setMode` / `setLanguage` / `configure` | `configure(opts): void` | Switches mode (`'guided' \| 'sandbox'`), language (`'js' \| 'ts'`), or `stepIndex`. |
+| `showPackagesModal` / `addNpmPackage` | `addNpmPackage(rawSpec: string): void` | Adds an NPM package specifier to `package.json`. |
+| `showSolutionModal` / `applyReferenceSolution` | `showSolutionModal(): void` | Views or applies the reference solution for the active file. |
+| `reset` / `resetLab` | `reset(): this` | Resets workspace files for the current `mode` and `lang` to their initial template. |
 | `toggleFullscreen` | `toggleFullscreen(): void` | Toggles full-viewport IDE mode (`Esc` exits). |
-| `destroy` | `destroy(): void` | Disposes Monaco models, editor instance, observers, and DOM listeners. |
+| `destroy` | `destroy(): void` | Disposes Monaco models, editor instance, plugins, observers, and DOM listeners. |
 
-### DOM Custom Events
+### DOM Custom Events & `.on()` Events
 
-`CodeLabWorkbench` dispatches bubbling `CustomEvent`s on `container`:
+`CodeLabWorkbench` dispatches bubbling `CustomEvent`s on `container` and notifies `.on(event, handler)` subscribers:
 
-| Event | `event.detail` |
+| Event | `detail` Payload |
 | :--- | :--- |
-| `codelab:change` | `{ labId, filename, code }` |
-| `codelab:run` | `{ labId, mode: 'run' \| 'test', entry, result }` |
-| `codelab:step-complete` | `{ labId, step, stepIndex, completedSteps }` |
-| `codelab:lab-complete` | `{ labId, completedSteps }` |
+| `codelab:change` / `'change'` | `{ labId, filename, code, files }` |
+| `codelab:file-create` / `'file-create'` | `{ labId, filename }` |
+| `codelab:file-delete` / `'file-delete'` | `{ labId, filename }` |
+| `codelab:file-open` / `'file-open'` | `{ labId, filename }` |
+| `codelab:run` / `'run'` | `{ labId, mode: 'run' \| 'test', entry, result }` |
+| `codelab:step-complete` / `'step-complete'` | `{ labId, step, stepIndex, completedSteps }` |
+| `codelab:lab-complete` / `'lab-complete'` | `{ labId, completedSteps }` |
 
 ---
 
@@ -294,7 +321,7 @@ interface CodeLabExecutionResult {
 
 ---
 
-## Supported Node.js Built-in Modules (23 Modules)
+## Supported Node.js Built-in Modules (24 Modules)
 
 All modules can be imported with or without the `node:` prefix (`require('node:fs')` or `require('fs')`).
 
@@ -308,11 +335,12 @@ All modules can be imported with or without the `node:` prefix (`require('node:f
 | `stream` / `node:stream` | `Stream`, `Readable`, `Writable`, `Duplex`, `Transform`, `PassThrough`, `pipeline`, `finished`, `Readable.from`, `promises`. |
 | `stream/promises` / `node:stream/promises` | `pipeline`, `finished`. |
 | `events` / `node:events` | `EventEmitter`, `once`, `on`, `getEventListeners`, `listenerCount`, `captureRejectionSymbol`, `errorMonitor`, `defaultMaxListeners`. |
-| `crypto` / `node:crypto` | `createHash` (`md5`, `sha1`, `sha256`, `sha384`, `sha512`), `createHmac`, ` pbkdf2Sync`, `pbkdf2`, `scryptSync`, `scrypt`, `createCipheriv`, `createDecipheriv`, `timingSafeEqual`, `randomUUID`, `randomBytes`, `randomFillSync`, `randomInt`, `hkdfSync`, `webcrypto`. |
+| `crypto` / `node:crypto` | `createHash` (`md5`, `sha1`, `sha256`, `sha384`, `sha512`), `createHmac`, `pbkdf2Sync`, `pbkdf2`, `scryptSync`, `scrypt`, `createCipheriv`, `createDecipheriv`, `timingSafeEqual`, `randomUUID`, `randomBytes`, `randomFillSync`, `randomInt`, `hkdfSync`, `webcrypto`. |
 | `zlib` / `node:zlib` | `crc32` (IEEE 802.3), `gzipSync`, `gunzipSync`, `deflateSync`, `inflateSync`, `deflateRawSync`, `inflateRawSync`, `brotliCompressSync`, `brotliDecompressSync`, async callback variants, and `constants`. |
 | `path` / `node:path` | POSIX `join`, `resolve`, `normalize`, `isAbsolute`, `relative`, `dirname`, `basename`, `extname`, `parse`, `format`, `sep`, `delimiter`, `posix`, `win32`. |
 | `os` / `node:os` | `EOL`, `tmpdir`, `homedir`, `hostname`, `platform`, `arch`, `type`, `release`, `cpus`, `totalmem`, `freemem`, `uptime`, `loadavg`, `networkInterfaces`, `userInfo`, `endianness`, `availableParallelism`. |
 | `util` / `node:util` | `format`, `inspect`, `promisify`, `callbackify`, `inherits`, `deprecate`, `isDeepStrictEqual`, `stripVTControlCharacters`, `types`, `TextEncoder`, `TextDecoder`. |
+| `console` / `node:console` | `log`, `info`, `debug`, `warn`, `error` (with `%s`, `%d`, `%i`, `%f`, `%j`, `%o`, `%O` formatting), `table` (ASCII box tables), `dir`, `time`, `timeLog`, `timeEnd`, `count`, `countReset`, `assert`, `group`, `groupCollapsed`, `groupEnd`, `trace`, `clear`, `Console`. |
 | `url` / `node:url` | `URL`, `URLSearchParams`, `parse`, `format`, `resolve`, `fileURLToPath`, `pathToFileURL`, `domainToASCII`, `domainToUnicode`. |
 | `querystring` / `node:querystring` | `parse`, `stringify`, `escape`, `unescape`, `decode`, `encode`. |
 | `string_decoder` / `node:string_decoder` | `StringDecoder` (`write`, `end`). |
@@ -321,7 +349,7 @@ All modules can be imported with or without the `node:` prefix (`require('node:f
 | `perf_hooks` / `node:perf_hooks` | `performance` (`now`, `timeOrigin`, `mark`, `measure`, `getEntries`, `getEntriesByName`, `getEntriesByType`, `clearMarks`, `clearMeasures`, `timerify`), `PerformanceObserver`, `monitorEventLoopDelay`, `constants`. |
 | `timers` / `node:timers` | `setTimeout`, `clearTimeout`, `setInterval`, `clearInterval`, `setImmediate`, `clearImmediate`, `promises` (handles support `.ref()`, `.unref()`, `.hasRef()`). |
 | `timers/promises` / `node:timers/promises` | `setTimeout`, `setImmediate`. |
-| `child_process` / `node:child_process` | `execSync`, `spawnSync`, `exec`, `execFile`, `spawn` (executes `node <script>`, `node -e`, `ls`, `cat`, `echo`, `pwd`, `env` against the active Virtual File System). |
+| `child_process` / `node:child_process` | `execSync`, `spawnSync`, `exec`, `execFile`, `spawn` (executes `node <script>`, `node -e`, `ls`, `cat`, `echo`, `pwd`, `env` against the active Virtual File System with output flood protection). |
 | `assert` / `node:assert` / `node:assert/strict` | `ok`, `equal`, `notEqual`, `strictEqual`, `notStrictEqual`, `deepEqual`, `notDeepEqual`, `deepStrictEqual`, `notDeepStrictEqual`, `throws`, `doesNotThrow`, `rejects`, `doesNotReject`, `match`, `doesNotMatch`, `ifError`, `fail`, `AssertionError`. |
 | `test` / `node:test` | `test`, `describe`, `suite`, `it`, `before`, `after`, `beforeEach`, `afterEach`, `mock` (`mock.fn`, `mock.method`, `mock.reset`, `mock.restoreAll`). |
 | `buffer` / `node:buffer` | `Buffer` (`Uint8Array` subclass supporting `from`, `alloc`, `allocUnsafe`, `concat`, `compare`, `isBuffer`, `isEncoding`, `byteLength`, and 8/16/32/64-bit BE/LE int/float read/write methods). |
@@ -351,12 +379,25 @@ All modules can be imported with or without the `node:` prefix (`require('node:f
 
 ---
 
+## Specialized AI Agents (`.agents/agents/`)
+
+This repository includes domain-specific agent specifications in `.agents/agents/` for extending, hardening, and auditing `@innovatorved/code-lab`:
+
+- `codelab-vscode-architect.md` — VS Code Workbench UI, Command Palette, Context Menus, Breadcrumbs, Diff Viewer, and Geist Monochrome styling.
+- `codelab-production-hardener.md` — Virtual Node.js Runtime, Multi-Instance Worker Concurrency, Rich `console.*` APIs, and Flood Protection.
+- `codelab-feature-researcher.md` — Browser IDE & SDK Architecture Research.
+- `codelab-qa-auditor.md` — End-to-End Runtime, Workbench DOM, and Bundle Verification.
+
+---
+
 ## Building & Testing
 
 ```bash
 # Generate dist/* bundles, dist/code-lab.d.ts, and site js/code-lab.js
 npm run build
 
-# Run the unit and integration test suites
+# Run the unit, runtime, and workbench UI test suites
 npm test
+node test-runtime-advanced.js
+node test-workbench-ui.js
 ```

@@ -396,8 +396,200 @@ async function runTests() {
     assert.equal(res.stdout.trim(), 'acme-toolkit 27 [[1,2],[3,4]] Hi Coder');
   });
 
+  // 7. Full Node.js console.* methods (table, dir, time/timeLog/timeEnd, count/countReset, assert, group/groupEnd, trace, printf specifiers)
+  await check('Console: table, dir, time/timeLog/timeEnd, count/countReset, assert, group/groupEnd, trace, printf %s/%d/%j', async () => {
+    let cleared = false;
+    const res = await runtime.executeInVirtualRuntime({
+      entry: 'index.js',
+      onConsoleClear: () => { cleared = true; },
+      files: {
+        'index.js': `
+          console.log('printf: %s=%d %j %%', 'answer', 42, { ok: true });
+          console.dir({ nested: { a: [1, 2] } }, { depth: 2 });
+          console.table([
+            { service: 'auth', rps: 1200 },
+            { service: 'billing', rps: 450 }
+          ], ['service', 'rps']);
+
+          console.count('req');
+          console.count('req');
+          console.countReset('req');
+          console.count('req');
+
+          console.time('db-query');
+          console.timeLog('db-query', 'step1');
+          console.timeEnd('db-query');
+          console.timeEnd('missing-label');
+
+          console.group('OuterGroup');
+          console.log('inside-outer');
+          console.groupCollapsed('InnerGroup');
+          console.log('inside-inner');
+          console.groupEnd();
+          console.groupEnd();
+
+          console.assert(true, 'should not print');
+          console.assert(false, 'expected %s to be %d', 'status', 200);
+          console.trace('trace-marker');
+          console.clear();
+        `
+      }
+    });
+    assert.equal(res.ok, true, res.stderr);
+    assert.equal(cleared, true);
+    assert.match(res.stdout, /printf: answer=42 \{"ok":true\} %/);
+    assert.match(res.stdout, /nested: \{ a: \[ 1, 2 \] \}/);
+    assert.match(res.stdout, /\(index\)/);
+    assert.match(res.stdout, /'auth'/);
+    assert.match(res.stdout, /1200/);
+    assert.match(res.stdout, /req: 1\nreq: 2\nreq: 1/);
+    assert.match(res.stdout, /db-query: \d+\.\d+ms step1/);
+    assert.match(res.stdout, /db-query: \d+\.\d+ms/);
+    assert.match(res.stdout, /OuterGroup\n  inside-outer\n  InnerGroup\n    inside-inner/);
+    assert.match(res.stderr, /Warning: No such label 'missing-label' for console\.timeEnd\(\)/);
+    assert.match(res.stderr, /Assertion failed: expected status to be 200/);
+    assert.match(res.stderr, /Trace: trace-marker/);
+    assert.equal(res.stderr.includes('should not print'), false);
+  });
+
+  // 8. Output Flood Circuit Breaker (maxOutputBytes and maxConsoleCalls + child_process protection)
+  await check('Flood Protection: maxOutputBytes and maxConsoleCalls truncate runaway stdout/stderr and subcommands safely', async () => {
+    const byteCapRes = await runtime.executeInVirtualRuntime({
+      entry: 'index.js',
+      maxOutputBytes: 512,
+      files: {
+        'index.js': `
+          for (let i = 0; i < 200; i++) {
+            console.log('LINE_' + i + '_' + 'X'.repeat(40));
+          }
+        `
+      }
+    });
+    assert.equal(byteCapRes.ok, true);
+    assert.match(byteCapRes.stdout, /\[Output truncated: exceeded 256 KB limit\]/);
+    assert.equal(byteCapRes.stdout.length <= 600, true);
+
+    const callCapRes = await runtime.executeInVirtualRuntime({
+      entry: 'index.js',
+      maxConsoleCalls: 25,
+      files: {
+        'index.js': `
+          for (let i = 0; i < 500; i++) {
+            console.log('msg', i);
+          }
+        `
+      }
+    });
+    assert.equal(callCapRes.ok, true);
+    assert.match(callCapRes.stdout, /\[Output truncated: exceeded 256 KB limit\]/);
+    const lineCount = callCapRes.stdout.trim().split('\n').length;
+    assert.equal(lineCount <= 27, true);
+
+    const subCmdFloodRes = await runtime.executeInVirtualRuntime({
+      entry: 'index.js',
+      maxOutputBytes: 512,
+      files: {
+        'child.js': `
+          for (let i = 0; i < 200; i++) {
+            process.stdout.write('CHILD_FLOOD_' + 'Y'.repeat(50) + '\\n');
+          }
+        `,
+        'index.js': `
+          const cp = require('node:child_process');
+          const out = cp.execSync('node child.js', { encoding: 'utf8' });
+          console.log('LEN=' + out.length);
+        `
+      }
+    });
+    assert.equal(subCmdFloodRes.ok, true);
+    assert.match(subCmdFloodRes.stdout, /\[Output truncated: exceeded 256 KB limit\]/);
+  });
+
+  // 9. Multi-Instance Worker Concurrency & Per-Instance Cancellation
+  await check('Worker Concurrency: Multiple concurrent executeInWorker calls run in parallel without canceling other instances', async () => {
+    const prevWorker = globalThis.Worker;
+    const prevCreateObjURL = URL.createObjectURL;
+    let createdWorkers = 0;
+    let terminatedWorkers = 0;
+
+    class MockWorker {
+      constructor() {
+        createdWorkers++;
+        this.onmessage = null;
+        this.onerror = null;
+      }
+      postMessage(msg) {
+        const { requestId, payload } = msg;
+        setTimeout(async () => {
+          const result = await runtime.executeInVirtualRuntime(payload);
+          if (this.onmessage) {
+            this.onmessage({ data: { requestId, type: 'complete', result } });
+          }
+        }, 25);
+      }
+      terminate() {
+        terminatedWorkers++;
+      }
+    }
+
+    globalThis.Worker = MockWorker;
+    URL.createObjectURL = () => 'blob:mock-worker-url';
+
+    try {
+      // Launch two concurrent executions from two separate <code-lab> instances (instance-A and instance-B)
+      const [resA, resB] = await Promise.all([
+        runtime.executeInWorker({
+          instanceId: 'instance-A',
+          entry: 'index.js',
+          files: { 'index.js': `console.log('FROM_A');` }
+        }),
+        runtime.executeInWorker({
+          instanceId: 'instance-B',
+          entry: 'index.js',
+          files: { 'index.js': `console.log('FROM_B');` }
+        })
+      ]);
+
+      assert.equal(resA.ok, true);
+      assert.equal(resA.stdout.trim(), 'FROM_A');
+      assert.equal(resB.ok, true);
+      assert.equal(resB.stdout.trim(), 'FROM_B');
+      // Warm worker + 1 ephemeral worker for the concurrent second job
+      assert.equal(createdWorkers, 2);
+      assert.equal(terminatedWorkers, 1);
+
+      // Re-triggering instance-A while in-flight cancels only instance-A's first run, leaving instance-B intact
+      const pA1 = runtime.executeInWorker({
+        instanceId: 'instance-A',
+        entry: 'index.js',
+        files: { 'index.js': `console.log('A1');` }
+      });
+      const pB1 = runtime.executeInWorker({
+        instanceId: 'instance-B',
+        entry: 'index.js',
+        files: { 'index.js': `console.log('B1');` }
+      });
+      const pA2 = runtime.executeInWorker({
+        instanceId: 'instance-A',
+        entry: 'index.js',
+        files: { 'index.js': `console.log('A2');` }
+      });
+
+      const [rA1, rB1, rA2] = await Promise.all([pA1, pB1, pA2]);
+      assert.equal(rA1.cancelled, true);
+      assert.equal(rB1.ok, true);
+      assert.equal(rB1.stdout.trim(), 'B1');
+      assert.equal(rA2.ok, true);
+      assert.equal(rA2.stdout.trim(), 'A2');
+    } finally {
+      globalThis.Worker = prevWorker;
+      URL.createObjectURL = prevCreateObjURL;
+    }
+  });
+
   console.log(`\n=== Summary: ${passed} passed, ${failed} failed ===`);
   if (failed > 0) process.exit(1);
 }
 
 runTests();
+

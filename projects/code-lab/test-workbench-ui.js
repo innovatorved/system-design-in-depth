@@ -1730,6 +1730,119 @@ async function runTier4() {
     assert.equal(workbench.files['lib/structures/lru.js'], undefined);
     assert.equal(workbench.openTabs.includes('lib/structures/lru.js'), false);
   });
+
+  // ── VS Code IDE & Third-Party SDK Capabilities Verification ─────────────
+  await registerTest('tier4', 'T4.7', 'VSCode-1: Command Palette (> commands & Quick Open files)', () => {
+    const { workbench } = createTestLab();
+    workbench.openCommandPalette('commands');
+    const slot = workbench.container.querySelector('#cl-modal-slot');
+    assert.ok(slot.innerHTML.includes('codelab-palette'), 'Palette modal should render');
+    assert.ok(workbench._currentPaletteItems.length >= 10, 'Should list IDE commands');
+
+    // Filter commands
+    workbench._renderPaletteList('> Diff');
+    assert.ok(workbench._currentPaletteItems.some(i => i.id === 'compare-solution'), 'Should filter Diff commands');
+
+    // Quick Open files mode
+    workbench.openCommandPalette('files');
+    workbench._renderPaletteList('test');
+    assert.ok(workbench._currentPaletteItems.some(i => i.id === 'test.js'), 'Should filter workspace files');
+    workbench._executePaletteSelection(0);
+    assert.equal(workbench.activeFile, 'test.js', 'Selecting file in Quick Open should activate it');
+  });
+
+  await registerTest('tier4', 'T4.8', 'VSCode-2: Right-Click Context Menus on Explorer & Tabs + Duplicate/Close Others', () => {
+    const { workbench } = createTestLab();
+    workbench.openContextMenu(100, 120, [
+      { label: 'Duplicate File', action: 'duplicate-file', target: 'lru.js' },
+      { divider: true },
+      { label: 'Delete File', action: 'delete-file', target: 'lru.js', danger: true }
+    ]);
+    const ctxSlot = workbench.container.querySelector('#cl-context-menu-slot');
+    assert.ok(ctxSlot.innerHTML.includes('codelab-context-menu'), 'Context menu should render');
+
+    const dupName = workbench.duplicateFile('lru.js');
+    assert.equal(dupName, 'lru.copy.js');
+    assert.ok(workbench.files['lru.copy.js'], 'Duplicate file should exist in VFS');
+
+    workbench.closeOtherTabs('lru.copy.js');
+    assert.deepEqual(workbench.getOpenTabs(), ['lru.copy.js']);
+
+    workbench.closeAllTabs();
+    assert.deepEqual(workbench.getOpenTabs(), []);
+    workbench.closeContextMenu();
+    assert.equal(ctxSlot.innerHTML, '');
+  });
+
+  await registerTest('tier4', 'T4.9', 'VSCode-3: Editor Breadcrumbs Bar (workspace › folder › file › symbol)', () => {
+    const { workbench } = createTestLab({ mode: 'guided' });
+    workbench.createFile('src/engine/storage.js', 'class StorageEngine {\n  put(k, v) {}\n}\n');
+    const bc = workbench.container.querySelector('#cl-breadcrumbs');
+    assert.ok(bc, 'Breadcrumbs bar should exist');
+    assert.ok(bc.innerHTML.includes('src'), 'Breadcrumbs should include folder segment');
+    assert.ok(bc.innerHTML.includes('storage.js'), 'Breadcrumbs should include file segment');
+    assert.ok(bc.innerHTML.includes('StorageEngine'), 'Breadcrumbs should detect class symbol');
+  });
+
+  await registerTest('tier4', 'T4.10', 'VSCode-4: Inline & Side-by-Side Diff Viewer (Compare with Solution & Starter)', () => {
+    const { workbench } = createTestLab({ mode: 'guided' });
+    workbench.showDiffModal('lru.js', 'solution');
+    const slot = workbench.container.querySelector('#cl-modal-slot');
+    assert.ok(slot.innerHTML.includes('codelab-diff-modal'), 'Diff modal should render');
+    assert.ok(slot.innerHTML.includes('codelab-diff-unified'), 'Default unified diff view should render');
+
+    // Switch to split view
+    workbench.diffViewMode = 'split';
+    workbench.showDiffModal('lru.js', 'starter');
+    assert.ok(slot.innerHTML.includes('codelab-diff-split'), 'Split diff view should render');
+    workbench.closeModal();
+  });
+
+  await registerTest('tier4', 'T4.11', 'VSCode-5: Workspace Export & Import JSON Snapshot', () => {
+    const { workbench } = createTestLab();
+    workbench.setFile('custom/module.js', 'module.exports = 42;');
+    const snap = workbench.exportWorkspace({ download: false });
+    assert.equal(snap.labId, 'lru-cache-test');
+    assert.equal(snap.files['custom/module.js'], 'module.exports = 42;');
+
+    const { workbench: workbench2 } = createTestLab({ labId: 'imported-lab' });
+    const imported = workbench2.importWorkspace(JSON.stringify(snap));
+    assert.equal(imported, true);
+    assert.equal(workbench2.getFile('custom/module.js'), 'module.exports = 42;');
+    assert.ok(workbench2.folders.has('custom'));
+  });
+
+  await registerTest('tier4', 'T4.12', 'VSCode-6: Imperative Third-Party SDK APIs, Event Subscriptions & Plugin Hook', () => {
+    let pluginCalled = false;
+    const events = [];
+    const { workbench } = createTestLab({
+      persistState: false,
+      plugins: [
+        (wb) => { pluginCalled = Boolean(wb && wb.instanceId); }
+      ]
+    });
+    assert.equal(pluginCalled, true, 'Plugin passed in options.plugins should run on init');
+    assert.ok(workbench.instanceId && workbench.instanceId.startsWith('cl-'), 'Unique instanceId should be assigned');
+
+    const offChange = workbench.on('change', detail => events.push(['change', detail.filename]));
+    const offCreate = workbench.on('file-create', detail => events.push(['create', detail.filename]));
+    const offDelete = workbench.on('file-delete', detail => events.push(['delete', detail.filename]));
+
+    workbench.setFile('sdk/hello.js', 'console.log("hi");');
+    assert.equal(workbench.getFile('sdk/hello.js'), 'console.log("hi");');
+    assert.ok(workbench.getFiles()['sdk/hello.js']);
+
+    workbench.deleteFile('sdk/hello.js');
+    assert.equal(workbench.getFile('sdk/hello.js'), undefined);
+
+    assert.ok(events.some(e => e[0] === 'create' && e[1] === 'sdk/hello.js'), 'file-create event should fire');
+    assert.ok(events.some(e => e[0] === 'change' && e[1] === 'sdk/hello.js'), 'change event should fire');
+    assert.ok(events.some(e => e[0] === 'delete' && e[1] === 'sdk/hello.js'), 'file-delete event should fire');
+
+    offChange();
+    offCreate();
+    offDelete();
+  });
 }
 
 // ── Main Test Runner Execution & Reporting ───────────────────────────────────

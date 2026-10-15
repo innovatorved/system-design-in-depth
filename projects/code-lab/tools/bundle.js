@@ -25,16 +25,14 @@ const cssPath = path.join(ROOT, 'css', 'code-lab.css');
 
 const BANNER = `/**
  * ============================================================
- * @innovatorved/code-lab v1.1.0 — Standalone Browser Code IDE & Virtual Runtime
+ * @innovatorved/code-lab v1.2.0 — Standalone Browser Code IDE & Virtual Runtime
  * ============================================================
  * Features:
- *   - Sandboxed Web Worker Execution Engine with Watchdog Timer & Instant Stop
- *   - TypeScript/JSX Compiler & CommonJS/ESM Module Bundler
- *   - Virtual File System (fs, path, crypto, events, http, timers)
- *   - Built-in Assertion & Test Runner Framework (describe, it, expect, assert)
- *   - Multi-file Tabbed Monaco IDE + Offline Line-Numbered Fallback Editor
- *   - Resizable Split Panes, Step-by-Step Guided Mode, Fullscreen & Light/Dark Themes
- *   - Embeddable via <code-lab>, CodeLab.create(container, options), or ESM imports
+ *   - Sandboxed Web Worker Execution Engine with Multi-Instance Isolation & Watchdog Timer
+ *   - TypeScript/ESM Compiler & CommonJS/NPM Module Bundler
+ *   - 24 Virtual Node.js Built-in Modules (fs, net, http, stream, crypto, events, test, console, etc.)
+ *   - VS Code Workbench: Hierarchical File Tree, Decoupled Tabs, Command Palette (Cmd+Shift+P), Quick Open (Cmd+P), Breadcrumbs, Context Menus & Solution Diff Viewer
+ *   - Third-Party Imperative SDK (getFiles, setFiles, getFile, setFile, on, off, use, exportWorkspace)
  * ============================================================
  */
 `;
@@ -223,6 +221,8 @@ export interface CodeLabExecutionOptions {
   timeoutMs?: number;
   maxOutputBytes?: number;
   maxConsoleCalls?: number;
+  instanceId?: string;
+  concurrent?: boolean;
   packages?: Record<string, any>;
   npmModules?: Record<string, any>;
   onStdout?: (text: string) => void;
@@ -268,6 +268,8 @@ export interface CodeLabOptions {
   lang?: 'js' | 'ts';
   /** Explicit theme override ('dark' | 'light' | 'auto') */
   theme?: 'dark' | 'light' | 'auto';
+  /** Set to false to disable localStorage persistence and use in-memory state only */
+  persistState?: boolean;
   /** Reference/solution files map (filename -> source content) */
   files?: Record<string, string>;
   /** Explicit reference solution files map (JavaScript) */
@@ -307,13 +309,15 @@ export interface CodeLabOptions {
 }
 
 export declare class CodeLabWorkbench {
+  instanceId: string;
   container: HTMLElement;
   labId: string;
   title: string;
   summary: string;
   options: CodeLabOptions;
   files: Record<string, string>;
-  activeFile: string;
+  openTabs: string[];
+  activeFile: string | null;
   mode: 'guided' | 'sandbox';
   lang: 'js' | 'ts';
   activeStepIndex: number;
@@ -329,16 +333,43 @@ export declare class CodeLabWorkbench {
   cancelExecution(): void;
   selectStep(idx: number, shouldJump?: boolean): void;
   openFile(filename: string, symbolToFind?: string): void;
+  closeTab(filename: string): void;
+  closeOtherTabs(keepPath: string): void;
+  closeAllTabs(): void;
   createFile(rawName: string): void;
-  promptNewFile(): void;
-  deleteFile(filename: string): void;
+  createFolder(rawFolderPath: string): boolean;
+  renameFile(oldPath: string, newPath: string): boolean;
+  renameFolder(oldPrefix: string, newPrefix: string): boolean;
+  duplicateFile(path: string): string | null;
+  movePath(sourcePath: string, targetFolder: string): boolean;
+  promptNewFile(folderPrefix?: string): void;
+  promptNewFolder(folderPrefix?: string): void;
+  deleteFile(filename: string): boolean;
+  deleteFolder(folderPrefix: string): boolean;
   setMode(newMode: 'guided' | 'sandbox'): void;
   setLanguage(newLang: 'js' | 'ts'): void;
   configure(opts?: { mode?: 'guided' | 'sandbox'; lang?: 'js' | 'ts'; stepIndex?: number }): void;
+  openCommandPalette(mode?: 'commands' | 'files'): void;
+  closeCommandPalette(): void;
+  openContextMenu(x: number, y: number, items: Array<{ label?: string; action?: () => void; danger?: boolean; separator?: boolean }>): void;
+  closeContextMenu(): void;
   showPackagesModal(): void;
   addNpmPackage(rawSpec: string): void;
   showSolutionModal(): void;
+  showDiffModal(targetFile?: string, compareTarget?: 'solution' | 'starter'): void;
   applyReferenceSolution(): void;
+  downloadFile(path?: string): { filename: string; content: string } | null;
+  exportWorkspace(options?: { download?: boolean }): Record<string, any>;
+  importWorkspace(snapshotOrJson: string | Record<string, any>): boolean;
+  getFiles(): Record<string, string>;
+  setFiles(filesMap: Record<string, string>, options?: { merge?: boolean }): this;
+  getFile(path: string): string | null;
+  setFile(path: string, content: string, options?: { open?: boolean }): this;
+  getOpenTabs(): string[];
+  reset(): this;
+  on(event: string, handler: (detail: any) => void): () => void;
+  off(event: string, handler: (detail: any) => void): this;
+  use(plugin: (workbench: CodeLabWorkbench, options?: any) => any, options?: any): this;
   closeModal(): void;
   resetLab(): void;
   toggleFullscreen(): void;
@@ -347,12 +378,26 @@ export declare class CodeLabWorkbench {
 
 export declare class CodeLabElement extends HTMLElement {
   _instance: CodeLabWorkbench | null;
+  getFiles(): Record<string, string>;
+  setFiles(filesMap: Record<string, string>, options?: { merge?: boolean }): CodeLabWorkbench | undefined;
+  getFile(path: string): string | null;
+  setFile(path: string, content: string, options?: { open?: boolean }): CodeLabWorkbench | undefined;
+  deleteFile(path: string): boolean;
+  getOpenTabs(): string[];
+  reset(): CodeLabWorkbench | undefined;
+  on(event: string, handler: (detail: any) => void): (() => void) | undefined;
+  off(event: string, handler: (detail: any) => void): CodeLabWorkbench | undefined;
+  use(plugin: (workbench: CodeLabWorkbench, options?: any) => any, options?: any): CodeLabWorkbench | undefined;
+  openCommandPalette(mode?: 'commands' | 'files'): void;
+  showDiffModal(targetFile?: string, compareTarget?: 'solution' | 'starter'): void;
+  exportWorkspace(options?: { download?: boolean }): Record<string, any> | null;
+  importWorkspace(snapshotOrJson: string | Record<string, any>): boolean;
 }
 
 export interface CodeLabRuntimeAPI {
   executeInVirtualRuntime(options?: CodeLabExecutionOptions): Promise<CodeLabExecutionResult>;
   executeInWorker(options?: CodeLabExecutionOptions): Promise<CodeLabExecutionResult>;
-  cancelWorkerExecution(reason?: string): boolean;
+  cancelWorkerExecution(reason?: string, instanceId?: string): boolean;
   preloadNpmPackages(files?: Record<string, string>, existingCache?: Map<string, string>): Promise<Record<string, string>>;
   transpileTS(source: string, filename?: string): string;
   createVirtualFs(initialFiles?: Record<string, string>): any;

@@ -45,21 +45,24 @@ flowchart LR
 
 | Layer | Source File | Responsibility |
 | :--- | :--- | :--- |
-| **Workbench UI** | `src/workbench.js` | `<code-lab>` Custom Element, `CodeLab.mount()` SDK, Monaco loader with `NODE_AMBIENT_DTS`, split panes, step progression, and `localStorage` state sync. |
-| **Worker Host** | `src/runtime.js` | Serializes `__initVirtualRuntime` + `__workerMessageLoop` into an inline `Blob` URL, manages the singleton warm `Worker` (`_warmWorker`), and enforces hard watchdog timeouts. |
-| **Virtual Runtime** | `src/runtime.js` | Provides `executeInVirtualRuntime`, 10-pass TypeScript/ESM transpiler, CommonJS module loader, POSIX VFS (`node:fs`), and in-memory loopback networking (`node:http`, `node:net`). |
+| **Workbench UI** | `src/workbench.js` | `<code-lab>` Custom Element, `CodeLab.mount()` SDK, hierarchical folder/file tree explorer with drag-and-drop, decoupled open tabs, Command Palette (`Cmd+Shift+P`), Quick Open (`Cmd+P`), context menus, breadcrumbs, LCS Diff Viewer (`showDiffModal`), and resilient storage (`localStorage` + in-memory fallback). |
+| **Worker Host** | `src/runtime.js` | Serializes `__initVirtualRuntime` + `__workerMessageLoop` into an inline `Blob` URL, manages per-instance worker concurrency (`_activeWorkerJobs` + ephemeral worker overflow), and enforces hard watchdog timeouts. |
+| **Virtual Runtime** | `src/runtime.js` | Provides `executeInVirtualRuntime`, 10-pass TypeScript/ESM transpiler, CommonJS module loader, POSIX VFS (`node:fs`), 24 built-in modules (`node:console`, `node:net`, `node:http`, etc.), and output flood circuit breakers (`maxOutputBytes`, `maxConsoleCalls`). |
 
 ---
 
 ## 2. Execution Pipeline
 
-### `executeInWorker(options)` & Warm Worker Pooling
+### `executeInWorker(options)` & Multi-Instance Worker Isolation
 
 1. **Self-Contained Worker Serialization**: `createWorkerRuntimeSource()` serializes `__initVirtualRuntime.toString()` and `__workerMessageLoop.toString()` into a `Blob` (`application/javascript`) and caches the object URL in `_cachedWorkerUrl`.
-2. **Warm Worker Reuse**: `_ensureWarmWorker()` spawns `_warmWorker` on the first run and keeps it alive across subsequent runs (`complete` leaves `_warmWorker` intact) for sub-millisecond startup.
-3. **Preemption & Cancellation**:
-   - Starting a new run while `_activeWorkerJob` is in-flight or calling `CodeLabRuntime.cancelWorkerExecution()` immediately calls `_warmWorker.terminate()`, clears `_warmWorker = null`, and resolves the cancelled run with `{ ok: false, cancelled: true, exitCode: 130 }`.
-4. **Watchdog Timeout**: `executeInWorker` sets a host-side timer for ` (options.timeoutMs || 15000) + 500 ` ms. If the worker is blocked by a synchronous `while(true)` loop or hung timer, the host terminates `_warmWorker` and resolves with `{ ok: false, timedOut: true, exitCode: 124 }`.
+2. **Warm Worker Reuse & Ephemeral Overflow**: `_ensureWarmWorker()` spawns `_warmWorker` on the first run and keeps it alive when idle (`!_warmWorkerBusy`) for sub-millisecond startup. If a second `<code-lab>` instance on the same page executes concurrently while `_warmWorkerBusy` is true, `executeInWorker` transparently spawns an ephemeral `new Worker(_cachedWorkerUrl)` for that job and terminates it upon completion.
+3. **Per-Instance Preemption & Cancellation**:
+   - Active jobs are tracked in `_activeWorkerJobs` (`Map<jobId, job>`) tagged with `options.instanceId`.
+   - Re-running inside a single `<code-lab>` instance or calling `CodeLabRuntime.cancelWorkerExecution(reason, instanceId)` cancels only jobs matching `instanceId` (`{ ok: false, cancelled: true, exitCode: 130 }`), leaving other instances running uninterrupted.
+4. **Watchdog Timeout & Output Flood Protection**:
+   - `executeInWorker` sets a host-side timer for `(options.timeoutMs || 15000) + 500` ms. If blocked by `while(true)`, the worker is terminated with `{ ok: false, timedOut: true, exitCode: 124 }`.
+   - Inside the runtime (and `child_process` subcommands), `stdout`/`stderr` streams enforce `maxOutputBytes` (default `262144` bytes) and `maxConsoleCalls` (default `5000` calls) circuit breakers to prevent memory exhaustion on infinite logging loops.
 5. **Fallback**: If `Worker` or `Blob` is unavailable (e.g. Node.js CLI verification), `executeInWorker` falls back directly to `_hostRuntime.executeInVirtualRuntime(options)`.
 
 ### `executeInVirtualRuntime(options)` & `resourceTracker` Settle Loop
