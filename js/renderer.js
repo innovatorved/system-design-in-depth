@@ -525,22 +525,6 @@ window.Renderer = (() => {
         </div>
       </div>
 
-      <div class="build-view-tabs" role="tablist" aria-label="Build View Mode">
-        <button type="button" class="build-view-tab active" role="tab" aria-selected="true">
-          ${icons.book}
-          <span>Architecture &amp; Reference Code</span>
-        </button>
-        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="guided">
-          ${icons.terminal}
-          <span>Interactive Lab IDE</span>
-          <span class="build-view-tab__badge">${completedIds.length}/${totalSteps} Steps</span>
-        </button>
-        <button type="button" class="build-view-tab" role="tab" aria-selected="false" data-action="open-code-lab" data-lab-mode="sandbox">
-          ${icons.code}
-          <span>Sandbox Mode</span>
-        </button>
-      </div>
-
       <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
         <div class="build-lab-card__top">
           <div class="build-lab-card__intro">
