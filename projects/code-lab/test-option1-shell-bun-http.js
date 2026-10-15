@@ -1415,6 +1415,41 @@ async function main() {
       assert.ok(res.stdout.includes('cpu') && res.stdout.includes('50.5'));
     });
 
+    await test('7.4 Bun Built-in Module: ESM import { serve, file, write, hash, deepEquals } from "bun" & require("bun")', async () => {
+      const res = await runtime.executeInVirtualRuntime({
+        files: {
+          'demo.ts': `
+            import { serve, file, write, hash, deepEquals, version } from 'bun';
+            const bunCjs = require('bun');
+            await write('/tmp/bun-mod-test.txt', 'bun-builtin-module-ok');
+            const text = await file('/tmp/bun-mod-test.txt').text();
+            const srv = serve({
+              port: 4991,
+              fetch() { return new Response(text); }
+            });
+            const resp = await fetch('http://localhost:4991/');
+            const body = await resp.text();
+            srv.stop();
+            console.log(JSON.stringify({
+              version,
+              body,
+              sameServe: serve === bunCjs.serve,
+              hashValid: typeof hash('abc') === 'number',
+              eq: deepEquals({ a: [1, 2] }, { a: [1, 2] })
+            }));
+          `
+        },
+        entry: 'demo.ts',
+        mode: 'run'
+      });
+      assert.strictEqual(res.exitCode, 0, res.stderr);
+      const parsed = JSON.parse(res.stdout.trim());
+      assert.strictEqual(parsed.body, 'bun-builtin-module-ok');
+      assert.strictEqual(parsed.sameServe, true);
+      assert.strictEqual(parsed.hashValid, true);
+      assert.strictEqual(parsed.eq, true);
+    });
+
   });
 
   // ===========================================================================

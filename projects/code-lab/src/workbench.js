@@ -305,6 +305,64 @@ declare module 'node:child_process' {
 declare module 'child_process' { export * from 'node:child_process'; }
 declare module 'node:buffer' { export { Buffer }; }
 declare module 'buffer' { export { Buffer }; }
+declare const Bun: {
+  version: string;
+  revision: string;
+  env: Record<string, string | undefined>;
+  serve(options: { port?: number; hostname?: string; fetch(req: Request, server?: any): Response | Promise<Response>; error?(err: Error): Response | Promise<Response> }): { port: number; hostname: string; url: string; stop(closeActiveConnections?: boolean): void };
+  file(path: string, options?: { type?: string }): { size: number; type: string; text(): Promise<string>; json(): Promise<any>; arrayBuffer(): Promise<ArrayBuffer>; bytes(): Promise<Uint8Array>; exists(): Promise<boolean> };
+  write(dest: string | any, input: string | Uint8Array | ArrayBuffer | Response | any): Promise<number>;
+  sleep(ms: number): Promise<void>;
+  sleepSync(ms: number): void;
+  hash(input: string | Uint8Array, seed?: number): number;
+  deepEquals(a: any, b: any, strict?: boolean): boolean;
+  inspect(val: any): string;
+  nanoseconds(): number;
+  which(bin: string): string | null;
+  escapeHTML(str: string): string;
+  stringWidth(str: string): number;
+};
+declare module 'bun' {
+  export const version: string;
+  export const env: Record<string, string | undefined>;
+  export const serve: typeof Bun.serve;
+  export const file: typeof Bun.file;
+  export const write: typeof Bun.write;
+  export const sleep: typeof Bun.sleep;
+  export const sleepSync: typeof Bun.sleepSync;
+  export const hash: typeof Bun.hash;
+  export const deepEquals: typeof Bun.deepEquals;
+  export const inspect: typeof Bun.inspect;
+  export const nanoseconds: typeof Bun.nanoseconds;
+  export const which: typeof Bun.which;
+  export const escapeHTML: typeof Bun.escapeHTML;
+  export const stringWidth: typeof Bun.stringWidth;
+  export default Bun;
+}
+declare module 'bun:test' {
+  export function test(name: string, fn: () => any, timeout?: number): Promise<void>;
+  export function it(name: string, fn: () => any, timeout?: number): Promise<void>;
+  export function describe(name: string, fn: () => void): void;
+  export function beforeAll(fn: () => any): void;
+  export function afterAll(fn: () => any): void;
+  export function beforeEach(fn: () => any): void;
+  export function afterEach(fn: () => any): void;
+  export function expect(actual: any): any;
+  export const mock: any;
+  export const jest: any;
+}
+declare module 'bun:sqlite' {
+  export class Database {
+    constructor(filename?: string, options?: any);
+    exec(sql: string): this;
+    run(sql: string, ...params: any[]): { changes: number; lastInsertRowid: number };
+    query(sql: string): { all(...params: any[]): any[]; get(...params: any[]): any; values(...params: any[]): any[][]; run(...params: any[]): { changes: number; lastInsertRowid: number } };
+    prepare(sql: string): { all(...params: any[]): any[]; get(...params: any[]): any; values(...params: any[]): any[][]; run(...params: any[]): { changes: number; lastInsertRowid: number }; finalize(): void };
+    transaction<T extends (...args: any[]) => any>(fn: T): T;
+    close(): void;
+  }
+  export default Database;
+}
 `;
 
   function escapeHtml(str) {
@@ -887,7 +945,8 @@ declare module 'buffer' { export { Buffer }; }
         'assert', 'assert/strict', 'buffer', 'child_process', 'crypto', 'dns',
         'events', 'fs', 'fs/promises', 'http', 'https', 'net', 'os', 'path',
         'perf_hooks', 'process', 'querystring', 'stream', 'string_decoder',
-        'test', 'timers', 'timers/promises', 'url', 'util', 'zlib'
+        'test', 'timers', 'timers/promises', 'url', 'util', 'zlib',
+        'bun', 'bun:test', 'bun:sqlite'
       ]);
       const npmSet = new Set();
       const builtinSet = new Set();
@@ -915,8 +974,10 @@ declare module 'buffer' { export { Buffer }; }
           while ((m = regex.exec(src)) !== null) {
             const spec = m[2].trim();
             if (!spec || spec.startsWith('.') || spec.startsWith('/')) continue;
-            if (spec.startsWith('node:')) {
+            if (spec.startsWith('node:') || spec.startsWith('bun:')) {
               builtinSet.add(spec);
+            } else if (spec === 'bun') {
+              builtinSet.add('bun');
             } else {
               const bare = spec.split('/').slice(0, spec.startsWith('@') ? 2 : 1).join('/');
               if (builtins.has(spec) || builtins.has(bare)) {
@@ -3170,7 +3231,9 @@ declare module 'buffer' { export { Buffer }; }
       if (this.onCodeChange) {
         try { this.onCodeChange(filename, code); } catch (_) {}
       }
-      this._emitEvent('codelab:change', { labId: this.labId, filename, code });
+      const detail = { labId: this.labId, filename, path: filename, code, content: code };
+      this._emitEvent('codelab:change', detail);
+      this._emitEvent('codelab:code-change', detail);
       this._updateStatusBar();
       this._renderBreadcrumbs();
     }
@@ -4585,12 +4648,16 @@ declare module 'buffer' { export { Buffer }; }
               if (this.onStepComplete) {
                 try { this.onStepComplete(step, sIdx); } catch (_) {}
               }
-              this._emitEvent('codelab:step-complete', {
+              const stepDetail = {
                 labId: this.labId,
                 step,
+                stepId: step.id,
                 stepIndex: sIdx,
+                index: sIdx,
                 completedSteps: Array.from(this.completedSteps)
-              });
+              };
+              this._emitEvent('codelab:step-complete', stepDetail);
+              this._emitEvent('codelab:step:pass', stepDetail);
             }
           }
         });

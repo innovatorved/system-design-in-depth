@@ -90,8 +90,10 @@ console.log(`Listening on http://localhost:${server.port}`);
 
 ---
 
-## 5. IDE Ports & HTTP Preview Tab
+## 5. IDE Bottom Drawer Tabs (`Ports`, `Network`, `Virtual Disk & HTTP`)
 
 In the CodeLab bottom drawer:
-- **Ports & HTTP Preview**: Lists all active virtual listening ports (e.g. `localhost:3000`). Clicking a port lets you trigger test HTTP requests and preview the live HTML or JSON response.
-- **Network Trace**: Records every simulated HTTP request with method, URL, status code, latency (ms), and request/response headers.
+- **Ports (`ports`)**: Lists all active virtual listening ports (`VirtualPortTable`, e.g., `localhost:3000`) and embeds an interactive **Mini HTTP Client** (Method selector, URL bar, Headers, Request Body, and Preview / Raw JSON / Headers response viewer).
+- **Network (`network`)**: Displays a live HTTP & TCP loopback trace waterfall with status badges, HTTP methods, latency (`ms`) bars, filter/search, and request/response payload inspection.
+- **Virtual Disk & HTTP (`inspector`)**: Displays a side-by-side snapshot of the in-memory POSIX Virtual File System (with 16-byte hex dumps and UTF-8 previews) and virtual loopback HTTP trace cards.
+

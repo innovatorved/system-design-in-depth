@@ -80,21 +80,21 @@ Complete reference of options, methods, events, and shortcuts for `CodeLab.mount
 
 ## 3. Event Subscriptions (`workbench.on`)
 
-Subscribe to events with `workbench.on(event, handler)`. Returns an unsubscribe function.
+Subscribe to events with `workbench.on(event, handler)`. Returns an unsubscribe function. Both short names (`'change'`, `'step-complete'`, `'lab-complete'`, `'run'`) and prefixed names (`'codelab:change'`, `'codelab:step-complete'`, etc.) are supported.
 
 ```ts
-// Subscribe to file modifications
-const unsubscribe = workbench.on('change', ({ filename, code }) => {
-  console.log(`File edited: ${filename}`);
+// Subscribe to file modifications ('change' or 'code-change')
+const unsubscribe = workbench.on('change', ({ filename, path, code, content }) => {
+  console.log(`File edited: ${filename} (${code.length} chars)`);
 });
 
-// Subscribe to step completion
-workbench.on('step-complete', ({ step, index }) => {
-  alert(`Completed step ${index + 1}: ${step.title}!`);
+// Subscribe to step completion ('step-complete' or 'step:pass')
+workbench.on('step-complete', ({ step, stepId, stepIndex, completedSteps }) => {
+  console.log(`Completed step ${stepIndex + 1} (${stepId}): ${step.title}!`);
 });
 
-// Subscribe to lab completion
-workbench.on('lab-complete', ({ labId }) => {
+// Subscribe to lab completion ('lab-complete')
+workbench.on('lab-complete', ({ labId, completedSteps }) => {
   console.log(`Lab completed: ${labId}`);
 });
 
@@ -108,11 +108,13 @@ unsubscribe();
 
 | Shortcut | Action |
 | :--- | :--- |
-| `Cmd / Ctrl + Enter` | **Run Demo** entry file |
-| `Cmd / Ctrl + Shift + Enter` | **Verify Step** / Run current step tests |
+| `Cmd / Ctrl + Enter` | **Verify Step** (Guided mode) or **Run Tests** (Sandbox mode) |
+| `Cmd / Ctrl + Shift + Enter` | **Run Demo** entry file (`demo.js` / `demo.ts`) |
 | `Cmd / Ctrl + Shift + P` or `F1` | Open **Command Palette** |
 | `Cmd / Ctrl + P` | Open **Quick Open** (file switcher) |
+| `F2` | Rename active file in Explorer |
 | `Esc` | Close active modal dialog or exit full-screen mode |
 | `Tab` (in Terminal) | Auto-complete command or VFS path |
 | `Ctrl + C` (in Terminal) | Send SIGINT / abort running command |
 | `Ctrl + L` (in Terminal) | Clear terminal screen |
+

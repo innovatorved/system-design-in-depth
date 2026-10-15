@@ -4,7 +4,7 @@ You can use `@innovatorved/code-lab/runtime` to execute JavaScript, TypeScript, 
 
 Use cases include:
 - Automated code graders and coding interview platforms
-- Interactive documentation documentation runners (like MDX or Starlight)
+- Interactive documentation runners (like MDX, Fumadocs, or Starlight)
 - In-browser sandbox evaluations for AI coding agents
 
 ---
@@ -30,7 +30,7 @@ interface CodeLabExecutionOptions {
   mode?: 'run' | 'test' | 'repl';     // Execution mode
   replCode?: string;                  // Expression to evaluate in REPL mode
   testFilter?: string | string[];     // Filter tests by substring or array of names
-  timeoutMs?: number;                 // Watchdog execution timeout (default: 8000ms)
+  timeoutMs?: number;                 // Watchdog execution timeout (default: 15000ms)
   instanceId?: string;                // Isolated worker instance ID
   onStdout?: (text: string) => void;  // Real-time stdout stream
   onStderr?: (text: string) => void;  // Real-time stderr stream

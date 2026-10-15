@@ -1,150 +1,204 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>@innovatorved/code-lab — Interactive System Design IDE Demo</title>
-  <link rel="stylesheet" href="../dist/code-lab.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@innovatorved/code-lab — Interactive Browser IDE, POSIX Shell &amp; Node.js/Bun Sandbox</title>
+  <link rel="stylesheet" href="../dist/code-lab.css" />
   <style>
     body {
       margin: 0;
-      padding: 24px;
-      background: #000000;
-      color: #ffffff;
+      padding: 0;
+      background: #0a0a0a;
+      color: #ededed;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     .demo-header {
-      max-width: 1440px;
-      margin: 0 auto 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: #111111;
+      gap: 12px;
+      flex-wrap: wrap;
     }
     .demo-header h1 {
-      font-size: 20px;
+      font-size: 14px;
+      font-weight: 600;
       margin: 0;
+      letter-spacing: -0.01em;
     }
-    .demo-container {
-      max-width: 1440px;
-      margin: 0 auto;
+    .demo-header span {
+      font-size: 12px;
+      color: #888;
+    }
+    .demo-header a {
+      color: #ededed;
+      text-decoration: none;
+      font-size: 12px;
+      padding: 4px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .demo-header a:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    #lab-root {
+      height: calc(100vh - 49px);
+    }
+    #lab-root .codelab {
+      height: 100%;
+      border-radius: 0;
+      border: none;
     }
   </style>
 </head>
 <body>
-  <div class="demo-header">
-    <h1>⚡ @innovatorved/code-lab — Standalone Browser IDE Demo</h1>
-    <span style="font-size:13px;color:#a1a1a1;">100% In-Browser Web Worker · Virtual Node.js · Monaco Editor</span>
-  </div>
-  <div class="demo-container">
-    <div id="demo-lab"></div>
-  </div>
+  <header class="demo-header">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <h1>@innovatorved/code-lab <code style="font-size:11px;color:#aaa;">v1.3.0</code></h1>
+      <span>Node.js v22 + Bun v1.1 · POSIX Shell (40+ Coreutils) · Loopback HTTP &amp; Ports</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <a href="https://github.com/innovatorved/code-lab" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/innovatorved/code-lab/wiki" target="_blank" rel="noopener">Documentation Wiki</a>
+      <a href="/">← System Design Curriculum</a>
+    </div>
+  </header>
+
+  <div id="lab-root"></div>
 
   <script src="../dist/code-lab.js"></script>
   <script>
-    const solutionCode = `class TokenBucketLimiter {
+    const solutionLimiter = `class TokenBucket {
   constructor(capacity, refillRatePerSec) {
     this.capacity = capacity;
-    this.refillRate = refillRatePerSec;
+    this.refillRatePerSec = refillRatePerSec;
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
 
-  allow(cost = 1, now = Date.now()) {
+  _refill(now = Date.now()) {
     const elapsedSec = Math.max(0, (now - this.lastRefill) / 1000);
-    this.tokens = Math.min(this.capacity, this.tokens + elapsedSec * this.refillRate);
+    this.tokens = Math.min(this.capacity, this.tokens + elapsedSec * this.refillRatePerSec);
     this.lastRefill = now;
+  }
+
+  allowRequest(cost = 1, now = Date.now()) {
+    this._refill(now);
     if (this.tokens >= cost) {
       this.tokens -= cost;
       return { allowed: true, remaining: Math.floor(this.tokens) };
     }
-    return { allowed: false, remaining: Math.floor(this.tokens) };
+    const deficit = cost - this.tokens;
+    return {
+      allowed: false,
+      remaining: 0,
+      retryAfterMs: Math.ceil((deficit / this.refillRatePerSec) * 1000)
+    };
   }
 }
 
-module.exports = { TokenBucketLimiter };
+module.exports = { TokenBucket };
 `;
 
-    const starterCode = `class TokenBucketLimiter {
+    const starterLimiter = `class TokenBucket {
   constructor(capacity, refillRatePerSec) {
     this.capacity = capacity;
-    this.refillRate = refillRatePerSec;
+    this.refillRatePerSec = refillRatePerSec;
     this.tokens = capacity;
     this.lastRefill = Date.now();
   }
 
-  allow(cost = 1, now = Date.now()) {
-    // TODO (Step 1): Refill tokens based on elapsed time and check if tokens >= cost
-    throw new Error('TODO: Implement TokenBucketLimiter.allow()');
+  _refill(now = Date.now()) {
+    // TODO (Step 1): Replenish tokens proportional to elapsed seconds, capped at this.capacity
+    const elapsedSec = Math.max(0, (now - this.lastRefill) / 1000);
+    this.tokens = Math.min(this.capacity, this.tokens + elapsedSec * this.refillRatePerSec);
+    this.lastRefill = now;
+  }
+
+  allowRequest(cost = 1, now = Date.now()) {
+    // TODO (Step 2): Call this._refill(now), deduct cost if enough tokens exist, or return retryAfterMs
+    this._refill(now);
+    if (this.tokens >= cost) {
+      this.tokens -= cost;
+      return { allowed: true, remaining: Math.floor(this.tokens) };
+    }
+    const deficit = cost - this.tokens;
+    return {
+      allowed: false,
+      remaining: 0,
+      retryAfterMs: Math.ceil((deficit / this.refillRatePerSec) * 1000)
+    };
   }
 }
 
-module.exports = { TokenBucketLimiter };
+module.exports = { TokenBucket };
 `;
 
-    const demoCode = `const { TokenBucketLimiter } = require('./limiter.js');
-const limiter = new TokenBucketLimiter(5, 2);
-for (let i = 1; i <= 7; i++) {
-  console.log('Request #' + i, limiter.allow(1, 1000));
-}
-`;
+    const serverCode = `const http = require('node:http');
+const { TokenBucket } = require('./limiter');
 
-    const testCode = `const assert = require('node:assert/strict');
-const { TokenBucketLimiter } = require('./limiter.js');
+const buckets = new Map();
 
-const tests = [];
-const test = (name, fn) => tests.push({ name, fn });
+const server = http.createServer((req, res) => {
+  const url = new URL(req.url, 'http://localhost:3000');
+  const clientKey = url.searchParams.get('client') || 'anonymous';
 
-test('allows bursts up to capacity', () => {
-  const l = new TokenBucketLimiter(3, 1);
-  assert.equal(l.allow(1, 0).allowed, true);
-  assert.equal(l.allow(1, 0).allowed, true);
-  assert.equal(l.allow(1, 0).allowed, true);
-  assert.equal(l.allow(1, 0).allowed, false);
-});
-
-test('refills tokens over elapsed time', () => {
-  const l = new TokenBucketLimiter(2, 1);
-  l.allow(2, 0);
-  assert.equal(l.allow(1, 500).allowed, false);
-  assert.equal(l.allow(1, 1000).allowed, true);
-});
-
-(async () => {
-  for (const t of tests) {
-    await t.fn();
-    console.log('PASS:', t.name);
+  if (!buckets.has(clientKey)) {
+    buckets.set(clientKey, new TokenBucket(5, 1));
   }
-})();
+  const decision = buckets.get(clientKey).allowRequest(1);
+
+  res.writeHead(decision.allowed ? 200 : 429, {
+    'Content-Type': 'application/json',
+    'X-RateLimit-Remaining': String(decision.remaining)
+  });
+  res.end(JSON.stringify({ client: clientKey, ...decision }, null, 2));
+});
+
+server.listen(3000, () => {
+  console.log('Rate Limiter HTTP Gateway listening on http://localhost:3000');
+});
 `;
 
-    CodeLab.mount(document.getElementById('demo-lab'), {
-      labId: 'token-bucket-demo',
-      title: 'Token Bucket Rate Limiter',
+    CodeLab.mount('#lab-root', {
+      id: 'standalone-token-bucket',
+      title: 'Token Bucket Rate Limiter & HTTP Gateway',
       mode: 'guided',
       language: 'js',
-      solutionFiles: {
-        'limiter.js': solutionCode,
-        'demo.js': demoCode,
-        'test.js': testCode
+      files: {
+        'limiter.js': solutionLimiter,
+        'server.js': serverCode,
+        'demo.js': `const { TokenBucket } = require('./limiter');\n\nconst bucket = new TokenBucket(3, 1);\nconst t0 = 1000;\nconsole.log('Req 1:', bucket.allowRequest(1, t0));\nconsole.log('Req 2:', bucket.allowRequest(1, t0));\nconsole.log('Req 3:', bucket.allowRequest(1, t0));\nconsole.log('Req 4 (Burst exceeded):', bucket.allowRequest(1, t0));\nconsole.log('Req 5 (+1000ms refill):', bucket.allowRequest(1, t0 + 1000));\n`,
+        'test.js': `const { test } = require('node:test');\nconst assert = require('node:assert/strict');\nconst { TokenBucket } = require('./limiter');\n\ntest('allows burst up to capacity', () => {\n  const b = new TokenBucket(2, 1);\n  assert.equal(b.allowRequest(1, 0).allowed, true);\n  assert.equal(b.allowRequest(1, 0).allowed, true);\n  assert.equal(b.allowRequest(1, 0).allowed, false);\n});\n\ntest('refills tokens over elapsed time', () => {\n  const b = new TokenBucket(2, 2);\n  b.allowRequest(2, 0);\n  assert.equal(b.allowRequest(1, 500).allowed, true);\n});\n`,
+        'README.md': `# Token Bucket Rate Limiter & HTTP Gateway\n\nThis interactive demo runs entirely in your browser inside a Web Worker virtual runtime.\n\n### Try the POSIX Shell & HTTP Loopback\nOpen **Terminal & REPL** in the bottom drawer and run:\n\`\`\`bash\nnode server.js &\ncurl -i "http://localhost:3000/check?client=user_42"\n\`\`\`\nOr open the **Ports** tab to send requests with the interactive **Mini HTTP Client** and inspect latency in the **Network** tab.`
       },
-      guided: {
-        mainFile: 'limiter.js',
-        starterFiles: {
-          'limiter.js': starterCode,
-          'demo.js': demoCode,
-          'test.js': testCode
-        }
+      starterFiles: {
+        'limiter.js': starterLimiter
       },
       steps: [
         {
           id: 'step-1',
-          title: 'Step 1: Refill & Consume Tokens',
-          concept: 'Lazy Token Refill',
-          instructions: 'Calculate `elapsedSec = Math.max(0, (now - this.lastRefill) / 1000)`, clamp `this.tokens` to `this.capacity`, and deduct `cost` when enough tokens are available.',
+          title: 'Time-Based Token Refill',
+          concept: 'Calculate elapsed time since lastRefill and add tokens capped at bucket capacity.',
+          instructions: ['Implement `_refill(now)` so tokens replenish smoothly over time.'],
+          hint: 'Multiply elapsedSec by this.refillRatePerSec and clamp with Math.min(this.capacity, ...).',
           targetFile: 'limiter.js',
-          targetSymbol: 'allow(',
-          hint: 'Use `Math.min(this.capacity, this.tokens + elapsedSec * this.refillRate)` before checking `this.tokens >= cost`.',
-          testNames: ['allows bursts up to capacity', 'refills tokens over elapsed time']
+          targetSymbol: '_refill',
+          testNames: ['refills tokens over elapsed time']
+        },
+        {
+          id: 'step-2',
+          title: 'Allow Request & Retry-After',
+          concept: 'Deduct tokens when available or compute exact retryAfterMs backoff.',
+          instructions: ['Implement `allowRequest(cost, now)` and verify all unit tests pass.'],
+          hint: 'If this.tokens >= cost, subtract cost and return { allowed: true }.',
+          targetFile: 'limiter.js',
+          targetSymbol: 'allowRequest',
+          testNames: ['allows burst up to capacity', 'refills tokens over elapsed time']
         }
       ]
     });
