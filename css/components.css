@@ -1992,3 +1992,362 @@
   }
 }
 
+/* ── Build View Switcher Bar & Interactive Lab Overview Card ─────────────── */
+.build-view-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--cl-bg-elevated, var(--surface));
+  border: 1px solid var(--cl-border, var(--border));
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.build-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-family: var(--cl-font-sans, var(--font-sans));
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cl-fg-muted, var(--fg-muted));
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+  white-space: nowrap;
+}
+
+.build-view-tab:hover {
+  color: var(--cl-fg, var(--fg));
+  background: var(--cl-bg-hover, var(--surface-hover));
+}
+
+.build-view-tab.active,
+.build-view-tab.is-active {
+  background: var(--cl-bg-active, var(--surface-active));
+  color: var(--cl-fg, var(--fg));
+  border-color: var(--cl-border-strong, var(--border-strong));
+  font-weight: 600;
+}
+
+.build-view-tab--ide {
+  color: var(--cl-fg, var(--fg));
+}
+
+.build-view-tab--ide:hover {
+  background: var(--cl-bg-hover, var(--surface-hover));
+  border-color: var(--cl-border-strong, var(--border-strong));
+}
+
+.build-view-tab__badge {
+  font-family: var(--cl-font-mono, var(--font-mono));
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--cl-bg, var(--bg));
+  border: 1px solid var(--cl-border, var(--border));
+  color: var(--cl-fg-muted, var(--fg-muted));
+  font-variant-numeric: tabular-nums;
+}
+
+/* Interactive Build Lab Overview Hero Card (.build-lab-card / .build-lab-cta) */
+.build-lab-card,
+.build-lab-cta {
+  background: var(--cl-bg-elevated, var(--surface));
+  border: 1px solid var(--cl-border, var(--border));
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.build-lab-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.build-lab-card__intro {
+  flex: 1;
+  min-width: 260px;
+}
+
+.build-lab-card__eyebrow {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--cl-font-mono, var(--font-mono));
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cl-fg-faint, var(--fg-faint));
+  margin-bottom: 0.5rem;
+}
+
+.build-lab-card__progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--cl-bg, var(--bg));
+  color: var(--cl-fg-muted, var(--fg-muted));
+  border: 1px solid var(--cl-border, var(--border));
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.build-lab-card__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--cl-fg, var(--fg));
+  margin: 0 0 0.375rem 0;
+  line-height: 1.35;
+}
+
+.build-lab-card__desc {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--cl-fg-muted, var(--fg-muted));
+  margin: 0;
+  max-width: 65ch;
+}
+
+.build-lab-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.build-lab-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--cl-bg, var(--bg));
+  border: 1px solid var(--cl-border, var(--border));
+  font-family: var(--cl-font-mono, var(--font-mono));
+  font-size: 11.5px;
+  color: var(--cl-fg-muted, var(--fg-muted));
+}
+
+.build-lab-card__cta-col {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.build-lab-card__launch-btn {
+  justify-content: center;
+  padding: 8px 16px;
+  font-weight: 600;
+}
+
+/* Progress bar inside Build Lab Overview Card */
+.build-lab-progress-track {
+  width: 100%;
+  height: 3px;
+  background: var(--cl-bg, var(--bg));
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--cl-border, var(--border));
+}
+
+.build-lab-progress-track__fill,
+.build-lab-progress-fill {
+  height: 100%;
+  background: var(--cl-fg, var(--fg));
+  border-radius: 999px;
+  transition: width 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 2x2 Guided Step Grid inside 760px Overview Column */
+.build-lab-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .build-lab-steps-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.build-lab-step-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 1rem 1.125rem;
+  border-radius: 6px;
+  background: var(--cl-bg, var(--bg));
+  border: 1px solid var(--cl-border, var(--border));
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+  gap: 6px;
+}
+
+.build-lab-step-card:hover {
+  border-color: var(--cl-border-strong, var(--border-strong));
+  background: var(--cl-bg-hover, var(--surface-hover));
+}
+
+.build-lab-step-card.is-done {
+  border-color: var(--cl-green, var(--success));
+}
+
+.build-lab-step-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.build-lab-step-card__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--cl-bg-elevated, var(--surface));
+  border: 1px solid var(--cl-border, var(--border));
+  font-family: var(--cl-font-mono, var(--font-mono));
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cl-fg-muted, var(--fg-muted));
+  flex-shrink: 0;
+}
+
+.build-lab-step-card.is-done .build-lab-step-card__num {
+  background: var(--cl-green-muted, var(--success-muted));
+  border-color: var(--cl-green, var(--success));
+  color: var(--cl-green, var(--success));
+}
+
+.build-lab-step-card__target {
+  font-family: var(--cl-font-mono, var(--font-mono));
+  font-size: 11px;
+  color: var(--cl-fg-faint, var(--fg-faint));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.build-lab-step-card__title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--cl-fg, var(--fg));
+  line-height: 1.35;
+}
+
+.build-lab-step-card__concept {
+  font-size: 12.5px;
+  color: var(--cl-fg-muted, var(--fg-muted));
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+.build-lab-step-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--cl-border-subtle, var(--divider));
+  font-family: var(--cl-font-mono, var(--font-mono));
+  font-size: 11px;
+  color: var(--cl-fg-faint, var(--fg-faint));
+}
+
+.build-lab-step-card__open {
+  color: var(--cl-fg-muted, var(--fg-muted));
+  font-weight: 600;
+  transition: color 120ms ease;
+}
+
+.build-lab-step-card:hover .build-lab-step-card__open {
+  color: var(--cl-fg, var(--fg));
+}
+
+/* ── Full-Page Interactive Lab Overlay with Smooth Transition ────────────── */
+.build-lab-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  width: 100vw;
+  height: 100vh;
+  background: var(--cl-bg, var(--bg));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition:
+    opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 180ms;
+  display: flex;
+  flex-direction: column;
+}
+
+.build-lab-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.build-lab-overlay__mount {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.build-lab-overlay .codelab,
+.build-lab-overlay .codelab-workbench {
+  height: 100vh !important;
+  max-height: none !important;
+  min-height: 100vh !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.lesson-builds__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-family: var(--cl-font-mono, var(--font-mono));
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--cl-fg, var(--fg));
+}

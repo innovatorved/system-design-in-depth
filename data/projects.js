@@ -134,7 +134,7 @@ window.PROJECTS_DATA = [
     name: 'code-lab',
     title: 'CodeLab — Browser-Native System Design IDE, POSIX Shell & Node/Bun Runtime',
     description: 'Zero-server, browser-native JS/TS IDE (<code-lab>) with a full POSIX shell (pipes, redirects, 40+ UNIX coreutils), Node.js v22 + Bun v1.1 runtime (Bun.serve, bun:sqlite, bun:test), and live HTTP & Virtual Disk inspectors.',
-    stars: 'v1.3.1',
+    stars: 'v1.3.2',
     starsCount: 60,
     forks: 0,
     language: 'TypeScript',

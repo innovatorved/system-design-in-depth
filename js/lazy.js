@@ -26,7 +26,20 @@ window.Lazy = (() => {
           fb.src = resolvedFallback;
           if (/^https?:\/\//.test(resolvedFallback)) fb.crossOrigin = 'anonymous';
           fb.onload = () => resolve();
-          fb.onerror = () => { pending.delete(path); reject(new Error('Failed to load ' + path + ' (and fallback ' + resolvedFallback + ')')); };
+          fb.onerror = () => {
+            const ghMatch = path.match(/^https:\/\/cdn\.jsdelivr\.net\/npm\/@innovatorved\/code-lab@([^/]+)\/(.+)$/);
+            if (ghMatch) {
+              const ghFb = document.createElement('script');
+              ghFb.src = `https://cdn.jsdelivr.net/gh/innovatorved/code-lab@v${ghMatch[1]}/${ghMatch[2]}`;
+              ghFb.crossOrigin = 'anonymous';
+              ghFb.onload = () => resolve();
+              ghFb.onerror = () => { pending.delete(path); reject(new Error('Failed to load ' + path + ' (and fallbacks)')); };
+              document.head.appendChild(ghFb);
+              return;
+            }
+            pending.delete(path);
+            reject(new Error('Failed to load ' + path + ' (and fallback ' + resolvedFallback + ')'));
+          };
           document.head.appendChild(fb);
           return;
         }
