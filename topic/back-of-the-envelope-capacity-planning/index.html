@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -956,51 +956,29 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="back-of-the-envelope-capacity-planning" id="audio-speed-back-of-the-envelope-capacity-planning" title="Playback speed">1x</button>
         <audio id="audio-back-of-the-envelope-capacity-planning" src="audio/back-of-the-envelope-capacity-planning.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Back-of-the-envelope capacity planning</h2>
-
 <p>Capacity planning turns product assumptions into approximate request rates, storage, bandwidth, and operating cost. The estimate should expose likely bottlenecks and help choose what to measure next. Extra decimal places do not make uncertain inputs more reliable.</p>
-
 <p>We will estimate a feed's read traffic, account for work hidden behind each request, and compare the shortener's storage allowance with a historical measurement.</p>
-
 <h2>Turn user activity into a rate</h2>
-
 <p>Start with active users and actions per user, not the total number of registered accounts. Suppose a feed has 10 million daily active users, each making 20 feed requests per day.</p>
-
-<table><thead><tr><th>Step</th><th>Calculation</th><th>Result</th></tr></thead><tbody><tr><td>Daily reads</td><td>10 million × 20</td><td>200 million requests</td></tr><tr><td>Average rate</td><td>200 million ÷ 86,400 seconds</td><td>About 2,300 requests per second</td></tr><tr><td>Assumed busy period</td><td>Average × 10</td><td>About 23,000 requests per second</td></tr></tbody></table>The tenfold peak is an assumption to replace with traffic evidence. If plausible peaks range from 20,000 to 50,000 requests per second, compare designs across that range. A design that works only at the rounded midpoint has little margin for uncertainty.
-
+<table><thead><tr><th>Step</th><th>Calculation</th><th>Result</th></tr></thead><tbody><tr><td>Daily reads</td><td>10 million × 20</td><td>200 million requests</td></tr><tr><td>Average rate</td><td>200 million ÷ 86,400 seconds</td><td>About 2,300 requests per second</td></tr><tr><td>Assumed busy period</td><td>Average × 10</td><td>About 23,000 requests per second</td></tr></tbody></table>
+<p>The tenfold peak is an assumption to replace with traffic evidence. If plausible peaks range from 20,000 to 50,000 requests per second, compare designs across that range. A design that works only at the rounded midpoint has little margin for uncertainty.</p>
 <p>Record where the traffic arrives, how long bursts last, and whether one tenant or popular item concentrates the load. A global daily total does not describe the busiest region or partition. Revisit the estimate for growth, launches, and seasonal demand.</p>
-
 <h2>Count the work behind one request</h2>
-
 <p>A feed request might return 20 items. Fetching each item with a separate database query would produce roughly 460,000 lookups per second at the assumed peak, before retries or cache misses. That estimate is a reason to inspect batching and query shape; it does not by itself prove that any particular database cannot cope.</p>
-
 <p>Separate reads, writes, background jobs, and fanout. One new post can cause many feed updates. One redirect in our shortener also writes an event, so a product with many more reads than creations is not necessarily read-heavy at the database.</p>
-
 <p>Bandwidth needs bytes as well as requests. At an illustrative 20 kB response payload, 23,000 feed responses per second carry about 460 MB/s, or 3.7 Gbit/s, before protocol overhead. These decimal units describe payload leaving that serving boundary; compression, caches, and network placement change what each link carries.</p>
-
 <p>Keep the latency target beside the rate. “Handles 23,000 requests per second” is not sufficient if the queue grows throughout the test and users wait longer each minute.</p>
-
 <h2>Build storage from retention and representation</h2>
-
 <p>For a steady write rate, start with:</p>
-
-<strong>Retained records = records per day × retention days.</strong>
-
+<p><strong>Retained records = records per day × retention days.</strong></p>
 <p>Multiply by the stored bytes per record, then account for indexes, replicas, derived data, backups, write logs, and temporary space. Do not add an index allowance twice if your measured record size already includes it.</p>
-
 <p>The shortener exercise assumes 1 million new links per day, retained for five 365-day years. That gives 1.825 billion links. An initial allowance of 500 bytes per link, including indexes, projects 0.9125 decimal TB for that one copy of the link data.</p>
-
 <p>Click history is separate and may dominate. At 100 million redirects per day, the shortener records 100 times as many redirect events as new links. The event size and retention period need their own estimate.</p>
-
 <h2>Replace the assumptions that matter most</h2>
-
 <p>A local PostgreSQL 16.10 capture on 11 September 2026 measured a million-row shortener fixture. Its link table's main data fork occupied 93,085,696 bytes and its indexes 44,974,080 bytes: about 138.1 bytes per link together. That measure excludes auxiliary storage and the rest of the database.</p>
-
 <p>Using the rounded 138.1 bytes in the same projection gives about 0.252 TB, roughly 3.6 times smaller than the initial link allowance. It remains a projection: longer URLs, extra indexes, growth, and deleted-row space can change the future representation. It is not the total disk requirement or a predicted invoice.</p>
-
 <p>The same historical test completed 231,377 warm indexed lookups in 20 seconds at a target arrival rate of about 11,574 per second. None failed, were skipped, or exceeded its chosen one-second limit. It used a local socket and excluded the application and required event insert. It supports testing the simple design further; it does not establish capacity for the complete five-year service.</p>
-
-<p>Finish the estimate by naming the next limiting resource: CPU, database writes, cache memory, queue processing, bandwidth, or a provider quota. Measure that path with representative data and failures. <a href="#" data-nav="topic" data-slug="cost-aware-architecture">Cost-aware architecture</a> then connects those quantities to the bill and the work of operating the system.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>Finish the estimate by naming the next limiting resource: CPU, database writes, cache memory, queue processing, bandwidth, or a provider quota. Measure that path with representative data and failures. <a href="#" data-nav="topic" data-slug="cost-aware-architecture">Cost-aware architecture</a> then connects those quantities to the bill and the work of operating the system.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
 <h2>Back-of-the-envelope capacity planning</h2>
 <p>Capacity planning turns product assumptions into approximate request rates, storage, bandwidth, and operating cost. The estimate should expose likely bottlenecks and help choose what to measure next. Extra decimal places do not make uncertain inputs more reliable.</p>
 <p>We will estimate a feed's read traffic, account for work hidden behind each request, and compare the shortener's storage allowance with a historical measurement.</p>
@@ -1349,7 +1327,7 @@
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators.js?v=b8038d5a4b"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

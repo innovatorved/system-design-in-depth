@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -949,27 +949,16 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="social-graph-follows-and-flockdb" id="audio-speed-social-graph-follows-and-flockdb" title="Playback speed">1x</button>
         <audio id="audio-social-graph-follows-and-flockdb" src="audio/social-graph-follows-and-flockdb.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Social graph follows and FlockDB</h2>
-
 <p>Ada follows Bo. Opening Ada's following list asks for edges leaving Ada; publishing Bo's post asks for edges entering Bo. The relationship is the same, but the two reads need different access paths.</p>
-
 <p>Most follow-graph work is shallow: test one relationship, list neighbors, page through followers, or count them. Start with those operations. A graph-shaped data model does not automatically require arbitrary graph traversal.</p>
-
 <h2>Store the direction, then the relationship rule</h2>
-
 <p>The <a href="#" data-nav="topic" data-slug="social-network-database-modeling">previous model</a> uses <code>(follower, followee)</code> as a unique pair. A mutual friendship would need a different acceptance rule or two confirmed directions. A reverse lookup for Ada following Bo is not a second friendship and does not mean Bo follows Ada.</p>
-
 <p>A broader <code>relations(source, type, target, state, position)</code> model can support follows, blocks or mutes when their storage needs are shared. Include the type in relationship identity. Keep each type's permissions and state transitions explicit: a pending follow request and an active block are not interchangeable just because both connect accounts.</p>
-
 <p>A sort position supports ordered listing. State can distinguish active, removed or archived edges. Extra metadata belongs to the relationship it describes; it should not turn every pair into an unvalidated bag of unrelated values.</p>
-
 <h2>Why the reverse lookup changes after sharding</h2>
-
 <p>On one database, a forward index on <code>(follower, followee)</code> and a reverse index on <code>(followee, follower)</code> can serve both reads. The database maintains the indexes when a row changes.</p>
-
 <p>Now partition the rows by follower. Ada's outgoing list stays on Ada's partition. Bo's followers can be spread across all the other users' partitions. A local index on <code>followee</code> helps inside each partition, but does not tell the router which partitions contain Bo's incoming edges.</p>
-
 <p>A separately placed reverse list solves that routing problem. The forward entry is grouped by Ada, and its reverse entry is grouped by Bo.</p>
-
 <div class="mermaid">flowchart TB
     accTitle: One follow has two access paths
     accDescr: Ada following Bo creates a forward entry grouped by Ada and a reverse entry grouped by Bo. Both entries describe the same directed relationship.
@@ -977,23 +966,14 @@
     E --> R[Grouped by Bo]
     F --> A[Following list<br/>contains Bo]
     R --> B[Follower list<br/>contains Ada]</div>
-
 <p>If Bo also follows Ada, that is a second logical relationship with its own forward and reverse entries: four entries for two follows. The cost is two logical entries per relationship before indexes and replication, plus the work of keeping them consistent. It is not a universal two-times storage estimate.</p>
-
 <h2>What FlockDB chose</h2>
-
 <p>Twitter's 2010 FlockDB design used MySQL-backed adjacency lists, indexed and partitioned in both directions. It targeted large neighbor lists, ordered pagination and set operations rather than multi-hop graph walks. Its position field supported ordered reads; removed and archived states let it retain edges without exposing them as active follows.</p>
-
 <p>That design also accepted retried and out-of-order writes using operation ordering. It did not make an arbitrary pair of remote database writes into a single SQLite transaction. The archived repository is no longer maintained; this is a historical design to understand, not a current package recommendation.</p>
-
 <p>The useful distinction survives the implementation: listing direct followers is different work from finding paths, communities or recommendations across many hops. Choose an online adjacency service and an offline graph-analysis pipeline according to the queries each must answer.</p>
-
 <h2>Keep the two representations consistent</h2>
-
 <p>Our social example, with its shared helpers, deliberately stores two tables in one SQLite database. One transaction writes the forward row, reverse row and operation receipt. An exception between the row writes rolls everything back. This exposes the maintenance obligation without pretending to implement distributed FlockDB.</p>
-
 <p>The six-account graph starts with Ada and Dee following Bo and Cy, plus Eli and Fay following Cy. The replay interrupts Eli's new follow of Bo, retries it, and then unfollows. A delayed retry of the old follow returns its historical receipt without restoring the edge.</p>
-
 <pre><code class="language-bash">python3 m22-social.py graph</code></pre>
 <pre><code class="language-output">Ada follows: Bo,Cy
 Cy followers: Ada,Dee,Eli,Fay
@@ -1003,36 +983,23 @@ delayed old follow: current=False
 absent unfollow: {&quot;accepted_state&quot;:false,&quot;duplicate&quot;:false}
 changed operation: 409
 committed forward/reverse pairs: 6 6</code></pre>
-
 <p>The successful retry is repeated before printing, hence <code>duplicate:true</code>. Reusing its operation identity with different input returns conflict. The receipt describes an accepted operation; the current adjacency list describes the relationship now. The final check compares complete forward and reverse pair sets, not just equal counts.</p>
-
 <p>Across independent stores, choose a consistency and recovery contract. A reverse projection updated asynchronously needs retained changes, duplicate handling, an applied position and repair. If it drives delivery, lag can omit recipients. A cached follower count cannot reconstruct who is missing.</p>
-
 <h2>Page by a stable boundary</h2>
-
 <p>Offset pagination repeatedly skips earlier rows. An indexed cursor can seek to the last returned ordering key instead. Include a tie-breaker: several follows can share one timestamp.</p>
-
-<p>For a relational extension with non-null <code>created_at</code> and a unique <code>(followee, follower)</code> pair, use an index beginning with <code>(followee, created_at DESC, follower DESC)</code>. After returning the row at <code>(100, 'Eli')</code>, the next-page query is:</p>
-
+<p>For a relational extension with non-null <code>created_at</code> and a unique <code>(followee, follower)</code> pair, use an index beginning with <code>(followee, created_at DESC, follower DESC)</code>. After returning the row at <code>(100, &#039;Eli&#039;)</code>, the next-page query is:</p>
 <pre><code class="language-sql">SELECT follower, created_at
 FROM follows_by_time
 WHERE followee = :author
   AND (created_at, follower) &lt; (:last_time, :last_id)
 ORDER BY created_at DESC, follower DESC
 LIMIT :page_size;</code></pre>
-
-<p>This is a proposed time-ordered table, separate from the example's alphabetically sorted lists. If Cy's followers sort as <code>Fay@100, Eli@100, Dee@99, Ada@99</code>, a two-row first page ends at <code>(100, 'Eli')</code>; the next page returns Dee and Ada. A one-row page ending at <code>(100, 'Fay')</code> still reaches Eli because the ID breaks the timestamp tie.</p>
-
+<p>This is a proposed time-ordered table, separate from the example's alphabetically sorted lists. If Cy's followers sort as <code>Fay@100, Eli@100, Dee@99, Ada@99</code>, a two-row first page ends at <code>(100, &#039;Eli&#039;)</code>; the next page returns Dee and Ada. A one-row page ending at <code>(100, &#039;Fay&#039;)</code> still reaches Eli because the ID breaks the timestamp tie.</p>
 <p>Keyset pagination avoids deep offset scans when an appropriate index is used. It does not freeze a changing graph. If an edge is removed or its sort position changes between requests, define whether the caller accepts a live list or needs a versioned snapshot. The cursor must also belong to the requested account and relationship type.</p>
-
 <h2>Handle a very large follower list deliberately</h2>
-
 <p>A single popular account can dominate one reverse partition. Isolating it protects other accounts, but does not divide its own workload. Bucketing that list spreads storage and writes; reads now need to merge ordered bucket pages and carry enough cursor state to resume them.</p>
-
 <p>Cache frequently read first pages when their freshness policy permits it. Separate an approximate public count from exact edge membership, and batch recipient enumeration for downstream delivery. Preserve current access rules when a cached list is used for a protected action.</p>
-
-<p>Once outgoing and incoming relationships have clear meanings, the <a href="#" data-nav="topic" data-slug="feed-generation-push-pull-hybrid">feed-generation comparison</a> can decide whether to write feed references when a post appears or collect posts when a reader opens the page.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>Once outgoing and incoming relationships have clear meanings, the <a href="#" data-nav="topic" data-slug="feed-generation-push-pull-hybrid">feed-generation comparison</a> can decide whether to write feed references when a post appears or collect posts when a reader opens the page.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>Managing the Follower Graph</h2>
       <p>The "social graph" is the mapping of relationships between users. In systems like Twitter or Instagram, this is a directed graph (User A follows User B, but B might not follow A). Managing this graph efficiently is crucial because every feed generation relies on knowing who a user follows.</p>
       
@@ -1285,7 +1252,7 @@ LIMIT :page_size;</code></pre>
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

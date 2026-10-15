@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -949,35 +949,20 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="caching-layers" id="audio-speed-caching-layers" title="Playback speed">1x</button>
         <audio id="audio-caching-layers" src="audio/caching-layers.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Caching layers</h2>
-
 <p>A cache keeps an answer so the next request can avoid some work: reading a database row, calling another service, resizing an image or recomputing a report. The useful question is which work a hit removes. That determines where the copy belongs.</p>
-
 <p>We’ll compare the places a cache can live, follow a read that fills one, and distinguish a database’s page cache from a disposable SQL table.</p>
-
 <h2>Keep the source separate</h2>
-
 <p>Suppose a catalog service copies product <code>p7</code> into a cache. Finding a usable copy is a <strong>hit</strong>; finding none is a <strong>miss</strong>. The product database remains the source of truth. Losing the cached copy should leave somewhere to recover the answer.</p>
-
-
-
 <p>That makes the copy replaceable, but does not make its contents permanently correct. If the product changes, the old copy needs a rule for when readers must stop using it. Name the allowed staleness before choosing a cache lifetime.</p>
-
 <p>The key must distinguish answers that are different. A public product description might use its product ID and locale. An account’s private report also needs its account boundary; a report-name-only key could expose one customer’s data to another.</p>
-
 <h2>Choose the work to avoid</h2>
-
 <p>These layers are alternatives you can combine when each earns its place. They are not a checklist of infrastructure every request should traverse.</p>
-
-<table><thead><tr><th>Placement</th><th>A hit can avoid</th><th>What needs care</th></tr></thead><tbody><tr><td>Client</td><td>Fetching or recomputing local data</td><td>Stale state and switching accounts</td></tr><tr><td>CDN</td><td>Sending a reusable public response from the origin</td><td>Invalidation and personalized responses</td></tr><tr><td>Gateway or reverse proxy</td><td>Running the application for a reusable response</td><td>Authorization and correct request matching</td></tr><tr><td>API process memory</td><td>A repeated lookup or computation</td><td>Separate copies and fills in every instance</td></tr><tr><td>API disk</td><td>Regenerating a larger artifact</td><td>Space limits and cleanup across deployments</td></tr><tr><td>Redis or Memcached</td><td>Repeated source lookups across instances</td><td>Network delay, outages and invalidation</td></tr><tr><td>Database buffer pool</td><td>Reading database pages from storage</td><td>Engine-specific memory management</td></tr><tr><td>Materialized view</td><td>Repeating a join or aggregation</td><td>Refresh cost and out-of-date results</td></tr></tbody></table>A buffer-pool hit still leaves the database executing the query. A cached query result can avoid that execution. A reusable HTTP response can skip the application entirely. Each moves the boundary of work saved, and therefore the behavior being skipped.
-
+<table><thead><tr><th>Placement</th><th>A hit can avoid</th><th>What needs care</th></tr></thead><tbody><tr><td>Client</td><td>Fetching or recomputing local data</td><td>Stale state and switching accounts</td></tr><tr><td>CDN</td><td>Sending a reusable public response from the origin</td><td>Invalidation and personalized responses</td></tr><tr><td>Gateway or reverse proxy</td><td>Running the application for a reusable response</td><td>Authorization and correct request matching</td></tr><tr><td>API process memory</td><td>A repeated lookup or computation</td><td>Separate copies and fills in every instance</td></tr><tr><td>API disk</td><td>Regenerating a larger artifact</td><td>Space limits and cleanup across deployments</td></tr><tr><td>Redis or Memcached</td><td>Repeated source lookups across instances</td><td>Network delay, outages and invalidation</td></tr><tr><td>Database buffer pool</td><td>Reading database pages from storage</td><td>Engine-specific memory management</td></tr><tr><td>Materialized view</td><td>Repeating a join or aggregation</td><td>Refresh cost and out-of-date results</td></tr></tbody></table>
+<p>A buffer-pool hit still leaves the database executing the query. A cached query result can avoid that execution. A reusable HTTP response can skip the application entirely. Each moves the boundary of work saved, and therefore the behavior being skipped.</p>
 <p>For example, our <a href="#" data-nav="topic" data-slug="url-shortener-system-design">shortener design</a> records every accepted redirect reaching the application. Caching its destination lookup preserves that write. Reusing a whole redirect before it reaches the application would bypass it.</p>
-
 <p>An HTTP cache also needs the response’s reuse rules, not just a URL lookup. A response that varies by a request header needs matching variants; private and public answers must not become interchangeable.</p>
-
 <h2>Follow a cache-aside read</h2>
-
 <p>With <strong>cache-aside</strong>, the application checks the cache, reads the source on a miss and saves the result for another request. This diagram follows a successful lookup of an existing product. It omits authorization and error handling to isolate the fill.</p>
-
 <div class="mermaid">sequenceDiagram
     accTitle: Filling a product cache on a miss
     accDescr: The application misses in the cache, reads product p7 from the database, and stores a copy. The database remains the source of truth.
@@ -990,23 +975,14 @@
     D-->>A: Product
     A->>C: Store product copy
     C-->>A: Stored</div>
-
 <p>A process-local map avoids a network exchange. A shared cache lets different application instances reuse the same fill and can outlive an application restart. Shared ownership adds a dependency, so choose it when that reuse is worth the cost.</p>
-
 <p>For changing data, you might delete a copy after a source update, give it a time limit, or update it through the write path. Writing both stores does not by itself make them atomic: a failure or concurrent fill can leave them disagreeing. The concurrency lesson follows that race.</p>
-
 <h2>A SQL-shaped cache</h2>
-
 <p>MySQL’s <code>MEMORY</code> engine offers a transient table with SQL access. It can suit a disposable derived dataset when retaining an existing schema and query shape simplifies the application. The <a href="/system/archive/caching-layers?recording=sd-60" target="_blank" rel="noopener">MEMORY engine recording</a> explores this option.</p>
-
 <p>In MySQL 8.4, the rows disappear on server restart while the table definition survives. This differs from InnoDB’s buffer pool, which holds pages belonging to durable tables. A materialized view is different again: it stores a query’s results until refreshed.</p>
-
-<code>MEMORY</code> lacks transactions, uses table-level locks and cannot store <code>TEXT</code> or <code>BLOB</code> columns. Even <code>VARCHAR</code> occupies a fixed-length row representation. Table size is bounded by configured memory limits; extra rows do not automatically spill to disk.
-
+<p><code>MEMORY</code> lacks transactions, uses table-level locks and cannot store <code>TEXT</code> or <code>BLOB</code> columns. Even <code>VARCHAR</code> occupies a fixed-length row representation. Table size is bounded by configured memory limits; extra rows do not automatically spill to disk.</p>
 <p>SQL reuse can be convenient, but these restrictions may cost more than they save. Compare the actual queries and schema with InnoDB or direct key access before assuming an in-memory table will be faster.</p>
-
-<p>For any placement, measure the avoided operation, miss cost and total response time. A high hit ratio helps only if it removes meaningful work and the answers remain usable.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>For any placement, measure the avoided operation, miss cost and total response time. A high hit ratio helps only if it removes meaningful work and the answers remain usable.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>The Full-Stack Caching Hierarchy</h2>
       <p>In high-throughput distributed systems, performance is governed by memory hierarchy latency: L1 CPU cache (1ns) → RAM (100ns) → NVMe SSD (100µs) → Datacenter Network RTT (500µs - 2ms) → Cross-Region Internet RTT (50ms - 150ms). An end-to-end web architecture places specialized caching layers along this pipeline to intercept requests as close to the user as possible.</p>
 
@@ -1282,7 +1258,7 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

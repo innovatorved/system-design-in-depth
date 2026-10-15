@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -934,27 +934,17 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="newly-unread-indicator" id="audio-speed-newly-unread-indicator" title="Playback speed">1x</button>
         <audio id="audio-newly-unread-indicator" src="audio/newly-unread-indicator.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Design: a newly-unread inbox indicator</h2>
-
 <p>A newly-unread badge tells someone how much new activity has arrived since they last opened an overview. It can clear when they open that screen even though they have not read every conversation. That makes it a separate feature from message read receipts.</p>
-
 <p>We'll design a badge that counts distinct senders, preserve arrivals that race with opening the inbox, and keep reads correct while a background worker is behind. The example is our own small inbox service, not a claim about Slack's or another messenger's internals.</p>
-
 <h2>Decide what the number means</h2>
-
 <p>Bo sends Ada two messages and Cy sends one. Our badge shows <strong>2</strong>, because two sender accounts contributed new activity. It does not show three messages, two humans, or a count of unread conversations.</p>
-
-<table><thead><tr><th>State</th><th>What it means</th></tr></thead><tbody><tr><td>Newly-unread badge</td><td>Distinct eligible senders after Ada's last inbox acknowledgement</td></tr><tr><td>Thread unread</td><td>A conversation contains messages beyond its own read position</td></tr><tr><td>Message read receipt</td><td>The client reported a particular message or position as read</td></tr></tbody></table>Opening the overview advances only the first state. The <a href="#" data-nav="topic" data-slug="chat-and-messaging-system-design">chat design</a> deals with delivery and thread-read reports separately. None of these reports proves that a person understood the text.
-
+<table><thead><tr><th>State</th><th>What it means</th></tr></thead><tbody><tr><td>Newly-unread badge</td><td>Distinct eligible senders after Ada's last inbox acknowledgement</td></tr><tr><td>Thread unread</td><td>A conversation contains messages beyond its own read position</td></tr><tr><td>Message read receipt</td><td>The client reported a particular message or position as read</td></tr></tbody></table>
+<p>Opening the overview advances only the first state. The <a href="#" data-nav="topic" data-slug="chat-and-messaging-system-design">chat design</a> deals with delivery and thread-read reports separately. None of these reports proves that a person understood the text.</p>
 <p>Repeated delivery of one send must not create another message. But two intentional sends with identical text are still two messages. Give each send an operation ID; use sender identity only when collapsing messages into the badge count.</p>
-
 <p>For this design, only the recipient may view or acknowledge the inbox. Senders and recipients must be active accounts, and inactive senders disappear from badge reads. Blocking, group conversations and message deletion need additional rules; they are outside the executable example.</p>
-
 <h2>Clear what the screen observed</h2>
-
 <p>Deleting the whole badge set when Ada opens the inbox looks simple. It fails if a new message arrives after the server prepared her response but before the acknowledgement reaches the server. The deletion clears activity she never had a chance to see.</p>
-
 <p>Give each accepted message a position within its recipient's inbox. Ada's first three messages occupy positions 1, 2 and 3. The response records that it observed through 3. Dee's later message receives position 4.</p>
-
 <div class="mermaid">sequenceDiagram
   accTitle: Acknowledge the observed inbox
   accDescr: Ada receives an inbox snapshot through position 3. Dee's message commits at position 4 before Ada acknowledges the older snapshot. Position 4 remains newly unread.
@@ -965,64 +955,39 @@
   Note over S: Dee's message commits at 4
   A->>S: Acknowledge snapshot 3
   S-->>A: One new sender remains</div>
-
 <p>Store an acknowledged-through position <strong>A</strong>. A sender counts when their latest eligible message position is strictly greater than A. After acknowledging 3, Bo and Cy stop contributing, while Dee at 4 remains.</p>
-
 <p>Positions describe acceptance order for one recipient. They are not wall-clock timestamps or a global order across all users. Equal timestamps cannot tell us which of two arrivals belonged to an earlier inbox response.</p>
-
 <p>The server stores an issued snapshot containing its recipient and observed boundary. Ada acknowledges the snapshot ID, not an arbitrary position supplied by her client. The server checks ownership and updates A to the greater of its current value and the snapshot boundary.</p>
-
 <p>That maximum handles multiple devices. If device B has already acknowledged through 4, device A's delayed acknowledgement through 3 leaves A at 4. A retry with the same operation ID returns its original receipt; that historical reply must not make the client lower a newer local boundary.</p>
-
 <p>The product decides when to send the acknowledgement: for example, after the overview loads successfully. Issuing a snapshot only proves which response the server prepared, not that Ada saw it. An acknowledgement should not be sent just because navigation began and the request might still fail.</p>
-
 <h2>Store the source and the prepared count separately</h2>
-
 <p>Accepted messages are the source. A projection keeps each sender's greatest processed position so a badge read need not rescan the entire message history. Let <strong>H</strong> be the accepted head and <strong>P</strong> the position through which the projection is complete.</p>
-
 <p>Our local service puts these records in one SQLite database:</p>
-
-<table><thead><tr><th>Record and key</th><th>Relevant fields</th></tr></thead><tbody><tr><td>Message: recipient, position</td><td>Sender and text</td></tr><tr><td>Inbox head: recipient</td><td>H, A and P</td></tr><tr><td>Sender summary: recipient, sender</td><td>Greatest processed position</td></tr><tr><td>Issued snapshot: snapshot ID</td><td>Recipient and observed-through position</td></tr><tr><td>Operation receipt: actor, operation ID</td><td>Original input and accepted result</td></tr></tbody></table>Separate thread-read rows exist to demonstrate that inbox acknowledgements leave them unchanged. A real thread-reading API is outside this service.
-
+<table><thead><tr><th>Record and key</th><th>Relevant fields</th></tr></thead><tbody><tr><td>Message: recipient, position</td><td>Sender and text</td></tr><tr><td>Inbox head: recipient</td><td>H, A and P</td></tr><tr><td>Sender summary: recipient, sender</td><td>Greatest processed position</td></tr><tr><td>Issued snapshot: snapshot ID</td><td>Recipient and observed-through position</td></tr><tr><td>Operation receipt: actor, operation ID</td><td>Original input and accepted result</td></tr></tbody></table>
+<p>Separate thread-read rows exist to demonstrate that inbox acknowledgements leave them unchanged. A real thread-reading API is outside this service.</p>
 <div class="mermaid">flowchart TD
   accTitle: The badge combines a prefix and a tail
   accDescr: A badge read merges sender maxima processed through P with source messages after P, then counts active senders whose latest position is above acknowledgement A. All records are read from one SQLite snapshot.
   P[Sender maxima through P] --> M[Merge latest positions]
   T[Messages after P] --> M
   M --> C[Count active senders<br/>above A]</div>
-
 <p>A read uses one database snapshot for the heads, projection, tail and account eligibility. Otherwise, it could combine a new P with an old projection and miss messages. The count is exact for that snapshot; an arrival after it begins can appear on the next read.</p>
-
 <p>This is a deliberate cost choice. With P=0 and H=4, the read examines four tail messages. Once the worker reaches P=4, the tail is empty, though this implementation still reads the sender summaries and checks account eligibility.</p>
-
 <h2>Follow a send, a read and an acknowledgement</h2>
-
 <p>The HTTP handler binds its demonstration credential to an account. Source methods then enforce ownership. The routes keep the three operations distinct:</p>
-
-<table><thead><tr><th>Route</th><th>Input or result</th></tr></thead><tbody><tr><td>POST <code>/messages</code></td><td>Send an operation ID, recipient and text; receive an accepted position</td></tr><tr><td>GET <code>/inbox/Ada</code></td><td>Receive eligible messages, snapshot ID and observed-through position</td></tr><tr><td>GET <code>/badge/Ada</code></td><td>Receive the count and diagnostic H, A, P and tail-row fields</td></tr><tr><td>POST <code>/inbox/Ada/ack</code></td><td>Send an operation ID and issued snapshot ID; receive acknowledged-through</td></tr></tbody></table>Bo's send transaction checks his operation receipt, validates the recipient, advances Ada's head, inserts the message and saves the result. Commit precedes the 201 response. The same operation and input return 200 with the original position; changed input under that ID returns 409.
-
+<table><thead><tr><th>Route</th><th>Input or result</th></tr></thead><tbody><tr><td>POST <code>/messages</code></td><td>Send an operation ID, recipient and text; receive an accepted position</td></tr><tr><td>GET <code>/inbox/Ada</code></td><td>Receive eligible messages, snapshot ID and observed-through position</td></tr><tr><td>GET <code>/badge/Ada</code></td><td>Receive the count and diagnostic H, A, P and tail-row fields</td></tr><tr><td>POST <code>/inbox/Ada/ack</code></td><td>Send an operation ID and issued snapshot ID; receive acknowledged-through</td></tr></tbody></table>
+<p>Bo's send transaction checks his operation receipt, validates the recipient, advances Ada's head, inserts the message and saves the result. Commit precedes the 201 response. The same operation and input return 200 with the original position; changed input under that ID returns 409.</p>
 <p>Opening Ada's inbox reads its head and eligible message history, then stores the snapshot in the same transaction. The example returns the entire retained history. Pagination would require a product decision: does opening page one acknowledge the overview, or only messages actually fetched? Do not extend the current token to pages without answering that.</p>
-
 <p>Acknowledgement verifies the path's account and the snapshot's owner independently. A predictable snapshot ID is not permission to use it. A guessed snapshot belonging to Ada is refused when Bo submits it through his own route.</p>
-
 <p>SQLite serializes the example's write transactions. Dee's arrival may commit before or after Ada acknowledges the older snapshot; either way, the final state is H=4 and A=3. The acknowledgement never replaces its issued boundary with the current head.</p>
-
 <h2>Keep projection lag from changing the answer</h2>
-
 <p>The background worker reads messages after P in order. It updates each sender's maximum and advances P in the same transaction. An interrupted transaction leaves both unchanged, so retrying starts from the last committed position.</p>
-
 <p>A badge read merges those processed maxima with every message in the unprocessed tail, taking the greater position per sender. It then counts active senders above A. Delayed work from Bo cannot undo Ada's acknowledgement or turn an older message into new activity.</p>
-
 <p>This retains the original goal of preparing cheap reads, while making the fallback cost visible. Measure tail length, worker progress and badge-read latency. If a tail becomes too large, catch the worker up, bound recovery with an explicit failure, or choose a documented stale-count experience. Returning an old projection as an exact current count is not the same contract.</p>
-
 <p>A live notification can tell an online client to refetch. A disconnected client reconciles on its next badge read, as in the <a href="#" data-nav="topic" data-slug="realtime-database-and-websocket-scaling">realtime recovery lesson</a>. This particular example sends no WebSocket notifications; it tests the source and reconciliation path.</p>
-
 <h2>Run the arrival race</h2>
-
 <p>Save the standard-library inbox service and shared helpers together. They use a private temporary SQLite file and an actual loopback HTTP server with fake account-bound credentials.</p>
-
 <p>Bo sends twice and Cy once. Device A fetches through 3, then two threads race Dee's fourth message against acknowledgement of that snapshot. A later device acknowledges through 4 before the first device submits its older snapshot again.</p>
-
 <pre><code class="language-bash">python3 m22-inbox.py</code></pre>
 <pre><code class="language-output">offline arrivals: events=3 distinct senders=2
 duplicate message: 200
@@ -1040,30 +1005,19 @@ thread read positions: [0, 0, 0]
 retained events=4 serialized message bytes=245
 unavailable authority: 503
 HTTP requests: application=15 malformed=5</code></pre>
-
 <p>The badge finds Dee both before projection and after it. Only <code>tail_rows</code> changes from four to zero. The thread-read positions stay at zero, confirming that the overview acknowledgement did not mark conversations read.</p>
-
 <p>The interruption is an exception before commit followed by reopening the database, not an operating-system crash. The replay also checks retry identity, ownership and malformed HTTP requests. Its 245-byte count covers only compact message JSON, not database size or network overhead.</p>
-
 <p>Those protocol probes exercise this small server's rules: one bounded Content-Length, no Transfer-Encoding, complete bodies and valid JSON Unicode. They are not a production authentication or load test. An unavailable source returns 503, so the client should retain a clearly stale display or show unavailability rather than invent zero.</p>
-
 <h2>Where a Redis sorted set fits</h2>
-
 <p>A sorted set is useful for the prepared sender summary: the recipient identifies the key, the sender ID is the unique member, and the latest accepted position is its score. Updating Bo changes his score without creating another member. Resolve display names separately so a rename does not change identity.</p>
-
 <p>For small exact integer positions, the core operations look like this:</p>
-
 <pre><code class="language-text">ZADD newly_unread:Ada GT 2 Bo
 ZADD newly_unread:Ada GT 3 Cy
 ZADD newly_unread:Ada GT 4 Dee
 ZCOUNT newly_unread:Ada (3 +inf</code></pre>
-
-<code>GT</code> prevents an older delivery from lowering an existing score. The exclusive bound <code>(3</code> counts only positions above acknowledgement 3. The result is one sender. This sketch assumes A=3 is already known; it does not implement cross-store acknowledgement or projection recovery.
-
-<code>ZCARD</code> is sufficient only if every retained member is newly unread. Once old entries remain, use the acknowledgement boundary. Deleting scores through A can reclaim space, but a late event can reinsert an old sender; counting above A still excludes that activity.
-
+<p><code>GT</code> prevents an older delivery from lowering an existing score. The exclusive bound <code>(3</code> counts only positions above acknowledgement 3. The result is one sender. This sketch assumes A=3 is already known; it does not implement cross-store acknowledgement or projection recovery.</p>
+<p><code>ZCARD</code> is sufficient only if every retained member is newly unread. Once old entries remain, use the acknowledgement boundary. Deleting scores through A can reclaim space, but a late event can reinsert an old sender; counting above A still excludes that activity.</p>
 <p>The Redis control starts a private process with TCP disabled and demonstrates the unsafe alternatives:</p>
-
 <pre><code class="language-bash">python3 m22-redis-badge.py</code></pre>
 <pre><code class="language-output">Redis server v=8.4.0
 snapshot through3: distinct senders=2
@@ -1071,21 +1025,13 @@ arrival4 then clear-all: count=0
 remove through3: senders=Dee
 delayed older update: ZCARD=2; ZCOUNT above ACK3=1
 equal timestamp100: remove-through100 removes both senders</code></pre>
-
 <p>Redis scores are floating-point numbers. Integers through 2^53 are exact, but arbitrary 64-bit source positions are not. Choose a representation that preserves the actual position range before using scores as acknowledgement boundaries.</p>
-
 <p>A separate Redis deployment also adds a consistency boundary. Preserve message acceptance in the source, use replayable work to maintain the projection, and keep acknowledgement authoritative during cache loss. A cache miss means “state unavailable or not yet built,” not necessarily “no new messages.”</p>
-
 <h2>Retain enough to recover</h2>
-
 <p>The local database retains all messages, snapshots and operation receipts for its temporary lifetime. Production retention cannot discard them under one guessed expiry: messages support reconstruction, snapshots authorize acknowledgements, and receipts suppress repeated operations.</p>
-
 <p>A clean projection rebuild resets sender maxima and P together, then replays retained messages. The badge path checks that its unprocessed tail reaches H without gaps; missing source positions produce a conflict instead of an incomplete count.</p>
-
 <p>If history must be trimmed, retain a sufficient checkpoint and define a floor below which replay is unavailable. Account erasure and message deletion must also update the eligibility and summary rules. A surviving sender maximum alone does not prove that its supporting message still exists.</p>
-
-<p>The essential boundary is simple: clearing the overview covers the inbox the server returned. New work beyond that boundary remains visible, regardless of device timing or background-worker progress.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>The essential boundary is simple: clearing the overview covers the inbox the server returned. New work beyond that boundary remains visible, regardless of device timing or background-worker progress.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>Implementation notes for a newly-unread badge</h2>
       <p>This design defines the badge precisely as distinct eligible senders after the last acknowledged inbox snapshot. It is not a count of unread messages or conversations, and opening the overview does not advance thread read receipts.</p>
       
@@ -1331,7 +1277,7 @@ equal timestamp100: remove-through100 removes both senders</code></pre>
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

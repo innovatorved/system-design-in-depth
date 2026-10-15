@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -955,86 +955,50 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="boolean-tiered-search" id="audio-speed-boolean-tiered-search" title="Playback speed">1x</button>
         <audio id="audio-boolean-tiered-search" src="audio/boolean-tiered-search.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Boolean and tiered search</h2>
-
 <p>A reader searches for <code>cache index</code>, and none of our documents contains both words. Returning nothing is defensible if both words are requirements. Returning separate cache and index lessons is defensible if the reader is exploring a topic. The service needs to choose that behavior explicitly before a score decides which document looks best.</p>
-
 <p>We'll keep required filters fixed, group strict and partial matches, and use term coverage or proximity when two groups are too coarse.</p>
-
 <h2>Requirements and preferences</h2>
-
-<a href="#" data-nav="topic" data-slug="inverted-index-and-posting-lists">The posting-list lesson</a> gave you posting lists and two ways to combine them. Requiring every query term uses their intersection, commonly expressed as AND. Accepting any query term uses their union, expressed as OR. These operators describe a matching condition; they do not measure how useful the resulting documents are.
-
+<p><a href="#" data-nav="topic" data-slug="inverted-index-and-posting-lists">The posting-list lesson</a> gave you posting lists and two ways to combine them. Requiring every query term uses their intersection, commonly expressed as AND. Accepting any query term uses their union, expressed as OR. These operators describe a matching condition; they do not measure how useful the resulting documents are.</p>
 <p>An unknown token makes an AND intersection empty because its posting list is empty. An OR union can still contain documents matching the remaining tokens. That difference is often hidden behind a search box, but it changes what a successful response means. The user who typed a precise part number may be poorly served by a result that matches only its accompanying description.</p>
-
 <p>A condition supplied as a structured filter deserves separate treatment. An allowed-document set represents which documents may be exposed in this exercise. It is chosen test input, not an authentication implementation. Every retrieval tier intersects its candidates with that same set, so relevance fallback cannot turn an excluded document into a permitted one.</p>
-
 <h3>Which conditions may relax?</h3>
-
 <p>Treat permissions and explicitly required filters as hard constraints. Treat an exploratory free-text query as a possible source of soft preferences when the interface says broader matches may appear. For a caller using an explicit “all words” search, keep AND semantics unless they request a broader search. A quiet fallback would make the response disagree with the request.</p>
-
 <p>The alternatives are to return only strict matches, present broad matches separately, or mix all matches under one score. The last option is convenient, but a high score could put a partial match above a complete match unless the ranker also enforces the requirement. Choose separate ordered groups here because the behavior stays inspectable before we introduce numerical ranking.</p>
-
 <h2>Ordered fallback groups</h2>
-
 <p>A group that runs under a particular matching rule is a tier. Our chosen policy first collects all permitted AND matches as tier zero. It then collects permitted OR matches that have not already appeared as tier one. The displayed response always appends the second tier, even when the first is nonempty; this differs from a policy that broadens only after an empty strict result.</p>
-
 <p>Within each tier, identifiers sort ascending. A document appears once, under the earliest rule it satisfies. Later scoring may change order within a tier, but it may not move a tier-one document ahead of a tier-zero document under this contract. If the product wants that movement, it has chosen a different contract and should evaluate it as such.</p>
-
 <p>Choose the default from what the caller asked for:</p>
-
-<table><thead><tr><th>Caller situation</th><th>Default</th><th>Reason</th></tr></thead><tbody><tr><td>Every submitted word is required</td><td>AND only</td><td>Preserve the requested condition</td></tr><tr><td>Exploring with useful partial matches</td><td>AND tier, then labeled OR tier</td><td>Keep complete matches first</td></tr><tr><td>Any term is independently sufficient</td><td>OR with ranking</td><td>No complete-match priority promised</td></tr></tbody></table><h2>One policy against several queries</h2>
-
+<table><thead><tr><th>Caller situation</th><th>Default</th><th>Reason</th></tr></thead><tbody><tr><td>Every submitted word is required</td><td>AND only</td><td>Preserve the requested condition</td></tr><tr><td>Exploring with useful partial matches</td><td>AND tier, then labeled OR tier</td><td>Keep complete matches first</td></tr><tr><td>Any term is independently sufficient</td><td>OR with ranking</td><td>No complete-match priority promised</td></tr></tbody></table>
+<h2>One policy against several queries</h2>
 <p>The allowed set contains <code>d1</code>, <code>d2</code>, <code>d4</code>, <code>d5</code> and <code>d8</code>. Documents <code>d3</code>, <code>d6</code> and <code>d7</code> remain in the corpus but are excluded from this response. The exclusion is deliberately visible so you can follow a broadening attempt without confusing candidate generation with access permission.</p>
-
 <p>The shared Python replay executes the rules directly against the eight chosen documents. In the capture, each tuple pairs a document identifier with its tier number. Empty input has an explicit empty-result rule, so it does not turn into a request for every permitted document.</p>
-
 <pre><code class="language-bash">python3 public/course-assets/system-design/m16-search.py boolean</code></pre>
-
 <pre><code class="language-output">&#039;cache stores&#039;: AND=[&#039;d1&#039;] OR=[&#039;d1&#039;, &#039;d2&#039;, &#039;d4&#039;] tiers=[(&#039;d1&#039;, 0), (&#039;d2&#039;, 1), (&#039;d4&#039;, 1)]
 &#039;cache index&#039;: AND=[] OR=[&#039;d1&#039;, &#039;d4&#039;, &#039;d5&#039;, &#039;d8&#039;] tiers=[(&#039;d1&#039;, 1), (&#039;d4&#039;, 1), (&#039;d5&#039;, 1), (&#039;d8&#039;, 1)]
 &#039;queue cache&#039;: AND=[] OR=[&#039;d1&#039;, &#039;d4&#039;] tiers=[(&#039;d1&#039;, 1), (&#039;d4&#039;, 1)]
 &#039;&#039;: AND=[] OR=[] tiers=[]
 all tiers retain allowed ids: [&#039;d1&#039;, &#039;d2&#039;, &#039;d4&#039;, &#039;d5&#039;, &#039;d8&#039;]</code></pre>
-
 <p>For <code>cache stores</code>, <code>d1</code> belongs to both raw sets but appears only in tier zero. The second group contains <code>d2</code> and <code>d4</code>; retaining <code>d1</code> again would make a later limit or evaluation count the same document twice. Deduplication belongs before the response is bounded or measured.</p>
-
 <p>For <code>cache index</code>, the strict group is empty, so every result is a broader match. The response still carries tier one on each identifier. A UI can label that group “Matches some words” instead of presenting it as if every word had matched. The backend has already retained enough information for that explanation.</p>
-
 <p>For <code>queue cache</code>, broader search still cannot expose the queue documents. Both are outside the allowed set. An empty strict result does not distinguish an absent document from an excluded one, and the public response should not reveal hidden document text to explain the difference. A diagnostic view needs its own access boundary.</p>
-
 <h2>Work limits and missing answers</h2>
-
 <p>Taking the first few candidates before deduplication can fill the response with repeats. Taking a global score sort after grouping can erase tier priority. The two-tier replay retains the complete small result and therefore avoids both interactions. If you add a limit, apply it to the final deduplicated ordered sequence and document whether a nonempty strict tier may leave space for broader results.</p>
-
 <p>Choose strict retrieval for explicit requirements, and ordered broader groups for this exploratory course search. Revisit that choice when <a href="#" data-nav="topic" data-slug="search-evaluation-metrics">search evaluation</a> supplies judgments showing which returned documents actually answer the intended question. A larger candidate set can recover a useful document and can also add irrelevant ones; result count alone cannot choose between those effects.</p>
-
 <h2>More than two tiers</h2>
-
 <p>For a longer query, OR groups very different matches together. A four-term query can use four coverage levels: all four, any three, any two, then any one. Each document belongs to its highest satisfied level and appears once. Repeated query words do not create extra requirements in this chosen policy.</p>
-
 <p>For <code>database index maps rows</code>, <code>d5</code> contains all four terms. No document contains exactly three. <code>d2</code> contains <code>database</code> and <code>rows</code>, while <code>d8</code> contains only <code>index</code>. The replay's additional coverage example returns the best two documents from those ordered groups:</p>
-
 <pre><code class="language-bash">python3 public/course-assets/system-design/m16-search.py coverage</code></pre>
 <pre><code class="language-output">query=&#039;database index maps rows&#039; distinct terms=4
 all coverage tiers: [(&#039;d5&#039;, 4), (&#039;d2&#039;, 2), (&#039;d8&#039;, 1)]
 limit 2: [(&#039;d5&#039;, 4), (&#039;d2&#039;, 2)]</code></pre>
-
 <p>Here the number is matched-term count, not the earlier zero/one tier label. A real ranker can use BM25 within each coverage level while keeping the level as the primary ordering key. A boost alone does not guarantee that ordering.</p>
-
 <p>A production query can require a minimum number of optional clauses. For example, Elasticsearch's <code>minimum_should_match</code> controls eligibility; it does not automatically implement this sequence of ranked groups. When combining text clauses with a required filter, set that minimum explicitly if text must match. A bool query with a filter otherwise defaults to zero required <code>should</code> clauses.</p>
-
 <p>Choose whether to fetch every group or only broaden until the page is full. The replay counts all eligible candidates, sorts and then limits; it does not save retrieval work through early stopping. A staged implementation can reuse postings, exclude seen IDs and stop once enough results are retained. Keep query, filters and ordering stable across pagination so broadening does not introduce repeats or skip earlier groups.</p>
-
 <h2>Presence, proximity and fields</h2>
-
 <p>Matching all the words does not mean matching their relationship. <code>cache stores</code> is adjacent in <code>d1</code>; <code>cache copies</code> occurs there with <code>stores</code> between them. Both pass AND. Only the first passes a zero-gap phrase condition. A positional check can require adjacency or allow a defined window, with ordered and unordered windows answering different questions.</p>
-
 <p>Use phrase or proximity evidence within a tier when nearby words better express the intent. Requiring a phrase is stricter than giving it a ranking preference. Preserve that distinction when broadening: quoted words should not silently become unrelated words anywhere in a document.</p>
-
 <p>Fields matter too. Requiring all terms in a title differs from allowing one in the title and another in the body. In Elasticsearch, <code>multi_match</code> with <code>best_fields</code> applies AND inside each field. A term-centric query such as <code>combined_fields</code> can match terms spread across compatible fields. Choose the intended rule before tuning title boosts.</p>
-
-<p>An empty strict result can signal a typo, missing synonym, absent source item, unavailable inventory or indexing lag. Record enough internal diagnostics to distinguish them. Increasing breadth is useful only when the extra documents answer the need. The <a href="#" data-nav="topic" data-slug="query-understanding-pipeline">query-understanding lesson</a> changes which terms are searched; <a href="#" data-nav="topic" data-slug="tf-idf-relevance-scoring">the next lesson</a> orders equally eligible documents with a specified numerical baseline.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>An empty strict result can signal a typo, missing synonym, absent source item, unavailable inventory or indexing lag. Record enough internal diagnostics to distinguish them. Increasing breadth is useful only when the extra documents answer the need. The <a href="#" data-nav="topic" data-slug="query-understanding-pipeline">query-understanding lesson</a> changes which terms are searched; <a href="#" data-nav="topic" data-slug="tf-idf-relevance-scoring">the next lesson</a> orders equally eligible documents with a specified numerical baseline.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>Under the Hood: Multi-Term Boolean Evaluation</h2>
       <p>When users search for multi-word queries (e.g. <code>"distributed consensus raft"</code>), the search engine parses the query into a boolean expression tree combining <code>MUST</code> (AND), <code>SHOULD</code> (OR), and <code>MUST_NOT</code> (NOT) clauses.</p>
 
@@ -1314,7 +1278,7 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -949,17 +949,12 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="parallel-monolith-read-drain" id="audio-speed-parallel-monolith-read-drain" title="Playback speed">1x</button>
         <audio id="audio-parallel-monolith-read-drain" src="audio/parallel-monolith-read-drain.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Parallel monolith read drain</h2>
-
 <p>A legacy monolith can overload its primary database with reads simply because its default connection points there. Many of those queries may tolerate a replica's delay, but changing every old call site could take months. Moving a few suitable routes can buy time for that cleanup.</p>
-
 <p>The useful boundary is the running application: give a second copy a different database configuration, then control which requests reach it. First choose eligible routes, then measure whether moving them actually relieves the primary.</p>
-
 <h2>Same code, different default database</h2>
-
 <p>Keep the existing fleet pointed at the primary. Run another fleet from the same application code with its default connection pointed at a replica. An API gateway sends selected read routes to the second fleet; writes and all other routes stay on the existing path.</p>
-
-<table><thead><tr><th>Application fleet</th><th>Default database</th></tr></thead><tbody><tr><td>Existing monolith</td><td>Primary</td></tr><tr><td>Read-drain monolith</td><td>Replica, with read-only credentials</td></tr></tbody></table>This avoids editing individual queries only when they use that configurable default. Audit explicit connection overrides, startup migrations, background consumers and scheduled jobs. Disable work that should not run in the second fleet. A second HTTP deployment should not accidentally become a second job scheduler.
-
+<table><thead><tr><th>Application fleet</th><th>Default database</th></tr></thead><tbody><tr><td>Existing monolith</td><td>Primary</td></tr><tr><td>Read-drain monolith</td><td>Replica, with read-only credentials</td></tr></tbody></table>
+<p>This avoids editing individual queries only when they use that configurable default. Audit explicit connection overrides, startup migrations, background consumers and scheduled jobs. Disable work that should not run in the second fleet. A second HTTP deployment should not accidentally become a second job scheduler.</p>
 <div class="mermaid">flowchart TB
   accTitle: Route selected reads to a second monolith
   accDescr: The gateway sends eligible reads to the replica-default monolith and all other routes to the primary-default monolith. The primary replicates changes to the replica.
@@ -968,39 +963,23 @@
   W --> P[(Primary)]
   R --> S[(Replica)]
   P -. Replication .-> S</div>
-
 <p>Route by both path and method. Gateway support for <code>GET /catalog</code> does not imply that <code>POST /catalog</code> should reach the same backend. KrakenD, for example, lets endpoint definitions select a method and backend. That supplies a routing mechanism; it cannot tell you whether the application behind a route is safe to move.</p>
-
 <h2>Choose by behavior and freshness</h2>
-
 <p>“GET” is not enough. A handler might update a last-seen timestamp, create a missing row, refresh a token or publish an external event. Read-only database credentials help reject accidental database writes, including after a replica is promoted. They do not prevent external side effects.</p>
-
 <p>A route also needs a freshness contract. An asynchronous replica can return a state from before an accepted write. Decide whether that is acceptable for the particular answer:</p>
-
-<table><thead><tr><th>Possible candidates, after inspection</th><th>Keep on the primary unless stronger guarantees exist</th></tr></thead><tbody><tr><td>Catalog descriptions with an accepted delay</td><td>Checkout confirmation immediately after payment</td></tr><tr><td>Profile display where a delayed edit is acceptable</td><td>Balance or entitlement decisions requiring current state</td></tr><tr><td>Dashboards that show their data freshness</td><td>Read-modify-write and idempotency endpoints</td></tr></tbody></table>These are starting points, not permanent labels. A catalog page that promises current inventory has a different requirement from one displaying descriptions. A profile response that includes current access permissions needs a separate authorization decision.
-
+<table><thead><tr><th>Possible candidates, after inspection</th><th>Keep on the primary unless stronger guarantees exist</th></tr></thead><tbody><tr><td>Catalog descriptions with an accepted delay</td><td>Checkout confirmation immediately after payment</td></tr><tr><td>Profile display where a delayed edit is acceptable</td><td>Balance or entitlement decisions requiring current state</td></tr><tr><td>Dashboards that show their data freshness</td><td>Read-modify-write and idempotency endpoints</td></tr></tbody></table>
+<p>These are starting points, not permanent labels. A catalog page that promises current inventory has a different requirement from one displaying descriptions. A profile response that includes current access permissions needs a separate authorization decision.</p>
 <p>For read-after-write flows, retaining the primary route is often the simplest first choice. The <a href="#" data-nav="topic" data-slug="replication">replication lesson</a> examines other freshness strategies. Do not silently weaken the product's behavior merely to move more queries.</p>
-
 <h2>Move one route and watch both databases</h2>
-
 <p>Start with primary read work attributable to the route: request volume, query volume and expensive queries. Establish enough replica capacity, then route a small population through the second fleet. Watch the primary's work, replica replay lag, endpoint errors and p95/p99 latency together.</p>
-
 <p>A replica can be healthy and still give users a poor answer. In PostgreSQL hot standby, long queries may conflict with WAL replay; letting them run can delay replay, while applying replay can require canceling them. A read drain therefore needs evidence about cancellations and freshness as well as CPU.</p>
-
 <p>Shadow reads are an optional earlier step: keep serving the old answer while privately comparing the new one. They add work, so bound the sample. With separate databases, two requests do not automatically share a snapshot. Differences can mean expected lag, a query bug or an incompatible representation; classify them before deciding what blocks rollout.</p>
-
 <p>Expand the route list only when the expected primary work falls without violating those route contracts. Keep enough primary capacity to take the traffic back. Reverting a gateway rule can restore routing while the old path remains compatible; it cannot undo stale answers already delivered.</p>
-
 <h2>Try the serving decisions locally</h2>
-
 <p>The following experiment isolates comparison, cutover and fallback. It uses the <a href="#" data-nav="topic" data-slug="database-migration-safety">migration lesson's</a> three orders and two representations in <strong>one SQLite database</strong>. It runs real read/write HTTP listeners, but it does not deploy two monoliths, a gateway or a database replica.</p>
-
 <p>Ada is selected for the new read path; Bo stays on the old one. The local router checks current source ownership, account activity, deletion state, version and a canonical-record fingerprint before serving a copied body. It therefore still queries the source on every request. This demonstrates a strict acceptance rule, not reduced primary load.</p>
-
 <p>The example separates three target failures: missing means no copied record, stale means a different version, and mismatch means changed contents at the current version. Old-served shadow comparisons use one shared SQLite snapshot here, so they do not have the cross-database timing ambiguity described above.</p>
-
 <p>Save the read-drain replay and shared implementation together. The original capture used Python 3.14.6 and SQLite 3.53.4 on 12 September 2026. Each run creates temporary state.</p>
-
 <pre><code class="language-bash">python3 m27-lab.py drain</code></pre>
 <pre><code class="language-output">old served; shadow check: 200 equal
 missing shadow: missing
@@ -1018,19 +997,12 @@ rollback cohort: []
 route work: {&quot;fallback&quot;:2,&quot;new&quot;:2,&quot;old&quot;:4,&quot;refused&quot;:1,&quot;shadow&quot;:4}
 shadow log fields: classification only; no response bodies
 HTTP outcomes: {&quot;200&quot;:8,&quot;201&quot;:1,&quot;403&quot;:1,&quot;404&quot;:1,&quot;405&quot;:1,&quot;503&quot;:1}</code></pre>
-
 <p>After the new writer changes Ada's order, the target is stale. Fallback returns paid from the authoritative source. Disabling fallback makes an unusable target return 503. Bo cannot read Ada's order, a revoked Ada cannot read her own, and the read listener rejects writes.</p>
-
 <p>The four shadow checks are additional comparisons attached to old reads, not four more user responses. The thirteen HTTP outcomes include the accepted write and permission/method refusals. Diagnostic logs retain comparison classes, not copied response bodies.</p>
-
 <h2>Decide what happens when the replica falls behind</h2>
-
 <p>Fallback trades freshness and availability for extra primary work. During a replica problem, unbounded fallback can send the entire drained workload back at once. Budget that capacity and cap retries; where capacity is insufficient, the route needs an explicit choice between refusal and an older answer that its product contract permits.</p>
-
 <p>A successful fallback should still count as a degraded new path. Otherwise a green response-success chart can hide a replica that serves almost nothing. Keep served-old, served-new, fallback and refusal counts separate.</p>
-
-<p>Before adding another route, ask: if this replica pauses immediately after a write, what will the caller see, and can the primary absorb the return traffic? Answer those questions with the route owner. The <a href="#" data-nav="topic" data-slug="zero-downtime-database-migration-case-study">complete migration design</a> combines the local acceptance checks with copying, retirement and the point where the old fallback disappears.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>Before adding another route, ask: if this replica pauses immediately after a write, what will the caller see, and can the primary absorb the return traffic? Answer those questions with the route owner. The <a href="#" data-nav="topic" data-slug="zero-downtime-database-migration-case-study">complete migration design</a> combines the local acceptance checks with copying, retirement and the point where the old fallback disappears.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>Decommissioning Monolith Endpoints Safely</h2>
       <p>When extracting microservices from an existing monolithic application (the Strangler Fig pattern), abruptly switching all customer traffic risks catastrophic bugs. The <strong>Parallel Read Drain (Dark Launch)</strong> pattern validates the new microservice invisibly in production:</p>
 
@@ -1273,7 +1245,7 @@ HTTP outcomes: {&quot;200&quot;:8,&quot;201&quot;:1,&quot;403&quot;:1,&quot;404&
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

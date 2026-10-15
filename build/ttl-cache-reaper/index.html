@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -340,24 +340,8 @@
         
       </section>
 
-      <div id="build-walkthrough-pane">
-        <div class="build-run">
-          <div class="build-run__text">
-            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
-            <code>node demo.js</code> and <code>node test.js</code>.
-          </div>
-          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="ttl-cache-reaper">Copy setup script</button>
-        </div>
-
-        <div class="build-files"><a href="#build-file-ttl-cache-reaper-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-ttl-cache-reaper-README_md">README.md</a><a href="#build-file-ttl-cache-reaper-cache_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-ttl-cache-reaper-cache_js">cache.js</a><a href="#build-file-ttl-cache-reaper-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-ttl-cache-reaper-demo_js">demo.js</a><a href="#build-file-ttl-cache-reaper-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-ttl-cache-reaper-test_js">test.js</a></div><article class="prose" id="build-file-ttl-cache-reaper-README_md"><h2>TTL Cache with a Redis-Style Adaptive Reaper</h2>
-
-<p>This is a key/value cache whose entries can expire. Reads must never return an</p>
-<p>expired value, and memory held by expired keys must eventually be freed, even</p>
-<p>for keys that nobody reads again. The work to free that memory should not make</p>
-<p>the server stall.</p>
-
+      <div id="build-walkthrough-pane"><article class="prose" id="build-file-ttl-cache-reaper-README_md"><p>This is a key/value cache whose entries can expire. Reads must never return an expired value, and memory held by expired keys must eventually be freed, even for keys that nobody reads again. The work to free that memory should not make the server stall.</p>
 <h2>Where it shows up</h2>
-
 <ul>
 <li><strong>Session and token stores</strong>: login sessions, OAuth tokens, CSRF nonces (Redis <code>SET ... PX</code>).</li>
 <li><strong>Rate limiters and idempotency keys</strong>: counters and request ids that must disappear after a window.</li>
@@ -365,699 +349,49 @@
 <li><strong>Inventory holds</strong>: "held in cart for 10 minutes" in flash sales.</li>
 </ul>
 <h2>Design</h2>
-
 <p>Two mechanisms work together. Neither one is enough by itself.</p>
-
-<strong>1. Lazy (passive) expiry.</strong> Each entry stores an absolute deadline
-<code>expiresAt = now + ttl</code>. Every <code>get</code>/<code>has</code>/<code>ttl</code>/<code>expire</code> first checks
-<code>expiresAt <= now</code> and, if it has passed, deletes the entry before answering.
-<p>This means reads are always correct. It costs O(1) and needs no background</p>
-<p>work. It does nothing for keys that are never read again. Demo step 2 writes</p>
-<p>10,000 such keys, and they stay in memory forever.</p>
-
-<strong>2. Active sampling reaper.</strong> <code>activeExpireCycle()</code> follows the classic Redis algorithm:
-
+<p><strong>1. Lazy (passive) expiry.</strong> Each entry stores an absolute deadline <code>expiresAt = now + ttl</code>. Every <code>get</code>/<code>has</code>/<code>ttl</code>/<code>expire</code> first checks <code>expiresAt &lt;= now</code> and, if it has passed, deletes the entry before answering. This means reads are always correct. It costs O(1) and needs no background work. It does nothing for keys that are never read again. Demo step 2 writes 10,000 such keys, and they stay in memory forever.</p>
+<p><strong>2. Active sampling reaper.</strong> <code>activeExpireCycle()</code> follows the classic Redis algorithm:</p>
 <pre><code class="language-text">repeat:
     if no keys have a TTL:                 stop (&quot;empty&quot;)
     sample 20 random keys that have a TTL; delete the expired ones
     if expired/20 &lt;= 25%:                  stop (&quot;threshold&quot;: the rest is probably clean)
     every 16 rounds, if elapsed &gt;= budget: stop (&quot;budget&quot;: continue next cycle)</code></pre>
-
-<p>Call it every 100 ms (Redis <code>hz 10</code>) with <code>start()</code>, or drive it by hand.</p>
-<p>Sampling is adaptive. A mostly clean keyspace costs a single 20-key probe per</p>
-<p>cycle. A keyspace that is full of garbage gets worked on until either the</p>
-<p>sample looks clean or the time budget runs out.</p>
-
-<strong>Data structures.</strong> A <code>Map</code> holds <code>key -> {value, expiresAt}</code>. Keys that have
-<p>a TTL (Redis calls these "volatile" keys) are also kept in a dense array plus a</p>
-<code>key -> index</code> map. That gives O(1) uniform random sampling and O(1) removal:
-<p>swap the removed key with the last element, then pop. Persistent keys are</p>
-<p>never sampled, just as Redis samples only its <code>expires</code> dict.</p>
-
-<strong>Invariants</strong> (checked by a randomized test against a reference model):
+<p>Call it every 100 ms (Redis <code>hz 10</code>) with <code>start()</code>, or drive it by hand. Sampling is adaptive. A mostly clean keyspace costs a single 20-key probe per cycle. A keyspace that is full of garbage gets worked on until either the sample looks clean or the time budget runs out.</p>
+<p><strong>Data structures.</strong> A <code>Map</code> holds <code>key -&gt; {value, expiresAt}</code>. Keys that have a TTL (Redis calls these "volatile" keys) are also kept in a dense array plus a <code>key -&gt; index</code> map. That gives O(1) uniform random sampling and O(1) removal: swap the removed key with the last element, then pop. Persistent keys are never sampled, just as Redis samples only its <code>expires</code> dict.</p>
+<p><strong>Invariants</strong> (checked by a randomized test against a reference model):</p>
 <ol>
 <li>A read never returns a value whose deadline has passed.</li>
 <li><code>volatile</code> and <code>volatileIndex</code> describe exactly the set of stored keys with a finite deadline.</li>
-<li>Every stop reason is reachable, and one cycle does bounded work: at most</li>
-   <code>budget</code> plus 16 rounds of overshoot.
+<li>Every stop reason is reachable, and one cycle does bounded work: at most <code>budget</code> plus 16 rounds of overshoot.</li>
 </ol>
-<strong>Injectable time and randomness.</strong> <code>clock()</code>, <code>random()</code> and the timer
-<p>functions are all constructor or <code>start()</code> parameters. The demo charges 10 µs</p>
-<p>of simulated time per sample, which makes the budget visible without real</p>
-<p>sleeping.</p>
-
+<p><strong>Injectable time and randomness.</strong> <code>clock()</code>, <code>random()</code> and the timer functions are all constructor or <code>start()</code> parameters. The demo charges 10 µs of simulated time per sample, which makes the budget visible without real sleeping.</p>
 <h2>Complexity</h2>
-
-<table><thead><tr><th>op</th><th>time</th><th>notes</th></tr></thead><tbody><tr><td>get / set / delete / ttl / expire / persist</td><td>O(1)</td><td>lazy check is one comparison</td></tr><tr><td>activeExpireCycle</td><td>O(rounds × 20)</td><td>rounds bounded by the time budget</td></tr><tr><td>countStale</td><td>O(volatile keys)</td><td>diagnostics only</td></tr><tr><td>space</td><td>O(n)</td><td>plus one array slot and one map entry per volatile key</td></tr></tbody></table><h2>Failure modes and trade-offs</h2>
-
+<table><thead><tr><th>op</th><th>time</th><th>notes</th></tr></thead><tbody><tr><td>get / set / delete / ttl / expire / persist</td><td>O(1)</td><td>lazy check is one comparison</td></tr><tr><td>activeExpireCycle</td><td>O(rounds × 20)</td><td>rounds bounded by the time budget</td></tr><tr><td>countStale</td><td>O(volatile keys)</td><td>diagnostics only</td></tr><tr><td>space</td><td>O(n)</td><td>plus one array slot and one map entry per volatile key</td></tr></tbody></table>
+<h2>Failure modes and trade-offs</h2>
 <ul>
-<li><strong>25% is a stop heuristic, not a bound.</strong> A cycle ends at the first sample</li>
-  that <em>looks</em> clean. When keys expire faster than one cycle can clean them,
-  the stale share settles well above the threshold. In demo step 3, about 250
-  keys expire per 100 ms and the peak stale share is about 54%. A 10%
-  threshold brings that down to about 39% but takes about 1.5x the samples.
-  Less garbage costs more CPU.
-<li><strong>Expiry waves.</strong> If 50k keys share one deadline (for example, all written by</li>
-  a batch job with the same TTL), cleanup takes many cycles. The budget spreads
-  that cost out (demo step 4: 20 cycles of at most about 26 ms each) instead of
-  one 500 ms stall. The usual mitigation is to <strong>add jitter to TTLs</strong> at write time.
-<li><strong>Memory is not reclaimed right away.</strong> <code>size</code> includes dead keys. If the</li>
-  cache has a hard memory cap, eviction (LRU/LFU) must also consider expired
-  keys. Redis's <code>volatile-ttl</code> policy does this.
-<li><strong>Clock jumps.</strong> A wall-clock step forward expires everything early, and a</li>
-  step backward keeps keys alive too long. Production code uses a monotonic
-  clock (<code>performance.now()</code> or <code>process.hrtime</code>) for relative TTLs. Redis
-  itself uses wall-clock deadlines, so that deadlines survive restarts and
-  replication.
-<li><strong>Replicas.</strong> A replica cannot expire keys on its own schedule without</li>
-  diverging from the primary. Redis replicas do not reap. The primary sends an
-  explicit <code>DEL</code> when a key expires, and since Redis 3.2 replicas hide
-  logically expired keys from reads.
+<li><strong>25% is a stop heuristic, not a bound.</strong> A cycle ends at the first sample that <em>looks</em> clean. When keys expire faster than one cycle can clean them, the stale share settles well above the threshold. In demo step 3, about 250 keys expire per 100 ms and the peak stale share is about 54%. A 10% threshold brings that down to about 39% but takes about 1.5x the samples. Less garbage costs more CPU.</li>
+<li><strong>Expiry waves.</strong> If 50k keys share one deadline (for example, all written by a batch job with the same TTL), cleanup takes many cycles. The budget spreads that cost out (demo step 4: 20 cycles of at most about 26 ms each) instead of one 500 ms stall. The usual mitigation is to <strong>add jitter to TTLs</strong> at write time.</li>
+<li><strong>Memory is not reclaimed right away.</strong> <code>size</code> includes dead keys. If the cache has a hard memory cap, eviction (LRU/LFU) must also consider expired keys. Redis's <code>volatile-ttl</code> policy does this.</li>
+<li><strong>Clock jumps.</strong> A wall-clock step forward expires everything early, and a step backward keeps keys alive too long. Production code uses a monotonic clock (<code>performance.now()</code> or <code>process.hrtime</code>) for relative TTLs. Redis itself uses wall-clock deadlines, so that deadlines survive restarts and replication.</li>
+<li><strong>Replicas.</strong> A replica cannot expire keys on its own schedule without diverging from the primary. Redis replicas do not reap. The primary sends an explicit <code>DEL</code> when a key expires, and since Redis 3.2 replicas hide logically expired keys from reads.</li>
 </ul>
 <h2>How production systems do it</h2>
-
 <ul>
-<li><strong>Redis ≤ 5</strong>: <code>expireIfNeeded()</code> on every key lookup, plus</li>
-  <code>activeExpireCycle()</code>. The SLOW cycle runs from <code>serverCron</code> at <code>hz</code>
-  (default 10) with a budget of 25% of CPU, which is 25 ms per call. A FAST
-  cycle of at most 1 ms runs in <code>beforeSleep</code>. Each cycle samples 20 keys per
-  DB (<code>ACTIVE_EXPIRE_CYCLE_LOOKUPS_PER_LOOP</code>), repeats while more than 25% of
-  them were expired, and checks the time every 16 iterations. This lab
-  implements the SLOW cycle.
-<li><strong>Redis ≥ 6.0</strong>: rewrote the cycle to walk hash-table buckets of the</li>
-  <code>expires</code> dict with a cursor instead of sampling at random. It added
-  <code>active-expire-effort</code> (1–10). Higher effort raises the keys per loop and the
-  CPU share and lowers the acceptable stale share. At the default effort the
-  target is about 10%.
-<li><strong>Memcached</strong>: lazy expiry on fetch, plus the <strong>LRU crawler</strong>, a background</li>
-  thread (on by default since 1.5) that walks the tails of the LRU lists and
-  frees expired items.
-<li><strong>Caffeine (Java)</strong>: variable per-entry expiry uses a **hierarchical timer</li>
-  wheel**, which gives O(1) scheduling and precise reclamation. Maintenance
-  work is amortized onto reads and writes rather than run on a dedicated thread.
-<li><strong>DynamoDB TTL</strong>: a background scanner deletes expired items, usually within</li>
-  a few days. Until then reads can still return expired items, so queries
-  should filter on the TTL attribute. Cassandra writes TTL'd cells as
-  tombstones and purges them during compaction after <code>gc_grace_seconds</code>.
+<li><strong>Redis ≤ 5</strong>: <code>expireIfNeeded()</code> on every key lookup, plus <code>activeExpireCycle()</code>. The SLOW cycle runs from <code>serverCron</code> at <code>hz</code> (default 10) with a budget of 25% of CPU, which is 25 ms per call. A FAST cycle of at most 1 ms runs in <code>beforeSleep</code>. Each cycle samples 20 keys per DB (<code>ACTIVE_EXPIRE_CYCLE_LOOKUPS_PER_LOOP</code>), repeats while more than 25% of them were expired, and checks the time every 16 iterations. This lab implements the SLOW cycle.</li>
+<li><strong>Redis ≥ 6.0</strong>: rewrote the cycle to walk hash-table buckets of the <code>expires</code> dict with a cursor instead of sampling at random. It added <code>active-expire-effort</code> (1–10). Higher effort raises the keys per loop and the CPU share and lowers the acceptable stale share. At the default effort the target is about 10%.</li>
+<li><strong>Memcached</strong>: lazy expiry on fetch, plus the <strong>LRU crawler</strong>, a background thread (on by default since 1.5) that walks the tails of the LRU lists and frees expired items.</li>
+<li><strong>Caffeine (Java)</strong>: variable per-entry expiry uses a <strong>hierarchical timer wheel</strong>, which gives O(1) scheduling and precise reclamation. Maintenance work is amortized onto reads and writes rather than run on a dedicated thread.</li>
+<li><strong>DynamoDB TTL</strong>: a background scanner deletes expired items, usually within a few days. Until then reads can still return expired items, so queries should filter on the TTL attribute. Cassandra writes TTL'd cells as tombstones and purges them during compaction after <code>gc_grace_seconds</code>.</li>
 </ul>
-<h2>How to run</h2>
-
-<pre><code class="language-bash">node demo.js   # lazy expiry, the lazy-only leak, adaptive reaper table, expiry wave, TTL commands
-node test.js   # 15 tests incl. a randomized model check and a real-timer smoke test (~60 ms)</code></pre>
-
 <h2>Extension exercises</h2>
-
 <ol>
-<li>Implement the Redis 6 approach. Instead of random sampling, keep a cursor</li>
-   into <code>volatile</code> and scan forward a fixed number of slots per round. Compare
-   the peak stale share and samples with the demo workload.
-<li>Add a FAST cycle: run it on each <code>set()</code> or <code>get()</code> when the last SLOW cycle</li>
-   stopped with <code>budget</code>, capped at 1 ms and at most once per 2 ms.
-<li>Add <code>maxKeys</code> with LRU eviction and a <code>volatile-ttl</code> policy (evict the key</li>
-   closest to expiring). Which should go first, a stale key or the LRU key?
-<li>Replace sampling with a hierarchical timing wheel (like Caffeine or Kafka's</li>
-   purgatory) and measure the precision against CPU trade-off.
+<li>Implement the Redis 6 approach. Instead of random sampling, keep a cursor into <code>volatile</code> and scan forward a fixed number of slots per round. Compare the peak stale share and samples with the demo workload.</li>
+<li>Add a FAST cycle: run it on each <code>set()</code> or <code>get()</code> when the last SLOW cycle stopped with <code>budget</code>, capped at 1 ms and at most once per 2 ms.</li>
+<li>Add <code>maxKeys</code> with LRU eviction and a <code>volatile-ttl</code> policy (evict the key closest to expiring). Which should go first, a stale key or the LRU key?</li>
+<li>Replace sampling with a hierarchical timing wheel (like Caffeine or Kafka's purgatory) and measure the precision against CPU trade-off.</li>
 <li>Add TTL jitter (±10%) on <code>set</code> and show how much it shortens the expiry wave in demo step 4.</li>
 </ol></article>
-          <div class="code-block" id="build-file-ttl-cache-reaper-cache_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">cache.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-/**
- * TTL cache with two expiry mechanisms, modelled on Redis:
- *
- *  1. Lazy (passive) expiry: every read checks the key&#039;s deadline and deletes it
- *     if it has passed. A read therefore never returns a stale value.
- *  2. Active expiry: a periodic &quot;reaper&quot; samples keys at random from the set of
- *     keys that have a TTL. If more than `threshold` of the sample was expired it
- *     assumes lots of garbage remains and samples again. It stops when the
- *     sample looks clean, the key set is empty, or the time budget runs out.
- *     This bounds the CPU spent per cycle and still keeps memory used by dead
- *     keys roughly proportional to `threshold`.
- *
- * Time is injectable (`clock()` returns ms) so tests and demos are deterministic.
- */
-
-/** Small deterministic PRNG (mulberry32). Returns floats in [0, 1). */
-function mulberry32(seed) {
-  let a = seed &gt;&gt;&gt; 0;
-  return function next() {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a &gt;&gt;&gt; 15), 1 | a);
-    t = (t + Math.imul(t ^ (t &gt;&gt;&gt; 7), 61 | t)) ^ t;
-    return ((t ^ (t &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296;
-  };
-}
-
-class TTLCache {
-  /**
-   * @param {object} [opts]
-   * @param {() =&gt; number} [opts.clock=Date.now]  current time in ms
-   * @param {() =&gt; number} [opts.random]          PRNG in [0,1), default seeded mulberry32(1)
-   * @param {number} [opts.sampleSize=20]         keys examined per sampling round
-   * @param {number} [opts.threshold=0.25]        repeat while expired/sampled &gt; threshold
-   * @param {number} [opts.timeBudgetMs=25]       max wall time per active cycle
-   * @param {number} [opts.budgetCheckEvery=16]   check the clock every N rounds (clock reads cost CPU)
-   */
-  constructor(opts = {}) {
-    this.clock = opts.clock ?? Date.now;
-    this.random = opts.random ?? mulberry32(1);
-    this.sampleSize = opts.sampleSize ?? 20;
-    this.threshold = opts.threshold ?? 0.25;
-    this.timeBudgetMs = opts.timeBudgetMs ?? 25;
-    this.budgetCheckEvery = opts.budgetCheckEvery ?? 16;
-    if (typeof this.clock !== &#039;function&#039;) throw new TypeError(&#039;clock must be a function&#039;);
-    if (!Number.isInteger(this.sampleSize) || this.sampleSize &lt; 1) throw new RangeError(&#039;sampleSize must be a positive integer&#039;);
-    if (!(this.threshold &gt;= 0 &amp;&amp; this.threshold &lt; 1)) throw new RangeError(&#039;threshold must be in [0, 1)&#039;);
-    if (!(this.timeBudgetMs &gt; 0)) throw new RangeError(&#039;timeBudgetMs must be &gt; 0&#039;);
-
-    this.store = new Map();   // key -&gt; { value, expiresAt (ms) | Infinity }
-    // Keys with a TTL live in a dense array (+ index map) so we can sample one
-    // uniformly at random in O(1) and remove one in O(1) by swapping it with the last.
-    this.volatile = [];
-    this.volatileIndex = new Map(); // key -&gt; position in this.volatile
-    this.timer = null;
-    this.stats = {
-      hits: 0, misses: 0, sets: 0, deletes: 0,
-      expiredLazy: 0, expiredActive: 0,
-      cycles: 0, rounds: 0, sampled: 0, budgetStops: 0,
-      lastCycle: null,
-    };
-  }
-
-  // --- internal bookkeeping ---------------------------------------------
-
-  _trackVolatile(key) {
-    if (this.volatileIndex.has(key)) return;
-    this.volatileIndex.set(key, this.volatile.length);
-    this.volatile.push(key);
-  }
-
-  _untrackVolatile(key) {
-    const i = this.volatileIndex.get(key);
-    if (i === undefined) return;
-    const last = this.volatile.pop();
-    if (i &lt; this.volatile.length) { this.volatile[i] = last; this.volatileIndex.set(last, i); }
-    this.volatileIndex.delete(key);
-  }
-
-  _remove(key) {
-    this._untrackVolatile(key);
-    return this.store.delete(key);
-  }
-
-  /** Returns the live entry or undefined, lazily expiring a dead one. */
-  _live(key, now = this.clock()) {
-    const e = this.store.get(key);
-    if (e === undefined) return undefined;
-    if (e.expiresAt &lt;= now) { this._remove(key); this.stats.expiredLazy++; return undefined; }
-    return e;
-  }
-
-  // --- public API --------------------------------------------------------
-
-  /** set(key, value, { ttlMs }) — omit ttlMs for a key that never expires. */
-  set(key, value, { ttlMs } = {}) {
-    let expiresAt = Infinity;
-    if (ttlMs !== undefined) {
-      if (typeof ttlMs !== &#039;number&#039; || !Number.isFinite(ttlMs)) throw new TypeError(&#039;ttlMs must be a finite number&#039;);
-      // Like Redis SET with EX 0 / negative PX, a non-positive TTL deletes the key.
-      if (ttlMs &lt;= 0) { this.delete(key); return false; }
-      expiresAt = this.clock() + ttlMs;
-    }
-    this.store.set(key, { value, expiresAt });
-    if (expiresAt === Infinity) this._untrackVolatile(key); else this._trackVolatile(key);
-    this.stats.sets++;
-    return true;
-  }
-
-  get(key) {
-    const e = this._live(key);
-    if (e === undefined) { this.stats.misses++; return undefined; }
-    this.stats.hits++;
-    return e.value;
-  }
-
-  has(key) { return this._live(key) !== undefined; }
-
-  delete(key) {
-    const existed = this._live(key) !== undefined &amp;&amp; this._remove(key);
-    if (existed) this.stats.deletes++;
-    return existed;
-  }
-
-  /** Remaining TTL in ms, -1 if the key has no TTL, -2 if missing (Redis PTTL semantics). */
-  ttl(key) {
-    const now = this.clock();
-    const e = this._live(key, now);
-    if (e === undefined) return -2;
-    return e.expiresAt === Infinity ? -1 : e.expiresAt - now;
-  }
-
-  /** Set/replace the TTL of an existing key. Returns false if the key is missing. */
-  expire(key, ttlMs) {
-    const e = this._live(key);
-    if (e === undefined) return false;
-    if (typeof ttlMs !== &#039;number&#039; || !Number.isFinite(ttlMs)) throw new TypeError(&#039;ttlMs must be a finite number&#039;);
-    if (ttlMs &lt;= 0) { this._remove(key); this.stats.deletes++; return true; }
-    e.expiresAt = this.clock() + ttlMs;
-    this._trackVolatile(key);
-    return true;
-  }
-
-  /** Remove the TTL so the key lives forever (Redis PERSIST). */
-  persist(key) {
-    const e = this._live(key);
-    if (e === undefined || e.expiresAt === Infinity) return false;
-    e.expiresAt = Infinity;
-    this._untrackVolatile(key);
-    return true;
-  }
-
-  /**
-   * Physical size: includes expired-but-not-yet-reaped keys. That gap is
-   * exactly the memory the active reaper exists to reclaim.
-   */
-  get size() { return this.store.size; }
-
-  /** Exact count of logically expired keys still in memory (O(n) — diagnostics only). */
-  countStale() {
-    const now = this.clock();
-    let n = 0;
-    for (const k of this.volatile) if (this.store.get(k).expiresAt &lt;= now) n++;
-    return n;
-  }
-
-  /**
-   * One active expiry cycle. Returns a summary. Stop reasons:
-   *   &#039;empty&#039;     — no keys with a TTL remain
-   *   &#039;threshold&#039; — last sample had &lt;= threshold expired: the rest is probably clean
-   *   &#039;budget&#039;    — time budget exhausted (garbage may remain; next cycle continues)
-   */
-  activeExpireCycle({ timeBudgetMs = this.timeBudgetMs } = {}) {
-    const start = this.clock();
-    let rounds = 0, sampled = 0, expired = 0, stoppedBy = &#039;threshold&#039;;
-
-    for (;;) {
-      if (this.volatile.length === 0) { stoppedBy = &#039;empty&#039;; break; }
-      const now = this.clock();
-      const n = Math.min(this.sampleSize, this.volatile.length);
-      let roundExpired = 0;
-      // Sampling with replacement, like Redis&#039;s dictGetRandomKey loop. A key
-      // may be drawn twice in one round; once deleted it cannot be drawn again.
-      for (let i = 0; i &lt; n &amp;&amp; this.volatile.length &gt; 0; i++) {
-        const key = this.volatile[Math.floor(this.random() * this.volatile.length)];
-        sampled++;
-        if (this.store.get(key).expiresAt &lt;= now) { this._remove(key); roundExpired++; }
-      }
-      rounds++;
-      expired += roundExpired;
-      if (roundExpired / n &lt;= this.threshold) { stoppedBy = &#039;threshold&#039;; break; }
-      if (rounds % this.budgetCheckEvery === 0 &amp;&amp; this.clock() - start &gt;= timeBudgetMs) {
-        stoppedBy = &#039;budget&#039;; break;
-      }
-    }
-
-    const s = this.stats;
-    s.cycles++; s.rounds += rounds; s.sampled += sampled; s.expiredActive += expired;
-    if (stoppedBy === &#039;budget&#039;) s.budgetStops++;
-    s.lastCycle = { rounds, sampled, expired, stoppedBy, elapsedMs: this.clock() - start };
-    return s.lastCycle;
-  }
-
-  /**
-   * Run activeExpireCycle every `intervalMs` (Redis: hz=10 -&gt; every 100 ms).
-   * Timer functions are injectable; the timer is unref&#039;d so it never keeps
-   * the process alive on its own.
-   */
-  start(intervalMs = 100, { setInterval: si = setInterval, clearInterval: ci = clearInterval } = {}) {
-    if (this.timer) return this;
-    if (!(intervalMs &gt; 0)) throw new RangeError(&#039;intervalMs must be &gt; 0&#039;);
-    this.timer = si(() =&gt; this.activeExpireCycle(), intervalMs);
-    if (this.timer &amp;&amp; typeof this.timer.unref === &#039;function&#039;) this.timer.unref();
-    this._clear = ci;
-    return this;
-  }
-
-  stop() {
-    if (this.timer) { this._clear(this.timer); this.timer = null; }
-  }
-
-  getStats() {
-    const lookups = this.stats.hits + this.stats.misses;
-    return {
-      ...this.stats,
-      size: this.store.size,
-      volatileKeys: this.volatile.length,
-      hitRate: lookups ? this.stats.hits / lookups : 0,
-    };
-  }
-}
-
-module.exports = { TTLCache, mulberry32 };
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-ttl-cache-reaper-demo_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">demo.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-// Deterministic walkthrough with a simulated clock (no real sleeping).
-const { TTLCache, mulberry32 } = require(&#039;./cache&#039;);
-
-const line = (s = &#039;&#039;) =&gt; console.log(s);
-let now = 1_000_000;               // simulated ms
-const clock = () =&gt; now;
-
-line(&#039;1) Lazy expiry: reads never return stale data&#039;);
-const c = new TTLCache({ clock });
-c.set(&#039;session:1&#039;, { user: &#039;ada&#039; }, { ttlMs: 500 });
-c.set(&#039;config&#039;, &#039;v42&#039;);                         // no TTL
-line(`   t=0     get(session:1) -&gt; ${JSON.stringify(c.get(&#039;session:1&#039;))}, pttl=${c.ttl(&#039;session:1&#039;)}ms, pttl(config)=${c.ttl(&#039;config&#039;)}`);
-now += 500;
-line(`   t=500   get(session:1) -&gt; ${c.get(&#039;session:1&#039;)}   (deadline reached: deleted on read)`);
-line(`   stats: expiredLazy=${c.stats.expiredLazy}, size=${c.size}`);
-line();
-
-line(&#039;2) Why lazy expiry alone leaks memory&#039;);
-const rnd = mulberry32(7);
-function populate(cache, count) {
-  for (let i = 0; i &lt; count; i++) cache.set(`k${i}`, i, { ttlMs: 1000 + Math.floor(rnd() * 4000) });
-  for (let i = 0; i &lt; count / 5; i++) cache.set(`perm${i}`, i); // 20% persistent keys
-}
-const lazyOnly = new TTLCache({ clock });
-populate(lazyOnly, 10_000);
-now += 6000; // every TTL key has expired, but nobody reads them
-line(`   10,000 TTL keys written, nobody reads them, 6s pass...`);
-line(`   size=${lazyOnly.size} of which stale=${lazyOnly.countStale()}  &lt;- dead keys still hold memory`);
-line();
-
-line(&#039;3) Adaptive active reaper (sample 20, repeat while &gt;25% expired)&#039;);
-// Model CPU cost: each sampled key costs 10µs of simulated time, so the
-// 25 ms budget buys ~2,500 samples per cycle.
-const costlyRandom = (() =&gt; { const r = mulberry32(3); return () =&gt; { now += 0.01; return r(); }; })();
-function workload(threshold, print) {
-  const cache = new TTLCache({ clock, random: costlyRandom, timeBudgetMs: 25, threshold });
-  now = 2_000_000;
-  populate(cache, 10_000);
-  let peak = 0;
-  if (print) line(&#039;   tick     size  stale stale%  rounds sampled expired stop&#039;);
-  for (let tick = 1; tick &lt;= 60; tick++) {
-    now = 2_000_000 + tick * 100; // hz=10: one cycle per 100 ms
-    const r = cache.activeExpireCycle();
-    const stale = cache.countStale(), vol = cache.volatile.length;
-    if (vol) peak = Math.max(peak, stale / vol);
-    if (print &amp;&amp; tick % 6 === 0) {
-      const stalePct = vol ? ((100 * stale) / vol).toFixed(0) + &#039;%&#039; : &#039;-&#039;;
-      line(`   ${String(tick * 100).padStart(4)}ms ${String(cache.size).padStart(6)} ${String(stale).padStart(6)} ${stalePct.padStart(6)}` +
-           ` ${String(r.rounds).padStart(6)} ${String(r.sampled).padStart(7)} ${String(r.expired).padStart(7)}  ${r.stoppedBy}`);
-    }
-  }
-  return { stats: cache.getStats(), peak };
-}
-const w25 = workload(0.25, true);
-line(`   total: ${w25.stats.cycles} cycles, ${w25.stats.sampled} samples, ${w25.stats.expiredActive} reclaimed actively, ${w25.stats.budgetStops} budget stops`);
-line(&#039;   25% is a *stop heuristic*, not a bound: ~250 keys expire per 100ms here, and the stale&#039;);
-line(&#039;   share settles where the per-round chance of a &quot;clean-looking&quot; sample balances that rate.&#039;);
-const w10 = workload(0.10, false);
-line(`   peak stale share: threshold 25% -&gt; ${(w25.peak * 100).toFixed(0)}%,  threshold 10% -&gt; ${(w10.peak * 100).toFixed(0)}% ` +
-     `(${w10.stats.sampled} vs ${w25.stats.sampled} samples: less garbage costs more CPU)`);
-line();
-
-line(&#039;4) Expiry wave: 50,000 keys die in the same millisecond&#039;);
-const wave = new TTLCache({ clock, random: costlyRandom, timeBudgetMs: 25 });
-now = 3_000_000;
-for (let i = 0; i &lt; 50_000; i++) wave.set(`w${i}`, i, { ttlMs: 1000 });
-let cycles = 0;
-now += 1000;
-while (wave.volatile.length &gt; 0 &amp;&amp; cycles &lt; 100) {
-  const tickStart = now;
-  const r = wave.activeExpireCycle();
-  cycles++;
-  if (cycles &lt;= 3 || wave.volatile.length === 0) {
-    line(`   cycle ${String(cycles).padStart(2)}: reclaimed ${String(r.expired).padStart(5)} in ${r.elapsedMs.toFixed(1)}ms (${r.stoppedBy}); ${wave.volatile.length} left`);
-  } else if (cycles === 4) line(&#039;   ...&#039;);
-  now = tickStart + 100;
-}
-line(`   The budget spread the work over ${cycles} cycles instead of one ~${(50_000 * 0.01).toFixed(0)}ms stall.`);
-line();
-
-line(&#039;5) TTL management (Redis-style semantics)&#039;);
-const m = new TTLCache({ clock });
-m.set(&#039;a&#039;, 1, { ttlMs: 1000 });
-line(`   pttl(a)=${m.ttl(&#039;a&#039;)}  persist(a)=${m.persist(&#039;a&#039;)}  pttl(a)=${m.ttl(&#039;a&#039;)}`);
-line(`   expire(a, 50)=${m.expire(&#039;a&#039;, 50)}  pttl(a)=${m.ttl(&#039;a&#039;)}  pttl(missing)=${m.ttl(&#039;missing&#039;)}`);
-line(`   set(b, x, {ttlMs: 0}) -&gt; ${m.set(&#039;b&#039;, &#039;x&#039;, { ttlMs: 0 })} (non-positive TTL deletes the key, like Redis EXPIRE k 0)`);
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-ttl-cache-reaper-test_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">test.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-const assert = require(&#039;node:assert&#039;);
-const { TTLCache, mulberry32 } = require(&#039;./cache&#039;);
-
-const tests = [];
-const test = (name, fn) =&gt; tests.push({ name, fn });
-
-function fakeClock(start = 1000) {
-  const c = { t: start };
-  c.now = () =&gt; c.t;
-  return c;
-}
-
-/** Checks the volatile array / index map / store stay mutually consistent. */
-function assertConsistent(cache) {
-  assert.strictEqual(cache.volatile.length, cache.volatileIndex.size);
-  cache.volatile.forEach((k, i) =&gt; {
-    assert.strictEqual(cache.volatileIndex.get(k), i);
-    assert.ok(cache.store.has(k));
-    assert.notStrictEqual(cache.store.get(k).expiresAt, Infinity);
-  });
-  for (const [k, e] of cache.store) {
-    assert.strictEqual(cache.volatileIndex.has(k), e.expiresAt !== Infinity);
-  }
-}
-
-test(&#039;set/get with and without TTL&#039;, () =&gt; {
-  const clk = fakeClock();
-  const c = new TTLCache({ clock: clk.now });
-  c.set(&#039;a&#039;, 1, { ttlMs: 100 });
-  c.set(&#039;b&#039;, 2);
-  assert.strictEqual(c.get(&#039;a&#039;), 1);
-  assert.strictEqual(c.get(&#039;b&#039;), 2);
-  assert.strictEqual(c.get(&#039;zzz&#039;), undefined);
-  clk.t += 1e9;
-  assert.strictEqual(c.get(&#039;b&#039;), 2, &#039;persistent key must survive&#039;);
-});
-
-test(&#039;lazy expiry: deadline is exclusive (expired at exactly expiresAt)&#039;, () =&gt; {
-  const clk = fakeClock();
-  const c = new TTLCache({ clock: clk.now });
-  c.set(&#039;a&#039;, 1, { ttlMs: 100 });
-  clk.t += 99;
-  assert.strictEqual(c.get(&#039;a&#039;), 1);
-  clk.t += 1;
-  assert.strictEqual(c.has(&#039;a&#039;), false);
-  assert.strictEqual(c.size, 0, &#039;lazy expiry must physically delete&#039;);
-  assert.strictEqual(c.stats.expiredLazy, 1);
-});
-
-test(&#039;without reads or reaper, expired keys keep occupying memory&#039;, () =&gt; {
-  const clk = fakeClock();
-  const c = new TTLCache({ clock: clk.now });
-  for (let i = 0; i &lt; 100; i++) c.set(`k${i}`, i, { ttlMs: 10 });
-  clk.t += 11;
-  assert.strictEqual(c.size, 100);
-  assert.strictEqual(c.countStale(), 100);
-});
-
-test(&#039;ttl()/expire()/persist() follow Redis PTTL/PEXPIRE/PERSIST semantics&#039;, () =&gt; {
-  const clk = fakeClock();
-  const c = new TTLCache({ clock: clk.now });
-  c.set(&#039;a&#039;, 1, { ttlMs: 500 });
-  c.set(&#039;p&#039;, 1);
-  assert.strictEqual(c.ttl(&#039;a&#039;), 500);
-  assert.strictEqual(c.ttl(&#039;p&#039;), -1);
-  assert.strictEqual(c.ttl(&#039;missing&#039;), -2);
-  assert.strictEqual(c.persist(&#039;a&#039;), true);
-  assert.strictEqual(c.ttl(&#039;a&#039;), -1);
-  assert.strictEqual(c.persist(&#039;a&#039;), false, &#039;already persistent&#039;);
-  assert.strictEqual(c.expire(&#039;a&#039;, 50), true);
-  clk.t += 20;
-  assert.strictEqual(c.ttl(&#039;a&#039;), 30);
-  assert.strictEqual(c.expire(&#039;missing&#039;, 50), false);
-  assert.strictEqual(c.expire(&#039;p&#039;, 0), true);
-  assert.strictEqual(c.has(&#039;p&#039;), false, &#039;expire &lt;= 0 deletes&#039;);
-  assertConsistent(c);
-});
-
-test(&#039;non-positive TTL on set deletes; overwrite without TTL clears the TTL&#039;, () =&gt; {
-  const clk = fakeClock();
-  const c = new TTLCache({ clock: clk.now });
-  c.set(&#039;a&#039;, 1);
-  assert.strictEqual(c.set(&#039;a&#039;, 2, { ttlMs: -5 }), false);
-  assert.strictEqual(c.has(&#039;a&#039;), false);
-  c.set(&#039;b&#039;, 1, { ttlMs: 10 });
-  c.set(&#039;b&#039;, 2); // like Redis SET without KEEPTTL: TTL is discarded
-  clk.t += 100;
-  assert.strictEqual(c.get(&#039;b&#039;), 2);
-  assertConsistent(c);
-});
-
-test(&#039;active cycle only samples keys that have a TTL&#039;, () =&gt; {
-  const clk = fakeClock();
-  const c = new TTLCache({ clock: clk.now });
-  for (let i = 0; i &lt; 1000; i++) c.set(`perm${i}`, i);
-  c.set(&#039;t&#039;, 1, { ttlMs: 1 });
-  clk.t += 5;
-  const r = c.activeExpireCycle();
-  assert.strictEqual(r.expired, 1);
-  assert.strictEqual(c.size, 1000);
-  assert.strictEqual(c.activeExpireCycle().stoppedBy, &#039;empty&#039;);
-});
-
-test(&#039;active cycle stops after one round when the sample looks clean&#039;, () =&gt; {
-  const clk = fakeClock();
-  const c = new TTLCache({ clock: clk.now });
-  for (let i = 0; i &lt; 1000; i++) c.set(`k${i}`, i, { ttlMs: i &lt; 10 ? 1 : 1e6 }); // 1% expired
-  clk.t += 5;
-  const r = c.activeExpireCycle();
-  assert.strictEqual(r.stoppedBy, &#039;threshold&#039;);
-  assert.strictEqual(r.rounds, 1);
-  assert.strictEqual(r.sampled, 20);
-});
-
-test(&#039;active cycle keeps sampling while &gt;25% of samples are expired&#039;, () =&gt; {
-  const clk = fakeClock();
-  const c = new TTLCache({ clock: clk.now, random: mulberry32(42) });
-  for (let i = 0; i &lt; 2000; i++) c.set(`k${i}`, i, { ttlMs: i &lt; 1800 ? 1 : 1e6 }); // 90% expired
-  clk.t += 5;
-  const r = c.activeExpireCycle();
-  assert.ok(r.rounds &gt; 1);
-  assert.strictEqual(r.stoppedBy, &#039;threshold&#039;);
-  // It must have reclaimed enough that stale keys are no longer the overwhelming majority.
-  const staleShare = c.countStale() / c.volatile.length;
-  assert.ok(staleShare &lt; 0.6, `stale share still ${staleShare}`);
-  assert.ok(r.expired &gt; 1000, `reclaimed only ${r.expired}`);
-  assertConsistent(c);
-});
-
-test(&#039;time budget caps a cycle and remaining garbage is handled next cycle&#039;, () =&gt; {
-  const clk = fakeClock();
-  // Every PRNG call &quot;costs&quot; 0.1 ms, so a 5 ms budget allows ~50 samples.
-  const base = mulberry32(9);
-  const c = new TTLCache({ clock: clk.now, random: () =&gt; { clk.t += 0.1; return base(); }, timeBudgetMs: 5, budgetCheckEvery: 1 });
-  for (let i = 0; i &lt; 10_000; i++) c.set(`k${i}`, i, { ttlMs: 1 });
-  clk.t += 5;
-  const r1 = c.activeExpireCycle();
-  assert.strictEqual(r1.stoppedBy, &#039;budget&#039;);
-  assert.ok(r1.elapsedMs &gt;= 5 &amp;&amp; r1.elapsedMs &lt; 7, `elapsed ${r1.elapsedMs}`);
-  assert.ok(r1.sampled &lt;= 60);
-  assert.strictEqual(c.stats.budgetStops, 1);
-  let cycles = 1;
-  while (c.volatile.length &amp;&amp; cycles &lt; 1000) { c.activeExpireCycle(); cycles++; }
-  assert.strictEqual(c.size, 0);
-  assert.strictEqual(c.stats.expiredActive, 10_000);
-});
-
-test(&#039;budget is only checked every budgetCheckEvery rounds&#039;, () =&gt; {
-  const clk = fakeClock();
-  const base = mulberry32(5);
-  const c = new TTLCache({ clock: clk.now, random: () =&gt; { clk.t += 1; return base(); }, timeBudgetMs: 1, budgetCheckEvery: 4 });
-  for (let i = 0; i &lt; 10_000; i++) c.set(`k${i}`, i, { ttlMs: 1 });
-  clk.t += 5;
-  const r = c.activeExpireCycle();
-  assert.strictEqual(r.stoppedBy, &#039;budget&#039;);
-  assert.strictEqual(r.rounds, 4);
-});
-
-test(&#039;randomized ops keep the volatile index consistent with the store&#039;, () =&gt; {
-  const clk = fakeClock();
-  const rnd = mulberry32(123);
-  const c = new TTLCache({ clock: clk.now, random: mulberry32(1) });
-  const model = new Map(); // key -&gt; {value, expiresAt}
-  for (let step = 0; step &lt; 5000; step++) {
-    const k = `k${Math.floor(rnd() * 200)}`;
-    const op = rnd();
-    if (op &lt; 0.35) { const ttl = rnd() &lt; 0.3 ? undefined : 1 + Math.floor(rnd() * 50); c.set(k, step, { ttlMs: ttl }); model.set(k, { value: step, expiresAt: ttl === undefined ? Infinity : clk.t + ttl }); }
-    else if (op &lt; 0.6) { const m = model.get(k); const want = m &amp;&amp; m.expiresAt &gt; clk.t ? m.value : undefined; assert.strictEqual(c.get(k), want); }
-    else if (op &lt; 0.7) { c.delete(k); model.delete(k); }
-    else if (op &lt; 0.75) { if (c.persist(k)) model.get(k).expiresAt = Infinity; }
-    else if (op &lt; 0.8) { c.activeExpireCycle(); }
-    else clk.t += Math.floor(rnd() * 5);
-  }
-  assertConsistent(c);
-  for (const [k, m] of model) assert.strictEqual(c.get(k), m.expiresAt &gt; clk.t ? m.value : undefined);
-});
-
-test(&#039;start/stop use injected timers and unref&#039;, () =&gt; {
-  const clk = fakeClock();
-  const c = new TTLCache({ clock: clk.now });
-  let cb = null, cleared = null, unrefd = false;
-  const handle = { unref() { unrefd = true; } };
-  c.start(100, { setInterval: (fn, ms) =&gt; { assert.strictEqual(ms, 100); cb = fn; return handle; }, clearInterval: (h) =&gt; { cleared = h; } });
-  c.set(&#039;a&#039;, 1, { ttlMs: 10 });
-  clk.t += 20;
-  cb();
-  assert.strictEqual(c.size, 0);
-  assert.ok(unrefd);
-  c.stop();
-  assert.strictEqual(cleared, handle);
-  assert.strictEqual(c.timer, null);
-});
-
-test(&#039;real timer smoke test: reaper runs and stop() halts it&#039;, async () =&gt; {
-  const c = new TTLCache();
-  c.set(&#039;a&#039;, 1, { ttlMs: 5 });
-  c.start(10);
-  await new Promise((r) =&gt; setTimeout(r, 60));
-  c.stop();
-  assert.strictEqual(c.size, 0);
-  assert.ok(c.stats.cycles &gt;= 1);
-});
-
-test(&#039;stats track hits, misses and hit rate&#039;, () =&gt; {
-  const clk = fakeClock();
-  const c = new TTLCache({ clock: clk.now });
-  c.set(&#039;a&#039;, 1, { ttlMs: 10 });
-  c.get(&#039;a&#039;); c.get(&#039;a&#039;); c.get(&#039;b&#039;);
-  clk.t += 10;
-  c.get(&#039;a&#039;);
-  const s = c.getStats();
-  assert.strictEqual(s.hits, 2);
-  assert.strictEqual(s.misses, 2);
-  assert.strictEqual(s.hitRate, 0.5);
-  assert.strictEqual(s.expiredLazy, 1);
-});
-
-test(&#039;invalid configuration and TTLs are rejected&#039;, () =&gt; {
-  assert.throws(() =&gt; new TTLCache({ sampleSize: 0 }), RangeError);
-  assert.throws(() =&gt; new TTLCache({ threshold: 1 }), RangeError);
-  assert.throws(() =&gt; new TTLCache({ timeBudgetMs: 0 }), RangeError);
-  assert.throws(() =&gt; new TTLCache({ clock: 5 }), TypeError);
-  const c = new TTLCache();
-  assert.throws(() =&gt; c.set(&#039;a&#039;, 1, { ttlMs: &#039;10&#039; }), TypeError);
-  assert.throws(() =&gt; c.set(&#039;a&#039;, 1, { ttlMs: NaN }), TypeError);
-  assert.throws(() =&gt; c.start(0), RangeError);
-});
-
-(async () =&gt; {
-  let failed = 0;
-  for (const { name, fn } of tests) {
-    try { await fn(); console.log(`✓ ${name}`); }
-    catch (e) { failed++; console.log(`✗ ${name}\n  ${e.stack}`); }
-  }
-  if (failed) { console.log(`\n${failed} test(s) failed`); process.exit(1); }
-  console.log(&#039;\nall tests passed&#039;);
-})();
-</code></pre>
-          </div>
       </div>
 
       <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
@@ -1133,9 +467,9 @@ test(&#039;invalid configuration and TTLs are rejected&#039;, () =&gt; {
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
-  <script type="text/plain" data-defer src="js/code-lab.js?v=20ce3ba328"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=7f68b9d746"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
   

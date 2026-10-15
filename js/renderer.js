@@ -592,30 +592,15 @@ window.Renderer = (() => {
         ` : ''}
       </section>
 
-      <div id="build-walkthrough-pane">
-        <div class="build-run">
-          <div class="build-run__text">
-            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
-            ${[demoFile, testFile].filter(Boolean).map(f => '<code>node ' + escapeHtml(f) + '</code>').join(' and ')}.
-          </div>
-          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="${buildId}">Copy setup script</button>
-        </div>
-
-        <div class="build-files">${files.map(([f]) => `<a href="#build-file-${buildId}-${f.replace(/[^\w-]/g, '_')}" class="build-files__item" data-action="scroll-to-file" data-target="build-file-${buildId}-${f.replace(/[^\w-]/g, '_')}">${escapeHtml(f)}</a>`).join('')}</div>`;
+      <div id="build-walkthrough-pane">`;
 
     for (const [filename, content] of files) {
-      const anchor = `build-file-${buildId}-${filename.replace(/[^\w-]/g, '_')}`;
       if (filename.endsWith('.md')) {
-        html += `<article class="prose" id="${anchor}">` + convertMarkdownToHTML(content) + '</article>';
-      } else {
-        html += `
-          <div class="code-block" id="${anchor}">
-            <div class="code-block__header">
-              <span class="code-block__lang">${escapeHtml(filename)}</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>${escapeHtml(content)}</code></pre>
-          </div>`;
+        const cleanMd = content
+          .replace(/^#\s+[^\n]+\n+/, '')
+          .replace(/\n##\s+(?:How to run|9\.\s*Verification & Running the Lab)\b[\s\S]*?(?=\n##\s+|\s*$)/g, '\n');
+        const anchor = `build-file-${buildId}-${filename.replace(/[^\w-]/g, '_')}`;
+        html += `<article class="prose" id="${anchor}">` + convertMarkdownToHTML(cleanMd) + '</article>';
       }
     }
 
@@ -627,22 +612,6 @@ window.Renderer = (() => {
       </div>`;
     return html;
   }
-
-  // One paste recreates the build folder: mkdir + a quoted heredoc per file (no shell expansion inside)
-  window.copyBuildScript = function(buildId, btn) {
-    const build = window.IMPLEMENTATIONS_DATA?.[buildId];
-    if (!build) return;
-    const lines = [`mkdir -p ${buildId} && cd ${buildId}`];
-    for (const [f, c] of orderedBuildFiles(build.files)) {
-      const dir = f.includes('/') ? f.slice(0, f.lastIndexOf('/')) : '';
-      if (dir) lines.push(`mkdir -p ${dir}`);
-      lines.push(`cat > ${f} <<'SDID_EOF'`, c.replace(/\n$/, ''), 'SDID_EOF');
-    }
-    navigator.clipboard.writeText(lines.join('\n') + '\n').then(() => {
-      btn.textContent = '✓ Copied';
-      setTimeout(() => { btn.textContent = 'Copy setup script'; }, 2000);
-    });
-  };
 
 
   /**
@@ -744,8 +713,9 @@ window.Renderer = (() => {
   function convertMarkdownToHTML(md) {
     if (!md) return '';
 
-    // Phase 1: Extract code blocks and mermaid diagrams to protect them from other regexes
+    // Phase 1: Extract code blocks, mermaid diagrams, and inline code spans to protect them from other regexes
     const codeBlocks = [];
+    const inlineCodes = [];
     let html = md
       // Mermaid blocks MUST be replaced before generic code blocks
       .replace(/```mermaid\s*\n([\s\S]*?)```/g, (_, diagram) => {
@@ -758,9 +728,15 @@ window.Renderer = (() => {
         const idx = codeBlocks.length;
         codeBlocks.push('<pre><code class="language-' + (lang || 'text') + '">' + escapeHtml(code.trim()) + '</code></pre>');
         return '\x00CODEBLOCK_' + idx + '\x00';
+      })
+      // Inline code (`...`) - escape HTML entities inside backticks & protect from markdown regexes
+      .replace(/`([^`\n]+)`/g, (_, code) => {
+        const idx = inlineCodes.length;
+        inlineCodes.push('<code>' + escapeHtml(code) + '</code>');
+        return '\x00INLINECODE_' + idx + '\x00';
       });
 
-    // Phase 2: Process markdown syntax (code blocks are safely extracted)
+    // Phase 2: Process block-level markdown syntax (code blocks & inline code are safely extracted)
     html = html
       // GitHub alerts / blockquote callouts
       .replace(/^>\s*\[!NOTE\]\s*(.*)$/gm, '<div class="callout callout--note"><div class="callout__title">ℹ️ Note</div><p>$1</p></div>')
@@ -773,102 +749,136 @@ window.Renderer = (() => {
       .replace(/^### (.+)$/gm, '<h3>$1</h3>')
       .replace(/^## (.+)$/gm, '<h2>$1</h2>')
       .replace(/^# (.+)$/gm, '<h2>$1</h2>')
-      // Bold
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // Italic
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      // Inline code (must come after bold/italic to avoid conflicts)
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      // Links (standard and wiki-style)
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-      .replace(/\[\[wiki\/([^\]|]+)\|([^\]]+)\]\]/g, '<a href="#" data-nav="topic" data-slug="$1">$2</a>')
-      .replace(/\[\[wiki\/([^\]]+)\]\]/g, (_, slug) => '<a href="#" data-nav="topic" data-slug="' + slug + '">' + slug.replace(/-/g, ' ') + '</a>')
       // Horizontal rules
       .replace(/^---$/gm, '<hr>')
       // Tables
-      .replace(/^\|(.+)\|\s*\n\|[-| :]+\|\s*\n((?:\|.+\|\s*\n?)*)/gm, (_, header, body) => {
-        const ths = header.split('|').map(h => h.trim()).filter(Boolean).map(h => '<th>' + h + '</th>').join('');
+      .replace(/^\|(.+)\|[ \t]*\n\|[-| :]+\|[ \t]*\n((?:\|.+\|[ \t]*(?:\n|$))*)/gm, (_, header, body) => {
+        const ths = header.split('|').map(h => '<th>' + h.trim() + '</th>').join('');
         const rows = body.trim().split('\n').map(row => {
-          const tds = row.split('|').map(c => c.trim()).filter(Boolean).map(c => '<td>' + c + '</td>').join('');
+          const tds = row.trim().replace(/^\||\|$/g, '').split('|').map(c => '<td>' + c.trim() + '</td>').join('');
           return '<tr>' + tds + '</tr>';
         }).join('');
-        return '<table><thead><tr>' + ths + '</tr></thead><tbody>' + rows + '</tbody></table>';
+        return '<table><thead><tr>' + ths + '</tr></thead><tbody>' + rows + '</tbody></table>\n';
       });
 
-    // Phase 3: Restore code blocks
-    html = html.replace(/\x00CODEBLOCK_(\d+)\x00/g, (_, idx) => codeBlocks[parseInt(idx)]);
-
-    // Process paragraphs and lists
+    // Phase 3: Process paragraphs and lists (joining hard-wrapped continuation lines cleanly)
     const lines = html.split('\n');
     const processed = [];
     let inList = false;
     let listType = '';
-    let inPre = false;
-    let inMermaid = false;
+    let openLi = false;
+    let paraLines = [];
+
+    function flushPara() {
+      if (paraLines.length > 0) {
+        processed.push('<p>' + paraLines.join(' ') + '</p>');
+        paraLines = [];
+      }
+    }
+
+    function closeList() {
+      if (openLi) {
+        processed[processed.length - 1] += '</li>';
+        openLi = false;
+      }
+      if (inList) {
+        processed.push('</' + listType + '>');
+        inList = false;
+        listType = '';
+      }
+    }
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
-      // Track pre blocks
-      if (line.includes('<pre>')) inPre = true;
-      if (line.includes('</pre>')) { inPre = false; processed.push(line); continue; }
-      if (inPre) { processed.push(line); continue; }
+      // Extracted code / mermaid block placeholder
+      if (line.trim().match(/^\x00CODEBLOCK_\d+\x00$/)) {
+        flushPara();
+        closeList();
+        processed.push(line.trim());
+        continue;
+      }
 
-      // Track mermaid blocks
-      if (line.includes('<div class="mermaid">')) inMermaid = true;
-      if (inMermaid) {
-        if (line.includes('</div>')) inMermaid = false;
+      // Skip already-processed block-level HTML tags
+      if (line.match(/^<(h[1-6]|table|thead|tbody|tr|th|td|div|pre|hr|ul|ol|li|blockquote)\b/)) {
+        flushPara();
+        closeList();
         processed.push(line);
         continue;
       }
 
-      // Skip already-processed HTML tags
-      if (line.match(/^<(h[1-6]|table|thead|tbody|tr|th|td|div|pre|hr|ul|ol|li|blockquote)/)) {
-        if (inList) { processed.push('</' + listType + '>'); inList = false; }
-        processed.push(line);
-        continue;
-      }
-
-      // Unordered list
+      // Unordered list item
       if (line.match(/^[-*] /)) {
+        flushPara();
         if (!inList || listType !== 'ul') {
-          if (inList) processed.push('</' + listType + '>');
+          closeList();
           processed.push('<ul>');
           inList = true; listType = 'ul';
+        } else if (openLi) {
+          processed[processed.length - 1] += '</li>';
+          openLi = false;
         }
-        processed.push('<li>' + line.replace(/^[-*] /, '') + '</li>');
+        processed.push('<li>' + line.replace(/^[-*] /, ''));
+        openLi = true;
         continue;
       }
 
-      // Ordered list
+      // Ordered list item
       if (line.match(/^\d+\. /)) {
+        flushPara();
         if (!inList || listType !== 'ol') {
-          if (inList) processed.push('</' + listType + '>');
+          closeList();
           processed.push('<ol>');
           inList = true; listType = 'ol';
+        } else if (openLi) {
+          processed[processed.length - 1] += '</li>';
+          openLi = false;
         }
-        processed.push('<li>' + line.replace(/^\d+\. /, '') + '</li>');
+        processed.push('<li>' + line.replace(/^\d+\. /, ''));
+        openLi = true;
         continue;
       }
 
-      // End list
-      if (inList && line.trim() === '') {
-        processed.push('</' + listType + '>');
-        inList = false;
+      // Blank line ends current paragraph or list
+      if (line.trim() === '') {
+        flushPara();
+        closeList();
         continue;
       }
 
-      // Paragraph
-      if (line.trim() && !line.match(/^</) && !inList) {
-        processed.push('<p>' + line + '</p>');
-      } else {
-        processed.push(line);
+      // Continuation line inside an active list item
+      if (inList && openLi) {
+        if (line.match(/^\s+[-*] /)) {
+          processed[processed.length - 1] += '<br>• ' + line.replace(/^\s+[-*] /, '').trim();
+        } else {
+          processed[processed.length - 1] += ' ' + line.trim();
+        }
+        continue;
       }
+
+      // Paragraph line
+      paraLines.push(line.trim());
     }
 
-    if (inList) processed.push('</' + listType + '>');
+    flushPara();
+    closeList();
 
-    return processed.join('\n');
+    // Phase 4: Inline formatting (after multi-line paragraphs and list items are joined) & code restoration
+    let out = processed.join('\n')
+      // Bold
+      .replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*([^*]+?)\*/g, '<em>$1</em>')
+      // Links (standard and wiki-style)
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+      .replace(/\[\[wiki\/([^\]|]+)\|([^\]]+)\]\]/g, '<a href="#" data-nav="topic" data-slug="$1">$2</a>')
+      .replace(/\[\[wiki\/([^\]]+)\]\]/g, (_, slug) => '<a href="#" data-nav="topic" data-slug="' + slug + '">' + slug.replace(/-/g, ' ') + '</a>');
+
+    out = out
+      .replace(/\x00CODEBLOCK_(\d+)\x00/g, (_, idx) => codeBlocks[parseInt(idx)])
+      .replace(/\x00INLINECODE_(\d+)\x00/g, (_, idx) => inlineCodes[parseInt(idx)]);
+
+    return out;
   }
 
   /**

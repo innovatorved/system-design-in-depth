@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -955,29 +955,18 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="byte-range-indexed-object-storage" id="audio-speed-byte-range-indexed-object-storage" title="Playback speed">1x</button>
         <audio id="audio-byte-range-indexed-object-storage" src="audio/byte-range-indexed-object-storage.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Byte-range indexed object storage</h2>
-
 <p>A byte-range read retrieves part of an object. Add an index from logical keys to byte locations, and a large dictionary or catalog can answer a point lookup without transferring its entire data file.</p>
-
 <p>The application supplies the lookup logic; object storage supplies bytes. We'll translate an index entry into a range, verify a local read, then handle response validation, compression and access control.</p>
-
 <h2>Name the object as well as the position</h2>
-
 <p>The <a href="#" data-nav="topic" data-slug="file-backed-dictionary-storage-engine">dictionary design</a> needs an entry shaped like this:</p>
-
 <pre><code class="language-text">key -&gt; object identity, start byte, length</code></pre>
-
 <p>Object identity must select the version used to build the index. An unchanged offset in a replaced object can return a different value with a perfectly valid length. Use immutable object names or an explicit retained version; <a href="#" data-nav="topic" data-slug="immutable-versioned-data-files">the next lesson</a> covers publication and cleanup.</p>
-
 <p>Our exercise uses a separate color pack: <code>red\n</code>, <code>green\n</code>, then <code>purple\n</code>. The newline is one byte, making the values four, six and seven bytes long. This is not the previous lesson's word-meaning file.</p>
-
-<table><thead><tr><th>Key</th><th>Half-open byte slice and length</th></tr></thead><tbody><tr><td>apple</td><td><code>[0:4]</code>: 4 bytes</td></tr><tr><td>pear</td><td><code>[4:10]</code>: 6 bytes</td></tr><tr><td>plum</td><td><code>[10:17]</code>: 7 bytes</td></tr></tbody></table>A program slice excludes its right endpoint. HTTP byte ranges include it, so pear's six bytes become <code>Range: bytes=4-9</code>. For a nonempty indexed value, the last byte is <code>start + length - 1</code>. An empty value needs no body read; do not turn zero length into an invalid reversed range.
-
+<table><thead><tr><th>Key</th><th>Half-open byte slice and length</th></tr></thead><tbody><tr><td>apple</td><td><code>[0:4]</code>: 4 bytes</td></tr><tr><td>pear</td><td><code>[4:10]</code>: 6 bytes</td></tr><tr><td>plum</td><td><code>[10:17]</code>: 7 bytes</td></tr></tbody></table>
+<p>A program slice excludes its right endpoint. HTTP byte ranges include it, so pear's six bytes become <code>Range: bytes=4-9</code>. For a nonempty indexed value, the last byte is <code>start + length - 1</code>. An empty value needs no body read; do not turn zero length into an invalid reversed range.</p>
 <h2>Exercise the boundary</h2>
-
 <p>The object-storage download writes this 17-byte pack in a private temporary directory. It compares a full read with a seek to pear's offset, then tries invalid metadata and an actually shortened source file.</p>
-
 <pre><code class="language-bash">python3 m13-object-store.py ranges</code></pre>
-
 <pre><code class="language-output">pack bytes: 17 ; index: {&quot;apple&quot;:[0,4],&quot;pear&quot;:[4,6],&quot;plum&quot;:[10,7]}
 full: b&#039;red\ngreen\npurple\n&#039;
 pear slice [4:10] -&gt; b&#039;green\n&#039;
@@ -985,35 +974,20 @@ HTTP range spelling: bytes=4-9; returned length=6
 index (-1,1): invalid indexed boundary
 index (10,8): invalid indexed boundary
 shortened source: truncated source</code></pre>
-
 <p>The helper rejects a negative offset or an interval beyond the recorded complete length. It also checks the returned byte count. A valid-looking index cannot make a shortened source return all its promised bytes.</p>
-
 <p>This mode performs local file reads. Its HTTP line is calculated syntax, not a network response or an S3 measurement. Returned bytes also do not tell us the number of physical disk reads.</p>
-
 <h2>Check what the server actually returned</h2>
-
 <p>A served single HTTP range uses <code>206 Partial Content</code> and a <code>Content-Range</code> describing the interval. An unsatisfiable range can produce <code>416</code>. A server may also ignore Range and send the full representation, so sending the header does not guarantee a partial response.</p>
-
 <p>For our six-byte lookup, require the expected interval and body length before decoding. Handle a full response explicitly within a bounded fallback policy, rather than passing its first bytes off as the requested value. A short body, wrong version or unexpected encoding is a failed read.</p>
-
 <p>S3's GetObject supports one selected range per request, and <code>versionId</code> can select a retained version where versioning is supported. The server still does not know which logical dictionary key the interval represents. Our index makes that connection.</p>
-
 <h2>Keep compression and caching aligned</h2>
-
 <p>As in <a href="#" data-nav="topic" data-slug="custom-binary-file-format">the format lesson</a>, HTTP offsets refer to the encoded representation. Offsets measured before whole-file compression cannot generally locate independently decodable values afterward. Keep data uncompressed, compress each record independently, or index compressed blocks and decode the containing block locally.</p>
-
 <p>A block can contain several values, so requesting one key may still fetch its neighbors. Verify the appropriate block or record checksum against trusted metadata before using it. Matching length alone misses same-length substitutions; fetching the whole object for every checksum would defeat a small-range read.</p>
-
 <p>Cache frequently requested values near the API. Include the object generation and logical key in the cache identity so an update cannot reuse the old answer accidentally. Fetching nearby entries together may reduce request overhead; measure the extra bytes against the saved requests.</p>
-
 <p>This pattern also suits indexed file sections and selected media chunks. It is less attractive when every request needs most of the object, or values require frequent independent updates. Separate objects give each value its own lifecycle; a pack trades that independence for one published collection.</p>
-
 <h2>Authorize the key before deriving the range</h2>
-
 <p>Accept a logical key at the API, check the caller's permission, then look up its trusted location. Allowing arbitrary object paths and byte offsets would let a caller reach neighboring data outside that key's policy.</p>
-
-<p>Bound the range length, total returned bytes, retries and request rate. Check the expected content type and encoding. Storage failures remain errors; they must not become “key missing” or a cached partial value. With those boundaries in place, the index provides precise access without turning the byte store into a database.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>Bound the range length, total returned bytes, retries and request rate. Check the expected content type and encoding. Storage failures remain errors; they must not become “key missing” or a cached partial value. With those boundaries in place, the index provides precise access without turning the byte store into a database.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>Under the Hood: Random Access Over Large Objects</h2>
       <p>When storing massive binary assets (e.g. 100GB video files, multi-gigabyte ZIP archives, or Parquet datasets), requiring an application to download the entire file to access a small subset of bytes is unacceptable. <strong>Byte-range indexed storage</strong> enables random access within contiguous blobs using offset and length metadata.</p>
 
@@ -1295,7 +1269,7 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

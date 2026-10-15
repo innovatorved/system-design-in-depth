@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -949,21 +949,13 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="rule-engine-trigger-framework" id="audio-speed-rule-engine-trigger-framework" title="Playback speed">1x</button>
         <audio id="audio-rule-engine-trigger-framework" src="audio/rule-engine-trigger-framework.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Rule engine and trigger framework</h2>
-
 <p>An order arrives, and the product wants some orders reviewed before fulfillment. The condition can change while old events remain available for replay. A rule engine must preserve why an action was selected, or the same recorded order can quietly acquire a different history each time a worker sees it.</p>
-
 <p>The same pattern can issue a rider incentive after delivery, a coupon after cart abandonment or a workflow after document approval. We'll define the event-to-action path, resolve overlapping rules, then replay an order under a changed policy.</p>
-
 <h2>A decision before an effect</h2>
-
-<a href="#" data-nav="topic" data-slug="dag-workflow-orchestration">The workflow lesson</a> started with an agreed set of steps. Here the first decision is whether that workflow should exist at all. An incoming event supplies facts; a versioned rule tests those facts and chooses an action obligation, such as creating a review task.
-
+<p><a href="#" data-nav="topic" data-slug="dag-workflow-orchestration">The workflow lesson</a> started with an agreed set of steps. Here the first decision is whether that workflow should exist at all. An incoming event supplies facts; a versioned rule tests those facts and chooses an action obligation, such as creating a review task.</p>
 <p>Keep evaluating the rule separate from carrying out the action. Evaluation should produce the same decision from the same recorded input and rule version. That is a pure evaluation: it does not charge a card, send a message or ask a changing external database what the order looks like now. Effect workers use the identity and recovery agreements already established in Module 08.</p>
-
 <p>If the rule needs additional facts, record those facts as inputs with their source versions or timestamps before evaluating. Otherwise a historical order can match differently because its customer's profile changed, even though the rule stayed fixed. Sometimes “use the current profile” is the intended product policy, but that evaluation must record which profile it actually used.</p>
-
 <p>Normalize the incoming event into a validated, typed input before matching. The rule store supplies an immutable policy version; matching produces a decision and an action obligation. In this proposed architecture, a dispatcher carries out the obligation later and records the outcome.</p>
-
 <div class="mermaid">flowchart TD
     accTitle: Match first, dispatch from a retained decision
     accDescr: An event is validated and normalized before matching against a versioned rule store. The matcher commits a decision and action obligation together. A dispatcher executes the allowed action and records its outcome.
@@ -974,27 +966,17 @@
     D --> W["Dispatcher"]
     W --> A["Allowed action"]
     A --> L["Execution outcome"]</div>
-
 <p>The decision explains why work was requested; the execution outcome explains what happened. Preserve both. An audit log written after an external effect cannot repair a lost decision by itself.</p>
-
 <h2>The matching policy</h2>
-
 <p>Our chosen event is <code>order-A</code>, with type <code>order.submitted</code>, schema version one and a quantity of 150 units. The units describe a synthetic order size, not a measured production threshold. Rule <code>review-large</code> matches at or above 100 units in rule set version one; <code>review-all</code> matches at or above zero.</p>
-
 <p>Both rules can therefore match the same event. We choose a policy where the lower priority number wins, with rule identifier as a deterministic tie-breaker. They select the same action category, review, so matching both must still create only one review obligation. Another product could permit several independent actions, but it would need an identity for each action and a defined conflict policy.</p>
-
 <p>Read the table as the chosen rule data. The two version columns make the change visible without changing the recorded order.</p>
-
-<table><thead><tr><th>Rule</th><th>Priority</th><th>Version one minimum</th><th>Version two minimum</th></tr></thead><tbody><tr><td><code>review-large</code></td><td>10</td><td>100 units</td><td>200 units</td></tr><tr><td><code>review-all</code></td><td>20</td><td>0 units</td><td>0 units</td></tr></tbody></table><em>Changing the threshold changes the selected rule; the retained order stays the same.</em>
-
+<table><thead><tr><th>Rule</th><th>Priority</th><th>Version one minimum</th><th>Version two minimum</th></tr></thead><tbody><tr><td><code>review-large</code></td><td>10</td><td>100 units</td><td>200 units</td></tr><tr><td><code>review-all</code></td><td>20</td><td>0 units</td><td>0 units</td></tr></tbody></table>
+<p><em>Changing the threshold changes the selected rule; the retained order stays the same.</em></p>
 <p>Rule-set version and event-schema version answer different questions. The schema version says how to interpret the event fields, as <a href="#" data-nav="topic" data-slug="event-contracts">the event contract lesson</a> established. The rule-set version says which policy evaluates those fields. Store both with the evaluation, together with the matched rules and selected action, so an explanation does not depend on today's configuration.</p>
-
 <h2>A versioned replay</h2>
-
 <p>The workflow replay stores evaluations and action obligations in a private temporary database; it creates no real review tasks or customer messages.</p>
-
 <p>The evaluation key is event identity plus rule-set version, and the saved canonical input must agree on repeat delivery. <code>dispatch</code> records the first action obligation. <code>audit</code> records a new evaluation for comparison without issuing another action. A change of rule set on an ordinary repeat delivery is refused until someone explicitly requests that audit replay.</p>
-
 <pre><code class="language-bash">python3 m15-workflows.py rules</code></pre>
 <pre><code class="language-output">v1: matches=review-large,review-all winner=review-large mode=dispatch
 same input: duplicate
@@ -1003,15 +985,10 @@ v2 ordinary delivery: requires-explicit-replay
 v2 explicit replay: matches=review-all winner=review-all mode=audit
 action feedback: ignored-type-or-schema
 evaluations=2 action obligations=1</code></pre>
-
 <p>The two evaluations explain different policy decisions about the same order. They leave one business action because the original action identity, <code>order-A/review</code>, survives the rule edit. The changed-input probe submits 151 units under the original event identity and receives a conflict. That prevents an event producer from rewriting the explanation of an already accepted decision.</p>
-
 <h2>The rule representation</h2>
-
 <p>Ordinary code is the simplest representation when developers own a small policy and deploy it with the application. Reviewers can use the existing code tools, and conditions can use the language's type checks. Its cost appears when a product operator needs to adjust a threshold independently or compare many historical policy versions.</p>
-
 <p>A restricted data representation makes those versions explicit. For example, this proposed JSON format describes the first review rule:</p>
-
 <pre><code class="language-json">{
   &quot;rule_id&quot;: &quot;review-large&quot;,
   &quot;event_type&quot;: &quot;order.submitted&quot;,
@@ -1024,25 +1001,15 @@ evaluations=2 action obligations=1</code></pre>
   },
   &quot;action&quot;: { &quot;type&quot;: &quot;create_review&quot; }
 }</code></pre>
-
 <p>This is our schema, not JsonLogic or a format parsed by the replay. A larger schema could compose allowed predicates with <code>and</code> and <code>or</code>. Define missing-field and type behavior explicitly: a numeric quantity and a string containing digits should not acquire accidental equivalence through an interpreter's coercion rules.</p>
-
 <p>Start with allowed fields, typed operators and named actions, and reject unknown combinations before publication. The fixture is narrower still: trusted tuples supply integer thresholds and fixed action names. It never evaluates arbitrary expression text, and it exposes no user scripting interface.</p>
-
 <p>User-authored scripts can express more complex conditions but add execution limits, isolation and authorization requirements. Choose that capability only when a restricted language demonstrably cannot express the needed decisions. Moving an <code>if</code> statement into a string creates those obligations without making the policy more understandable.</p>
-
 <p>Index candidate rules by event type, tenant, region, product or active time window when those fields exclude unrelated policies. Keep priority as a conflict-resolution rule, not permission to discard a lower-priority match needed for audit. The selector must preserve the result of evaluating the applicable rule set. Measure candidate counts and compare outcomes before introducing a cache of active rules. A worker that uses a stale rule version must reveal that version in its receipt.</p>
-
 <h2>Publication and feedback</h2>
-
 <p>Treat a new rule set as immutable data that can be reviewed and exercised on saved examples before activation. Pin the selected version when accepting evaluation work so a later deployment does not change a queued event's policy silently. Compare its matches in audit mode first, then publish a version that future events can select. Returning to an older version changes future decisions; it does not revoke actions already accepted under the intervening version.</p>
-
 <p>The <a href="#" data-nav="topic" data-slug="event-bus-for-product-events">transactional outbox</a> supplies the next boundary. Commit the evaluation and its action obligation together, then let a worker deliver it. The local replay retains that obligation but does not run a dispatcher. Calling the action while evaluating and recording the decision afterward leaves a crash window where the effect exists without its explanation.</p>
-
 <p>An action may emit another event, creating a possible feedback loop. The fixture accepts only the originating <code>order.submitted</code> type and ignores a <code>review.created</code> event. Broader systems should define which event types can trigger which action types, retain causal identifiers, and bound repeated transitions. Deduplicating the same event does not stop a loop that generates a fresh event identity every time.</p>
-
-<p>For this review policy, use immutable versions, one winning review action and audit-only historical re-evaluation. Change to action-producing replay only when the product explicitly owes new work and supplies new identities for it. The next lesson, <a href="#" data-nav="topic" data-slug="fanout-patterns">fanout patterns</a>, follows actions owed to several recipients. Later, <a href="#" data-nav="topic" data-slug="flash-sale-inventory-locking">inventory reservations</a> put a harder limit on an action: matching a rule can request a unit, but only the stock owner can grant it. The booking and payment designs will carry that distinction across separate services.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>For this review policy, use immutable versions, one winning review action and audit-only historical re-evaluation. Change to action-producing replay only when the product explicitly owes new work and supplies new identities for it. The next lesson, <a href="#" data-nav="topic" data-slug="fanout-patterns">fanout patterns</a>, follows actions owed to several recipients. Later, <a href="#" data-nav="topic" data-slug="flash-sale-inventory-locking">inventory reservations</a> put a harder limit on an action: matching a rule can request a unit, but only the stock owner can grant it. The booking and payment designs will carry that distinction across separate services.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>Under the Hood: High-Throughput Rule Evaluation</h2>
       <p>Modern platforms process millions of real-time events per second against dynamic rule collections: fraud prevention ("Flag transaction if amount > 10,000 and country != user.home_country"), promotional pricing, and security firewalls. Naive evaluation (O(N × M) linear checking) creates crippling CPU bottlenecks.</p>
 
@@ -1300,7 +1267,7 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

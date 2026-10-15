@@ -328,33 +328,33 @@ for (const { unit, mod } of units) {
   let page = template;
 
   // Replace Title
-  page = page.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(title)}</title>`);
+  page = page.replace(/<title>.*?<\/title>/i, () => `<title>${escapeHtml(title)}</title>`);
 
   // Replace Meta Description
   page = page.replace(
     /<meta\s+name="description"\s+content="[^"]*">/i,
-    `<meta name="description" content="${escapeAttr(desc)}">`
+    () => `<meta name="description" content="${escapeAttr(desc)}">`
   );
 
   // Replace Canonical Link
   page = page.replace(
     /<link\s+rel="canonical"\s+href="[^"]*">/i,
-    `<link rel="canonical" href="${canonicalUrl}">`
+    () => `<link rel="canonical" href="${canonicalUrl}">`
   );
 
   // Replace OpenGraph
   page = page.replace(/<meta\s+property="og:type"\s+content="[^"]*">/i, '<meta property="og:type" content="article">');
   page = page.replace(
     /<meta\s+property="og:title"\s+content="[^"]*">/i,
-    `<meta property="og:title" content="${escapeAttr(title)}">`
+    () => `<meta property="og:title" content="${escapeAttr(title)}">`
   );
   page = page.replace(
     /<meta\s+property="og:description"\s+content="[^"]*">/i,
-    `<meta property="og:description" content="${escapeAttr(desc)}">`
+    () => `<meta property="og:description" content="${escapeAttr(desc)}">`
   );
   page = page.replace(
     /<meta\s+property="og:url"\s+content="[^"]*">/i,
-    `<meta property="og:url" content="${canonicalUrl}">`
+    () => `<meta property="og:url" content="${canonicalUrl}">`
   );
   if (/<meta\s+property="og:image"/i.test(page)) {
     page = page.replace(
@@ -364,7 +364,7 @@ for (const { unit, mod } of units) {
   } else {
     page = page.replace(
       /<meta\s+property="og:url"\s+content="[^"]*">/i,
-      `<meta property="og:url" content="${canonicalUrl}">\n  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      () => `<meta property="og:url" content="${canonicalUrl}">\n  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
     );
   }
 
@@ -377,11 +377,11 @@ for (const { unit, mod } of units) {
   }
   page = page.replace(
     /<meta\s+name="twitter:title"\s+content="[^"]*">/i,
-    `<meta name="twitter:title" content="${escapeAttr(title)}">`
+    () => `<meta name="twitter:title" content="${escapeAttr(title)}">`
   );
   page = page.replace(
     /<meta\s+name="twitter:description"\s+content="[^"]*">/i,
-    `<meta name="twitter:description" content="${escapeAttr(desc)}">`
+    () => `<meta name="twitter:description" content="${escapeAttr(desc)}">`
   );
   if (/<meta\s+name="twitter:image"/i.test(page)) {
     page = page.replace(
@@ -391,7 +391,7 @@ for (const { unit, mod } of units) {
   } else {
     page = page.replace(
       /<meta\s+name="twitter:description"\s+content="[^"]*">/i,
-      `<meta name="twitter:description" content="${escapeAttr(desc)}">\n  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      () => `<meta name="twitter:description" content="${escapeAttr(desc)}">\n  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
     );
   }
 
@@ -415,19 +415,19 @@ for (const { unit, mod } of units) {
   };
 
   const jsonLdTag = `\n  <script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n  </script>`;
-  page = page.replace('</head>', `${jsonLdTag}\n</head>`);
+  page = page.replace('</head>', () => `${jsonLdTag}\n</head>`);
 
   // Pre-render sidebar HTML with current unit active
   const sidebarHtml = renderStaticSidebar(curriculum, slug);
   page = page.replace(
     /<div class="sidebar__content" id="sidebar-content"><\/div>/i,
-    `<div class="sidebar__content" id="sidebar-content">\n${sidebarHtml}\n    </div>`
+    () => `<div class="sidebar__content" id="sidebar-content">\n${sidebarHtml}\n    </div>`
   );
 
   // Replace #reader content with prerendered lesson
   page = page.replace(
     /<div class="main__content" id="reader">[\s\S]*?<\/div>(\s*<\/main>)/i,
-    `<div class="main__content" id="reader" data-prerendered="${slug}">\n${lessonHtml}\n    </div>$1`
+    (_, closingMain) => `<div class="main__content" id="reader" data-prerendered="${slug}">\n${lessonHtml}\n    </div>${closingMain}`
   );
 
   // Strip implementation code and interactive lab scripts from static topic HTML (loaded on demand)
@@ -477,33 +477,33 @@ for (const [buildId, build] of buildEntries) {
   let page = template;
 
   // Replace Title
-  page = page.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(title)}</title>`);
+  page = page.replace(/<title>.*?<\/title>/i, () => `<title>${escapeHtml(title)}</title>`);
 
   // Replace Meta Description
   page = page.replace(
     /<meta\s+name="description"\s+content="[^"]*">/i,
-    `<meta name="description" content="${escapeAttr(desc)}">`
+    () => `<meta name="description" content="${escapeAttr(desc)}">`
   );
 
   // Replace Canonical Link
   page = page.replace(
     /<link\s+rel="canonical"\s+href="[^"]*">/i,
-    `<link rel="canonical" href="${canonicalUrl}">`
+    () => `<link rel="canonical" href="${canonicalUrl}">`
   );
 
   // Replace OpenGraph
   page = page.replace(/<meta\s+property="og:type"\s+content="[^"]*">/i, '<meta property="og:type" content="article">');
   page = page.replace(
     /<meta\s+property="og:title"\s+content="[^"]*">/i,
-    `<meta property="og:title" content="${escapeAttr(title)}">`
+    () => `<meta property="og:title" content="${escapeAttr(title)}">`
   );
   page = page.replace(
     /<meta\s+property="og:description"\s+content="[^"]*">/i,
-    `<meta property="og:description" content="${escapeAttr(desc)}">`
+    () => `<meta property="og:description" content="${escapeAttr(desc)}">`
   );
   page = page.replace(
     /<meta\s+property="og:url"\s+content="[^"]*">/i,
-    `<meta property="og:url" content="${canonicalUrl}">`
+    () => `<meta property="og:url" content="${canonicalUrl}">`
   );
   if (/<meta\s+property="og:image"/i.test(page)) {
     page = page.replace(
@@ -513,7 +513,7 @@ for (const [buildId, build] of buildEntries) {
   } else {
     page = page.replace(
       /<meta\s+property="og:url"\s+content="[^"]*">/i,
-      `<meta property="og:url" content="${canonicalUrl}">\n  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      () => `<meta property="og:url" content="${canonicalUrl}">\n  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
     );
   }
 
@@ -526,11 +526,11 @@ for (const [buildId, build] of buildEntries) {
   }
   page = page.replace(
     /<meta\s+name="twitter:title"\s+content="[^"]*">/i,
-    `<meta name="twitter:title" content="${escapeAttr(title)}">`
+    () => `<meta name="twitter:title" content="${escapeAttr(title)}">`
   );
   page = page.replace(
     /<meta\s+name="twitter:description"\s+content="[^"]*">/i,
-    `<meta name="twitter:description" content="${escapeAttr(desc)}">`
+    () => `<meta name="twitter:description" content="${escapeAttr(desc)}">`
   );
   if (/<meta\s+name="twitter:image"/i.test(page)) {
     page = page.replace(
@@ -540,7 +540,7 @@ for (const [buildId, build] of buildEntries) {
   } else {
     page = page.replace(
       /<meta\s+name="twitter:description"\s+content="[^"]*">/i,
-      `<meta name="twitter:description" content="${escapeAttr(desc)}">\n  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      () => `<meta name="twitter:description" content="${escapeAttr(desc)}">\n  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
     );
   }
 
@@ -564,7 +564,7 @@ for (const [buildId, build] of buildEntries) {
   };
 
   const jsonLdTag = `\n  <script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n  </script>`;
-  page = page.replace('</head>', `${jsonLdTag}\n</head>`);
+  page = page.replace('</head>', () => `${jsonLdTag}\n</head>`);
 
   // Activate Builds tab in sidebar and pre-render Builds sidebar list
   page = page.replace(
@@ -578,13 +578,13 @@ for (const [buildId, build] of buildEntries) {
   const buildsSidebarHtml = renderStaticBuildsSidebar(implementations, buildId);
   page = page.replace(
     /<div class="sidebar__content" id="sidebar-content"><\/div>/i,
-    `<div class="sidebar__content" id="sidebar-content">\n${buildsSidebarHtml}\n    </div>`
+    () => `<div class="sidebar__content" id="sidebar-content">\n${buildsSidebarHtml}\n    </div>`
   );
 
   // Replace #reader content with prerendered build page
   page = page.replace(
     /<div class="main__content" id="reader">[\s\S]*?<\/div>(\s*<\/main>)/i,
-    `<div class="main__content" id="reader" data-prerendered-build="${buildId}">\n${buildHtml}\n    </div>$1`
+    (_, closingMain) => `<div class="main__content" id="reader" data-prerendered-build="${buildId}">\n${buildHtml}\n    </div>${closingMain}`
   );
 
   // Strip unused simulator scripts from static build pages

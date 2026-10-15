@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -340,661 +340,60 @@
         
       </section>
 
-      <div id="build-walkthrough-pane">
-        <div class="build-run">
-          <div class="build-run__text">
-            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
-            <code>node demo.js</code> and <code>node test.js</code>.
-          </div>
-          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="lease-leader-election">Copy setup script</button>
-        </div>
-
-        <div class="build-files"><a href="#build-file-lease-leader-election-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lease-leader-election-README_md">README.md</a><a href="#build-file-lease-leader-election-lease_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lease-leader-election-lease_js">lease.js</a><a href="#build-file-lease-leader-election-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lease-leader-election-demo_js">demo.js</a><a href="#build-file-lease-leader-election-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lease-leader-election-test_js">test.js</a></div><article class="prose" id="build-file-lease-leader-election-README_md"><h2>Lease-Based Leader Election with Fencing Tokens</h2>
-
-<h2>The problem</h2>
-
-<p>Many systems need exactly one node to do something: run the scheduler, own a shard, accept</p>
-<p>writes for a partition, or be the active NameNode. Nodes crash and networks partition, so</p>
-<p>"exactly one" has to recover on its own. The standard tool is a <strong>lease</strong>: a lock that</p>
-<p>expires unless it is renewed. When the leader dies, the lease runs out and someone else</p>
-<p>takes over.</p>
-
-<p>Leases alone are <strong>not safe</strong>. A leader can check that it holds the lease and then freeze:</p>
-<p>a GC pause, a VM migration, a swapped-out page, a slow disk. By the time it runs again the</p>
-<p>lease has expired, a successor is active, and the old leader sends its write anyway. The fix</p>
-<p>(Chubby's "sequencers", popularised by Kleppmann's critique of Redlock) is a **fencing</p>
-<p>token<em>*: a number that increases with every change of ownership and that the </em>protected</p>
-<p>resource* checks.</p>
-
-<p>Where it shows up: Kubernetes controller-manager/scheduler (<code>coordination.k8s.io/Lease</code>),</p>
-<p>HDFS NameNode HA (quorum journal epochs), Kafka controller epochs, etcd and ZooKeeper</p>
-<p>election recipes, Google Chubby, and any cron or singleton worker that must not run twice.</p>
-
+      <div id="build-walkthrough-pane"><article class="prose" id="build-file-lease-leader-election-README_md"><h2>The problem</h2>
+<p>Many systems need exactly one node to do something: run the scheduler, own a shard, accept writes for a partition, or be the active NameNode. Nodes crash and networks partition, so "exactly one" has to recover on its own. The standard tool is a <strong>lease</strong>: a lock that expires unless it is renewed. When the leader dies, the lease runs out and someone else takes over.</p>
+<p>Leases alone are <strong>not safe</strong>. A leader can check that it holds the lease and then freeze: a GC pause, a VM migration, a swapped-out page, a slow disk. By the time it runs again the lease has expired, a successor is active, and the old leader sends its write anyway. The fix (Chubby's "sequencers", popularised by Kleppmann's critique of Redlock) is a <strong>fencing token</strong>: a number that increases with every change of ownership and that the <em>protected resource</em> checks.</p>
+<p>Where it shows up: Kubernetes controller-manager/scheduler (<code>coordination.k8s.io/Lease</code>), HDFS NameNode HA (quorum journal epochs), Kafka controller epochs, etcd and ZooKeeper election recipes, Google Chubby, and any cron or singleton worker that must not run twice.</p>
 <h2>Design</h2>
-
 <pre><code class="language-text">LeaseClient A ──acquire/renew──►  LeaseStore  (authority on ownership, issues tokens 1,2,3...)
   LeaseClient B ──acquire/renew──►
         │ write(token, ...)
         ▼
   FencedStorage  (remembers highest token seen, rejects anything lower)</code></pre>
-
-<code>lease.js</code> exports:
-
+<p><code>lease.js</code> exports:</p>
 <ul>
-<li><code>LeaseStore</code>: <code>acquire(holder, ttl)</code>, <code>renew(holder, token, ttl)</code>, <code>release(holder, token)</code>.</li>
-  A new owner always receives <code>token + 1</code>, including the same node coming back after its own
-  lease expired, because someone else may have held the lease in between. Tokens never go
-  down, even after a release.
-<li><code>LeaseClient</code>: a candidate state machine driven by <code>tick()</code>. Its local check</li>
-  <code>isLeader()</code> makes no network call.
-<li><code>FencedStorage</code>: <code>write(token, k, v)</code> and <code>fence(token)</code>. A token equal to the highest seen</li>
-  is accepted (the same leader keeps writing); a lower one throws <code>StaleTokenError</code>.
-<li><code>ManualClock</code>, <code>DriftingClock</code> (injectable clocks with rate drift and offset) and</li>
-  <code>mulberry32</code> (a seeded PRNG).
+<li><code>LeaseStore</code>: <code>acquire(holder, ttl)</code>, <code>renew(holder, token, ttl)</code>, <code>release(holder, token)</code>. A new owner always receives <code>token + 1</code>, including the same node coming back after its own lease expired, because someone else may have held the lease in between. Tokens never go down, even after a release.</li>
+<li><code>LeaseClient</code>: a candidate state machine driven by <code>tick()</code>. Its local check <code>isLeader()</code> makes no network call.</li>
+<li><code>FencedStorage</code>: <code>write(token, k, v)</code> and <code>fence(token)</code>. A token equal to the highest seen is accepted (the same leader keeps writing); a lower one throws <code>StaleTokenError</code>.</li>
+<li><code>ManualClock</code>, <code>DriftingClock</code> (injectable clocks with rate drift and offset) and <code>mulberry32</code> (a seeded PRNG).</li>
 </ul>
 <h3>Invariants and the timing argument</h3>
-
 <ol>
 <li><strong>Token monotonicity</strong>: each ownership change in the store gets exactly the next integer.</li>
-<li><strong>Storage safety</strong>: once storage has seen token <em>n</em>, no write with a token below <em>n</em> ever</li>
-   lands. This holds <strong>whatever the clocks do</strong>. It is the real safety net.
-<li><strong>Belief safety</strong>: at most one client has <code>isLeader() === true</code> at any real instant,</li>
-   provided relative clock drift stays within <code>maxDriftRate</code>. The client:
-   - starts its countdown when it <strong>sends</strong> the request, not when the reply arrives. The
-     store started the TTL later than that, so network delay only shortens the client's view.
-   - acts only for <code>safeWindow = ttl * (1 - maxDriftRate) - safetyMargin</code> on its own clock.
-     If that clock runs slow by rate <em>r</em>, the window lasts <code>safeWindow / (1 - r)</code> real ms,
-     which is at most <code>ttl</code> whenever <code>r ≤ maxDriftRate</code>.
-   - renews after <code>renewFraction</code> (1/3) of the window, so it survives a couple of lost renewals.
-<li><strong>Clock offset does not matter</strong>: only durations on a monotonic clock are used, never</li>
-   wall-clock timestamps compared across machines. <code>DriftingClock</code> in the demo runs B's clock
-   42 s ahead to show this.
+<li><strong>Storage safety</strong>: once storage has seen token <em>n</em>, no write with a token below <em>n</em> ever lands. This holds <strong>whatever the clocks do</strong>. It is the real safety net.</li>
+<li><strong>Belief safety</strong>: at most one client has <code>isLeader() === true</code> at any real instant, provided relative clock drift stays within <code>maxDriftRate</code>. The client:<br>• starts its countdown when it <strong>sends</strong> the request, not when the reply arrives. The store started the TTL later than that, so network delay only shortens the client's view.<br>• acts only for <code>safeWindow = ttl * (1 - maxDriftRate) - safetyMargin</code> on its own clock. If that clock runs slow by rate <em>r</em>, the window lasts <code>safeWindow / (1 - r)</code> real ms, which is at most <code>ttl</code> whenever <code>r ≤ maxDriftRate</code>.<br>• renews after <code>renewFraction</code> (1/3) of the window, so it survives a couple of lost renewals.</li>
+<li><strong>Clock offset does not matter</strong>: only durations on a monotonic clock are used, never wall-clock timestamps compared across machines. <code>DriftingClock</code> in the demo runs B's clock 42 s ahead to show this.</li>
 </ol>
-<p>The seeded chaos test runs 3 clients with random drift inside the bound and random pauses of</p>
-<p>up to 1 s, and asserts invariant 3 at every step. If you set <code>maxDriftRate</code> and the margin to</p>
-<p>0, the same test fails, so the margin is doing real work.</p>
-
+<p>The seeded chaos test runs 3 clients with random drift inside the bound and random pauses of up to 1 s, and asserts invariant 3 at every step. If you set <code>maxDriftRate</code> and the margin to 0, the same test fails, so the margin is doing real work.</p>
 <h3>Election barrier</h3>
-
-<p>Storage can only reject token 1 after it has <em>seen</em> token 2. If the new leader has not</p>
-<p>written yet, a zombie write with token 1 still gets in (the test shows this). The fix is for</p>
-<p>the new leader to call <code>storage.fence(token)</code> as its first act, the way HDFS makes a new</p>
-<p>NameNode bump the epoch on a quorum of JournalNodes before it writes.</p>
-
+<p>Storage can only reject token 1 after it has <em>seen</em> token 2. If the new leader has not written yet, a zombie write with token 1 still gets in (the test shows this). The fix is for the new leader to call <code>storage.fence(token)</code> as its first act, the way HDFS makes a new NameNode bump the epoch on a quorum of JournalNodes before it writes.</p>
 <h2>Complexity</h2>
-
-<p>All operations are O(1) time and space. Memory is O(ownership changes) only because</p>
-<code>history</code> and <code>events</code> are kept for inspection. Failover takes at most <code>ttl</code> (plus one tick),
-<p>or one tick after a voluntary <code>resign()</code>.</p>
-
+<p>All operations are O(1) time and space. Memory is O(ownership changes) only because <code>history</code> and <code>events</code> are kept for inspection. Failover takes at most <code>ttl</code> (plus one tick), or one tick after a voluntary <code>resign()</code>.</p>
 <h2>Failure modes & trade-offs</h2>
-
 <ul>
-<li><strong>TTL length</strong>: a short TTL gives fast failover but false failovers under GC or network</li>
-  jitter. A long TTL means longer unavailability when the leader really dies. Kubernetes
-  defaults to 15 s lease / 10 s renew deadline / 2 s retry.
-<li><strong>Drift beyond the bound</strong> breaks belief safety, as the demo's -20% case shows. Storage</li>
-  safety still holds, which is why fencing is not optional.
-<li><strong>Resources that cannot check tokens</strong> (a third-party API, an email being sent) cannot be</li>
-  fenced. You need idempotency keys or a design that accepts at-least-once effects.
-<li><strong>The lease store must itself be consistent.</strong> A token counter backed by one replicated</li>
-  Raft log (etcd) or ZAB (ZooKeeper) is fine. A single Redis without replication is a single
-  point of failure. Redlock across independent Redis nodes does not produce monotonic tokens
-  at all.
-<li><strong>Store restarts</strong> must never reuse tokens. Persist the counter, or derive it from a</li>
-  replicated revision number.
+<li><strong>TTL length</strong>: a short TTL gives fast failover but false failovers under GC or network jitter. A long TTL means longer unavailability when the leader really dies. Kubernetes defaults to 15 s lease / 10 s renew deadline / 2 s retry.</li>
+<li><strong>Drift beyond the bound</strong> breaks belief safety, as the demo's -20% case shows. Storage safety still holds, which is why fencing is not optional.</li>
+<li><strong>Resources that cannot check tokens</strong> (a third-party API, an email being sent) cannot be fenced. You need idempotency keys or a design that accepts at-least-once effects.</li>
+<li><strong>The lease store must itself be consistent.</strong> A token counter backed by one replicated Raft log (etcd) or ZAB (ZooKeeper) is fine. A single Redis without replication is a single point of failure. Redlock across independent Redis nodes does not produce monotonic tokens at all.</li>
+<li><strong>Store restarts</strong> must never reuse tokens. Persist the counter, or derive it from a replicated revision number.</li>
 </ul>
 <h2>How production systems do it</h2>
-
 <ul>
-<li><strong>etcd</strong>: <code>LeaseGrant</code> / <code>LeaseKeepAlive</code> with a server-side TTL. The <code>concurrency.Election</code></li>
-  recipe writes a key attached to the lease, and the key's <strong>create revision</strong> (globally
-  monotonic) works as the fencing token. Transactions can compare <code>mod_revision</code> so a write
-  only applies if leadership has not changed.
-<li><strong>ZooKeeper</strong>: ephemeral sequential znodes tied to the session timeout. The lowest sequence</li>
-  number leads. The zxid or znode version serves as the token.
-<li><strong>Chubby</strong>: lock holders obtain a <em>sequencer</em> (lock name, mode, generation) and pass it to</li>
-  servers, which verify it. There is also a <em>lock-delay</em> for clients that do not check sequencers.
-<li><strong>Kubernetes client-go <code>leaderelection</code></strong>: a <code>Lease</code> object updated with optimistic</li>
-  concurrency (<code>resourceVersion</code>) and a <code>leaseTransitions</code> counter. The docs say it relies on
-  bounded clock skew and does <strong>not</strong> fence the controlled resources.
-<li><strong>HDFS QJM</strong>: each new active NameNode obtains a higher <em>epoch</em>. JournalNodes reject edits</li>
-  from lower epochs. This is textbook storage-side fencing.
-<li><strong>Raft (etcd, CockroachDB, TiKV)</strong>: terms act as fencing tokens for log replication.</li>
-  <em>Leader leases</em> on top allow local reads, and they depend on the same bounded-drift
-  argument used here.
+<li><strong>etcd</strong>: <code>LeaseGrant</code> / <code>LeaseKeepAlive</code> with a server-side TTL. The <code>concurrency.Election</code> recipe writes a key attached to the lease, and the key's <strong>create revision</strong> (globally monotonic) works as the fencing token. Transactions can compare <code>mod_revision</code> so a write only applies if leadership has not changed.</li>
+<li><strong>ZooKeeper</strong>: ephemeral sequential znodes tied to the session timeout. The lowest sequence number leads. The zxid or znode version serves as the token.</li>
+<li><strong>Chubby</strong>: lock holders obtain a <em>sequencer</em> (lock name, mode, generation) and pass it to servers, which verify it. There is also a <em>lock-delay</em> for clients that do not check sequencers.</li>
+<li><strong>Kubernetes client-go <code>leaderelection</code></strong>: a <code>Lease</code> object updated with optimistic concurrency (<code>resourceVersion</code>) and a <code>leaseTransitions</code> counter. The docs say it relies on bounded clock skew and does <strong>not</strong> fence the controlled resources.</li>
+<li><strong>HDFS QJM</strong>: each new active NameNode obtains a higher <em>epoch</em>. JournalNodes reject edits from lower epochs. This is textbook storage-side fencing.</li>
+<li><strong>Raft (etcd, CockroachDB, TiKV)</strong>: terms act as fencing tokens for log replication. <em>Leader leases</em> on top allow local reads, and they depend on the same bounded-drift argument used here.</li>
 </ul>
-<h2>How to run</h2>
-
-<pre><code class="language-text">node demo.js   # election, renewals, 6 s GC pause fenced off, drift within vs beyond bound, hand-over
-node test.js   # 15 tests, including a seeded multi-client chaos run</code></pre>
-
 <h2>Extension exercises</h2>
-
 <ol>
-<li>Put the <code>LeaseStore</code> behind a simulated network with delay and loss, and check that sending</li>
-   time, not receive time, is what keeps <code>isLeader()</code> safe.
-<li>Make <code>FencedStorage</code> a replicated store: a write succeeds only if a majority of replicas</li>
-   accept its token. Then partition one replica.
-<li>Implement etcd-style <strong>compare-and-swap writes</strong> (<code>if leaderKey.createRevision == myToken</code>)</li>
-   instead of a highest-seen check, and compare the two.
-<li>Add a <strong>lease-delay</strong> mode like Chubby's: after an expiry, the store refuses new owners for</li>
-   an extra period, which protects resources that cannot check tokens.
-<li>Measure <strong>false failovers</strong> against TTL and renewFraction under a GC-pause distribution</li>
-   (for example, lognormal), and plot availability against failover time.
+<li>Put the <code>LeaseStore</code> behind a simulated network with delay and loss, and check that sending time, not receive time, is what keeps <code>isLeader()</code> safe.</li>
+<li>Make <code>FencedStorage</code> a replicated store: a write succeeds only if a majority of replicas accept its token. Then partition one replica.</li>
+<li>Implement etcd-style <strong>compare-and-swap writes</strong> (<code>if leaderKey.createRevision == myToken</code>) instead of a highest-seen check, and compare the two.</li>
+<li>Add a <strong>lease-delay</strong> mode like Chubby's: after an expiry, the store refuses new owners for an extra period, which protects resources that cannot check tokens.</li>
+<li>Measure <strong>false failovers</strong> against TTL and renewFraction under a GC-pause distribution (for example, lognormal), and plot availability against failover time.</li>
 </ol></article>
-          <div class="code-block" id="build-file-lease-leader-election-lease_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">lease.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-/**
- * Lease-based leader election with fencing tokens.
- *
- *   LeaseStore     the lock service (think etcd / ZooKeeper / a DynamoDB row). It is the only
- *                  authority on who holds the lease, and it hands out a strictly increasing
- *                  fencing token each time ownership changes.
- *   LeaseClient    a candidate. It trusts only its own monotonic clock and stops acting as
- *                  leader early enough that bounded clock drift can never let two clients
- *                  believe they lead at once.
- *   FencedStorage  the protected resource. It remembers the highest token it has seen and
- *                  rejects anything older. This is what makes a leader that was paused by GC
- *                  and then wakes up harmless.
- *
- * All time comes from injected clocks, so every scenario is deterministic.
- */
-
-// ---------------------------------------------------------------- clocks ----
-class ManualClock {
-  constructor(start = 0) { this.t = start; }
-  now() { return this.t; }
-  advance(ms) {
-    if (!(ms &gt;= 0)) throw new RangeError(&#039;clocks are monotonic: advance(ms) needs ms &gt;= 0&#039;);
-    this.t += ms;
-    return this.t;
-  }
-}
-
-/**
- * A node-local monotonic clock that runs `rate` faster (+) or slower (-) than true time,
- * with an arbitrary offset. The offset (wall-clock skew) is irrelevant to lease safety,
- * because clients only measure durations. The rate (drift) is what the safety margin has to cover.
- */
-class DriftingClock {
-  constructor(base, { rate = 0, offset = 0 } = {}) {
-    if (!base || typeof base.now !== &#039;function&#039;) throw new TypeError(&#039;base clock needs now()&#039;);
-    if (!(rate &gt; -1)) throw new RangeError(&#039;rate must be &gt; -1&#039;);
-    this.base = base; this.rate = rate; this.offset = offset; this.t0 = base.now();
-  }
-  now() { return this.offset + this.t0 + (this.base.now() - this.t0) * (1 + this.rate); }
-}
-
-// ------------------------------------------------------------ lease store ----
-class LeaseStore {
-  constructor({ clock }) {
-    if (!clock || typeof clock.now !== &#039;function&#039;) throw new TypeError(&#039;LeaseStore needs a clock&#039;);
-    this.clock = clock;
-    this.holder = null;
-    this.token = 0;       // last token issued; never decreases, even after release/expiry
-    this.expiresAt = -Infinity;
-    this.history = [];    // [{token, holder, at}] one entry per ownership change
-  }
-
-  _expired() { return this.clock.now() &gt;= this.expiresAt; }
-
-  /**
-   * Acquire, or re-acquire if already held by the caller. A new owner always gets a NEW,
-   * larger token. The current owner calling again keeps its token and extends the lease.
-   */
-  acquire(holder, ttlMs) {
-    if (typeof holder !== &#039;string&#039; || !holder) throw new TypeError(&#039;holder must be a non-empty string&#039;);
-    if (!(Number.isFinite(ttlMs) &amp;&amp; ttlMs &gt; 0)) throw new RangeError(&#039;ttlMs must be a positive number&#039;);
-    const now = this.clock.now();
-    if (this.holder !== null &amp;&amp; !this._expired() &amp;&amp; this.holder !== holder) {
-      return { ok: false, holder: this.holder, retryInMs: this.expiresAt - now };
-    }
-    if (this.holder !== holder || this._expired()) {
-      this.token += 1;
-      this.holder = holder;
-      this.history.push({ token: this.token, holder, at: now });
-    }
-    this.expiresAt = now + ttlMs;
-    return { ok: true, token: this.token, ttlMs };
-  }
-
-  /** Renew only if the caller still owns the lease under exactly this token and it has not expired. */
-  renew(holder, token, ttlMs) {
-    if (!(Number.isFinite(ttlMs) &amp;&amp; ttlMs &gt; 0)) throw new RangeError(&#039;ttlMs must be a positive number&#039;);
-    if (this.holder !== holder || this.token !== token || this._expired()) {
-      return { ok: false, holder: this._expired() ? null : this.holder };
-    }
-    this.expiresAt = this.clock.now() + ttlMs;
-    return { ok: true, token, ttlMs };
-  }
-
-  /** Voluntary step-down so a successor need not wait for the TTL. Wrong token = no-op. */
-  release(holder, token) {
-    if (this.holder !== holder || this.token !== token) return false;
-    this.holder = null;
-    this.expiresAt = -Infinity;
-    return true;
-  }
-
-  current() { return this._expired() ? null : { holder: this.holder, token: this.token, expiresAt: this.expiresAt }; }
-}
-
-// ----------------------------------------------------------- lease client ----
-class LeaseClient {
-  /**
-   * @param {object} o
-   * @param {string} o.id
-   * @param {LeaseStore} o.store
-   * @param {{now():number}} o.clock        this node&#039;s own monotonic clock
-   * @param {number} o.ttlMs                lease duration requested from the store
-   * @param {number} [o.maxDriftRate=0.01]  assumed bound on |drift| between this clock and the store&#039;s
-   * @param {number} [o.safetyMarginMs]     extra slack for scheduling/GC jitter (default 5% of ttl)
-   * @param {number} [o.renewFraction=1/3]  renew once this fraction of the safe window has passed
-   */
-  constructor({ id, store, clock, ttlMs, maxDriftRate = 0.01, safetyMarginMs, renewFraction = 1 / 3 }) {
-    if (typeof id !== &#039;string&#039; || !id) throw new TypeError(&#039;id must be a non-empty string&#039;);
-    if (!(store instanceof LeaseStore)) throw new TypeError(&#039;store must be a LeaseStore&#039;);
-    if (!clock || typeof clock.now !== &#039;function&#039;) throw new TypeError(&#039;clock needs now()&#039;);
-    if (!(ttlMs &gt; 0)) throw new RangeError(&#039;ttlMs must be &gt; 0&#039;);
-    if (!(maxDriftRate &gt;= 0 &amp;&amp; maxDriftRate &lt; 1)) throw new RangeError(&#039;maxDriftRate must be in [0, 1)&#039;);
-    if (!(renewFraction &gt; 0 &amp;&amp; renewFraction &lt; 1)) throw new RangeError(&#039;renewFraction must be in (0, 1)&#039;);
-    this.id = id; this.store = store; this.clock = clock; this.ttlMs = ttlMs;
-    this.maxDriftRate = maxDriftRate;
-    this.safetyMarginMs = safetyMarginMs === undefined ? ttlMs * 0.05 : safetyMarginMs;
-    // Local duration during which we may act. If our clock runs slow by rate r, then
-    // `local` ms of ours equal local/(1-r) true ms, so we need local &lt;= ttl*(1-r).
-    this.safeWindowMs = ttlMs * (1 - maxDriftRate) - this.safetyMarginMs;
-    if (!(this.safeWindowMs &gt; 0)) throw new RangeError(&#039;safety margin + drift allowance consume the whole ttl&#039;);
-    this.renewFraction = renewFraction;
-    this.token = null;
-    this.safeUntil = -Infinity; // on OUR clock
-    this.events = [];
-  }
-
-  /** True only while the lease is certainly still ours (a local check that makes no network call). */
-  isLeader() { return this.token !== null &amp;&amp; this.clock.now() &lt; this.safeUntil; }
-
-  _granted(res, sentAt) {
-    // Measure from when the request was SENT: the store started its TTL later than that,
-    // so any network delay only makes us stop earlier (safe), never later.
-    if (this.token !== res.token) this.events.push({ at: sentAt, event: &#039;elected&#039;, token: res.token });
-    this.token = res.token;
-    this.safeUntil = sentAt + this.safeWindowMs;
-  }
-
-  _stepDown(reason) {
-    if (this.token !== null) this.events.push({ at: this.clock.now(), event: &#039;stepped-down&#039;, token: this.token, reason });
-    this.token = null;
-    this.safeUntil = -Infinity;
-  }
-
-  /** Drive the state machine; call periodically. Returns the current role. */
-  tick() {
-    const now = this.clock.now();
-    if (this.token !== null &amp;&amp; now &gt;= this.safeUntil) this._stepDown(&#039;lease-expired-locally&#039;);
-    if (this.token !== null) {
-      const renewAt = this.safeUntil - this.safeWindowMs * (1 - this.renewFraction);
-      if (now &gt;= renewAt) {
-        const res = this.store.renew(this.id, this.token, this.ttlMs);
-        if (res.ok) this._granted(res, now); else this._stepDown(&#039;renew-rejected&#039;);
-      }
-    } else {
-      const res = this.store.acquire(this.id, this.ttlMs);
-      if (res.ok) this._granted(res, now);
-    }
-    return this.isLeader() ? &#039;leader&#039; : &#039;follower&#039;;
-  }
-
-  resign() {
-    if (this.token !== null) this.store.release(this.id, this.token);
-    this._stepDown(&#039;resigned&#039;);
-  }
-}
-
-// --------------------------------------------------------- fenced storage ----
-class StaleTokenError extends Error {
-  constructor(token, highest) { super(`stale fencing token ${token} (highest seen ${highest})`); this.token = token; this.highest = highest; }
-}
-
-class FencedStorage {
-  constructor() { this.highestToken = 0; this.data = new Map(); this.log = []; this.rejected = 0; }
-
-  _check(token) {
-    if (!Number.isSafeInteger(token) || token &lt;= 0) throw new TypeError(&#039;token must be a positive integer&#039;);
-    if (token &lt; this.highestToken) { this.rejected++; throw new StaleTokenError(token, this.highestToken); }
-    this.highestToken = token;
-  }
-
-  /**
-   * Barrier: a new leader calls this right after election, so the old leader is fenced off
-   * even before the new one has written anything. Without it, the storage cannot know that
-   * token 1 is stale until it first sees token 2.
-   */
-  fence(token) { this._check(token); }
-
-  write(token, key, value) {
-    this._check(token); // equal is fine: the same leader keeps writing under one token
-    this.data.set(key, value);
-    this.log.push({ token, key, value });
-  }
-}
-
-/** Mulberry32: tiny seeded PRNG for reproducible simulations. */
-function mulberry32(seed) {
-  let a = seed &gt;&gt;&gt; 0;
-  return () =&gt; {
-    a = (a + 0x6d2b79f5) &gt;&gt;&gt; 0;
-    let t = a;
-    t = Math.imul(t ^ (t &gt;&gt;&gt; 15), t | 1);
-    t ^= t + Math.imul(t ^ (t &gt;&gt;&gt; 7), t | 61);
-    return ((t ^ (t &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296;
-  };
-}
-
-module.exports = { ManualClock, DriftingClock, LeaseStore, LeaseClient, FencedStorage, StaleTokenError, mulberry32 };
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-lease-leader-election-demo_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">demo.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-// Deterministic walkthrough: election, renewals, a GC pause, fencing, and clock drift.
-const { ManualClock, DriftingClock, LeaseStore, LeaseClient, FencedStorage, StaleTokenError } = require(&#039;./lease&#039;);
-
-const truth = new ManualClock();              // the lock service&#039;s clock = &quot;true&quot; time
-const store = new LeaseStore({ clock: truth });
-const storage = new FencedStorage();
-const TTL = 3000;
-const mk = (id, rate) =&gt; new LeaseClient({ id, store, ttlMs: TTL, maxDriftRate: 0.01, safetyMarginMs: 100, clock: new DriftingClock(truth, { rate, offset: id === &#039;node-B&#039; ? 42_000 : 0 }) });
-const A = mk(&#039;node-A&#039;, -0.008); // runs 0.8% slow
-const B = mk(&#039;node-B&#039;, +0.005); // runs 0.5% fast, and its wall clock is 42 s ahead (irrelevant)
-const t = () =&gt; `t=${String(truth.now()).padStart(5)}ms`;
-const roles = () =&gt; `A:${A.isLeader() ? `LEADER(tok ${A.token})` : &#039;follower&#039;}  B:${B.isLeader() ? `LEADER(tok ${B.token})` : &#039;follower&#039;}`;
-
-function run(ms, step = 250, clients = [A, B]) {
-  for (let el = 0; el &lt; ms; el += step) {
-    for (const c of clients) {
-      const before = c.token;
-      c.tick();
-      if (c.isLeader() &amp;&amp; c.token !== before) {
-        storage.fence(c.token); // election barrier: storage learns the new token immediately
-        console.log(`${t()}  ${c.id} elected with fencing token ${c.token}; fenced storage at ${c.token}`);
-      }
-    }
-    truth.advance(step);
-  }
-}
-
-console.log(`Lease TTL ${TTL} ms. Client safe window = TTL*(1-maxDrift) - margin = ${A.safeWindowMs} ms (on its own clock).`);
-console.log(&#039;Renewal is attempted after 1/3 of the safe window.\n&#039;);
-
-console.log(&#039;1) Election and steady-state renewals&#039;);
-run(4000);
-console.log(`${t()}  ${roles()}  store history: ${JSON.stringify(store.history.map((h) =&gt; [h.holder, h.token]))}`);
-storage.write(A.token, &#039;config&#039;, &#039;v1 by A&#039;);
-console.log(`${t()}  A writes config=v1 with token ${A.token}: ok\n`);
-
-console.log(&#039;2) A stalls in a 6 s stop-the-world GC right after checking isLeader()&#039;);
-const zombieToken = A.token;
-console.log(`${t()}  A.isLeader() = ${A.isLeader()}  -&gt; A decides to write ...`);
-run(6000, 250, [B]); // only B gets CPU time
-storage.write(B.token, &#039;config&#039;, &#039;v2 by B&#039;);
-console.log(`${t()}  B writes config=v2 with token ${B.token}: ok`);
-console.log(`${t()}  A wakes up and sends its write with token ${zombieToken}`);
-try {
-  storage.write(zombieToken, &#039;config&#039;, &#039;v0 by zombie A&#039;);
-  console.log(&#039;   !!! write accepted: split brain&#039;);
-} catch (e) {
-  if (!(e instanceof StaleTokenError)) throw e;
-  console.log(`   rejected by storage: ${e.message}`);
-}
-console.log(`   config = &quot;${storage.data.get(&#039;config&#039;)}&quot; (B&#039;s write survives); A.isLeader() now = ${A.isLeader()}`);
-run(250);
-console.log(`${t()}  ${roles()}\n`);
-
-console.log(&#039;3) Why the client must use a safety margin: drift vs. lease expiry&#039;);
-for (const [label, rate, maxDrift] of [[&#039;within bound (-1%, assumed 1%)&#039;, -0.01, 0.01], [&#039;beyond bound (-20%, assumed 1%)&#039;, -0.2, 0.01]]) {
-  const clock = new ManualClock();
-  const s = new LeaseStore({ clock });
-  const c = new LeaseClient({ id: &#039;x&#039;, store: s, ttlMs: 1000, maxDriftRate: maxDrift, safetyMarginMs: 0, clock: new DriftingClock(clock, { rate }) });
-  c.tick();
-  let lastLed = 0;
-  while (clock.now() &lt; 1500) { if (c.isLeader()) lastLed = clock.now(); clock.advance(1); }
-  const verdict = lastLed &lt; 1000 ? &#039;safe: stopped before the store expired the lease at 1000&#039; : &#039;UNSAFE: still leading after the store expired the lease at 1000&#039;;
-  console.log(`   ${label.padEnd(32)} client led until true t=${lastLed} -&gt; ${verdict}`);
-}
-
-console.log(&#039;\n4) Graceful hand-over: B resigns, A takes over without waiting for the TTL&#039;);
-B.resign();
-run(250);
-console.log(`${t()}  ${roles()}`);
-storage.write(A.token, &#039;config&#039;, &#039;v3 by A&#039;);
-console.log(`   write log: ${storage.log.map((e) =&gt; `[tok ${e.token}] ${e.value}`).join(&#039;  &#039;)}`);
-console.log(`   stale writes rejected: ${storage.rejected}`);
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-lease-leader-election-test_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">test.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-const assert = require(&#039;node:assert&#039;);
-const {
-  ManualClock, DriftingClock, LeaseStore, LeaseClient, FencedStorage, StaleTokenError, mulberry32,
-} = require(&#039;./lease&#039;);
-
-let failed = 0; let count = 0;
-function test(name, fn) {
-  count++;
-  try { fn(); console.log(`✓ ${name}`); } catch (err) { failed++; console.log(`✗ ${name}\n  ${err.stack}`); }
-}
-
-test(&#039;first acquirer gets token 1; a rival is refused while the lease is live&#039;, () =&gt; {
-  const clock = new ManualClock();
-  const store = new LeaseStore({ clock });
-  assert.deepStrictEqual(store.acquire(&#039;a&#039;, 1000), { ok: true, token: 1, ttlMs: 1000 });
-  clock.advance(999);
-  const r = store.acquire(&#039;b&#039;, 1000);
-  assert.strictEqual(r.ok, false);
-  assert.strictEqual(r.holder, &#039;a&#039;);
-  assert.strictEqual(r.retryInMs, 1);
-});
-
-test(&#039;renewal extends the lease and keeps the same token&#039;, () =&gt; {
-  const clock = new ManualClock();
-  const store = new LeaseStore({ clock });
-  store.acquire(&#039;a&#039;, 1000);
-  for (let i = 0; i &lt; 10; i++) { clock.advance(600); assert.deepStrictEqual(store.renew(&#039;a&#039;, 1, 1000), { ok: true, token: 1, ttlMs: 1000 }); }
-  assert.strictEqual(store.acquire(&#039;b&#039;, 1000).ok, false);
-  assert.strictEqual(store.history.length, 1);
-});
-
-test(&#039;after expiry a new holder gets a strictly larger token and the old one cannot renew&#039;, () =&gt; {
-  const clock = new ManualClock();
-  const store = new LeaseStore({ clock });
-  store.acquire(&#039;a&#039;, 1000);
-  clock.advance(1000); // expiry is exclusive: at t = expiresAt the lease is gone
-  assert.deepStrictEqual(store.acquire(&#039;b&#039;, 1000), { ok: true, token: 2, ttlMs: 1000 });
-  assert.strictEqual(store.renew(&#039;a&#039;, 1, 1000).ok, false);
-  assert.strictEqual(store.renew(&#039;b&#039;, 1, 1000).ok, false, &#039;right holder, wrong token&#039;);
-});
-
-test(&#039;the same holder re-acquiring after its own expiry still gets a new token&#039;, () =&gt; {
-  const clock = new ManualClock();
-  const store = new LeaseStore({ clock });
-  store.acquire(&#039;a&#039;, 100);
-  clock.advance(150);
-  assert.strictEqual(store.acquire(&#039;a&#039;, 100).token, 2); // someone may have held it in between
-});
-
-test(&#039;tokens are strictly monotonic across random handovers, releases and expiries&#039;, () =&gt; {
-  const rnd = mulberry32(7);
-  const clock = new ManualClock();
-  const store = new LeaseStore({ clock });
-  let last = 0;
-  for (let i = 0; i &lt; 2000; i++) {
-    const who = `n${Math.floor(rnd() * 4)}`;
-    const r = store.acquire(who, 50 + rnd() * 100);
-    if (r.ok) { assert.ok(r.token &gt;= last); last = r.token; }
-    if (rnd() &lt; 0.2 &amp;&amp; store.current()) store.release(store.holder, store.token);
-    clock.advance(rnd() * 120);
-  }
-  const tokens = store.history.map((h) =&gt; h.token);
-  tokens.forEach((t, i) =&gt; assert.strictEqual(t, i + 1)); // one new token per ownership change, no gaps
-  assert.ok(tokens.length &gt; 100);
-});
-
-test(&#039;release allows immediate takeover; releasing with a stale token does nothing&#039;, () =&gt; {
-  const clock = new ManualClock();
-  const store = new LeaseStore({ clock });
-  store.acquire(&#039;a&#039;, 10_000);
-  assert.strictEqual(store.release(&#039;a&#039;, 99), false);
-  assert.strictEqual(store.release(&#039;b&#039;, 1), false);
-  assert.strictEqual(store.release(&#039;a&#039;, 1), true);
-  assert.strictEqual(store.acquire(&#039;b&#039;, 10_000).token, 2);
-});
-
-test(&#039;FencedStorage accepts equal or newer tokens and rejects older ones&#039;, () =&gt; {
-  const s = new FencedStorage();
-  s.write(1, &#039;x&#039;, &#039;a&#039;); s.write(1, &#039;x&#039;, &#039;b&#039;); s.write(3, &#039;x&#039;, &#039;c&#039;);
-  assert.throws(() =&gt; s.write(2, &#039;x&#039;, &#039;stale&#039;), StaleTokenError);
-  assert.strictEqual(s.data.get(&#039;x&#039;), &#039;c&#039;);
-  assert.strictEqual(s.rejected, 1);
-  assert.throws(() =&gt; s.write(0, &#039;x&#039;, &#039;y&#039;), TypeError);
-  assert.throws(() =&gt; s.write(1.5, &#039;x&#039;, &#039;y&#039;), TypeError);
-});
-
-test(&#039;GC pause: the paused ex-leader is fenced out and its write never lands&#039;, () =&gt; {
-  const clock = new ManualClock();
-  const store = new LeaseStore({ clock });
-  const storage = new FencedStorage();
-  const a = new LeaseClient({ id: &#039;a&#039;, store, clock, ttlMs: 1000 });
-  const b = new LeaseClient({ id: &#039;b&#039;, store, clock, ttlMs: 1000 });
-  a.tick(); b.tick();
-  assert.ok(a.isLeader() &amp;&amp; !b.isLeader());
-  const token = a.token;
-  assert.ok(a.isLeader()); // a checks &quot;am I leader?&quot; ... then stops the world for 5 s
-  clock.advance(5000);
-  b.tick();                // b is elected while a is frozen
-  assert.ok(b.isLeader());
-  storage.fence(b.token);  // election barrier
-  assert.throws(() =&gt; storage.write(token, &#039;config&#039;, &#039;from-zombie&#039;), StaleTokenError);
-  storage.write(b.token, &#039;config&#039;, &#039;from-b&#039;);
-  assert.deepStrictEqual(storage.log.map((e) =&gt; e.value), [&#039;from-b&#039;]);
-  assert.strictEqual(a.isLeader(), false); // once a looks at its clock again it knows it lost
-});
-
-test(&#039;without the election barrier a zombie write slips in before the successor writes&#039;, () =&gt; {
-  const storage = new FencedStorage();
-  storage.write(1, &#039;k&#039;, &#039;old-leader&#039;);
-  // token 2 exists but storage has not seen it yet
-  storage.write(1, &#039;k&#039;, &#039;zombie&#039;); // accepted: storage cannot know token 1 is stale
-  storage.write(2, &#039;k&#039;, &#039;new-leader&#039;);
-  assert.throws(() =&gt; storage.write(1, &#039;k&#039;, &#039;zombie-again&#039;), StaleTokenError);
-  assert.deepStrictEqual(storage.log.map((e) =&gt; e.value), [&#039;old-leader&#039;, &#039;zombie&#039;, &#039;new-leader&#039;]);
-});
-
-test(&#039;client stops leading before the store expires the lease, even with a slow clock&#039;, () =&gt; {
-  for (const rate of [-0.01, -0.005, 0, 0.01]) {
-    const truth = new ManualClock();
-    const store = new LeaseStore({ clock: truth });
-    const c = new LeaseClient({ id: &#039;a&#039;, store, clock: new DriftingClock(truth, { rate, offset: 123456 }), ttlMs: 1000, maxDriftRate: 0.01, safetyMarginMs: 0 });
-    c.tick();
-    let lastLeaderTrueTime = 0;
-    for (let t = 0; t &lt; 1500; t++) { if (c.isLeader()) lastLeaderTrueTime = truth.now(); truth.advance(1); }
-    assert.ok(lastLeaderTrueTime &lt; 1000, `rate ${rate}: led until ${lastLeaderTrueTime}`);
-  }
-});
-
-test(&#039;drift beyond the assumed bound breaks the guarantee (why the bound matters)&#039;, () =&gt; {
-  const truth = new ManualClock();
-  const store = new LeaseStore({ clock: truth });
-  const slow = new LeaseClient({ id: &#039;a&#039;, store, clock: new DriftingClock(truth, { rate: -0.2 }), ttlMs: 1000, maxDriftRate: 0.01, safetyMarginMs: 0 });
-  slow.tick();
-  truth.advance(1100);                    // store: expired at 1000
-  assert.strictEqual(store.current(), null);
-  assert.strictEqual(slow.isLeader(), true); // local clock shows only 880 ms elapsed
-});
-
-test(&#039;network delay only shortens the client-side lease&#039;, () =&gt; {
-  const truth = new ManualClock();
-  const store = new LeaseStore({ clock: truth });
-  const c = new LeaseClient({ id: &#039;a&#039;, store, clock: truth, ttlMs: 1000, maxDriftRate: 0, safetyMarginMs: 0 });
-  // Simulate a slow request: the store grants 300 ms after the client sent it.
-  const sentAt = truth.now();
-  truth.advance(300);
-  c._granted(store.acquire(&#039;a&#039;, 1000), sentAt);
-  assert.strictEqual(c.safeUntil, 1000);     // client stops at 1000
-  assert.strictEqual(store.expiresAt, 1300); // store expires at 1300
-});
-
-test(&#039;safety invariant: at most one client believes it leads at any instant (seeded chaos)&#039;, () =&gt; {
-  for (const seed of [1, 2, 3, 4, 5]) {
-    const rnd = mulberry32(seed);
-    const truth = new ManualClock();
-    const store = new LeaseStore({ clock: truth });
-    const storage = new FencedStorage();
-    const clients = [&#039;a&#039;, &#039;b&#039;, &#039;c&#039;].map((id) =&gt; new LeaseClient({
-      id, store, ttlMs: 300, maxDriftRate: 0.02,
-      clock: new DriftingClock(truth, { rate: (rnd() * 2 - 1) * 0.02, offset: rnd() * 1e6 }),
-    }));
-    const pausedUntil = new Map();
-    let leaderships = 0;
-    for (let step = 0; step &lt; 5000; step++) {
-      for (const c of clients) {
-        if ((pausedUntil.get(c) || 0) &gt; truth.now()) continue; // frozen (GC / VM stall)
-        if (rnd() &lt; 0.002) { pausedUntil.set(c, truth.now() + rnd() * 1000); continue; }
-        const before = c.token;
-        c.tick();
-        if (c.isLeader() &amp;&amp; before !== c.token) { storage.fence(c.token); leaderships++; }
-        if (c.isLeader() &amp;&amp; rnd() &lt; 0.3) storage.write(c.token, &#039;k&#039;, c.id);
-      }
-      const leaders = clients.filter((c) =&gt; c.isLeader());
-      assert.ok(leaders.length &lt;= 1, `seed ${seed} step ${step}: ${leaders.map((l) =&gt; l.id)}`);
-      truth.advance(1 + rnd() * 10);
-    }
-    assert.ok(leaderships &gt;= 2, `seed ${seed}: expected failovers, got ${leaderships}`);
-    for (let i = 1; i &lt; storage.log.length; i++) assert.ok(storage.log[i].token &gt;= storage.log[i - 1].token);
-  }
-});
-
-test(&#039;invalid configuration and inputs are rejected&#039;, () =&gt; {
-  const clock = new ManualClock();
-  const store = new LeaseStore({ clock });
-  assert.throws(() =&gt; new LeaseStore({}), TypeError);
-  assert.throws(() =&gt; store.acquire(&#039;&#039;, 100), TypeError);
-  assert.throws(() =&gt; store.acquire(&#039;a&#039;, 0), RangeError);
-  assert.throws(() =&gt; store.acquire(&#039;a&#039;, NaN), RangeError);
-  assert.throws(() =&gt; new LeaseClient({ id: &#039;a&#039;, store, clock, ttlMs: 100, safetyMarginMs: 100 }), RangeError);
-  assert.throws(() =&gt; new LeaseClient({ id: &#039;a&#039;, store, clock, ttlMs: 100, maxDriftRate: 1 }), RangeError);
-  assert.throws(() =&gt; new LeaseClient({ id: &#039;a&#039;, store: {}, clock, ttlMs: 100 }), TypeError);
-  assert.throws(() =&gt; clock.advance(-1), RangeError);
-  assert.throws(() =&gt; new DriftingClock(clock, { rate: -1 }), RangeError);
-});
-
-test(&#039;resign hands over immediately and records the event history&#039;, () =&gt; {
-  const clock = new ManualClock();
-  const store = new LeaseStore({ clock });
-  const a = new LeaseClient({ id: &#039;a&#039;, store, clock, ttlMs: 1000 });
-  const b = new LeaseClient({ id: &#039;b&#039;, store, clock, ttlMs: 1000 });
-  a.tick(); a.resign(); b.tick();
-  assert.ok(b.isLeader() &amp;&amp; !a.isLeader());
-  assert.deepStrictEqual(a.events.map((e) =&gt; e.event), [&#039;elected&#039;, &#039;stepped-down&#039;]);
-  assert.strictEqual(b.token, 2);
-});
-
-console.log(`\n${count - failed}/${count} passed`);
-process.exit(failed ? 1 : 0);
-</code></pre>
-          </div>
       </div>
 
       <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
@@ -1070,9 +469,9 @@ process.exit(failed ? 1 : 0);
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
-  <script type="text/plain" data-defer src="js/code-lab.js?v=20ce3ba328"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=7f68b9d746"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
   

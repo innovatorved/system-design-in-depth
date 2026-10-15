@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -340,34 +340,15 @@
         
       </section>
 
-      <div id="build-walkthrough-pane">
-        <div class="build-run">
-          <div class="build-run__text">
-            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
-            <code>node demo.js</code> and <code>node test.js</code>.
-          </div>
-          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="keyset-pagination-cursors">Copy setup script</button>
-        </div>
-
-        <div class="build-files"><a href="#build-file-keyset-pagination-cursors-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-keyset-pagination-cursors-README_md">README.md</a><a href="#build-file-keyset-pagination-cursors-pagination_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-keyset-pagination-cursors-pagination_js">pagination.js</a><a href="#build-file-keyset-pagination-cursors-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-keyset-pagination-cursors-demo_js">demo.js</a><a href="#build-file-keyset-pagination-cursors-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-keyset-pagination-cursors-test_js">test.js</a></div><article class="prose" id="build-file-keyset-pagination-cursors-README_md"><h2>Keyset (Cursor) Pagination vs OFFSET</h2>
-
-<p>This lab pages through a large list that other requests keep changing, such</p>
-<p>as a feed, an inbox, an audit log, or an API collection. Every page should be</p>
-<p>equally cheap no matter how deep the user scrolls. A row should never appear</p>
-<p>twice or go missing because of concurrent inserts or deletes.</p>
-
+      <div id="build-walkthrough-pane"><article class="prose" id="build-file-keyset-pagination-cursors-README_md"><p>This lab pages through a large list that other requests keep changing, such as a feed, an inbox, an audit log, or an API collection. Every page should be equally cheap no matter how deep the user scrolls. A row should never appear twice or go missing because of concurrent inserts or deletes.</p>
 <h2>Where it shows up</h2>
-
 <ul>
 <li><strong>Infinite-scroll feeds and timelines</strong> ("load more").</li>
-<li><strong>Public APIs</strong>: Stripe <code>starting_after</code>/<code>ending_before</code>, Slack</li>
-  <code>response_metadata.next_cursor</code>, and GitHub GraphQL <code>after:</code>/<code>endCursor</code>.
+<li><strong>Public APIs</strong>: Stripe <code>starting_after</code>/<code>ending_before</code>, Slack <code>response_metadata.next_cursor</code>, and GitHub GraphQL <code>after:</code>/<code>endCursor</code>.</li>
 <li><strong>Batch jobs and exports</strong> that walk a whole table in chunks without long transactions.</li>
-<li><strong>Search engines</strong>: Elasticsearch <code>search_after</code>. Deep <code>from + size</code> paging</li>
-  is capped by <code>index.max_result_window</code>, which defaults to 10,000.
+<li><strong>Search engines</strong>: Elasticsearch <code>search_after</code>. Deep <code>from + size</code> paging is capped by <code>index.max_result_window</code>, which defaults to 10,000.</li>
 </ul>
 <h2>The two queries</h2>
-
 <pre><code class="language-sql">CREATE INDEX posts_feed_idx ON posts (created_at DESC, id DESC);
 
 -- OFFSET: the database walks and discards :offset index entries first.
@@ -388,701 +369,43 @@ WHERE created_at &lt; :c OR (created_at = :c AND id &lt; :i)
 -- Previous page: flip the comparison and the sort, then reverse in the app.
 SELECT ... WHERE (created_at, id) &gt; (:c, :i)
 ORDER BY created_at ASC, id ASC LIMIT 21;</code></pre>
-
-<code>Table</code> in <code>pagination.js</code> simulates that index. Rows are kept sorted by
-<code>(created_at DESC, id DESC)</code>, <code>seek()</code> binary-searches to the cursor the way a
-<p>B-tree descent would, and <code>rowsExamined</code> counts the index entries each query</p>
-<p>touches.</p>
-
+<p><code>Table</code> in <code>pagination.js</code> simulates that index. Rows are kept sorted by <code>(created_at DESC, id DESC)</code>, <code>seek()</code> binary-searches to the cursor the way a B-tree descent would, and <code>rowsExamined</code> counts the index entries each query touches.</p>
 <h2>Design and key invariants</h2>
-
 <ol>
-<li><strong>Total order.</strong> <code>created_at</code> alone is not unique. Several rows created in</li>
-   the same millisecond would make the order ambiguous, and a cursor of
-   <code>created_at < :c</code> <strong>skips</strong> the rest of a tie group (demo step 4, and a
-   test). Adding the primary key as a tie-breaker makes <code>(created_at, id)</code>
-   unique, so every row has exactly one position.
-<li><strong>The cursor is a position, not a row.</strong> The seek is a strict <code><</code> against</li>
-   the last row's key. It works even if that row has since been deleted (demo
-   step 2, and a test).
-<li><strong>Stable under writes.</strong> Inserts or deletes <em>above</em> the cursor do not</li>
-   shift later pages. A randomized churn test checks that there are no
-   duplicates, that no row which existed for the whole scroll is missed, and
-   that order is strictly descending across page boundaries.
-<li><strong>Opaque, tamper-evident cursors.</strong> A cursor is</li>
-   <code>base64url(JSON{v,k:[created_at,id],d,t}) + "." + base64url(HMAC-SHA256(secret, "v1\n" + scope + "\n" + payload)[:16])</code>.
-   - It is <em>opaque</em> so clients don't build their own cursors. That lets the
-     server change the sort key or the encoding later (the <code>v</code> field).
-   - It is <em>signed</em> so a client cannot forge a position. Treat the payload as
-     readable, because base64 is not encryption. Use AES-GCM if the keys are sensitive.
-   - The <em>scope</em> (route plus filters) is covered by the MAC but not sent, so a
-     cursor minted for <code>?author=7</code> is rejected on <code>?author=all</code>.
-   - The check is constant-time (<code>crypto.timingSafeEqual</code>) and requires
-     canonical base64url. The payload is validated again after the MAC check,
-     as defense in depth. <code>maxAgeMs</code> can optionally expire cursors.
+<li><strong>Total order.</strong> <code>created_at</code> alone is not unique. Several rows created in the same millisecond would make the order ambiguous, and a cursor of <code>created_at &lt; :c</code> <strong>skips</strong> the rest of a tie group (demo step 4, and a test). Adding the primary key as a tie-breaker makes <code>(created_at, id)</code> unique, so every row has exactly one position.</li>
+<li><strong>The cursor is a position, not a row.</strong> The seek is a strict <code>&lt;</code> against the last row's key. It works even if that row has since been deleted (demo step 2, and a test).</li>
+<li><strong>Stable under writes.</strong> Inserts or deletes <em>above</em> the cursor do not shift later pages. A randomized churn test checks that there are no duplicates, that no row which existed for the whole scroll is missed, and that order is strictly descending across page boundaries.</li>
+<li><strong>Opaque, tamper-evident cursors.</strong> A cursor is <code>base64url(JSON{v,k:[created_at,id],d,t}) + &quot;.&quot; + base64url(HMAC-SHA256(secret, &quot;v1\n&quot; + scope + &quot;\n&quot; + payload)[:16])</code>.<br>• It is <em>opaque</em> so clients don't build their own cursors. That lets the server change the sort key or the encoding later (the <code>v</code> field).<br>• It is <em>signed</em> so a client cannot forge a position. Treat the payload as readable, because base64 is not encryption. Use AES-GCM if the keys are sensitive.<br>• The <em>scope</em> (route plus filters) is covered by the MAC but not sent, so a cursor minted for <code>?author=7</code> is rejected on <code>?author=all</code>.<br>• The check is constant-time (<code>crypto.timingSafeEqual</code>) and requires canonical base64url. The payload is validated again after the MAC check, as defense in depth. <code>maxAgeMs</code> can optionally expire cursors.</li>
 </ol>
 <h2>Complexity</h2>
-
-<table><thead><tr><th>OFFSET page at depth k</th><th>keyset page</th></tr></thead><tbody><tr><td>time</td><td>O(k + n) rows examined</td><td>O(log N) descent + O(n) rows</td></tr><tr><td>extra state</td><td>none</td><td>cursor (about 100 bytes)</td></tr><tr><td>jump to page 57</td><td>yes</td><td>no (only next/prev from a known position)</td></tr></tbody></table>Space: O(N) for the table. Cursors are O(1).
-
+<table><thead><tr><th></th><th>OFFSET page at depth k</th><th>keyset page</th></tr></thead><tbody><tr><td>time</td><td>O(k + n) rows examined</td><td>O(log N) descent + O(n) rows</td></tr><tr><td>extra state</td><td>none</td><td>cursor (about 100 bytes)</td></tr><tr><td>jump to page 57</td><td>yes</td><td>no (only next/prev from a known position)</td></tr></tbody></table>
+<p>Space: O(N) for the table. Cursors are O(1).</p>
 <h2>Failure modes and trade-offs</h2>
-
 <ul>
-<li><strong>OFFSET drift.</strong> An insert at the head between requests shifts rows down,</li>
-  so the next page repeats them (demo step 1: 2 duplicates). A delete above the
-  window shifts rows up, so the next page skips them (demo step 2: 2 rows never
-  shown). Over a full scroll with churn, OFFSET showed 4 duplicates and missed
-  6 rows. Keyset showed 0 and 0.
-<li><strong>No random access.</strong> Keyset cannot jump to "page 57". UIs switch to</li>
-  "next/prev" and infinite scroll. If you need page numbers, cap the depth, as
-  Google and Elasticsearch do.
-<li><strong>New rows above the cursor are not shown</strong> while scrolling down. That is</li>
-  the stability you asked for. Use <code>prevCursor</code> from the first page, or a
-  <code>since</code> query, to pick up new items.
-<li><strong>Mutable sort keys.</strong> If <code>created_at</code> (or a score) can change, a row can</li>
-  move across the cursor and be seen twice or not at all. Only paginate on
-  immutable columns, or snapshot the result (Elasticsearch point-in-time,
-  a <code>REPEATABLE READ</code> transaction).
-<li><strong>Index must match.</strong> The <code>ORDER BY</code> has to match an index prefix, in the</li>
-  same direction or fully reversed. Otherwise the database sorts the whole
-  filtered set and the seek gains nothing. Filters such as <code>WHERE author_id = ?</code>
-  should come first: <code>(author_id, created_at DESC, id DESC)</code>.
-<li><strong>Secret rotation.</strong> Rotating the HMAC key invalidates every cursor that is</li>
-  in flight. Keep a key id in the payload and verify against the current and
-  previous keys.
+<li><strong>OFFSET drift.</strong> An insert at the head between requests shifts rows down, so the next page repeats them (demo step 1: 2 duplicates). A delete above the window shifts rows up, so the next page skips them (demo step 2: 2 rows never shown). Over a full scroll with churn, OFFSET showed 4 duplicates and missed 6 rows. Keyset showed 0 and 0.</li>
+<li><strong>No random access.</strong> Keyset cannot jump to "page 57". UIs switch to "next/prev" and infinite scroll. If you need page numbers, cap the depth, as Google and Elasticsearch do.</li>
+<li><strong>New rows above the cursor are not shown</strong> while scrolling down. That is the stability you asked for. Use <code>prevCursor</code> from the first page, or a <code>since</code> query, to pick up new items.</li>
+<li><strong>Mutable sort keys.</strong> If <code>created_at</code> (or a score) can change, a row can move across the cursor and be seen twice or not at all. Only paginate on immutable columns, or snapshot the result (Elasticsearch point-in-time, a <code>REPEATABLE READ</code> transaction).</li>
+<li><strong>Index must match.</strong> The <code>ORDER BY</code> has to match an index prefix, in the same direction or fully reversed. Otherwise the database sorts the whole filtered set and the seek gains nothing. Filters such as <code>WHERE author_id = ?</code> should come first: <code>(author_id, created_at DESC, id DESC)</code>.</li>
+<li><strong>Secret rotation.</strong> Rotating the HMAC key invalidates every cursor that is in flight. Keep a key id in the payload and verify against the current and previous keys.</li>
 </ul>
 <h2>How production systems do it</h2>
-
 <ul>
-<li><strong>PostgreSQL</strong>: row-value comparison <code>(a, b) < (
-  </main>, $2)</code> becomes a single</li>
-  B-tree index condition on <code>(a, b)</code>. Because B-trees scan in both directions,
-  one ASC index serves the <code>DESC, DESC</code> query.
-<li><strong>MySQL</strong>: supports row constructors and, since 5.7, can plan them as index</li>
-  range scans. Older versions needed the expanded <code>OR</code> form.
-<li><strong>Stripe</strong>: <code>starting_after=<object id></code> returns objects after that id in</li>
-  the list's order. The cursor is simply the last object's id.
-<li><strong>Slack Web API</strong>: opaque base64 <code>next_cursor</code> strings. An empty</li>
-  <code>next_cursor</code> means the end of the list.
-<li><strong>GitHub GraphQL</strong>: Relay connection spec. <code>first</code>/<code>after</code> return</li>
-  <code>pageInfo { endCursor hasNextPage }</code>, and cursors are opaque strings.
-<li><strong>Elasticsearch</strong>: <code>search_after: [sort values...]</code>, with a unique</li>
-  tie-breaker field and a point-in-time (PIT) for a consistent snapshot. This
-  is the same tuple-cursor idea.
+<li><strong>PostgreSQL</strong>: row-value comparison <code>(a, b) &lt; ($1, $2)</code> becomes a single B-tree index condition on <code>(a, b)</code>. Because B-trees scan in both directions, one ASC index serves the <code>DESC, DESC</code> query.</li>
+<li><strong>MySQL</strong>: supports row constructors and, since 5.7, can plan them as index range scans. Older versions needed the expanded <code>OR</code> form.</li>
+<li><strong>Stripe</strong>: <code>starting_after=&lt;object id&gt;</code> returns objects after that id in the list's order. The cursor is simply the last object's id.</li>
+<li><strong>Slack Web API</strong>: opaque base64 <code>next_cursor</code> strings. An empty <code>next_cursor</code> means the end of the list.</li>
+<li><strong>GitHub GraphQL</strong>: Relay connection spec. <code>first</code>/<code>after</code> return <code>pageInfo { endCursor hasNextPage }</code>, and cursors are opaque strings.</li>
+<li><strong>Elasticsearch</strong>: <code>search_after: [sort values...]</code>, with a unique tie-breaker field and a point-in-time (PIT) for a consistent snapshot. This is the same tuple-cursor idea.</li>
 </ul>
-<h2>How to run</h2>
-
-<pre><code class="language-bash">node demo.js   # insert/delete drift, full scroll under churn, tie-breaking, cost at depth, cursor tampering
-node test.js   # 14 tests incl. randomized churn, every-character tamper check, prev/next round trip</code></pre>
-
 <h2>Extension exercises</h2>
-
 <ol>
-<li>Add a filter, <code>author_id</code>, with index <code>(author_id, created_at DESC, id DESC)</code>.</li>
-   Put the filter in the cursor scope and show that a cursor cannot cross authors.
-<li>Support a mixed-direction sort, <code>ORDER BY score DESC, id ASC</code>, and build</li>
-   the expanded <code>OR</code> predicate. Explain why <code>(score, id) < (...)</code> is wrong here.
-<li>Add key rotation. Put a <code>kid</code> in the payload, keep <code>{current, previous}</code></li>
-   secrets, and test that old cursors keep working for one rotation.
-<li>Encrypt the payload with AES-256-GCM (<code>node:crypto</code>) instead of signing it</li>
-   in plaintext. What does that give you beyond HMAC, and what does it cost?
-<li>Generate the real SQL string with bind parameters from a <code>(sort spec, cursor)</code></li>
-   pair, and test it against the in-memory results for random data.
+<li>Add a filter, <code>author_id</code>, with index <code>(author_id, created_at DESC, id DESC)</code>. Put the filter in the cursor scope and show that a cursor cannot cross authors.</li>
+<li>Support a mixed-direction sort, <code>ORDER BY score DESC, id ASC</code>, and build the expanded <code>OR</code> predicate. Explain why <code>(score, id) &lt; (...)</code> is wrong here.</li>
+<li>Add key rotation. Put a <code>kid</code> in the payload, keep <code>{current, previous}</code> secrets, and test that old cursors keep working for one rotation.</li>
+<li>Encrypt the payload with AES-256-GCM (<code>node:crypto</code>) instead of signing it in plaintext. What does that give you beyond HMAC, and what does it cost?</li>
+<li>Generate the real SQL string with bind parameters from a <code>(sort spec, cursor)</code> pair, and test it against the in-memory results for random data.</li>
 </ol></article>
-          <div class="code-block" id="build-file-keyset-pagination-cursors-pagination_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">pagination.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-/**
- * Keyset (seek) pagination over an in-memory table that simulates an index on
- * (created_at DESC, id DESC), compared with LIMIT/OFFSET pagination.
- *
- *   OFFSET:  SELECT ... ORDER BY created_at DESC, id DESC LIMIT :n OFFSET :k
- *   KEYSET:  SELECT ... WHERE (created_at, id) &lt; (:c, :i)
- *            ORDER BY created_at DESC, id DESC LIMIT :n
- *
- * Cursors are opaque: base64url(JSON payload) + &quot;.&quot; + base64url(HMAC-SHA256).
- * Clients cannot read or forge them, and a cursor minted for one query
- * cannot be used with a different one.
- */
-const crypto = require(&#039;node:crypto&#039;);
-
-class InvalidCursorError extends Error {
-  constructor(reason) { super(`invalid cursor: ${reason}`); this.name = &#039;InvalidCursorError&#039;; }
-}
-
-/** Sort order: created_at DESC, then id DESC. Returns &lt;0 if a comes first. */
-function compareDesc(a, b) {
-  if (a.created_at !== b.created_at) return b.created_at - a.created_at;
-  return b.id - a.id;
-}
-
-function validateRow(row) {
-  if (!row || !Number.isSafeInteger(row.id)) throw new TypeError(&#039;row.id must be a safe integer&#039;);
-  if (!Number.isSafeInteger(row.created_at)) throw new TypeError(&#039;row.created_at must be an integer (ms epoch)&#039;);
-}
-
-function validateLimit(limit) {
-  if (!Number.isInteger(limit) || limit &lt; 1 || limit &gt; 1000) throw new RangeError(&#039;limit must be an integer in [1, 1000]&#039;);
-}
-
-/**
- * Rows kept sorted in index order, like a B-tree leaf chain. `rowsExamined`
- * counts how many index entries each query touched: that is where OFFSET&#039;s
- * O(offset + limit) cost comes from.
- */
-class Table {
-  constructor(rows = []) {
-    this.rows = [];
-    this.ids = new Set();
-    this.rowsExamined = 0;
-    // Bulk load: validate, then sort once (O(n log n)) instead of n splices.
-    for (const r of rows) {
-      validateRow(r);
-      if (this.ids.has(r.id)) throw new Error(`duplicate primary key ${r.id}`);
-      this.ids.add(r.id);
-      this.rows.push(Object.freeze({ ...r }));
-    }
-    this.rows.sort(compareDesc);
-  }
-
-  get size() { return this.rows.length; }
-
-  /** Index of the first row that sorts at or after `key` (lower bound). */
-  _lowerBound(key) {
-    let lo = 0, hi = this.rows.length;
-    while (lo &lt; hi) {
-      const mid = (lo + hi) &gt;&gt;&gt; 1;
-      if (compareDesc(this.rows[mid], key) &lt; 0) lo = mid + 1; else hi = mid;
-    }
-    return lo;
-  }
-
-  insert(row) {
-    validateRow(row);
-    if (this.ids.has(row.id)) throw new Error(`duplicate primary key ${row.id}`);
-    const r = Object.freeze({ ...row });
-    this.rows.splice(this._lowerBound(r), 0, r);
-    this.ids.add(r.id);
-    return r;
-  }
-
-  delete(id) {
-    const i = this.rows.findIndex((r) =&gt; r.id === id);
-    if (i === -1) return false;
-    this.rows.splice(i, 1);
-    this.ids.delete(id);
-    return true;
-  }
-
-  /** ORDER BY created_at DESC, id DESC LIMIT limit OFFSET offset */
-  offsetPage({ limit, offset = 0 }) {
-    validateLimit(limit);
-    if (!Number.isInteger(offset) || offset &lt; 0) throw new RangeError(&#039;offset must be a non-negative integer&#039;);
-    const end = Math.min(offset + limit, this.rows.length);
-    // The database must walk past `offset` rows to discard them.
-    this.rowsExamined += end;
-    return this.rows.slice(offset, end);
-  }
-
-  /**
-   * Seek: rows strictly after `after` in index order (i.e. older), or strictly
-   * before `before` (newer; returned in DESC order). One index descent
-   * (O(log n)) plus `limit + 1` rows read; the extra row tells us whether more exist.
-   */
-  seek({ limit, after = null, before = null }) {
-    validateLimit(limit);
-    if (after &amp;&amp; before) throw new Error(&#039;pass at most one of after/before&#039;);
-    if (before) {
-      // WHERE (created_at, id) &gt; (:c, :i) ORDER BY created_at ASC, id ASC LIMIT n+1, then reverse.
-      const end = this._lowerBound(before);
-      const start = Math.max(0, end - (limit + 1));
-      const rows = this.rows.slice(start, end);
-      this.rowsExamined += rows.length;
-      const hasMore = rows.length &gt; limit;
-      return { rows: hasMore ? rows.slice(1) : rows, hasMore };
-    }
-    let start = 0;
-    if (after) {
-      start = this._lowerBound(after);
-      // lowerBound lands ON the cursor row if it still exists; skip it (strict &quot;&lt;&quot;).
-      if (start &lt; this.rows.length &amp;&amp; compareDesc(this.rows[start], after) === 0) start++;
-    }
-    const rows = this.rows.slice(start, start + limit + 1);
-    this.rowsExamined += rows.length;
-    const hasMore = rows.length &gt; limit;
-    return { rows: hasMore ? rows.slice(0, limit) : rows, hasMore };
-  }
-
-  /**
-   * The classic bug, kept for demonstration: seeking on created_at alone
-   * (WHERE created_at &lt; :c). Rows sharing the boundary timestamp are skipped.
-   */
-  seekTimestampOnly({ limit, afterCreatedAt = null }) {
-    validateLimit(limit);
-    const rows = [];
-    for (const r of this.rows) {
-      if (afterCreatedAt !== null &amp;&amp; !(r.created_at &lt; afterCreatedAt)) continue;
-      rows.push(r);
-      if (rows.length === limit) break;
-    }
-    return rows;
-  }
-}
-
-// --- opaque, tamper-evident cursors ----------------------------------------
-
-const b64u = (buf) =&gt; Buffer.from(buf).toString(&#039;base64url&#039;);
-
-class CursorCodec {
-  /**
-   * @param {object} opts
-   * @param {string|Buffer} opts.secret   server-side HMAC key (&gt;= 16 bytes)
-   * @param {number} [opts.macBytes=16]   truncated tag length (128-bit)
-   * @param {number} [opts.maxAgeMs]      optional expiry for cursors
-   * @param {() =&gt; number} [opts.clock]
-   */
-  constructor({ secret, macBytes = 16, maxAgeMs, clock = Date.now } = {}) {
-    if (!secret || Buffer.byteLength(secret) &lt; 16) throw new RangeError(&#039;secret must be at least 16 bytes&#039;);
-    if (!Number.isInteger(macBytes) || macBytes &lt; 8 || macBytes &gt; 32) throw new RangeError(&#039;macBytes must be in [8, 32]&#039;);
-    this.secret = secret;
-    this.macBytes = macBytes;
-    this.maxAgeMs = maxAgeMs;
-    this.clock = clock;
-  }
-
-  _mac(scope, payloadB64) {
-    // The scope (e.g. &quot;GET /posts?author=7&quot;) is authenticated but not embedded,
-    // so a cursor from one query is rejected by another.
-    return crypto.createHmac(&#039;sha256&#039;, this.secret)
-      .update(`v1\n${scope}\n${payloadB64}`)
-      .digest()
-      .subarray(0, this.macBytes);
-  }
-
-  /** Encode a position: { created_at, id, dir: &#039;next&#039; | &#039;prev&#039; }. */
-  encode({ created_at, id, dir = &#039;next&#039; }, scope = &#039;&#039;) {
-    if (dir !== &#039;next&#039; &amp;&amp; dir !== &#039;prev&#039;) throw new TypeError(&quot;dir must be &#039;next&#039; or &#039;prev&#039;&quot;);
-    validateRow({ created_at, id });
-    const payload = b64u(JSON.stringify({ v: 1, k: [created_at, id], d: dir, t: this.clock() }));
-    return `${payload}.${b64u(this._mac(scope, payload))}`;
-  }
-
-  decode(cursor, scope = &#039;&#039;) {
-    if (typeof cursor !== &#039;string&#039; || cursor.length &gt; 512) throw new InvalidCursorError(&#039;not a string or too long&#039;);
-    const parts = cursor.split(&#039;.&#039;);
-    if (parts.length !== 2 || !/^[A-Za-z0-9_-]+$/.test(parts[0]) || !/^[A-Za-z0-9_-]+$/.test(parts[1])) {
-      throw new InvalidCursorError(&#039;malformed&#039;);
-    }
-    const [payload, tag] = parts;
-    const expected = this._mac(scope, payload);
-    const given = Buffer.from(tag, &#039;base64url&#039;);
-    // Constant-time compare; lengths must match first (timingSafeEqual throws otherwise).
-    // Also require canonical base64url, so exactly one string is valid per tag.
-    if (given.length !== expected.length || b64u(given) !== tag || !crypto.timingSafeEqual(given, expected)) {
-      throw new InvalidCursorError(&#039;signature mismatch (tampered, wrong query, or wrong key)&#039;);
-    }
-    let obj;
-    try { obj = JSON.parse(Buffer.from(payload, &#039;base64url&#039;).toString(&#039;utf8&#039;)); }
-    catch { throw new InvalidCursorError(&#039;bad payload&#039;); }
-    if (obj.v !== 1 || !Array.isArray(obj.k) || obj.k.length !== 2 || (obj.d !== &#039;next&#039; &amp;&amp; obj.d !== &#039;prev&#039;)) throw new InvalidCursorError(&#039;unsupported version&#039;);
-    if (this.maxAgeMs !== undefined &amp;&amp; this.clock() - obj.t &gt; this.maxAgeMs) throw new InvalidCursorError(&#039;expired&#039;);
-    const [created_at, id] = obj.k;
-    validateRow({ created_at, id });
-    return { created_at, id, dir: obj.d };
-  }
-}
-
-/**
- * The API layer: page through `table` with opaque cursors, in both directions.
- * Returns { items, nextCursor, prevCursor }. A null cursor means that end of
- * the list has been reached as of this request.
- */
-function paginate(table, codec, { limit = 20, cursor = null, scope = &#039;&#039; } = {}) {
-  let pos = null;
-  if (cursor !== null &amp;&amp; cursor !== undefined) pos = codec.decode(cursor, scope);
-  const res = pos &amp;&amp; pos.dir === &#039;prev&#039;
-    ? table.seek({ limit, before: pos })
-    : table.seek({ limit, after: pos });
-  const items = res.rows;
-  if (items.length === 0) return { items, nextCursor: null, prevCursor: null };
-  const first = items[0], last = items[items.length - 1];
-  // Going forward, &quot;more&quot; means more older rows; going back, more newer rows.
-  // The opposite direction is assumed non-empty because we arrived from there
-  // (it may have been emptied by deletes; the client then just gets an empty page).
-  const hasOlder = pos &amp;&amp; pos.dir === &#039;prev&#039; ? true : res.hasMore;
-  const hasNewer = pos === null ? false : pos.dir === &#039;prev&#039; ? res.hasMore : true;
-  return {
-    items,
-    nextCursor: hasOlder ? codec.encode({ created_at: last.created_at, id: last.id, dir: &#039;next&#039; }, scope) : null,
-    prevCursor: hasNewer ? codec.encode({ created_at: first.created_at, id: first.id, dir: &#039;prev&#039; }, scope) : null,
-  };
-}
-
-module.exports = { Table, CursorCodec, InvalidCursorError, paginate, compareDesc };
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-keyset-pagination-cursors-demo_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">demo.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-// Deterministic walkthrough: OFFSET vs keyset under concurrent writes, tie-breaking,
-// cost at depth, and opaque HMAC-signed cursors.
-const { Table, CursorCodec, InvalidCursorError, paginate } = require(&#039;./pagination&#039;);
-
-const line = (s = &#039;&#039;) =&gt; console.log(s);
-const T0 = Date.UTC(2026, 8, 30, 9, 0, 0);
-const hhmmss = (ms) =&gt; new Date(ms).toISOString().slice(11, 19);
-const show = (rows) =&gt; rows.map((r) =&gt; `#${r.id}@${hhmmss(r.created_at)}`).join(&#039; &#039;);
-const ids = (rows) =&gt; rows.map((r) =&gt; r.id);
-
-// 20 posts, 2 per second -&gt; every timestamp is shared by two rows.
-function seedTable() {
-  const t = new Table();
-  for (let i = 1; i &lt;= 20; i++) t.insert({ id: i, created_at: T0 + Math.ceil(i / 2) * 1000, title: `post ${i}` });
-  return t;
-}
-let nextId = 1000;
-const newPost = (t, secondsAfter) =&gt; t.insert({ id: nextId++, created_at: T0 + secondsAfter * 1000, title: &#039;new&#039; });
-
-const codec = new CursorCodec({ secret: &#039;demo-secret-at-least-16-bytes&#039;, clock: () =&gt; T0 });
-
-line(&#039;Table: posts ORDER BY created_at DESC, id DESC (index on (created_at DESC, id DESC))&#039;);
-line(`   ${show(seedTable().rows.slice(0, 8))} ...`);
-line();
-
-line(&#039;1) New rows arrive between page 1 and page 2&#039;);
-{
-  const t = seedTable();
-  const off1 = t.offsetPage({ limit: 5, offset: 0 });
-  const ks1 = paginate(t, codec, { limit: 5 });
-  newPost(t, 60); newPost(t, 61); // two fresh posts land at the top
-  const off2 = t.offsetPage({ limit: 5, offset: 5 });
-  const ks2 = paginate(t, codec, { limit: 5, cursor: ks1.nextCursor });
-  const dup = off2.filter((r) =&gt; ids(off1).includes(r.id));
-  line(`   OFFSET  page1: ${show(off1)}`);
-  line(`   OFFSET  page2: ${show(off2)}   &lt;- ${dup.length} duplicates (${ids(dup).join(&#039;, &#039;)}) shifted down`);
-  line(`   KEYSET  page2: ${show(ks2.items)}   &lt;- continues exactly after #${ks1.items.at(-1).id}`);
-}
-line();
-
-line(&#039;2) Rows on page 1 are deleted before page 2 is fetched&#039;);
-{
-  const t = seedTable();
-  const off1 = t.offsetPage({ limit: 5, offset: 0 });
-  const ks1 = paginate(t, codec, { limit: 5 });
-  t.delete(20); t.delete(19);
-  const off2 = t.offsetPage({ limit: 5, offset: 5 });
-  const ks2 = paginate(t, codec, { limit: 5, cursor: ks1.nextCursor });
-  const skipped = ids(t.rows).filter((id) =&gt; !ids(off1).includes(id) &amp;&amp; !ids(off2).includes(id) &amp;&amp; id &gt; Math.min(...ids(off2)));
-  line(`   OFFSET  page2: ${show(off2)}   &lt;- never showed #${skipped.join(&#039;, #&#039;)}`);
-  line(`   KEYSET  page2: ${show(ks2.items)}   &lt;- cursor row #16 needn&#039;t exist for the seek to work`);
-}
-line();
-
-line(&#039;3) Full scroll under churn (odd pages: 2 new posts arrive; even pages: 3 already-seen posts deleted)&#039;);
-{
-  const scroll = (useKeyset) =&gt; {
-    const t = seedTable();
-    const stable = new Set(ids(t.rows)); // rows present for the whole scroll
-    const seen = [];
-    let cursor = null, offset = 0, pages = 0;
-    for (;;) {
-      let items;
-      if (useKeyset) { const p = paginate(t, codec, { limit: 4, cursor }); items = p.items; cursor = p.nextCursor; }
-      else { items = t.offsetPage({ limit: 4, offset }); offset += 4; }
-      seen.push(...ids(items));
-      pages++;
-      if (useKeyset ? cursor === null : items.length &lt; 4) break;
-      if (pages % 2 === 1) { newPost(t, 100 + pages); newPost(t, 100 + pages); }
-      else for (const id of seen.slice(-3)) { stable.delete(id); t.delete(id); }
-    }
-    const seenSet = new Set(seen);
-    return { pages, dups: seen.length - seenSet.size, missed: [...stable].filter((id) =&gt; !seenSet.has(id)).length };
-  };
-  const o = scroll(false), k = scroll(true);
-  line(`   OFFSET: ${o.pages} pages, ${o.dups} duplicates, ${o.missed} surviving rows never shown`);
-  line(`   KEYSET: ${k.pages} pages, ${k.dups} duplicates, ${k.missed} surviving rows never shown`);
-  line(&#039;   (Keyset does not show rows inserted *above* the cursor mid-scroll; that is by design: use prevCursor to refresh.)&#039;);
-}
-line();
-
-line(&#039;4) Why the id tie-breaker is mandatory&#039;);
-{
-  const t = seedTable();
-  const p1 = t.seekTimestampOnly({ limit: 5 });
-  const p2 = t.seekTimestampOnly({ limit: 5, afterCreatedAt: p1.at(-1).created_at });
-  line(`   WHERE created_at &lt; :c   page1: ${show(p1)}`);
-  line(`                           page2: ${show(p2)}   &lt;- #15 shares ${hhmmss(p1.at(-1).created_at)} with #16 and is lost`);
-  const k1 = paginate(t, codec, { limit: 5 });
-  const k2 = paginate(t, codec, { limit: 5, cursor: k1.nextCursor });
-  line(`   WHERE (created_at,id) &lt; (:c,:i) page2: ${show(k2.items)}`);
-}
-line();
-
-line(&#039;5) Cost at depth: 100,000 rows, fetch 20 rows around position 90,000&#039;);
-{
-  const t = new Table(Array.from({ length: 100_000 }, (_, i) =&gt; ({ id: i + 1, created_at: T0 + (i + 1) * 10 })));
-  t.rowsExamined = 0;
-  const deep = t.offsetPage({ limit: 20, offset: 90_000 });
-  const offCost = t.rowsExamined;
-  t.rowsExamined = 0;
-  const before = t.rows[89_999];
-  const ks = t.seek({ limit: 20, after: before });
-  line(`   OFFSET 90000 LIMIT 20      -&gt; rows examined: ${offCost.toLocaleString(&#039;en-US&#039;)}`);
-  line(`   WHERE (c,id) &lt; (..) LIMIT 20 -&gt; rows examined: ${t.rowsExamined} (+ one O(log n) index descent)`);
-  line(`   same rows: ${JSON.stringify(ids(deep)) === JSON.stringify(ids(ks.rows))}`);
-}
-line();
-
-line(&#039;6) Opaque, tamper-evident cursors (base64url payload + HMAC-SHA256 tag)&#039;);
-{
-  const t = seedTable();
-  const scope = &#039;GET /posts?author=all&#039;;
-  const p1 = paginate(t, codec, { limit: 5, scope });
-  const [payload] = p1.nextCursor.split(&#039;.&#039;);
-  line(`   cursor : ${p1.nextCursor}`);
-  line(`   payload: ${Buffer.from(payload, &#039;base64url&#039;).toString()}  (readable, but signed)`);
-  const forgedPayload = Buffer.from(JSON.stringify({ v: 1, k: [T0 + 999_000, 1], d: &#039;next&#039;, t: T0 })).toString(&#039;base64url&#039;);
-  const attempts = {
-    &#039;edited payload&#039;: `${forgedPayload}.${p1.nextCursor.split(&#039;.&#039;)[1]}`,
-    &#039;flipped 1 char&#039;: p1.nextCursor.slice(0, 5) + (p1.nextCursor[5] === &#039;A&#039; ? &#039;B&#039; : &#039;A&#039;) + p1.nextCursor.slice(6),
-    &#039;garbage&#039;: &#039;not-a-cursor&#039;,
-  };
-  for (const [what, c] of Object.entries(attempts)) {
-    try { paginate(t, codec, { limit: 5, cursor: c, scope }); line(`   ${what}: accepted?!`); }
-    catch (e) { line(`   ${what.padEnd(15)} -&gt; ${e instanceof InvalidCursorError ? e.message : &#039;unexpected &#039; + e}`); }
-  }
-  try { paginate(t, codec, { limit: 5, cursor: p1.nextCursor, scope: &#039;GET /posts?author=7&#039; }); }
-  catch (e) { line(`   ${&#039;other query&#039;.padEnd(15)} -&gt; ${e.message}`); }
-
-  const p2 = paginate(t, codec, { limit: 5, cursor: p1.nextCursor, scope });
-  const back = paginate(t, codec, { limit: 5, cursor: p2.prevCursor, scope });
-  line(`   page2 -&gt; prevCursor -&gt; ${show(back.items)}  (== page1: ${JSON.stringify(ids(back.items)) === JSON.stringify(ids(p1.items))})`);
-}
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-keyset-pagination-cursors-test_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">test.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-const assert = require(&#039;node:assert&#039;);
-const { Table, CursorCodec, InvalidCursorError, paginate, compareDesc } = require(&#039;./pagination&#039;);
-
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`✓ ${name}`); }
-  catch (e) { failed++; console.log(`✗ ${name}\n  ${e.stack}`); }
-}
-
-const T0 = 1_790_000_000_000;
-const SECRET = &#039;test-secret-0123456789abcdef&#039;;
-const ids = (rows) =&gt; rows.map((r) =&gt; r.id);
-
-/** mulberry32 */
-function prng(seed) {
-  let a = seed &gt;&gt;&gt; 0;
-  return () =&gt; { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a &gt;&gt;&gt; 15), 1 | a); t = (t + Math.imul(t ^ (t &gt;&gt;&gt; 7), 61 | t)) ^ t; return ((t ^ (t &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296; };
-}
-
-/** n rows where timestamps repeat heavily (only n/4 distinct values). */
-function tiedTable(n) {
-  return new Table(Array.from({ length: n }, (_, i) =&gt; ({ id: i + 1, created_at: T0 + Math.floor(i / 4) * 1000 })));
-}
-
-function scrollAll(table, codec, limit, scope = &#039;&#039;) {
-  const out = [];
-  let cursor = null, guard = 0;
-  do {
-    const p = paginate(table, codec, { limit, cursor, scope });
-    out.push(...p.items);
-    cursor = p.nextCursor;
-  } while (cursor &amp;&amp; ++guard &lt; 10_000);
-  return out;
-}
-
-test(&#039;table keeps ORDER BY created_at DESC, id DESC after random inserts&#039;, () =&gt; {
-  const r = prng(1);
-  const t = new Table();
-  for (let i = 0; i &lt; 500; i++) t.insert({ id: i + 1, created_at: T0 + Math.floor(r() * 50) });
-  for (let i = 1; i &lt; t.rows.length; i++) assert.ok(compareDesc(t.rows[i - 1], t.rows[i]) &lt; 0);
-  assert.throws(() =&gt; t.insert({ id: 1, created_at: T0 }), /duplicate/);
-  assert.throws(() =&gt; t.insert({ id: &#039;x&#039;, created_at: T0 }), TypeError);
-});
-
-test(&#039;keyset scroll returns every row exactly once, with heavy timestamp ties&#039;, () =&gt; {
-  const t = tiedTable(103);
-  const codec = new CursorCodec({ secret: SECRET });
-  for (const limit of [1, 3, 4, 7, 50, 103, 200]) {
-    const got = scrollAll(t, codec, limit);
-    assert.deepStrictEqual(ids(got), ids(t.rows), `limit ${limit}`);
-  }
-});
-
-test(&#039;keyset page equals OFFSET page on a static table&#039;, () =&gt; {
-  const t = tiedTable(40);
-  const codec = new CursorCodec({ secret: SECRET });
-  let cursor = null;
-  for (let page = 0; page &lt; 8; page++) {
-    const k = paginate(t, codec, { limit: 5, cursor });
-    assert.deepStrictEqual(ids(k.items), ids(t.offsetPage({ limit: 5, offset: page * 5 })));
-    cursor = k.nextCursor;
-  }
-  assert.strictEqual(cursor, null, &#039;last page must have no nextCursor&#039;);
-});
-
-test(&#039;timestamp-only cursor skips tied rows; tuple cursor does not&#039;, () =&gt; {
-  const t = tiedTable(12); // timestamps in groups of 4
-  const p1 = t.seekTimestampOnly({ limit: 3 });
-  const p2 = t.seekTimestampOnly({ limit: 3, afterCreatedAt: p1.at(-1).created_at });
-  const shown = new Set([...ids(p1), ...ids(p2)]);
-  const lost = ids(t.rows).slice(0, 4).filter((id) =&gt; !shown.has(id));
-  assert.strictEqual(lost.length, 1, &#039;the 4th row of the first tie group is lost&#039;);
-  const k = t.seek({ limit: 3, after: p1.at(-1) });
-  assert.strictEqual(k.rows[0].id, lost[0]);
-});
-
-test(&#039;OFFSET duplicates rows after inserts at the head; keyset does not&#039;, () =&gt; {
-  const t = tiedTable(20);
-  const codec = new CursorCodec({ secret: SECRET });
-  const o1 = t.offsetPage({ limit: 5 }), k1 = paginate(t, codec, { limit: 5 });
-  t.insert({ id: 900, created_at: T0 + 1e6 });
-  t.insert({ id: 901, created_at: T0 + 1e6 });
-  const o2 = t.offsetPage({ limit: 5, offset: 5 }), k2 = paginate(t, codec, { limit: 5, cursor: k1.nextCursor });
-  assert.strictEqual(o2.filter((r) =&gt; ids(o1).includes(r.id)).length, 2);
-  assert.strictEqual(k2.items.filter((r) =&gt; ids(k1.items).includes(r.id)).length, 0);
-  assert.strictEqual(k2.items[0].id, t.rows[t.rows.indexOf(k1.items.at(-1)) + 1].id);
-});
-
-test(&#039;OFFSET skips rows after deletes above the window; keyset does not (even if cursor row is deleted)&#039;, () =&gt; {
-  const t = tiedTable(20);
-  const codec = new CursorCodec({ secret: SECRET });
-  const k1 = paginate(t, codec, { limit: 5 });
-  const expectedNext = ids(t.rows.slice(5, 10));
-  for (const r of k1.items) t.delete(r.id); // delete all of page 1, including the cursor row
-  const o2 = t.offsetPage({ limit: 5, offset: 5 });
-  const k2 = paginate(t, codec, { limit: 5, cursor: k1.nextCursor });
-  assert.deepStrictEqual(ids(k2.items), expectedNext);
-  assert.notDeepStrictEqual(ids(o2), expectedNext);
-});
-
-test(&#039;randomized churn: keyset never duplicates and never misses a surviving row&#039;, () =&gt; {
-  const r = prng(99);
-  const t = tiedTable(300);
-  const codec = new CursorCodec({ secret: SECRET });
-  const original = new Set(ids(t.rows));
-  const deleted = new Set();
-  const seen = [], seenRows = [];
-  let cursor = null, nextId = 10_000, guard = 0;
-  do {
-    const p = paginate(t, codec, { limit: 7, cursor });
-    seen.push(...ids(p.items));
-    seenRows.push(...p.items);
-    cursor = p.nextCursor;
-    for (let j = 0; j &lt; 3; j++) {
-      if (r() &lt; 0.5) t.insert({ id: nextId++, created_at: T0 + Math.floor(r() * 80) * 1000 });
-      else if (t.rows.length) { const v = t.rows[Math.floor(r() * t.rows.length)]; t.delete(v.id); deleted.add(v.id); }
-    }
-  } while (cursor &amp;&amp; ++guard &lt; 1000);
-  assert.strictEqual(new Set(seen).size, seen.length, &#039;duplicates&#039;);
-  // Seen order must be strictly descending in (created_at, id), across page boundaries.
-  for (let i = 1; i &lt; seenRows.length; i++) assert.ok(compareDesc(seenRows[i - 1], seenRows[i]) &lt; 0, `order broken at ${i}`);
-  const survivors = [...original].filter((id) =&gt; !deleted.has(id));
-  const seenSet = new Set(seen);
-  assert.deepStrictEqual(survivors.filter((id) =&gt; !seenSet.has(id)), [], &#039;missed rows that existed throughout&#039;);
-});
-
-test(&#039;rowsExamined: OFFSET is O(offset+limit), keyset is O(limit)&#039;, () =&gt; {
-  const t = new Table(Array.from({ length: 10_000 }, (_, i) =&gt; ({ id: i + 1, created_at: T0 + i })));
-  t.rowsExamined = 0;
-  t.offsetPage({ limit: 10, offset: 9000 });
-  assert.strictEqual(t.rowsExamined, 9010);
-  t.rowsExamined = 0;
-  t.seek({ limit: 10, after: t.rows[8999] });
-  assert.strictEqual(t.rowsExamined, 11, &#039;limit + 1 look-ahead row&#039;);
-});
-
-test(&#039;prevCursor walks back to the exact previous page; first page has no prevCursor&#039;, () =&gt; {
-  const t = tiedTable(23);
-  const codec = new CursorCodec({ secret: SECRET });
-  const pages = [paginate(t, codec, { limit: 5 })];
-  assert.strictEqual(pages[0].prevCursor, null);
-  while (pages.at(-1).nextCursor) pages.push(paginate(t, codec, { limit: 5, cursor: pages.at(-1).nextCursor }));
-  assert.strictEqual(pages.at(-1).items.length, 3);
-  for (let i = pages.length - 1; i &gt; 0; i--) {
-    const back = paginate(t, codec, { limit: 5, cursor: pages[i].prevCursor });
-    assert.deepStrictEqual(ids(back.items), ids(pages[i - 1].items), `back from page ${i}`);
-  }
-  const backToFirst = paginate(t, codec, { limit: 5, cursor: pages[1].prevCursor });
-  assert.strictEqual(backToFirst.prevCursor, null, &#039;no newer rows before page 1&#039;);
-});
-
-test(&#039;cursors are base64url and round-trip&#039;, () =&gt; {
-  const codec = new CursorCodec({ secret: SECRET });
-  const c = codec.encode({ created_at: T0, id: 42, dir: &#039;prev&#039; }, &#039;scope&#039;);
-  assert.match(c, /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
-  assert.deepStrictEqual(codec.decode(c, &#039;scope&#039;), { created_at: T0, id: 42, dir: &#039;prev&#039; });
-});
-
-test(&#039;tampering with any character of a cursor is detected&#039;, () =&gt; {
-  const codec = new CursorCodec({ secret: SECRET });
-  const c = codec.encode({ created_at: T0, id: 42 });
-  const alphabet = &#039;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_&#039;;
-  for (let i = 0; i &lt; c.length; i++) {
-    if (c[i] === &#039;.&#039;) continue;
-    const repl = alphabet[(alphabet.indexOf(c[i]) + 1) % alphabet.length];
-    const bad = c.slice(0, i) + repl + c.slice(i + 1);
-    assert.throws(() =&gt; codec.decode(bad), InvalidCursorError, `flip at ${i} accepted`);
-  }
-});
-
-test(&#039;forged payload, wrong key, wrong scope, expiry and junk are rejected&#039;, () =&gt; {
-  const codec = new CursorCodec({ secret: SECRET });
-  const c = codec.encode({ created_at: T0, id: 42 }, &#039;GET /posts&#039;);
-  const forged = Buffer.from(JSON.stringify({ v: 1, k: [T0, 1], d: &#039;next&#039;, t: 0 })).toString(&#039;base64url&#039;) + &#039;.&#039; + c.split(&#039;.&#039;)[1];
-  assert.throws(() =&gt; codec.decode(forged, &#039;GET /posts&#039;), /signature/);
-  assert.throws(() =&gt; new CursorCodec({ secret: &#039;another-secret-0123456789&#039; }).decode(c, &#039;GET /posts&#039;), /signature/);
-  assert.throws(() =&gt; codec.decode(c, &#039;GET /posts?author=7&#039;), /signature/);
-  for (const junk of [&#039;&#039;, &#039;abc&#039;, &#039;a.b.c&#039;, &#039;!!!.???&#039;, 42, null, &#039;x&#039;.repeat(600)]) {
-    assert.throws(() =&gt; codec.decode(junk), InvalidCursorError);
-  }
-  let now = T0;
-  const ttl = new CursorCodec({ secret: SECRET, maxAgeMs: 60_000, clock: () =&gt; now });
-  const fresh = ttl.encode({ created_at: T0, id: 1 });
-  now += 60_001;
-  assert.throws(() =&gt; ttl.decode(fresh), /expired/);
-});
-
-test(&#039;a validly signed but semantically bad payload is still rejected&#039;, () =&gt; {
-  // Simulates a key compromise or a bug in an older server version.
-  const codec = new CursorCodec({ secret: SECRET });
-  const payload = Buffer.from(JSON.stringify({ v: 1, k: [&#039;DROP TABLE&#039;, 1], d: &#039;next&#039;, t: 0 })).toString(&#039;base64url&#039;);
-  const tag = codec._mac(&#039;&#039;, payload).toString(&#039;base64url&#039;);
-  assert.throws(() =&gt; codec.decode(`${payload}.${tag}`), TypeError);
-});
-
-test(&#039;input validation&#039;, () =&gt; {
-  const t = tiedTable(5);
-  assert.throws(() =&gt; t.offsetPage({ limit: 0 }), RangeError);
-  assert.throws(() =&gt; t.offsetPage({ limit: 5, offset: -1 }), RangeError);
-  assert.throws(() =&gt; t.seek({ limit: 1001 }), RangeError);
-  assert.throws(() =&gt; t.seek({ limit: 5, after: t.rows[0], before: t.rows[1] }), /at most one/);
-  assert.throws(() =&gt; new CursorCodec({ secret: &#039;short&#039; }), RangeError);
-  assert.throws(() =&gt; new CursorCodec({ secret: SECRET }).encode({ created_at: T0, id: 1, dir: &#039;up&#039; }), TypeError);
-  const empty = paginate(new Table(), new CursorCodec({ secret: SECRET }), { limit: 5 });
-  assert.deepStrictEqual(empty, { items: [], nextCursor: null, prevCursor: null });
-});
-
-if (failed) { console.log(`\n${failed} test(s) failed`); process.exit(1); }
-console.log(&#039;\nall tests passed&#039;);
-</code></pre>
-          </div>
       </div>
 
       <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
@@ -1158,9 +481,9 @@ console.log(&#039;\nall tests passed&#039;);
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
-  <script type="text/plain" data-defer src="js/code-lab.js?v=20ce3ba328"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=7f68b9d746"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
   

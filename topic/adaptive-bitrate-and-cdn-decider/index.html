@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -949,29 +949,18 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="adaptive-bitrate-and-cdn-decider" id="audio-speed-adaptive-bitrate-and-cdn-decider" title="Playback speed">1x</button>
         <audio id="audio-adaptive-bitrate-and-cdn-decider" src="audio/adaptive-bitrate-and-cdn-decider.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Adaptive bitrate and CDN selection</h2>
-
 <p>Adaptive bitrate streaming lets a player choose among encoded representations as network and playback conditions change. A smaller next segment can help avoid a stall. It cannot undo time already spent waiting for an earlier segment.</p>
-
 <p>There are three related decisions: which rendition the viewer requests now, which renditions the service prepares, and where their bytes should be cached. We'll separate them, then use real segment sizes in a small simulation to see why reacting to the last transfer can be too late.</p>
-
 <h2>The player chooses from a prepared offer</h2>
-
 <p>The <a href="#" data-nav="topic" data-slug="video-transcoding-pipeline">transcoding pipeline</a> creates the representations. In HLS, a master playlist identifies available variants, and their media playlists identify ordered segments. The player chooses files that already exist; it does not ask the encoder to change an in-flight file's quality.</p>
-
 <p>The ladder is the set of offered resolutions and bitrates. It must fit supported devices and codecs, with corresponding content aligned in time. A higher resolution is not automatically useful on a small display, and bitrate alone does not compare visual quality across different codecs or scenes.</p>
-
 <p>Three quantities guide playback:</p>
-
-<table><thead><tr><th>Quantity</th><th>Meaning</th></tr></thead><tbody><tr><td>Media bitrate</td><td>Encoded bits per second of media</td></tr><tr><td>Download throughput</td><td>Received bits per second of transfer time</td></tr><tr><td>Buffer</td><td>Seconds of media available ahead of playback</td></tr></tbody></table>A rendition can have a modest average bitrate and still contain a large segment. The player needs enough buffer to survive that segment's actual transfer. A path's last observed throughput is evidence about the next request, not knowledge of its future capacity.
-
+<table><thead><tr><th>Quantity</th><th>Meaning</th></tr></thead><tbody><tr><td>Media bitrate</td><td>Encoded bits per second of media</td></tr><tr><td>Download throughput</td><td>Received bits per second of transfer time</td></tr><tr><td>Buffer</td><td>Seconds of media available ahead of playback</td></tr></tbody></table>
+<p>A rendition can have a modest average bitrate and still contain a large segment. The player needs enough buffer to survive that segment's actual transfer. A path's last observed throughput is evidence about the next request, not knowledge of its future capacity.</p>
 <p>Production selectors may combine throughput estimates, buffer levels, device limits and switching history. For example, dash.js documents distinct throughput, buffer, dropped-frame and request-abandonment rules. Our rule below intentionally uses only the previous completed transfer so its delay is easy to see.</p>
-
 <h2>A three-request experiment</h2>
-
 <p>The lab and media helper generate the same HLS files as the preceding lesson. Use its pinned Python environment and FFmpeg 8.1.2. File sizes are measured; download times and stalls are calculated under a chosen capacity schedule, with no real congested network.</p>
-
 <p>Both policies start with one second buffered. Fixed-high always requests the larger rendition. Adaptive requests high if its previous observed capacity is at least 200,000 bits/s, otherwise low. Its initial observation is 400,000 bits/s; neither policy can see the next capacity before choosing.</p>
-
 <pre><code class="language-bash">/tmp/fanout-m24/bin/python m24-lab.py abr</code></pre>
 <pre><code class="language-output">#EXTM3U
 #EXT-X-VERSION:6
@@ -983,58 +972,35 @@ chosen capacity bits/s=[400000, 40000, 400000] initial buffer=1.000s
 fixed-high download/buffer/stall: high:0.447s/1.553s/0.000s, high:4.474s/1.000s/2.922s, high:0.470s/1.530s/0.000s total_stall=2.922s
 adaptive download/buffer/stall: high:0.447s/1.553s/0.000s, high:4.474s/1.000s/2.922s, low:0.139s/1.861s/0.000s total_stall=2.922s
 simulated origin observations: A age=4 refused; B age=1 selected=B</code></pre>
-
 <p>Each generated segment lasts one second. The largest high segment contains 23,500 bytes, giving the advertised peak of 188,000 bits/s. This calculation is valid for the fixture's equal one-second segments and one-second target duration; it is not a promise of network capacity.</p>
-
 <p>For a segment of <code>S</code> bytes and a path capacity of <code>C</code> bits/s, ideal transfer time is <code>8*S/C</code>. If the player starts that request with <code>B</code> seconds buffered, the stall is <code>max(0, transfer time − B)</code>. Afterward, the buffer is <code>max(0, B − transfer time) + segment duration</code>.</p>
-
 <p>The first high segment is 22,372 bytes. At 400,000 bits/s it takes 0.44744 seconds, leaving 1.55256 seconds buffered after adding the new second of media. The next high segment has the same size, but capacity drops to 40,000 bits/s.</p>
-
 <p>That transfer takes 4.4744 seconds: 2.92184 seconds longer than the available buffer. Both policies stall by the displayed 2.922 seconds. Adaptive learns about the drop only after that transfer completes, then switches low just as capacity recovers.</p>
-
 <div class="mermaid">flowchart TD
     accTitle: A playback decision arrives late
     accDescr: The first fast transfer makes the selector choose high again. The second transfer is slow and stalls. Only afterward does the selector choose low, when the path has already recovered.
     A["Request 1: high<br/>Fast transfer"] --> B["Request 2: high<br/>Capacity drops; stall"]
     B --> C["Observe slow transfer"]
     C --> D["Request 3: low<br/>Capacity has recovered"]</div>
-
 <p>The last low segment's 6,956 bytes arrive quickly, but cannot recover time already stalled. On this schedule the adaptive rule does not improve the total-stall metric. The experiment omits round trips, protocol overhead, contention and decoder startup; it tests the consequence of delayed information, not a production ABR algorithm.</p>
-
 <p>A buffer-aware rule could become more cautious as playable time runs low. More startup buffer can absorb longer transfers, but makes the viewer wait before playback. Evaluate startup delay, rebuffering and quality changes together rather than choosing a universal threshold from this three-second clip.</p>
-
 <h2>Which renditions should exist?</h2>
-
 <p>The player cannot select a version the service has not prepared. Encoding every upload into every possible format spends compute and storage even on videos that nobody watches. Deferring everything makes the first viewer wait for processing.</p>
-
-<table><thead><tr><th>Preparation policy</th><th>Useful when</th><th>Cost or delay</th></tr></thead><tbody><tr><td>Eager ladder</td><td>The expected audience needs several representations immediately</td><td>Work is paid even if some renditions are never watched</td></tr><tr><td>Baseline, then more on demand</td><td>A complete initial offer is enough for less-watched uploads</td><td>New representations take time to become available</td></tr><tr><td>Prepare for predicted demand</td><td>A release or rising audience provides advance notice</td><td>A wrong prediction wastes work or misses demand</td></tr></tbody></table>In our proposed service, an on-demand miss queues a deduplicated job keyed by source and encoding recipe. The existing baseline remains playable while the new rendition is prepared. Add it to the advertised offer only after validation; a viewer request should not receive a playlist pointing at unfinished work.
-
+<table><thead><tr><th>Preparation policy</th><th>Useful when</th><th>Cost or delay</th></tr></thead><tbody><tr><td>Eager ladder</td><td>The expected audience needs several representations immediately</td><td>Work is paid even if some renditions are never watched</td></tr><tr><td>Baseline, then more on demand</td><td>A complete initial offer is enough for less-watched uploads</td><td>New representations take time to become available</td></tr><tr><td>Prepare for predicted demand</td><td>A release or rising audience provides advance notice</td><td>A wrong prediction wastes work or misses demand</td></tr></tbody></table>
+<p>In our proposed service, an on-demand miss queues a deduplicated job keyed by source and encoding recipe. The existing baseline remains playable while the new rendition is prepared. Add it to the advertised offer only after validation; a viewer request should not receive a playlist pointing at unfinished work.</p>
 <p>This is independent of the request-by-request ABR rule. It changes what the rule will be able to choose later.</p>
-
 <h2>The CDN decider controls preparation and placement</h2>
-
 <p>“CDN decider” is a name for our proposed policy service, not a standard CDN API. It combines recent view velocity, viewer geography, channel audience, content type, shares, trending signals and known release spikes to decide where extra work is justified.</p>
-
 <p>Its actions may include generating another rendition, warming selected ready objects in a region, retaining an origin copy or retiring an unused cache placement. The available controls depend on the delivery provider; ordinary CDN eviction is often automatic, not a per-object command the application owns.</p>
-
 <p>Warming transfers bytes before a viewer requests them. It can reduce a first miss while consuming fill bandwidth and cache space. Moving a source to colder storage is a separate retention choice and may increase retrieval delay. Keep encoding, cache placement and storage tiering as separate actions with explicit costs.</p>
-
 <p>Netflix's Open Connect fill documentation gives a concrete placement example: appliances hold portions of the catalog and primarily receive updates in off-peak windows. Popularity changes and new or re-encoded titles affect those updates. This is Netflix's documented delivery model, not a guarantee offered by every CDN.</p>
-
 <p>Our controller can consume <a href="#" data-nav="topic" data-slug="event-bus-for-product-events">product events</a> such as <code>video.published</code>, <code>video.viewed</code> and <code>video.trending</code>, and emit a request to prepare or cache a version. Treat <code>variant.generated</code> as evidence of a ready output, not merely a queued task. Repeated events should converge on one intended action.</p>
-
 <p>Use bounded budgets and a quiet period before reversing a placement decision. Otherwise noisy demand can repeatedly trigger expensive encodes or cache fills. Measure useful cache hits and avoided viewer delay against the work spent; traffic volume alone does not show that warming paid off.</p>
-
 <h2>Choosing a delivery location</h2>
-
 <p>After selecting a ready object, a player or delivery service may still choose which CDN or origin serves it. This is a separate decision from choosing the rendition. Old latency samples can mislead either choice.</p>
-
 <p>The final line of the replay compares two simulated origins transferring the same 1,000 bytes. A took 0.1 seconds at tick 1; B took 0.2 seconds at tick 4. At tick 5, a maximum age of two ticks excludes the faster but stale A sample, so B wins.</p>
-
 <p>That toy rule only compares fresh equal-size observations. A real selector also needs failure rates, comparable workloads and a fallback when no candidate is eligible. Neither the example nor the label “CDN” establishes a global performance result.</p>
-
-<p>The next <a href="#" data-nav="topic" data-slug="signed-urls-drm-and-video-security">access lesson</a> checks permission on every playlist and segment the player chooses.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>The next <a href="#" data-nav="topic" data-slug="signed-urls-drm-and-video-security">access lesson</a> checks permission on every playlist and segment the player chooses.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>Adaptive Bitrate (ABR) Protocols: HLS & DASH</h2>
       <p>Adaptive Bitrate streaming dynamically adjusts video quality in real time based on the viewer's current network bandwidth and device capabilities. If a viewer walks into an elevator, the stream drops from 1080p to 480p, usually before the buffer runs dry, so playback continues at lower quality instead of stalling.</p>
 
@@ -1310,7 +1276,7 @@ simulated origin observations: A age=4 refused; B age=1 selected=B</code></pre>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-data.js?v=accc3870f9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

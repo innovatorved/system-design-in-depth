@@ -42,6 +42,8 @@ Most system design materials are either high-level cheat sheets for interviews o
 
 ---
 
+> **Note:** This project and its embedded browser IDE (`@innovatorved/code-lab`) are in active development.
+
 ## Curriculum Overview (6 Tracks, 18 Modules, 200 Units)
 
 The curriculum is structured into **6 core engineering tracks** following strict conceptual prerequisites:
@@ -67,7 +69,7 @@ Interactive sandboxes let you tweak parameters, simulate network partitions, ind
 - **Algorithms & Data Structures:** Consistent Hashing Ring, Sliding Window Rate Limiter, Cache Eviction (LRU/LFU/FIFO), Bloom Filter, HyperLogLog, Count-Min Sketch, BM25 Scoring, CRDT Conflict Resolution, Geohash Explorer.
 
 ### 15 Interactive System Design Build Labs (`/build/<slug>/`)
-Every reference implementation runs directly in the browser at `/build/<slug>/` via **`@innovatorved/code-lab`** ([Package Docs](projects/code-lab/README.md) · [Architecture Spec](projects/code-lab/ARCHITECTURE.md))—a zero-dependency Monaco IDE workbench and sandboxed Web Worker Virtual Node.js v22 runtime supporting both **Guided Step-by-Step Mode** (`JavaScript` & `TypeScript`) and **Freeform Sandbox Mode**:
+Each reference implementation runs in the browser at `/build/<slug>/` using **`@innovatorved/code-lab`** ([README](projects/code-lab/README.md) · [Architecture](projects/code-lab/ARCHITECTURE.md)), an in-browser editor and Web Worker Node.js runtime (currently in active development) with guided steps and a sandbox mode:
 
 1. [`/build/load-balancer-from-scratch/`](build/load-balancer-from-scratch/) — Layer 7 Load Balancer (`node:http` reverse proxy, Round-Robin, Least-Connections, P2C, active/passive health checks)
 2. [`/build/consistent-hashing-ring/`](build/consistent-hashing-ring/) — Consistent Hashing Ring with Virtual Nodes & Bounded Load
@@ -86,9 +88,9 @@ Every reference implementation runs directly in the browser at `/build/<slug>/` 
 15. [`/build/tiny-search-engine/`](build/tiny-search-engine/) — Inverted Index Search Engine with Variable-Byte Posting Lists & BM25F
 
 ### `@innovatorved/code-lab` (`projects/code-lab/`)
-The interactive build labs are powered by [`@innovatorved/code-lab`](projects/code-lab/), an embeddable `<code-lab>` Web Component, `CodeLab.mount()` SDK, and headless Virtual Node.js runtime (`CodeLabRuntime`):
-- **[Usage & SDK Reference (`projects/code-lab/README.md`)](projects/code-lab/README.md)** — Embedding via `<code-lab>`, `CodeLab.mount()`, instance methods, and headless `executeInVirtualRuntime`.
-- **[Engineering & Runtime Specification (`projects/code-lab/ARCHITECTURE.md`)](projects/code-lab/ARCHITECTURE.md)** — Warm Web Worker pooling, `resourceTracker` async settle loop, 10-pass TypeScript/ESM transpiler (`transpileTS`), POSIX VFS + loopback `node:http`/`node:net`, module resolution, and guided lab authoring template.
+The build labs run on [`@innovatorved/code-lab`](projects/code-lab/) (early development), a standalone `<code-lab>` custom element and Web Worker runtime:
+- **[README (`projects/code-lab/README.md`)](projects/code-lab/README.md)** — Setup, options, and runtime usage.
+- **[Architecture (`projects/code-lab/ARCHITECTURE.md`)](projects/code-lab/ARCHITECTURE.md)** — How the Web Worker runtime, VFS, and TypeScript transpiler work.
 
 ---
 

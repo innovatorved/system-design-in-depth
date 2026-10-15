@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -955,49 +955,26 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="concurrency-vs-parallelism" id="audio-speed-concurrency-vs-parallelism" title="Playback speed">1x</button>
         <audio id="audio-concurrency-vs-parallelism" src="audio/concurrency-vs-parallelism.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>How a server handles many requests</h2>
-
 <p>Concurrency lets several tasks make progress during overlapping periods. Parallelism means computations run at the same time on different execution resources. A server can handle many waiting requests concurrently while only one CPU core executes its application code.</p>
-
 <p>The distinction helps you choose between overlapping waits, adding compute capacity, and limiting the amount of work in flight. We will separate those choices using a small request timeline.</p>
-
 <h2>Separate computing from waiting</h2>
-
 <p>Assume each request needs 5 ms of CPU work, waits 40 ms for a database result, then needs another 1 ms of CPU work to respond. These are teaching values, not measurements of a real endpoint.</p>
-
 <p>A server that finishes each request before starting the next spends 46 ms per request. Sixteen requests arriving together take 16 × 46 = 736 ms to finish. Its CPU does only 96 ms of application work during that period; the rest is waiting.</p>
-
 <p>Another request could use the CPU while the first waits. Overlapping those waits reduces the time needed to finish the batch without making any individual database operation faster.</p>
-
-<p>:::interactive name="ServerConcurrency"</p>
-<p>Start with 16 requests and compare the three handling models. Watch both the request timelines and the CPU row. Then increase the burst to 64 requests.</p>
-<p>:::</p>
-
+<p>:::interactive name="ServerConcurrency" Start with 16 requests and compare the three handling models. Watch both the request timelines and the CPU row. Then increase the burst to 64 requests. :::</p>
 <h2>Two ways to overlap the waits</h2>
-
 <p>A <strong>thread pool</strong> gives several requests their own execution context. When one thread blocks on I/O, another can run. A cap bounds the number of requests holding worker slots; requests beyond that cap must wait or be refused.</p>
-
 <p>An <strong>event loop</strong> starts a non-blocking operation and resumes the request when its result is ready. A request waiting on network I/O does not need to occupy a separate application thread for the entire wait. The loop can work on another ready request meanwhile.</p>
-
 <p>In this model, the eight-worker pool finishes 16 requests in 134 ms; the event-loop model finishes them in 121 ms. The difference comes from the model's admission cap and scheduling, not a universal speed advantage of event loops. Both still perform 96 ms of CPU work on one core.</p>
-
 <p>A long CPU computation on the event-loop thread prevents its other callbacks from running. Declaring a function <code>async</code> does not move that computation to another processor. In Node.js, some platform operations use a worker pool; application CPU work still needs an explicit strategy such as worker threads, separate processes, or small chunks that yield.</p>
-
 <h2>Add parallelism when computing is the limit</h2>
-
 <p>For 64 requests, the model needs 64 × 6 = 384 ms of CPU work. Its event-loop result reaches that floor: the single core is continuously busy. Adding more waiting requests cannot make that core execute the same instructions sooner.</p>
-
 <p>To reduce the computing time, reduce the work or spread independent work across additional cores. Shared state, coordination, and uneven task sizes can limit the gain, so twice as many workers does not promise twice the throughput.</p>
-
 <p>Runtime details matter. In a conventional CPython build with the global interpreter lock enabled, Python bytecode does not execute in parallel across its threads. Threads can still overlap I/O; processes, native code that releases the lock, and optional free-threaded builds have different behavior. “Threads never run in parallel” is not a general rule.</p>
-
 <h2>Bound the work your dependencies receive</h2>
-
 <p>Overlapping waits is useful only while the dependency can support the resulting load. More requests in flight can increase database contention, hold more connections, consume memory, and make every request wait longer.</p>
-
 <p>Budget concurrency across application instances. If each of ten instances may hold eight database connections, that is up to 80 connections before counting background workers and administrative access. A per-process cap is not a system-wide cap.</p>
-
-<p>The model above holds database wait time fixed. Real dependencies often slow down as load rises, so its numbers illustrate scheduling rather than predict production throughput. Use measurements to choose limits, and use <a href="#" data-nav="topic" data-slug="backpressure">backpressure</a> or <a href="#" data-nav="topic" data-slug="load-shedding">load shedding</a> when incoming work exceeds them.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>The model above holds database wait time fixed. Real dependencies often slow down as load rises, so its numbers illustrate scheduling rather than predict production throughput. Use measurements to choose limits, and use <a href="#" data-nav="topic" data-slug="backpressure">backpressure</a> or <a href="#" data-nav="topic" data-slug="load-shedding">load shedding</a> when incoming work exceeds them.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
 <h2>How a server handles many requests</h2>
 <p>Concurrency lets several tasks make progress during overlapping periods. Parallelism means computations run at the same time on different execution resources. A server can handle many waiting requests concurrently while only one CPU core executes its application code.</p>
 <p>The distinction helps you choose between overlapping waits, adding compute capacity, and limiting the amount of work in flight. We will separate those choices using a small request timeline.</p>
@@ -1272,7 +1249,7 @@
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

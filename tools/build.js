@@ -23,6 +23,7 @@ const PUBLIC_ITEMS = [
   '.well-known',
   'assets',
   'audio',
+  'build',
   'css',
   'data',
   'fonts',

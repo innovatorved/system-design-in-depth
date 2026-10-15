@@ -1,4 +1,7 @@
 'use strict';
+if (typeof globalThis !== 'undefined' && typeof globalThis.Bun === 'undefined') {
+  globalThis.Bun = { version: '1.1.20' };
+}
 /**
  * Virtual Node.js Web Worker Runtime & Multi-File JS/TS Execution Engine
  * Zero external dependencies. Runs identically in Browser Web Workers, Browser Main Thread, and Node.js.
@@ -862,12 +865,13 @@ function __initVirtualRuntime(rootScope) {
       }
     }
 
-    function makeStats(size, mtimeMs, isDir, ino = 1) {
+    function makeStats(size, mtimeMs, isDir, ino = 1, mode = null) {
       const d = new Date(mtimeMs);
+      const defaultMode = isDir ? 0o40755 : 0o100644;
       return {
         size,
         ino,
-        mode: isDir ? 0o40755 : 0o100644,
+        mode: mode !== null && mode !== undefined ? mode : defaultMode,
         mtimeMs,
         ctimeMs: mtimeMs,
         atimeMs: mtimeMs,
@@ -889,7 +893,9 @@ function __initVirtualRuntime(rootScope) {
     // Seed initial project files into /workspace
     for (const [relPath, content] of Object.entries(initialFiles)) {
       const cleanRel = relPath.startsWith('/') ? relPath.slice(1) : relPath;
-      const fullPath = normPath(`/workspace/${cleanRel}`);
+      const fullPath = (relPath.startsWith('/workspace/') || relPath === '/workspace')
+        ? normPath(relPath)
+        : normPath(`/workspace/${cleanRel}`);
       ensureParentDirs(fullPath);
       const bytes = typeof content === 'string' ? utf8Encode(content) : new Uint8Array(content);
       files.set(fullPath, {
@@ -897,6 +903,7 @@ function __initVirtualRuntime(rootScope) {
         mtimeMs: Date.now(),
         ctimeMs: Date.now(),
         ino: nextIno++,
+        mode: 0o100644,
         isInitialProjectFile: true
       });
     }
@@ -975,9 +982,9 @@ function __initVirtualRuntime(rootScope) {
 
       statSync(p) {
         const np = normPath(p);
-        if (dirs.has(np)) return makeStats(0, Date.now(), true, 1);
+        if (dirs.has(np)) return makeStats(0, Date.now(), true, 1, 0o40755);
         const f = files.get(np);
-        if (f) return makeStats(f.data.byteLength, f.mtimeMs, false, f.ino);
+        if (f) return makeStats(f.data.byteLength, f.mtimeMs, false, f.ino, f.mode !== undefined ? f.mode : 0o100644);
         throw fsError('ENOENT', 'stat', p, 'no such file or directory');
       },
 
@@ -988,11 +995,11 @@ function __initVirtualRuntime(rootScope) {
       fstatSync(fd) {
         const entry = fdTable.get(fd);
         if (!entry) throw fsError('EBADF', 'fstat', String(fd), 'bad file descriptor');
-        if (entry.isDirectory) return makeStats(0, Date.now(), true, 1);
-        return makeStats(entry.inode.data.byteLength, entry.inode.mtimeMs, false, entry.inode.ino);
+        if (entry.isDirectory) return makeStats(0, Date.now(), true, 1, 0o40755);
+        return makeStats(entry.inode.data.byteLength, entry.inode.mtimeMs, false, entry.inode.ino, entry.inode.mode !== undefined ? entry.inode.mode : 0o100644);
       },
 
-      openSync(p, flags = 'r') {
+      openSync(p, flags = 'r', mode = 0o666) {
         const np = normPath(p);
         const flagStr = String(flags || 'r');
         if (dirs.has(np)) {
@@ -1011,7 +1018,7 @@ function __initVirtualRuntime(rootScope) {
           const parent = VirtualPath.dirname(np);
           if (!dirs.has(parent)) throw fsError('ENOENT', 'open', p, 'no such file or directory');
           if (!inode) {
-            inode = { data: new Uint8Array(0), mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++ };
+            inode = { data: new Uint8Array(0), mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++, mode: 0o100000 | (Number(mode) & 0o777) };
             files.set(np, inode);
           } else {
             inode.data = new Uint8Array(0);
@@ -1021,7 +1028,7 @@ function __initVirtualRuntime(rootScope) {
           const parent = VirtualPath.dirname(np);
           if (!dirs.has(parent)) throw fsError('ENOENT', 'open', p, 'no such file or directory');
           if (!inode) {
-            inode = { data: new Uint8Array(0), mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++ };
+            inode = { data: new Uint8Array(0), mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++, mode: 0o100000 | (Number(mode) & 0o777) };
             files.set(np, inode);
           }
         }
@@ -1137,13 +1144,24 @@ function __initVirtualRuntime(rootScope) {
           : (data instanceof Uint8Array ? data.slice() : new Uint8Array( VirtualBuffer.from(String(data), encoding) ));
         let inode = files.get(np);
         if (!inode) {
-          inode = { data: bytes, mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++ };
+          const modeVal = (opts && typeof opts === 'object' && opts.mode !== undefined) ? Number(opts.mode) : 0o100644;
+          inode = { data: bytes, mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++, mode: modeVal };
           files.set(np, inode);
         } else {
           inode.data = bytes;
           inode.mtimeMs = Date.now();
         }
         deletedInspectorCache.set(np, { data: bytes.slice(), mtimeMs: inode.mtimeMs, deletedAtMs: null });
+      },
+
+      chmodSync(p, mode) {
+        const np = normPath(p);
+        const parsedMode = typeof mode === 'string' ? parseInt(mode, 8) : Number(mode);
+        if (dirs.has(np)) return;
+        const f = files.get(np);
+        if (!f) throw fsError('ENOENT', 'chmod', p, 'no such file or directory');
+        const currentType = (f.mode !== undefined ? f.mode : 0o100644) & ~0o777;
+        f.mode = currentType | (parsedMode & 0o777);
       },
 
       appendFileSync(p, data, opts) {
@@ -1184,6 +1202,52 @@ function __initVirtualRuntime(rootScope) {
       renameSync(oldP, newP) {
         const src = normPath(oldP);
         const dst = normPath(newP);
+        if (dirs.has(src)) {
+          if (src === dst) return;
+          if (dst.startsWith(src + '/')) {
+            throw fsError('EINVAL', 'rename', oldP, 'cannot move an ancestor to child');
+          }
+          if (files.has(dst)) {
+            throw fsError('ENOTDIR', 'rename', newP, 'not a directory');
+          }
+          if (dirs.has(dst)) {
+            const hasChildren = Array.from(dirs).some(d => d !== dst && d.startsWith(dst + '/')) ||
+              Array.from(files.keys()).some(f => f.startsWith(dst + '/'));
+            if (hasChildren) {
+              throw fsError('ENOTEMPTY', 'rename', newP, 'directory not empty');
+            }
+            dirs.delete(dst);
+          }
+          ensureParentDirs(dst);
+          dirs.delete(src);
+          dirs.add(dst);
+
+          const srcPrefix = src + '/';
+          const dstPrefix = dst + '/';
+          const dirsToRename = [];
+          for (const d of dirs) {
+            if (d.startsWith(srcPrefix)) dirsToRename.push(d);
+          }
+          for (const d of dirsToRename) {
+            dirs.delete(d);
+            dirs.add(dstPrefix + d.slice(srcPrefix.length));
+          }
+
+          const filesToRename = [];
+          for (const [p, fileNode] of files.entries()) {
+            if (p.startsWith(srcPrefix)) filesToRename.push([p, fileNode]);
+          }
+          for (const [p, fileNode] of filesToRename) {
+            files.delete(p);
+            const newPath = dstPrefix + p.slice(srcPrefix.length);
+            files.set(newPath, fileNode);
+            for (const fdEntry of fdTable.values()) {
+              if (fdEntry.path === p) fdEntry.path = newPath;
+            }
+          }
+          return;
+        }
+
         const inode = files.get(src);
         if (!inode) throw fsError('ENOENT', 'rename', oldP, 'no such file or directory');
         ensureParentDirs(dst);
@@ -1454,6 +1518,7 @@ function __initVirtualRuntime(rootScope) {
     fsShim.access = wrapAsyncCb(fsShim.accessSync);
     fsShim.copyFile = wrapAsyncCb(fsShim.copyFileSync);
     fsShim.realpath = wrapAsyncCb(fsShim.realpathSync);
+    fsShim.chmod = wrapAsyncCb(fsShim.chmodSync);
     fsShim.open = wrapAsyncCb(fsShim.openSync);
     fsShim.close = wrapAsyncCb(fsShim.closeSync);
     fsShim.fsync = wrapAsyncCb(fsShim.fsyncSync);
@@ -1541,6 +1606,7 @@ function __initVirtualRuntime(rootScope) {
       constants: fsShim.constants,
       FileHandle: VirtualFileHandle,
       access: async (p, mode) => fsShim.accessSync(p, mode),
+      chmod: async (p, mode) => fsShim.chmodSync(p, mode),
       copyFile: async (src, dest, mode) => fsShim.copyFileSync(src, dest, mode),
       open: async (p, flags = 'r') => {
         const np = normPath(p);
@@ -2229,7 +2295,70 @@ function __initVirtualRuntime(rootScope) {
   Stream.promises = VirtualStreamPromises;
   const VirtualStream = Stream;
 
-  function createVirtualHttp(resourceTracker) {
+  function createVirtualPortTable() {
+    const table = new Map();
+    return {
+      registerServer(port, info = {}) {
+        const p = Number(port);
+        if (table.has(p)) {
+          throw new Error(`Port ${p} is already in use`);
+        }
+        const entry = Object.assign({ port: p, registeredAt: Date.now() }, info);
+        table.set(p, entry);
+        return entry;
+      },
+      unregisterServer(port) {
+        return table.delete(Number(port));
+      },
+      killProcess(pid) {
+        const pStr = String(pid);
+        let found = false;
+        for (const [port, entry] of table.entries()) {
+          if (entry.pid !== undefined && String(entry.pid) === pStr) {
+            if (entry.server && typeof entry.server.close === 'function') {
+              try { entry.server.close(); } catch (_) {}
+            }
+            if (typeof entry.stop === 'function') {
+              try { entry.stop(); } catch (_) {}
+            }
+            table.delete(port);
+            found = true;
+          }
+        }
+        return found;
+      },
+      unregisterByPid(pid) {
+        return this.killProcess(pid);
+      },
+      getServer(port) {
+        return table.get(Number(port)) || null;
+      },
+      listServers() {
+        return Array.from(table.values());
+      },
+      async dispatchRequest(url, init = {}) {
+        const parsed = new URL(url);
+        const port = Number(parsed.port || (parsed.protocol === 'https:' ? 443 : 80));
+        const entry = table.get(port);
+        if (!entry) {
+          const err = new Error(`connect ECONNREFUSED 127.0.0.1:${port}`);
+          err.code = 'ECONNREFUSED';
+          throw err;
+        }
+        if (entry.fetch) {
+          return entry.fetch(new Request(url, init));
+        }
+        if (entry.server && typeof entry.server.dispatchRequest === 'function') {
+          return entry.server.dispatchRequest(url, init);
+        }
+        return new Response('OK', { status: 200 });
+      }
+    };
+  }
+
+  const _defaultPortTable = createVirtualPortTable();
+
+  function createVirtualHttp(resourceTracker, activePortTable = null) {
     const activeServers = new Map(); // port -> VirtualServer
     const httpTrace = [];
     let nextEphemeralPort = 31000;
@@ -2651,6 +2780,14 @@ function __initVirtualRuntime(rootScope) {
         this._host = host || '127.0.0.1';
         this._listening = true;
         activeServers.set(this._port, this);
+        if (activePortTable) {
+          activePortTable.registerServer(this._port, {
+            server: this,
+            name: 'http-server',
+            port: this._port,
+            pid: (resourceTracker && resourceTracker.pid) || 1
+          });
+        }
         if (typeof callback === 'function') {
           this.once('listening', callback);
         }
@@ -2672,6 +2809,9 @@ function __initVirtualRuntime(rootScope) {
       close(callback) {
         if (this._port !== null) {
           activeServers.delete(this._port);
+          if (activePortTable) {
+            activePortTable.unregisterServer(this._port);
+          }
         }
         this._listening = false;
         if (typeof callback === 'function') {
@@ -2679,6 +2819,101 @@ function __initVirtualRuntime(rootScope) {
         }
         queueMicrotask(() => this.emit('close'));
         return this;
+      }
+
+      async dispatchRequest(url, init = {}) {
+        return new Promise((resolve, reject) => {
+          try {
+            const parsed = new URL(url);
+            let rawHeaders = init.headers || {};
+            let hdrs = {};
+            if (rawHeaders instanceof Headers || (rawHeaders && typeof rawHeaders.entries === 'function')) {
+              for (const [k, v] of rawHeaders.entries()) {
+                hdrs[k.toLowerCase()] = String(v);
+              }
+            } else if (typeof rawHeaders === 'object' && rawHeaders !== null) {
+              for (const [k, v] of Object.entries(rawHeaders)) {
+                if (v !== undefined) hdrs[k.toLowerCase()] = String(v);
+              }
+            }
+            if (!hdrs.host) {
+              hdrs.host = `${parsed.hostname || '127.0.0.1'}:${parsed.port || this._port}`;
+            }
+
+            const serverReq = new IncomingMessage({
+              method: (init.method || 'GET').toUpperCase(),
+              url: parsed.pathname + parsed.search,
+              headers: hdrs,
+              socket: { remoteAddress: '127.0.0.1', encrypted: false }
+            });
+
+            const mockClientReq = new MiniEventEmitter();
+            mockClientReq.destroyed = false;
+            mockClientReq._clearTimeout = () => {};
+            mockClientReq._finishInFlight = () => {};
+            mockClientReq._onResponseHeaders = () => {};
+
+            const serverRes = new ServerResponse(mockClientReq, null);
+            const chunks = [];
+
+            const origWrite = serverRes.write.bind(serverRes);
+            const origEnd = serverRes.end.bind(serverRes);
+
+            serverRes.write = function(chunk, encoding) {
+              if (chunk !== undefined && chunk !== null && chunk !== '') {
+                const buf = typeof chunk === 'string'
+                  ? VirtualBuffer.from(chunk, encoding || 'utf8')
+                  : VirtualBuffer.from(chunk);
+                chunks.push(buf);
+              }
+              return origWrite(chunk, encoding);
+            };
+
+            serverRes.end = function(chunk, encoding, cb) {
+              if (typeof chunk === 'function') { cb = chunk; chunk = undefined; }
+              else if (typeof encoding === 'function') { cb = encoding; encoding = undefined; }
+              if (chunk !== undefined && chunk !== null && chunk !== '') {
+                const buf = typeof chunk === 'string'
+                  ? VirtualBuffer.from(chunk, encoding || 'utf8')
+                  : VirtualBuffer.from(chunk);
+                chunks.push(buf);
+              }
+              const resObj = origEnd(chunk, encoding, cb);
+              queueMicrotask(() => {
+                const totalBuf = VirtualBuffer.concat(chunks);
+                const outHeaders = new Headers();
+                for (const [k, v] of Object.entries(serverRes._headers)) {
+                  outHeaders.set(k, v);
+                }
+                const response = new Response(totalBuf, {
+                  status: serverRes.statusCode || 200,
+                  statusText: serverRes.statusMessage || 'OK',
+                  headers: outHeaders
+                });
+                resolve(response);
+              });
+              return resObj;
+            };
+
+            this.emit('request', serverReq, serverRes);
+
+            queueMicrotask(async () => {
+              try {
+                if (init.body) {
+                  let b = init.body;
+                  if (typeof b.text === 'function') b = await b.text();
+                  const buf = typeof b === 'string' ? VirtualBuffer.from(b, 'utf8') : VirtualBuffer.from(b);
+                  serverReq._pushData(buf);
+                }
+                serverReq._pushEnd();
+              } catch (err) {
+                reject(err);
+              }
+            });
+          } catch (err) {
+            reject(err);
+          }
+        });
       }
     }
 
@@ -2711,7 +2946,14 @@ function __initVirtualRuntime(rootScope) {
       getTrace() {
         return httpTrace.map(({ _t0, ...rest }) => rest);
       },
+      activeServers,
+      hasActiveServers() {
+        return activeServers.size > 0;
+      },
       closeAllServers() {
+        for (const s of Array.from(activeServers.values())) {
+          try { s.close(); } catch (_) {}
+        }
         activeServers.clear();
       }
     };
@@ -4335,7 +4577,13 @@ function __initVirtualRuntime(rootScope) {
       maxConsoleCalls = 5000,
       onStdout = null,
       onStderr = null,
-      onTestResult = null
+      onTestResult = null,
+      vfs: optVfs = null,
+      activePortTable: optPortTable = null,
+      portTable = null,
+      pid = 1000,
+      argv = null,
+      isBackground = false
     } = options;
 
     const startTime = performance.now();
@@ -4354,7 +4602,8 @@ function __initVirtualRuntime(rootScope) {
       allTimers: new Set(),
       activeImmediates: new Set(),
       inFlightHttp: new Set(),
-      pendingTests: new Set()
+      pendingTests: new Set(),
+      pid
     };
 
     function formatConsoleArg(arg) {
@@ -4488,8 +4737,21 @@ function __initVirtualRuntime(rootScope) {
       };
     }
 
-    const vfs = createVirtualFs(files);
-    const vhttp = createVirtualHttp(resourceTracker);
+    const activePortTable = optPortTable || portTable || _defaultPortTable;
+    resourceTracker.pid = pid;
+
+    const vfs = optVfs || createVirtualFs(files);
+    if (optVfs && files && typeof files === 'object') {
+      for (const [fPath, content] of Object.entries(files)) {
+        const abs = fPath.startsWith('/') ? fPath : '/workspace/' + fPath;
+        try {
+          const dir = VirtualPath.dirname(abs);
+          if (!vfs.existsSync(dir)) vfs.mkdirSync(dir, { recursive: true });
+          vfs.writeFileSync(abs, content);
+        } catch (_) {}
+      }
+    }
+    const vhttp = createVirtualHttp(resourceTracker, activePortTable);
     const vnet = createVirtualNet(resourceTracker, vhttp.getTrace());
 
     const injectedPackages = new Map();
@@ -4874,11 +5136,11 @@ function __initVirtualRuntime(rootScope) {
 
     const sandboxProcess = Object.assign(new EventEmitter(), {
       env: { NODE_ENV: 'development', PATH: '/usr/local/bin:/usr/bin:/bin', HOME: '/home/coder' },
-      argv: ['node', `/workspace/${entry}`],
+      argv: argv || ['node', entry.startsWith('/') ? entry : `/workspace/${entry}`],
       argv0: 'node',
       execArgv: [],
       execPath: '/usr/local/bin/node',
-      pid: 1000,
+      pid: pid,
       ppid: 1,
       title: 'node',
       version: 'v22.0.0',
@@ -5547,6 +5809,461 @@ function __initVirtualRuntime(rootScope) {
       });
     });
 
+    class SqliteDatabase {
+      constructor(filename = ':memory:') {
+        this.filename = filename;
+        this.tables = new Map();
+      }
+
+      run(sql, params = []) {
+        const stmt = sql.trim();
+        if (/^CREATE\s+TABLE/i.test(stmt)) {
+          const match = stmt.match(/^CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-zA-Z0-9_]+)\s*\((.*)\)/is);
+          if (match) {
+            const tableName = match[1];
+            const colDefs = match[2].split(',').map(c => c.trim());
+            const cols = [];
+            for (const c of colDefs) {
+              const parts = c.split(/\s+/);
+              const colName = parts[0];
+              const isPk = /PRIMARY\s+KEY/i.test(c);
+              const isAuto = /AUTOINCREMENT/i.test(c) || (/INTEGER/i.test(parts[1]) && isPk);
+              cols.push({ name: colName, type: parts[1] || 'TEXT', isPk, isAuto });
+            }
+            if (!this.tables.has(tableName)) {
+              this.tables.set(tableName, { columns: cols, rows: [], autoInc: 0 });
+            }
+          }
+          return { changes: 0, lastInsertRowid: 0 };
+        }
+
+        if (/^INSERT\s+INTO/i.test(stmt)) {
+          const match = stmt.match(/^INSERT\s+INTO\s+([a-zA-Z0-9_]+)(?:\s*\(([^)]+)\))?\s*VALUES\s*\((.*)\)/is);
+          if (match) {
+            const tableName = match[1];
+            const table = this.tables.get(tableName);
+            if (!table) throw new Error(`no such table: ${tableName}`);
+            const colNames = match[2] ? match[2].split(',').map(s => s.trim()) : table.columns.filter(c => !c.isPk).map(c => c.name);
+            const valExprs = match[3].split(',').map(s => s.trim());
+            const pList = Array.isArray(params) ? [...params] : [params];
+            const row = {};
+
+            table.autoInc++;
+            const pkCol = table.columns.find(c => c.isPk);
+            if (pkCol) {
+              row[pkCol.name] = table.autoInc;
+            }
+
+            for (let i = 0; i < colNames.length; i++) {
+              const cName = colNames[i];
+              const expr = valExprs[i] !== undefined ? valExprs[i] : '?';
+              if (expr === '?') {
+                row[cName] = pList.shift();
+              } else if (/^['"].*['"]$/.test(expr)) {
+                row[cName] = expr.slice(1, -1);
+              } else if (!isNaN(Number(expr))) {
+                row[cName] = Number(expr);
+              } else {
+                row[cName] = expr;
+              }
+            }
+            table.rows.push(row);
+            return { changes: 1, lastInsertRowid: table.autoInc };
+          }
+        }
+        return { changes: 0, lastInsertRowid: 0 };
+      }
+
+      exec(sql) {
+        const statements = sql.split(';').map(s => s.trim()).filter(Boolean);
+        for (const s of statements) {
+          this.run(s);
+        }
+      }
+
+      query(sql) {
+        const db = this;
+        return {
+          all(...args) {
+            let params = args;
+            if (args.length === 1 && Array.isArray(args[0])) params = args[0];
+            return db._executeSelect(sql, params);
+          },
+          get(...args) {
+            const rows = this.all(...args);
+            return rows[0] || null;
+          },
+          values(...args) {
+            const rows = this.all(...args);
+            return rows.map(r => Object.values(r));
+          },
+          run(...args) {
+            return db.run(sql, args);
+          }
+        };
+      }
+
+      prepare(sql) {
+        return this.query(sql);
+      }
+
+      _executeSelect(sql, params = []) {
+        const s = sql.trim().replace(/;$/, '');
+        const match = s.match(/^SELECT\s+(.*?)\s+FROM\s+([a-zA-Z0-9_]+)(?:\s+WHERE\s+(.*?))?(?:\s+GROUP\s+BY\s+(.*?))?(?:\s+ORDER\s+BY\s+(.*?))?$/is);
+        if (!match) return [];
+        const selectColsRaw = match[1].trim();
+        const tableName = match[2].trim();
+        const whereClause = match[3] ? match[3].trim() : null;
+        const groupByClause = match[4] ? match[4].trim() : null;
+        const orderByClause = match[5] ? match[5].trim() : null;
+
+        const table = this.tables.get(tableName);
+        if (!table) return [];
+
+        let pList = Array.isArray(params) ? [...params] : [params];
+        let filteredRows = table.rows.filter(row => {
+          if (!whereClause) return true;
+          const eqMatch = whereClause.match(/^([a-zA-Z0-9_]+)\s*=\s*(.*)$/);
+          if (eqMatch) {
+            const col = eqMatch[1].trim();
+            let expected = eqMatch[2].trim();
+            if (expected === '?') {
+              expected = pList.shift();
+            } else if (/^['"].*['"]$/.test(expected)) {
+              expected = expected.slice(1, -1);
+            } else if (!isNaN(Number(expected))) {
+              expected = Number(expected);
+            }
+            return String(row[col]) === String(expected);
+          }
+          return true;
+        });
+
+        const colSpecs = [];
+        if (selectColsRaw !== '*') {
+          const parts = selectColsRaw.split(',').map(p => p.trim());
+          for (const p of parts) {
+            const asMatch = p.match(/^(.*?)\s+(?:as\s+)?([a-zA-Z0-9_]+)$/i);
+            if (asMatch) {
+              colSpecs.push({ expr: asMatch[1].trim(), alias: asMatch[2].trim() });
+            } else {
+              colSpecs.push({ expr: p, alias: p });
+            }
+          }
+        }
+
+        let outputRows = [];
+        if (groupByClause) {
+          const groupCol = groupByClause.trim();
+          const groups = new Map();
+          for (const row of filteredRows) {
+            const key = row[groupCol];
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(row);
+          }
+
+          for (const [key, rows] of groups.entries()) {
+            const outRow = {};
+            for (const col of colSpecs) {
+              const expr = col.expr;
+              const alias = col.alias;
+              const aggMatch = expr.match(/^(AVG|SUM|COUNT|MIN|MAX)\(([a-zA-Z0-9_*]+)\)$/i);
+              if (aggMatch) {
+                const fn = aggMatch[1].toUpperCase();
+                const aggCol = aggMatch[2];
+                if (fn === 'COUNT') {
+                  outRow[alias] = rows.length;
+                } else if (fn === 'AVG') {
+                  const sum = rows.reduce((acc, r) => acc + (Number(r[aggCol]) || 0), 0);
+                  outRow[alias] = rows.length > 0 ? sum / rows.length : 0;
+                } else if (fn === 'SUM') {
+                  outRow[alias] = rows.reduce((acc, r) => acc + (Number(r[aggCol]) || 0), 0);
+                } else if (fn === 'MIN') {
+                  outRow[alias] = Math.min(...rows.map(r => Number(r[aggCol]) || 0));
+                } else if (fn === 'MAX') {
+                  outRow[alias] = Math.max(...rows.map(r => Number(r[aggCol]) || 0));
+                }
+              } else if (expr === groupCol) {
+                outRow[alias] = key;
+              } else {
+                outRow[alias] = rows[0] ? rows[0][expr] : null;
+              }
+            }
+            outputRows.push(outRow);
+          }
+        } else {
+          for (const row of filteredRows) {
+            if (selectColsRaw === '*') {
+              outputRows.push(Object.assign({}, row));
+            } else {
+              const outRow = {};
+              for (const col of colSpecs) {
+                outRow[col.alias] = row[col.expr];
+              }
+              outputRows.push(outRow);
+            }
+          }
+        }
+
+        if (orderByClause) {
+          const parts = orderByClause.trim().split(/\s+/);
+          const orderCol = parts[0];
+          const desc = parts[1] && parts[1].toUpperCase() === 'DESC';
+          outputRows.sort((a, b) => {
+            const valA = a[orderCol];
+            const valB = b[orderCol];
+            if (valA === valB) return 0;
+            if (valA === undefined) return 1;
+            if (valB === undefined) return -1;
+            const res = valA > valB ? 1 : -1;
+            return desc ? -res : res;
+          });
+        }
+
+        return outputRows;
+      }
+    }
+
+    function crc32Hash(str) {
+      const s = String(str);
+      let crc = 0 ^ (-1);
+      for (let i = 0; i < s.length; i++) {
+        crc = (crc >>> 8) ^ ((crc ^ s.charCodeAt(i)) & 0xFF);
+      }
+      return (crc ^ (-1)) >>> 0;
+    }
+
+    const bunHashFn = function hash(val) {
+      return crc32Hash(val);
+    };
+    bunHashFn.crc32 = (val) => crc32Hash(val);
+    bunHashFn.cityHash64 = (val) => {
+      const h1 = crc32Hash(val);
+      const h2 = crc32Hash(val + ':seed64');
+      return (BigInt(h1) << 32n) | BigInt(h2);
+    };
+
+    function deepEquals(a, b) {
+      if (a === b) return true;
+      if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') {
+        return false;
+      }
+      if (a instanceof Date && b instanceof Date) {
+        return a.getTime() === b.getTime();
+      }
+      if (a instanceof RegExp && b instanceof RegExp) {
+        return a.toString() === b.toString();
+      }
+      if (Array.isArray(a) !== Array.isArray(b)) return false;
+      const keysA = Object.keys(a);
+      const keysB = Object.keys(b);
+      if (keysA.length !== keysB.length) return false;
+      for (const k of keysA) {
+        if (!Object.prototype.hasOwnProperty.call(b, k)) return false;
+        if (!deepEquals(a[k], b[k])) return false;
+      }
+      return true;
+    }
+
+    const BunObj = {
+      version: '1.1.0',
+      serve(opts = {}) {
+        const port = Number(opts.port || 3000);
+        const hostname = opts.hostname || '127.0.0.1';
+        const serverObj = {
+          port,
+          hostname,
+          development: false,
+          stop() {
+            activePortTable.unregisterServer(port);
+          }
+        };
+        activePortTable.registerServer(port, {
+          server: serverObj,
+          name: opts.name || 'bun-server',
+          port,
+          pid: resourceTracker.pid || 1,
+          fetch: opts.fetch ? opts.fetch.bind(serverObj) : undefined,
+          stop: () => serverObj.stop()
+        });
+        return serverObj;
+      },
+      file(p) {
+        const resolved = VirtualPath.resolve(sandboxProcess.cwd(), String(p));
+        return {
+          name: VirtualPath.basename(resolved),
+          get size() {
+            try {
+              return vfs.statSync(resolved).size;
+            } catch (_) {
+              return 0;
+            }
+          },
+          async exists() {
+            return vfs.existsSync(resolved);
+          },
+          async text() {
+            return vfs.readFileSync(resolved, 'utf8');
+          },
+          async json() {
+            return JSON.parse(vfs.readFileSync(resolved, 'utf8'));
+          },
+          async arrayBuffer() {
+            const buf = vfs.readFileSync(resolved);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+          }
+        };
+      },
+      async write(dest, data) {
+        const resolved = VirtualPath.resolve(sandboxProcess.cwd(), String(dest));
+        const dir = VirtualPath.dirname(resolved);
+        if (!vfs.existsSync(dir)) vfs.mkdirSync(dir, { recursive: true });
+        let buf;
+        if (typeof data === 'string') {
+          buf = VirtualBuffer.from(data, 'utf8');
+        } else if (data && data.arrayBuffer && typeof data.arrayBuffer === 'function') {
+          const ab = await data.arrayBuffer();
+          buf = VirtualBuffer.from(ab);
+        } else if (data instanceof Uint8Array || VirtualBuffer.isBuffer(data)) {
+          buf = VirtualBuffer.from(data);
+        } else {
+          buf = VirtualBuffer.from(String(data), 'utf8');
+        }
+        vfs.writeFileSync(resolved, buf);
+        return buf.length;
+      },
+      sleep(ms) {
+        return new Promise(resolve => sandboxSetTimeout(resolve, Number(ms) || 0));
+      },
+      hash: bunHashFn,
+      deepEquals,
+      inspect(val) {
+        return VirtualUtil.inspect(val);
+      },
+      nanoseconds() {
+        return Math.round(performance.now() * 1e6);
+      }
+    };
+
+    const bunTestModule = (() => {
+      function makeExpect(actual, isNot = false) {
+        const pass = (condition, msg) => {
+          const ok = isNot ? !condition : condition;
+          if (!ok) {
+            throw new Error(msg || `expect assertion failed: actual=${actual}`);
+          }
+        };
+
+        const matchers = {
+          toBe(expected) {
+            pass(Object.is(actual, expected), `Expected ${actual} to be ${expected}`);
+          },
+          toEqual(expected) {
+            pass(deepEquals(actual, expected), `Expected ${JSON.stringify(actual)} to equal ${JSON.stringify(expected)}`);
+          },
+          toContain(item) {
+            let contains = false;
+            if (actual && typeof actual.includes === 'function') {
+              contains = actual.includes(item);
+            } else if (actual && typeof actual.has === 'function') {
+              contains = actual.has(item);
+            }
+            pass(contains, `Expected collection to contain ${item}`);
+          },
+          toThrow(expected) {
+            let threw = false;
+            let thrownErr = null;
+            try {
+              if (typeof actual === 'function') actual();
+            } catch (err) {
+              threw = true;
+              thrownErr = err;
+            }
+            if (!threw) {
+              pass(false, `Expected function to throw`);
+              return;
+            }
+            if (expected) {
+              const msg = thrownErr && thrownErr.message ? thrownErr.message : String(thrownErr);
+              if (typeof expected === 'string') {
+                pass(msg.includes(expected), `Expected error message "${msg}" to contain "${expected}"`);
+              } else if (expected instanceof RegExp) {
+                pass(expected.test(msg), `Expected error message "${msg}" to match ${expected}`);
+              }
+            } else {
+              pass(true);
+            }
+          },
+          toBeTruthy() {
+            pass(Boolean(actual) === true, `Expected ${actual} to be truthy`);
+          },
+          toBeFalsy() {
+            pass(Boolean(actual) === false, `Expected ${actual} to be falsy`);
+          },
+          toBeGreaterThan(n) {
+            pass(actual > n, `Expected ${actual} to be greater than ${n}`);
+          },
+          toBeLessThan(n) {
+            pass(actual < n, `Expected ${actual} to be less than ${n}`);
+          },
+          toHaveBeenCalled() {
+            const calls = (actual && actual.mock && actual.mock.calls) || [];
+            pass(calls.length > 0, `Expected mock function to have been called`);
+          },
+          toHaveBeenCalledTimes(n) {
+            const calls = (actual && actual.mock && actual.mock.calls) || [];
+            pass(calls.length === n, `Expected mock function to have been called ${n} times, was called ${calls.length}`);
+          },
+          toHaveBeenCalledWith(...args) {
+            const calls = (actual && actual.mock && actual.mock.calls) || [];
+            const found = calls.some(callArgs => deepEquals(callArgs, args));
+            pass(found, `Expected mock to have been called with ${JSON.stringify(args)}`);
+          }
+        };
+
+        if (!isNot) {
+          matchers.not = makeExpect(actual, true);
+        }
+        return matchers;
+      }
+
+      function mockFn(impl) {
+        const calls = [];
+        const results = [];
+        const fn = function(...args) {
+          calls.push(args);
+          let res;
+          try {
+            if (typeof impl === 'function') {
+              res = impl.apply(this, args);
+            }
+            results.push({ type: 'return', value: res });
+            return res;
+          } catch (err) {
+            results.push({ type: 'throw', value: err });
+            throw err;
+          }
+        };
+        fn.mock = {
+          calls,
+          results
+        };
+        return fn;
+      }
+
+      return {
+        describe: (suiteName, fn) => nodeDescribeFn(suiteName, fn),
+        test: (testName, fn) => nodeTestFn(testName, fn),
+        it: (testName, fn) => nodeTestFn(testName, fn),
+        expect: (actual) => makeExpect(actual),
+        mock: (impl) => mockFn(impl),
+        beforeAll: () => {},
+        afterAll: () => {},
+        beforeEach: () => {},
+        afterEach: () => {}
+      };
+    })();
+
     // Built-in Node module table
     const builtinModules = {
       fs: vfs,
@@ -5604,7 +6321,9 @@ function __initVirtualRuntime(rootScope) {
       'timers/promises': VirtualTimersPromises,
       'node:timers/promises': VirtualTimersPromises,
       buffer: { Buffer: VirtualBuffer },
-      'node:buffer': { Buffer: VirtualBuffer }
+      'node:buffer': { Buffer: VirtualBuffer },
+      'bun:test': bunTestModule,
+      'bun:sqlite': { Database: SqliteDatabase }
     };
 
     const moduleCache = new Map();
@@ -5722,6 +6441,67 @@ function __initVirtualRuntime(rootScope) {
       throw err;
     }
 
+    // Global fallback `test` / `it` / `describe` for custom user test scripts
+    const globalTest = (name, optsOrFn, maybeFn) => nodeTestFn(name, optsOrFn, maybeFn);
+    const globalDescribe = (suiteName, optsOrFn, maybeFn) => nodeDescribeFn(suiteName, optsOrFn, maybeFn);
+
+    const virtualFetch = async (urlOrReq, init = {}) => {
+      let urlStr;
+      let finalInit = init || {};
+      if (typeof urlOrReq === 'string') {
+        urlStr = urlOrReq;
+      } else if (urlOrReq && urlOrReq.url) {
+        urlStr = urlOrReq.url;
+        finalInit = Object.assign({
+          method: urlOrReq.method,
+          headers: urlOrReq.headers,
+          body: urlOrReq.body
+        }, init);
+      } else {
+        urlStr = String(urlOrReq);
+      }
+
+      try {
+        const parsed = new URL(urlStr);
+        const isLocal = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '0.0.0.0';
+        if (isLocal && activePortTable) {
+          return await activePortTable.dispatchRequest(urlStr, finalInit);
+        }
+      } catch (_) {}
+
+      if (typeof globalThis.fetch === 'function') {
+        return await globalThis.fetch(urlOrReq, init);
+      }
+      throw new Error(`fetch failed for ${urlStr}`);
+    };
+
+    const sandboxGlobal = {
+      Buffer: VirtualBuffer,
+      process: sandboxProcess,
+      console: sandboxConsole,
+      setTimeout: sandboxSetTimeout,
+      clearTimeout: sandboxClearTimeout,
+      setInterval: sandboxSetInterval,
+      clearInterval: sandboxClearInterval,
+      setImmediate: sandboxSetImmediate,
+      clearImmediate: sandboxClearImmediate,
+      queueMicrotask,
+      TextEncoder: typeof TextEncoder !== 'undefined' ? TextEncoder : undefined,
+      TextDecoder: typeof TextDecoder !== 'undefined' ? TextDecoder : undefined,
+      performance: virtualPerformance,
+      PerformanceObserver: VirtualPerformanceObserver,
+      URL: VirtualUrl.URL,
+      URLSearchParams: VirtualUrl.URLSearchParams,
+      crypto: VirtualCrypto,
+      fetch: virtualFetch,
+      Request,
+      Response,
+      Headers,
+      Bun: BunObj
+    };
+    sandboxGlobal.global = sandboxGlobal;
+    sandboxGlobal.globalThis = sandboxGlobal;
+
     function loadModule(absPath, isMain = false) {
       if (moduleCache.has(absPath)) {
         return moduleCache.get(absPath).exports;
@@ -5762,61 +6542,43 @@ function __initVirtualRuntime(rootScope) {
         transformed = instrumentTestCode(transformed);
       }
 
-      // Global fallback `test` / `it` / `describe` for custom user test scripts
-      const globalTest = (name, optsOrFn, maybeFn) => nodeTestFn(name, optsOrFn, maybeFn);
-      const globalDescribe = (suiteName, optsOrFn, maybeFn) => nodeDescribeFn(suiteName, optsOrFn, maybeFn);
-
-      const sandboxGlobal = {
-        Buffer: VirtualBuffer,
-        process: sandboxProcess,
-        console: sandboxConsole,
-        setTimeout: sandboxSetTimeout,
-        clearTimeout: sandboxClearTimeout,
-        setInterval: sandboxSetInterval,
-        clearInterval: sandboxClearInterval,
-        setImmediate: sandboxSetImmediate,
-        clearImmediate: sandboxClearImmediate,
-        queueMicrotask,
-        TextEncoder: typeof TextEncoder !== 'undefined' ? TextEncoder : undefined,
-        TextDecoder: typeof TextDecoder !== 'undefined' ? TextDecoder : undefined,
-        performance: virtualPerformance,
-        PerformanceObserver: VirtualPerformanceObserver,
-        URL: VirtualUrl.URL,
-        URLSearchParams: VirtualUrl.URLSearchParams,
-        crypto: VirtualCrypto
-      };
-      sandboxGlobal.global = sandboxGlobal;
-      sandboxGlobal.globalThis = sandboxGlobal;
-
       const moduleBody = '{\n' + transformed + '\n}\n//# sourceURL=' + absPath;
 
-      const fn = new Function(
-        'exports',
-        'require',
-        'module',
-        '__filename',
-        '__dirname',
-        'Buffer',
-        'process',
-        'console',
-        'setTimeout',
-        'clearTimeout',
-        'setInterval',
-        'clearInterval',
-        'setImmediate',
-        'clearImmediate',
-        'global',
-        '__shouldSkipTest',
-        '__wrapTestFn',
-        'test',
-        'describe',
-        'it',
+      const fn = compileFunction(
+        [
+          'exports',
+          'require',
+          'module',
+          '__filename',
+          '__dirname',
+          'Buffer',
+          'process',
+          'console',
+          'setTimeout',
+          'clearTimeout',
+          'setInterval',
+          'clearInterval',
+          'setImmediate',
+          'clearImmediate',
+          'global',
+          '__shouldSkipTest',
+          '__wrapTestFn',
+          'test',
+          'describe',
+          'it',
+          'Bun',
+          'fetch',
+          'Request',
+          'Response',
+          'Headers'
+        ],
         moduleBody
       );
 
       syncExecDepth++;
+      let execResult;
       try {
-        fn(
+        execResult = fn(
           mod.exports,
           localRequire,
           mod,
@@ -5836,14 +6598,68 @@ function __initVirtualRuntime(rootScope) {
           wrapTestFn,
           globalTest,
           globalDescribe,
-          globalTest
+          globalTest,
+          BunObj,
+          sandboxGlobal.fetch,
+          Request,
+          Response,
+          Headers
         );
       } finally {
         syncExecDepth--;
       }
 
+      if (execResult && typeof execResult.then === 'function') {
+        resourceTracker.pendingTests.add(execResult);
+        return execResult.then(() => {
+          resourceTracker.pendingTests.delete(execResult);
+          mod.loaded = true;
+          return mod.exports;
+        }).catch((err) => {
+          resourceTracker.pendingTests.delete(execResult);
+          throw err;
+        });
+      }
+
       mod.loaded = true;
       return mod.exports;
+    }
+
+    const AsyncFunction = Object.getPrototypeOf(async function() {}).constructor;
+    let __fnSeq = 0;
+    function compileFunction(argNames, body) {
+      try {
+        return new Function(...argNames, body);
+      } catch (err) {
+        if (err instanceof SyntaxError && /await/.test(err.message)) {
+          try {
+            return new AsyncFunction(...argNames, body);
+          } catch (_) {}
+        }
+        if (
+          err &&
+          err.name === 'EvalError' &&
+          typeof importScripts === 'function' &&
+          typeof Blob !== 'undefined' &&
+          typeof URL !== 'undefined' &&
+          typeof URL.createObjectURL === 'function'
+        ) {
+          const globalObj = typeof self !== 'undefined' ? self : globalThis;
+          const fnKey = '__cl_fn_' + (++__fnSeq) + '_' + Math.random().toString(36).slice(2);
+          const scriptSrc = `self[${JSON.stringify(fnKey)}] = function(${argNames.join(', ')}) {\n${body}\n};`;
+          const blob = new Blob([scriptSrc], { type: 'application/javascript' });
+          const blobUrl = URL.createObjectURL(blob);
+          try {
+            importScripts(blobUrl);
+            const compiled = globalObj[fnKey];
+            delete globalObj[fnKey];
+            if (typeof compiled === 'function') return compiled;
+          } finally {
+            URL.revokeObjectURL(blobUrl);
+          }
+        }
+        throw err;
+      }
     }
 
     let replValue = undefined;
@@ -5859,29 +6675,42 @@ function __initVirtualRuntime(rootScope) {
           return loadModule(resolved, false);
         };
         const transpiledRepl = transpileTS(replCode || '', replPath);
-        let body = transpiledRepl;
-        const lines = body.trim().split('\n');
-        const lastLine = lines[lines.length - 1] || '';
-        if (lines.length > 0 && !/^\s*(const|let|var|function|class|if|for|while|switch|try|return|throw)\b/.test(lastLine)) {
-          lines[lines.length - 1] = `return (${lastLine.replace(/;+\s*$/, '')});`;
+        let body = transpiledRepl.trim();
+        const semiIdx = body.lastIndexOf(';');
+        let prefix = '';
+        let candidate = body;
+        if (semiIdx !== -1 && semiIdx < body.length - 1) {
+          prefix = body.slice(0, semiIdx + 1) + '\n';
+          candidate = body.slice(semiIdx + 1).trim();
+        } else {
+          const lines = body.split('\n');
+          prefix = lines.slice(0, -1).join('\n') + '\n';
+          candidate = (lines[lines.length - 1] || '').trim();
+        }
+        if (candidate && !/^\s*(const|let|var|function|class|if|for|while|switch|try|return|throw)\b/.test(candidate)) {
+          const testBody = prefix + `return (${candidate.replace(/;+\s*$/, '')});`;
           try {
-            new Function(lines.join('\n'));
-            body = lines.join('\n');
+            compileFunction([], testBody);
+            body = testBody;
           } catch (_) {
             body = transpiledRepl;
           }
         }
-        const replFn = new Function(
-          'require',
-          'Buffer',
-          'process',
-          'console',
-          'setTimeout',
-          'clearTimeout',
-          'setInterval',
-          'clearInterval',
-          'setImmediate',
-          'clearImmediate',
+        const replFn = compileFunction(
+          [
+            'require',
+            'Buffer',
+            'process',
+            'console',
+            'setTimeout',
+            'clearTimeout',
+            'setInterval',
+            'clearInterval',
+            'setImmediate',
+            'clearImmediate',
+            'Bun',
+            'fetch'
+          ],
           `return (async () => {\n${body}\n})();`
         );
         replValue = await replFn(
@@ -5894,18 +6723,23 @@ function __initVirtualRuntime(rootScope) {
           sandboxSetInterval,
           sandboxClearInterval,
           sandboxSetImmediate,
-          sandboxClearImmediate
+          sandboxClearImmediate,
+          BunObj,
+          sandboxGlobal.fetch
         );
-        if (replValue !== undefined) {
+        if (replValue !== undefined && options.printReplResult !== false) {
           emitStdout(formatConsoleArg(replValue) + '\n');
         }
       } else {
-        let entryAbs = `/workspace/${entry.replace(/^\/+/, '')}`;
+        let entryAbs = vfs.existsSync(entry) ? entry : `/workspace/${entry.replace(/^\/+/, '')}`;
         if (!vfs.existsSync(entryAbs)) {
           const alt = `/workspace/src/${entry.replace(/^\/+/, '')}`;
           if (vfs.existsSync(alt)) entryAbs = alt;
         }
-        loadModule(entryAbs, true);
+        const res = loadModule(entryAbs, true);
+        if (res && typeof res.then === 'function') {
+          await res;
+        }
       }
 
       const deadline = performance.now() + timeoutMs;
@@ -5917,7 +6751,8 @@ function __initVirtualRuntime(rootScope) {
           resourceTracker.activeTimers.size > 0 ||
           resourceTracker.activeImmediates.size > 0 ||
           resourceTracker.inFlightHttp.size > 0 ||
-          resourceTracker.pendingTests.size > 0;
+          resourceTracker.pendingTests.size > 0 ||
+          (isBackground && vhttp.hasActiveServers());
 
         if (!busy) {
           idleTicks++;
@@ -5947,8 +6782,10 @@ function __initVirtualRuntime(rootScope) {
       resourceTracker.allTimers.clear();
       resourceTracker.activeImmediates.clear();
       resourceTracker.inFlightHttp.clear();
-      vhttp.closeAllServers();
-      vnet.closeAllServers();
+      if (!isBackground) {
+        vhttp.closeAllServers();
+        vnet.closeAllServers();
+      }
     }
 
     const failedTests = testResults.filter((t) => !t.passed).length;
@@ -5993,6 +6830,7 @@ function __initVirtualRuntime(rootScope) {
     createVirtualNet,
     transpileTS,
     preloadNpmPackages,
+    createVirtualPortTable,
     executeInVirtualRuntime
   };
 

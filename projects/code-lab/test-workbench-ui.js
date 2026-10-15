@@ -990,8 +990,14 @@ async function runTier1() {
   });
 
   // ── F8: Geist Monochrome Styling & System Validation (R4) ───────────────────
+  const resolveCssPath = () => [
+    path.resolve(__dirname, 'dist/code-lab.css'),
+    path.resolve(__dirname, '../../css/code-lab.css'),
+    path.resolve(__dirname, 'css/code-lab.css')
+  ].find(p => fs.existsSync(p)) || path.resolve(__dirname, 'dist/code-lab.css');
+
   await registerTest('tier1', 'T1.F8.1', 'R4: Stylesheet css/code-lab.css defines Geist monochrome dark tokens', () => {
-    const cssPath = path.resolve(__dirname, '../../css/code-lab.css');
+    const cssPath = resolveCssPath();
     const css = fs.readFileSync(cssPath, 'utf8');
     assert.match(css, /--cl-bg:\s*var\(--bg,\s*#000000\)/, 'Dark background must default to #000000');
     assert.match(css, /--cl-bg-elevated:\s*var\(--surface,\s*#0a0a0a\)/, 'Dark elevated surface must default to #0a0a0a');
@@ -1000,7 +1006,7 @@ async function runTier1() {
   });
 
   await registerTest('tier1', 'T1.F8.2', 'R4: Stylesheet css/code-lab.css defines Geist monochrome light tokens', () => {
-    const cssPath = path.resolve(__dirname, '../../css/code-lab.css');
+    const cssPath = resolveCssPath();
     const css = fs.readFileSync(cssPath, 'utf8');
     assert.match(css, /--cl-bg:\s*var\(--bg,\s*#ffffff\)/, 'Light background must default to #ffffff');
     assert.match(css, /--cl-bg-elevated:\s*var\(--bg-alt,\s*#fafafa\)/, 'Light elevated surface must default to #fafafa');
@@ -1009,7 +1015,7 @@ async function runTier1() {
   });
 
   await registerTest('tier1', 'T1.F8.3', 'R4: Accent button tokens invert contrast in dark and light modes', () => {
-    const cssPath = path.resolve(__dirname, '../../css/code-lab.css');
+    const cssPath = resolveCssPath();
     const css = fs.readFileSync(cssPath, 'utf8');
     assert.match(css, /--cl-accent:\s*var\(--accent,\s*#ffffff\)/, 'Dark mode accent must be white');
     assert.match(css, /--cl-accent-fg:\s*var\(--accent-fg,\s*#000000\)/, 'Dark mode accent text must be black');
@@ -1018,7 +1024,7 @@ async function runTier1() {
   });
 
   await registerTest('tier1', 'T1.F8.4', 'R4: Status colors (success, error) are strictly reserved for test outputs and badges', () => {
-    const cssPath = path.resolve(__dirname, '../../css/code-lab.css');
+    const cssPath = resolveCssPath();
     const css = fs.readFileSync(cssPath, 'utf8');
     assert.match(css, /--cl-green:\s*var\(--success,\s*#05df72\)/, 'Green token defined for success');
     assert.match(css, /--cl-red:\s*var\(--error,\s*#fb2c36\)/, 'Red token defined for error');

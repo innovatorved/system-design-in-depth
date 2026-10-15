@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -956,19 +956,13 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="logical-system-design" id="audio-speed-logical-system-design" title="Playback speed">1x</button>
         <audio id="audio-logical-system-design" src="audio/logical-system-design.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Logical system design</h2>
-
 <p>Logical system design decides where application rules live and how modules work together. It helps answer a practical question: when a product rule or external provider changes, which code should need to change with it?</p>
-
 <p>We will separate the shortener's HTTP handling, link rules, and storage work, then check whether those boundaries make a change easier to test.</p>
-
 <h2>Give each responsibility an owner</h2>
-
 <p>A route handler can parse a request, run SQL, check whether a link is disabled, record a click, and format the redirect. For a small operation, that can be readable. Trouble starts when an import job needs the same rules, or every handler begins interpreting database rows differently.</p>
-
 <p>Separate the work when those responsibilities need to vary independently:</p>
-
-<table><thead><tr><th>Responsibility</th><th>What it owns</th></tr></thead><tbody><tr><td>HTTP adapter</td><td>Parse the request and translate the result into an HTTP response</td></tr><tr><td>Link operation</td><td>Apply the product's rules for creating or opening a link</td></tr><tr><td>Storage adapter</td><td>Execute queries and map stored records into the application's result types</td></tr></tbody></table>A <strong>boundary</strong> is the agreement between these parts. It can be an ordinary function call inside one process. Drawing separate boxes does not require separate servers or deployments.
-
+<table><thead><tr><th>Responsibility</th><th>What it owns</th></tr></thead><tbody><tr><td>HTTP adapter</td><td>Parse the request and translate the result into an HTTP response</td></tr><tr><td>Link operation</td><td>Apply the product's rules for creating or opening a link</td></tr><tr><td>Storage adapter</td><td>Execute queries and map stored records into the application's result types</td></tr></tbody></table>
+<p>A <strong>boundary</strong> is the agreement between these parts. It can be an ordinary function call inside one process. Drawing separate boxes does not require separate servers or deployments.</p>
 <div class="mermaid">flowchart TB
   accTitle: Two callers share the same link rules
   accDescr: HTTP handling and an import job call link operations, which use a storage adapter. These are application responsibilities, not separate machines.
@@ -976,33 +970,20 @@
   Import[Import job] --> Rules
   Rules --> Storage[Storage adapter]
   Storage --> DB[(Database)]</div>
-
 <p>The HTTP path creates one link; the import job may create many. Both must enforce the same rule that a generated code cannot replace an existing mapping. The database's uniqueness constraint enforces the collision rule atomically; the application decides whether to retry with another candidate or return an error.</p>
-
 <h2>Make the agreement useful to its caller</h2>
-
 <p>Consider <code>resolve(code)</code>. “Returns a URL” leaves several cases unstated. The link might be absent, disabled, or temporarily impossible to look up.</p>
-
-<table><thead><tr><th>Result</th><th>Meaning</th><th>HTTP caller's action</th></tr></thead><tbody><tr><td>Found</td><td>The operation permits this link and supplies its destination</td><td>Continue the redirect path</td></tr><tr><td>Missing</td><td>The lookup succeeded, but no mapping exists</td><td>Return not found</td></tr><tr><td>Disabled</td><td>The mapping exists but cannot be used</td><td>Refuse the redirect</td></tr><tr><td>Unavailable</td><td>The operation could not establish an answer</td><td>Return a service error</td></tr></tbody></table>Keep unavailable distinct from missing. Translating a connection failure into “no such link” gives the caller a false answer. Likewise, the storage adapter should not leak a vendor-specific exception into every route and job that uses it.
-
+<table><thead><tr><th>Result</th><th>Meaning</th><th>HTTP caller's action</th></tr></thead><tbody><tr><td>Found</td><td>The operation permits this link and supplies its destination</td><td>Continue the redirect path</td></tr><tr><td>Missing</td><td>The lookup succeeded, but no mapping exists</td><td>Return not found</td></tr><tr><td>Disabled</td><td>The mapping exists but cannot be used</td><td>Refuse the redirect</td></tr><tr><td>Unavailable</td><td>The operation could not establish an answer</td><td>Return a service error</td></tr></tbody></table>
+<p>Keep unavailable distinct from missing. Translating a connection failure into “no such link” gives the caller a false answer. Likewise, the storage adapter should not leak a vendor-specific exception into every route and job that uses it.</p>
 <p>For the shortener's agreed contract, a successful redirect also waits for its request event to be stored. That sequencing belongs to the link operation. HTTP formatting does not decide whether losing a click is acceptable.</p>
-
 <h2>Test the rule through the boundary</h2>
-
 <p>To test “disabled links never redirect,” supply a small in-memory storage implementation that returns a disabled record. Exercise the link operation directly. The test should not need a browser, a live database, or knowledge of SQL syntax to check that product rule.</p>
-
 <p>That test does not establish that the real database query works. Test the storage adapter against the database separately, including missing rows, uniqueness conflicts, and failures. Keeping these tests distinct helps identify whether a failure comes from a rule or its persistence implementation.</p>
-
 <p>The same approach applies to a payment or notification provider: expose the operation the application needs, then translate it to the provider's API in one place. A replacement provider may have different guarantees, so an interface reduces the places to inspect; it does not make providers automatically interchangeable.</p>
-
 <h2>Stop before the boundary becomes ceremony</h2>
-
 <p>A function that forwards unchanged arguments through three layers is not necessarily protecting anything. Introduce a boundary around a repeated rule, a dependency that changes, or a decision worth testing independently.</p>
-
 <p>Review a likely change: add an import job, replace a notification provider, or introduce link expiry. If each requires edits across unrelated route handlers, the rule probably has no clear owner. If one focused operation owns the change and its tests, the logical design is doing useful work.</p>
-
-<p>The <a href="#" data-nav="topic" data-slug="repository-pattern">repository pattern</a> develops the storage boundary further. <a href="#" data-nav="topic" data-slug="monolith-vs-microservices">Monoliths and microservices</a> asks a separate question: which of these responsibilities need independent deployment?</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>The <a href="#" data-nav="topic" data-slug="repository-pattern">repository pattern</a> develops the storage boundary further. <a href="#" data-nav="topic" data-slug="monolith-vs-microservices">Monoliths and microservices</a> asks a separate question: which of these responsibilities need independent deployment?</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
 <h2>Logical system design</h2>
 <p>Logical system design decides where application rules live and how modules work together. It helps answer a practical question: when a product rule or external provider changes, which code should need to change with it?</p>
 <p>We will separate the shortener's HTTP handling, link rules, and storage work, then check whether those boundaries make a change easier to test.</p>
@@ -1262,7 +1243,7 @@ flowchart TB
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

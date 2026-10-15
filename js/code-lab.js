@@ -1,11 +1,13 @@
 /**
  * ============================================================
- * @innovatorved/code-lab v1.2.0 — Standalone Browser Code IDE & Virtual Runtime
+ * @innovatorved/code-lab v1.3.0 — Standalone Browser Code IDE & Virtual Runtime
  * ============================================================
  * Features:
  *   - Sandboxed Web Worker Execution Engine with Multi-Instance Isolation & Watchdog Timer
- *   - TypeScript/ESM Compiler & CommonJS/NPM Module Bundler
- *   - 24 Virtual Node.js Built-in Modules (fs, net, http, stream, crypto, events, test, console, etc.)
+ *   - First-Class Node.js and Bun Runtimes (Bun.serve, bun:test, bun:sqlite, Bun.*)
+ *   - Full POSIX Shell AST & 40+ UNIX Coreutils (pipes, redirects, globs, env vars)
+ *   - Interactive PTY Terminal Emulator with inline prompt, Tab completion & ANSI colors
+ *   - Persistent HTTP/TCP Servers, CLI curl & Live Port/HTTP Preview
  *   - VS Code Workbench: Hierarchical File Tree, Decoupled Tabs, Command Palette (Cmd+Shift+P), Quick Open (Cmd+P), Breadcrumbs, Context Menus & Solution Diff Viewer
  *   - Third-Party Imperative SDK (getFiles, setFiles, getFile, setFile, on, off, use, exportWorkspace)
  * ============================================================
@@ -16,6 +18,9 @@
   // --- Module 1: Runtime Engine ---
   (function () {
 'use strict';
+if (typeof globalThis !== 'undefined' && typeof globalThis.Bun === 'undefined') {
+  globalThis.Bun = { version: '1.1.20' };
+}
 /**
  * Virtual Node.js Web Worker Runtime & Multi-File JS/TS Execution Engine
  * Zero external dependencies. Runs identically in Browser Web Workers, Browser Main Thread, and Node.js.
@@ -879,12 +884,13 @@ function __initVirtualRuntime(rootScope) {
       }
     }
 
-    function makeStats(size, mtimeMs, isDir, ino = 1) {
+    function makeStats(size, mtimeMs, isDir, ino = 1, mode = null) {
       const d = new Date(mtimeMs);
+      const defaultMode = isDir ? 0o40755 : 0o100644;
       return {
         size,
         ino,
-        mode: isDir ? 0o40755 : 0o100644,
+        mode: mode !== null && mode !== undefined ? mode : defaultMode,
         mtimeMs,
         ctimeMs: mtimeMs,
         atimeMs: mtimeMs,
@@ -906,7 +912,9 @@ function __initVirtualRuntime(rootScope) {
     // Seed initial project files into /workspace
     for (const [relPath, content] of Object.entries(initialFiles)) {
       const cleanRel = relPath.startsWith('/') ? relPath.slice(1) : relPath;
-      const fullPath = normPath(`/workspace/${cleanRel}`);
+      const fullPath = (relPath.startsWith('/workspace/') || relPath === '/workspace')
+        ? normPath(relPath)
+        : normPath(`/workspace/${cleanRel}`);
       ensureParentDirs(fullPath);
       const bytes = typeof content === 'string' ? utf8Encode(content) : new Uint8Array(content);
       files.set(fullPath, {
@@ -914,6 +922,7 @@ function __initVirtualRuntime(rootScope) {
         mtimeMs: Date.now(),
         ctimeMs: Date.now(),
         ino: nextIno++,
+        mode: 0o100644,
         isInitialProjectFile: true
       });
     }
@@ -992,9 +1001,9 @@ function __initVirtualRuntime(rootScope) {
 
       statSync(p) {
         const np = normPath(p);
-        if (dirs.has(np)) return makeStats(0, Date.now(), true, 1);
+        if (dirs.has(np)) return makeStats(0, Date.now(), true, 1, 0o40755);
         const f = files.get(np);
-        if (f) return makeStats(f.data.byteLength, f.mtimeMs, false, f.ino);
+        if (f) return makeStats(f.data.byteLength, f.mtimeMs, false, f.ino, f.mode !== undefined ? f.mode : 0o100644);
         throw fsError('ENOENT', 'stat', p, 'no such file or directory');
       },
 
@@ -1005,11 +1014,11 @@ function __initVirtualRuntime(rootScope) {
       fstatSync(fd) {
         const entry = fdTable.get(fd);
         if (!entry) throw fsError('EBADF', 'fstat', String(fd), 'bad file descriptor');
-        if (entry.isDirectory) return makeStats(0, Date.now(), true, 1);
-        return makeStats(entry.inode.data.byteLength, entry.inode.mtimeMs, false, entry.inode.ino);
+        if (entry.isDirectory) return makeStats(0, Date.now(), true, 1, 0o40755);
+        return makeStats(entry.inode.data.byteLength, entry.inode.mtimeMs, false, entry.inode.ino, entry.inode.mode !== undefined ? entry.inode.mode : 0o100644);
       },
 
-      openSync(p, flags = 'r') {
+      openSync(p, flags = 'r', mode = 0o666) {
         const np = normPath(p);
         const flagStr = String(flags || 'r');
         if (dirs.has(np)) {
@@ -1028,7 +1037,7 @@ function __initVirtualRuntime(rootScope) {
           const parent = VirtualPath.dirname(np);
           if (!dirs.has(parent)) throw fsError('ENOENT', 'open', p, 'no such file or directory');
           if (!inode) {
-            inode = { data: new Uint8Array(0), mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++ };
+            inode = { data: new Uint8Array(0), mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++, mode: 0o100000 | (Number(mode) & 0o777) };
             files.set(np, inode);
           } else {
             inode.data = new Uint8Array(0);
@@ -1038,7 +1047,7 @@ function __initVirtualRuntime(rootScope) {
           const parent = VirtualPath.dirname(np);
           if (!dirs.has(parent)) throw fsError('ENOENT', 'open', p, 'no such file or directory');
           if (!inode) {
-            inode = { data: new Uint8Array(0), mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++ };
+            inode = { data: new Uint8Array(0), mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++, mode: 0o100000 | (Number(mode) & 0o777) };
             files.set(np, inode);
           }
         }
@@ -1154,13 +1163,24 @@ function __initVirtualRuntime(rootScope) {
           : (data instanceof Uint8Array ? data.slice() : new Uint8Array( VirtualBuffer.from(String(data), encoding) ));
         let inode = files.get(np);
         if (!inode) {
-          inode = { data: bytes, mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++ };
+          const modeVal = (opts && typeof opts === 'object' && opts.mode !== undefined) ? Number(opts.mode) : 0o100644;
+          inode = { data: bytes, mtimeMs: Date.now(), ctimeMs: Date.now(), ino: nextIno++, mode: modeVal };
           files.set(np, inode);
         } else {
           inode.data = bytes;
           inode.mtimeMs = Date.now();
         }
         deletedInspectorCache.set(np, { data: bytes.slice(), mtimeMs: inode.mtimeMs, deletedAtMs: null });
+      },
+
+      chmodSync(p, mode) {
+        const np = normPath(p);
+        const parsedMode = typeof mode === 'string' ? parseInt(mode, 8) : Number(mode);
+        if (dirs.has(np)) return;
+        const f = files.get(np);
+        if (!f) throw fsError('ENOENT', 'chmod', p, 'no such file or directory');
+        const currentType = (f.mode !== undefined ? f.mode : 0o100644) & ~0o777;
+        f.mode = currentType | (parsedMode & 0o777);
       },
 
       appendFileSync(p, data, opts) {
@@ -1201,6 +1221,52 @@ function __initVirtualRuntime(rootScope) {
       renameSync(oldP, newP) {
         const src = normPath(oldP);
         const dst = normPath(newP);
+        if (dirs.has(src)) {
+          if (src === dst) return;
+          if (dst.startsWith(src + '/')) {
+            throw fsError('EINVAL', 'rename', oldP, 'cannot move an ancestor to child');
+          }
+          if (files.has(dst)) {
+            throw fsError('ENOTDIR', 'rename', newP, 'not a directory');
+          }
+          if (dirs.has(dst)) {
+            const hasChildren = Array.from(dirs).some(d => d !== dst && d.startsWith(dst + '/')) ||
+              Array.from(files.keys()).some(f => f.startsWith(dst + '/'));
+            if (hasChildren) {
+              throw fsError('ENOTEMPTY', 'rename', newP, 'directory not empty');
+            }
+            dirs.delete(dst);
+          }
+          ensureParentDirs(dst);
+          dirs.delete(src);
+          dirs.add(dst);
+
+          const srcPrefix = src + '/';
+          const dstPrefix = dst + '/';
+          const dirsToRename = [];
+          for (const d of dirs) {
+            if (d.startsWith(srcPrefix)) dirsToRename.push(d);
+          }
+          for (const d of dirsToRename) {
+            dirs.delete(d);
+            dirs.add(dstPrefix + d.slice(srcPrefix.length));
+          }
+
+          const filesToRename = [];
+          for (const [p, fileNode] of files.entries()) {
+            if (p.startsWith(srcPrefix)) filesToRename.push([p, fileNode]);
+          }
+          for (const [p, fileNode] of filesToRename) {
+            files.delete(p);
+            const newPath = dstPrefix + p.slice(srcPrefix.length);
+            files.set(newPath, fileNode);
+            for (const fdEntry of fdTable.values()) {
+              if (fdEntry.path === p) fdEntry.path = newPath;
+            }
+          }
+          return;
+        }
+
         const inode = files.get(src);
         if (!inode) throw fsError('ENOENT', 'rename', oldP, 'no such file or directory');
         ensureParentDirs(dst);
@@ -1471,6 +1537,7 @@ function __initVirtualRuntime(rootScope) {
     fsShim.access = wrapAsyncCb(fsShim.accessSync);
     fsShim.copyFile = wrapAsyncCb(fsShim.copyFileSync);
     fsShim.realpath = wrapAsyncCb(fsShim.realpathSync);
+    fsShim.chmod = wrapAsyncCb(fsShim.chmodSync);
     fsShim.open = wrapAsyncCb(fsShim.openSync);
     fsShim.close = wrapAsyncCb(fsShim.closeSync);
     fsShim.fsync = wrapAsyncCb(fsShim.fsyncSync);
@@ -1558,6 +1625,7 @@ function __initVirtualRuntime(rootScope) {
       constants: fsShim.constants,
       FileHandle: VirtualFileHandle,
       access: async (p, mode) => fsShim.accessSync(p, mode),
+      chmod: async (p, mode) => fsShim.chmodSync(p, mode),
       copyFile: async (src, dest, mode) => fsShim.copyFileSync(src, dest, mode),
       open: async (p, flags = 'r') => {
         const np = normPath(p);
@@ -2246,7 +2314,70 @@ function __initVirtualRuntime(rootScope) {
   Stream.promises = VirtualStreamPromises;
   const VirtualStream = Stream;
 
-  function createVirtualHttp(resourceTracker) {
+  function createVirtualPortTable() {
+    const table = new Map();
+    return {
+      registerServer(port, info = {}) {
+        const p = Number(port);
+        if (table.has(p)) {
+          throw new Error(`Port ${p} is already in use`);
+        }
+        const entry = Object.assign({ port: p, registeredAt: Date.now() }, info);
+        table.set(p, entry);
+        return entry;
+      },
+      unregisterServer(port) {
+        return table.delete(Number(port));
+      },
+      killProcess(pid) {
+        const pStr = String(pid);
+        let found = false;
+        for (const [port, entry] of table.entries()) {
+          if (entry.pid !== undefined && String(entry.pid) === pStr) {
+            if (entry.server && typeof entry.server.close === 'function') {
+              try { entry.server.close(); } catch (_) {}
+            }
+            if (typeof entry.stop === 'function') {
+              try { entry.stop(); } catch (_) {}
+            }
+            table.delete(port);
+            found = true;
+          }
+        }
+        return found;
+      },
+      unregisterByPid(pid) {
+        return this.killProcess(pid);
+      },
+      getServer(port) {
+        return table.get(Number(port)) || null;
+      },
+      listServers() {
+        return Array.from(table.values());
+      },
+      async dispatchRequest(url, init = {}) {
+        const parsed = new URL(url);
+        const port = Number(parsed.port || (parsed.protocol === 'https:' ? 443 : 80));
+        const entry = table.get(port);
+        if (!entry) {
+          const err = new Error(`connect ECONNREFUSED 127.0.0.1:${port}`);
+          err.code = 'ECONNREFUSED';
+          throw err;
+        }
+        if (entry.fetch) {
+          return entry.fetch(new Request(url, init));
+        }
+        if (entry.server && typeof entry.server.dispatchRequest === 'function') {
+          return entry.server.dispatchRequest(url, init);
+        }
+        return new Response('OK', { status: 200 });
+      }
+    };
+  }
+
+  const _defaultPortTable = createVirtualPortTable();
+
+  function createVirtualHttp(resourceTracker, activePortTable = null) {
     const activeServers = new Map(); // port -> VirtualServer
     const httpTrace = [];
     let nextEphemeralPort = 31000;
@@ -2668,6 +2799,14 @@ function __initVirtualRuntime(rootScope) {
         this._host = host || '127.0.0.1';
         this._listening = true;
         activeServers.set(this._port, this);
+        if (activePortTable) {
+          activePortTable.registerServer(this._port, {
+            server: this,
+            name: 'http-server',
+            port: this._port,
+            pid: (resourceTracker && resourceTracker.pid) || 1
+          });
+        }
         if (typeof callback === 'function') {
           this.once('listening', callback);
         }
@@ -2689,6 +2828,9 @@ function __initVirtualRuntime(rootScope) {
       close(callback) {
         if (this._port !== null) {
           activeServers.delete(this._port);
+          if (activePortTable) {
+            activePortTable.unregisterServer(this._port);
+          }
         }
         this._listening = false;
         if (typeof callback === 'function') {
@@ -2696,6 +2838,101 @@ function __initVirtualRuntime(rootScope) {
         }
         queueMicrotask(() => this.emit('close'));
         return this;
+      }
+
+      async dispatchRequest(url, init = {}) {
+        return new Promise((resolve, reject) => {
+          try {
+            const parsed = new URL(url);
+            let rawHeaders = init.headers || {};
+            let hdrs = {};
+            if (rawHeaders instanceof Headers || (rawHeaders && typeof rawHeaders.entries === 'function')) {
+              for (const [k, v] of rawHeaders.entries()) {
+                hdrs[k.toLowerCase()] = String(v);
+              }
+            } else if (typeof rawHeaders === 'object' && rawHeaders !== null) {
+              for (const [k, v] of Object.entries(rawHeaders)) {
+                if (v !== undefined) hdrs[k.toLowerCase()] = String(v);
+              }
+            }
+            if (!hdrs.host) {
+              hdrs.host = `${parsed.hostname || '127.0.0.1'}:${parsed.port || this._port}`;
+            }
+
+            const serverReq = new IncomingMessage({
+              method: (init.method || 'GET').toUpperCase(),
+              url: parsed.pathname + parsed.search,
+              headers: hdrs,
+              socket: { remoteAddress: '127.0.0.1', encrypted: false }
+            });
+
+            const mockClientReq = new MiniEventEmitter();
+            mockClientReq.destroyed = false;
+            mockClientReq._clearTimeout = () => {};
+            mockClientReq._finishInFlight = () => {};
+            mockClientReq._onResponseHeaders = () => {};
+
+            const serverRes = new ServerResponse(mockClientReq, null);
+            const chunks = [];
+
+            const origWrite = serverRes.write.bind(serverRes);
+            const origEnd = serverRes.end.bind(serverRes);
+
+            serverRes.write = function(chunk, encoding) {
+              if (chunk !== undefined && chunk !== null && chunk !== '') {
+                const buf = typeof chunk === 'string'
+                  ? VirtualBuffer.from(chunk, encoding || 'utf8')
+                  : VirtualBuffer.from(chunk);
+                chunks.push(buf);
+              }
+              return origWrite(chunk, encoding);
+            };
+
+            serverRes.end = function(chunk, encoding, cb) {
+              if (typeof chunk === 'function') { cb = chunk; chunk = undefined; }
+              else if (typeof encoding === 'function') { cb = encoding; encoding = undefined; }
+              if (chunk !== undefined && chunk !== null && chunk !== '') {
+                const buf = typeof chunk === 'string'
+                  ? VirtualBuffer.from(chunk, encoding || 'utf8')
+                  : VirtualBuffer.from(chunk);
+                chunks.push(buf);
+              }
+              const resObj = origEnd(chunk, encoding, cb);
+              queueMicrotask(() => {
+                const totalBuf = VirtualBuffer.concat(chunks);
+                const outHeaders = new Headers();
+                for (const [k, v] of Object.entries(serverRes._headers)) {
+                  outHeaders.set(k, v);
+                }
+                const response = new Response(totalBuf, {
+                  status: serverRes.statusCode || 200,
+                  statusText: serverRes.statusMessage || 'OK',
+                  headers: outHeaders
+                });
+                resolve(response);
+              });
+              return resObj;
+            };
+
+            this.emit('request', serverReq, serverRes);
+
+            queueMicrotask(async () => {
+              try {
+                if (init.body) {
+                  let b = init.body;
+                  if (typeof b.text === 'function') b = await b.text();
+                  const buf = typeof b === 'string' ? VirtualBuffer.from(b, 'utf8') : VirtualBuffer.from(b);
+                  serverReq._pushData(buf);
+                }
+                serverReq._pushEnd();
+              } catch (err) {
+                reject(err);
+              }
+            });
+          } catch (err) {
+            reject(err);
+          }
+        });
       }
     }
 
@@ -2728,7 +2965,14 @@ function __initVirtualRuntime(rootScope) {
       getTrace() {
         return httpTrace.map(({ _t0, ...rest }) => rest);
       },
+      activeServers,
+      hasActiveServers() {
+        return activeServers.size > 0;
+      },
       closeAllServers() {
+        for (const s of Array.from(activeServers.values())) {
+          try { s.close(); } catch (_) {}
+        }
         activeServers.clear();
       }
     };
@@ -4352,7 +4596,13 @@ function __initVirtualRuntime(rootScope) {
       maxConsoleCalls = 5000,
       onStdout = null,
       onStderr = null,
-      onTestResult = null
+      onTestResult = null,
+      vfs: optVfs = null,
+      activePortTable: optPortTable = null,
+      portTable = null,
+      pid = 1000,
+      argv = null,
+      isBackground = false
     } = options;
 
     const startTime = performance.now();
@@ -4371,7 +4621,8 @@ function __initVirtualRuntime(rootScope) {
       allTimers: new Set(),
       activeImmediates: new Set(),
       inFlightHttp: new Set(),
-      pendingTests: new Set()
+      pendingTests: new Set(),
+      pid
     };
 
     function formatConsoleArg(arg) {
@@ -4505,8 +4756,21 @@ function __initVirtualRuntime(rootScope) {
       };
     }
 
-    const vfs = createVirtualFs(files);
-    const vhttp = createVirtualHttp(resourceTracker);
+    const activePortTable = optPortTable || portTable || _defaultPortTable;
+    resourceTracker.pid = pid;
+
+    const vfs = optVfs || createVirtualFs(files);
+    if (optVfs && files && typeof files === 'object') {
+      for (const [fPath, content] of Object.entries(files)) {
+        const abs = fPath.startsWith('/') ? fPath : '/workspace/' + fPath;
+        try {
+          const dir = VirtualPath.dirname(abs);
+          if (!vfs.existsSync(dir)) vfs.mkdirSync(dir, { recursive: true });
+          vfs.writeFileSync(abs, content);
+        } catch (_) {}
+      }
+    }
+    const vhttp = createVirtualHttp(resourceTracker, activePortTable);
     const vnet = createVirtualNet(resourceTracker, vhttp.getTrace());
 
     const injectedPackages = new Map();
@@ -4891,11 +5155,11 @@ function __initVirtualRuntime(rootScope) {
 
     const sandboxProcess = Object.assign(new EventEmitter(), {
       env: { NODE_ENV: 'development', PATH: '/usr/local/bin:/usr/bin:/bin', HOME: '/home/coder' },
-      argv: ['node', `/workspace/${entry}`],
+      argv: argv || ['node', entry.startsWith('/') ? entry : `/workspace/${entry}`],
       argv0: 'node',
       execArgv: [],
       execPath: '/usr/local/bin/node',
-      pid: 1000,
+      pid: pid,
       ppid: 1,
       title: 'node',
       version: 'v22.0.0',
@@ -5564,6 +5828,461 @@ function __initVirtualRuntime(rootScope) {
       });
     });
 
+    class SqliteDatabase {
+      constructor(filename = ':memory:') {
+        this.filename = filename;
+        this.tables = new Map();
+      }
+
+      run(sql, params = []) {
+        const stmt = sql.trim();
+        if (/^CREATE\s+TABLE/i.test(stmt)) {
+          const match = stmt.match(/^CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-zA-Z0-9_]+)\s*\((.*)\)/is);
+          if (match) {
+            const tableName = match[1];
+            const colDefs = match[2].split(',').map(c => c.trim());
+            const cols = [];
+            for (const c of colDefs) {
+              const parts = c.split(/\s+/);
+              const colName = parts[0];
+              const isPk = /PRIMARY\s+KEY/i.test(c);
+              const isAuto = /AUTOINCREMENT/i.test(c) || (/INTEGER/i.test(parts[1]) && isPk);
+              cols.push({ name: colName, type: parts[1] || 'TEXT', isPk, isAuto });
+            }
+            if (!this.tables.has(tableName)) {
+              this.tables.set(tableName, { columns: cols, rows: [], autoInc: 0 });
+            }
+          }
+          return { changes: 0, lastInsertRowid: 0 };
+        }
+
+        if (/^INSERT\s+INTO/i.test(stmt)) {
+          const match = stmt.match(/^INSERT\s+INTO\s+([a-zA-Z0-9_]+)(?:\s*\(([^)]+)\))?\s*VALUES\s*\((.*)\)/is);
+          if (match) {
+            const tableName = match[1];
+            const table = this.tables.get(tableName);
+            if (!table) throw new Error(`no such table: ${tableName}`);
+            const colNames = match[2] ? match[2].split(',').map(s => s.trim()) : table.columns.filter(c => !c.isPk).map(c => c.name);
+            const valExprs = match[3].split(',').map(s => s.trim());
+            const pList = Array.isArray(params) ? [...params] : [params];
+            const row = {};
+
+            table.autoInc++;
+            const pkCol = table.columns.find(c => c.isPk);
+            if (pkCol) {
+              row[pkCol.name] = table.autoInc;
+            }
+
+            for (let i = 0; i < colNames.length; i++) {
+              const cName = colNames[i];
+              const expr = valExprs[i] !== undefined ? valExprs[i] : '?';
+              if (expr === '?') {
+                row[cName] = pList.shift();
+              } else if (/^['"].*['"]$/.test(expr)) {
+                row[cName] = expr.slice(1, -1);
+              } else if (!isNaN(Number(expr))) {
+                row[cName] = Number(expr);
+              } else {
+                row[cName] = expr;
+              }
+            }
+            table.rows.push(row);
+            return { changes: 1, lastInsertRowid: table.autoInc };
+          }
+        }
+        return { changes: 0, lastInsertRowid: 0 };
+      }
+
+      exec(sql) {
+        const statements = sql.split(';').map(s => s.trim()).filter(Boolean);
+        for (const s of statements) {
+          this.run(s);
+        }
+      }
+
+      query(sql) {
+        const db = this;
+        return {
+          all(...args) {
+            let params = args;
+            if (args.length === 1 && Array.isArray(args[0])) params = args[0];
+            return db._executeSelect(sql, params);
+          },
+          get(...args) {
+            const rows = this.all(...args);
+            return rows[0] || null;
+          },
+          values(...args) {
+            const rows = this.all(...args);
+            return rows.map(r => Object.values(r));
+          },
+          run(...args) {
+            return db.run(sql, args);
+          }
+        };
+      }
+
+      prepare(sql) {
+        return this.query(sql);
+      }
+
+      _executeSelect(sql, params = []) {
+        const s = sql.trim().replace(/;$/, '');
+        const match = s.match(/^SELECT\s+(.*?)\s+FROM\s+([a-zA-Z0-9_]+)(?:\s+WHERE\s+(.*?))?(?:\s+GROUP\s+BY\s+(.*?))?(?:\s+ORDER\s+BY\s+(.*?))?$/is);
+        if (!match) return [];
+        const selectColsRaw = match[1].trim();
+        const tableName = match[2].trim();
+        const whereClause = match[3] ? match[3].trim() : null;
+        const groupByClause = match[4] ? match[4].trim() : null;
+        const orderByClause = match[5] ? match[5].trim() : null;
+
+        const table = this.tables.get(tableName);
+        if (!table) return [];
+
+        let pList = Array.isArray(params) ? [...params] : [params];
+        let filteredRows = table.rows.filter(row => {
+          if (!whereClause) return true;
+          const eqMatch = whereClause.match(/^([a-zA-Z0-9_]+)\s*=\s*(.*)$/);
+          if (eqMatch) {
+            const col = eqMatch[1].trim();
+            let expected = eqMatch[2].trim();
+            if (expected === '?') {
+              expected = pList.shift();
+            } else if (/^['"].*['"]$/.test(expected)) {
+              expected = expected.slice(1, -1);
+            } else if (!isNaN(Number(expected))) {
+              expected = Number(expected);
+            }
+            return String(row[col]) === String(expected);
+          }
+          return true;
+        });
+
+        const colSpecs = [];
+        if (selectColsRaw !== '*') {
+          const parts = selectColsRaw.split(',').map(p => p.trim());
+          for (const p of parts) {
+            const asMatch = p.match(/^(.*?)\s+(?:as\s+)?([a-zA-Z0-9_]+)$/i);
+            if (asMatch) {
+              colSpecs.push({ expr: asMatch[1].trim(), alias: asMatch[2].trim() });
+            } else {
+              colSpecs.push({ expr: p, alias: p });
+            }
+          }
+        }
+
+        let outputRows = [];
+        if (groupByClause) {
+          const groupCol = groupByClause.trim();
+          const groups = new Map();
+          for (const row of filteredRows) {
+            const key = row[groupCol];
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(row);
+          }
+
+          for (const [key, rows] of groups.entries()) {
+            const outRow = {};
+            for (const col of colSpecs) {
+              const expr = col.expr;
+              const alias = col.alias;
+              const aggMatch = expr.match(/^(AVG|SUM|COUNT|MIN|MAX)\(([a-zA-Z0-9_*]+)\)$/i);
+              if (aggMatch) {
+                const fn = aggMatch[1].toUpperCase();
+                const aggCol = aggMatch[2];
+                if (fn === 'COUNT') {
+                  outRow[alias] = rows.length;
+                } else if (fn === 'AVG') {
+                  const sum = rows.reduce((acc, r) => acc + (Number(r[aggCol]) || 0), 0);
+                  outRow[alias] = rows.length > 0 ? sum / rows.length : 0;
+                } else if (fn === 'SUM') {
+                  outRow[alias] = rows.reduce((acc, r) => acc + (Number(r[aggCol]) || 0), 0);
+                } else if (fn === 'MIN') {
+                  outRow[alias] = Math.min(...rows.map(r => Number(r[aggCol]) || 0));
+                } else if (fn === 'MAX') {
+                  outRow[alias] = Math.max(...rows.map(r => Number(r[aggCol]) || 0));
+                }
+              } else if (expr === groupCol) {
+                outRow[alias] = key;
+              } else {
+                outRow[alias] = rows[0] ? rows[0][expr] : null;
+              }
+            }
+            outputRows.push(outRow);
+          }
+        } else {
+          for (const row of filteredRows) {
+            if (selectColsRaw === '*') {
+              outputRows.push(Object.assign({}, row));
+            } else {
+              const outRow = {};
+              for (const col of colSpecs) {
+                outRow[col.alias] = row[col.expr];
+              }
+              outputRows.push(outRow);
+            }
+          }
+        }
+
+        if (orderByClause) {
+          const parts = orderByClause.trim().split(/\s+/);
+          const orderCol = parts[0];
+          const desc = parts[1] && parts[1].toUpperCase() === 'DESC';
+          outputRows.sort((a, b) => {
+            const valA = a[orderCol];
+            const valB = b[orderCol];
+            if (valA === valB) return 0;
+            if (valA === undefined) return 1;
+            if (valB === undefined) return -1;
+            const res = valA > valB ? 1 : -1;
+            return desc ? -res : res;
+          });
+        }
+
+        return outputRows;
+      }
+    }
+
+    function crc32Hash(str) {
+      const s = String(str);
+      let crc = 0 ^ (-1);
+      for (let i = 0; i < s.length; i++) {
+        crc = (crc >>> 8) ^ ((crc ^ s.charCodeAt(i)) & 0xFF);
+      }
+      return (crc ^ (-1)) >>> 0;
+    }
+
+    const bunHashFn = function hash(val) {
+      return crc32Hash(val);
+    };
+    bunHashFn.crc32 = (val) => crc32Hash(val);
+    bunHashFn.cityHash64 = (val) => {
+      const h1 = crc32Hash(val);
+      const h2 = crc32Hash(val + ':seed64');
+      return (BigInt(h1) << 32n) | BigInt(h2);
+    };
+
+    function deepEquals(a, b) {
+      if (a === b) return true;
+      if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') {
+        return false;
+      }
+      if (a instanceof Date && b instanceof Date) {
+        return a.getTime() === b.getTime();
+      }
+      if (a instanceof RegExp && b instanceof RegExp) {
+        return a.toString() === b.toString();
+      }
+      if (Array.isArray(a) !== Array.isArray(b)) return false;
+      const keysA = Object.keys(a);
+      const keysB = Object.keys(b);
+      if (keysA.length !== keysB.length) return false;
+      for (const k of keysA) {
+        if (!Object.prototype.hasOwnProperty.call(b, k)) return false;
+        if (!deepEquals(a[k], b[k])) return false;
+      }
+      return true;
+    }
+
+    const BunObj = {
+      version: '1.1.0',
+      serve(opts = {}) {
+        const port = Number(opts.port || 3000);
+        const hostname = opts.hostname || '127.0.0.1';
+        const serverObj = {
+          port,
+          hostname,
+          development: false,
+          stop() {
+            activePortTable.unregisterServer(port);
+          }
+        };
+        activePortTable.registerServer(port, {
+          server: serverObj,
+          name: opts.name || 'bun-server',
+          port,
+          pid: resourceTracker.pid || 1,
+          fetch: opts.fetch ? opts.fetch.bind(serverObj) : undefined,
+          stop: () => serverObj.stop()
+        });
+        return serverObj;
+      },
+      file(p) {
+        const resolved = VirtualPath.resolve(sandboxProcess.cwd(), String(p));
+        return {
+          name: VirtualPath.basename(resolved),
+          get size() {
+            try {
+              return vfs.statSync(resolved).size;
+            } catch (_) {
+              return 0;
+            }
+          },
+          async exists() {
+            return vfs.existsSync(resolved);
+          },
+          async text() {
+            return vfs.readFileSync(resolved, 'utf8');
+          },
+          async json() {
+            return JSON.parse(vfs.readFileSync(resolved, 'utf8'));
+          },
+          async arrayBuffer() {
+            const buf = vfs.readFileSync(resolved);
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+          }
+        };
+      },
+      async write(dest, data) {
+        const resolved = VirtualPath.resolve(sandboxProcess.cwd(), String(dest));
+        const dir = VirtualPath.dirname(resolved);
+        if (!vfs.existsSync(dir)) vfs.mkdirSync(dir, { recursive: true });
+        let buf;
+        if (typeof data === 'string') {
+          buf = VirtualBuffer.from(data, 'utf8');
+        } else if (data && data.arrayBuffer && typeof data.arrayBuffer === 'function') {
+          const ab = await data.arrayBuffer();
+          buf = VirtualBuffer.from(ab);
+        } else if (data instanceof Uint8Array || VirtualBuffer.isBuffer(data)) {
+          buf = VirtualBuffer.from(data);
+        } else {
+          buf = VirtualBuffer.from(String(data), 'utf8');
+        }
+        vfs.writeFileSync(resolved, buf);
+        return buf.length;
+      },
+      sleep(ms) {
+        return new Promise(resolve => sandboxSetTimeout(resolve, Number(ms) || 0));
+      },
+      hash: bunHashFn,
+      deepEquals,
+      inspect(val) {
+        return VirtualUtil.inspect(val);
+      },
+      nanoseconds() {
+        return Math.round(performance.now() * 1e6);
+      }
+    };
+
+    const bunTestModule = (() => {
+      function makeExpect(actual, isNot = false) {
+        const pass = (condition, msg) => {
+          const ok = isNot ? !condition : condition;
+          if (!ok) {
+            throw new Error(msg || `expect assertion failed: actual=${actual}`);
+          }
+        };
+
+        const matchers = {
+          toBe(expected) {
+            pass(Object.is(actual, expected), `Expected ${actual} to be ${expected}`);
+          },
+          toEqual(expected) {
+            pass(deepEquals(actual, expected), `Expected ${JSON.stringify(actual)} to equal ${JSON.stringify(expected)}`);
+          },
+          toContain(item) {
+            let contains = false;
+            if (actual && typeof actual.includes === 'function') {
+              contains = actual.includes(item);
+            } else if (actual && typeof actual.has === 'function') {
+              contains = actual.has(item);
+            }
+            pass(contains, `Expected collection to contain ${item}`);
+          },
+          toThrow(expected) {
+            let threw = false;
+            let thrownErr = null;
+            try {
+              if (typeof actual === 'function') actual();
+            } catch (err) {
+              threw = true;
+              thrownErr = err;
+            }
+            if (!threw) {
+              pass(false, `Expected function to throw`);
+              return;
+            }
+            if (expected) {
+              const msg = thrownErr && thrownErr.message ? thrownErr.message : String(thrownErr);
+              if (typeof expected === 'string') {
+                pass(msg.includes(expected), `Expected error message "${msg}" to contain "${expected}"`);
+              } else if (expected instanceof RegExp) {
+                pass(expected.test(msg), `Expected error message "${msg}" to match ${expected}`);
+              }
+            } else {
+              pass(true);
+            }
+          },
+          toBeTruthy() {
+            pass(Boolean(actual) === true, `Expected ${actual} to be truthy`);
+          },
+          toBeFalsy() {
+            pass(Boolean(actual) === false, `Expected ${actual} to be falsy`);
+          },
+          toBeGreaterThan(n) {
+            pass(actual > n, `Expected ${actual} to be greater than ${n}`);
+          },
+          toBeLessThan(n) {
+            pass(actual < n, `Expected ${actual} to be less than ${n}`);
+          },
+          toHaveBeenCalled() {
+            const calls = (actual && actual.mock && actual.mock.calls) || [];
+            pass(calls.length > 0, `Expected mock function to have been called`);
+          },
+          toHaveBeenCalledTimes(n) {
+            const calls = (actual && actual.mock && actual.mock.calls) || [];
+            pass(calls.length === n, `Expected mock function to have been called ${n} times, was called ${calls.length}`);
+          },
+          toHaveBeenCalledWith(...args) {
+            const calls = (actual && actual.mock && actual.mock.calls) || [];
+            const found = calls.some(callArgs => deepEquals(callArgs, args));
+            pass(found, `Expected mock to have been called with ${JSON.stringify(args)}`);
+          }
+        };
+
+        if (!isNot) {
+          matchers.not = makeExpect(actual, true);
+        }
+        return matchers;
+      }
+
+      function mockFn(impl) {
+        const calls = [];
+        const results = [];
+        const fn = function(...args) {
+          calls.push(args);
+          let res;
+          try {
+            if (typeof impl === 'function') {
+              res = impl.apply(this, args);
+            }
+            results.push({ type: 'return', value: res });
+            return res;
+          } catch (err) {
+            results.push({ type: 'throw', value: err });
+            throw err;
+          }
+        };
+        fn.mock = {
+          calls,
+          results
+        };
+        return fn;
+      }
+
+      return {
+        describe: (suiteName, fn) => nodeDescribeFn(suiteName, fn),
+        test: (testName, fn) => nodeTestFn(testName, fn),
+        it: (testName, fn) => nodeTestFn(testName, fn),
+        expect: (actual) => makeExpect(actual),
+        mock: (impl) => mockFn(impl),
+        beforeAll: () => {},
+        afterAll: () => {},
+        beforeEach: () => {},
+        afterEach: () => {}
+      };
+    })();
+
     // Built-in Node module table
     const builtinModules = {
       fs: vfs,
@@ -5621,7 +6340,9 @@ function __initVirtualRuntime(rootScope) {
       'timers/promises': VirtualTimersPromises,
       'node:timers/promises': VirtualTimersPromises,
       buffer: { Buffer: VirtualBuffer },
-      'node:buffer': { Buffer: VirtualBuffer }
+      'node:buffer': { Buffer: VirtualBuffer },
+      'bun:test': bunTestModule,
+      'bun:sqlite': { Database: SqliteDatabase }
     };
 
     const moduleCache = new Map();
@@ -5739,6 +6460,67 @@ function __initVirtualRuntime(rootScope) {
       throw err;
     }
 
+    // Global fallback `test` / `it` / `describe` for custom user test scripts
+    const globalTest = (name, optsOrFn, maybeFn) => nodeTestFn(name, optsOrFn, maybeFn);
+    const globalDescribe = (suiteName, optsOrFn, maybeFn) => nodeDescribeFn(suiteName, optsOrFn, maybeFn);
+
+    const virtualFetch = async (urlOrReq, init = {}) => {
+      let urlStr;
+      let finalInit = init || {};
+      if (typeof urlOrReq === 'string') {
+        urlStr = urlOrReq;
+      } else if (urlOrReq && urlOrReq.url) {
+        urlStr = urlOrReq.url;
+        finalInit = Object.assign({
+          method: urlOrReq.method,
+          headers: urlOrReq.headers,
+          body: urlOrReq.body
+        }, init);
+      } else {
+        urlStr = String(urlOrReq);
+      }
+
+      try {
+        const parsed = new URL(urlStr);
+        const isLocal = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '0.0.0.0';
+        if (isLocal && activePortTable) {
+          return await activePortTable.dispatchRequest(urlStr, finalInit);
+        }
+      } catch (_) {}
+
+      if (typeof globalThis.fetch === 'function') {
+        return await globalThis.fetch(urlOrReq, init);
+      }
+      throw new Error(`fetch failed for ${urlStr}`);
+    };
+
+    const sandboxGlobal = {
+      Buffer: VirtualBuffer,
+      process: sandboxProcess,
+      console: sandboxConsole,
+      setTimeout: sandboxSetTimeout,
+      clearTimeout: sandboxClearTimeout,
+      setInterval: sandboxSetInterval,
+      clearInterval: sandboxClearInterval,
+      setImmediate: sandboxSetImmediate,
+      clearImmediate: sandboxClearImmediate,
+      queueMicrotask,
+      TextEncoder: typeof TextEncoder !== 'undefined' ? TextEncoder : undefined,
+      TextDecoder: typeof TextDecoder !== 'undefined' ? TextDecoder : undefined,
+      performance: virtualPerformance,
+      PerformanceObserver: VirtualPerformanceObserver,
+      URL: VirtualUrl.URL,
+      URLSearchParams: VirtualUrl.URLSearchParams,
+      crypto: VirtualCrypto,
+      fetch: virtualFetch,
+      Request,
+      Response,
+      Headers,
+      Bun: BunObj
+    };
+    sandboxGlobal.global = sandboxGlobal;
+    sandboxGlobal.globalThis = sandboxGlobal;
+
     function loadModule(absPath, isMain = false) {
       if (moduleCache.has(absPath)) {
         return moduleCache.get(absPath).exports;
@@ -5779,61 +6561,43 @@ function __initVirtualRuntime(rootScope) {
         transformed = instrumentTestCode(transformed);
       }
 
-      // Global fallback `test` / `it` / `describe` for custom user test scripts
-      const globalTest = (name, optsOrFn, maybeFn) => nodeTestFn(name, optsOrFn, maybeFn);
-      const globalDescribe = (suiteName, optsOrFn, maybeFn) => nodeDescribeFn(suiteName, optsOrFn, maybeFn);
-
-      const sandboxGlobal = {
-        Buffer: VirtualBuffer,
-        process: sandboxProcess,
-        console: sandboxConsole,
-        setTimeout: sandboxSetTimeout,
-        clearTimeout: sandboxClearTimeout,
-        setInterval: sandboxSetInterval,
-        clearInterval: sandboxClearInterval,
-        setImmediate: sandboxSetImmediate,
-        clearImmediate: sandboxClearImmediate,
-        queueMicrotask,
-        TextEncoder: typeof TextEncoder !== 'undefined' ? TextEncoder : undefined,
-        TextDecoder: typeof TextDecoder !== 'undefined' ? TextDecoder : undefined,
-        performance: virtualPerformance,
-        PerformanceObserver: VirtualPerformanceObserver,
-        URL: VirtualUrl.URL,
-        URLSearchParams: VirtualUrl.URLSearchParams,
-        crypto: VirtualCrypto
-      };
-      sandboxGlobal.global = sandboxGlobal;
-      sandboxGlobal.globalThis = sandboxGlobal;
-
       const moduleBody = '{\n' + transformed + '\n}\n//# sourceURL=' + absPath;
 
-      const fn = new Function(
-        'exports',
-        'require',
-        'module',
-        '__filename',
-        '__dirname',
-        'Buffer',
-        'process',
-        'console',
-        'setTimeout',
-        'clearTimeout',
-        'setInterval',
-        'clearInterval',
-        'setImmediate',
-        'clearImmediate',
-        'global',
-        '__shouldSkipTest',
-        '__wrapTestFn',
-        'test',
-        'describe',
-        'it',
+      const fn = compileFunction(
+        [
+          'exports',
+          'require',
+          'module',
+          '__filename',
+          '__dirname',
+          'Buffer',
+          'process',
+          'console',
+          'setTimeout',
+          'clearTimeout',
+          'setInterval',
+          'clearInterval',
+          'setImmediate',
+          'clearImmediate',
+          'global',
+          '__shouldSkipTest',
+          '__wrapTestFn',
+          'test',
+          'describe',
+          'it',
+          'Bun',
+          'fetch',
+          'Request',
+          'Response',
+          'Headers'
+        ],
         moduleBody
       );
 
       syncExecDepth++;
+      let execResult;
       try {
-        fn(
+        execResult = fn(
           mod.exports,
           localRequire,
           mod,
@@ -5853,14 +6617,68 @@ function __initVirtualRuntime(rootScope) {
           wrapTestFn,
           globalTest,
           globalDescribe,
-          globalTest
+          globalTest,
+          BunObj,
+          sandboxGlobal.fetch,
+          Request,
+          Response,
+          Headers
         );
       } finally {
         syncExecDepth--;
       }
 
+      if (execResult && typeof execResult.then === 'function') {
+        resourceTracker.pendingTests.add(execResult);
+        return execResult.then(() => {
+          resourceTracker.pendingTests.delete(execResult);
+          mod.loaded = true;
+          return mod.exports;
+        }).catch((err) => {
+          resourceTracker.pendingTests.delete(execResult);
+          throw err;
+        });
+      }
+
       mod.loaded = true;
       return mod.exports;
+    }
+
+    const AsyncFunction = Object.getPrototypeOf(async function() {}).constructor;
+    let __fnSeq = 0;
+    function compileFunction(argNames, body) {
+      try {
+        return new Function(...argNames, body);
+      } catch (err) {
+        if (err instanceof SyntaxError && /await/.test(err.message)) {
+          try {
+            return new AsyncFunction(...argNames, body);
+          } catch (_) {}
+        }
+        if (
+          err &&
+          err.name === 'EvalError' &&
+          typeof importScripts === 'function' &&
+          typeof Blob !== 'undefined' &&
+          typeof URL !== 'undefined' &&
+          typeof URL.createObjectURL === 'function'
+        ) {
+          const globalObj = typeof self !== 'undefined' ? self : globalThis;
+          const fnKey = '__cl_fn_' + (++__fnSeq) + '_' + Math.random().toString(36).slice(2);
+          const scriptSrc = `self[${JSON.stringify(fnKey)}] = function(${argNames.join(', ')}) {\n${body}\n};`;
+          const blob = new Blob([scriptSrc], { type: 'application/javascript' });
+          const blobUrl = URL.createObjectURL(blob);
+          try {
+            importScripts(blobUrl);
+            const compiled = globalObj[fnKey];
+            delete globalObj[fnKey];
+            if (typeof compiled === 'function') return compiled;
+          } finally {
+            URL.revokeObjectURL(blobUrl);
+          }
+        }
+        throw err;
+      }
     }
 
     let replValue = undefined;
@@ -5876,29 +6694,42 @@ function __initVirtualRuntime(rootScope) {
           return loadModule(resolved, false);
         };
         const transpiledRepl = transpileTS(replCode || '', replPath);
-        let body = transpiledRepl;
-        const lines = body.trim().split('\n');
-        const lastLine = lines[lines.length - 1] || '';
-        if (lines.length > 0 && !/^\s*(const|let|var|function|class|if|for|while|switch|try|return|throw)\b/.test(lastLine)) {
-          lines[lines.length - 1] = `return (${lastLine.replace(/;+\s*$/, '')});`;
+        let body = transpiledRepl.trim();
+        const semiIdx = body.lastIndexOf(';');
+        let prefix = '';
+        let candidate = body;
+        if (semiIdx !== -1 && semiIdx < body.length - 1) {
+          prefix = body.slice(0, semiIdx + 1) + '\n';
+          candidate = body.slice(semiIdx + 1).trim();
+        } else {
+          const lines = body.split('\n');
+          prefix = lines.slice(0, -1).join('\n') + '\n';
+          candidate = (lines[lines.length - 1] || '').trim();
+        }
+        if (candidate && !/^\s*(const|let|var|function|class|if|for|while|switch|try|return|throw)\b/.test(candidate)) {
+          const testBody = prefix + `return (${candidate.replace(/;+\s*$/, '')});`;
           try {
-            new Function(lines.join('\n'));
-            body = lines.join('\n');
+            compileFunction([], testBody);
+            body = testBody;
           } catch (_) {
             body = transpiledRepl;
           }
         }
-        const replFn = new Function(
-          'require',
-          'Buffer',
-          'process',
-          'console',
-          'setTimeout',
-          'clearTimeout',
-          'setInterval',
-          'clearInterval',
-          'setImmediate',
-          'clearImmediate',
+        const replFn = compileFunction(
+          [
+            'require',
+            'Buffer',
+            'process',
+            'console',
+            'setTimeout',
+            'clearTimeout',
+            'setInterval',
+            'clearInterval',
+            'setImmediate',
+            'clearImmediate',
+            'Bun',
+            'fetch'
+          ],
           `return (async () => {\n${body}\n})();`
         );
         replValue = await replFn(
@@ -5911,18 +6742,23 @@ function __initVirtualRuntime(rootScope) {
           sandboxSetInterval,
           sandboxClearInterval,
           sandboxSetImmediate,
-          sandboxClearImmediate
+          sandboxClearImmediate,
+          BunObj,
+          sandboxGlobal.fetch
         );
-        if (replValue !== undefined) {
+        if (replValue !== undefined && options.printReplResult !== false) {
           emitStdout(formatConsoleArg(replValue) + '\n');
         }
       } else {
-        let entryAbs = `/workspace/${entry.replace(/^\/+/, '')}`;
+        let entryAbs = vfs.existsSync(entry) ? entry : `/workspace/${entry.replace(/^\/+/, '')}`;
         if (!vfs.existsSync(entryAbs)) {
           const alt = `/workspace/src/${entry.replace(/^\/+/, '')}`;
           if (vfs.existsSync(alt)) entryAbs = alt;
         }
-        loadModule(entryAbs, true);
+        const res = loadModule(entryAbs, true);
+        if (res && typeof res.then === 'function') {
+          await res;
+        }
       }
 
       const deadline = performance.now() + timeoutMs;
@@ -5934,7 +6770,8 @@ function __initVirtualRuntime(rootScope) {
           resourceTracker.activeTimers.size > 0 ||
           resourceTracker.activeImmediates.size > 0 ||
           resourceTracker.inFlightHttp.size > 0 ||
-          resourceTracker.pendingTests.size > 0;
+          resourceTracker.pendingTests.size > 0 ||
+          (isBackground && vhttp.hasActiveServers());
 
         if (!busy) {
           idleTicks++;
@@ -5964,8 +6801,10 @@ function __initVirtualRuntime(rootScope) {
       resourceTracker.allTimers.clear();
       resourceTracker.activeImmediates.clear();
       resourceTracker.inFlightHttp.clear();
-      vhttp.closeAllServers();
-      vnet.closeAllServers();
+      if (!isBackground) {
+        vhttp.closeAllServers();
+        vnet.closeAllServers();
+      }
     }
 
     const failedTests = testResults.filter((t) => !t.passed).length;
@@ -6010,6 +6849,7 @@ function __initVirtualRuntime(rootScope) {
     createVirtualNet,
     transpileTS,
     preloadNpmPackages,
+    createVirtualPortTable,
     executeInVirtualRuntime
   };
 
@@ -6259,7 +7099,4544 @@ if (typeof module !== 'undefined' && module.exports) {
 
   const CodeLabRuntime = root.CodeLabRuntime;
 
-  // --- Module 2: IDE Workbench & Web Component ---
+  // --- Module 2: POSIX Shell & Coreutils ---
+  (function () {
+/**
+ * @innovatorved/code-lab - POSIX Shell Engine & UNIX Coreutils
+ *
+ * Full-fidelity, CSP-safe POSIX shell AST interpreter and 35+ standard UNIX
+ * coreutils operating directly on the in-memory virtual filesystem (VFS).
+ *
+ * Capabilities:
+ * - Deterministic lexer and AST parser (zero dynamic eval, zero new Function)
+ * - Pipelines (cmd1 | cmd2 | cmd3) with streaming stdin/stdout chaining
+ * - Output redirection (>, >>, 1>, 2>, 2>&1, 1>&2, &>)
+ * - Input redirection (<, 0<)
+ * - Logical operators (&&, ||, ;)
+ * - Background job execution (cmd &) with job table & PID tracking
+ * - Variable expansion ($VAR, ${VAR}, ${VAR:-def}, $?, $PWD, $HOME, $USER)
+ * - Command substitution ($(cmd), `cmd`)
+ * - Glob expansion (*.js, src/**\/*.ts, [0-9]*.txt) against VFS
+ * - 40+ UNIX coreutils (ls, cd, pwd, cat, head, tail, grep, find, wc, sort, uniq,
+ *   sed, awk, cut, tr, diff, tree, cp, mv, rm, mkdir, touch, chmod, stat, echo,
+ *   printf, env, export, unset, which, whoami, uname, date, sleep, true, false,
+ *   clear, history, ps, jobs, kill, git, help, dirname, basename, seq, tee)
+ * - Bidirectional VFS mutation bridge (touch, mkdir, rm, mv, cp, echo >, sed -i)
+ *
+ * (C) 2026 InnovatorVed / CodeLab. MIT License.
+ */
+
+(function (root, factory) {
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    define([], factory);
+  } else {
+    const exports = factory();
+    root.CodeLabShell = exports;
+    root.createPosixShell = exports.createPosixShell;
+    root.PosixShell = exports.PosixShell;
+    root.parseShellCommand = exports.parseShellCommand;
+    root.tokenizeShell = exports.tokenizeShell;
+    root.COREUTILS = exports.COREUTILS;
+    root.createVirtualPortTable = exports.createVirtualPortTable;
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  let runtimeModule = null;
+  try {
+    if (typeof require !== 'undefined') {
+      runtimeModule = require('./runtime.js');
+    }
+  } catch (_) {}
+
+  const executeInVirtualRuntime = (runtimeModule && runtimeModule.executeInVirtualRuntime) || null;
+  const createVirtualPortTable = (runtimeModule && runtimeModule.createVirtualPortTable) || null;
+
+  // =========================================================================
+  // 1. POSIX PATH UTILITIES (Virtual Filesystem Path Normalizer)
+  // =========================================================================
+  const PosixPath = {
+    normalize(p) {
+      if (typeof p !== 'string' || !p) return '/';
+      const isAbs = p.startsWith('/');
+      const parts = p.split('/').filter(Boolean);
+      const stack = [];
+      for (const part of parts) {
+        if (part === '.') continue;
+        if (part === '..') {
+          if (stack.length > 0) stack.pop();
+        } else {
+          stack.push(part);
+        }
+      }
+      const res = (isAbs ? '/' : '') + stack.join('/');
+      return res || (isAbs ? '/' : '.');
+    },
+
+    resolve(cwd, ...paths) {
+      let resolved = cwd.startsWith('/') ? cwd : '/' + cwd;
+      for (const p of paths) {
+        if (!p) continue;
+        if (p.startsWith('/')) {
+          resolved = p;
+        } else if (p === '~' || p.startsWith('~/')) {
+          resolved = '/home/user' + p.slice(1);
+        } else {
+          resolved = resolved.endsWith('/') ? resolved + p : resolved + '/' + p;
+        }
+      }
+      return PosixPath.normalize(resolved);
+    },
+
+    dirname(p) {
+      const norm = PosixPath.normalize(p);
+      if (norm === '/' || norm === '.') return norm;
+      const idx = norm.lastIndexOf('/');
+      if (idx === -1) return '.';
+      if (idx === 0) return '/';
+      return norm.slice(0, idx);
+    },
+
+    basename(p, ext) {
+      const norm = PosixPath.normalize(p);
+      if (norm === '/') return '/';
+      const idx = norm.lastIndexOf('/');
+      let base = idx === -1 ? norm : norm.slice(idx + 1);
+      if (ext && base.endsWith(ext) && base !== ext) {
+        base = base.slice(0, -ext.length);
+      }
+      return base;
+    },
+
+    join(...parts) {
+      return PosixPath.normalize(parts.filter(Boolean).join('/'));
+    }
+  };
+
+  // =========================================================================
+  // 2. GLOB PATTERN MATCHING & VFS DIRECTORY EXPANSION
+  // =========================================================================
+  function globToRegExp(glob, isPath = true) {
+    let regStr = '^';
+    let i = 0;
+    while (i < glob.length) {
+      const c = glob[i];
+      if (c === '*' && glob[i + 1] === '*' && (glob[i + 2] === '/' || i + 2 === glob.length)) {
+        regStr += '(?:.+/)?';
+        i += glob[i + 2] === '/' ? 3 : 2;
+      } else if (c === '*' && glob[i + 1] === '*') {
+        regStr += '.*';
+        i += 2;
+      } else if (c === '*') {
+        regStr += isPath ? '[^/]*' : '.*';
+        i++;
+      } else if (c === '?') {
+        regStr += isPath ? '[^/]' : '.';
+        i++;
+      } else if (c === '[') {
+        const close = glob.indexOf(']', i + 1);
+        if (close !== -1) {
+          regStr += glob.slice(i, close + 1);
+          i = close + 1;
+        } else {
+          regStr += '\\[';
+          i++;
+        }
+      } else if (['.', '$', '^', '+', '(', ')', '{', '}', '|', '\\'].includes(c)) {
+        regStr += '\\' + c;
+        i++;
+      } else {
+        regStr += c;
+        i++;
+      }
+    }
+    regStr += '$';
+    return new RegExp(regStr);
+  }
+
+  function expandGlob(pattern, cwd, vfs) {
+    if (!vfs) return [pattern];
+    // Check if pattern contains wildcard characters outside quotes
+    if (!/[*?\[]/.test(pattern)) {
+      return [pattern];
+    }
+
+    const isAbs = pattern.startsWith('/');
+    const searchRoot = isAbs ? '/' : cwd;
+    const allPaths = [];
+
+    // Helper to traverse VFS tree recursively
+    function traverse(currentDir, relPrefix) {
+      let entries = [];
+      try {
+        if (typeof vfs.readdirSync === 'function') {
+          entries = vfs.readdirSync(currentDir);
+        }
+      } catch (_) {
+        return;
+      }
+
+      for (const entry of entries) {
+        const full = currentDir === '/' ? '/' + entry : currentDir + '/' + entry;
+        const rel = relPrefix ? relPrefix + '/' + entry : entry;
+        allPaths.push({ full, rel });
+
+        let isDir = false;
+        try {
+          if (typeof vfs.statSync === 'function') {
+            isDir = vfs.statSync(full).isDirectory();
+          }
+        } catch (_) {}
+
+        if (isDir) {
+          traverse(full, rel);
+        }
+      }
+    }
+
+    traverse(searchRoot, '');
+
+    const targetGlob = isAbs ? pattern : (pattern.startsWith('./') ? pattern.slice(2) : pattern);
+    const regex = globToRegExp(targetGlob, true);
+
+    const matches = [];
+    for (const item of allPaths) {
+      const candidate = isAbs ? item.full : item.rel;
+      if (regex.test(candidate)) {
+        // POSIX dotfile protection: * wildcard must NOT match dotfiles starting with .
+        // unless pattern component explicitly starts with .
+        const candParts = candidate.split('/').filter(Boolean);
+        const patParts = targetGlob.split('/').filter(Boolean);
+        let dotMismatch = false;
+        for (let idx = 0; idx < candParts.length; idx++) {
+          const cp = candParts[idx];
+          const pp = patParts[idx] !== undefined ? patParts[idx] : patParts[patParts.length - 1];
+          if (cp && cp.startsWith('.') && pp && !pp.startsWith('.')) {
+            dotMismatch = true;
+            break;
+          }
+        }
+        if (!dotMismatch) {
+          matches.push(isAbs ? item.full : (pattern.startsWith('./') ? './' + item.rel : item.rel));
+        }
+      }
+    }
+
+    matches.sort();
+    return matches.length > 0 ? matches : [pattern];
+  }
+
+  // =========================================================================
+  // 3. POSIX SHELL LEXER & TOKENIZER
+  // =========================================================================
+  /**
+   * Tokenizes a POSIX shell command string into structured tokens:
+   * Words with segment types (literal, single-quoted, double-quoted, var, subshell)
+   * Operators: &&, ||, |, ;, &, >, >>, <, 2>, 2>>, 2>&1, 1>&2, &>
+   */
+  function tokenizeShell(commandLine) {
+    if (typeof commandLine !== 'string') return [];
+    const tokens = [];
+    const len = commandLine.length;
+    let i = 0;
+
+    while (i < len) {
+      const ch = commandLine[i];
+
+      // Newline: treated as command separator (equivalent to semicolon)
+      if (ch === '\n') {
+        i++;
+        if (tokens.length > 0) {
+          const lastType = tokens[tokens.length - 1].type;
+          if (lastType !== 'SEMICOLON' && lastType !== 'AND' && lastType !== 'OR' && lastType !== 'PIPE') {
+            tokens.push({ type: 'SEMICOLON', raw: ';' });
+          }
+        }
+        continue;
+      }
+
+      // Whitespace (excluding newline)
+      if (/[ \t\r\f\v]/.test(ch)) {
+        i++;
+        continue;
+      }
+
+      // Comments: # until end of line
+      if (ch === '#') {
+        while (i < len && commandLine[i] !== '\n') i++;
+        continue;
+      }
+
+      // Logical AND '&&'
+      if (ch === '&' && commandLine[i + 1] === '&') {
+        tokens.push({ type: 'AND', raw: '&&' });
+        i += 2;
+        continue;
+      }
+
+      // Logical OR '||'
+      if (ch === '|' && commandLine[i + 1] === '|') {
+        tokens.push({ type: 'OR', raw: '||' });
+        i += 2;
+        continue;
+      }
+
+      // Pipeline '|'
+      if (ch === '|') {
+        tokens.push({ type: 'PIPE', raw: '|' });
+        i++;
+        continue;
+      }
+
+      // Semicolon ';'
+      if (ch === ';') {
+        tokens.push({ type: 'SEMICOLON', raw: ';' });
+        i++;
+        continue;
+      }
+
+      // Both stdout & stderr redirect '&>'
+      if (ch === '&' && commandLine[i + 1] === '>') {
+        tokens.push({ type: 'REDIRECT', op: '&>', sourceFd: 'all' });
+        i += 2;
+        continue;
+      }
+
+      // Background job '&'
+      if (ch === '&') {
+        tokens.push({ type: 'BACKGROUND', raw: '&' });
+        i++;
+        continue;
+      }
+
+      // Redirection: 2>&1 or 1>&2 or 2>> or 2> or 1>> or 1> or 0<
+      if ((ch === '1' || ch === '2' || ch === '0') && (commandLine[i + 1] === '>' || commandLine[i + 1] === '<')) {
+        const fd = parseInt(ch, 10);
+        const opChar = commandLine[i + 1];
+
+        if (opChar === '>' && commandLine[i + 2] === '&' && (commandLine[i + 3] === '1' || commandLine[i + 3] === '2')) {
+          const targetFd = parseInt(commandLine[i + 3], 10);
+          tokens.push({ type: 'REDIRECT_FD', sourceFd: fd, targetFd, raw: `${fd}>&${targetFd}` });
+          i += 4;
+          continue;
+        }
+
+        if (opChar === '>' && commandLine[i + 2] === '>') {
+          tokens.push({ type: 'REDIRECT', op: '>>', sourceFd: fd, raw: `${fd}>>` });
+          i += 3;
+          continue;
+        }
+
+        tokens.push({ type: 'REDIRECT', op: opChar, sourceFd: fd, raw: `${fd}${opChar}` });
+        i += 2;
+        continue;
+      }
+
+      // Redirection: >> or >&1 or >&2 or > or <
+      if (ch === '>') {
+        if (commandLine[i + 1] === '&' && (commandLine[i + 2] === '1' || commandLine[i + 2] === '2')) {
+          const targetFd = parseInt(commandLine[i + 2], 10);
+          tokens.push({ type: 'REDIRECT_FD', sourceFd: 1, targetFd, raw: `>&${targetFd}` });
+          i += 3;
+          continue;
+        }
+        if (commandLine[i + 1] === '>') {
+          tokens.push({ type: 'REDIRECT', op: '>>', sourceFd: 1, raw: '>>' });
+          i += 2;
+          continue;
+        }
+        tokens.push({ type: 'REDIRECT', op: '>', sourceFd: 1, raw: '>' });
+        i++;
+        continue;
+      }
+
+      if (ch === '<') {
+        tokens.push({ type: 'REDIRECT', op: '<', sourceFd: 0, raw: '<' });
+        i++;
+        continue;
+      }
+
+      // Otherwise, parse a WORD token (may contain quotes, variables, escapes, subshells)
+      const segments = [];
+      let rawWord = '';
+      let hasWildcard = false;
+
+      while (i < len) {
+        const c = commandLine[i];
+        if (/\s/.test(c) || c === '|' || c === '&' || c === ';' || c === '<' || c === '>') {
+          // Lookahead: digit immediately preceding > or < is a redirect, not part of word
+          break;
+        }
+
+        // Single quotes '...'
+        if (c === "'") {
+          i++;
+          let literal = '';
+          while (i < len && commandLine[i] !== "'") {
+            literal += commandLine[i];
+            i++;
+          }
+          if (i < len && commandLine[i] === "'") i++; // skip closing quote
+          segments.push({ type: 'single_quoted', value: literal });
+          rawWord += `'${literal}'`;
+          continue;
+        }
+
+        // Double quotes "..."
+        if (c === '"') {
+          i++;
+          const dqParts = [];
+          let currentLit = '';
+          while (i < len && commandLine[i] !== '"') {
+            const dc = commandLine[i];
+            if (dc === '\\' && i + 1 < len) {
+              const nextC = commandLine[i + 1];
+              if (nextC === '"' || nextC === '\\' || nextC === '$' || nextC === '`') {
+                currentLit += nextC;
+                i += 2;
+                continue;
+              }
+              if (nextC === 'n') { currentLit += '\n'; i += 2; continue; }
+              if (nextC === 't') { currentLit += '\t'; i += 2; continue; }
+              currentLit += '\\' + nextC;
+              i += 2;
+              continue;
+            }
+
+            // Command substitution inside double quotes: $(...) or `...`
+            if (dc === '$' && commandLine[i + 1] === '(') {
+              if (currentLit) { dqParts.push({ type: 'literal', value: currentLit }); currentLit = ''; }
+              i += 2;
+              let depth = 1;
+              let subCmd = '';
+              while (i < len && depth > 0) {
+                if (commandLine[i] === '(') depth++;
+                else if (commandLine[i] === ')') depth--;
+                if (depth > 0) subCmd += commandLine[i];
+                i++;
+              }
+              dqParts.push({ type: 'subshell', command: subCmd });
+              continue;
+            }
+
+            // Variable inside double quotes: ${VAR} or $VAR
+            if (dc === '$') {
+              if (currentLit) { dqParts.push({ type: 'literal', value: currentLit }); currentLit = ''; }
+              i++;
+              if (commandLine[i] === '{') {
+                i++;
+                let varName = '';
+                while (i < len && commandLine[i] !== '}') {
+                  varName += commandLine[i];
+                  i++;
+                }
+                if (i < len && commandLine[i] === '}') i++;
+                dqParts.push({ type: 'variable', name: varName });
+              } else if (/[a-zA-Z0-9_?!$#@]/.test(commandLine[i])) {
+                let varName = '';
+                while (i < len && /[a-zA-Z0-9_]/.test(commandLine[i])) {
+                  varName += commandLine[i];
+                  i++;
+                }
+                if (!varName && /[?!$#@]/.test(commandLine[i])) {
+                  varName = commandLine[i];
+                  i++;
+                }
+                dqParts.push({ type: 'variable', name: varName });
+              } else {
+                currentLit += '$';
+              }
+              continue;
+            }
+
+            currentLit += dc;
+            i++;
+          }
+          if (i < len && commandLine[i] === '"') i++;
+          if (currentLit) dqParts.push({ type: 'literal', value: currentLit });
+          segments.push({ type: 'double_quoted', parts: dqParts });
+          rawWord += `"${currentLit}"`;
+          continue;
+        }
+
+        // Backslash outside quotes
+        if (c === '\\' && i + 1 < len) {
+          segments.push({ type: 'literal', value: commandLine[i + 1] });
+          rawWord += commandLine[i + 1];
+          i += 2;
+          continue;
+        }
+
+        // Command substitution $(...) outside quotes
+        if (c === '$' && commandLine[i + 1] === '(') {
+          i += 2;
+          let depth = 1;
+          let subCmd = '';
+          while (i < len && depth > 0) {
+            if (commandLine[i] === '(') depth++;
+            else if (commandLine[i] === ')') depth--;
+            if (depth > 0) subCmd += commandLine[i];
+            i++;
+          }
+          segments.push({ type: 'subshell', command: subCmd });
+          rawWord += `$(${subCmd})`;
+          continue;
+        }
+
+        // Backtick command substitution `...`
+        if (c === '`') {
+          i++;
+          let subCmd = '';
+          while (i < len && commandLine[i] !== '`') {
+            subCmd += commandLine[i];
+            i++;
+          }
+          if (i < len && commandLine[i] === '`') i++;
+          segments.push({ type: 'subshell', command: subCmd });
+          rawWord += `\`${subCmd}\``;
+          continue;
+        }
+
+        // Variable ${VAR} or $VAR outside quotes
+        if (c === '$') {
+          i++;
+          if (commandLine[i] === '{') {
+            i++;
+            let varName = '';
+            while (i < len && commandLine[i] !== '}') {
+              varName += commandLine[i];
+              i++;
+            }
+            if (i < len && commandLine[i] === '}') i++;
+            segments.push({ type: 'variable', name: varName });
+            rawWord += `\${${varName}}`;
+          } else if (/[a-zA-Z0-9_?!$#@]/.test(commandLine[i])) {
+            let varName = '';
+            if (/[?!$#@]/.test(commandLine[i])) {
+              varName = commandLine[i];
+              i++;
+            } else {
+              while (i < len && /[a-zA-Z0-9_]/.test(commandLine[i])) {
+                varName += commandLine[i];
+                i++;
+              }
+            }
+            segments.push({ type: 'variable', name: varName });
+            rawWord += `$${varName}`;
+          } else {
+            segments.push({ type: 'literal', value: '$' });
+            rawWord += '$';
+          }
+          continue;
+        }
+
+        // Wildcard detection
+        if (c === '*' || c === '?' || c === '[') {
+          hasWildcard = true;
+        }
+
+        // Normal character outside quotes
+        segments.push({ type: 'literal', value: c });
+        rawWord += c;
+        i++;
+      }
+
+      tokens.push({
+        type: 'WORD',
+        segments,
+        raw: rawWord,
+        hasWildcard
+      });
+    }
+
+    return tokens;
+  }
+
+  // =========================================================================
+  // 4. POSIX SHELL AST PARSER
+  // =========================================================================
+  /**
+   * Parses token stream into an executable AST:
+   * Sequence -> Logical (&&, ||) -> Pipeline (|) -> SimpleCommand (args, redirects, env)
+   */
+  function parseShellCommand(input) {
+    const tokens = typeof input === 'string' ? tokenizeShell(input) : input;
+    let pos = 0;
+
+    function peek() {
+      return tokens[pos] || null;
+    }
+
+    function next() {
+      return tokens[pos++] || null;
+    }
+
+    // Sequence: cmd1 ; cmd2 & cmd3
+    function parseSequence() {
+      const items = [];
+      while (pos < tokens.length) {
+        if (peek() && peek().type === 'SEMICOLON') {
+          next();
+          continue;
+        }
+
+        const logicalNode = parseLogical();
+        if (!logicalNode) break;
+
+        let background = false;
+        if (peek() && peek().type === 'BACKGROUND') {
+          next();
+          background = true;
+        } else if (peek() && peek().type === 'SEMICOLON') {
+          next();
+        }
+
+        items.push({ node: logicalNode, background });
+      }
+
+      return {
+        type: 'Sequence',
+        items
+      };
+    }
+
+    // Logical: pipeline1 && pipeline2 || pipeline3
+    function parseLogical() {
+      let left = parsePipeline();
+      if (!left) return null;
+
+      while (peek() && (peek().type === 'AND' || peek().type === 'OR')) {
+        const opToken = next();
+        const right = parsePipeline();
+        if (!right) break;
+        left = {
+          type: 'Logical',
+          op: opToken.type === 'AND' ? '&&' : '||',
+          left,
+          right
+        };
+      }
+
+      return left;
+    }
+
+    // Pipeline: cmd1 | cmd2 | cmd3
+    function parsePipeline() {
+      const commands = [];
+      const first = parseCommand();
+      if (!first) return null;
+      commands.push(first);
+
+      while (peek() && peek().type === 'PIPE') {
+        next(); // consume '|'
+        const nextCmd = parseCommand();
+        if (nextCmd) commands.push(nextCmd);
+      }
+
+      if (commands.length === 1) return commands[0];
+      return {
+        type: 'Pipeline',
+        commands
+      };
+    }
+
+    // Simple Command: leading ENV=val, name, args, redirections
+    function parseCommand() {
+      const envVars = [];
+      const words = [];
+      const redirects = [];
+
+      while (pos < tokens.length) {
+        const token = peek();
+        if (!token) break;
+
+        if (token.type === 'PIPE' || token.type === 'AND' || token.type === 'OR' ||
+            token.type === 'SEMICOLON' || token.type === 'BACKGROUND') {
+          break;
+        }
+
+        // Redirection with file target: >, >>, <, 2>, 2>>
+        if (token.type === 'REDIRECT') {
+          next();
+          const targetToken = peek();
+          let target = null;
+          if (targetToken && targetToken.type === 'WORD') {
+            target = next();
+          }
+          redirects.push({
+            type: token.op,
+            sourceFd: token.sourceFd,
+            target
+          });
+          continue;
+        }
+
+        // Redirection FD duplicate: 2>&1, 1>&2
+        if (token.type === 'REDIRECT_FD') {
+          next();
+          redirects.push({
+            type: '>&',
+            sourceFd: token.sourceFd,
+            targetFd: token.targetFd
+          });
+          continue;
+        }
+
+        // Word token
+        if (token.type === 'WORD') {
+          // If no command name yet, check if this is an environment assignment: KEY=value
+          if (words.length === 0 && token.raw.includes('=')) {
+            const eqIdx = token.raw.indexOf('=');
+            const key = token.raw.slice(0, eqIdx);
+            if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) {
+              envVars.push({ key, rawVal: token.raw.slice(eqIdx + 1), token });
+              next();
+              continue;
+            }
+          }
+
+          words.push(next());
+          continue;
+        }
+
+        // Unrecognized token, advance
+        next();
+      }
+
+      if (words.length === 0 && envVars.length === 0 && redirects.length === 0) {
+        return null;
+      }
+
+      return {
+        type: 'Command',
+        name: words[0] || null,
+        args: words.slice(1),
+        envVars,
+        redirects
+      };
+    }
+
+    return parseSequence();
+  }
+
+  // =========================================================================
+  // 5. IN-MEMORY VFS FALLBACK SHIM (For Standalone Zero-Config Usability)
+  // =========================================================================
+  function createFallbackVfs() {
+    const files = new Map();
+    const dirs = new Set(['/', '/tmp', '/workspace', '/home', '/home/user']);
+
+    function norm(p) {
+      return PosixPath.normalize(p.startsWith('/') ? p : '/workspace/' + p);
+    }
+
+    const emitter = {
+      _listeners: new Map(),
+      on(evt, fn) {
+        if (!this._listeners.has(evt)) this._listeners.set(evt, []);
+        this._listeners.get(evt).push(fn);
+      },
+      emit(evt, ...args) {
+        const fns = this._listeners.get(evt) || [];
+        for (const fn of fns) fn(...args);
+      }
+    };
+
+    return {
+      ...emitter,
+      existsSync(p) {
+        const np = norm(p);
+        return dirs.has(np) || files.has(np);
+      },
+      statSync(p) {
+        const np = norm(p);
+        if (dirs.has(np)) {
+          return { size: 0, mtimeMs: Date.now(), isDirectory: () => true, isFile: () => false, mode: 0o40755 };
+        }
+        const f = files.get(np);
+        if (f) {
+          return { size: f.data.length, mtimeMs: f.mtimeMs, isDirectory: () => false, isFile: () => true, mode: f.mode !== undefined ? f.mode : 0o100644 };
+        }
+        const err = new Error(`ENOENT: no such file or directory, stat '${p}'`);
+        err.code = 'ENOENT';
+        throw err;
+      },
+      chmodSync(p, mode) {
+        const np = norm(p);
+        if (dirs.has(np)) return;
+        const f = files.get(np);
+        if (!f) {
+          const err = new Error(`ENOENT: no such file or directory, chmod '${p}'`);
+          err.code = 'ENOENT';
+          throw err;
+        }
+        const parsedMode = typeof mode === 'string' ? parseInt(mode, 8) : Number(mode);
+        const currentType = (f.mode !== undefined ? f.mode : 0o100644) & ~0o777;
+        f.mode = currentType | (parsedMode & 0o777);
+      },
+      readdirSync(p) {
+        const np = norm(p);
+        if (!dirs.has(np)) {
+          const err = new Error(`ENOTDIR: not a directory, scandir '${p}'`);
+          err.code = 'ENOTDIR';
+          throw err;
+        }
+        const prefix = np === '/' ? '/' : np + '/';
+        const children = new Set();
+        for (const d of dirs) {
+          if (d !== np && d.startsWith(prefix)) {
+            const rest = d.slice(prefix.length).split('/')[0];
+            if (rest) children.add(rest);
+          }
+        }
+        for (const f of files.keys()) {
+          if (f.startsWith(prefix)) {
+            const rest = f.slice(prefix.length);
+            if (!rest.includes('/')) children.add(rest);
+          }
+        }
+        return Array.from(children).sort();
+      },
+      readFileSync(p, enc = 'utf8') {
+        const np = norm(p);
+        const f = files.get(np);
+        if (!f) {
+          const err = new Error(`ENOENT: no such file or directory, open '${p}'`);
+          err.code = 'ENOENT';
+          throw err;
+        }
+        return typeof enc === 'string' ? f.data : f.data;
+      },
+      writeFileSync(p, data) {
+        const np = norm(p);
+        const parent = PosixPath.dirname(np);
+        if (!dirs.has(parent)) {
+          const parts = parent.split('/').filter(Boolean);
+          let cur = '';
+          for (const pt of parts) { cur += '/' + pt; dirs.add(cur); }
+        }
+        const str = typeof data === 'string' ? data : (data.toString ? data.toString('utf8') : String(data));
+        const prevMode = files.has(np) ? files.get(np).mode : 0o100644;
+        files.set(np, { data: str, mtimeMs: Date.now(), mode: prevMode });
+      },
+      appendFileSync(p, data) {
+        const np = norm(p);
+        const prev = files.has(np) ? files.get(np).data : '';
+        const str = typeof data === 'string' ? data : (data.toString ? data.toString('utf8') : String(data));
+        this.writeFileSync(np, prev + str);
+      },
+      mkdirSync(p, opts = {}) {
+        const np = norm(p);
+        const recursive = Boolean(opts && opts.recursive);
+        if (files.has(np)) throw new Error(`EEXIST: file already exists, mkdir '${p}'`);
+        if (dirs.has(np)) return;
+        const parent = PosixPath.dirname(np);
+        if (!dirs.has(parent)) {
+          if (!recursive) throw new Error(`ENOENT: no such file or directory, mkdir '${p}'`);
+          const parts = np.split('/').filter(Boolean);
+          let cur = '';
+          for (const pt of parts) { cur += '/' + pt; dirs.add(cur); }
+          return;
+        }
+        dirs.add(np);
+      },
+      rmdirSync(p, opts) {
+        this.rmSync(p, { ...opts, recursive: true });
+      },
+      unlinkSync(p) {
+        const np = norm(p);
+        if (!files.has(np)) throw new Error(`ENOENT: no such file or directory, unlink '${p}'`);
+        files.delete(np);
+      },
+      rmSync(p, opts = {}) {
+        const np = norm(p);
+        const recursive = Boolean(opts && opts.recursive);
+        const force = Boolean(opts && opts.force);
+        if (files.has(np)) { files.delete(np); return; }
+        if (dirs.has(np)) {
+          const prefix = np === '/' ? '/' : np + '/';
+          for (const f of Array.from(files.keys())) {
+            if (f.startsWith(prefix)) files.delete(f);
+          }
+          for (const d of Array.from(dirs)) {
+            if (d.startsWith(prefix) && d !== '/' && d !== '/workspace' && d !== '/tmp') dirs.delete(d);
+          }
+          if (np !== '/' && np !== '/workspace' && np !== '/tmp') dirs.delete(np);
+          return;
+        }
+        if (!force) throw new Error(`ENOENT: no such file or directory, rm '${p}'`);
+      },
+      renameSync(oldP, newP) {
+        const src = norm(oldP);
+        const dst = norm(newP);
+        if (files.has(src)) {
+          files.set(dst, files.get(src));
+          files.delete(src);
+        } else if (dirs.has(src)) {
+          dirs.add(dst);
+          dirs.delete(src);
+        } else {
+          throw new Error(`ENOENT: no such file or directory, rename '${oldP}' -> '${newP}'`);
+        }
+      },
+      copyFileSync(src, dst) {
+        const s = norm(src);
+        const d = norm(dst);
+        if (!files.has(s)) throw new Error(`ENOENT: no such file or directory, copy '${src}'`);
+        files.set(d, { data: files.get(s).data, mtimeMs: Date.now() });
+      }
+    };
+  }
+
+  // =========================================================================
+  // 6. DIFF & LCS UTILITIES (For `diff -u` and `git diff`)
+  // =========================================================================
+  function computeUnifiedDiff(file1Name, file2Name, text1, text2) {
+    const lines1 = text1.length > 0 ? text1.split('\n') : [];
+    const lines2 = text2.length > 0 ? text2.split('\n') : [];
+
+    // LCS table
+    const m = lines1.length;
+    const n = lines2.length;
+    const dp = Array.from({ length: m + 1 }, () => new Int32Array(n + 1));
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (lines1[i - 1] === lines2[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1] + 1;
+        } else {
+          dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+        }
+      }
+    }
+
+    // Backtrack to build diff ops
+    const edits = [];
+    let i = m, j = n;
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && lines1[i - 1] === lines2[j - 1]) {
+        edits.push({ type: 'common', line: lines1[i - 1] });
+        i--;
+        j--;
+      } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+        edits.push({ type: 'added', line: lines2[j - 1] });
+        j--;
+      } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
+        edits.push({ type: 'removed', line: lines1[i - 1] });
+        i--;
+      }
+    }
+    edits.reverse();
+
+    if (!edits.some(e => e.type !== 'common')) {
+      return ''; // identical
+    }
+
+    let diffOutput = `--- ${file1Name}\n+++ ${file2Name}\n@@ -1,${m} +1,${n} @@\n`;
+    for (const e of edits) {
+      if (e.type === 'common') diffOutput += ` ${e.line}\n`;
+      else if (e.type === 'added') diffOutput += `+${e.line}\n`;
+      else if (e.type === 'removed') diffOutput += `-${e.line}\n`;
+    }
+    return diffOutput;
+  }
+
+  // =========================================================================
+  // Package Management Helpers (npm / bun virtual modules & scripts)
+  // =========================================================================
+  function findPackageJsonPath(vfs, cwd) {
+    const cwdPkg = PosixPath.join(cwd || '/workspace', 'package.json');
+    if (vfs.existsSync(cwdPkg)) return cwdPkg;
+    const wsPkg = '/workspace/package.json';
+    if (vfs.existsSync(wsPkg)) return wsPkg;
+    return cwdPkg;
+  }
+
+  function readPackageJson(vfs, cwd) {
+    const p = findPackageJsonPath(vfs, cwd);
+    if (vfs.existsSync(p)) {
+      try {
+        const parsed = JSON.parse(vfs.readFileSync(p, 'utf8'));
+        return { path: p, data: parsed };
+      } catch (_) {}
+    }
+    return { path: p, data: { name: 'app', dependencies: {}, devDependencies: {}, scripts: {} } };
+  }
+
+  function writePackageJson(vfs, pkgPath, data, emitMutation) {
+    const dir = PosixPath.dirname(pkgPath);
+    if (!vfs.existsSync(dir)) {
+      vfs.mkdirSync(dir, { recursive: true });
+    }
+    const jsonStr = JSON.stringify(data, null, 2) + '\n';
+    vfs.writeFileSync(pkgPath, jsonStr);
+    if (typeof emitMutation === 'function') emitMutation('change', pkgPath);
+  }
+
+  function ensureDirSync(vfs, dir, emitMutation) {
+    if (!vfs.existsSync(dir)) {
+      vfs.mkdirSync(dir, { recursive: true });
+      if (typeof emitMutation === 'function') emitMutation('create', dir);
+    }
+  }
+
+  function removeDirRecursive(vfs, dirPath, emitMutation) {
+    if (!vfs.existsSync(dirPath)) return;
+    try {
+      if (typeof vfs.rmSync === 'function') {
+        vfs.rmSync(dirPath, { recursive: true, force: true });
+      } else {
+        const entries = vfs.readdirSync(dirPath);
+        for (const entry of entries) {
+          const full = PosixPath.join(dirPath, entry);
+          const st = vfs.statSync(full);
+          if (st.isDirectory()) {
+            removeDirRecursive(vfs, full, emitMutation);
+          } else {
+            vfs.unlinkSync(full);
+          }
+        }
+        vfs.rmdirSync(dirPath);
+      }
+      if (typeof emitMutation === 'function') emitMutation('delete', dirPath);
+    } catch (_) {}
+  }
+
+  function installPackage(pkgSpec, ctx) {
+    const parts = pkgSpec.split('@').filter(Boolean);
+    const pkgName = pkgSpec.startsWith('@') ? '@' + parts[0] : parts[0];
+    const pkgVersion = (pkgSpec.startsWith('@') ? parts[1] : parts[1]) || '^1.0.0';
+
+    const { path: pkgPath, data: pkgData } = readPackageJson(ctx.vfs, ctx.cwd);
+    if (!pkgData.dependencies) pkgData.dependencies = {};
+    pkgData.dependencies[pkgName] = pkgVersion;
+    writePackageJson(ctx.vfs, pkgPath, pkgData, ctx.emitMutation);
+
+    const targetDirs = ['/workspace/node_modules/' + pkgName];
+    const cwdTarget = PosixPath.join(ctx.cwd || '/workspace', 'node_modules', pkgName);
+    if (!targetDirs.includes(cwdTarget)) targetDirs.push(cwdTarget);
+
+    for (const modDir of targetDirs) {
+      ensureDirSync(ctx.vfs, modDir, ctx.emitMutation);
+      const modPkgPath = PosixPath.join(modDir, 'package.json');
+      const modIndexPath = PosixPath.join(modDir, 'index.js');
+      ctx.vfs.writeFileSync(modPkgPath, JSON.stringify({ name: pkgName, version: pkgVersion.replace(/^[\^~]/, ''), main: './index.js' }, null, 2) + '\n');
+      if (typeof ctx.emitMutation === 'function') ctx.emitMutation('create', modPkgPath);
+
+      let code = 'module.exports = {};\n';
+      if (pkgName === 'is-even') {
+        code = 'module.exports = function isEven(n) { return (Number(n) % 2) === 0; };\n';
+      } else if (pkgName === 'tiny-invariant') {
+        code = 'module.exports = function invariant(condition, message) { if (!condition) throw new Error(message || "Invariant failed"); };\n';
+      } else if (pkgName === 'lodash') {
+        code = 'module.exports = { isArray: Array.isArray, isObject: function(v) { return v !== null && typeof v === "object"; } };\n';
+      }
+      ctx.vfs.writeFileSync(modIndexPath, code);
+      if (typeof ctx.emitMutation === 'function') ctx.emitMutation('create', modIndexPath);
+    }
+  }
+
+  function uninstallPackage(pkgName, ctx) {
+    const { path: pkgPath, data: pkgData } = readPackageJson(ctx.vfs, ctx.cwd);
+    let changed = false;
+    if (pkgData.dependencies && pkgName in pkgData.dependencies) {
+      delete pkgData.dependencies[pkgName];
+      changed = true;
+    }
+    if (pkgData.devDependencies && pkgName in pkgData.devDependencies) {
+      delete pkgData.devDependencies[pkgName];
+      changed = true;
+    }
+    if (changed) {
+      writePackageJson(ctx.vfs, pkgPath, pkgData, ctx.emitMutation);
+    }
+
+    const targetDirs = ['/workspace/node_modules/' + pkgName];
+    const cwdTarget = PosixPath.join(ctx.cwd || '/workspace', 'node_modules', pkgName);
+    if (!targetDirs.includes(cwdTarget)) targetDirs.push(cwdTarget);
+
+    for (const modDir of targetDirs) {
+      removeDirRecursive(ctx.vfs, modDir, ctx.emitMutation);
+    }
+  }
+
+  function listDependencies(ctx) {
+    const { path: pkgPath, data: pkgData } = readPackageJson(ctx.vfs, ctx.cwd);
+    const deps = Object.assign({}, pkgData.dependencies || {});
+    let out = `${pkgData.name || 'project'}@${pkgData.version || '1.0.0'} ${ctx.cwd || '/workspace'}\n`;
+    const keys = Object.keys(deps);
+    if (keys.length === 0) {
+      out += '└── (empty)\n';
+    } else {
+      for (let i = 0; i < keys.length; i++) {
+        const k = keys[i];
+        const v = String(deps[k]).replace(/^[\^~]/, '');
+        const prefix = (i === keys.length - 1) ? '└── ' : '├── ';
+        out += `${prefix}${k}@${v}\n`;
+      }
+    }
+    return out;
+  }
+
+  async function runPackageScript(scriptName, scriptArgs, ctx) {
+    const { data: pkgData } = readPackageJson(ctx.vfs, ctx.cwd);
+    if (!pkgData.scripts || !pkgData.scripts[scriptName]) {
+      return { code: 1, stdout: '', stderr: `npm ERR! Missing script: "${scriptName}"\n` };
+    }
+    let cmd = pkgData.scripts[scriptName];
+    if (scriptArgs && scriptArgs.length > 0) {
+      cmd += ' ' + scriptArgs.join(' ');
+    }
+    return await ctx.shell.execute(cmd, { cwd: ctx.cwd, env: ctx.env });
+  }
+
+  // =========================================================================
+  // 7. 40+ UNIX COREUTILS LIBRARY (POSIX Virtual Filesystem Implementations)
+  // =========================================================================
+  const COREUTILS = {
+    // -----------------------------------------------------------------------
+    // Navigation & Inspection: pwd, cd, ls, stat
+    // -----------------------------------------------------------------------
+    async pwd(args, ctx) {
+      const dir = ctx.shell ? ctx.shell.cwd : ctx.cwd;
+      return { code: 0, stdout: dir + '\n', stderr: '' };
+    },
+
+    async cd(args, ctx) {
+      let target = args[0];
+      if (!target || target === '~') {
+        target = ctx.env.HOME || '/workspace';
+      } else if (target === '-') {
+        target = ctx.env.OLDPWD || ctx.cwd;
+      }
+
+      const resolved = ctx.resolvePath(target);
+      if (!ctx.vfs.existsSync(resolved)) {
+        return { code: 1, stdout: '', stderr: `cd: ${target}: No such file or directory\n` };
+      }
+
+      let isDir = false;
+      try {
+        isDir = ctx.vfs.statSync(resolved).isDirectory();
+      } catch (_) {}
+
+      if (!isDir) {
+        return { code: 1, stdout: '', stderr: `cd: ${target}: Not a directory\n` };
+      }
+
+      const oldPwd = ctx.cwd;
+      ctx.cwd = resolved;
+      ctx.env.OLDPWD = oldPwd;
+      ctx.env.PWD = resolved;
+      if (ctx.shell) {
+        ctx.shell.cwd = resolved;
+        ctx.shell.env.OLDPWD = oldPwd;
+        ctx.shell.env.PWD = resolved;
+      }
+      return { code: 0, stdout: '', stderr: '' };
+    },
+
+    async ls(args, ctx) {
+      let showAll = false;
+      let longFormat = false;
+      let humanReadable = false;
+      let reverse = false;
+      let sortByTime = false;
+      let onePerLine = false;
+      let recursive = false;
+      let dirOnly = false;
+      const paths = [];
+
+      for (const arg of args) {
+        if (arg.startsWith('-') && arg.length > 1) {
+          for (let j = 1; j < arg.length; j++) {
+            const flag = arg[j];
+            if (flag === 'a' || flag === 'A') showAll = true;
+            else if (flag === 'l') longFormat = true;
+            else if (flag === 'h') humanReadable = true;
+            else if (flag === 'r') reverse = true;
+            else if (flag === 't') sortByTime = true;
+            else if (flag === '1') onePerLine = true;
+            else if (flag === 'R') recursive = true;
+            else if (flag === 'd') dirOnly = true;
+          }
+        } else {
+          paths.push(arg);
+        }
+      }
+
+      if (paths.length === 0) paths.push('.');
+
+      function formatSize(bytes) {
+        if (!humanReadable) return String(bytes).padStart(6, ' ');
+        if (bytes < 1024) return `${bytes}B`.padStart(5, ' ');
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}K`.padStart(5, ' ');
+        return `${(bytes / (1024 * 1024)).toFixed(1)}M`.padStart(5, ' ');
+      }
+
+      function formatDate(ms) {
+        const d = new Date(ms || Date.now());
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const m = months[d.getMonth()];
+        const day = String(d.getDate()).padStart(2, ' ');
+        const hr = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${m} ${day} ${hr}:${min}`;
+      }
+
+      let stdout = '';
+      let stderr = '';
+      let exitCode = 0;
+
+      for (let pIdx = 0; pIdx < paths.length; pIdx++) {
+        const rawP = paths[pIdx];
+        const absP = ctx.resolvePath(rawP);
+
+        if (!ctx.vfs.existsSync(absP)) {
+          stderr += `ls: cannot access '${rawP}': No such file or directory\n`;
+          exitCode = 2;
+          continue;
+        }
+
+        let stat;
+        try { stat = ctx.vfs.statSync(absP); } catch (e) {
+          stderr += `ls: cannot access '${rawP}': ${e.message}\n`;
+          exitCode = 2;
+          continue;
+        }
+
+        if (paths.length > 1 && stat.isDirectory() && !dirOnly) {
+          stdout += (pIdx > 0 ? '\n' : '') + `${rawP}:\n`;
+        }
+
+        if (stat.isFile() || dirOnly) {
+          if (longFormat) {
+            stdout += `-rw-r--r-- 1 ${ctx.env.USER || 'codelab'} ${ctx.env.USER || 'codelab'} ${formatSize(stat.size)} ${formatDate(stat.mtimeMs)} ${rawP}\n`;
+          } else {
+            stdout += `${rawP}\n`;
+          }
+          continue;
+        }
+
+        // Directory listing
+        let entries = [];
+        try {
+          entries = ctx.vfs.readdirSync(absP);
+        } catch (err) {
+          stderr += `ls: cannot open directory '${rawP}': ${err.message}\n`;
+          exitCode = 2;
+          continue;
+        }
+
+        if (showAll) {
+          entries = ['.', '..', ...entries];
+        } else {
+          entries = entries.filter(e => !e.startsWith('.'));
+        }
+
+        const items = entries.map(name => {
+          const itemPath = absP === '/' ? '/' + name : absP + '/' + name;
+          let isDirectory = false;
+          let size = 0;
+          let mtimeMs = Date.now();
+          try {
+            const st = ctx.vfs.statSync(itemPath);
+            isDirectory = st.isDirectory();
+            size = st.size;
+            mtimeMs = st.mtimeMs || Date.now();
+          } catch (_) {}
+          return { name, isDirectory, size, mtimeMs };
+        });
+
+        if (sortByTime) {
+          items.sort((a, b) => b.mtimeMs - a.mtimeMs);
+        } else {
+          items.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        if (reverse) items.reverse();
+
+        if (longFormat) {
+          let totalBlocks = 0;
+          for (const it of items) totalBlocks += Math.ceil(it.size / 512);
+          stdout += `total ${totalBlocks}\n`;
+          for (const it of items) {
+            const mode = it.isDirectory ? 'drwxr-xr-x' : '-rw-r--r--';
+            stdout += `${mode} 1 ${ctx.env.USER || 'codelab'} ${ctx.env.USER || 'codelab'} ${formatSize(it.size)} ${formatDate(it.mtimeMs)} ${it.name}\n`;
+          }
+        } else if (onePerLine) {
+          for (const it of items) stdout += `${it.name}\n`;
+        } else {
+          stdout += items.map(it => it.name).join('  ') + (items.length > 0 ? '\n' : '');
+        }
+      }
+
+      return { code: exitCode, stdout, stderr };
+    },
+
+    async stat(args, ctx) {
+      if (args.length === 0) {
+        return { code: 1, stdout: '', stderr: 'stat: missing operand\n' };
+      }
+      let stdout = '';
+      let stderr = '';
+      let code = 0;
+
+      for (const arg of args) {
+        const abs = ctx.resolvePath(arg);
+        if (!ctx.vfs.existsSync(abs)) {
+          stderr += `stat: cannot stat '${arg}': No such file or directory\n`;
+          code = 1;
+          continue;
+        }
+        const st = ctx.vfs.statSync(abs);
+        const isDir = st.isDirectory();
+        const d = new Date(st.mtimeMs || Date.now());
+        stdout += `  File: ${arg}\n`;
+        stdout += `  Size: ${st.size}\tBlocks: ${Math.ceil(st.size / 512)}\tIO Block: 4096\t${isDir ? 'directory' : 'regular file'}\n`;
+        stdout += `Device: 1h/1d\tInode: 100\tLinks: 1\n`;
+        stdout += `Access: (${isDir ? '0755/drwxr-xr-x' : '0644/-rw-r--r--'})\tUid: (1000/${ctx.env.USER || 'codelab'})\tGid: (1000/${ctx.env.USER || 'codelab'})\n`;
+        stdout += `Access: ${d.toISOString()}\n`;
+        stdout += `Modify: ${d.toISOString()}\n`;
+        stdout += `Change: ${d.toISOString()}\n`;
+        stdout += ` Birth: ${d.toISOString()}\n`;
+      }
+      return { code, stdout, stderr };
+    },
+
+    // -----------------------------------------------------------------------
+    // Content Display: cat, head, tail, echo, printf
+    // -----------------------------------------------------------------------
+    async cat(args, ctx) {
+      let numberLines = false;
+      let numberNonBlank = false;
+      let squeezeBlank = false;
+      const files = [];
+
+      for (const arg of args) {
+        if (arg === '-n') numberLines = true;
+        else if (arg === '-b') numberNonBlank = true;
+        else if (arg === '-s') squeezeBlank = true;
+        else files.push(arg);
+      }
+
+      let rawContent = '';
+      let code = 0;
+      let stderr = '';
+
+      if (files.length === 0 || (files.length === 1 && files[0] === '-')) {
+        rawContent = ctx.stdin || '';
+      } else {
+        for (const file of files) {
+          if (file === '-') {
+            rawContent += ctx.stdin || '';
+            continue;
+          }
+          const abs = ctx.resolvePath(file);
+          if (!ctx.vfs.existsSync(abs)) {
+            stderr += `cat: ${file}: No such file or directory\n`;
+            code = 1;
+            continue;
+          }
+          try {
+            rawContent += ctx.vfs.readFileSync(abs, 'utf8');
+          } catch (err) {
+            stderr += `cat: ${file}: ${err.message}\n`;
+            code = 1;
+          }
+        }
+      }
+
+      if (!numberLines && !numberNonBlank && !squeezeBlank) {
+        return { code, stdout: rawContent, stderr };
+      }
+
+      const lines = rawContent.split('\n');
+      let outLines = [];
+      let lineNum = 1;
+      let prevWasBlank = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const isBlank = line.trim() === '';
+        if (squeezeBlank && isBlank && prevWasBlank) continue;
+        prevWasBlank = isBlank;
+
+        if (numberNonBlank) {
+          if (!isBlank) {
+            outLines.push(`${String(lineNum++).padStart(6, ' ')}\t${line}`);
+          } else {
+            outLines.push(line);
+          }
+        } else if (numberLines) {
+          outLines.push(`${String(lineNum++).padStart(6, ' ')}\t${line}`);
+        } else {
+          outLines.push(line);
+        }
+      }
+
+      return { code, stdout: outLines.join('\n'), stderr };
+    },
+
+    async head(args, ctx) {
+      let numLines = 10;
+      const files = [];
+
+      for (let i = 0; i < args.length; i++) {
+        const a = args[i];
+        if (a === '-n' && i + 1 < args.length) {
+          const parsed = parseInt(args[++i], 10);
+          numLines = isNaN(parsed) ? 10 : parsed;
+        } else if (/^-\d+$/.test(a)) {
+          const parsed = parseInt(a.slice(1), 10);
+          numLines = isNaN(parsed) ? 10 : parsed;
+        } else {
+          files.push(a);
+        }
+      }
+
+      function processText(text) {
+        if (numLines <= 0) return '';
+        const lines = text.split('\n');
+        return lines.slice(0, numLines).join('\n') + (lines.length > 0 ? '\n' : '');
+      }
+
+      if (files.length === 0) {
+        return { code: 0, stdout: processText(ctx.stdin || ''), stderr: '' };
+      }
+
+      let stdout = '';
+      let stderr = '';
+      let code = 0;
+
+      for (const f of files) {
+        const abs = ctx.resolvePath(f);
+        if (!ctx.vfs.existsSync(abs)) {
+          stderr += `head: cannot open '${f}' for reading: No such file or directory\n`;
+          code = 1;
+          continue;
+        }
+        if (ctx.vfs.statSync && ctx.vfs.statSync(abs).isDirectory()) {
+          stderr += `head: error reading '${f}': Is a directory\n`;
+          code = 1;
+          continue;
+        }
+        try {
+          const text = ctx.vfs.readFileSync(abs, 'utf8');
+          stdout += processText(text);
+        } catch (err) {
+          stderr += `head: ${err.message}\n`;
+          code = 1;
+        }
+      }
+
+      return { code, stdout, stderr };
+    },
+
+    async tail(args, ctx) {
+      let numLines = 10;
+      const files = [];
+
+      for (let i = 0; i < args.length; i++) {
+        const a = args[i];
+        if (a === '-n' && i + 1 < args.length) {
+          const parsed = parseInt(args[++i], 10);
+          numLines = isNaN(parsed) ? 10 : parsed;
+        } else if (/^-\d+$/.test(a)) {
+          const parsed = parseInt(a.slice(1), 10);
+          numLines = isNaN(parsed) ? 10 : parsed;
+        } else {
+          files.push(a);
+        }
+      }
+
+      function processText(text) {
+        if (numLines <= 0) return '';
+        const lines = text.endsWith('\n') ? text.slice(0, -1).split('\n') : text.split('\n');
+        const slice = lines.slice(Math.max(0, lines.length - numLines));
+        return slice.join('\n') + '\n';
+      }
+
+      if (files.length === 0) {
+        return { code: 0, stdout: processText(ctx.stdin || ''), stderr: '' };
+      }
+
+      let stdout = '';
+      let stderr = '';
+      let code = 0;
+
+      for (const f of files) {
+        const abs = ctx.resolvePath(f);
+        if (!ctx.vfs.existsSync(abs)) {
+          stderr += `tail: cannot open '${f}' for reading: No such file or directory\n`;
+          code = 1;
+          continue;
+        }
+        if (ctx.vfs.statSync && ctx.vfs.statSync(abs).isDirectory()) {
+          stderr += `tail: error reading '${f}': Is a directory\n`;
+          code = 1;
+          continue;
+        }
+        try {
+          const text = ctx.vfs.readFileSync(abs, 'utf8');
+          stdout += processText(text);
+        } catch (err) {
+          stderr += `tail: ${err.message}\n`;
+          code = 1;
+        }
+      }
+
+      return { code, stdout, stderr };
+    },
+
+    async echo(args, ctx) {
+      let omitNewline = false;
+      let interpretEscapes = false;
+      let startIdx = 0;
+
+      while (startIdx < args.length && args[startIdx].startsWith('-')) {
+        const flag = args[startIdx];
+        if (flag === '-n') omitNewline = true;
+        else if (flag === '-e') interpretEscapes = true;
+        else if (flag === '-ne' || flag === '-en') { omitNewline = true; interpretEscapes = true; }
+        else break;
+        startIdx++;
+      }
+
+      let out = args.slice(startIdx).join(' ');
+      if (interpretEscapes) {
+        out = out
+          .replace(/\\n/g, '\n')
+          .replace(/\\t/g, '\t')
+          .replace(/\\r/g, '\r')
+          .replace(/\\b/g, '\b')
+          .replace(/\\f/g, '\f')
+          .replace(/\\\\/g, '\\');
+      }
+
+      return { code: 0, stdout: out + (omitNewline ? '' : '\n'), stderr: '' };
+    },
+
+    async printf(args, ctx) {
+      if (args.length === 0) return { code: 0, stdout: '', stderr: '' };
+      let fmt = args[0]
+        .replace(/\\n/g, '\n')
+        .replace(/\\t/g, '\t')
+        .replace(/\\r/g, '\r')
+        .replace(/\\\\/g, '\\');
+
+      let argIdx = 1;
+      const formatted = fmt.replace(/%([-+0 #]*)(\d+)?(?:\.(\d+))?([sdifxX%])/g, (match, flags, width, prec, type) => {
+        if (type === '%') return '%';
+        const val = args[argIdx++];
+        if (val === undefined) return '';
+        let s = '';
+        if (type === 's') {
+          s = String(val);
+          if (prec !== undefined && prec !== '') s = s.slice(0, parseInt(prec, 10));
+        } else if (type === 'd' || type === 'i') {
+          s = String(parseInt(val, 10) || 0);
+        } else if (type === 'f') {
+          const num = parseFloat(val) || 0;
+          s = prec !== undefined && prec !== '' ? num.toFixed(parseInt(prec, 10)) : String(num);
+        } else if (type === 'x') {
+          s = (Number(val) || 0).toString(16);
+        } else if (type === 'X') {
+          s = (Number(val) || 0).toString(16).toUpperCase();
+        } else {
+          return match;
+        }
+
+        if (width) {
+          const w = parseInt(width, 10);
+          if (flags && flags.includes('0') && (type === 'd' || type === 'i')) {
+            const isNeg = s.startsWith('-');
+            if (isNeg) s = s.slice(1);
+            s = s.padStart(w - (isNeg ? 1 : 0), '0');
+            if (isNeg) s = '-' + s;
+          } else if (flags && flags.includes('-')) {
+            s = s.padEnd(w, ' ');
+          } else {
+            s = s.padStart(w, ' ');
+          }
+        }
+        return s;
+      });
+
+      return { code: 0, stdout: formatted, stderr: '' };
+    },
+
+    // -----------------------------------------------------------------------
+    // Search & Matching: grep, find
+    // -----------------------------------------------------------------------
+    async grep(args, ctx) {
+      let ignoreCase = false;
+      let invertMatch = false;
+      let lineNumbers = false;
+      let countOnly = false;
+      let filesOnly = false;
+      let recursive = false;
+      let extendedRegex = false;
+      let pattern = null;
+      const fileArgs = [];
+
+      for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        if (arg.startsWith('-') && arg.length > 1) {
+          for (let j = 1; j < arg.length; j++) {
+            const flag = arg[j];
+            if (flag === 'i') ignoreCase = true;
+            else if (flag === 'v') invertMatch = true;
+            else if (flag === 'n') lineNumbers = true;
+            else if (flag === 'c') countOnly = true;
+            else if (flag === 'l') filesOnly = true;
+            else if (flag === 'r' || flag === 'R') recursive = true;
+            else if (flag === 'E') extendedRegex = true;
+          }
+        } else if (pattern === null) {
+          pattern = arg;
+        } else {
+          fileArgs.push(arg);
+        }
+      }
+
+      if (!pattern) {
+        return { code: 2, stdout: '', stderr: 'grep: missing pattern\n' };
+      }
+
+      let regex;
+      try {
+        regex = new RegExp(pattern, ignoreCase ? 'i' : '');
+      } catch (e) {
+        return { code: 2, stdout: '', stderr: `grep: invalid pattern: ${e.message}\n` };
+      }
+
+      // Collect target files
+      const targets = [];
+      if (recursive) {
+        const roots = fileArgs.length > 0 ? fileArgs : ['.'];
+        for (const root of roots) {
+          const absRoot = ctx.resolvePath(root);
+          function walk(dir) {
+            try {
+              const entries = ctx.vfs.readdirSync(dir);
+              for (const e of entries) {
+                const full = dir === '/' ? '/' + e : dir + '/' + e;
+                const st = ctx.vfs.statSync(full);
+                if (st.isDirectory()) walk(full);
+                else targets.push(full);
+              }
+            } catch (_) {}
+          }
+          if (ctx.vfs.existsSync(absRoot)) {
+            const st = ctx.vfs.statSync(absRoot);
+            if (st.isDirectory()) walk(absRoot);
+            else targets.push(absRoot);
+          }
+        }
+      } else {
+        for (const f of fileArgs) {
+          targets.push(ctx.resolvePath(f));
+        }
+      }
+
+      let stdout = '';
+      let stderr = '';
+      let totalMatches = 0;
+      let hasFileError = false;
+
+      function checkText(text, label) {
+        const lines = text.split('\n');
+        if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+        let fileMatchCount = 0;
+        let fileOutput = '';
+
+        for (let lIdx = 0; lIdx < lines.length; lIdx++) {
+          const line = lines[lIdx];
+          const matched = regex.test(line);
+          const shouldInclude = invertMatch ? !matched : matched;
+
+          if (shouldInclude) {
+            fileMatchCount++;
+            totalMatches++;
+            if (filesOnly) {
+              stdout += `${label}\n`;
+              return;
+            }
+            if (!countOnly) {
+              const prefix = label ? `${label}:` : '';
+              const numPrefix = lineNumbers ? `${lIdx + 1}:` : '';
+              fileOutput += `${prefix}${numPrefix}${line}\n`;
+            }
+          }
+        }
+
+        if (countOnly) {
+          const prefix = label ? `${label}:` : '';
+          stdout += `${prefix}${fileMatchCount}\n`;
+        } else {
+          stdout += fileOutput;
+        }
+      }
+
+      if (targets.length === 0) {
+        checkText(ctx.stdin || '', '');
+      } else {
+        const multiple = targets.length > 1;
+        for (const t of targets) {
+          if (!ctx.vfs.existsSync(t)) {
+            stderr += `grep: ${t}: No such file or directory\n`;
+            hasFileError = true;
+            continue;
+          }
+          try {
+            const content = ctx.vfs.readFileSync(t, 'utf8');
+            const displayLabel = multiple ? PosixPath.normalize(t.replace('/workspace/', '')) : '';
+            checkText(content, displayLabel);
+          } catch (e) {
+            stderr += `grep: ${t}: ${e.message}\n`;
+            hasFileError = true;
+          }
+        }
+      }
+
+      let exitCode = 1;
+      if (totalMatches > 0) exitCode = 0;
+      else if (hasFileError) exitCode = 2;
+
+      return { code: exitCode, stdout, stderr };
+    },
+
+    async find(args, ctx) {
+      let root = '.';
+      let namePattern = null;
+      let typeFilter = null; // 'f' or 'd'
+      let maxDepth = Infinity;
+
+      let i = 0;
+      if (args[0] && !args[0].startsWith('-')) {
+        root = args[0];
+        i = 1;
+      }
+
+      while (i < args.length) {
+        const opt = args[i];
+        if (opt === '-name' && i + 1 < args.length) {
+          namePattern = args[++i];
+        } else if (opt === '-type' && i + 1 < args.length) {
+          typeFilter = args[++i];
+        } else if (opt === '-maxdepth' && i + 1 < args.length) {
+          maxDepth = parseInt(args[++i], 10) || Infinity;
+        }
+        i++;
+      }
+
+      const nameRegex = namePattern ? globToRegExp(namePattern, false) : null;
+      const absRoot = ctx.resolvePath(root);
+      const results = [];
+
+      function walk(dirPath, depth) {
+        if (depth > maxDepth) return;
+        let entries = [];
+        try {
+          entries = ctx.vfs.readdirSync(dirPath);
+        } catch (_) {
+          return;
+        }
+
+        for (const entry of entries) {
+          const full = dirPath === '/' ? '/' + entry : dirPath + '/' + entry;
+          let isDir = false;
+          try {
+            isDir = ctx.vfs.statSync(full).isDirectory();
+          } catch (_) {}
+
+          const relPath = root === '.'
+            ? './' + full.replace(absRoot.endsWith('/') ? absRoot : absRoot + '/', '')
+            : full;
+
+          let matches = true;
+          if (typeFilter === 'f' && isDir) matches = false;
+          if (typeFilter === 'd' && !isDir) matches = false;
+          if (nameRegex && !nameRegex.test(entry)) matches = false;
+
+          if (matches) results.push(relPath);
+          if (isDir) walk(full, depth + 1);
+        }
+      }
+
+      // Root itself check
+      if (ctx.vfs.existsSync(absRoot)) {
+        let isDir = false;
+        try { isDir = ctx.vfs.statSync(absRoot).isDirectory(); } catch (_) {}
+        if (!typeFilter || (typeFilter === 'd' && isDir) || (typeFilter === 'f' && !isDir)) {
+          if (!nameRegex || nameRegex.test(PosixPath.basename(root))) {
+            results.push(root);
+          }
+        }
+        if (isDir) walk(absRoot, 1);
+      } else {
+        return { code: 1, stdout: '', stderr: `find: '${root}': No such file or directory\n` };
+      }
+
+      results.sort();
+      return { code: 0, stdout: results.join('\n') + (results.length > 0 ? '\n' : ''), stderr: '' };
+    },
+
+    // -----------------------------------------------------------------------
+    // Text Manipulation: wc, sort, uniq, sed, awk, cut, tr, diff
+    // -----------------------------------------------------------------------
+    async wc(args, ctx) {
+      let countLines = false;
+      let countWords = false;
+      let countBytes = false;
+      const files = [];
+
+      for (const arg of args) {
+        if (arg === '-l') countLines = true;
+        else if (arg === '-w') countWords = true;
+        else if (arg === '-c' || arg === '-m') countBytes = true;
+        else files.push(arg);
+      }
+
+      if (!countLines && !countWords && !countBytes) {
+        countLines = true;
+        countWords = true;
+        countBytes = true;
+      }
+
+      function countText(text) {
+        const lines = text.length === 0 ? 0 : (text.match(/\n/g) || []).length;
+        const words = (text.trim().match(/\S+/g) || []).length;
+        const bytes = Buffer.byteLength(text, 'utf8');
+        return { lines, words, bytes };
+      }
+
+      function formatCounts(c, label) {
+        let parts = [];
+        if (countLines) parts.push(String(c.lines).padStart(4, ' '));
+        if (countWords) parts.push(String(c.words).padStart(4, ' '));
+        if (countBytes) parts.push(String(c.bytes).padStart(4, ' '));
+        if (label) parts.push(label);
+        return parts.join(' ') + '\n';
+      }
+
+      if (files.length === 0) {
+        const c = countText(ctx.stdin || '');
+        return { code: 0, stdout: formatCounts(c, ''), stderr: '' };
+      }
+
+      let stdout = '';
+      let stderr = '';
+      let code = 0;
+      let total = { lines: 0, words: 0, bytes: 0 };
+
+      for (const f of files) {
+        const abs = ctx.resolvePath(f);
+        if (!ctx.vfs.existsSync(abs)) {
+          stderr += `wc: ${f}: No such file or directory\n`;
+          code = 1;
+          continue;
+        }
+        try {
+          const st = ctx.vfs.statSync(abs);
+          if (st.isDirectory()) {
+            stderr += `wc: ${f}: Is a directory\n`;
+            code = 1;
+            continue;
+          }
+          const content = ctx.vfs.readFileSync(abs, 'utf8');
+          const c = countText(content);
+          total.lines += c.lines;
+          total.words += c.words;
+          total.bytes += c.bytes;
+          stdout += formatCounts(c, f);
+        } catch (e) {
+          stderr += `wc: ${f}: ${e.message}\n`;
+          code = 1;
+        }
+      }
+
+      if (files.length > 1) {
+        stdout += formatCounts(total, 'total');
+      }
+
+      return { code, stdout, stderr };
+    },
+
+    async sort(args, ctx) {
+      let reverse = false;
+      let numeric = false;
+      let unique = false;
+      let ignoreCase = false;
+      let keyCol = null;
+      let delim = null;
+      const files = [];
+
+      for (let i = 0; i < args.length; i++) {
+        const a = args[i];
+        if (a === '-k' && i + 1 < args.length) {
+          keyCol = parseInt(args[++i], 10) - 1;
+        } else if (a === '-t' && i + 1 < args.length) {
+          delim = args[++i];
+        } else if (a.startsWith('-') && a.length > 1 && !a.startsWith('--')) {
+          for (let j = 1; j < a.length; j++) {
+            const ch = a[j];
+            if (ch === 'r') reverse = true;
+            else if (ch === 'n') numeric = true;
+            else if (ch === 'u') unique = true;
+            else if (ch === 'f') ignoreCase = true;
+            else {
+              files.push(a);
+              break;
+            }
+          }
+        } else {
+          files.push(a);
+        }
+      }
+
+      let text = '';
+      if (files.length === 0) {
+        text = ctx.stdin || '';
+      } else {
+        for (const f of files) {
+          const abs = ctx.resolvePath(f);
+          if (!ctx.vfs.existsSync(abs)) {
+            return { code: 1, stdout: '', stderr: `sort: cannot read '${f}': No such file or directory\n` };
+          }
+          try {
+            const st = ctx.vfs.statSync(abs);
+            if (st.isDirectory()) {
+              return { code: 1, stdout: '', stderr: `sort: read failed: ${f}: Is a directory\n` };
+            }
+            text += ctx.vfs.readFileSync(abs, 'utf8');
+          } catch (err) {
+            return { code: 1, stdout: '', stderr: `sort: cannot read '${f}': ${err.message}\n` };
+          }
+        }
+      }
+
+      let lines = text.split('\n');
+      if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+
+      lines.sort((a, b) => {
+        let valA = a;
+        let valB = b;
+        if (keyCol !== null) {
+          const partsA = delim ? a.split(delim) : a.trim().split(/\s+/);
+          const partsB = delim ? b.split(delim) : b.trim().split(/\s+/);
+          valA = partsA[keyCol] || '';
+          valB = partsB[keyCol] || '';
+        }
+        if (numeric) {
+          const numA = parseFloat(valA) || 0;
+          const numB = parseFloat(valB) || 0;
+          return numA - numB;
+        }
+        if (ignoreCase) {
+          return valA.toLowerCase().localeCompare(valB.toLowerCase());
+        }
+        return valA.localeCompare(valB);
+      });
+
+      if (reverse) lines.reverse();
+      if (unique) {
+        lines = Array.from(new Set(lines));
+      }
+
+      return { code: 0, stdout: lines.join('\n') + (lines.length > 0 ? '\n' : ''), stderr: '' };
+    },
+
+    async uniq(args, ctx) {
+      let count = false;
+      let duplicatesOnly = false;
+      let uniqueOnly = false;
+      let ignoreCase = false;
+      const files = [];
+
+      for (const a of args) {
+        if (a.startsWith('-') && a.length > 1 && !a.startsWith('--')) {
+          for (let j = 1; j < a.length; j++) {
+            const ch = a[j];
+            if (ch === 'c') count = true;
+            else if (ch === 'd') duplicatesOnly = true;
+            else if (ch === 'u') uniqueOnly = true;
+            else if (ch === 'i') ignoreCase = true;
+            else {
+              files.push(a);
+              break;
+            }
+          }
+        } else {
+          files.push(a);
+        }
+      }
+
+      let text = ctx.stdin || '';
+      if (files.length > 0) {
+        const abs = ctx.resolvePath(files[0]);
+        if (!ctx.vfs.existsSync(abs)) {
+          return { code: 1, stdout: '', stderr: `uniq: ${files[0]}: No such file or directory\n` };
+        }
+        try {
+          const st = ctx.vfs.statSync(abs);
+          if (st.isDirectory()) {
+            return { code: 1, stdout: '', stderr: `uniq: error reading '${files[0]}': Is a directory\n` };
+          }
+          text = ctx.vfs.readFileSync(abs, 'utf8');
+        } catch (err) {
+          return { code: 1, stdout: '', stderr: `uniq: error reading '${files[0]}': ${err.message}\n` };
+        }
+      }
+
+      const lines = text.split('\n');
+      if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+
+      const grouped = [];
+      let currentLine = null;
+      let currentCount = 0;
+
+      for (const l of lines) {
+        const cmp = ignoreCase ? l.toLowerCase() : l;
+        const curCmp = ignoreCase && currentLine !== null ? currentLine.toLowerCase() : currentLine;
+        if (cmp === curCmp) {
+          currentCount++;
+        } else {
+          if (currentLine !== null) grouped.push({ line: currentLine, count: currentCount });
+          currentLine = l;
+          currentCount = 1;
+        }
+      }
+      if (currentLine !== null) grouped.push({ line: currentLine, count: currentCount });
+
+      let stdout = '';
+      for (const g of grouped) {
+        if (duplicatesOnly && g.count === 1) continue;
+        if (uniqueOnly && g.count > 1) continue;
+        if (count) {
+          stdout += `${String(g.count).padStart(4, ' ')} ${g.line}\n`;
+        } else {
+          stdout += `${g.line}\n`;
+        }
+      }
+
+      return { code: 0, stdout, stderr: '' };
+    },
+
+    async sed(args, ctx) {
+      let inPlace = false;
+      let script = null;
+      const files = [];
+
+      for (let i = 0; i < args.length; i++) {
+        const a = args[i];
+        if (a === '-i') {
+          inPlace = true;
+        } else if (a === '-e' && i + 1 < args.length) {
+          script = args[++i];
+        } else if (!script) {
+          script = a;
+        } else {
+          files.push(a);
+        }
+      }
+
+      if (!script) {
+        return { code: 1, stdout: '', stderr: 'sed: missing expression\n' };
+      }
+
+      function splitWithEscape(str, d) {
+        const parts = [];
+        let cur = '';
+        let esc = false;
+        for (let idx = 0; idx < str.length; idx++) {
+          const ch = str[idx];
+          if (esc) {
+            if (ch === d) {
+              cur += d;
+            } else {
+              cur += '\\' + ch;
+            }
+            esc = false;
+          } else if (ch === '\\') {
+            esc = true;
+          } else if (ch === d) {
+            parts.push(cur);
+            cur = '';
+          } else {
+            cur += ch;
+          }
+        }
+        parts.push(cur);
+        return parts;
+      }
+
+      function applyScript(content) {
+        // Substitute command: s/find/replace/flags (supports custom delimiters like s|foo|bar|g)
+        if (script.startsWith('s')) {
+          const delim = script[1];
+          const parts = splitWithEscape(script.slice(2), delim);
+          if (parts.length >= 2) {
+            const find = parts[0];
+            const repl = parts[1];
+            const flags = parts[2] || '';
+            const regex = new RegExp(find, flags.includes('g') ? 'g' : '');
+            return content.split('\n').map(line => line.replace(regex, repl)).join('\n');
+          }
+        }
+        // Delete command: /pattern/d or 1d
+        if (script.endsWith('d')) {
+          const addr = script.slice(0, -1);
+          if (/^\d+$/.test(addr)) {
+            const targetLine = parseInt(addr, 10);
+            return content.split('\n').filter((_, idx) => idx + 1 !== targetLine).join('\n');
+          }
+          if (addr.startsWith('/') && addr.endsWith('/')) {
+            const pattern = addr.slice(1, -1);
+            const regex = new RegExp(pattern);
+            return content.split('\n').filter(line => !regex.test(line)).join('\n');
+          }
+        }
+        return content;
+      }
+
+      if (files.length === 0) {
+        try {
+          return { code: 0, stdout: applyScript(ctx.stdin || ''), stderr: '' };
+        } catch (err) {
+          return { code: 1, stdout: '', stderr: `sed: ${err.message}\n` };
+        }
+      }
+
+      let stdout = '';
+      let stderr = '';
+      let code = 0;
+
+      for (const f of files) {
+        const abs = ctx.resolvePath(f);
+        if (!ctx.vfs.existsSync(abs)) {
+          stderr += `sed: can't read ${f}: No such file or directory\n`;
+          code = 1;
+          continue;
+        }
+        try {
+          const st = ctx.vfs.statSync(abs);
+          if (st.isDirectory()) {
+            stderr += `sed: couldn't edit ${f}: is a directory\n`;
+            code = 1;
+            continue;
+          }
+          const text = ctx.vfs.readFileSync(abs, 'utf8');
+          const modified = applyScript(text);
+          if (inPlace) {
+            ctx.vfs.writeFileSync(abs, modified);
+            ctx.emitMutation('change', abs);
+          } else {
+            stdout += modified;
+          }
+        } catch (err) {
+          stderr += `sed: ${err.message}\n`;
+          code = 1;
+        }
+      }
+
+      return { code, stdout, stderr };
+    },
+
+    async awk(args, ctx) {
+      let delim = null;
+      let script = null;
+      const files = [];
+
+      for (let i = 0; i < args.length; i++) {
+        const a = args[i];
+        if (a === '-F' && i + 1 < args.length) {
+          delim = args[++i];
+        } else if (a.startsWith('-F') && a.length > 2) {
+          delim = a.slice(2);
+        } else if (!script) {
+          script = a;
+        } else {
+          files.push(a);
+        }
+      }
+
+      if (!script) return { code: 1, stdout: '', stderr: 'awk: missing script\n' };
+
+      let text = ctx.stdin || '';
+      if (files.length > 0) {
+        text = '';
+        for (const f of files) {
+          const abs = ctx.resolvePath(f);
+          if (!ctx.vfs.existsSync(abs)) {
+            return { code: 1, stdout: '', stderr: `awk: cannot open ${f} (No such file or directory)\n` };
+          }
+          try {
+            const st = ctx.vfs.statSync(abs);
+            if (st.isDirectory()) {
+              return { code: 1, stdout: '', stderr: `awk: ${f}: Is a directory\n` };
+            }
+            text += ctx.vfs.readFileSync(abs, 'utf8');
+          } catch (err) {
+            return { code: 1, stdout: '', stderr: `awk: ${f}: ${err.message}\n` };
+          }
+        }
+      }
+
+      const lines = text.split('\n');
+      if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+
+      let stdout = '';
+      for (let lIdx = 0; lIdx < lines.length; lIdx++) {
+        const line = lines[lIdx];
+        const cols = delim ? (delim.length === 1 ? line.split(delim) : line.split(new RegExp(delim))) : line.trim().split(/\s+/);
+        const NR = lIdx + 1;
+        const NF = cols.length;
+
+        // Basic {print $1, $2, ...} parser
+        const printMatch = script.match(/print\s+(.+)}/);
+        if (printMatch) {
+          const exprs = printMatch[1].split(',').map(s => s.trim());
+          const vals = exprs.map(e => {
+            if (e === '$0') return line;
+            if (e === '$NF') return cols[cols.length - 1] || '';
+            if (e.startsWith('$')) {
+              const colIdx = parseInt(e.slice(1), 10) - 1;
+              return cols[colIdx] || '';
+            }
+            if (e === 'NR') return String(NR);
+            if (e === 'NF') return String(NF);
+            if (e.startsWith('"') && e.endsWith('"')) return e.slice(1, -1);
+            return e;
+          });
+          stdout += vals.join(' ') + '\n';
+        } else {
+          stdout += line + '\n';
+        }
+      }
+
+      return { code: 0, stdout, stderr: '' };
+    },
+
+    async cut(args, ctx) {
+      let delim = '\t';
+      let fields = null;
+      let chars = null;
+      const files = [];
+
+      for (let i = 0; i < args.length; i++) {
+        const a = args[i];
+        if (a === '-d' && i + 1 < args.length) {
+          delim = args[++i];
+        } else if (a.startsWith('-d')) {
+          delim = a.slice(2);
+        } else if (a === '-f' && i + 1 < args.length) {
+          fields = args[++i];
+        } else if (a.startsWith('-f')) {
+          fields = a.slice(2);
+        } else if (a === '-c' && i + 1 < args.length) {
+          chars = args[++i];
+        } else if (a.startsWith('-c')) {
+          chars = a.slice(2);
+        } else {
+          files.push(a);
+        }
+      }
+
+      const selectedCols = [];
+      if (fields) {
+        for (const part of fields.split(',')) {
+          if (part.includes('-')) {
+            const [start, end] = part.split('-').map(Number);
+            for (let c = start; c <= end; c++) selectedCols.push(c - 1);
+          } else {
+            selectedCols.push(parseInt(part, 10) - 1);
+          }
+        }
+      }
+
+      let text = ctx.stdin || '';
+      if (files.length > 0) {
+        text = '';
+        for (const f of files) {
+          const abs = ctx.resolvePath(f);
+          if (!ctx.vfs.existsSync(abs)) {
+            return { code: 1, stdout: '', stderr: `cut: ${f}: No such file or directory\n` };
+          }
+          try {
+            const st = ctx.vfs.statSync(abs);
+            if (st.isDirectory()) {
+              return { code: 1, stdout: '', stderr: `cut: ${f}: Is a directory\n` };
+            }
+            text += ctx.vfs.readFileSync(abs, 'utf8');
+          } catch (e) {
+            return { code: 1, stdout: '', stderr: `cut: ${f}: ${e.message}\n` };
+          }
+        }
+      }
+
+      const lines = text.split('\n');
+      if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+
+      if (chars) {
+        const ranges = chars.split(',').map(part => {
+          if (part.includes('-')) {
+            const [start, end] = part.split('-').map(Number);
+            return { start: start - 1, end: end };
+          }
+          const idx = parseInt(part, 10) - 1;
+          return { start: idx, end: idx + 1 };
+        });
+        const out = lines.map(line => {
+          let res = '';
+          for (const r of ranges) {
+            res += line.slice(r.start, r.end);
+          }
+          return res;
+        });
+        return { code: 0, stdout: out.join('\n') + (out.length > 0 ? '\n' : ''), stderr: '' };
+      }
+
+      const out = lines.map(line => {
+        const parts = line.split(delim);
+        if (selectedCols.length === 0) return line;
+        return selectedCols.map(c => parts[c] || '').join(delim);
+      });
+
+      return { code: 0, stdout: out.join('\n') + (out.length > 0 ? '\n' : ''), stderr: '' };
+    },
+
+    async tr(args, ctx) {
+      let deleteMode = false;
+      let squeezeMode = false;
+      let set1 = '';
+      let set2 = '';
+
+      for (const a of args) {
+        if (a === '-d') deleteMode = true;
+        else if (a === '-s') squeezeMode = true;
+        else if (!set1) set1 = a;
+        else if (!set2) set2 = a;
+      }
+
+      function expandSet(s) {
+        if (s === '[:lower:]' || s === 'a-z') return 'abcdefghijklmnopqrstuvwxyz';
+        if (s === '[:upper:]' || s === 'A-Z') return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        if (s === '[:digit:]' || s === '0-9') return '0123456789';
+        return s;
+      }
+
+      const fromChars = expandSet(set1);
+      const toChars = expandSet(set2);
+      const text = ctx.stdin || '';
+      let out = '';
+
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const idx = fromChars.indexOf(c);
+        if (idx !== -1) {
+          if (deleteMode) continue;
+          out += toChars[idx] || toChars[toChars.length - 1] || c;
+        } else {
+          out += c;
+        }
+      }
+
+      return { code: 0, stdout: out, stderr: '' };
+    },
+
+    async diff(args, ctx) {
+      let unified = false;
+      const files = [];
+
+      for (const a of args) {
+        if (a === '-u') unified = true;
+        else files.push(a);
+      }
+
+      if (files.length < 2) {
+        return { code: 2, stdout: '', stderr: 'diff: missing operand\n' };
+      }
+
+      const abs1 = ctx.resolvePath(files[0]);
+      const abs2 = ctx.resolvePath(files[1]);
+
+      if (!ctx.vfs.existsSync(abs1)) return { code: 2, stdout: '', stderr: `diff: ${files[0]}: No such file or directory\n` };
+      if (!ctx.vfs.existsSync(abs2)) return { code: 2, stdout: '', stderr: `diff: ${files[1]}: No such file or directory\n` };
+
+      const st1 = ctx.vfs.statSync(abs1);
+      if (st1.isDirectory()) return { code: 2, stdout: '', stderr: `diff: ${files[0]}: Is a directory\n` };
+      const st2 = ctx.vfs.statSync(abs2);
+      if (st2.isDirectory()) return { code: 2, stdout: '', stderr: `diff: ${files[1]}: Is a directory\n` };
+
+      const text1 = ctx.vfs.readFileSync(abs1, 'utf8');
+      const text2 = ctx.vfs.readFileSync(abs2, 'utf8');
+
+      if (text1 === text2) {
+        return { code: 0, stdout: '', stderr: '' };
+      }
+
+      const diffResult = computeUnifiedDiff(files[0], files[1], text1, text2);
+      return { code: 1, stdout: diffResult, stderr: '' };
+    },
+
+    // -----------------------------------------------------------------------
+    // File & Directory Operations: cp, mv, rm, mkdir, touch, chmod, tree
+    // -----------------------------------------------------------------------
+    async mkdir(args, ctx) {
+      let recursive = false;
+      const dirs = [];
+
+      for (const a of args) {
+        if (a === '-p') recursive = true;
+        else dirs.push(a);
+      }
+
+      if (dirs.length === 0) {
+        return { code: 1, stdout: '', stderr: 'mkdir: missing operand\n' };
+      }
+
+      let code = 0;
+      let stderr = '';
+
+      for (const d of dirs) {
+        const abs = ctx.resolvePath(d);
+        try {
+          if (recursive) {
+            const parts = abs.split('/').filter(Boolean);
+            let cur = '';
+            for (const part of parts) {
+              cur += '/' + part;
+              if (!ctx.vfs.existsSync(cur)) {
+                ctx.vfs.mkdirSync(cur, { recursive: true });
+                ctx.emitMutation('create', cur);
+              }
+            }
+          } else {
+            ctx.vfs.mkdirSync(abs, { recursive });
+            ctx.emitMutation('create', abs);
+          }
+        } catch (err) {
+          stderr += `mkdir: cannot create directory '${d}': ${err.message}\n`;
+          code = 1;
+        }
+      }
+
+      return { code, stdout: '', stderr };
+    },
+
+    async touch(args, ctx) {
+      if (args.length === 0) {
+        return { code: 1, stdout: '', stderr: 'touch: missing file operand\n' };
+      }
+
+      let code = 0;
+      let stderr = '';
+
+      for (const f of args) {
+        if (f.startsWith('-')) continue;
+        const abs = ctx.resolvePath(f);
+        try {
+          if (!ctx.vfs.existsSync(abs)) {
+            ctx.vfs.writeFileSync(abs, '');
+            ctx.emitMutation('create', abs);
+          } else {
+            // update timestamp if exists
+            const prev = ctx.vfs.readFileSync(abs, 'utf8');
+            ctx.vfs.writeFileSync(abs, prev);
+            ctx.emitMutation('change', abs);
+          }
+        } catch (err) {
+          stderr += `touch: cannot touch '${f}': ${err.message}\n`;
+          code = 1;
+        }
+      }
+
+      return { code, stdout: '', stderr };
+    },
+
+    async rm(args, ctx) {
+      let recursive = false;
+      let force = false;
+      const targets = [];
+
+      for (const a of args) {
+        if (a === '-r' || a === '-R' || a === '-rf' || a === '-fr') recursive = true;
+        if (a === '-f' || a === '-rf' || a === '-fr') force = true;
+        if (!a.startsWith('-')) targets.push(a);
+      }
+
+      if (targets.length === 0) {
+        if (force) return { code: 0, stdout: '', stderr: '' };
+        return { code: 1, stdout: '', stderr: 'rm: missing operand\n' };
+      }
+
+      let code = 0;
+      let stderr = '';
+
+      for (const t of targets) {
+        const abs = ctx.resolvePath(t);
+        if (!ctx.vfs.existsSync(abs)) {
+          if (!force) {
+            stderr += `rm: cannot remove '${t}': No such file or directory\n`;
+            code = 1;
+          }
+          continue;
+        }
+
+        const st = ctx.vfs.statSync(abs);
+        if (st.isDirectory() && !recursive) {
+          stderr += `rm: cannot remove '${t}': Is a directory\n`;
+          code = 1;
+          continue;
+        }
+
+        try {
+          if (typeof ctx.vfs.rmSync === 'function') {
+            ctx.vfs.rmSync(abs, { recursive, force });
+          } else {
+            if (st.isDirectory()) ctx.vfs.rmdirSync(abs, { recursive });
+            else ctx.vfs.unlinkSync(abs);
+          }
+          ctx.emitMutation('delete', abs);
+        } catch (err) {
+          if (!force) {
+            stderr += `rm: cannot remove '${t}': ${err.message}\n`;
+            code = 1;
+          }
+        }
+      }
+
+      return { code, stdout: '', stderr };
+    },
+
+    async cp(args, ctx) {
+      let recursive = false;
+      const paths = [];
+
+      for (const a of args) {
+        if (a === '-r' || a === '-R') recursive = true;
+        else if (!a.startsWith('-')) paths.push(a);
+      }
+
+      if (paths.length < 2) {
+        return { code: 1, stdout: '', stderr: 'cp: missing destination file operand\n' };
+      }
+
+      const dest = ctx.resolvePath(paths[paths.length - 1]);
+      const sources = paths.slice(0, -1);
+
+      function copyRecursive(srcAbs, destAbs) {
+        const st = ctx.vfs.statSync(srcAbs);
+        if (st.isDirectory()) {
+          ctx.vfs.mkdirSync(destAbs, { recursive: true });
+          const entries = ctx.vfs.readdirSync(srcAbs);
+          for (const e of entries) {
+            copyRecursive(srcAbs + '/' + e, destAbs + '/' + e);
+          }
+        } else {
+          if (typeof ctx.vfs.copyFileSync === 'function') {
+            ctx.vfs.copyFileSync(srcAbs, destAbs);
+          } else {
+            const data = ctx.vfs.readFileSync(srcAbs);
+            ctx.vfs.writeFileSync(destAbs, data);
+          }
+          ctx.emitMutation('create', destAbs);
+        }
+      }
+
+      for (const src of sources) {
+        const srcAbs = ctx.resolvePath(src);
+        if (!ctx.vfs.existsSync(srcAbs)) {
+          return { code: 1, stdout: '', stderr: `cp: cannot stat '${src}': No such file or directory\n` };
+        }
+        const st = ctx.vfs.statSync(srcAbs);
+        if (st.isDirectory() && !recursive) {
+          return { code: 1, stdout: '', stderr: `cp: -r not specified; omitting directory '${src}'\n` };
+        }
+        try {
+          let targetDest = dest;
+          if (ctx.vfs.existsSync(dest) && ctx.vfs.statSync(dest).isDirectory()) {
+            targetDest = dest === '/' ? '/' + PosixPath.basename(srcAbs) : dest + '/' + PosixPath.basename(srcAbs);
+          }
+          copyRecursive(srcAbs, targetDest);
+        } catch (e) {
+          return { code: 1, stdout: '', stderr: `cp: ${e.message}\n` };
+        }
+      }
+
+      return { code: 0, stdout: '', stderr: '' };
+    },
+
+    async mv(args, ctx) {
+      const paths = args.filter(a => !a.startsWith('-'));
+      if (paths.length < 2) {
+        return { code: 1, stdout: '', stderr: 'mv: missing destination file operand\n' };
+      }
+
+      const src = ctx.resolvePath(paths[0]);
+      let dest = ctx.resolvePath(paths[1]);
+
+      if (!ctx.vfs.existsSync(src)) {
+        return { code: 1, stdout: '', stderr: `mv: cannot stat '${paths[0]}': No such file or directory\n` };
+      }
+
+      try {
+        if (ctx.vfs.existsSync(dest) && ctx.vfs.statSync(dest).isDirectory()) {
+          dest = dest === '/' ? '/' + PosixPath.basename(src) : dest + '/' + PosixPath.basename(src);
+        }
+        if (typeof ctx.vfs.renameSync === 'function') {
+          ctx.vfs.renameSync(src, dest);
+        } else {
+          const data = ctx.vfs.readFileSync(src);
+          ctx.vfs.writeFileSync(dest, data);
+          ctx.vfs.unlinkSync(src);
+        }
+        ctx.emitMutation('rename', dest);
+      } catch (err) {
+        return { code: 1, stdout: '', stderr: `mv: ${err.message}\n` };
+      }
+
+      return { code: 0, stdout: '', stderr: '' };
+    },
+
+    async chmod(args, ctx) {
+      if (args.length < 2) {
+        return { code: 1, stdout: '', stderr: 'chmod: missing operand\n' };
+      }
+      const modeStr = args[0];
+      for (let i = 1; i < args.length; i++) {
+        const target = args[i];
+        const abs = ctx.resolvePath(target);
+        if (!ctx.vfs.existsSync(abs)) {
+          return { code: 1, stdout: '', stderr: `chmod: cannot access '${target}': No such file or directory\n` };
+        }
+        if (typeof ctx.vfs.chmodSync === 'function') {
+          try {
+            ctx.vfs.chmodSync(abs, modeStr);
+          } catch (err) {
+            return { code: 1, stdout: '', stderr: `chmod: ${err.message}\n` };
+          }
+        }
+      }
+      return { code: 0, stdout: '', stderr: '' };
+    },
+
+    async tree(args, ctx) {
+      let showAll = false;
+      let maxLevel = Infinity;
+      let root = '.';
+
+      for (let i = 0; i < args.length; i++) {
+        const a = args[i];
+        if (a === '-a') showAll = true;
+        else if (a === '-L' && i + 1 < args.length) maxLevel = parseInt(args[++i], 10) || Infinity;
+        else if (!a.startsWith('-')) root = a;
+      }
+
+      const absRoot = ctx.resolvePath(root);
+      if (!ctx.vfs.existsSync(absRoot)) {
+        return { code: 1, stdout: '', stderr: `tree: '${root}': No such file or directory\n` };
+      }
+
+      let stdout = `${root}\n`;
+      let dirCount = 0;
+      let fileCount = 0;
+
+      function renderTree(dirPath, prefix, level) {
+        if (level > maxLevel) return;
+        let entries = [];
+        try { entries = ctx.vfs.readdirSync(dirPath); } catch (_) { return; }
+        if (!showAll) entries = entries.filter(e => !e.startsWith('.'));
+        entries.sort();
+
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i];
+          const isLast = i === entries.length - 1;
+          const full = dirPath === '/' ? '/' + entry : dirPath + '/' + entry;
+          let isDir = false;
+          try { isDir = ctx.vfs.statSync(full).isDirectory(); } catch (_) {}
+
+          stdout += `${prefix}${isLast ? '└── ' : '├── '}${entry}\n`;
+
+          if (isDir) {
+            dirCount++;
+            renderTree(full, prefix + (isLast ? '    ' : '│   '), level + 1);
+          } else {
+            fileCount++;
+          }
+        }
+      }
+
+      renderTree(absRoot, '', 1);
+      stdout += `\n${dirCount} directories, ${fileCount} files\n`;
+      return { code: 0, stdout, stderr: '' };
+    },
+
+    // -----------------------------------------------------------------------
+    // System, Environment & Process Control: env, export, unset, which,
+    // whoami, uname, date, sleep, true, false, clear, history, ps, jobs, kill
+    // -----------------------------------------------------------------------
+    async env(args, ctx) {
+      const keys = Object.keys(ctx.env).sort();
+      let stdout = '';
+      for (const k of keys) {
+        if (k !== '?' && !k.startsWith('__')) {
+          stdout += `${k}=${ctx.env[k]}\n`;
+        }
+      }
+      return { code: 0, stdout, stderr: '' };
+    },
+
+    async export(args, ctx) {
+      const targetEnv = ctx.shell ? ctx.shell.env : ctx.env;
+      if (args.length === 0) {
+        const keys = Object.keys(targetEnv).sort();
+        let stdout = '';
+        for (const k of keys) {
+          stdout += `declare -x ${k}="${targetEnv[k]}"\n`;
+        }
+        return { code: 0, stdout, stderr: '' };
+      }
+
+      for (const arg of args) {
+        const eqIdx = arg.indexOf('=');
+        if (eqIdx !== -1) {
+          const key = arg.slice(0, eqIdx);
+          const val = arg.slice(eqIdx + 1);
+          ctx.env[key] = val;
+          if (ctx.shell) ctx.shell.env[key] = val;
+        } else {
+          const existing = ctx.shell && ctx.shell.env[arg] !== undefined ? ctx.shell.env[arg] : (ctx.env[arg] || '');
+          ctx.env[arg] = existing;
+          if (ctx.shell) ctx.shell.env[arg] = existing;
+        }
+      }
+
+      return { code: 0, stdout: '', stderr: '' };
+    },
+
+    async unset(args, ctx) {
+      for (const arg of args) {
+        delete ctx.env[arg];
+        if (ctx.shell) delete ctx.shell.env[arg];
+      }
+      return { code: 0, stdout: '', stderr: '' };
+    },
+
+    async which(args, ctx) {
+      if (args.length === 0) return { code: 1, stdout: '', stderr: '' };
+      let stdout = '';
+      let code = 0;
+
+      for (const cmd of args) {
+        if (COREUTILS[cmd]) {
+          stdout += `/usr/bin/${cmd}\n`;
+        } else {
+          code = 1;
+        }
+      }
+
+      return { code, stdout, stderr: '' };
+    },
+
+    async whoami(args, ctx) {
+      return { code: 0, stdout: `${ctx.env.USER || 'codelab'}\n`, stderr: '' };
+    },
+
+    async uname(args, ctx) {
+      const a = args.includes('-a');
+      if (a) {
+        return { code: 0, stdout: 'Linux code-lab 6.5.0-codelab #1 SMP PREEMPT x86_64 GNU/Linux\n', stderr: '' };
+      }
+      return { code: 0, stdout: 'Linux\n', stderr: '' };
+    },
+
+    async date(args, ctx) {
+      const now = new Date();
+      if (args.length > 0 && args[0].startsWith('+')) {
+        const fmt = args[0].slice(1);
+        const pad = (n) => String(n).padStart(2, '0');
+        const formatted = fmt
+          .replace(/%Y/g, now.getFullYear())
+          .replace(/%m/g, pad(now.getMonth() + 1))
+          .replace(/%d/g, pad(now.getDate()))
+          .replace(/%H/g, pad(now.getHours()))
+          .replace(/%M/g, pad(now.getMinutes()))
+          .replace(/%S/g, pad(now.getSeconds()))
+          .replace(/%s/g, Math.floor(now.getTime() / 1000));
+        return { code: 0, stdout: formatted + '\n', stderr: '' };
+      }
+      return { code: 0, stdout: now.toUTCString() + '\n', stderr: '' };
+    },
+
+    async sleep(args, ctx) {
+      const sec = parseFloat(args[0]) || 0;
+      await new Promise(r => setTimeout(r, Math.max(0, sec * 1000)));
+      return { code: 0, stdout: '', stderr: '' };
+    },
+
+    async true() {
+      return { code: 0, stdout: '', stderr: '' };
+    },
+
+    async false() {
+      return { code: 1, stdout: '', stderr: '' };
+    },
+
+    async clear() {
+      return { code: 0, stdout: '\x1b[2J\x1b[H', stderr: '' };
+    },
+
+    async history(args, ctx) {
+      if (args[0] === '-c') {
+        ctx.shell.history.length = 0;
+        return { code: 0, stdout: '', stderr: '' };
+      }
+      let stdout = '';
+      for (let i = 0; i < ctx.shell.history.length; i++) {
+        stdout += `${String(i + 1).padStart(5, ' ')}  ${ctx.shell.history[i]}\n`;
+      }
+      return { code: 0, stdout, stderr: '' };
+    },
+
+    async ps(args, ctx) {
+      let stdout = '  PID TTY          TIME CMD\n';
+      stdout += '    1 ?        00:00:00 sh\n';
+      for (const [jobId, job] of ctx.shell.jobs.entries()) {
+        if (job.status === 'Running') {
+          stdout += `${String(job.pid).padStart(5, ' ')} ?        00:00:00 ${job.command}\n`;
+        }
+      }
+      return { code: 0, stdout, stderr: '' };
+    },
+
+    async jobs(args, ctx) {
+      let stdout = '';
+      for (const [id, job] of ctx.shell.jobs.entries()) {
+        stdout += `[${id}]+  ${job.status}                       ${job.command} &\n`;
+      }
+      return { code: 0, stdout, stderr: '' };
+    },
+
+    async kill(args, ctx) {
+      if (args.length === 0) return { code: 1, stdout: '', stderr: 'kill: usage: kill [-s sigspec | -n signum | -sigspec] pid | jobspec ...\n' };
+      const target = args[args.length - 1];
+      const pid = parseInt(target.replace('%', ''), 10);
+      if (isNaN(pid)) {
+        return { code: 1, stdout: '', stderr: `kill: ${target}: arguments must be process or job IDs\n` };
+      }
+
+      let killedJob = false;
+      for (const [id, job] of ctx.shell.jobs.entries()) {
+        if (job.pid === pid || id === pid) {
+          job.status = 'Terminated';
+          if (typeof job.abort === 'function') job.abort();
+          killedJob = true;
+          break;
+        }
+      }
+
+      let killedPort = false;
+      if (ctx.shell.portTable) {
+        if (typeof ctx.shell.portTable.killProcess === 'function') {
+          killedPort = ctx.shell.portTable.killProcess(pid) || killedPort;
+        }
+        if (typeof ctx.shell.portTable.unregisterByPid === 'function') {
+          killedPort = ctx.shell.portTable.unregisterByPid(pid) || killedPort;
+        }
+        if (typeof ctx.shell.portTable.listServers === 'function' && typeof ctx.shell.portTable.unregisterServer === 'function') {
+          for (const s of ctx.shell.portTable.listServers()) {
+            if (s.pid !== undefined && String(s.pid) === String(pid)) {
+              if (s.server && typeof s.server.close === 'function') {
+                try { s.server.close(); } catch (_) {}
+              }
+              if (typeof s.stop === 'function') {
+                try { s.stop(); } catch (_) {}
+              }
+              ctx.shell.portTable.unregisterServer(s.port);
+              killedPort = true;
+            }
+          }
+        }
+      }
+
+      if (killedJob || killedPort) {
+        return { code: 0, stdout: '', stderr: '' };
+      }
+
+      return { code: 1, stdout: '', stderr: `kill: (${target}) - No such process\n` };
+    },
+
+    // -----------------------------------------------------------------------
+    // Additional Utilities: dirname, basename, seq, tee
+    // -----------------------------------------------------------------------
+    async dirname(args) {
+      const p = args[0] || '.';
+      return { code: 0, stdout: PosixPath.dirname(p) + '\n', stderr: '' };
+    },
+
+    async basename(args) {
+      const p = args[0] || '';
+      const ext = args[1] || '';
+      return { code: 0, stdout: PosixPath.basename(p, ext) + '\n', stderr: '' };
+    },
+
+    async seq(args) {
+      let first = 1;
+      let step = 1;
+      let last = 1;
+
+      if (args.length === 1) {
+        last = parseFloat(args[0]) || 1;
+      } else if (args.length === 2) {
+        first = parseFloat(args[0]) || 1;
+        last = parseFloat(args[1]) || 1;
+      } else if (args.length >= 3) {
+        first = parseFloat(args[0]) || 1;
+        step = parseFloat(args[1]) || 1;
+        last = parseFloat(args[2]) || 1;
+      }
+
+      let stdout = '';
+      for (let cur = first; step > 0 ? cur <= last : cur >= last; cur += step) {
+        stdout += `${cur}\n`;
+      }
+      return { code: 0, stdout, stderr: '' };
+    },
+
+    async tee(args, ctx) {
+      let append = false;
+      const files = [];
+
+      for (const a of args) {
+        if (a === '-a') append = true;
+        else if (!a.startsWith('-')) files.push(a);
+      }
+
+      const input = ctx.stdin || '';
+      for (const f of files) {
+        const abs = ctx.resolvePath(f);
+        if (ctx.vfs.existsSync(abs)) {
+          const st = ctx.vfs.statSync(abs);
+          if (st.isDirectory()) {
+            return { code: 1, stdout: '', stderr: `tee: ${f}: Is a directory\n` };
+          }
+        }
+        if (append) {
+          ctx.vfs.appendFileSync(abs, input);
+          ctx.emitMutation('change', abs);
+        } else {
+          ctx.vfs.writeFileSync(abs, input);
+          ctx.emitMutation('create', abs);
+        }
+      }
+
+      return { code: 0, stdout: input, stderr: '' };
+    },
+
+    // -----------------------------------------------------------------------
+    // Mock VCS Engine: git
+    // -----------------------------------------------------------------------
+    async git(args, ctx) {
+      const subcmd = args[0] || 'status';
+      const gitState = ctx.shell.gitState;
+
+      if (subcmd === 'status') {
+        let stdout = `On branch ${gitState.branch}\n`;
+        if (gitState.staged.size === 0) {
+          stdout += 'nothing to commit, working tree clean\n';
+        } else {
+          stdout += 'Changes to be committed:\n';
+          for (const s of gitState.staged) {
+            stdout += `\tmodified:   ${s}\n`;
+          }
+        }
+        return { code: 0, stdout, stderr: '' };
+      }
+
+      if (subcmd === 'branch') {
+        let stdout = '';
+        for (const b of gitState.branches) {
+          stdout += (b === gitState.branch ? `* ${b}\n` : `  ${b}\n`);
+        }
+        return { code: 0, stdout, stderr: '' };
+      }
+
+      if (subcmd === 'log') {
+        let stdout = '';
+        for (const c of gitState.commits) {
+          stdout += `commit ${c.hash}\n`;
+          stdout += `Author: ${c.author}\n`;
+          stdout += `Date:   ${c.date}\n\n`;
+          stdout += `    ${c.message}\n\n`;
+        }
+        return { code: 0, stdout, stderr: '' };
+      }
+
+      if (subcmd === 'add') {
+        const files = args.slice(1);
+        for (const f of files) gitState.staged.add(f);
+        return { code: 0, stdout: '', stderr: '' };
+      }
+
+      if (subcmd === 'commit') {
+        let msg = 'Commit changes';
+        const mIdx = args.indexOf('-m');
+        if (mIdx !== -1 && mIdx + 1 < args.length) msg = args[mIdx + 1];
+        const hash = Math.random().toString(16).slice(2, 9);
+        gitState.commits.unshift({
+          hash,
+          author: `${ctx.env.USER || 'codelab'} <dev@codelab.internal>`,
+          date: new Date().toUTCString(),
+          message: msg
+        });
+        const count = gitState.staged.size || 1;
+        gitState.staged.clear();
+        return { code: 0, stdout: `[${gitState.branch} ${hash}] ${msg}\n ${count} file changed\n`, stderr: '' };
+      }
+
+      if (subcmd === 'diff') {
+        return { code: 0, stdout: '', stderr: '' };
+      }
+
+      return { code: 0, stdout: `git: '${subcmd}' executed\n`, stderr: '' };
+    },
+
+    // -----------------------------------------------------------------------
+    // Interactive Help: help
+    // -----------------------------------------------------------------------
+    async help(args, ctx) {
+      let stdout = 'CodeLab POSIX Shell & UNIX Coreutils (Pure-JS Engine)\n\n';
+      stdout += 'Filesystem:\n';
+      stdout += '  ls [-l -a -la -lh]     List directory contents\n';
+      stdout += '  cd [dir]               Change current directory\n';
+      stdout += '  pwd                    Print working directory\n';
+      stdout += '  mkdir [-p] [dir...]    Create directories\n';
+      stdout += '  touch [file...]        Update timestamp or create empty file\n';
+      stdout += '  rm [-r -f] [path...]   Remove files or directories\n';
+      stdout += '  cp [-r] [src] [dst]    Copy files or directories\n';
+      stdout += '  mv [src] [dst]         Move / rename files\n';
+      stdout += '  stat [file...]         Display file status\n';
+      stdout += '  tree [-a -L n] [dir]   Visual directory hierarchy\n\n';
+      stdout += 'Text & Search:\n';
+      stdout += '  cat [-n] [file...]     Concatenate and print files\n';
+      stdout += '  head [-n n] [file...]  Output first lines\n';
+      stdout += '  tail [-n n] [file...]  Output last lines\n';
+      stdout += '  grep [-n -i -r -v -E]  Search lines matching regex\n';
+      stdout += '  find [path] [-name pat] Search files in directory tree\n';
+      stdout += '  wc [-l -w -c]          Count lines, words, bytes\n';
+      stdout += '  sort [-r -n -u]        Sort lines\n';
+      stdout += '  uniq [-c -d -u]        Filter repeated lines\n';
+      stdout += '  sed [-i] s/pat/rep/g   Stream editor\n';
+      stdout += '  awk [-F sep] "{print}" Pattern scanning language\n';
+      stdout += '  cut [-d sep -f list]   Cut out selected fields\n';
+      stdout += '  tr [-d] set1 set2      Translate or delete characters\n';
+      stdout += '  diff [-u] f1 f2        Compare files line by line\n\n';
+      stdout += 'System & Shell:\n';
+      stdout += '  echo [-n -e] [args...] Print arguments\n';
+      stdout += '  printf format [args..] Formatted output\n';
+      stdout += '  env, export, unset     Environment variable manipulation\n';
+      stdout += '  which, whoami, uname   System identification\n';
+      stdout += '  date, sleep, clear     Date, delay, terminal screen control\n';
+      stdout += '  history, ps, jobs, kill Process and job management\n';
+      stdout += '  git [status diff log]  Built-in version control\n';
+      stdout += '  node, bun, npm, npx, bunx CLI runtime and package shims\n';
+      stdout += '  ports, curl            Port table inspection & HTTP requests\n';
+      return { code: 0, stdout, stderr: '' };
+    },
+
+    // -----------------------------------------------------------------------
+    // Language Runtimes & Package Managers: node, bun, npm, npx, bunx
+    // -----------------------------------------------------------------------
+    async node(args, ctx) {
+      if (!executeInVirtualRuntime) {
+        return { code: 1, stdout: '', stderr: 'node: Virtual runtime engine is not available\n' };
+      }
+      if (args.length === 0) {
+        return { code: 0, stdout: 'Welcome to Node.js v20.10.0.\nType ".help" for more information.\n', stderr: '' };
+      }
+
+      if (args[0] === '-e' || args[0] === '--eval') {
+        const code = args[1] || '';
+        const res = await executeInVirtualRuntime({
+          mode: 'repl',
+          replCode: code,
+          printReplResult: false,
+          vfs: ctx.vfs,
+          activePortTable: ctx.shell.portTable,
+          pid: ctx.pid,
+          isBackground: ctx.isBackground
+        });
+        return { code: res.ok ? 0 : (res.exitCode || 1), stdout: res.stdout, stderr: res.stderr };
+      }
+
+      if (args[0] === '-p' || args[0] === '--print') {
+        const code = args[1] || '';
+        const res = await executeInVirtualRuntime({
+          mode: 'repl',
+          replCode: code,
+          printReplResult: true,
+          vfs: ctx.vfs,
+          activePortTable: ctx.shell.portTable,
+          pid: ctx.pid,
+          isBackground: ctx.isBackground
+        });
+        return { code: res.ok ? 0 : (res.exitCode || 1), stdout: res.stdout, stderr: res.stderr };
+      }
+
+      if (args[0] === '--test') {
+        const testFile = args[1] ? ctx.resolvePath(args[1]) : null;
+        let filesToRun = [];
+        if (testFile) {
+          filesToRun.push(testFile);
+        } else {
+          const findTests = (dir) => {
+            if (!ctx.vfs.existsSync(dir)) return;
+            for (const item of ctx.vfs.readdirSync(dir)) {
+              const full = PosixPath.join(dir, item);
+              const st = ctx.vfs.statSync(full);
+              if (st.isDirectory() && item !== 'node_modules') {
+                findTests(full);
+              } else if (item.endsWith('.test.js') || item.endsWith('.test.ts') || item === 'test.js') {
+                filesToRun.push(full);
+              }
+            }
+          };
+          findTests(ctx.cwd);
+        }
+
+        let combinedOut = '';
+        let combinedErr = '';
+        let allOk = true;
+        for (const f of filesToRun) {
+          const res = await executeInVirtualRuntime({
+            mode: 'test',
+            entry: f,
+            vfs: ctx.vfs,
+            activePortTable: ctx.shell.portTable,
+            pid: ctx.pid,
+            isBackground: ctx.isBackground
+          });
+          combinedOut += res.stdout;
+          combinedErr += res.stderr;
+          if (!res.ok) allOk = false;
+        }
+        return { code: allOk ? 0 : 1, stdout: combinedOut, stderr: combinedErr };
+      }
+
+      const scriptFile = ctx.resolvePath(args[0]);
+      if (!ctx.vfs.existsSync(scriptFile)) {
+        return { code: 1, stdout: '', stderr: `node: cannot find module '${args[0]}'\n` };
+      }
+
+      const scriptArgs = args.slice(1);
+      const res = await executeInVirtualRuntime({
+        mode: 'run',
+        entry: scriptFile,
+        argv: ['node', scriptFile, ...scriptArgs],
+        vfs: ctx.vfs,
+        activePortTable: ctx.shell.portTable,
+        pid: ctx.pid,
+        isBackground: ctx.isBackground
+      });
+      return { code: res.ok ? 0 : (res.exitCode || 1), stdout: res.stdout, stderr: res.stderr };
+    },
+
+    async bun(args, ctx) {
+      if (args.length === 0) {
+        return { code: 0, stdout: 'Bun v1.1.0\n', stderr: '' };
+      }
+
+      const sub = args[0];
+
+      if (sub === 'init') {
+        const pkgPath = PosixPath.join(ctx.cwd, 'package.json');
+        const dirName = PosixPath.basename(ctx.cwd) || 'app';
+        if (!ctx.vfs.existsSync(pkgPath)) {
+          ctx.vfs.writeFileSync(pkgPath, JSON.stringify({
+            name: dirName,
+            module: 'index.ts',
+            type: 'module',
+            devDependencies: {
+              '@types/bun': 'latest'
+            },
+            peerDependencies: {
+              typescript: '^5.0.0'
+            }
+          }, null, 2) + '\n');
+          if (typeof ctx.emitMutation === 'function') ctx.emitMutation('create', pkgPath);
+        }
+        const indexTsPath = PosixPath.join(ctx.cwd, 'index.ts');
+        if (!ctx.vfs.existsSync(indexTsPath)) {
+          ctx.vfs.writeFileSync(indexTsPath, 'console.log("Hello via Bun!");\n');
+          if (typeof ctx.emitMutation === 'function') ctx.emitMutation('create', indexTsPath);
+        }
+        const tsconfigPath = PosixPath.join(ctx.cwd, 'tsconfig.json');
+        if (!ctx.vfs.existsSync(tsconfigPath)) {
+          ctx.vfs.writeFileSync(tsconfigPath, JSON.stringify({
+            compilerOptions: {
+              lib: ['ESNext'],
+              module: 'esnext',
+              target: 'esnext',
+              moduleResolution: 'bundler',
+              moduleDetection: 'force',
+              allowImportingTsExtensions: true,
+              noEmit: true,
+              composite: true,
+              strict: true,
+              downlevelIteration: true,
+              skipLibCheck: true,
+              jsx: 'react-jsx',
+              allowSyntheticDefaultImports: true,
+              forceConsistentCasingInFileNames: true,
+              allowJs: true,
+              types: ['bun-types']
+            }
+          }, null, 2) + '\n');
+          if (typeof ctx.emitMutation === 'function') ctx.emitMutation('create', tsconfigPath);
+        }
+        return { code: 0, stdout: 'Done! A package.json file was created in ' + ctx.cwd + '\n', stderr: '' };
+      }
+
+      if (sub === 'add') {
+        const pkgs = args.slice(1).filter(a => !a.startsWith('-'));
+        for (const p of pkgs) {
+          installPackage(p, ctx);
+        }
+        return { code: 0, stdout: `saved ${pkgs.length} package(s)\n`, stderr: '' };
+      }
+
+      if (sub === 'remove' || sub === 'rm') {
+        const pkgs = args.slice(1).filter(a => !a.startsWith('-'));
+        for (const p of pkgs) {
+          uninstallPackage(p, ctx);
+        }
+        return { code: 0, stdout: `removed ${pkgs.length} package(s)\n`, stderr: '' };
+      }
+
+      if (sub === 'pm') {
+        if (args[1] === 'ls') {
+          return { code: 0, stdout: listDependencies(ctx), stderr: '' };
+        }
+        return { code: 0, stdout: '', stderr: '' };
+      }
+
+      if (sub === '-e') {
+        const code = args[1] || '';
+        const res = await executeInVirtualRuntime({
+          mode: 'repl',
+          replCode: code,
+          printReplResult: false,
+          vfs: ctx.vfs,
+          activePortTable: ctx.shell.portTable,
+          pid: ctx.pid,
+          isBackground: ctx.isBackground
+        });
+        return { code: res.ok ? 0 : (res.exitCode || 1), stdout: res.stdout, stderr: res.stderr };
+      }
+
+      if (sub === 'test') {
+        const testTarget = args[1] ? ctx.resolvePath(args[1]) : null;
+        let filesToRun = [];
+        if (testTarget) {
+          filesToRun.push(testTarget);
+        } else {
+          const findTests = (dir) => {
+            if (!ctx.vfs.existsSync(dir)) return;
+            for (const item of ctx.vfs.readdirSync(dir)) {
+              const full = PosixPath.join(dir, item);
+              const st = ctx.vfs.statSync(full);
+              if (st.isDirectory() && item !== 'node_modules') {
+                findTests(full);
+              } else if (item.endsWith('.test.js') || item.endsWith('.test.ts')) {
+                filesToRun.push(full);
+              }
+            }
+          };
+          findTests(ctx.cwd);
+        }
+
+        let combinedOut = '';
+        let combinedErr = '';
+        let allOk = true;
+        for (const f of filesToRun) {
+          const res = await executeInVirtualRuntime({
+            mode: 'test',
+            entry: f,
+            vfs: ctx.vfs,
+            activePortTable: ctx.shell.portTable,
+            pid: ctx.pid,
+            isBackground: ctx.isBackground
+          });
+          combinedOut += res.stdout;
+          combinedErr += res.stderr;
+          if (!res.ok) allOk = false;
+        }
+        return { code: allOk ? 0 : 1, stdout: combinedOut, stderr: combinedErr };
+      }
+
+      if (sub === 'run') {
+        const target = args[1];
+        if (!target) {
+          return { code: 0, stdout: listDependencies(ctx), stderr: '' };
+        }
+        const resolved = ctx.resolvePath(target);
+        if (ctx.vfs.existsSync(resolved)) {
+          const scriptArgs = args.slice(2);
+          const res = await executeInVirtualRuntime({
+            mode: 'run',
+            entry: resolved,
+            argv: ['bun', resolved, ...scriptArgs],
+            vfs: ctx.vfs,
+            activePortTable: ctx.shell.portTable,
+            pid: ctx.pid,
+            isBackground: ctx.isBackground
+          });
+          return { code: res.ok ? 0 : (res.exitCode || 1), stdout: res.stdout, stderr: res.stderr };
+        }
+        const { data: pkgData } = readPackageJson(ctx.vfs, ctx.cwd);
+        if (pkgData.scripts && pkgData.scripts[target]) {
+          return await runPackageScript(target, args.slice(2), ctx);
+        }
+        return { code: 1, stdout: '', stderr: `error: Script or file not found "${target}"\n` };
+      }
+
+      const resolved = ctx.resolvePath(sub);
+      if (ctx.vfs.existsSync(resolved)) {
+        const scriptArgs = args.slice(1);
+        const res = await executeInVirtualRuntime({
+          mode: 'run',
+          entry: resolved,
+          argv: ['bun', resolved, ...scriptArgs],
+          vfs: ctx.vfs,
+          activePortTable: ctx.shell.portTable,
+          pid: ctx.pid,
+          isBackground: ctx.isBackground
+        });
+        return { code: res.ok ? 0 : (res.exitCode || 1), stdout: res.stdout, stderr: res.stderr };
+      }
+
+      const { data: pkgData } = readPackageJson(ctx.vfs, ctx.cwd);
+      if (pkgData.scripts && pkgData.scripts[sub]) {
+        return await runPackageScript(sub, args.slice(1), ctx);
+      }
+
+      return { code: 1, stdout: '', stderr: `bun: file or command not found: ${sub}\n` };
+    },
+
+    async npm(args, ctx) {
+      if (args.length === 0) {
+        return { code: 0, stdout: 'npm v10.2.0\n', stderr: '' };
+      }
+      const sub = args[0];
+
+      if (sub === 'init') {
+        const pkgPath = PosixPath.join(ctx.cwd, 'package.json');
+        if (!ctx.vfs.existsSync(pkgPath)) {
+          ctx.vfs.writeFileSync(pkgPath, JSON.stringify({
+            name: PosixPath.basename(ctx.cwd) || 'app',
+            version: '1.0.0',
+            description: '',
+            main: 'index.js',
+            scripts: {
+              test: 'echo "Error: no test specified" && exit 1'
+            },
+            keywords: [],
+            author: '',
+            license: 'ISC'
+          }, null, 2) + '\n');
+          if (typeof ctx.emitMutation === 'function') ctx.emitMutation('create', pkgPath);
+        }
+        return { code: 0, stdout: 'Wrote to ' + pkgPath + '\n', stderr: '' };
+      }
+
+      if (sub === 'i' || sub === 'install' || sub === 'add') {
+        const pkgs = args.slice(1).filter(a => !a.startsWith('-'));
+        if (pkgs.length === 0) {
+          const { data: pkgData } = readPackageJson(ctx.vfs, ctx.cwd);
+          for (const p of Object.keys(pkgData.dependencies || {})) {
+            installPackage(p, ctx);
+          }
+          return { code: 0, stdout: 'up to date\n', stderr: '' };
+        }
+        for (const p of pkgs) {
+          installPackage(p, ctx);
+        }
+        return { code: 0, stdout: `added ${pkgs.length} package(s) in 0.1s\n`, stderr: '' };
+      }
+
+      if (sub === 'uninstall' || sub === 'remove' || sub === 'rm') {
+        const pkgs = args.slice(1).filter(a => !a.startsWith('-'));
+        for (const p of pkgs) {
+          uninstallPackage(p, ctx);
+        }
+        return { code: 0, stdout: `removed ${pkgs.length} package(s) in 0.1s\n`, stderr: '' };
+      }
+
+      if (sub === 'list' || sub === 'ls') {
+        return { code: 0, stdout: listDependencies(ctx), stderr: '' };
+      }
+
+      if (sub === 'run' || sub === 'run-script') {
+        const scriptName = args[1];
+        if (!scriptName) {
+          return { code: 1, stdout: '', stderr: 'npm ERR! missing script name\n' };
+        }
+        return await runPackageScript(scriptName, args.slice(2), ctx);
+      }
+
+      if (sub === 'test') {
+        return await runPackageScript('test', args.slice(1), ctx);
+      }
+
+      const { data: pkgData } = readPackageJson(ctx.vfs, ctx.cwd);
+      if (pkgData.scripts && pkgData.scripts[sub]) {
+        return await runPackageScript(sub, args.slice(1), ctx);
+      }
+
+      return { code: 1, stdout: '', stderr: `npm ERR! Unknown command: "${sub}"\n` };
+    },
+
+    async npx(args, ctx) {
+      if (args.length === 0) {
+        return { code: 1, stdout: '', stderr: 'npx: missing command\n' };
+      }
+      const cmd = args[0];
+      const cmdArgs = args.slice(1);
+      const binPath = PosixPath.join('/workspace/node_modules/.bin', cmd);
+      if (ctx.vfs.existsSync(binPath)) {
+        return await ctx.commands.node([binPath, ...cmdArgs], ctx);
+      }
+      return await ctx.shell.execute(cmd + (cmdArgs.length ? ' ' + cmdArgs.join(' ') : ''));
+    },
+
+    async bunx(args, ctx) {
+      return await this.npx(args, ctx);
+    },
+
+    // -----------------------------------------------------------------------
+    // Port Table & HTTP Inspection: ports, curl
+    // -----------------------------------------------------------------------
+    async ports(args, ctx) {
+      const portTable = ctx.shell && ctx.shell.portTable;
+      if (!portTable || typeof portTable.listServers !== 'function') {
+        return { code: 0, stdout: 'PORT     PID     NAME\n', stderr: '' };
+      }
+      const servers = portTable.listServers();
+      let out = 'PORT     PID     NAME\n';
+      for (const s of servers) {
+        const portStr = String(s.port || '').padEnd(8, ' ');
+        const pidStr = String(s.pid !== undefined ? s.pid : '-').padEnd(8, ' ');
+        const nameStr = s.name || s.type || 'server';
+        out += `${portStr} ${pidStr} ${nameStr}\n`;
+      }
+      return { code: 0, stdout: out, stderr: '' };
+    },
+
+    async curl(args, ctx) {
+      let method = null;
+      const headers = {};
+      let data = null;
+      let includeHeaders = false;
+      let url = null;
+
+      for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        if (arg === '-X' || arg === '--request') {
+          method = args[++i];
+        } else if (arg === '-H' || arg === '--header') {
+          const h = args[++i] || '';
+          const colon = h.indexOf(':');
+          if (colon !== -1) {
+            headers[h.slice(0, colon).trim().toLowerCase()] = h.slice(colon + 1).trim();
+          }
+        } else if (arg === '-d' || arg === '--data' || arg === '--data-raw') {
+          data = args[++i];
+          if (!method) method = 'POST';
+        } else if (arg === '-i' || arg === '--include' || arg === '-v' || arg === '--verbose') {
+          includeHeaders = true;
+        } else if (arg === '-s' || arg === '--silent') {
+          // silent
+        } else if (!arg.startsWith('-')) {
+          url = arg;
+        }
+      }
+
+      if (!url) {
+        return { code: 1, stdout: '', stderr: 'curl: no URL specified!\n' };
+      }
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'http://' + url;
+      }
+      if (!method) method = 'GET';
+
+      const portTable = (ctx.shell && ctx.shell.portTable) || null;
+      let resp = null;
+      let lastErr = null;
+
+      for (let attempt = 0; attempt < 25; attempt++) {
+        try {
+          if (portTable) {
+            resp = await portTable.dispatchRequest(url, {
+              method,
+              headers,
+              body: data
+            });
+            lastErr = null;
+            break;
+          } else {
+            resp = await fetch(url, {
+              method,
+              headers,
+              body: data
+            });
+            lastErr = null;
+            break;
+          }
+        } catch (err) {
+          lastErr = err;
+          await new Promise(r => setTimeout(r, 15));
+        }
+      }
+
+      if (!resp) {
+        return { code: 7, stdout: '', stderr: `curl: (7) Failed to connect to host: ${lastErr ? lastErr.message : 'Connection refused'}\n` };
+      }
+
+      const bodyText = typeof resp.text === 'function' ? await resp.text() : String(resp.body || '');
+      let output = '';
+
+      if (includeHeaders) {
+        output += `HTTP/1.1 ${resp.status || 200} ${resp.statusText || 'OK'}\r\n`;
+        if (resp.headers) {
+          if (typeof resp.headers.forEach === 'function') {
+            resp.headers.forEach((val, key) => {
+              output += `${key}: ${val}\r\n`;
+            });
+          } else if (typeof resp.headers.entries === 'function') {
+            for (const [k, v] of resp.headers.entries()) {
+              output += `${k}: ${v}\r\n`;
+            }
+          } else {
+            for (const [k, v] of Object.entries(resp.headers)) {
+              output += `${k}: ${v}\r\n`;
+            }
+          }
+        }
+        output += '\r\n';
+      }
+
+      output += bodyText;
+      return { code: 0, stdout: output, stderr: '' };
+    }
+  };
+
+  // =========================================================================
+  // 8. POSIX SHELL EXECUTION ENGINE
+  // =========================================================================
+  class PosixShell {
+    constructor(options = {}) {
+      this.options = options;
+      this.portTable = options.portTable || (typeof createVirtualPortTable === 'function' ? createVirtualPortTable() : null);
+      this.vfs = options.vfs || createFallbackVfs();
+      this.env = Object.assign({
+        PATH: '/usr/local/bin:/usr/bin:/bin',
+        PWD: '/workspace',
+        HOME: '/home/user',
+        USER: 'codelab',
+        SHELL: '/bin/sh',
+        TERM: 'xterm-256color',
+        '?': '0'
+      }, options.env || {});
+      this.cwd = this.env.PWD || '/workspace';
+      this.history = [];
+      this.jobs = new Map();
+      this.nextJobId = 1;
+      this.nextPid = 100;
+      this.commands = Object.assign({}, COREUTILS, options.commands || {});
+
+      this.gitState = {
+        branch: 'main',
+        branches: ['main'],
+        staged: new Set(),
+        commits: [
+          {
+            hash: 'a1b2c3d',
+            author: 'CodeLab Developer <dev@codelab.internal>',
+            date: new Date().toUTCString(),
+            message: 'Initial project commit'
+          }
+        ]
+      };
+    }
+
+    resolvePath(p) {
+      if (!p) return this.cwd;
+      return PosixPath.resolve(this.cwd, p);
+    }
+
+    _emitVfsMutation(type, absPath) {
+      if (!this.vfs) return;
+      const evt = { type, path: absPath, timestamp: Date.now() };
+      if (typeof this.vfs.emit === 'function') {
+        this.vfs.emit('mutation', evt);
+        this.vfs.emit('change', evt);
+      } else if (typeof this.vfs._emit === 'function') {
+        this.vfs._emit('mutation', evt);
+        this.vfs._emit('change', evt);
+      }
+      if (typeof this.options.onFsChange === 'function') {
+        this.options.onFsChange(evt);
+      }
+    }
+
+    // Evaluate Word token to string (with variable expansion & command substitution)
+    async evaluateWord(wordToken, env) {
+      if (!wordToken) return '';
+      if (typeof wordToken === 'string') return wordToken;
+
+      let result = '';
+      for (const seg of wordToken.segments) {
+        if (seg.type === 'literal' || seg.type === 'single_quoted') {
+          result += seg.value;
+        } else if (seg.type === 'variable') {
+          result += this._expandVariable(seg.name, env);
+        } else if (seg.type === 'subshell') {
+          result += await this._executeSubshell(seg.command, env);
+        } else if (seg.type === 'double_quoted') {
+          for (const part of seg.parts) {
+            if (part.type === 'literal') result += part.value;
+            else if (part.type === 'variable') result += this._expandVariable(part.name, env);
+            else if (part.type === 'subshell') result += await this._executeSubshell(part.command, env);
+          }
+        }
+      }
+      return result;
+    }
+
+    // Evaluate Word token to argument list (includes glob expansion against VFS)
+    async evaluateWordToArgs(wordToken, env) {
+      const raw = await this.evaluateWord(wordToken, env);
+      if (wordToken.hasWildcard) {
+        return expandGlob(raw, this.cwd, this.vfs);
+      }
+      return [raw];
+    }
+
+    _expandVariable(name, env) {
+      if (name === '?') return env['?'] !== undefined ? String(env['?']) : '0';
+      if (name === '$') return '1';
+      if (name === 'PWD') return this.cwd;
+      if (name === 'OLDPWD') return env.OLDPWD || this.cwd;
+
+      // Handle parameter expansion defaults: ${VAR:-default} or ${VAR:=default}
+      if (name.includes(':-')) {
+        const [k, def] = name.split(':-');
+        return env[k] || def || '';
+      }
+      if (name.includes('=')) {
+        const [k, def] = name.split('=');
+        if (!env[k]) env[k] = def;
+        return env[k];
+      }
+
+      return env[name] !== undefined ? String(env[name]) : '';
+    }
+
+    async _executeSubshell(commandStr, env) {
+      const subShell = new PosixShell({
+        ...this.options,
+        vfs: this.vfs,
+        portTable: this.portTable,
+        env: { ...env, PWD: this.cwd }
+      });
+      subShell.cwd = this.cwd;
+      const res = await subShell.execute(commandStr);
+      // POSIX removes trailing newlines from command substitution
+      return res.stdout.replace(/\r?\n+$/, '');
+    }
+
+    // Main execute entrypoint
+    async execute(commandLine, execOptions = {}) {
+      const trimmed = (commandLine || '').trim();
+      if (!trimmed || trimmed.startsWith('#')) {
+        return { code: 0, stdout: '', stderr: '' };
+      }
+
+      this.history.push(trimmed);
+
+      const cwd = execOptions.cwd ? this.resolvePath(execOptions.cwd) : this.cwd;
+      this.cwd = cwd;
+      this.env.PWD = cwd;
+
+      let currentEnv = Object.assign({}, this.env, execOptions.env || {});
+      const ast = parseShellCommand(trimmed);
+      let combinedStdout = '';
+      let combinedStderr = '';
+      let lastCode = 0;
+
+      for (const item of ast.items) {
+        if (item.background) {
+          const pid = this.nextPid++;
+          const jobId = this.nextJobId++;
+          const job = {
+            id: jobId,
+            pid,
+            command: trimmed,
+            status: 'Running',
+            startTime: Date.now()
+          };
+          this.jobs.set(jobId, job);
+          if (typeof this.options.onJobStart === 'function') this.options.onJobStart(job);
+
+          // Run in background promise
+          this._executeAstNode(item.node, { ...execOptions, env: Object.assign({}, this.env, currentEnv), cwd: this.cwd, pid, isBackground: true })
+            .then(res => {
+              if (job.status !== 'Terminated') {
+                job.status = 'Done';
+                job.exitCode = res.code;
+                if (typeof this.options.onJobEnd === 'function') this.options.onJobEnd(job);
+              }
+            })
+            .catch(err => {
+              if (job.status !== 'Terminated') {
+                job.status = 'Failed';
+                job.error = err;
+                if (typeof this.options.onJobEnd === 'function') this.options.onJobEnd(job);
+              }
+            });
+
+          const bgMsg = `[${jobId}] ${pid}\n`;
+          combinedStdout += bgMsg;
+          lastCode = 0;
+          if (execOptions.onStdout) execOptions.onStdout(bgMsg);
+        } else {
+          const runContext = { ...execOptions, env: Object.assign({}, this.env, currentEnv), cwd: this.cwd };
+          const res = await this._executeAstNode(item.node, runContext);
+          combinedStdout += res.stdout || '';
+          combinedStderr += res.stderr || '';
+          lastCode = res.code !== undefined ? res.code : 0;
+          this.env['?'] = String(lastCode);
+          Object.assign(currentEnv, this.env);
+        }
+      }
+
+      return { code: lastCode, stdout: combinedStdout, stderr: combinedStderr };
+    }
+
+    async _executeAstNode(node, context) {
+      if (!node) return { code: 0, stdout: '', stderr: '' };
+
+      if (node.type === 'Logical') {
+        const leftRes = await this._executeAstNode(node.left, context);
+        if (node.op === '&&') {
+          if (leftRes.code === 0) {
+            const nextContext = {
+              ...context,
+              cwd: this.cwd,
+              env: Object.assign({}, this.env)
+            };
+            const rightRes = await this._executeAstNode(node.right, nextContext);
+            return {
+              code: rightRes.code,
+              stdout: leftRes.stdout + rightRes.stdout,
+              stderr: leftRes.stderr + rightRes.stderr
+            };
+          }
+          return leftRes;
+        } else if (node.op === '||') {
+          if (leftRes.code !== 0) {
+            const nextContext = {
+              ...context,
+              cwd: this.cwd,
+              env: Object.assign({}, this.env)
+            };
+            const rightRes = await this._executeAstNode(node.right, nextContext);
+            return {
+              code: rightRes.code,
+              stdout: leftRes.stdout + rightRes.stdout,
+              stderr: leftRes.stderr + rightRes.stderr
+            };
+          }
+          return leftRes;
+        }
+      }
+
+      if (node.type === 'Pipeline') {
+        return this._executePipeline(node, context);
+      }
+
+      if (node.type === 'Command') {
+        return this._executeSimpleCommand(node, context);
+      }
+
+      return { code: 0, stdout: '', stderr: '' };
+    }
+
+    async _executePipeline(pipelineNode, context) {
+      const commands = pipelineNode.commands;
+      let currentStdin = context.stdin || '';
+      let combinedStderr = '';
+      let lastResult = { code: 0, stdout: '', stderr: '' };
+
+      for (let i = 0; i < commands.length; i++) {
+        const cmd = commands[i];
+        const isLast = (i === commands.length - 1);
+
+        const cmdContext = {
+          ...context,
+          stdin: currentStdin,
+          // Only forward to external onStdout if it's the last command and not redirected
+          onStdout: isLast ? context.onStdout : null,
+          onStderr: context.onStderr
+        };
+
+        const res = await this._executeSimpleCommand(cmd, cmdContext);
+        currentStdin = res.stdout;
+        combinedStderr += res.stderr;
+        lastResult = res;
+      }
+
+      return {
+        code: lastResult.code,
+        stdout: lastResult.stdout,
+        stderr: combinedStderr
+      };
+    }
+
+    async _executeSimpleCommand(cmdNode, context) {
+      // 1. Process local environment assignments
+      const cmdEnv = Object.assign({}, this.env, context.env);
+      for (const envAssign of cmdNode.envVars) {
+        const val = await this.evaluateWord(envAssign.token, cmdEnv);
+        const eqIdx = val.indexOf('=');
+        if (eqIdx !== -1) {
+          const k = val.slice(0, eqIdx);
+          const v = val.slice(eqIdx + 1);
+          cmdEnv[k] = v;
+          if (!cmdNode.name) {
+            this.env[k] = v; // persistent if assignment-only
+            context.env[k] = v;
+          }
+        }
+      }
+
+      if (!cmdNode.name) {
+        Object.assign(context.env, this.env);
+        return { code: 0, stdout: '', stderr: '' };
+      }
+
+      // 2. Evaluate command name and arguments
+      const cmdName = await this.evaluateWord(cmdNode.name, cmdEnv);
+      const args = [];
+      for (const argToken of cmdNode.args) {
+        const expanded = await this.evaluateWordToArgs(argToken, cmdEnv);
+        args.push(...expanded);
+      }
+
+      // 3. Process input redirection (<, 0<)
+      let effectiveStdin = context.stdin || '';
+      for (const red of cmdNode.redirects) {
+        if (red.type === '<') {
+          const target = await this.evaluateWord(red.target, cmdEnv);
+          const absTarget = this.resolvePath(target);
+          if (!this.vfs.existsSync(absTarget)) {
+            return { code: 1, stdout: '', stderr: `shell: ${target}: No such file or directory\n` };
+          }
+          try {
+            effectiveStdin = this.vfs.readFileSync(absTarget, 'utf8');
+          } catch (err) {
+            return { code: 1, stdout: '', stderr: `shell: ${target}: ${err.message}\n` };
+          }
+        }
+      }
+
+      // 4. Validate output redirections and setup file descriptors
+      let fd1 = { type: 'stdout' };
+      let fd2 = { type: 'stderr' };
+
+      for (const red of cmdNode.redirects) {
+        if (red.type === '<') continue;
+        if (red.type === '>' || red.type === '>>' || red.type === '&>') {
+          const target = await this.evaluateWord(red.target, cmdEnv);
+          const abs = this.resolvePath(target);
+          const parentDir = PosixPath.dirname(abs);
+          if (!this.vfs.existsSync(parentDir)) {
+            return { code: 1, stdout: '', stderr: `shell: ${target}: No such file or directory\n` };
+          }
+          const parentSt = this.vfs.statSync(parentDir);
+          if (!parentSt.isDirectory()) {
+            return { code: 1, stdout: '', stderr: `shell: ${target}: Not a directory\n` };
+          }
+          if (this.vfs.existsSync(abs) && this.vfs.statSync(abs).isDirectory()) {
+            return { code: 1, stdout: '', stderr: `shell: ${target}: Is a directory\n` };
+          }
+
+          if (red.type === '>') {
+            this.vfs.writeFileSync(abs, '');
+            this._emitVfsMutation('create', abs);
+            const dest = { type: 'file', path: abs, append: true };
+            if (red.sourceFd === 2) {
+              fd2 = dest;
+            } else {
+              fd1 = dest;
+            }
+          } else if (red.type === '>>') {
+            if (!this.vfs.existsSync(abs)) {
+              this.vfs.writeFileSync(abs, '');
+              this._emitVfsMutation('create', abs);
+            }
+            const dest = { type: 'file', path: abs, append: true };
+            if (red.sourceFd === 2) {
+              fd2 = dest;
+            } else {
+              fd1 = dest;
+            }
+          } else if (red.type === '&>') {
+            this.vfs.writeFileSync(abs, '');
+            this._emitVfsMutation('create', abs);
+            const dest = { type: 'file', path: abs, append: true };
+            fd1 = dest;
+            fd2 = dest;
+          }
+        } else if (red.type === '>&') {
+          if (red.sourceFd === 2 && red.targetFd === 1) {
+            fd2 = { ...fd1 };
+          } else if (red.sourceFd === 1 && red.targetFd === 2) {
+            fd1 = { ...fd2 };
+          }
+        }
+      }
+
+      // 5. Command execution dispatch
+      const cmdCtx = {
+        vfs: this.vfs,
+        shell: this,
+        portTable: this.portTable,
+        cwd: this.cwd,
+        env: cmdEnv,
+        stdin: effectiveStdin,
+        pid: context.pid || 1000,
+        isBackground: Boolean(context.isBackground),
+        resolvePath: (p) => this.resolvePath(p),
+        emitMutation: (type, p) => this._emitVfsMutation(type, p)
+      };
+
+      let res;
+      if (this.commands[cmdName]) {
+        res = await this.commands[cmdName](args, cmdCtx);
+        if (cmdName === 'export' || cmdName === 'unset' || cmdName === 'cd') {
+          for (const k of Object.keys(context.env)) {
+            if (!(k in this.env)) delete context.env[k];
+          }
+          Object.assign(context.env, this.env);
+          context.cwd = this.cwd;
+        }
+      } else if (typeof this.options.onProcessSpawn === 'function') {
+        const spawned = await this.options.onProcessSpawn(cmdName, args, {
+          cwd: this.cwd,
+          env: cmdEnv,
+          stdin: effectiveStdin
+        });
+        if (spawned !== undefined && spawned !== null) {
+          res = spawned;
+        } else {
+          res = { code: 127, stdout: '', stderr: `shell: ${cmdName}: command not found\n` };
+        }
+      } else {
+        res = { code: 127, stdout: '', stderr: `shell: ${cmdName}: command not found\n` };
+      }
+
+      // 6. Route output according to file descriptors
+      let stdoutOut = '';
+      let stderrOut = '';
+
+      const routeOutput = (fd, text) => {
+        if (!text) return;
+        if (fd.type === 'stdout') {
+          stdoutOut += text;
+        } else if (fd.type === 'stderr') {
+          stderrOut += text;
+        } else if (fd.type === 'file') {
+          this.vfs.appendFileSync(fd.path, text);
+          this._emitVfsMutation('change', fd.path);
+        }
+      };
+
+      routeOutput(fd1, res.stdout || '');
+      routeOutput(fd2, res.stderr || '');
+
+      if (context.onStdout && stdoutOut) context.onStdout(stdoutOut);
+      if (context.onStderr && stderrOut) context.onStderr(stderrOut);
+
+      return {
+        code: res.code !== undefined ? res.code : 0,
+        stdout: stdoutOut,
+        stderr: stderrOut
+      };
+    }
+  }
+
+  function createPosixShell(options = {}) {
+    return new PosixShell(options);
+  }
+
+  // Return public API
+  return {
+    createPosixShell,
+    parseShellCommand,
+    tokenizeShell,
+    PosixShell,
+    COREUTILS,
+    PosixPath,
+    expandGlob,
+    createVirtualPortTable
+  };
+});
+
+  })();
+
+  const CodeLabShell = root.CodeLabShell;
+
+  // --- Module 3: PTY Terminal Engine ---
+  (function () {
+/**
+ * @innovatorved/code-lab - Pure-JS PTY Terminal Emulator Component
+ *
+ * High-fidelity, self-contained terminal emulator engine providing:
+ * - Inline prompt with cwd awareness (codelab:${cwd}$ )
+ * - Interactive REPL sub-mode (> ) with .exit and Ctrl+D/Ctrl+C
+ * - Character-by-character editing with cursor navigation:
+ *   ArrowLeft, ArrowRight, Home, End, Ctrl+A, Ctrl+E, Ctrl+U, Ctrl+K, Backspace, Delete
+ * - Tab auto-completion for built-in commands and VFS filesystem paths
+ * - History navigation (ArrowUp, ArrowDown)
+ * - ANSI 16/256 SGR escape sequence translation to styled Geist HTML spans
+ * - Headless DOM safety (defensive guards for Node.js test environments)
+ *
+ * (C) 2026 InnovatorVed / CodeLab. MIT License.
+ */
+
+(function (root, factory) {
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    define([], factory);
+  } else {
+    const exports = factory();
+    root.CodeLabTerminal = exports;
+    root.PTYTerminalEngine = exports.PTYTerminalEngine;
+    root.createTerminal = exports.createTerminal;
+    root.ansiToHtml = exports.ansiToHtml;
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  const ANSI_CODE_MAP = {
+    1: 'cl-ansi-bold',
+    2: 'cl-ansi-dim',
+    3: 'cl-ansi-italic',
+    4: 'cl-ansi-underline',
+    30: 'cl-ansi-black',
+    31: 'cl-ansi-red',
+    32: 'cl-ansi-green',
+    33: 'cl-ansi-yellow',
+    34: 'cl-ansi-blue',
+    35: 'cl-ansi-magenta',
+    36: 'cl-ansi-cyan',
+    37: 'cl-ansi-white',
+    90: 'cl-ansi-gray',
+    91: 'cl-ansi-bright-red',
+    92: 'cl-ansi-bright-green',
+    93: 'cl-ansi-bright-yellow',
+    94: 'cl-ansi-bright-blue',
+    95: 'cl-ansi-bright-magenta',
+    96: 'cl-ansi-bright-cyan',
+    97: 'cl-ansi-bright-white',
+    40: 'cl-ansi-bg-black',
+    41: 'cl-ansi-bg-red',
+    42: 'cl-ansi-bg-green',
+    43: 'cl-ansi-bg-yellow',
+    44: 'cl-ansi-bg-blue',
+    45: 'cl-ansi-bg-magenta',
+    46: 'cl-ansi-bg-cyan',
+    47: 'cl-ansi-bg-white'
+  };
+
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function ansiToHtml(str) {
+    if (!str) return '';
+    const s = String(str);
+    if (!s.includes('\x1b[')) {
+      return escapeHtml(s);
+    }
+
+    // Strip non-color cursor control sequences
+    const cleaned = s.replace(/\x1b\[[0-9;]*[A-LN-Za-z]/g, '');
+
+    const tokenRegex = /\x1b\[([0-9;]*)m/g;
+    let result = '';
+    let lastIdx = 0;
+    let openSpans = 0;
+    let match;
+
+    while ((match = tokenRegex.exec(cleaned)) !== null) {
+      const rawText = cleaned.slice(lastIdx, match.index);
+      if (rawText) result += escapeHtml(rawText);
+      lastIdx = tokenRegex.lastIndex;
+
+      const codes = match[1] ? match[1].split(';').map(Number) : [0];
+      for (const code of codes) {
+        if (code === 0) {
+          while (openSpans > 0) {
+            result += '</span>';
+            openSpans--;
+          }
+        } else {
+          const cls = ANSI_CODE_MAP[code];
+          if (cls) {
+            result += `<span class="${cls}">`;
+            openSpans++;
+          }
+        }
+      }
+    }
+
+    const remaining = cleaned.slice(lastIdx);
+    if (remaining) result += escapeHtml(remaining);
+    while (openSpans > 0) {
+      result += '</span>';
+      openSpans--;
+    }
+    return result;
+  }
+
+  class PTYTerminalEngine {
+    constructor(container, options = {}) {
+      this.container = container || null;
+      this.options = options;
+      this.logs = Array.isArray(options.logs) ? options.logs : [];
+      this.cwd = options.cwd || '/workspace';
+      this.replMode = Boolean(options.replMode);
+      this.promptOverride = options.prompt || null;
+      this.history = Array.isArray(options.history) ? options.history : [];
+      this.historyIdx = -1;
+      this.savedBuffer = '';
+      this.buffer = '';
+      this.cursor = 0;
+      this.onCommand = typeof options.onCommand === 'function' ? options.onCommand : null;
+      this.getCompletions = typeof options.getCompletions === 'function' ? options.getCompletions : null;
+      this.onKey = typeof options.onKey === 'function' ? options.onKey : null;
+
+      this._mounted = false;
+      this._listeners = [];
+
+      if (this.container) {
+        this.mount(this.container);
+      }
+    }
+
+    getPrompt() {
+      if (this.promptOverride) return this.promptOverride;
+      if (this.replMode) return '> ';
+      const cwd = this.cwd || '/workspace';
+      return `codelab:${cwd}$ `;
+    }
+
+    setPrompt(p) {
+      this.promptOverride = p;
+      this.updateActiveLine();
+    }
+
+    setCwd(cwd) {
+      this.cwd = cwd;
+      this.updateActiveLine();
+    }
+
+    setReplMode(enabled) {
+      this.replMode = Boolean(enabled);
+      this.updateActiveLine();
+    }
+
+    write(data, type = 'stdout') {
+      const text = String(data);
+      this.logs.push({ text, type });
+      this.render();
+    }
+
+    writeln(data, type = 'stdout') {
+      this.write(String(data) + '\n', type);
+    }
+
+    clear() {
+      this.logs.length = 0;
+      this.render();
+    }
+
+    getHistory() {
+      return [...this.history];
+    }
+
+    focus() {
+      if (!this.container) return;
+      const input = this.container.querySelector('#cl-repl-input');
+      if (input && typeof input.focus === 'function') {
+        try { input.focus(); } catch (_) {}
+      }
+    }
+
+    mount(container) {
+      this.container = container;
+      this._mounted = true;
+      this.render();
+      this._bindEvents();
+    }
+
+    destroy() {
+      for (const { target, type, handler } of this._listeners) {
+        if (target && typeof target.removeEventListener === 'function') {
+          try { target.removeEventListener(type, handler); } catch (_) {}
+        }
+      }
+      this._listeners = [];
+      this._mounted = false;
+    }
+
+    _addListener(target, type, handler) {
+      if (target && typeof target.addEventListener === 'function') {
+        target.addEventListener(type, handler);
+        this._listeners.push({ target, type, handler });
+      }
+    }
+
+    _bindEvents() {
+      if (!this.container) return;
+      const termSurface = this.container.querySelector('#cl-terminal-surface') || this.container;
+      const input = this.container.querySelector('#cl-repl-input');
+      const form = this.container.querySelector('#cl-repl-form');
+
+      if (termSurface) {
+        this._addListener(termSurface, 'click', (e) => {
+          if (e && e.target === input) return;
+          const hasSelection = typeof window !== 'undefined' && window.getSelection && String(window.getSelection());
+          if (!hasSelection) this.focus();
+        });
+      }
+
+      if (input) {
+        this._addListener(input, 'keydown', (e) => this.handleKeyDown(e));
+        this._addListener(input, 'input', () => {
+          if (input.value !== this.buffer) {
+            this.buffer = input.value;
+            this.cursor = this.buffer.length;
+            this.updateActiveLine();
+          }
+        });
+      }
+
+      if (form) {
+        this._addListener(form, 'submit', (e) => {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          this.submitLine();
+        });
+      }
+    }
+
+    handleKeyDown(e) {
+      if (!e) return;
+      if (this.onKey) {
+        try {
+          const res = this.onKey(e);
+          if (res === false) return;
+        } catch (_) {}
+      }
+
+      const key = e.key;
+      const isCtrl = e.ctrlKey || e.metaKey;
+
+      if (key === 'ArrowLeft') {
+        if (e.preventDefault) e.preventDefault();
+        if (this.cursor > 0) {
+          this.cursor--;
+          this.updateActiveLine();
+        }
+        return;
+      }
+
+      if (key === 'ArrowRight') {
+        if (e.preventDefault) e.preventDefault();
+        if (this.cursor < this.buffer.length) {
+          this.cursor++;
+          this.updateActiveLine();
+        }
+        return;
+      }
+
+      if (key === 'Home' || (isCtrl && (key === 'a' || key === 'A'))) {
+        if (e.preventDefault) e.preventDefault();
+        this.cursor = 0;
+        this.updateActiveLine();
+        return;
+      }
+
+      if (key === 'End' || (isCtrl && (key === 'e' || key === 'E'))) {
+        if (e.preventDefault) e.preventDefault();
+        this.cursor = this.buffer.length;
+        this.updateActiveLine();
+        return;
+      }
+
+      if (isCtrl && (key === 'u' || key === 'U')) {
+        if (e.preventDefault) e.preventDefault();
+        this.buffer = this.buffer.slice(this.cursor);
+        this.cursor = 0;
+        this.updateActiveLine();
+        return;
+      }
+
+      if (isCtrl && (key === 'k' || key === 'K')) {
+        if (e.preventDefault) e.preventDefault();
+        this.buffer = this.buffer.slice(0, this.cursor);
+        this.updateActiveLine();
+        return;
+      }
+
+      if (key === 'Backspace') {
+        if (e.preventDefault) e.preventDefault();
+        if (this.cursor > 0) {
+          this.buffer = this.buffer.slice(0, this.cursor - 1) + this.buffer.slice(this.cursor);
+          this.cursor--;
+          this.updateActiveLine();
+        }
+        return;
+      }
+
+      if (key === 'Delete') {
+        if (e.preventDefault) e.preventDefault();
+        if (this.cursor < this.buffer.length) {
+          this.buffer = this.buffer.slice(0, this.cursor) + this.buffer.slice(this.cursor + 1);
+          this.updateActiveLine();
+        }
+        return;
+      }
+
+      if (isCtrl && (key === 'l' || key === 'L')) {
+        if (e.preventDefault) e.preventDefault();
+        this.clear();
+        return;
+      }
+
+      if (isCtrl && (key === 'c' || key === 'C')) {
+        if (e.preventDefault) e.preventDefault();
+        this.logs.push({ type: 'system', text: `${this.getPrompt()}${this.buffer}^C` });
+        this.buffer = '';
+        this.cursor = 0;
+        this.historyIdx = -1;
+        if (this.replMode) {
+          this.replMode = false;
+        }
+        this.render();
+        return;
+      }
+
+      if (isCtrl && (key === 'd' || key === 'D')) {
+        if (this.buffer === '') {
+          if (e.preventDefault) e.preventDefault();
+          if (this.replMode) {
+            this.logs.push({ type: 'system', text: `${this.getPrompt()}.exit` });
+            this.replMode = false;
+            this.render();
+            return;
+          }
+        }
+      }
+
+      if (key === 'ArrowUp') {
+        if (e.preventDefault) e.preventDefault();
+        if (!this.history.length) return;
+        if (this.historyIdx === -1) {
+          this.savedBuffer = this.buffer;
+          this.historyIdx = this.history.length - 1;
+        } else if (this.historyIdx > 0) {
+          this.historyIdx--;
+        }
+        this.buffer = this.history[this.historyIdx] || '';
+        this.cursor = this.buffer.length;
+        this.updateActiveLine();
+        return;
+      }
+
+      if (key === 'ArrowDown') {
+        if (e.preventDefault) e.preventDefault();
+        if (this.historyIdx !== -1) {
+          if (this.historyIdx < this.history.length - 1) {
+            this.historyIdx++;
+            this.buffer = this.history[this.historyIdx] || '';
+          } else {
+            this.historyIdx = -1;
+            this.buffer = this.savedBuffer || '';
+          }
+          this.cursor = this.buffer.length;
+          this.updateActiveLine();
+        }
+        return;
+      }
+
+      if (key === 'Tab') {
+        if (e.preventDefault) e.preventDefault();
+        this.autoComplete();
+        return;
+      }
+
+      if (key === 'Enter') {
+        if (e.preventDefault) e.preventDefault();
+        this.submitLine();
+        return;
+      }
+
+      // Printable character
+      if (key && key.length === 1 && !isCtrl && !e.altKey) {
+        this.buffer = this.buffer.slice(0, this.cursor) + key + this.buffer.slice(this.cursor);
+        this.cursor++;
+        this.updateActiveLine();
+      }
+    }
+
+    autoComplete() {
+      if (!this.getCompletions) return;
+      const res = this.getCompletions(this.buffer, this.cursor);
+      if (!res || !Array.isArray(res.matches) || res.matches.length === 0) return;
+
+      const matches = res.matches;
+      if (matches.length === 1) {
+        const match = matches[0];
+        const isDir = match.endsWith('/');
+        const appendChar = isDir ? '' : ' ';
+        const before = this.buffer.slice(0, res.tokenStart);
+        const after = this.buffer.slice(this.cursor);
+        this.buffer = before + match + appendChar + after;
+        this.cursor = before.length + match.length + appendChar.length;
+        this.updateActiveLine();
+      } else {
+        // Find longest common prefix
+        let lcp = matches[0];
+        for (let i = 1; i < matches.length; i++) {
+          let j = 0;
+          while (j < lcp.length && j < matches[i].length && lcp[j] === matches[i][j]) {
+            j++;
+          }
+          lcp = lcp.slice(0, j);
+        }
+
+        if (lcp.length > res.token.length) {
+          const before = this.buffer.slice(0, res.tokenStart);
+          const after = this.buffer.slice(this.cursor);
+          this.buffer = before + lcp + after;
+          this.cursor = before.length + lcp.length;
+        }
+
+        // Print candidate matches
+        this.logs.push({ type: 'system', text: `${this.getPrompt()}${this.buffer}` });
+        this.logs.push({ type: 'stdout', text: matches.join('  ') });
+        this.render();
+      }
+    }
+
+    submitLine() {
+      const line = this.buffer;
+      this.buffer = '';
+      this.cursor = 0;
+      this.historyIdx = -1;
+
+      if (line.trim()) {
+        if (this.history[this.history.length - 1] !== line.trim()) {
+          this.history.push(line.trim());
+        }
+      }
+
+      if (this.onCommand) {
+        this.onCommand(line);
+      }
+    }
+
+    updateActiveLine() {
+      if (!this.container) return;
+      const input = this.container.querySelector('#cl-repl-input');
+      if (input && input.value !== this.buffer) {
+        input.value = this.buffer;
+      }
+      const lineEl = this.container.querySelector('#cl-pty-active-line');
+      if (!lineEl) return;
+
+      const prompt = this.getPrompt();
+      const before = this.buffer.slice(0, this.cursor);
+      const cursorChar = this.cursor < this.buffer.length ? this.buffer[this.cursor] : ' ';
+      const after = this.cursor < this.buffer.length ? this.buffer.slice(this.cursor + 1) : '';
+
+      lineEl.innerHTML = `<span class="codelab-pty__prompt">${escapeHtml(prompt)}</span><span class="codelab-pty__before">${escapeHtml(before)}</span><span class="codelab-pty__cursor blink">${escapeHtml(cursorChar)}</span><span class="codelab-pty__after">${escapeHtml(after)}</span>`;
+    }
+
+    render() {
+      if (!this.container) return;
+      const logsHtml = this.logs
+        .map(item => `<div class="codelab-log-line ${escapeHtml(item.type || '')}">${ansiToHtml(item.text)}</div>`)
+        .join('');
+
+      const prompt = this.getPrompt();
+      const before = this.buffer.slice(0, this.cursor);
+      const cursorChar = this.cursor < this.buffer.length ? this.buffer[this.cursor] : ' ';
+      const after = this.cursor < this.buffer.length ? this.buffer.slice(this.cursor + 1) : '';
+
+      this.container.innerHTML = `
+        <div class="codelab-terminal" id="cl-terminal-surface" tabindex="0">
+          <div class="codelab-terminal__log" id="cl-terminal-log">${logsHtml}</div>
+          <div class="codelab-pty__active-line" id="cl-pty-active-line">
+            <span class="codelab-pty__prompt">${escapeHtml(prompt)}</span><span class="codelab-pty__before">${escapeHtml(before)}</span><span class="codelab-pty__cursor blink">${escapeHtml(cursorChar)}</span><span class="codelab-pty__after">${escapeHtml(after)}</span>
+          </div>
+          <form class="codelab-repl" id="cl-repl-form" style="position:absolute;opacity:0;pointer-events:none;height:0;overflow:hidden;">
+            <input type="text" class="codelab-repl__input" id="cl-repl-input" autocomplete="off" spellcheck="false" aria-label="Terminal command input" value="${escapeHtml(this.buffer)}">
+          </form>
+        </div>
+      `;
+
+      if (typeof this.container.scrollTop === 'number' && typeof this.container.scrollHeight === 'number') {
+        this.container.scrollTop = this.container.scrollHeight;
+      }
+
+      this._bindEvents();
+    }
+  }
+
+  function createTerminal(container, options = {}) {
+    return new PTYTerminalEngine(container, options);
+  }
+
+  return {
+    PTYTerminalEngine,
+    createTerminal,
+    ansiToHtml,
+    escapeHtml,
+    ANSI_CODE_MAP
+  };
+});
+
+  })();
+
+  const CodeLabTerminal = root.CodeLabTerminal;
+
+  // --- Module 4: IDE Workbench & Web Component ---
   (function () {
 /* ═══════════════════════════════════════════════════════════════════════════
    @innovatorved/code-lab — Interactive Monaco IDE Workbench & Guided Lab UI
@@ -6268,6 +11645,36 @@ if (typeof module !== 'undefined' && module.exports) {
 
 (function (root) {
   'use strict';
+
+  let terminalModule = null;
+  let shellModule = null;
+  let runtimeModule = null;
+  if (typeof require === 'function') {
+    try { terminalModule = require('./terminal.js'); } catch (_) {}
+    try { shellModule = require('./shell.js'); } catch (_) {}
+    try { runtimeModule = require('./runtime.js'); } catch (_) {}
+  }
+  const CodeLabTerminal = (root && root.CodeLabTerminal) || terminalModule || {};
+  const CodeLabShell = (root && root.CodeLabShell) || shellModule || {};
+  const createPTYTerminalEngine = CodeLabTerminal.PTYTerminalEngine || (root && root.PTYTerminalEngine);
+  const ansiToHtml = CodeLabTerminal.ansiToHtml || (root && root.ansiToHtml);
+  const createPosixShell = CodeLabShell.createPosixShell || (root && root.createPosixShell);
+  const createVirtualPortTable = (root && root.createVirtualPortTable) ||
+    (root && root.CodeLabRuntime && root.CodeLabRuntime.createVirtualPortTable) ||
+    (shellModule && shellModule.createVirtualPortTable) ||
+    (runtimeModule && runtimeModule.createVirtualPortTable) || null;
+
+  function findCommonPrefix(arr) {
+    if (!arr || arr.length === 0) return '';
+    let prefix = arr[0];
+    for (let i = 1; i < arr.length; i++) {
+      while (!arr[i].startsWith(prefix)) {
+        prefix = prefix.slice(0, -1);
+        if (!prefix) return '';
+      }
+    }
+    return prefix;
+  }
 
   const MONACO_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs';
   const STORAGE_PREFIX = 'sd-codelab-v1:';
@@ -6819,7 +12226,11 @@ declare module 'buffer' { export { Buffer }; }
     search: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
     diff: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><path d="M8 8H4v8h4"/><path d="M16 8h4v8h-4"/></svg>',
     command: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>',
-    download: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
+    download: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+    refresh: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
+    send: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+    activity: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    radio: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>'
   };
 
   let _workbenchInstanceCounter = 0;
@@ -6949,14 +12360,53 @@ declare module 'buffer' { export { Buffer }; }
         this.activeFile = null;
       }
 
-      // Execution state
+      // Execution & shell state
+      this.cwd = '/workspace';
+      this.replHistory = [];
+      this.replHistoryIdx = -1;
       this.lastTestResults = [];
       this.terminalLogs = [
-        { type: 'system', text: `[CodeLab] Virtual Node.js Runtime ready (${this.title}).` },
-        { type: 'system', text: `Type "help", "node demo.js", "node test.js", "ls", or any JS/TS expression below.` }
+        { type: 'system', text: `[CodeLab] Virtual Node.js v22 Runtime ready (${this.title}).` },
+        { type: 'system', text: `Type "help", "ls", "pwd", "cat <file>", "node demo.js", "node test.js", or any JS/TS expression.` }
       ];
       this.lastFsSnapshot = [];
       this.lastHttpTrace = [];
+
+      // Milestone 4: Ports, HTTP Client, Network Trace, PTY state
+      this.portTable = options.portTable || (typeof createVirtualPortTable === 'function' ? createVirtualPortTable() : null);
+      this.inRepl = false;
+      this._ptyInputBeforeCursor = '';
+      this._ptyInputAfterCursor = '';
+
+      this.httpClientState = {
+        method: 'GET',
+        url: 'http://localhost:3000/',
+        headers: 'Content-Type: application/json',
+        body: '',
+        activeResponseTab: 'preview',
+        lastResponse: null,
+        loading: false
+      };
+
+      this.networkFilter = {
+        search: '',
+        method: 'ALL',
+        status: 'ALL',
+        selectedTraceId: null
+      };
+
+      this.ptyEngine = null;
+      if (typeof createPTYTerminalEngine === 'function') {
+        try {
+          this.ptyEngine = new createPTYTerminalEngine({
+            cwd: this.cwd,
+            onCommand: (cmd) => this._handleReplCommand(cmd)
+          });
+        } catch (_) {}
+      }
+
+      this.shell = null;
+      this._initShell();
 
       // Editor instances
       this.monaco = null;
@@ -6971,6 +12421,26 @@ declare module 'buffer' { export { Buffer }; }
         for (const plugin of options.plugins) {
           this.use(plugin);
         }
+      }
+    }
+
+    _initShell() {
+      if (typeof createPosixShell === 'function') {
+        try {
+          this.shell = createPosixShell({
+            cwd: this.cwd,
+            files: this.files,
+            portTable: this.portTable,
+            env: {
+              TERM: 'xterm-256color',
+              COLORTERM: 'truecolor',
+              USER: 'codelab',
+              HOME: '/home/codelab',
+              NODE_ENV: 'development',
+              PATH: '/usr/local/bin:/usr/bin:/bin:/workspace/node_modules/.bin'
+            }
+          });
+        } catch (_) {}
       }
     }
 
@@ -7277,15 +12747,20 @@ declare module 'buffer' { export { Buffer }; }
                 <span class="codelab-btn__kbd">⌘↵</span>
               </button>
               <span class="codelab-toolbar__sep" aria-hidden="true"></span>
-              <button type="button" class="codelab-btn codelab-btn--icon" data-cl-action="toggle-guide" title="Toggle Guide Panel" aria-label="Toggle Guide Panel">
+              <button type="button" class="codelab-btn codelab-btn--icon" id="cl-toggle-guide-btn" data-cl-action="toggle-guide" title="Toggle Guide Panel" aria-label="Toggle Guide Panel">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
               </button>
-              <button type="button" class="codelab-btn codelab-btn--icon" data-cl-action="toggle-drawer" title="Toggle Terminal Drawer" aria-label="Toggle Terminal Drawer">
+              <button type="button" class="codelab-btn codelab-btn--icon" id="cl-toggle-drawer-btn" data-cl-action="toggle-drawer" title="Toggle Terminal Drawer" aria-label="Toggle Terminal Drawer">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15h18"/></svg>
               </button>
-              <button type="button" class="codelab-btn codelab-btn--icon" data-cl-action="toggle-fullscreen" title="Toggle Fullscreen IDE (Esc to exit)" aria-label="Toggle Fullscreen IDE">
+              <button type="button" class="codelab-btn codelab-btn--icon" id="cl-fullscreen-btn" data-cl-action="toggle-fullscreen" title="Toggle Fullscreen IDE (Esc to exit)" aria-label="Toggle Fullscreen IDE">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
               </button>
+              ${this.onClose ? `
+                <button type="button" class="codelab-btn codelab-btn--icon codelab-btn--close-ide" id="cl-close-ide-btn" data-cl-action="close-lab" title="${escapeHtml(this.backLabel || 'Close IDE')}" aria-label="Close IDE">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              ` : ''}
             </div>
           </div>
 
@@ -7358,6 +12833,16 @@ declare module 'buffer' { export { Buffer }; }
                     <button type="button" role="tab" aria-selected="${this.drawerTab === 'terminal'}" class="codelab-drawer__tab ${this.drawerTab === 'terminal' ? 'active' : ''}" data-cl-drawertab="terminal">
                       ${CL_ICONS.terminal}
                       <span>Terminal &amp; REPL</span>
+                    </button>
+                    <button type="button" role="tab" aria-selected="${this.drawerTab === 'ports'}" class="codelab-drawer__tab ${this.drawerTab === 'ports' ? 'active' : ''}" data-cl-drawertab="ports">
+                      ${CL_ICONS.radio}
+                      <span>Ports</span>
+                      <span class="codelab-drawer__pill" id="cl-ports-pill">${this.portTable && typeof this.portTable.listServers === 'function' ? this.portTable.listServers().length : 0} open</span>
+                    </button>
+                    <button type="button" role="tab" aria-selected="${this.drawerTab === 'network'}" class="codelab-drawer__tab ${this.drawerTab === 'network' ? 'active' : ''}" data-cl-drawertab="network">
+                      ${CL_ICONS.activity}
+                      <span>Network</span>
+                      <span class="codelab-drawer__pill" id="cl-network-pill">${(this.lastHttpTrace || []).length} reqs</span>
                     </button>
                     <button type="button" role="tab" aria-selected="${this.drawerTab === 'inspector'}" class="codelab-drawer__tab ${this.drawerTab === 'inspector' ? 'active' : ''}" data-cl-drawertab="inspector">
                       ${CL_ICONS.database}
@@ -7812,17 +13297,20 @@ declare module 'buffer' { export { Buffer }; }
       });
 
       // Explorer container drop target (for moving to workspace root)
-      explorerEl.addEventListener('dragover', ev => {
-        ev.preventDefault();
-      });
-      explorerEl.addEventListener('drop', ev => {
-        if (ev.target.closest && ev.target.closest('.codelab-folder-item')) return;
-        ev.preventDefault();
-        const fileToMove = this._draggedFile || (ev.dataTransfer && ev.dataTransfer.getData('text/plain'));
-        if (fileToMove) {
-          this.moveFile(fileToMove, '');
-        }
-      });
+      if (!explorerEl._dragBound) {
+        explorerEl._dragBound = true;
+        explorerEl.addEventListener('dragover', ev => {
+          ev.preventDefault();
+        });
+        explorerEl.addEventListener('drop', ev => {
+          if (ev.target.closest && ev.target.closest('.codelab-folder-item')) return;
+          ev.preventDefault();
+          const fileToMove = this._draggedFile || (ev.dataTransfer && ev.dataTransfer.getData('text/plain'));
+          if (fileToMove) {
+            this.moveFile(fileToMove, '');
+          }
+        });
+      }
 
       // Tree inline creation input listeners
       const treeInput = explorerEl.querySelector('#cl-tree-create-input');
@@ -7864,11 +13352,11 @@ declare module 'buffer' { export { Buffer }; }
         const isActive = f === this.activeFile;
         const ext = f.endsWith('.ts') ? 'ts' : f.endsWith('.js') ? 'js' : f.endsWith('.json') ? 'json' : f.endsWith('.md') ? 'md' : 'txt';
         return `
-          <button type="button" role="tab" aria-selected="${isActive}" class="codelab-tab ${isActive ? 'active' : ''}" data-cl-file="${escapeHtml(f)}" data-tab-file="${escapeHtml(f)}">
+          <div role="tab" tabindex="0" aria-selected="${isActive}" class="codelab-tab ${isActive ? 'active' : ''}" data-cl-file="${escapeHtml(f)}" data-tab-file="${escapeHtml(f)}">
             <span class="codelab-tab__ext codelab-tab__ext--${ext}">${ext.toUpperCase()}</span>
-            <span>${escapeHtml(f)}</span>
-            <span class="codelab-tab__close" data-action="close-tab" data-cl-file="${escapeHtml(f)}" title="Close ${escapeHtml(f)}" role="button" aria-label="Close ${escapeHtml(f)}">×</span>
-          </button>
+            <span class="codelab-tab__label">${escapeHtml(f)}</span>
+            <button type="button" class="codelab-tab__close" data-action="close-tab" data-cl-file="${escapeHtml(f)}" title="Close ${escapeHtml(f)}" aria-label="Close ${escapeHtml(f)}">×</button>
+          </div>
         `;
       }).join('');
 
@@ -8233,6 +13721,8 @@ declare module 'buffer' { export { Buffer }; }
       const bodyEl = this.container.querySelector('#cl-drawer-body');
       const testPill = this.container.querySelector('#cl-test-pill');
       const vfsPill = this.container.querySelector('#cl-vfs-pill');
+      const portsPill = this.container.querySelector('#cl-ports-pill');
+      const networkPill = this.container.querySelector('#cl-network-pill');
       if (!bodyEl) return;
 
       // Update drawer tab active state
@@ -8253,6 +13743,16 @@ declare module 'buffer' { export { Buffer }; }
           testPill.textContent = `${passed}/${total} Passed`;
           testPill.className = `codelab-drawer__pill ${passed === total ? 'pass' : 'fail'}`;
         }
+      }
+      if (portsPill) {
+        const portCount = (this.portTable && typeof this.portTable.listServers === 'function')
+          ? this.portTable.listServers().length
+          : 0;
+        portsPill.textContent = `${portCount} open`;
+      }
+      if (networkPill) {
+        const netCount = (this.lastHttpTrace || []).length;
+        networkPill.textContent = `${netCount} reqs`;
       }
       if (vfsPill) {
         const diskCount = this.lastFsSnapshot.length;
@@ -8302,31 +13802,148 @@ declare module 'buffer' { export { Buffer }; }
       }
 
       if (this.drawerTab === 'terminal') {
-        bodyEl.innerHTML = `
-          <div class="codelab-terminal">
-            <div class="codelab-terminal__log" id="cl-terminal-log">
-              ${this.terminalLogs.map(item => `
-                <div class="codelab-log-line ${escapeHtml(item.type || '')}">${escapeHtml(item.text)}</div>
-              `).join('')}
-            </div>
-            <form class="codelab-repl" id="cl-repl-form">
-              <span class="codelab-repl__prompt">codelab$</span>
-              <input type="text" class="codelab-repl__input" id="cl-repl-input" placeholder="node demo.js | node test.js | ls | cat <file> | or any JS/TS expression…" autocomplete="off" spellcheck="false" aria-label="REPL command input">
-            </form>
-          </div>
-        `;
+        const logsHtml = this.terminalLogs
+          .map(item => {
+            const html = ansiToHtml ? ansiToHtml(item.text || '') : escapeHtml(item.text || '');
+            return `<div class="codelab-log-line ${escapeHtml(item.type || '')}">${html}</div>`;
+          })
+          .join('');
+        const cwdShort = (this.cwd || '/workspace').replace(/^\/workspace\/?/, '') || '~';
+        const promptLabel = this.inRepl ? '> ' : (cwdShort === '~' ? 'codelab$' : `codelab:${cwdShort}$`);
+        bodyEl.innerHTML = `<div class="codelab-terminal" id="cl-terminal-surface" tabindex="0"><div class="codelab-terminal__log" id="cl-terminal-log">${logsHtml}</div><div class="codelab-pty__active-line" id="cl-pty-active-line"><span class="codelab-pty__prompt">${escapeHtml(promptLabel)} </span><span class="codelab-pty__before">${escapeHtml(this._ptyInputBeforeCursor || '')}</span><span class="codelab-pty__cursor blink">&#x2588;</span><span class="codelab-pty__after">${escapeHtml(this._ptyInputAfterCursor || '')}</span></div><form class="codelab-repl" id="cl-repl-form" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;"><span class="codelab-repl__prompt">${escapeHtml(promptLabel)}</span><input type="text" class="codelab-repl__input" id="cl-repl-input" placeholder="ls, pwd, cat file.js, node demo.js, node test.js, or JS/TS expression…" autocomplete="off" spellcheck="false" aria-label="REPL command input"></form></div>`;
         bodyEl.scrollTop = bodyEl.scrollHeight;
+        const termSurface = bodyEl.querySelector('#cl-terminal-surface');
+        const input = bodyEl.querySelector('#cl-repl-input');
+        if (termSurface && input) {
+          termSurface.addEventListener('click', e => {
+            if (e.target === input) return;
+            const sel = typeof window !== 'undefined' && window.getSelection ? String(window.getSelection()) : '';
+            if (!sel && typeof input.focus === 'function') input.focus();
+          });
+        }
+        if (input) {
+          input.value = (this._ptyInputBeforeCursor || '') + (this._ptyInputAfterCursor || '');
+          input.addEventListener('input', () => {
+            const val = input.value || '';
+            const pos = (input.selectionStart !== undefined && input.selectionStart !== null) ? input.selectionStart : val.length;
+            this._ptyInputBeforeCursor = val.slice(0, pos);
+            this._ptyInputAfterCursor = val.slice(pos);
+            this._updatePtyActiveLine();
+          });
+          input.addEventListener('keydown', e => {
+            if (e.key === 'Tab') {
+              e.preventDefault();
+              this._handlePtyTabCompletion(input);
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              if (!this.replHistory.length) return;
+              if (this.replHistoryIdx < 0) this.replHistoryIdx = this.replHistory.length - 1;
+              else if (this.replHistoryIdx > 0) this.replHistoryIdx--;
+              const histVal = this.replHistory[this.replHistoryIdx] || '';
+              input.value = histVal;
+              this._ptyInputBeforeCursor = histVal;
+              this._ptyInputAfterCursor = '';
+              this._updatePtyActiveLine();
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              if (!this.replHistory.length || this.replHistoryIdx < 0) return;
+              if (this.replHistoryIdx < this.replHistory.length - 1) {
+                this.replHistoryIdx++;
+                const histVal = this.replHistory[this.replHistoryIdx] || '';
+                input.value = histVal;
+                this._ptyInputBeforeCursor = histVal;
+                this._ptyInputAfterCursor = '';
+                this._updatePtyActiveLine();
+              } else {
+                this.replHistoryIdx = -1;
+                input.value = '';
+                this._ptyInputBeforeCursor = '';
+                this._ptyInputAfterCursor = '';
+                this._updatePtyActiveLine();
+              }
+            } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+              e.preventDefault();
+              if (this.inRepl) {
+                this.inRepl = false;
+                this.terminalLogs.push({ type: 'stdout', text: '^C\nExiting REPL...' });
+              } else {
+                this.terminalLogs.push({ type: 'stdout', text: `${promptLabel} ^C` });
+              }
+              input.value = '';
+              this._ptyInputBeforeCursor = '';
+              this._ptyInputAfterCursor = '';
+              this._renderDrawerBody();
+              const nextInput = this.container.querySelector('#cl-repl-input');
+              if (nextInput && typeof nextInput.focus === 'function') nextInput.focus();
+            } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+              e.preventDefault();
+              if (this.inRepl) {
+                this.inRepl = false;
+                this.terminalLogs.push({ type: 'stdout', text: 'Exiting REPL...' });
+                this._renderDrawerBody();
+                const nextInput = this.container.querySelector('#cl-repl-input');
+                if (nextInput && typeof nextInput.focus === 'function') nextInput.focus();
+              }
+            } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+              e.preventDefault();
+              this.terminalLogs = [];
+              this._renderDrawerBody();
+              const nextInput = this.container.querySelector('#cl-repl-input');
+              if (nextInput && typeof nextInput.focus === 'function') nextInput.focus();
+            } else if (e.ctrlKey && e.key.toLowerCase() === 'u') {
+              e.preventDefault();
+              this._ptyInputBeforeCursor = '';
+              input.value = this._ptyInputAfterCursor || '';
+              this._updatePtyActiveLine();
+            } else if (e.ctrlKey && e.key.toLowerCase() === 'k') {
+              e.preventDefault();
+              this._ptyInputAfterCursor = '';
+              input.value = this._ptyInputBeforeCursor || '';
+              this._updatePtyActiveLine();
+            } else if (e.ctrlKey && e.key.toLowerCase() === 'a') {
+              e.preventDefault();
+              this._ptyInputAfterCursor = (this._ptyInputBeforeCursor || '') + (this._ptyInputAfterCursor || '');
+              this._ptyInputBeforeCursor = '';
+              if (input && typeof input.setSelectionRange === 'function') input.setSelectionRange(0, 0);
+              this._updatePtyActiveLine();
+            } else if (e.ctrlKey && e.key.toLowerCase() === 'e') {
+              e.preventDefault();
+              this._ptyInputBeforeCursor = (this._ptyInputBeforeCursor || '') + (this._ptyInputAfterCursor || '');
+              this._ptyInputAfterCursor = '';
+              const len = this._ptyInputBeforeCursor.length;
+              if (input && typeof input.setSelectionRange === 'function') input.setSelectionRange(len, len);
+              this._updatePtyActiveLine();
+            }
+          });
+        }
         const replForm = bodyEl.querySelector('#cl-repl-form');
         if (replForm) {
           replForm.addEventListener('submit', e => {
             e.preventDefault();
-            const input = bodyEl.querySelector('#cl-repl-input');
-            if (!input || !input.value.trim()) return;
-            const cmd = input.value.trim();
-            input.value = '';
-            this._handleReplCommand(cmd);
+            const rawCmd = (input && input.value !== undefined ? input.value : '') ||
+              ((this._ptyInputBeforeCursor || '') + (this._ptyInputAfterCursor || ''));
+            const cmd = rawCmd.trim();
+            if (!cmd) return;
+            if (input) input.value = '';
+            this._ptyInputBeforeCursor = '';
+            this._ptyInputAfterCursor = '';
+            this._updatePtyActiveLine();
+            this._handleReplCommand(cmd).then(() => {
+              const nextInput = this.container.querySelector('#cl-repl-input');
+              if (nextInput && typeof nextInput.focus === 'function') nextInput.focus();
+            });
           });
         }
+        return;
+      }
+
+      if (this.drawerTab === 'ports') {
+        this._renderPortsPanel(bodyEl);
+        return;
+      }
+
+      if (this.drawerTab === 'network') {
+        this._renderNetworkPanel(bodyEl);
         return;
       }
 
@@ -8371,6 +13988,674 @@ declare module 'buffer' { export { Buffer }; }
             </div>
           </div>
         `;
+      }
+    }
+
+    _updatePtyActiveLine() {
+      if (!this.container) return;
+      const beforeEl = this.container.querySelector('.codelab-pty__before');
+      const afterEl = this.container.querySelector('.codelab-pty__after');
+      const promptEl = this.container.querySelector('.codelab-pty__prompt');
+      const cwdShort = (this.cwd || '/workspace').replace(/^\/workspace\/?/, '') || '~';
+      const promptLabel = this.inRepl ? '> ' : (cwdShort === '~' ? 'codelab$' : `codelab:${cwdShort}$`);
+
+      if (promptEl) promptEl.textContent = promptLabel + ' ';
+      if (beforeEl) beforeEl.textContent = this._ptyInputBeforeCursor || '';
+      if (afterEl) afterEl.textContent = this._ptyInputAfterCursor || '';
+    }
+
+    _handlePtyTabCompletion(input) {
+      const currentInput = (input && input.value !== undefined) ? input.value : ((this._ptyInputBeforeCursor || '') + (this._ptyInputAfterCursor || ''));
+      const candidates = this._getCompletionCandidates(currentInput);
+      if (!candidates || candidates.length === 0) return;
+
+      const lastSpaceIdx = currentInput.lastIndexOf(' ');
+      const prefix = lastSpaceIdx === -1 ? '' : currentInput.slice(0, lastSpaceIdx + 1);
+      const token = lastSpaceIdx === -1 ? currentInput : currentInput.slice(lastSpaceIdx + 1);
+
+      if (candidates.length === 1) {
+        const completed = prefix + candidates[0] + (candidates[0].endsWith('/') ? '' : ' ');
+        if (input) input.value = completed;
+        this._ptyInputBeforeCursor = completed;
+        this._ptyInputAfterCursor = '';
+        this._updatePtyActiveLine();
+      } else {
+        const common = findCommonPrefix(candidates);
+        if (common && common.length > token.length) {
+          const completed = prefix + common;
+          if (input) input.value = completed;
+          this._ptyInputBeforeCursor = completed;
+          this._ptyInputAfterCursor = '';
+          this._updatePtyActiveLine();
+        } else {
+          const cwdShort = (this.cwd || '/workspace').replace(/^\/workspace\/?/, '') || '~';
+          const promptLabel = this.inRepl ? '> ' : (cwdShort === '~' ? 'codelab$' : `codelab:${cwdShort}$`);
+          this.terminalLogs.push({ type: 'system', text: `${promptLabel} ${currentInput}` });
+          this.terminalLogs.push({ type: 'stdout', text: candidates.join('  ') });
+          this._renderDrawerBody();
+          const nextInput = this.container.querySelector('#cl-repl-input');
+          if (nextInput) {
+            nextInput.value = currentInput;
+            this._ptyInputBeforeCursor = currentInput;
+            this._ptyInputAfterCursor = '';
+            this._updatePtyActiveLine();
+            if (typeof nextInput.focus === 'function') nextInput.focus();
+          }
+        }
+      }
+    }
+
+    _getCompletionCandidates(currentInput) {
+      const line = currentInput || '';
+      const lastSpaceIdx = line.lastIndexOf(' ');
+      const token = lastSpaceIdx === -1 ? line : line.slice(lastSpaceIdx + 1);
+      const isFirstToken = lastSpaceIdx === -1;
+
+      if (isFirstToken) {
+        const commands = [
+          'cat', 'cd', 'clear', 'cp', 'curl', 'echo', 'env', 'export', 'find',
+          'grep', 'head', 'help', 'history', 'jobs', 'kill', 'ls', 'mkdir', 'mv',
+          'node', 'npm', 'npx', 'ps', 'pwd', 'rm', 'sed', 'sort', 'tail', 'touch',
+          'uniq', 'unset', 'wc', 'which', 'bun'
+        ];
+        return commands.filter(c => c.startsWith(token));
+      } else {
+        const vfsPaths = [];
+        const cwd = this.cwd || '/workspace';
+        const normCwd = cwd.endsWith('/') ? cwd : cwd + '/';
+
+        for (const p of Object.keys(this.files || {})) {
+          const fullPath = p.startsWith('/') ? p : normCwd + p;
+          if (token.startsWith('/')) {
+            vfsPaths.push(fullPath);
+          } else if (fullPath.startsWith(normCwd)) {
+            vfsPaths.push(fullPath.slice(normCwd.length));
+          } else {
+            vfsPaths.push(p);
+          }
+        }
+        for (const folder of (this.folders || [])) {
+          const fullFolder = folder.startsWith('/') ? folder : normCwd + folder;
+          if (token.startsWith('/')) {
+            vfsPaths.push(fullFolder + '/');
+          } else if (fullFolder.startsWith(normCwd)) {
+            vfsPaths.push(fullFolder.slice(normCwd.length) + '/');
+          } else {
+            vfsPaths.push(folder + '/');
+          }
+        }
+        const unique = Array.from(new Set(vfsPaths));
+        return unique.filter(p => p.startsWith(token));
+      }
+    }
+
+    _renderPortsPanel(bodyEl) {
+      if (!bodyEl) return;
+      const servers = (this.portTable && typeof this.portTable.listServers === 'function')
+        ? this.portTable.listServers()
+        : [];
+      const httpState = this.httpClientState;
+      const lastRes = httpState.lastResponse;
+
+      let serversHtml = '';
+      if (servers.length === 0) {
+        serversHtml = `
+          <div class="codelab-ports-empty">
+            <p style="margin:0 0 6px 0;font-weight:500;">No active port listeners</p>
+            <span style="font-size:12px;color:var(--cl-fg-muted);">
+              Run an HTTP or WebSocket server in the terminal (e.g. <code>node server.js &amp;</code> or <code>bun run server.ts &amp;</code>) to bind a virtual port.
+            </span>
+          </div>
+        `;
+      } else {
+        serversHtml = `
+          <div class="codelab-ports-table-wrapper">
+            <table class="codelab-ports-table">
+              <thead>
+                <tr>
+                  <th>Port</th>
+                  <th>Host / URL</th>
+                  <th>Protocol</th>
+                  <th>Process / Service</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${servers.map(s => `
+                  <tr>
+                    <td><span class="codelab-port-tag">${s.port}</span></td>
+                    <td><a href="http://127.0.0.1:${s.port}/" target="_blank" class="codelab-port-link">http://127.0.0.1:${s.port}/</a></td>
+                    <td><span class="codelab-badge">${escapeHtml(s.protocol || 'HTTP/1.1')}</span></td>
+                    <td><code>${escapeHtml(s.service || (s.pid ? `PID ${s.pid}` : 'node'))}</code></td>
+                    <td><span class="codelab-port-status codelab-port-status--listening"><span class="codelab-port-status-dot"></span>LISTENING</span></td>
+                    <td style="text-align:right;white-space:nowrap;">
+                      <button type="button" class="codelab-btn codelab-btn--sm" data-cl-action="open-port-client" data-port="${s.port}">Open in Client</button>
+                      <button type="button" class="codelab-btn codelab-btn--sm codelab-btn--danger" data-cl-action="stop-port" data-port="${s.port}">Stop</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
+      const methodOptions = methods.map(m => `<option value="${m}" ${httpState.method === m ? 'selected' : ''}>${m}</option>`).join('');
+
+      let responseBodyView = '';
+      if (httpState.loading) {
+        responseBodyView = `<div class="codelab-response-placeholder">Sending virtual loopback request...</div>`;
+      } else if (!lastRes) {
+        responseBodyView = `<div class="codelab-response-placeholder">No response received yet. Send a request above to inspect loopback traffic.</div>`;
+      } else if (httpState.activeResponseTab === 'preview') {
+        const isHtml = lastRes.headers && Object.entries(lastRes.headers).some(([k, v]) => k.toLowerCase() === 'content-type' && String(v).includes('text/html'));
+        if (isHtml || lastRes.body.includes('<html') || lastRes.body.includes('<!DOCTYPE') || lastRes.body.includes('<div') || lastRes.body.includes('<body')) {
+          responseBodyView = `<iframe class="codelab-response-iframe" sandbox="allow-same-origin" srcdoc="${escapeHtml(lastRes.body)}"></iframe>`;
+        } else {
+          responseBodyView = `<pre class="codelab-response-raw"><code>${escapeHtml(lastRes.formattedBody || lastRes.body)}</code></pre>`;
+        }
+      } else if (httpState.activeResponseTab === 'raw') {
+        responseBodyView = `<pre class="codelab-response-raw"><code>${escapeHtml(lastRes.formattedBody || lastRes.body)}</code></pre>`;
+      } else if (httpState.activeResponseTab === 'headers') {
+        const headerRows = Object.entries(lastRes.headers || {})
+          .map(([k, v]) => `<tr><td class="codelab-header-key">${escapeHtml(k)}:</td><td class="codelab-header-val">${escapeHtml(String(v))}</td></tr>`)
+          .join('');
+        responseBodyView = `
+          <table class="codelab-headers-table">
+            <tbody>
+              ${headerRows || '<tr><td colspan="2" style="color:var(--cl-fg-muted);">No headers present</td></tr>'}
+            </tbody>
+          </table>
+        `;
+      }
+
+      let responseHeaderMeta = '';
+      if (lastRes) {
+        const statusClass = lastRes.status < 300 ? 'status-2xx' : (lastRes.status < 400 ? 'status-3xx' : (lastRes.status < 500 ? 'status-4xx' : 'status-5xx'));
+        responseHeaderMeta = `
+          <div class="codelab-response-meta">
+            <span class="codelab-status-badge ${statusClass}">HTTP ${lastRes.status} ${escapeHtml(lastRes.statusText || '')}</span>
+            <span class="codelab-meta-item">${(lastRes.durationMs || 0).toFixed(1)} ms</span>
+            <span class="codelab-meta-item">${lastRes.size} bytes</span>
+          </div>
+        `;
+      }
+
+      bodyEl.innerHTML = `
+        <div class="codelab-ports-panel">
+          <div class="codelab-panel-section">
+            <div class="codelab-section-title">
+              <span>${CL_ICONS.radio || ''} Active Port Listeners</span>
+              <span class="codelab-badge">${servers.length} listening</span>
+            </div>
+            ${serversHtml}
+          </div>
+
+          <div class="codelab-panel-section">
+            <div class="codelab-section-title">
+              <span>${CL_ICONS.send || ''} Mini HTTP Client</span>
+              <span style="font-size:11px;color:var(--cl-fg-muted);">Virtual Loopback (127.0.0.1)</span>
+            </div>
+            <div class="codelab-http-client">
+              <div class="codelab-http-url-bar">
+                <select class="codelab-select" id="cl-http-method" aria-label="HTTP Method">${methodOptions}</select>
+                <input type="text" class="codelab-input" id="cl-http-url" value="${escapeHtml(httpState.url)}" placeholder="http://localhost:3000/" aria-label="Request URL">
+                <button type="button" class="codelab-btn codelab-btn--primary" id="cl-http-send-btn" data-cl-action="http-send">${CL_ICONS.send || ''} <span>Send</span></button>
+              </div>
+              <div class="codelab-http-editors">
+                <div class="codelab-http-editor-group">
+                  <label for="cl-http-headers" class="codelab-label">Headers (Key: Value):</label>
+                  <textarea class="codelab-textarea" id="cl-http-headers" rows="2" placeholder="Content-Type: application/json">${escapeHtml(httpState.headers)}</textarea>
+                </div>
+                <div class="codelab-http-editor-group">
+                  <label for="cl-http-body" class="codelab-label">Request Body:</label>
+                  <textarea class="codelab-textarea" id="cl-http-body" rows="2" placeholder='{"key":"value"}'>${escapeHtml(httpState.body)}</textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="codelab-panel-section" style="flex:1;display:flex;flex-direction:column;min-height:200px;">
+            <div class="codelab-section-title" style="justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span>Response Viewer</span>
+                <div class="codelab-subtabs" role="tablist">
+                  <button type="button" role="tab" class="codelab-subtab ${httpState.activeResponseTab === 'preview' ? 'active' : ''}" data-cl-action="http-tab" data-tab="preview">Preview</button>
+                  <button type="button" role="tab" class="codelab-subtab ${httpState.activeResponseTab === 'raw' ? 'active' : ''}" data-cl-action="http-tab" data-tab="raw">Raw / JSON</button>
+                  <button type="button" role="tab" class="codelab-subtab ${httpState.activeResponseTab === 'headers' ? 'active' : ''}" data-cl-action="http-tab" data-tab="headers">Headers</button>
+                </div>
+              </div>
+              ${responseHeaderMeta}
+            </div>
+            <div class="codelab-response-body-wrapper">
+              ${responseBodyView}
+            </div>
+          </div>
+        </div>
+      `;
+
+      this._bindPortsEvents(bodyEl);
+    }
+
+    _bindPortsEvents(bodyEl) {
+      if (!bodyEl) return;
+      const methodSelect = bodyEl.querySelector('#cl-http-method');
+      if (methodSelect) {
+        methodSelect.addEventListener('change', e => {
+          this.httpClientState.method = e.target.value;
+        });
+      }
+      const urlInput = bodyEl.querySelector('#cl-http-url');
+      if (urlInput) {
+        urlInput.addEventListener('input', e => {
+          this.httpClientState.url = e.target.value;
+        });
+      }
+      const headersArea = bodyEl.querySelector('#cl-http-headers');
+      if (headersArea) {
+        headersArea.addEventListener('input', e => {
+          this.httpClientState.headers = e.target.value;
+        });
+      }
+      const bodyArea = bodyEl.querySelector('#cl-http-body');
+      if (bodyArea) {
+        bodyArea.addEventListener('input', e => {
+          this.httpClientState.body = e.target.value;
+        });
+      }
+    }
+
+    _renderNetworkPanel(bodyEl) {
+      if (!bodyEl) return;
+      const traces = Array.isArray(this.lastHttpTrace) ? this.lastHttpTrace : [];
+      const filter = this.networkFilter;
+
+      const filtered = traces.filter(t => {
+        if (filter.method && filter.method !== 'ALL' && (t.method || 'GET').toUpperCase() !== filter.method) return false;
+        if (filter.status && filter.status !== 'ALL') {
+          const s = Number(t.status || 0);
+          if (filter.status === '2xx' && (s < 200 || s >= 300)) return false;
+          if (filter.status === '3xx' && (s < 300 || s >= 400)) return false;
+          if (filter.status === '4xx' && (s < 400 || s >= 500)) return false;
+          if (filter.status === '5xx' && (s < 500 || s >= 600)) return false;
+        }
+        if (filter.search) {
+          const query = filter.search.toLowerCase();
+          const urlMatch = String(t.url || '').toLowerCase().includes(query);
+          const methodMatch = String(t.method || '').toLowerCase().includes(query);
+          const portMatch = String(t.port || '').includes(query);
+          if (!urlMatch && !methodMatch && !portMatch) return false;
+        }
+        return true;
+      });
+
+      const selectedTrace = traces.find(t => String(t.id) === String(filter.selectedTraceId)) || null;
+
+      let rowsHtml = '';
+      if (filtered.length === 0) {
+        rowsHtml = `
+          <tr>
+            <td colspan="7" style="text-align:center;padding:32px;color:var(--cl-fg-muted);">
+              ${traces.length === 0 ? 'No network requests recorded yet. Run a demo, tests, or send an HTTP request to inspect traffic.' : 'No network requests match the active filters.'}
+            </td>
+          </tr>
+        `;
+      } else {
+        const maxDuration = Math.max(1, ...filtered.map(t => t.durationMs || 1));
+        rowsHtml = filtered.map(t => {
+          const status = Number(t.status || 200);
+          const statusClass = status < 300 ? 'status-2xx' : (status < 400 ? 'status-3xx' : (status < 500 ? 'status-4xx' : 'status-5xx'));
+          const widthPct = Math.min(100, Math.max(8, Math.round(((t.durationMs || 1) / maxDuration) * 100)));
+          const isSelected = selectedTrace && String(selectedTrace.id) === String(t.id);
+          return `
+            <tr class="codelab-net-row ${isSelected ? 'selected' : ''}" data-cl-action="select-net-trace" data-trace-id="${escapeHtml(t.id || '')}">
+              <td><span class="codelab-status-badge ${statusClass}">${status}</span></td>
+              <td><span class="codelab-method-badge codelab-method-${(t.method || 'GET').toLowerCase()}">${escapeHtml(t.method || 'GET')}</span></td>
+              <td class="codelab-net-path" title="${escapeHtml(t.url || '/')}">${escapeHtml(t.url || '/')}</td>
+              <td><code>${t.port || 3000}</code></td>
+              <td style="white-space:nowrap;font-family:var(--cl-font-mono);font-size:11.5px;">${(t.durationMs || 0).toFixed(1)} ms</td>
+              <td style="white-space:nowrap;font-family:var(--cl-font-mono);font-size:11.5px;">${t.size != null ? t.size : 0} B</td>
+              <td class="codelab-waterfall-cell">
+                <div class="codelab-waterfall-track">
+                  <div class="codelab-waterfall-bar" style="width:${widthPct}%;"></div>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      let detailHtml = '';
+      if (selectedTrace) {
+        const reqHeaders = typeof selectedTrace.requestHeaders === 'string'
+          ? selectedTrace.requestHeaders
+          : JSON.stringify(selectedTrace.requestHeaders || {}, null, 2);
+        const resHeaders = typeof selectedTrace.responseHeaders === 'string'
+          ? selectedTrace.responseHeaders
+          : JSON.stringify(selectedTrace.responseHeaders || {}, null, 2);
+        detailHtml = `
+          <div class="codelab-net-detail">
+            <div class="codelab-net-detail__head">
+              <span style="font-weight:600;display:flex;align-items:center;gap:8px;">
+                <span class="codelab-method-badge codelab-method-${(selectedTrace.method || 'GET').toLowerCase()}">${escapeHtml(selectedTrace.method || 'GET')}</span>
+                <span>${escapeHtml(selectedTrace.url || '/')}</span>
+              </span>
+              <button type="button" class="codelab-btn codelab-btn--sm" data-cl-action="close-net-detail">Close</button>
+            </div>
+            <div class="codelab-net-detail__body">
+              <div class="codelab-net-detail__section">
+                <div class="codelab-detail-label">General</div>
+                <div class="codelab-detail-kv"><strong>URL:</strong> 127.0.0.1:${selectedTrace.port}${escapeHtml(selectedTrace.url || '/')}</div>
+                <div class="codelab-detail-kv"><strong>Status:</strong> ${selectedTrace.status} ${escapeHtml(selectedTrace.statusText || '')}</div>
+                <div class="codelab-detail-kv"><strong>Duration:</strong> ${(selectedTrace.durationMs || 0).toFixed(2)} ms</div>
+                <div class="codelab-detail-kv"><strong>Size:</strong> ${selectedTrace.size || 0} bytes</div>
+              </div>
+              <div class="codelab-net-detail__section">
+                <div class="codelab-detail-label">Request Headers</div>
+                <pre class="codelab-detail-pre"><code>${escapeHtml(reqHeaders || '(empty)')}</code></pre>
+              </div>
+              ${selectedTrace.requestBody ? `
+                <div class="codelab-net-detail__section">
+                  <div class="codelab-detail-label">Request Body</div>
+                  <pre class="codelab-detail-pre"><code>${escapeHtml(selectedTrace.requestBody)}</code></pre>
+                </div>
+              ` : ''}
+              <div class="codelab-net-detail__section">
+                <div class="codelab-detail-label">Response Headers</div>
+                <pre class="codelab-detail-pre"><code>${escapeHtml(resHeaders || '(empty)')}</code></pre>
+              </div>
+              <div class="codelab-net-detail__section">
+                <div class="codelab-detail-label">Response Body</div>
+                <pre class="codelab-detail-pre"><code>${escapeHtml(selectedTrace.formattedBody || selectedTrace.responseBody || '(empty)')}</code></pre>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      bodyEl.innerHTML = `
+        <div class="codelab-network-panel ${selectedTrace ? 'has-detail' : ''}">
+          <div class="codelab-net-toolbar">
+            <input type="text" class="codelab-input" id="cl-net-search" placeholder="Filter URL or method..." value="${escapeHtml(filter.search)}" aria-label="Filter network traces">
+            <select class="codelab-select" id="cl-net-method" aria-label="Filter by method">
+              <option value="ALL" ${filter.method === 'ALL' ? 'selected' : ''}>All Methods</option>
+              <option value="GET" ${filter.method === 'GET' ? 'selected' : ''}>GET</option>
+              <option value="POST" ${filter.method === 'POST' ? 'selected' : ''}>POST</option>
+              <option value="PUT" ${filter.method === 'PUT' ? 'selected' : ''}>PUT</option>
+              <option value="DELETE" ${filter.method === 'DELETE' ? 'selected' : ''}>DELETE</option>
+              <option value="PATCH" ${filter.method === 'PATCH' ? 'selected' : ''}>PATCH</option>
+            </select>
+            <select class="codelab-select" id="cl-net-status" aria-label="Filter by status">
+              <option value="ALL" ${filter.status === 'ALL' ? 'selected' : ''}>All Status</option>
+              <option value="2xx" ${filter.status === '2xx' ? 'selected' : ''}>2xx Success</option>
+              <option value="3xx" ${filter.status === '3xx' ? 'selected' : ''}>3xx Redirect</option>
+              <option value="4xx" ${filter.status === '4xx' ? 'selected' : ''}>4xx Client Error</option>
+              <option value="5xx" ${filter.status === '5xx' ? 'selected' : ''}>5xx Server Error</option>
+            </select>
+            <button type="button" class="codelab-btn" data-cl-action="clear-net-traces">Clear</button>
+            <span style="margin-left:auto;font-size:11.5px;color:var(--cl-fg-muted);">${filtered.length} of ${traces.length} requests</span>
+          </div>
+          <div class="codelab-net-main">
+            <div class="codelab-net-table-container">
+              <table class="codelab-net-table">
+                <thead>
+                  <tr>
+                    <th style="width:55px;">Status</th>
+                    <th style="width:65px;">Method</th>
+                    <th>Path</th>
+                    <th style="width:60px;">Port</th>
+                    <th style="width:75px;">Time</th>
+                    <th style="width:70px;">Size</th>
+                    <th style="width:140px;">Waterfall</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rowsHtml}
+                </tbody>
+              </table>
+            </div>
+            ${detailHtml}
+          </div>
+        </div>
+      `;
+
+      this._bindNetworkEvents(bodyEl);
+    }
+
+    _bindNetworkEvents(bodyEl) {
+      if (!bodyEl) return;
+      const searchInput = bodyEl.querySelector('#cl-net-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', e => {
+          this.networkFilter.search = e.target.value;
+          this._renderDrawerBody();
+        });
+      }
+      const methodSelect = bodyEl.querySelector('#cl-net-method');
+      if (methodSelect) {
+        methodSelect.addEventListener('change', e => {
+          this.networkFilter.method = e.target.value;
+          this._renderDrawerBody();
+        });
+      }
+      const statusSelect = bodyEl.querySelector('#cl-net-status');
+      if (statusSelect) {
+        statusSelect.addEventListener('change', e => {
+          this.networkFilter.status = e.target.value;
+          this._renderDrawerBody();
+        });
+      }
+    }
+
+    async dispatchHttpClientRequest() {
+      const method = this.httpClientState.method || 'GET';
+      let url = this.httpClientState.url || 'http://localhost:3000/';
+      const headersRaw = this.httpClientState.headers || '';
+      const body = this.httpClientState.body || '';
+
+      this.httpClientState.loading = true;
+      this._renderDrawerBody();
+
+      const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      let status = 0;
+      let statusText = '';
+      let responseHeaders = {};
+      let responseBody = '';
+      let parsedPort = 3000;
+      let reqPath = '/';
+
+      try {
+        if (!/^https?:\/\//i.test(url)) {
+          url = `http://127.0.0.1:3000${url.startsWith('/') ? '' : '/'}${url}`;
+        }
+        const parsedUrl = new URL(url);
+        parsedPort = Number(parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80));
+        reqPath = parsedUrl.pathname + (parsedUrl.search || '');
+
+        const reqHeaders = {};
+        for (const line of headersRaw.split('\n')) {
+          const idx = line.indexOf(':');
+          if (idx > 0) {
+            const k = line.slice(0, idx).trim();
+            const v = line.slice(idx + 1).trim();
+            if (k) reqHeaders[k] = v;
+          }
+        }
+
+        const init = {
+          method,
+          headers: reqHeaders
+        };
+        if (['POST', 'PUT', 'PATCH'].includes(method) && body) {
+          init.body = body;
+        }
+
+        let response = null;
+        if (this.portTable && typeof this.portTable.dispatchRequest === 'function') {
+          response = await this.portTable.dispatchRequest(url, init);
+        } else {
+          const err = new Error(`connect ECONNREFUSED 127.0.0.1:${parsedPort}`);
+          err.code = 'ECONNREFUSED';
+          throw err;
+        }
+
+        status = response.status;
+        statusText = response.statusText || (status >= 200 && status < 300 ? 'OK' : 'Error');
+        if (response.headers && typeof response.headers.forEach === 'function') {
+          response.headers.forEach((v, k) => { responseHeaders[k] = v; });
+        } else if (response.headers) {
+          responseHeaders = { ...response.headers };
+        }
+        responseBody = await response.text();
+      } catch (err) {
+        status = 502;
+        statusText = 'Bad Gateway / Connection Refused';
+        responseBody = String(err.message || err);
+        responseHeaders = { 'content-type': 'text/plain' };
+      }
+
+      const durationMs = Math.max(0.1, (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0);
+      const size = responseBody.length;
+
+      let formattedBody = responseBody;
+      try {
+        const parsed = JSON.parse(responseBody);
+        formattedBody = JSON.stringify(parsed, null, 2);
+      } catch (_) {}
+
+      const traceId = 'trace_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const traceItem = {
+        id: traceId,
+        timestamp: new Date().toLocaleTimeString(),
+        method,
+        url: reqPath,
+        fullUrl: url,
+        port: parsedPort,
+        status,
+        statusText,
+        durationMs,
+        size,
+        requestHeaders: headersRaw,
+        requestBody: body,
+        responseHeaders,
+        responseBody,
+        formattedBody
+      };
+
+      if (!Array.isArray(this.lastHttpTrace)) {
+        this.lastHttpTrace = [];
+      }
+      this.lastHttpTrace.push(traceItem);
+
+      this.httpClientState.lastResponse = {
+        status,
+        statusText,
+        durationMs,
+        size,
+        headers: responseHeaders,
+        body: responseBody,
+        formattedBody
+      };
+      this.httpClientState.loading = false;
+      this._renderDrawerBody();
+    }
+
+    _syncVfsSnapshot(fsSnapshot) {
+      let changed = false;
+
+      // 1. Sync from this.shell.vfs if available
+      if (this.shell && this.shell.vfs && this.shell.vfs.files instanceof Map) {
+        const shellWorkspaceFiles = new Map();
+        for (const [p, fileObj] of this.shell.vfs.files.entries()) {
+          if (p.startsWith('/workspace/')) {
+            const rel = p.slice('/workspace/'.length);
+            if (rel) {
+              const content = typeof fileObj.data === 'string'
+                ? fileObj.data
+                : (fileObj.data ? (fileObj.data.toString ? fileObj.data.toString('utf8') : String(fileObj.data)) : '');
+              shellWorkspaceFiles.set(rel, content);
+            }
+          }
+        }
+
+        // Additions & modifications
+        for (const [rel, content] of shellWorkspaceFiles.entries()) {
+          if (this.files[rel] === undefined || this.files[rel] !== content) {
+            this.files[rel] = content;
+            changed = true;
+            const parts = rel.split('/');
+            let cur = '';
+            for (let i = 0; i < parts.length - 1; i++) {
+              cur = cur ? `${cur}/${parts[i]}` : parts[i];
+              this.folders.add(cur);
+            }
+            const model = this.models.get(rel);
+            if (model && typeof model.getValue === 'function') {
+              if (model.getValue() !== content) {
+                model.setValue(content);
+              }
+            } else {
+              this._getOrCreateModel(rel);
+            }
+          }
+        }
+
+        // Deletions
+        for (const rel of Object.keys(this.files)) {
+          if (!shellWorkspaceFiles.has(rel)) {
+            delete this.files[rel];
+            changed = true;
+            const model = this.models.get(rel);
+            if (model) {
+              model.dispose();
+              this.models.delete(rel);
+            }
+            if (Array.isArray(this.openTabs)) {
+              const tabIdx = this.openTabs.indexOf(rel);
+              if (tabIdx !== -1) {
+                this.openTabs.splice(tabIdx, 1);
+                if (this.activeFile === rel) {
+                  this.activeFile = this.openTabs[Math.max(0, tabIdx - 1)] || null;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Also sync from snapshot array if provided
+      if (Array.isArray(fsSnapshot) && fsSnapshot.length > 0) {
+        for (const item of fsSnapshot) {
+          if (!item || !item.path) continue;
+          if (item.path.startsWith('/workspace/')) {
+            const rel = item.path.slice('/workspace/'.length);
+            if (!rel) continue;
+            if (item.isDirectory) {
+              this.folders.add(rel);
+            } else if (item.content !== undefined || item.preview !== undefined) {
+              const content = item.content !== undefined ? item.content : (item.preview || '');
+              if (this.files[rel] !== content) {
+                this.files[rel] = content;
+                changed = true;
+                const model = this.models.get(rel);
+                if (model && typeof model.getValue === 'function') {
+                  if (model.getValue() !== content) model.setValue(content);
+                } else {
+                  this._getOrCreateModel(rel);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (changed) {
+        this._saveState();
+        this._renderFileLists();
+        this._renderTabs();
+        this._syncActiveFileToView();
       }
     }
 
@@ -8832,7 +15117,7 @@ declare module 'buffer' { export { Buffer }; }
           return;
         }
 
-        if (e.target.classList && e.target.classList.contains('codelab-palette-backdrop')) {
+        if (e.target.classList && (e.target.classList.contains('codelab-palette-backdrop') || e.target.classList.contains('codelab-modal-backdrop'))) {
           this.closeModal();
           return;
         }
@@ -8963,7 +15248,11 @@ declare module 'buffer' { export { Buffer }; }
           else if (action === 'reset-lab') this.resetLab();
           else if (action === 'toggle-fullscreen') this.toggleFullscreen();
           else if (action === 'close-lab') {
+            if (typeof document !== 'undefined' && document.fullscreenElement && document.exitFullscreen) {
+              document.exitFullscreen().catch(() => {});
+            }
             if (typeof this.onClose === 'function') this.onClose();
+            else if (this.isFullscreen) this.toggleFullscreen();
           } else if (action === 'new-file') {
             this.isCreatingFile = true;
             this._renderFileLists();
@@ -9550,7 +15839,22 @@ declare module 'buffer' { export { Buffer }; }
       this._renderGuidePane();
     }
 
-    configure({ mode, lang, stepIndex } = {}) {
+    configure({ mode, lang, stepIndex, onClose } = {}) {
+      if (typeof onClose === 'function') {
+        this.onClose = onClose;
+        const rightBar = this.container.querySelector('.codelab-topbar__right');
+        if (rightBar && !rightBar.querySelector('#cl-close-ide-btn')) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'codelab-btn codelab-btn--icon codelab-btn--close-ide';
+          btn.id = 'cl-close-ide-btn';
+          btn.setAttribute('data-cl-action', 'close-lab');
+          btn.title = this.backLabel || 'Close IDE';
+          btn.setAttribute('aria-label', 'Close IDE');
+          btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+          rightBar.appendChild(btn);
+        }
+      }
       if (mode === 'guided' || mode === 'sandbox') {
         this.setMode(mode);
       }
@@ -9570,6 +15874,19 @@ declare module 'buffer' { export { Buffer }; }
       if (!shell) return;
       this.isFullscreen = !this.isFullscreen;
       shell.classList.toggle('is-fullscreen', this.isFullscreen);
+      const fsBtn = this.container.querySelector('#cl-fullscreen-btn');
+      if (fsBtn) {
+        fsBtn.classList.toggle('active', this.isFullscreen);
+        fsBtn.title = this.isFullscreen ? 'Exit Fullscreen (Esc)' : 'Toggle Fullscreen';
+      }
+      if (typeof document !== 'undefined') {
+        const target = this.container.closest('.build-lab-overlay') || shell;
+        if (this.isFullscreen && !document.fullscreenElement && target && typeof target.requestFullscreen === 'function') {
+          target.requestFullscreen().catch(() => {});
+        } else if (!this.isFullscreen && document.fullscreenElement && typeof document.exitFullscreen === 'function') {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
       if (this.editor) setTimeout(() => this.editor.layout(), 50);
     }
 
@@ -9950,60 +16267,303 @@ declare module 'buffer' { export { Buffer }; }
       }
     }
 
-    async _handleReplCommand(cmd) {
-      this.terminalLogs.push({ type: 'system', text: `codelab$ ${cmd}` });
+    _resolveShellPath(rawPath) {
+      if (!rawPath || rawPath === '.') return this.cwd || '/workspace';
+      if (rawPath === '~') return '/workspace';
+      let p = rawPath.startsWith('/') ? rawPath : `${this.cwd || '/workspace'}/${rawPath}`;
+      const parts = p.split('/');
+      const stack = [];
+      for (const part of parts) {
+        if (!part || part === '.') continue;
+        if (part === '..') stack.pop();
+        else stack.push(part);
+      }
+      return '/' + stack.join('/');
+    }
 
-      if (cmd === 'clear') {
+    _toWorkspaceRelPath(absOrRel) {
+      const abs = this._resolveShellPath(absOrRel);
+      if (abs === '/workspace') return '';
+      if (abs.startsWith('/workspace/')) return abs.slice('/workspace/'.length);
+      return abs.replace(/^\/+/, '');
+    }
+
+    async _handleReplCommand(cmd) {
+      const trimmed = (cmd || '').trim();
+      if (!trimmed) return;
+      if (this.replHistory[this.replHistory.length - 1] !== trimmed) {
+        this.replHistory.push(trimmed);
+      }
+      this.replHistoryIdx = -1;
+      this.terminalLogs.push({ type: 'system', text: `codelab$ ${trimmed}` });
+
+      const parts = trimmed.split(/\s+/);
+      const bin = parts[0];
+      const args = parts.slice(1);
+
+      if (bin === 'clear' || bin === 'cls') {
         this.terminalLogs = [];
         this._renderDrawerBody();
         return;
       }
-      if (cmd === 'help') {
+      if (bin === 'help') {
         this.terminalLogs.push({
           type: 'stdout',
           text: [
-            'Available commands:',
-            '  node demo.js | run     Run the demo workload script',
-            '  node test.js | test    Run the full unit test suite',
-            '  ls                     List files in workspace & /tmp virtual disk',
-            '  cat <filename>         Display contents of a workspace file',
-            '  clear                  Clear terminal output',
-            '  <JS/TS expression>     Evaluate live code with require() access to workspace files'
+            'Built-in shell & Node commands:',
+            '  pwd, ls [-la], cd <dir>      Navigate workspace directory (/workspace)',
+            '  cat, head, tail, wc <file>   Inspect file contents & line counts',
+            '  touch, mkdir, rm, cp, mv     Create, copy, rename, or remove workspace files',
+            '  node <file.js|ts>            Execute any script in the Virtual Node runtime',
+            '  npm test | test | run        Run unit test suite or demo workload',
+            '  clear (Ctrl+L)               Clear terminal output',
+            '  <JS/TS expression>           Evaluate live JS/TS with require() & Node globals'
           ].join('\n')
         });
         this._renderDrawerBody();
         return;
       }
-      if (cmd === 'ls') {
-        const wsFiles = Object.keys(this.files);
-        const vfsFiles = this.lastFsSnapshot.map(f => f.path);
-        const all = Array.from(new Set([...wsFiles, ...vfsFiles]));
-        this.terminalLogs.push({ type: 'stdout', text: all.join('  ') });
+      if (bin === 'pwd') {
+        this.terminalLogs.push({ type: 'stdout', text: this.cwd || '/workspace' });
         this._renderDrawerBody();
         return;
       }
-      if (cmd.startsWith('cat ')) {
-        const target = cmd.slice(4).trim();
-        if (this.files[target] != null) {
-          this.terminalLogs.push({ type: 'stdout', text: this.files[target] });
-        } else {
-          const snap = this.lastFsSnapshot.find(f => f.path === target || f.path.endsWith('/' + target));
-          if (snap) {
-            this.terminalLogs.push({ type: 'stdout', text: snap.preview || snap.hexPreview || `(${snap.size} bytes)` });
+      if (bin === 'whoami') {
+        this.terminalLogs.push({ type: 'stdout', text: 'codelab' });
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'hostname') {
+        this.terminalLogs.push({ type: 'stdout', text: 'codelab-vfs' });
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'uname') {
+        this.terminalLogs.push({ type: 'stdout', text: args.includes('-a') ? 'Linux codelab-vfs 6.6.0-virtual #1 SMP WebWorker x86_64 GNU/Linux' : 'Linux' });
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'date') {
+        this.terminalLogs.push({ type: 'stdout', text: new Date().toUTCString() });
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'env' || bin === 'printenv') {
+        this.terminalLogs.push({
+          type: 'stdout',
+          text: `NODE_ENV=development\nPWD=${this.cwd || '/workspace'}\nHOME=/workspace\nUSER=codelab\nPATH=/usr/local/bin:/usr/bin:/bin`
+        });
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'which') {
+        const target = args[0] || '';
+        const known = ['node', 'npm', 'ls', 'cat', 'pwd', 'cd', 'mkdir', 'touch', 'rm', 'cp', 'mv', 'echo', 'clear'];
+        this.terminalLogs.push({
+          type: known.includes(target) ? 'stdout' : 'stderr',
+          text: known.includes(target) ? `/usr/local/bin/${target}` : `${target} not found`
+        });
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'echo') {
+        const raw = trimmed.slice(4).trim().replace(/^(['"])(.*)\1$/, '$2');
+        this.terminalLogs.push({ type: 'stdout', text: raw });
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'cd') {
+        const target = args[0] || '/workspace';
+        const resolved = this._resolveShellPath(target);
+        if (resolved === '/workspace' || resolved === '/tmp') {
+          this.cwd = resolved;
+        } else if (resolved.startsWith('/workspace/')) {
+          const rel = resolved.slice('/workspace/'.length);
+          const existsDir = this.folders.has(rel) || Object.keys(this.files).some(f => f.startsWith(rel + '/'));
+          if (existsDir) {
+            this.cwd = resolved;
           } else {
-            this.terminalLogs.push({ type: 'stderr', text: `cat: ${target}: No such file in virtual filesystem` });
+            this.terminalLogs.push({ type: 'stderr', text: `cd: no such file or directory: ${target}` });
+          }
+        } else {
+          this.terminalLogs.push({ type: 'stderr', text: `cd: no such file or directory: ${target}` });
+        }
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'ls' || bin === 'll' || bin === 'la') {
+        const flags = args.filter(a => a.startsWith('-')).join('');
+        const isLong = bin === 'll' || flags.includes('l');
+        const pathArg = args.find(a => !a.startsWith('-')) || '.';
+        const resolved = this._resolveShellPath(pathArg);
+        const prefix = resolved === '/workspace' ? '' : (resolved.startsWith('/workspace/') ? resolved.slice('/workspace/'.length) + '/' : null);
+        const entries = new Map();
+        if (prefix !== null) {
+          for (const folder of this.folders) {
+            if (prefix === '' && !folder.includes('/')) entries.set(folder + '/', { isDir: true, size: 0 });
+            else if (prefix && folder.startsWith(prefix)) {
+              const rest = folder.slice(prefix.length);
+              if (rest && !rest.includes('/')) entries.set(rest + '/', { isDir: true, size: 0 });
+            }
+          }
+          for (const [k, content] of Object.entries(this.files)) {
+            if (prefix === '' || k.startsWith(prefix)) {
+              const rest = prefix === '' ? k : k.slice(prefix.length);
+              if (!rest) continue;
+              if (rest.includes('/')) {
+                const topDir = rest.split('/')[0] + '/';
+                if (!entries.has(topDir)) entries.set(topDir, { isDir: true, size: 0 });
+              } else {
+                entries.set(rest, { isDir: false, size: (content || '').length });
+              }
+            }
+          }
+        } else if (resolved === '/tmp' || resolved.startsWith('/tmp/')) {
+          for (const snap of this.lastFsSnapshot) {
+            if (snap.path.startsWith('/tmp/')) {
+              entries.set(snap.path.slice('/tmp/'.length), { isDir: !!snap.isDirectory, size: snap.size || 0 });
+            }
+          }
+        }
+        const names = Array.from(entries.keys()).sort();
+        if (names.length === 0) {
+          this.terminalLogs.push({ type: 'stdout', text: '(empty)' });
+        } else if (isLong) {
+          const lines = names.map(n => {
+            const info = entries.get(n);
+            const perm = info.isDir ? 'drwxr-xr-x' : '-rw-r--r--';
+            return `${perm}  1 codelab  staff  ${String(info.size).padStart(6, ' ')}  ${n}`;
+          });
+          this.terminalLogs.push({ type: 'stdout', text: lines.join('\n') });
+        } else {
+          this.terminalLogs.push({ type: 'stdout', text: names.join('  ') });
+        }
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'cat' || bin === 'head' || bin === 'tail' || bin === 'wc') {
+        const fileArgs = args.filter(a => !a.startsWith('-'));
+        const target = fileArgs[0];
+        if (!target) {
+          this.terminalLogs.push({ type: 'stderr', text: `${bin}: missing file operand` });
+          this._renderDrawerBody();
+          return;
+        }
+        const rel = this._toWorkspaceRelPath(target);
+        let text = this.files[rel] != null ? this.files[rel] : this.files[target];
+        if (text == null) {
+          const snap = this.lastFsSnapshot.find(f => f.path === target || f.path.endsWith('/' + target));
+          if (snap) text = snap.preview || snap.hexPreview || `(${snap.size} bytes)`;
+        }
+        if (text == null) {
+          this.terminalLogs.push({ type: 'stderr', text: `${bin}: ${target}: No such file or directory` });
+        } else if (bin === 'wc') {
+          const lines = text.split('\n').length;
+          const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+          const bytes = text.length;
+          this.terminalLogs.push({ type: 'stdout', text: `  ${lines}  ${words}  ${bytes} ${target}` });
+        } else if (bin === 'head') {
+          this.terminalLogs.push({ type: 'stdout', text: text.split('\n').slice(0, 10).join('\n') });
+        } else if (bin === 'tail') {
+          this.terminalLogs.push({ type: 'stdout', text: text.split('\n').slice(-10).join('\n') });
+        } else {
+          this.terminalLogs.push({ type: 'stdout', text });
+        }
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'touch') {
+        const target = args[0];
+        if (target) {
+          const rel = this._toWorkspaceRelPath(target);
+          if (this.files[rel] === undefined) this.createFile(rel);
+        }
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'mkdir') {
+        const target = args.find(a => !a.startsWith('-'));
+        if (target) {
+          const rel = this._toWorkspaceRelPath(target);
+          if (rel) this.createFolder(rel);
+        }
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'rm') {
+        const targets = args.filter(a => !a.startsWith('-'));
+        for (const t of targets) {
+          const rel = this._toWorkspaceRelPath(t);
+          if (this.files[rel] !== undefined) {
+            this.deleteFile(rel);
+          } else if (this.folders.has(rel)) {
+            this.deleteFolder(rel);
+          } else {
+            this.terminalLogs.push({ type: 'stderr', text: `rm: ${t}: No such file or directory` });
           }
         }
         this._renderDrawerBody();
         return;
       }
-      if (cmd === 'run' || /^node\s+\S*demo\.(js|ts)$/.test(cmd)) {
+      if (bin === 'cp' && args.length >= 2) {
+        const src = this._toWorkspaceRelPath(args[0]);
+        const dst = this._toWorkspaceRelPath(args[1]);
+        if (this.files[src] !== undefined) {
+          this.setFile(dst, this.files[src], { open: false });
+        } else {
+          this.terminalLogs.push({ type: 'stderr', text: `cp: ${args[0]}: No such file` });
+        }
+        this._renderDrawerBody();
+        return;
+      }
+      if (bin === 'mv' && args.length >= 2) {
+        const src = this._toWorkspaceRelPath(args[0]);
+        const dst = this._toWorkspaceRelPath(args[1]);
+        if (!this.renameFile(src, dst)) {
+          this.terminalLogs.push({ type: 'stderr', text: `mv: cannot move '${args[0]}' to '${args[1]}'` });
+        }
+        this._renderDrawerBody();
+        return;
+      }
+      if (trimmed === 'run' || trimmed === 'npm start' || trimmed === 'npm run demo' || /^node\s+\S*demo\.(js|ts)$/.test(trimmed)) {
         await this.runDemo();
         return;
       }
-      if (cmd === 'test' || /^node\s+\S*test\.(js|ts)$/.test(cmd)) {
+      if (trimmed === 'test' || trimmed === 'npm test' || trimmed === 'npm t' || /^node\s+\S*test\.(js|ts)$/.test(trimmed)) {
         await this.runTests();
         return;
+      }
+      if (bin === 'node') {
+        if (args[0] === '-v' || args[0] === '--version') {
+          this.terminalLogs.push({ type: 'stdout', text: 'v22.0.0' });
+          this._renderDrawerBody();
+          return;
+        }
+        if (args[0] === '-e' || args[0] === '--eval') {
+          const evalCode = trimmed.replace(/^node\s+(-e|--eval)\s+/, '').replace(/^(['"])([\s\S]*)\1$/, '$2');
+          return this._handleReplCommand(evalCode);
+        }
+        if (args[0]) {
+          const rel = this._toWorkspaceRelPath(args[0]);
+          const entryFile = this.files[rel] !== undefined ? rel : (this.files[args[0]] !== undefined ? args[0] : null);
+          if (!entryFile) {
+            this.terminalLogs.push({ type: 'stderr', text: `node: Cannot find module '/workspace/${rel || args[0]}'` });
+            this._renderDrawerBody();
+            return;
+          }
+          const res = await this._executeRuntime({
+            files: { ...this.files },
+            entry: entryFile,
+            mode: 'run'
+          });
+          if (res.stdout) this.terminalLogs.push({ type: 'stdout', text: res.stdout.replace(/\n$/, '') });
+          if (res.stderr) this.terminalLogs.push({ type: 'stderr', text: res.stderr.replace(/\n$/, '') });
+          if (res.error) this.terminalLogs.push({ type: 'stderr', text: formatErrorText(res.error) });
+          this.lastFsSnapshot = res.fsSnapshot || [];
+          this.lastHttpTrace = res.httpTrace || [];
+          this._renderDrawerBody();
+          return;
+        }
       }
 
       // Evaluate arbitrary JS/TS expression in the Virtual Runtime
@@ -10011,15 +16571,25 @@ declare module 'buffer' { export { Buffer }; }
         const res = await this._executeRuntime({
           files: { ...this.files },
           mode: 'repl',
-          replCode: cmd
+          replCode: trimmed
         });
-        if (res.stdout) this.terminalLogs.push({ type: 'stdout', text: res.stdout.replace(/\n$/, '') });
-        if (res.stderr) this.terminalLogs.push({ type: 'stderr', text: res.stderr.replace(/\n$/, '') });
-        if (res.replValue !== undefined) {
+        const cleanStdout = res.stdout ? res.stdout.replace(/\n$/, '') : '';
+        if (cleanStdout) {
+          this.terminalLogs.push({ type: 'stdout', text: cleanStdout });
+        }
+        if (res.stderr) {
+          this.terminalLogs.push({ type: 'stderr', text: res.stderr.replace(/\n$/, '') });
+        }
+        if (res.replValue !== undefined && cleanStdout !== String(res.replValue)) {
           this.terminalLogs.push({ type: 'success', text: `→ ${res.replValue}` });
         }
         if (res.error) {
-          this.terminalLogs.push({ type: 'stderr', text: formatErrorText(res.error) });
+          const errStr = formatErrorText(res.error);
+          if (/^[a-zA-Z0-9_-]+$/.test(trimmed) && errStr.includes(`ReferenceError: ${trimmed} is not defined`)) {
+            this.terminalLogs.push({ type: 'stderr', text: `codelab: ${trimmed}: command not found (type "help" for commands or enter a JS/TS expression)` });
+          } else {
+            this.terminalLogs.push({ type: 'stderr', text: errStr });
+          }
         }
       } catch (err) {
         this.terminalLogs.push({ type: 'stderr', text: formatErrorText(err) });
@@ -10342,6 +16912,11 @@ declare module 'buffer' { export { Buffer }; }
       CodeLabWorkbench: CodeLabWorkbench,
       CodeLabElement: CodeLabElement,
       CodeLabRuntime: CodeLabRuntime,
+      CodeLabShell: CodeLabShell,
+      CodeLabTerminal: CodeLabTerminal,
+      createPosixShell: CodeLabShell ? CodeLabShell.createPosixShell : null,
+      createTerminal: CodeLabTerminal ? CodeLabTerminal.createTerminal : null,
+      PTYTerminalEngine: CodeLabTerminal ? CodeLabTerminal.PTYTerminalEngine : null,
       executeInVirtualRuntime: CodeLabRuntime.executeInVirtualRuntime,
       executeInWorker: CodeLabRuntime.executeInWorker,
       cancelWorkerExecution: CodeLabRuntime.cancelWorkerExecution,

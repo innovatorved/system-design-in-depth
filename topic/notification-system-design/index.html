@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -949,19 +949,11 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="notification-system-design" id="audio-speed-notification-system-design" title="Playback speed">1x</button>
         <audio id="audio-notification-system-design" src="audio/notification-system-design.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Design: a notification system</h2>
-
 <p>A notification service turns a product event into messages for particular people. When a report finishes, Ada might need an inbox item and an email. Those are two separate pieces of work: the inbox can appear while the email is still waiting at a provider.</p>
-
 <p>We'll follow that report from the product database to its recipients, then handle preference changes, lost send replies and a large announcement. The design starts with email and an in-app inbox. Push and SMS share the routing machinery, but need their own delivery rules.</p>
-
-
-
 <h2>Decide what the service promises</h2>
-
 <p>Accepting work means retaining enough information to finish or explain it after a restart. It does not mean every selected channel has delivered a message. We call the retained decision for one recipient and channel an <strong>intent</strong>.</p>
-
 <p>For our report product, the useful contract is:</p>
-
 <ul>
 <li>A committed report event can be retried without creating another intent for the same recipient and channel.</li>
 <li>Pending email work observes opt-outs before its dispatch decision. Once a send may be in flight, withdrawal requires a different recovery decision.</li>
@@ -969,15 +961,10 @@
 <li>Support can distinguish suppression, local inbox visibility, provider acceptance and subsequent delivery evidence.</li>
 </ul>
 <p>Product requirements should also specify how late a message may be. A report-ready message can remain useful after a short outage; an expired invitation cannot. Store an expiry time where needed and check it before starting a send. A queue retry budget should not outlive the message's usefulness.</p>
-
 <p>The inbox is durable history, while a badge is a projection of what the user has acknowledged. Keep that distinction from <a href="#" data-nav="topic" data-slug="newly-unread-indicator">the unread-indicator design</a>. Opening the inbox need not assert that every email was read.</p>
-
 <h2>Separate routing from delivery</h2>
-
 <p>The product commits the report change and an outbox entry together. A relay publishes the event. This is the <a href="#" data-nav="topic" data-slug="event-bus-for-product-events">transactional outbox</a> boundary: losing a process after the report commits must leave the notification work discoverable.</p>
-
 <p>A router consumes the event, selects recipients and channels, and records their intents. Channel workers perform those intents later. The <a href="#" data-nav="topic" data-slug="task-queue-vs-event-stream">event stream carries a fact; the work queue assigns an action</a>. Rebuilding an analytics projection from old events should not silently resend old notifications.</p>
-
 <div class="mermaid">flowchart TD
     accTitle: From product fact to channel work
     accDescr: Product state and an outbox commit together. A relay publishes to the router, which retains intents in the notification database. Dispatch workers read pending work. Inbox writes stay local; email goes through a provider. Verified provider events return through a receipt handler.
@@ -988,43 +975,25 @@
     W -->|Send|E["Email provider"]
     E -->|Webhook|H["Receipt handler"]
     H -->|Verified evidence|D</div>
-
 <p>The database owns intents, preferences, inbox rows and delivery history. A queue can carry intent IDs to wake workers quickly, but a scan of pending work must recover a lost wake-up. Otherwise the gap between saving an intent and publishing its queue message can strand it forever.</p>
-
 <p>These are responsibilities, not a demand for six independently deployed services. One application and database can provide the first version. Split workers and queues when a slow provider or bulk workload needs isolation.</p>
-
 <p>Uber's historical RAMEN account makes a related separation between deciding when to generate an update, constructing its payload and delivering it. Its foreground app transport is a different system from our email adapter; the useful architectural idea is keeping product decisions separate from transport behavior.</p>
-
 <h2>Retain the decision, then record attempts</h2>
-
 <p>Use <code>(tenant, event, recipient, channel)</code> as the intent's unique identity. The small single-tenant download omits tenant. A template version is an attribute, not part of that identity: deploying a new template must not turn a retry into a second notification.</p>
-
 <p>An intent stores the chosen template version, locale and rendering inputs. Before its first external call, freeze the exact provider payload and destination. Re-reading a mutable display name or template during a retry can change the request even when its key stays the same.</p>
-
-<table><thead><tr><th>Stored record</th><th>What it lets us answer</th></tr></thead><tbody><tr><td>Event and routing progress</td><td>Did we retain this fact, and finish enumerating its audience?</td></tr><tr><td>Recipient-channel intent</td><td>What message do we owe, when is it due, and may it expire?</td></tr><tr><td>Attempt</td><td>Which provider call ran, under which preference decision, and what did it return?</td></tr><tr><td>Provider message and evidence</td><td>Which external message do later callbacks describe?</td></tr><tr><td>Inbox item</td><td>What can this account read locally?</td></tr></tbody></table>Store the event receipt and a small event's intents in one transaction. Saving the receipt first and crashing halfway through routing would make the replay skip missing recipients. For a large audience, retain a fanout job and advance its progress only with the corresponding inserted intents.
-
+<table><thead><tr><th>Stored record</th><th>What it lets us answer</th></tr></thead><tbody><tr><td>Event and routing progress</td><td>Did we retain this fact, and finish enumerating its audience?</td></tr><tr><td>Recipient-channel intent</td><td>What message do we owe, when is it due, and may it expire?</td></tr><tr><td>Attempt</td><td>Which provider call ran, under which preference decision, and what did it return?</td></tr><tr><td>Provider message and evidence</td><td>Which external message do later callbacks describe?</td></tr><tr><td>Inbox item</td><td>What can this account read locally?</td></tr></tbody></table>
+<p>Store the event receipt and a small event's intents in one transaction. Saving the receipt first and crashing halfway through routing would make the replay skip missing recipients. For a large audience, retain a fanout job and advance its progress only with the corresponding inserted intents.</p>
 <p>An internal API might accept <code>POST /notification-events</code> with an event ID, event type, subject and audience reference. Authenticate the producing service and authorize that audience; callers should not acquire permission to email arbitrary users merely by knowing an ID. Return accepted only after the routing job is durable. Reuse with incompatible input is an error.</p>
-
 <p>For readers, <code>GET /notifications?before=...</code> selects the authenticated account's inbox using a stable <code>(created_at, id)</code> cursor. Support lookup joins the event's intents and attempts. Index these two access paths rather than expecting one global delivery-status scan to serve both.</p>
-
 <p>At larger volume, partition recipient state by tenant and user so an inbox read and its uniqueness check stay together. Routing spans those partitions: retain the fanout job separately and replay idempotent recipient inserts instead of assuming a cross-shard transaction. Keep an event-to-intent index for support lookups.</p>
-
 <h2>Apply preferences at a precise boundary</h2>
-
 <p>Routing is too early to make the final email preference decision. Ada can disable email while a backlog is draining. For a pending intent, read her current settings and record the dispatch decision atomically with claiming that work. In our design, an opt-out committed before this decision suppresses it.</p>
-
 <p>Do not hold the transaction open during the provider call. It would occupy database resources without making the remote provider participate in the transaction. An opt-out committed after the local decision can still race with the send.</p>
-
 <p>Record the preference version that authorized dispatch. That gives support a concrete explanation instead of a current settings screen that disagrees with yesterday's decision. Category and tenant policy need similarly explicit precedence; a report update should not inherit an unrelated marketing preference.</p>
-
 <p>Quiet hours introduce a due time, computed in the user's timezone, rather than a sleeping worker. A digest also needs membership: retain which events belong to which digest occurrence so rebuilding it cannot notify the same events again. The <a href="#" data-nav="topic" data-slug="distributed-task-scheduler">scheduler</a> supplies due-work recovery; it cannot decide those product rules for us.</p>
-
 <h2>Recover an uncertain send</h2>
-
 <p>A successful provider reply gives us a message ID. A timeout may give us nothing, even if the provider already accepted the email. Generating a fresh ID on the next attempt risks a second message.</p>
-
 <p>Instead, generate a stable operation key from the intent and send the frozen payload under that key. The adapter must rely on a documented provider contract. Resend, for example, retains idempotency keys for 24 hours, returns the previous result for a repeated request and rejects a changed payload under the same key. Our retry window must fit that contract.</p>
-
 <div class="mermaid">sequenceDiagram
     accTitle: A lost reply does not require a second email
     accDescr: The worker records its dispatch decision, sends a stable key and payload, then loses the provider reply after acceptance. It records uncertainty. Repeating the original request within the provider's idempotency window returns the same message ID.
@@ -1039,63 +1008,34 @@
     W->>P: Retry K, same payload
     P-->>W: Original message ID
     W->>D: Record accepted message</div>
-
 <p>This is the external version of <a href="#" data-nav="topic" data-slug="retries-timeouts-idempotency">retry identity</a>. Our database can prevent duplicate intents; it cannot unilaterally prevent duplicate effects at another company's API.</p>
-
 <p>A worker can also disappear before it records <code>unknown</code>, leaving <code>sending</code> behind. Production workers need expiring claims and guarded completion. On reclaim, treat the prior call as uncertain, even if it might never have left the machine. A stale worker must not overwrite newer local evidence, and concurrent provider attempts must still use the same identity.</p>
-
 <p>If the provider window expires, look up the original operation where supported or retain the unknown state for an explicit decision. A circuit breaker stops more calls during an outage; it does not explain earlier calls. Moving uncertain work from provider A to provider B also loses A's deduplication protection.</p>
-
 <p>There is a preference consequence too. Retrying an unknown operation under its original decision may create its first acceptance after a later opt-out if the earlier call never arrived. Our fixture permits that. A stricter withdrawal policy needs lookup or cancellation support, or must leave the outcome unresolved rather than risk starting a send.</p>
-
 <p>Distinguish this uncertainty from a definite refusal. Invalid input should not retry unchanged. A documented throttle can schedule a later attempt with backoff and jitter. Bound retries by provider limits, message expiry and the acceptable duplicate-versus-miss policy.</p>
-
 <h2>Let evidence describe delivery</h2>
-
 <p>The inbox writer can insert the item and mark its intent visible in one database transaction. A unique event-recipient key makes repetition harmless. Reads still require current authorization; a link inside an old message must not grant continuing access to a report.</p>
-
 <p>Email crosses another owner's boundary. Amazon SES distinguishes a successful send request from delivery to the recipient's mail server. Neither proves that the person read it. Name the status accordingly rather than showing one ambiguous green “sent” flag.</p>
-
 <p>Provider webhooks form another retried input stream. Resend documents duplicate and out-of-order delivery. Verify the signature over the raw request body, bind the provider account and message to our intent, then durably store the receipt before acknowledging it. Applying the evidence can happen in that transaction or through recoverable pending work.</p>
-
 <p>A delivery event might arrive before the send response has been saved. Keep that unmatched evidence for reconciliation; do not discard it because the intent currently lacks the message ID. Once delivery evidence exists, a delayed send response must not replace it with a weaker accepted-only status. Complaints and bounces are additional facts worth retaining, not merely numbers in one increasing status sequence.</p>
-
 <p>Receipt retention must cover the intended replay window. Removing all deduplication records while old events can still return may recreate messages. Retain minimal identities where possible and expire sensitive bodies according to the product's <a href="#" data-nav="topic" data-slug="data-retention-and-deletion">retention policy</a>.</p>
-
 <h3>Add push without hiding its differences</h3>
-
 <p>FCM returning a message ID means acceptance for delivery, not arrival at the device. Its message lifespan bounds how long unavailable-device work remains useful. An expired meeting invitation should not appear when a phone reconnects days later.</p>
-
 <p>A push collapse key can replace an older pending update with a newer one. That is useful for “refresh this report,” but it is not the same as deduplicating a particular send, nor does it preserve every distinct report event. Keep durable history in the inbox when each event matters.</p>
-
 <p>Track device tokens separately from users, remove tokens on definitive invalid-token feedback, and preserve per-device outcomes. SMS would add its own provider error mapping, expiry, cost budget and delivery evidence. A shared adapter interface should expose these differences rather than promise universal exactly-once delivery.</p>
-
 <h2>Keep a large audience from blocking small work</h2>
-
 <p>Suppose a chosen load has 40 report events per second, five recipients per event, and email plus inbox for each recipient. That creates 400 intents per second. If 25% of email intents are suppressed, the email lane receives 150 first attempts per second; the inbox still receives 200 writes per second. Retries add provider calls, not new intents.</p>
-
 <p>Now add an announcement with 120,000 eligible email recipients. At a hypothetical bulk allowance of 200 first attempts per second, the best-case drain time is ten minutes, before retries or throttling. These are planning assumptions, not measured throughput or a provider quota.</p>
-
 <p>A single FIFO queue can put report messages behind that announcement. Allocate a separate bulk budget and retain capacity for transactional work. Separate queues alone are insufficient if both workers exhaust the same provider account quota or database pool. <a href="#" data-nav="topic" data-slug="rate-limiter-placement-and-keys">Rate-limit placement</a> determines which shared resource is actually protected.</p>
-
 <p>Enumerate the announcement's audience in recoverable chunks, using a frozen audience version or an explicit membership cutoff. Advance the cursor with the chunk's durable intents; replay can then reuse their unique keys. Re-querying a changing audience without a membership rule can skip or unexpectedly add recipients. This is the <a href="#" data-nav="topic" data-slug="fanout-patterns">fanout progress problem</a> at notification scale.</p>
-
 <p>Per-user limits solve a different problem: protecting attention. A mention storm might create several durable inbox items but only one push or digest. Record that coalescing decision so a retry cannot consume another attention allowance or send another summary. Provider quotas alone cannot express it.</p>
-
 <p>A <a href="#" data-nav="topic" data-slug="batching">batch adapter</a> can reduce calls where the provider supports it, but must record each recipient's result. Retry the failed subset with the appropriate stable identities. Share template work only for identical locale and content; personalization must remain bound to the right recipient.</p>
-
 <p>Measure oldest eligible intent age per lane, provider throttles, unknown-attempt age and suppression reasons. Count provider acceptance and delivery evidence separately. A provider's temporary outage can delay callbacks, so “no delivery event yet” is not a measured permanent failure.</p>
-
 <h2>Run the smaller recovery experiment</h2>
-
 <p>The notification example isolates four intents in private SQLite files. Ada gets email and an inbox item. Bo starts with email disabled; Cy opts out after routing. A separate fake provider accepts Ada's email and deliberately loses the reply.</p>
-
 <p>It makes local Python calls and sends no email. Its provider keys never expire. It implements neither a worker pool nor automatic recovery from abandoned <code>sending</code> claims; those remain production requirements described above.</p>
-
 <p>Run with Python 3. This capture was checked on 18 September 2026 with Python 3.14.6 and SQLite 3.53.4, including optimized Python:</p>
-
 <pre><code class="language-bash">python3 m14-notifications.py</code></pre>
-
 <pre><code class="language-output">route new event: True
 route duplicate: False
 retained intents: 4
@@ -1114,11 +1054,8 @@ Ada | email | delivered | 1
 Ada | in-app | visible | 1
 Bo | email | suppressed | 1
 Cy | email | suppressed | 2</code></pre>
-
 <p>Ada's two provider calls leave one acceptance record. Reopening the files preserves that identity. Only the later trusted callback marks delivery; it is a direct function call, not a verified public webhook. Bo and Cy never reach the provider, and Cy's version-two preference explains why.</p>
-
-<p>To test the subtle boundary, repeat the experiment with a provider that times out <strong>before</strong> accepting. Disable Ada's email, then retry the unknown intent. Under this fixture's stated rule, the retry still uses the original decision and can create the message. Compare that with Cy, whose still-pending intent is suppressed. Both outcomes follow from where the service recorded permission to begin sending.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>To test the subtle boundary, repeat the experiment with a provider that times out <strong>before</strong> accepting. Disable Ada's email, then retry the unknown intent. Under this fixture's stated rule, the retry still uses the original decision and can create the message. Compare that with Cy, whose still-pending intent is suppressed. Both outcomes follow from where the service recorded permission to begin sending.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>Problem Statement & Scale</h2>
       <p>A modern notification system must reliably send millions of notifications per day across diverse channels: Apple Push Notification service (APNs), Firebase Cloud Messaging (FCM), SMS (via Twilio/Sinch), and Email (via SendGrid/Amazon SES). The primary challenges include handling massive traffic spikes (e.g., breaking news alerts to 50 million users), preventing duplicate sends, respecting user opt-out and quiet-hour rate limits, and guaranteeing high delivery rates with end-to-end telemetry.</p>
 
@@ -1391,7 +1328,7 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

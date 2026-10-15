@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -340,68 +340,38 @@
         
       </section>
 
-      <div id="build-walkthrough-pane">
-        <div class="build-run">
-          <div class="build-run__text">
-            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
-            <code>node demo.js</code> and <code>node test.js</code>.
-          </div>
-          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="consistent-hashing-ring">Copy setup script</button>
-        </div>
-
-        <div class="build-files"><a href="#build-file-consistent-hashing-ring-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-consistent-hashing-ring-README_md">README.md</a><a href="#build-file-consistent-hashing-ring-ring_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-consistent-hashing-ring-ring_js">ring.js</a><a href="#build-file-consistent-hashing-ring-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-consistent-hashing-ring-demo_js">demo.js</a><a href="#build-file-consistent-hashing-ring-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-consistent-hashing-ring-test_js">test.js</a></div><article class="prose" id="build-file-consistent-hashing-ring-README_md"><h2>Consistent Hashing Ring with Virtual Nodes</h2>
-
-<p>Maps keys to nodes so that adding or removing a node moves only about <code>1/N</code> of the keys, not nearly all of them.</p>
-
+      <div id="build-walkthrough-pane"><article class="prose" id="build-file-consistent-hashing-ring-README_md"><p>Maps keys to nodes so that adding or removing a node moves only about <code>1/N</code> of the keys, not nearly all of them.</p>
 <pre><code class="language-js">const ring = new HashRing({ vnodesPerWeight: 128 });
 ring.addNode(&#039;A&#039;).addNode(&#039;B&#039;).addNode(&#039;C&#039;, { weight: 2 });
 ring.getNode(&#039;user:42&#039;);        // &#039;C&#039;
 ring.getNodes(&#039;user:42&#039;, 3);    // [&#039;C&#039;, &#039;A&#039;, &#039;B&#039;], a replica preference list of distinct nodes
 ring.ownership();               // { A: 0.25.., B: 0.24.., C: 0.51.. }, exact share of the hash space</code></pre>
-
 <h2>The problem and where it shows up</h2>
-
-<p>With <code>node = hash(key) % N</code>, changing N from 4 to 5 remaps about <code>1 - 1/5 = 80%</code> of keys (the demo measures</p>
-<p>79.7%). For a cache fleet that is a mass cold-miss event. For a datastore it is a mass data migration.</p>
-<p>Consistent hashing puts both keys and nodes on a circle, and a key belongs to the next node clockwise.</p>
-<p>A membership change only affects the arcs next to the changed node. It's used in:</p>
-
+<p>With <code>node = hash(key) % N</code>, changing N from 4 to 5 remaps about <code>1 - 1/5 = 80%</code> of keys (the demo measures 79.7%). For a cache fleet that is a mass cold-miss event. For a datastore it is a mass data migration. Consistent hashing puts both keys and nodes on a circle, and a key belongs to the next node clockwise. A membership change only affects the arcs next to the changed node. It's used in:</p>
 <ul>
 <li><strong>Amazon Dynamo / DynamoDB-lineage stores and Riak</strong>: partitioning and replica preference lists.</li>
-<li><strong>Apache Cassandra</strong>: token ring. Each node owns <code>num_tokens</code> vnodes (the default dropped from 256 to 16</li>
-  in 4.0, with a token-allocation algorithm to keep balance).
+<li><strong>Apache Cassandra</strong>: token ring. Each node owns <code>num_tokens</code> vnodes (the default dropped from 256 to 16 in 4.0, with a token-allocation algorithm to keep balance).</li>
 <li><strong>Memcached clients</strong> (libketama, spymemcached): client-side key-to-server selection.</li>
-<li><strong>Load balancers</strong>: Envoy <code>RING_HASH</code> and <code>MAGLEV</code>, NGINX <code>hash ... consistent</code>, HAProxy <code>hash-type consistent</code>,</li>
-  for session affinity and cache locality.
+<li><strong>Load balancers</strong>: Envoy <code>RING_HASH</code> and <code>MAGLEV</code>, NGINX <code>hash ... consistent</code>, HAProxy <code>hash-type consistent</code>, for session affinity and cache locality.</li>
 <li><strong>Discord, Akamai and others</strong>: routing users or objects to shards and cache servers.</li>
 </ul>
 <h2>Design</h2>
-
 <pre><code class="language-text">0 / 2^32
          A#7 .   . B#2
      C#1 .           . A#3        key k: h = md5(k)[0..4] as uint32
         .      ring     .          owner = first vnode with point &gt;= h (wrap to index 0)
      B#9 .           . C#4
           C#0 .   . A#1</code></pre>
-
 <ul>
-<li><strong>Hash space</strong>: uint32. The default hash is the first 4 bytes of MD5, as libketama does. Any <code>(string) => uint32</code> can be injected; the tests use one that places points at chosen positions.</li>
-<li><strong>Virtual nodes</strong>: node <code>X</code> of weight <code>w</code> gets <code>round(vnodesPerWeight * w)</code> points (at least 1), at <code>hash("X#0") ... hash("X#k-1")</code>.</li>
-  Many small arcs per node average out the randomness of arc lengths.
-<li><strong>Storage</strong>: two parallel sorted arrays, <code>points[]</code> and <code>owners[]</code>. Lookup is a lower-bound binary search,</li>
-  and a hash past the last point wraps to index 0. A point exactly equal to the key hash owns the key.
-<li><strong>Collisions</strong>: if two vnodes hash to the same point, the node with the smaller id wins. Ties are</li>
-  broken the same way everywhere, so every process builds a byte-identical ring (tested).
-<li><strong>Preference list</strong> (<code>getNodes(key, n)</code>): walk clockwise from the key's position and skip vnodes whose</li>
-  physical node was already chosen. This returns <code>min(n, size)</code> distinct nodes, which is the Dynamo
-  "skip positions to ensure distinct physical nodes" rule.
-<li><strong>Ownership</strong>: the arc <code>(points[i-1], points[i]]</code> belongs to <code>owners[i]</code>, and index 0 also owns the wrap</li>
-  arc. <code>ownership()</code> sums the arcs exactly, so it doesn't need sampling.
-<li><strong>Movement stats</strong>: <code>assignments(keys)</code> snapshots key→node. <code>movementStats(before, after)</code> returns</li>
-  the moved count, the fraction, and the <code>from->to</code> flow matrix.
+<li><strong>Hash space</strong>: uint32. The default hash is the first 4 bytes of MD5, as libketama does. Any <code>(string) =&gt; uint32</code> can be injected; the tests use one that places points at chosen positions.</li>
+<li><strong>Virtual nodes</strong>: node <code>X</code> of weight <code>w</code> gets <code>round(vnodesPerWeight * w)</code> points (at least 1), at <code>hash(&quot;X#0&quot;) ... hash(&quot;X#k-1&quot;)</code>. Many small arcs per node average out the randomness of arc lengths.</li>
+<li><strong>Storage</strong>: two parallel sorted arrays, <code>points[]</code> and <code>owners[]</code>. Lookup is a lower-bound binary search, and a hash past the last point wraps to index 0. A point exactly equal to the key hash owns the key.</li>
+<li><strong>Collisions</strong>: if two vnodes hash to the same point, the node with the smaller id wins. Ties are broken the same way everywhere, so every process builds a byte-identical ring (tested).</li>
+<li><strong>Preference list</strong> (<code>getNodes(key, n)</code>): walk clockwise from the key's position and skip vnodes whose physical node was already chosen. This returns <code>min(n, size)</code> distinct nodes, which is the Dynamo "skip positions to ensure distinct physical nodes" rule.</li>
+<li><strong>Ownership</strong>: the arc <code>(points[i-1], points[i]]</code> belongs to <code>owners[i]</code>, and index 0 also owns the wrap arc. <code>ownership()</code> sums the arcs exactly, so it doesn't need sampling.</li>
+<li><strong>Movement stats</strong>: <code>assignments(keys)</code> snapshots key→node. <code>movementStats(before, after)</code> returns the moved count, the fraction, and the <code>from-&gt;to</code> flow matrix.</li>
 </ul>
 <h3>Invariants (all tested)</h3>
-
 <ol>
 <li>Adding node X: every key that moves, moves <strong>to X</strong>.</li>
 <li>Removing node X: every key that moves, moves <strong>from X</strong>. The number moved equals X's key count.</li>
@@ -411,511 +381,37 @@ ring.ownership();               // { A: 0.25.., B: 0.24.., C: 0.51.. }, exact sh
 <li>Ownership shares sum to 1. Binary search agrees with a linear scan.</li>
 </ol>
 <h2>Complexity</h2>
-
-<table><thead><tr><th>Operation</th><th>Time</th><th>Space</th></tr></thead><tbody><tr><td><code>getNode</code></td><td>O(log V)</td></tr><tr><td><code>getNodes(key, n)</code></td><td>O(log V + steps). Steps are coupon-collector-like, ≈ N·(H_N − H_{N−n}), which is a handful for small n. Worst case O(V)</td><td>O(n)</td></tr><tr><td><code>addNode</code> / <code>removeNode</code> / <code>setWeight</code></td><td>O(V log V) full rebuild</td><td>O(V)</td></tr><tr><td><code>ownership</code></td><td>O(V)</td><td>O(N)</td></tr></tbody></table>V = total vnodes, N = physical nodes. The rebuild is deliberately simple. Membership changes are rare
-<p>compared with lookups, and an incremental sorted merge would be O(V).</p>
-
+<table><thead><tr><th>Operation</th><th>Time</th><th>Space</th></tr></thead><tbody><tr><td><code>getNode</code></td><td>O(log V)</td><td></td></tr><tr><td><code>getNodes(key, n)</code></td><td>O(log V + steps). Steps are coupon-collector-like, ≈ N·(H_N − H_{N−n}), which is a handful for small n. Worst case O(V)</td><td>O(n)</td></tr><tr><td><code>addNode</code> / <code>removeNode</code> / <code>setWeight</code></td><td>O(V log V) full rebuild</td><td>O(V)</td></tr><tr><td><code>ownership</code></td><td>O(V)</td><td>O(N)</td></tr></tbody></table>
+<p>V = total vnodes, N = physical nodes. The rebuild is deliberately simple. Membership changes are rare compared with lookups, and an incremental sorted merge would be O(V).</p>
 <h3>Balance vs vnodes (from <code>demo.js</code>, 4 nodes, 100k keys)</h3>
-
-<table><thead><tr><th>vnodes/node</th><th>largest share (ideal 25%)</th><th>CV of key counts</th></tr></thead><tbody><tr><td>1</td><td>55.5%</td><td>0.94</td></tr><tr><td>32</td><td>28.1%</td><td>0.12</td></tr><tr><td>128</td><td>27.4%</td><td>0.09</td></tr><tr><td>512</td><td>25.7%</td><td>0.02</td></tr></tbody></table>Imbalance falls roughly as <code>1/sqrt(vnodes)</code>. The cost is memory and a slightly longer binary search.
-
+<table><thead><tr><th>vnodes/node</th><th>largest share (ideal 25%)</th><th>CV of key counts</th></tr></thead><tbody><tr><td>1</td><td>55.5%</td><td>0.94</td></tr><tr><td>32</td><td>28.1%</td><td>0.12</td></tr><tr><td>128</td><td>27.4%</td><td>0.09</td></tr><tr><td>512</td><td>25.7%</td><td>0.02</td></tr></tbody></table>
+<p>Imbalance falls roughly as <code>1/sqrt(vnodes)</code>. The cost is memory and a slightly longer binary search.</p>
 <h2>Failure modes and trade-offs</h2>
-
 <ul>
-<li><strong>Too few vnodes</strong>: hot nodes get 2x their share. <strong>Too many</strong>: memory, rebuild time, and (in Cassandra)</li>
-  repair and streaming overhead per token range. That is why Cassandra reduced its default.
-<li><strong>Hot keys are not fixed by hashing</strong>: a single viral key still lands on one node. Mitigate with key</li>
-  salting or splitting, replica reads, or a local cache in front.
-<li><strong>Membership disagreement</strong>: if clients hold different rings (for example, one hasn't seen a node leave),</li>
-  the same key routes to different nodes. Real systems spread ring state by gossip or a coordination service,
-  and tolerate a convergence window (hinted handoff, read repair).
-<li><strong>Cascading failure</strong>: when a node dies, its whole load moves to its clockwise successors. With vnodes it</li>
-  is spread over many successors, which is one of the main reasons for vnodes.
-<li><strong>Replicas in the same failure domain</strong>: distinct <em>nodes</em> aren't distinct <em>racks/AZs</em>. Production preference</li>
-  lists also skip nodes in an already-used rack (Cassandra's <code>NetworkTopologyStrategy</code>).
+<li><strong>Too few vnodes</strong>: hot nodes get 2x their share. <strong>Too many</strong>: memory, rebuild time, and (in Cassandra) repair and streaming overhead per token range. That is why Cassandra reduced its default.</li>
+<li><strong>Hot keys are not fixed by hashing</strong>: a single viral key still lands on one node. Mitigate with key salting or splitting, replica reads, or a local cache in front.</li>
+<li><strong>Membership disagreement</strong>: if clients hold different rings (for example, one hasn't seen a node leave), the same key routes to different nodes. Real systems spread ring state by gossip or a coordination service, and tolerate a convergence window (hinted handoff, read repair).</li>
+<li><strong>Cascading failure</strong>: when a node dies, its whole load moves to its clockwise successors. With vnodes it is spread over many successors, which is one of the main reasons for vnodes.</li>
+<li><strong>Replicas in the same failure domain</strong>: distinct <em>nodes</em> aren't distinct <em>racks/AZs</em>. Production preference lists also skip nodes in an already-used rack (Cassandra's <code>NetworkTopologyStrategy</code>).</li>
 <li><strong>Weights are approximate</strong>: shares converge to the weight ratio only as vnodes grow (the demo's 2x node gets 52.2%, not 50%).</li>
 </ul>
 <h2>How production systems do it</h2>
-
 <ul>
-<li><strong>libketama</strong> (memcached): each server gets about 160 points weighted by memory. Each MD5 digest yields</li>
-  <strong>4</strong> 32-bit points, so it runs 40 digests per server.
-<li><strong>Cassandra</strong>: Murmur3Partitioner with a signed 64-bit token space. Since 4.0, <code>num_tokens: 16</code> plus</li>
-  <code>allocate_tokens_for_local_replication_factor</code> places tokens to minimize imbalance instead of choosing them at random.
-<li><strong>Dynamo (2007 paper)</strong>: evolved from random tokens per node (strategy 1) to Q equal-sized fixed partitions</li>
-  with tokens assigned to nodes (strategy 3), which decouples partitioning from placement and makes
-  bootstrap and recovery simpler. Preference lists skip positions so replicas land on distinct physical nodes.
-<li><strong>Envoy</strong>: <code>RING_HASH</code> (configurable <code>minimum_ring_size</code>, default 1024) or <code>MAGLEV</code> (a 65537-entry lookup</li>
-  table, O(1) lookup, near-perfect balance, slightly more disruption on change).
-<li><strong>Jump consistent hash</strong> (Google, 2014): no ring and no memory, O(log N), perfect balance, but only for</li>
-  numbered buckets that are added or removed at the end.
-<li><strong>Rendezvous (HRW) hashing</strong>: score every node with <code>hash(key, node)</code> and take the max. O(N) per lookup,</li>
-  no vnodes needed, and a natural top-k preference list.
+<li><strong>libketama</strong> (memcached): each server gets about 160 points weighted by memory. Each MD5 digest yields <strong>4</strong> 32-bit points, so it runs 40 digests per server.</li>
+<li><strong>Cassandra</strong>: Murmur3Partitioner with a signed 64-bit token space. Since 4.0, <code>num_tokens: 16</code> plus <code>allocate_tokens_for_local_replication_factor</code> places tokens to minimize imbalance instead of choosing them at random.</li>
+<li><strong>Dynamo (2007 paper)</strong>: evolved from random tokens per node (strategy 1) to Q equal-sized fixed partitions with tokens assigned to nodes (strategy 3), which decouples partitioning from placement and makes bootstrap and recovery simpler. Preference lists skip positions so replicas land on distinct physical nodes.</li>
+<li><strong>Envoy</strong>: <code>RING_HASH</code> (configurable <code>minimum_ring_size</code>, default 1024) or <code>MAGLEV</code> (a 65537-entry lookup table, O(1) lookup, near-perfect balance, slightly more disruption on change).</li>
+<li><strong>Jump consistent hash</strong> (Google, 2014): no ring and no memory, O(log N), perfect balance, but only for numbered buckets that are added or removed at the end.</li>
+<li><strong>Rendezvous (HRW) hashing</strong>: score every node with <code>hash(key, node)</code> and take the max. O(N) per lookup, no vnodes needed, and a natural top-k preference list.</li>
 </ul>
-<h2>How to run</h2>
-
-<pre><code class="language-bash">node demo.js   # balance vs vnodes, key movement vs hash % N, weights, preference lists
-node test.js   # 15 tests: wrap-around, exact ownership, movement invariants, replicas, collisions</code></pre>
-
-<p>Node ≥ 18, no dependencies (uses <code>node:crypto</code> MD5). Both finish in a couple of seconds.</p>
-
 <h2>Extension exercises</h2>
-
 <ol>
-<li><strong>Rack-aware preference lists</strong>: give nodes a <code>zone</code> and make <code>getNodes</code> skip nodes whose zone is already used,</li>
-   falling back to reusing zones only when there are fewer zones than replicas.
+<li><strong>Rack-aware preference lists</strong>: give nodes a <code>zone</code> and make <code>getNodes</code> skip nodes whose zone is already used, falling back to reusing zones only when there are fewer zones than replicas.</li>
 <li><strong>Incremental add/remove</strong>: replace the full rebuild with an O(V) sorted merge or filter, and benchmark both at 10k vnodes.</li>
 <li><strong>Bounded loads</strong> (Google/Vimeo, 2017): cap each node at <code>(1+ε) * average</code> load and send overflow clockwise. Measure the max load under a Zipf workload.</li>
 <li><strong>Rendezvous vs ring</strong>: implement HRW, then compare movement, balance and lookup cost at N = 5, 50 and 500.</li>
 <li><strong>Ketama-compatible mode</strong>: 4 points per MD5 digest and weight-proportional point counts. Check your ring matches a known libketama server list.</li>
 </ol></article>
-          <div class="code-block" id="build-file-consistent-hashing-ring-ring_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">ring.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-/**
- * Consistent hash ring with virtual nodes and weights.
- *
- * The hash space is the 32-bit circle [0, 2^32). Each physical node owns
- * round(vnodesPerWeight * weight) points (&quot;virtual nodes&quot;) on the circle. A key is
- * owned by the first point clockwise from hash(key) (wrapping past 2^32 - 1 to 0).
- *
- * Storage: two parallel sorted arrays (points: Uint32 hash, owners: node id), so a
- * lookup is a single lower-bound binary search: O(log V), V = total virtual nodes.
- */
-const crypto = require(&#039;node:crypto&#039;);
-
-const SPACE = 2 ** 32;
-
-/** Default hash: first 4 bytes of MD5, big-endian (the same idea as libketama). */
-function md5Hash32(str) {
-  return crypto.createHash(&#039;md5&#039;).update(str).digest().readUInt32BE(0);
-}
-
-class HashRing {
-  /**
-   * @param {object} [opts]
-   * @param {number} [opts.vnodesPerWeight=128] virtual nodes for a node of weight 1
-   * @param {(s: string) =&gt; number} [opts.hash] must return an integer in [0, 2^32)
-   */
-  constructor({ vnodesPerWeight = 128, hash = md5Hash32 } = {}) {
-    if (!Number.isInteger(vnodesPerWeight) || vnodesPerWeight &lt; 1) {
-      throw new RangeError(&#039;vnodesPerWeight must be a positive integer&#039;);
-    }
-    if (typeof hash !== &#039;function&#039;) throw new TypeError(&#039;hash must be a function&#039;);
-    this.vnodesPerWeight = vnodesPerWeight;
-    this.hash = hash;
-    this.nodes = new Map(); // id -&gt; { weight, vnodes }
-    this.points = [];       // sorted ascending
-    this.owners = [];       // owners[i] owns points[i]
-  }
-
-  _hashOf(str) {
-    const h = this.hash(str);
-    if (!Number.isInteger(h) || h &lt; 0 || h &gt;= SPACE) throw new RangeError(`hash returned ${h}, expected uint32`);
-    return h;
-  }
-
-  get size() { return this.nodes.size; }
-  get vnodeCount() { return this.points.length; }
-
-  /** Add a node. Weight scales its number of virtual nodes (and so its share of keys). */
-  addNode(id, { weight = 1 } = {}) {
-    if (typeof id !== &#039;string&#039; || id.length === 0) throw new TypeError(&#039;node id must be a non-empty string&#039;);
-    if (this.nodes.has(id)) throw new Error(`node ${id} already exists`);
-    if (typeof weight !== &#039;number&#039; || !Number.isFinite(weight) || weight &lt;= 0) {
-      throw new RangeError(&#039;weight must be a positive finite number&#039;);
-    }
-    const vnodes = Math.max(1, Math.round(this.vnodesPerWeight * weight));
-    this.nodes.set(id, { weight, vnodes });
-    this._rebuild();
-    return this;
-  }
-
-  removeNode(id) {
-    if (!this.nodes.delete(id)) return false;
-    this._rebuild();
-    return true;
-  }
-
-  setWeight(id, weight) {
-    if (!this.nodes.has(id)) throw new Error(`unknown node ${id}`);
-    this.nodes.delete(id);
-    return this.addNode(id, { weight });
-  }
-
-  /**
-   * Rebuild the sorted arrays: O(V log V). Membership changes are rare compared with lookups,
-   * so a full rebuild keeps the code simple. Hash collisions between vnodes are broken
-   * deterministically by node id, so every process builds an identical ring.
-   */
-  _rebuild() {
-    const entries = [];
-    for (const [id, { vnodes }] of this.nodes) {
-      for (let i = 0; i &lt; vnodes; i++) entries.push([this._hashOf(`${id}#${i}`), id]);
-    }
-    entries.sort((a, b) =&gt; a[0] - b[0] || (a[1] &lt; b[1] ? -1 : a[1] &gt; b[1] ? 1 : 0));
-    // Drop exact duplicate points (keep the first owner by id): a point can only have one owner.
-    this.points = [];
-    this.owners = [];
-    for (const [p, id] of entries) {
-      if (this.points.length &amp;&amp; this.points[this.points.length - 1] === p) continue;
-      this.points.push(p);
-      this.owners.push(id);
-    }
-  }
-
-  /** Index of the first point &gt;= h, wrapping to 0. Classic lower-bound binary search. */
-  _successor(h) {
-    let lo = 0, hi = this.points.length; // search in [lo, hi)
-    while (lo &lt; hi) {
-      const mid = (lo + hi) &gt;&gt;&gt; 1;
-      if (this.points[mid] &lt; h) lo = mid + 1; else hi = mid;
-    }
-    return lo === this.points.length ? 0 : lo;
-  }
-
-  _keyHash(key) {
-    if (typeof key !== &#039;string&#039;) throw new TypeError(&#039;key must be a string&#039;);
-    return this._hashOf(key);
-  }
-
-  /** Owner of key, or null if the ring is empty. */
-  getNode(key) {
-    const h = this._keyHash(key);
-    if (this.points.length === 0) return null;
-    return this.owners[this._successor(h)];
-  }
-
-  /**
-   * Preference list (Dynamo-style): walk clockwise from the key, collecting the first n
-   * DISTINCT physical nodes. Virtual nodes of an already-chosen node are skipped, so replicas
-   * never land twice on the same machine. Returns min(n, size) nodes; the first is the owner.
-   */
-  getNodes(key, n) {
-    if (!Number.isInteger(n) || n &lt; 1) throw new RangeError(&#039;n must be a positive integer&#039;);
-    const h = this._keyHash(key);
-    const want = Math.min(n, this.nodes.size);
-    const out = [];
-    if (want === 0) return out;
-    const seen = new Set();
-    const start = this._successor(h);
-    for (let step = 0; step &lt; this.points.length &amp;&amp; out.length &lt; want; step++) {
-      const id = this.owners[(start + step) % this.points.length];
-      if (!seen.has(id)) { seen.add(id); out.push(id); }
-    }
-    return out;
-  }
-
-  /**
-   * Exact fraction of the hash circle owned by each node. The arc (points[i-1], points[i]]
-   * belongs to owners[i]; the first point also owns the wrap-around arc from the last point.
-   */
-  ownership() {
-    const share = Object.fromEntries([...this.nodes.keys()].map((id) =&gt; [id, 0]));
-    const P = this.points, n = P.length;
-    for (let i = 0; i &lt; n; i++) {
-      const prev = i === 0 ? P[n - 1] - SPACE : P[i - 1];
-      share[this.owners[i]] += (P[i] - prev) / SPACE;
-    }
-    return share;
-  }
-
-  /** Count keys per node for a given key list. */
-  distribution(keys) {
-    const counts = Object.fromEntries([...this.nodes.keys()].map((id) =&gt; [id, 0]));
-    for (const k of keys) counts[this.getNode(k)]++;
-    return counts;
-  }
-
-  /** Snapshot key -&gt; owner, for comparing before/after a membership change. */
-  assignments(keys) {
-    const m = new Map();
-    for (const k of keys) m.set(k, this.getNode(k));
-    return m;
-  }
-}
-
-/**
- * Compare two assignment maps (from ring.assignments or any key -&gt; node map).
- * Returns { total, moved, fraction, flows: { &quot;a-&gt;b&quot;: count } }.
- */
-function movementStats(before, after) {
-  let moved = 0, total = 0;
-  const flows = {};
-  for (const [k, from] of before) {
-    if (!after.has(k)) continue;
-    total++;
-    const to = after.get(k);
-    if (from !== to) {
-      moved++;
-      const f = `${from}-&gt;${to}`;
-      flows[f] = (flows[f] || 0) + 1;
-    }
-  }
-  return { total, moved, fraction: total ? moved / total : 0, flows };
-}
-
-/** Coefficient of variation (stddev / mean) of a counts object: 0 = perfectly even. */
-function imbalance(counts) {
-  const v = Object.values(counts);
-  const mean = v.reduce((a, b) =&gt; a + b, 0) / v.length;
-  const variance = v.reduce((a, b) =&gt; a + (b - mean) ** 2, 0) / v.length;
-  return Math.sqrt(variance) / mean;
-}
-
-module.exports = { HashRing, movementStats, imbalance, md5Hash32 };
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-consistent-hashing-ring-demo_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">demo.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-const { HashRing, movementStats, imbalance, md5Hash32 } = require(&#039;./ring&#039;);
-
-const KEYS = Array.from({ length: 100_000 }, (_, i) =&gt; `user:${i}`);
-const pct = (x) =&gt; (100 * x).toFixed(1) + &#039;%&#039;;
-const fmt = (counts) =&gt; Object.entries(counts).map(([k, v]) =&gt; `${k}=${v}`).join(&#039;  &#039;);
-
-console.log(&#039;=== 1. Why virtual nodes: balance vs number of points per node ===&#039;);
-for (const v of [1, 8, 32, 128, 512]) {
-  const r = new HashRing({ vnodesPerWeight: v });
-  [&#039;A&#039;, &#039;B&#039;, &#039;C&#039;, &#039;D&#039;].forEach((n) =&gt; r.addNode(n));
-  const own = r.ownership();
-  const max = Math.max(...Object.values(own));
-  console.log(`vnodes/node=${String(v).padStart(3)}  ring points=${String(r.vnodeCount).padStart(4)}  ` +
-    `largest share=${pct(max).padStart(6)} (ideal 25.0%)  CV of key counts=${imbalance(r.distribution(KEYS)).toFixed(3)}`);
-}
-
-console.log(&#039;\n=== 2. Adding a node moves ~1/N of keys, and only onto the new node ===&#039;);
-const ring = new HashRing({ vnodesPerWeight: 128 });
-[&#039;A&#039;, &#039;B&#039;, &#039;C&#039;, &#039;D&#039;].forEach((n) =&gt; ring.addNode(n));
-const before = ring.assignments(KEYS);
-ring.addNode(&#039;E&#039;);
-const afterAdd = ring.assignments(KEYS);
-const add = movementStats(before, afterAdd);
-console.log(`4 -&gt; 5 nodes: moved ${add.moved}/${add.total} = ${pct(add.fraction)} (ideal 1/5 = 20.0%)`);
-console.log(&#039;flows:&#039;, fmt(add.flows));
-
-// Contrast: naive hash(key) % N.
-const modN = (n) =&gt; new Map(KEYS.map((k) =&gt; [k, &#039;n&#039; + (md5Hash32(k) % n)]));
-const mod = movementStats(modN(4), modN(5));
-console.log(`hash % N, 4 -&gt; 5 nodes: moved ${pct(mod.fraction)} (theory 1 - 1/5 = 80%)`);
-
-console.log(&#039;\n=== 3. Removing a node moves only its keys, spread across the survivors ===&#039;);
-ring.removeNode(&#039;B&#039;);
-const rem = movementStats(afterAdd, ring.assignments(KEYS));
-console.log(`remove B: moved ${pct(rem.fraction)}; flows: ${fmt(rem.flows)}`);
-
-console.log(&#039;\n=== 4. Weights: a 2x machine gets ~2x the keys ===&#039;);
-const w = new HashRing({ vnodesPerWeight: 128 });
-w.addNode(&#039;small-1&#039;).addNode(&#039;small-2&#039;).addNode(&#039;big&#039;, { weight: 2 });
-const own = w.ownership();
-console.log(&#039;ownership of hash space:&#039;, Object.entries(own).map(([k, v]) =&gt; `${k}=${pct(v)}`).join(&#039;  &#039;), &#039;(ideal 25/25/50)&#039;);
-console.log(&#039;keys:&#039;, fmt(w.distribution(KEYS)));
-
-console.log(&#039;\n=== 5. Replica preference list (N=3, distinct physical nodes) ===&#039;);
-const rep = new HashRing({ vnodesPerWeight: 64 });
-[&#039;n1&#039;, &#039;n2&#039;, &#039;n3&#039;, &#039;n4&#039;, &#039;n5&#039;].forEach((n) =&gt; rep.addNode(n));
-for (const k of [&#039;cart:alice&#039;, &#039;cart:bob&#039;, &#039;session:42&#039;]) {
-  console.log(`${k.padEnd(11)} -&gt; [${rep.getNodes(k, 3).join(&#039;, &#039;)}]  (first = coordinator; walk skips repeat vnodes)`);
-}
-const k = &#039;cart:alice&#039;;
-const prefBefore = rep.getNodes(k, 3);
-rep.removeNode(prefBefore[0]);
-console.log(`remove ${prefBefore[0]} -&gt; [${rep.getNodes(k, 3).join(&#039;, &#039;)}]  (the two survivors keep their order; a new third joins)`);
-
-console.log(&#039;\n=== 6. Lookup cost ===&#039;);
-console.log(`${ring.vnodeCount} points -&gt; each lookup is a binary search of &lt;= ${Math.ceil(Math.log2(ring.vnodeCount + 1))} comparisons`);
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-consistent-hashing-ring-test_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">test.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-const assert = require(&#039;node:assert/strict&#039;);
-const { HashRing, movementStats, imbalance } = require(&#039;./ring&#039;);
-
-let failed = 0, passed = 0;
-function test(name, fn) {
-  try { fn(); passed++; console.log(&#039;✓ &#039; + name); }
-  catch (e) { failed++; console.log(&#039;✗ &#039; + name + &#039;\n    &#039; + (e &amp;&amp; e.stack || e)); }
-}
-const KEYS = Array.from({ length: 20000 }, (_, i) =&gt; `k${i}`);
-const ringOf = (ids, opts) =&gt; { const r = new HashRing(opts); ids.forEach((id) =&gt; r.addNode(id)); return r; };
-
-// Controllable hash for exact-position tests: &quot;name@123&quot; hashes to 123.
-const posHash = (s) =&gt; {
-  const m = /@(\d+)/.exec(s);
-  if (m) return Number(m[1]);
-  // vnode ids look like &quot;A#0&quot;: place node X&#039;s i-th vnode at table[X][i]
-  const [id, i] = s.split(&#039;#&#039;);
-  return { A: [100, 300], B: [200, 400] }[id][Number(i)];
-};
-
-test(&#039;empty ring returns null / [] and ownership is empty&#039;, () =&gt; {
-  const r = new HashRing();
-  assert.equal(r.getNode(&#039;x&#039;), null);
-  assert.deepEqual(r.getNodes(&#039;x&#039;, 3), []);
-  assert.deepEqual(r.ownership(), {});
-});
-
-test(&#039;key maps to first vnode clockwise, inclusive, with wrap-around past the top&#039;, () =&gt; {
-  const r = ringOf([&#039;A&#039;, &#039;B&#039;], { vnodesPerWeight: 2, hash: posHash }); // A:100,300  B:200,400
-  assert.equal(r.getNode(&#039;k@0&#039;), &#039;A&#039;);
-  assert.equal(r.getNode(&#039;k@100&#039;), &#039;A&#039;);   // exactly on a point -&gt; that point
-  assert.equal(r.getNode(&#039;k@101&#039;), &#039;B&#039;);
-  assert.equal(r.getNode(&#039;k@350&#039;), &#039;B&#039;);
-  assert.equal(r.getNode(&#039;k@401&#039;), &#039;A&#039;);   // past the last point -&gt; wraps to first
-  assert.equal(r.getNode(`k@${2 ** 32 - 1}`), &#039;A&#039;);
-});
-
-test(&#039;ownership is the exact arc length and sums to 1&#039;, () =&gt; {
-  const r = ringOf([&#039;A&#039;, &#039;B&#039;], { vnodesPerWeight: 2, hash: posHash });
-  const own = r.ownership();
-  const S = 2 ** 32;
-  assert.equal(own.B, 200 / S);             // (100,200] + (300,400]
-  assert.equal(own.A, (S - 200) / S);        // (0..100] + (200,300] + wrap (400, 2^32)
-  const big = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;]);
-  const sum = Object.values(big.ownership()).reduce((x, y) =&gt; x + y, 0);
-  assert.ok(Math.abs(sum - 1) &lt; 1e-12);
-});
-
-test(&#039;binary search agrees with a linear scan on random hashes&#039;, () =&gt; {
-  const r = ringOf([&#039;n1&#039;, &#039;n2&#039;, &#039;n3&#039;, &#039;n4&#039;, &#039;n5&#039;, &#039;n6&#039;], { vnodesPerWeight: 50 });
-  let seed = 3;
-  for (let i = 0; i &lt; 5000; i++) {
-    seed = (seed * 1664525 + 1013904223) &gt;&gt;&gt; 0;
-    const idx = r._successor(seed);
-    let lin = r.points.findIndex((p) =&gt; p &gt;= seed);
-    if (lin === -1) lin = 0;
-    assert.equal(idx, lin);
-  }
-  // Points really are sorted and unique.
-  for (let i = 1; i &lt; r.points.length; i++) assert.ok(r.points[i] &gt; r.points[i - 1]);
-});
-
-test(&#039;virtual nodes improve balance (more vnodes -&gt; lower imbalance)&#039;, () =&gt; {
-  const ids = [&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;];
-  const cv1 = imbalance(ringOf(ids, { vnodesPerWeight: 1 }).distribution(KEYS));
-  const cv256 = imbalance(ringOf(ids, { vnodesPerWeight: 256 }).distribution(KEYS));
-  assert.ok(cv256 &lt; cv1, `${cv256} !&lt; ${cv1}`);
-  assert.ok(cv256 &lt; 0.1, `cv with 256 vnodes = ${cv256}`);
-});
-
-test(&#039;adding a node moves ~1/N keys and ONLY onto the new node&#039;, () =&gt; {
-  const r = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;]);
-  const before = r.assignments(KEYS);
-  r.addNode(&#039;e&#039;);
-  const s = movementStats(before, r.assignments(KEYS));
-  for (const flow of Object.keys(s.flows)) assert.ok(flow.endsWith(&#039;-&gt;e&#039;), flow);
-  assert.ok(s.fraction &gt; 0.12 &amp;&amp; s.fraction &lt; 0.28, `moved ${s.fraction}`);
-});
-
-test(&#039;removing a node moves ONLY its keys; others stay put&#039;, () =&gt; {
-  const r = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;]);
-  const before = r.assignments(KEYS);
-  const ownedByC = [...before.values()].filter((n) =&gt; n === &#039;c&#039;).length;
-  assert.equal(r.removeNode(&#039;c&#039;), true);
-  assert.equal(r.removeNode(&#039;c&#039;), false);
-  const s = movementStats(before, r.assignments(KEYS));
-  for (const flow of Object.keys(s.flows)) assert.ok(flow.startsWith(&#039;c-&gt;&#039;), flow);
-  assert.equal(s.moved, ownedByC);
-});
-
-test(&#039;weights: share of hash space is proportional to weight&#039;, () =&gt; {
-  const r = new HashRing({ vnodesPerWeight: 256 });
-  r.addNode(&#039;w1&#039;, { weight: 1 }).addNode(&#039;w3&#039;, { weight: 3 });
-  const own = r.ownership();
-  assert.ok(Math.abs(own.w3 - 0.75) &lt; 0.05, `w3 share ${own.w3}`);
-  assert.equal(r.nodes.get(&#039;w3&#039;).vnodes, 768);
-  // Fractional weights round to at least one vnode.
-  r.addNode(&#039;tiny&#039;, { weight: 0.0001 });
-  assert.equal(r.nodes.get(&#039;tiny&#039;).vnodes, 1);
-});
-
-test(&#039;setWeight only moves keys to/from the reweighted node&#039;, () =&gt; {
-  const r = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;]);
-  const before = r.assignments(KEYS);
-  r.setWeight(&#039;b&#039;, 2);
-  const s1 = movementStats(before, r.assignments(KEYS));
-  for (const f of Object.keys(s1.flows)) assert.ok(f.endsWith(&#039;-&gt;b&#039;), f);
-  const mid = r.assignments(KEYS);
-  r.setWeight(&#039;b&#039;, 0.5);
-  const s2 = movementStats(mid, r.assignments(KEYS));
-  for (const f of Object.keys(s2.flows)) assert.ok(f.startsWith(&#039;b-&gt;&#039;), f);
-});
-
-test(&#039;preference list: distinct nodes, owner first, capped at cluster size&#039;, () =&gt; {
-  const r = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;], { vnodesPerWeight: 64 });
-  for (const k of KEYS.slice(0, 2000)) {
-    const pl = r.getNodes(k, 3);
-    assert.equal(pl.length, 3);
-    assert.equal(new Set(pl).size, 3);
-    assert.equal(pl[0], r.getNode(k));
-  }
-  assert.equal(r.getNodes(&#039;x&#039;, 10).length, 5);
-  assert.throws(() =&gt; r.getNodes(&#039;x&#039;, 0), RangeError);
-});
-
-test(&#039;preference list follows ring order and skips repeat vnodes&#039;, () =&gt; {
-  // A:100,300  B:200,400. From 50, clockwise: A(100) B(200) A(300) B(400).
-  const r = ringOf([&#039;A&#039;, &#039;B&#039;], { vnodesPerWeight: 2, hash: posHash });
-  assert.deepEqual(r.getNodes(&#039;k@50&#039;, 2), [&#039;A&#039;, &#039;B&#039;]);
-  assert.deepEqual(r.getNodes(&#039;k@250&#039;, 2), [&#039;A&#039;, &#039;B&#039;]);   // 300 is A, then 400 is B
-  assert.deepEqual(r.getNodes(&#039;k@350&#039;, 2), [&#039;B&#039;, &#039;A&#039;]);   // 400 B, wrap to 100 A
-});
-
-test(&#039;removing a replica keeps survivors in the same relative order&#039;, () =&gt; {
-  const r = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;, &#039;f&#039;], { vnodesPerWeight: 32 });
-  for (const k of KEYS.slice(0, 500)) {
-    const pl = r.getNodes(k, 3);
-    const r2 = ringOf([&#039;a&#039;, &#039;b&#039;, &#039;c&#039;, &#039;d&#039;, &#039;e&#039;, &#039;f&#039;].filter((n) =&gt; n !== pl[1]), { vnodesPerWeight: 32 });
-    const pl2 = r2.getNodes(k, 3);
-    assert.deepEqual(pl2.slice(0, 2), [pl[0], pl[2]]);
-  }
-});
-
-test(&#039;deterministic: same membership in any insertion order -&gt; identical ring&#039;, () =&gt; {
-  const r1 = ringOf([&#039;x&#039;, &#039;y&#039;, &#039;z&#039;]);
-  const r2 = ringOf([&#039;z&#039;, &#039;x&#039;, &#039;y&#039;]);
-  assert.deepEqual(r1.points, r2.points);
-  assert.deepEqual(r1.owners, r2.owners);
-});
-
-test(&#039;vnode hash collisions are resolved deterministically by node id&#039;, () =&gt; {
-  const collide = (s) =&gt; (s.startsWith(&#039;k@&#039;) ? Number(s.slice(2)) : 500); // every vnode at 500
-  const r = new HashRing({ vnodesPerWeight: 3, hash: collide });
-  r.addNode(&#039;zeta&#039;).addNode(&#039;alpha&#039;);
-  assert.deepEqual(r.points, [500]);
-  assert.deepEqual(r.owners, [&#039;alpha&#039;]);
-  assert.equal(r.getNode(&#039;k@7&#039;), &#039;alpha&#039;);
-});
-
-test(&#039;rejects invalid input&#039;, () =&gt; {
-  const r = new HashRing();
-  assert.throws(() =&gt; new HashRing({ vnodesPerWeight: 0 }), RangeError);
-  assert.throws(() =&gt; r.addNode(&#039;&#039;), TypeError);
-  assert.throws(() =&gt; r.addNode(&#039;a&#039;, { weight: 0 }), RangeError);
-  assert.throws(() =&gt; r.addNode(&#039;a&#039;, { weight: NaN }), RangeError);
-  r.addNode(&#039;a&#039;);
-  assert.throws(() =&gt; r.addNode(&#039;a&#039;), /already exists/);
-  assert.throws(() =&gt; r.getNode(42), TypeError);
-  assert.throws(() =&gt; r.setWeight(&#039;nope&#039;, 2), /unknown node/);
-  const bad = new HashRing({ hash: () =&gt; -1 });
-  assert.throws(() =&gt; bad.addNode(&#039;a&#039;), RangeError);
-});
-
-console.log(`\n${passed} passed, ${failed} failed`);
-if (failed) process.exit(1);
-</code></pre>
-          </div>
       </div>
 
       <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
@@ -991,9 +487,9 @@ if (failed) process.exit(1);
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
-  <script type="text/plain" data-defer src="js/code-lab.js?v=20ce3ba328"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=7f68b9d746"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
   

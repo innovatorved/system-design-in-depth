@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -934,60 +934,35 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="database-ticket-servers" id="audio-speed-database-ticket-servers" title="Playback speed">1x</button>
         <audio id="audio-database-ticket-servers" src="audio/database-ticket-servers.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Database ticket servers</h2>
-
 <p>A database ticket server allocates unique IDs for other parts of an application. It returns a number; the application uses that number when it stores a record in its own database.</p>
-
 <p>This is useful when data is spread across several databases and their records need unique numeric IDs across all of them. Each database's local auto-increment counter cannot provide that guarantee on its own.</p>
-
 <p>We'll work through three parts:</p>
-
 <ul>
 <li>Why Flickr needed an ID allocator and how its MySQL table issued IDs.</li>
 <li>How reserving several IDs per database call works, with a small SQLite exercise.</li>
 <li>What happens to unused IDs after a crash, and how that affects range size.</li>
 </ul>
-
-
 <h2>Why a separate ID allocator?</h2>
-
 <p>In Flickr's 2010 system, photos were spread across many databases. The company needed to move them between databases without primary-key collisions.</p>
-
 <p>Two independent databases can both assign photo ID 42. Each ID is unique within its own table, but combining or moving those records creates a collision.</p>
-
 <p>A ticket server moves ID generation into a shared service. The application asks for an ID before storing the photo. The allocator keeps track of IDs it has issued; it doesn't store the photo itself.</p>
-
-<a href="#" data-nav="topic" data-slug="uuid-objectid-and-snowflake">UUIDs</a> and <a href="#" data-nav="topic" data-slug="snowflake-id-design">Snowflake IDs</a> are alternatives. A ticket server is useful when you want numeric IDs allocated through a database you already know how to operate.
-
+<p><a href="#" data-nav="topic" data-slug="uuid-objectid-and-snowflake">UUIDs</a> and <a href="#" data-nav="topic" data-slug="snowflake-id-design">Snowflake IDs</a> are alternatives. A ticket server is useful when you want numeric IDs allocated through a database you already know how to operate.</p>
 <p>The IDs only need to be unique within the chosen scope. Photos can share one sequence and accounts another. Photo 42 and account 42 are different records, identified by both their type and their number.</p>
-
 <h2>How Flickr's ticket table worked</h2>
-
 <p>In Flickr's implementation, asking for an ID meant updating a small MySQL table. It had an auto-incrementing ID and a unique marker column called <code>stub</code>. Each allocation supplied the same marker.</p>
-
 <p>MySQL's <code>REPLACE</code> operation removed the row with that marker and inserted a replacement with a new ID. The table held one row while the counter advanced.</p>
-
 <p>The application then called <code>LAST_INSERT_ID()</code> on the same database connection to retrieve that ID. Connection pools matter here: both statements must use the same connection because the value is connection-local.</p>
-
 <p>To avoid relying on one ticket server, Flickr used two. One allocated odd IDs and the other even IDs. They couldn't issue the same ID, even if one server allocated more than the other.</p>
-
 <p>A replacement server must preserve its counter position as well as its odd/even role. Restarting the odd sequence at 1 would reuse old IDs. Restoring an old backup can cause the same problem.</p>
-
 <h2>Allocating several IDs at once</h2>
-
 <p>So far, every new record needs a network call to the allocator. Reserving several IDs in one call reduces that traffic: a worker can issue IDs locally until its range runs out.</p>
-
 <p>Meituan's 2017 Leaf-segment design does this with a shared counter. The database records the highest reserved ID; each worker tracks the next unused ID in its own range.</p>
-
 <p>With a range size of three, starting from zero:</p>
-
-<table><thead><tr><th>Reservation</th><th>IDs the worker receives</th><th>Highest reserved ID</th></tr></thead><tbody><tr><td>Worker A</td><td>1, 2, 3</td><td>3</td></tr><tr><td>Worker B</td><td>4, 5, 6</td><td>6</td></tr><tr><td>Next reservation</td><td>7, 8, 9</td><td>9</td></tr></tbody></table>Reading the old boundary and advancing it must be one protected transaction. Otherwise, two workers could both read zero and claim 1 through 3.
-
+<table><thead><tr><th>Reservation</th><th>IDs the worker receives</th><th>Highest reserved ID</th></tr></thead><tbody><tr><td>Worker A</td><td>1, 2, 3</td><td>3</td></tr><tr><td>Worker B</td><td>4, 5, 6</td><td>6</td></tr><tr><td>Next reservation</td><td>7, 8, 9</td><td>9</td></tr></tbody></table>
+<p>Reading the old boundary and advancing it must be one protected transaction. Otherwise, two workers could both read zero and claim 1 through 3.</p>
 <p>The reservation must commit before the worker issues any of its IDs. This is where <a href="#" data-nav="topic" data-slug="database-locking-and-isolation">locking and isolation</a> apply to the allocator.</p>
-
 <p>To try the reservation yourself, run this small SQLite example. It reserves two ranges of three IDs, just like the first two rows in the table.</p>
-
 <p>It uses a counter row rather than MySQL's auto-increment mechanism. The database exists only in memory and is discarded when the command exits.</p>
-
 <pre><code class="language-bash">sqlite3 -header :memory: &lt;&lt;&#039;SQL&#039;
 CREATE TABLE tickets (name TEXT PRIMARY KEY, high INTEGER NOT NULL);
 INSERT INTO tickets VALUES (&#039;photos&#039;, 0);
@@ -1004,43 +979,23 @@ SQL</code></pre>
 1|3
 first_id|last_id
 4|6</code></pre>
-
 <p>This output was captured with SQLite 3.51.0 on 2026-09-15. The <code>RETURNING</code> clause requires SQLite 3.35 or newer.</p>
-
-<code>BEGIN IMMEDIATE</code> starts a write transaction. Another writer to the same database must wait or receive a busy error. This example uses one connection to show the reservation arithmetic.
-
+<p><code>BEGIN IMMEDIATE</code> starts a write transaction. Another writer to the same database must wait or receive a busy error. This example uses one connection to show the reservation arithmetic.</p>
 <p>The SQL client prints <code>RETURNING</code> values before <code>COMMIT</code>. A real allocator must wait until the commit succeeds before returning the range to its caller.</p>
-
 <h2>Unused IDs after a crash</h2>
-
 <p>Reserving a range and using it happen separately. A worker can stop after the reservation commits, leaving some IDs unused.</p>
-
-<strong>A reserves 1 through 3, uses 1 and crashes. B owns 4 through 6 and hasn't used any yet. Which ID should B use next? Can A's replacement reuse 2?</strong>
-
+<p><strong>A reserves 1 through 3, uses 1 and crashes. B owns 4 through 6 and hasn't used any yet. Which ID should B use next? Can A's replacement reuse 2?</strong></p>
 <p>B uses 4, the first ID in its range. A's replacement reserves a fresh range starting at 7. It discards 2 and 3 because it cannot safely assume that A never issued them before crashing.</p>
-
 <p>Gaps are expected. The counter records reservations, so it can advance even when no corresponding photo is stored.</p>
-
 <p>ID order also doesn't give creation order. A worker holding ID 1 can pause while another worker stores a photo with ID 4, even when both obtained their ranges from the same allocator.</p>
-
-
-
 <p>A lost allocator reply has a similar result: the caller can request another range and abandon the uncertain one. It uses more numbers but avoids reissuing them.</p>
-
 <p>This doesn't prevent duplicate uploads. Retrying the same photo upload may obtain a new ID and store a second photo. That requires separate <a href="#" data-nav="topic" data-slug="retries-timeouts-idempotency">idempotency handling</a>.</p>
-
 <h2>Choosing a range size</h2>
-
 <p>Larger ranges can leave more unused IDs when a worker stops. In return, workers call the database less often and can continue through an allocator outage until their ranges run out.</p>
-
 <p>Leaf also fetches the next range before the current one is exhausted. This reduces the chance that a request has to wait for a refill.</p>
-
 <p>If one database already generates all your IDs, a ticket service adds another dependency without solving a current collision problem. Consider it when independent writers need a shared numeric ID space.</p>
-
 <p>Monitor allocation failures and remaining integer space. Sequential IDs also require normal authorization checks: guessing another record's number must not grant access to it.</p>
-
-<p>For a larger exercise, the Python allocation replay extends the SQLite example with two worker processes and a deliberately lost reply.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>For a larger exercise, the Python allocation replay extends the SQLite example with two worker processes and a deliberately lost reply.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>Under the Hood: Flickr Ticket Servers and ID Generation</h2>
       <p>Before Twitter created Snowflake, large-scale sharded MySQL databases (pioneered by Flickr in 2006) solved unique 64-bit ID generation across independent database shards using dedicated <strong>Ticket Servers</strong>.</p>
 
@@ -1311,7 +1266,7 @@ SELECT LAST_INSERT_ID();
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

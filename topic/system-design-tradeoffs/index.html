@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -956,43 +956,25 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="system-design-tradeoffs" id="audio-speed-system-design-tradeoffs" title="Playback speed">1x</button>
         <audio id="audio-system-design-tradeoffs" src="audio/system-design-tradeoffs.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>System design tradeoffs</h2>
-
 <p>A design tradeoff is a choice between useful properties that the available options cannot all provide equally well. A cache may reduce read work while serving older data. A separate service may allow independent releases while adding network failures to handle.</p>
-
 <p>The useful explanation names the benefit, the cost, and the requirement that makes the choice reasonable. We will work through one cache decision, then use the same method on other common choices.</p>
-
 <h2>Compare two answers to the same requirement</h2>
-
 <p>Suppose a product page repeatedly loads a seller's display name. Reading the database each time keeps the path simple. Caching the name can avoid repeated database work, but an edit may take time to appear wherever the cached value is used.</p>
-
 <p>First ask whether that delay is acceptable. If the product allows a briefly outdated display name, an expiry or invalidation policy can be part of the design. If the requirement says every read must reflect a completed edit, a cache that can serve an old value does not meet it.</p>
-
 <p>Now change the field from display name to “this seller may accept payments.” A stale answer can permit an operation that should have been stopped. Similar data shapes do not imply similar correctness requirements.</p>
-
 <p>Write the decision in a form another engineer can challenge:</p>
-
 <blockquote><p>Cache seller display names to reduce repeated reads. Accept the agreed update delay, and check current payment eligibility separately before accepting an order.</p></blockquote>
-
 <p>The explanation makes two boundaries visible: which field may be stale and which operation needs a stronger check. “Use a cache for speed” leaves both unresolved.</p>
-
 <h2>Follow the cost to the place it appears</h2>
-
 <p>Many costs appear outside the component being optimized:</p>
-
-<table><thead><tr><th>Choice</th><th>What it can improve</th><th>What the design must also handle</th></tr></thead><tbody><tr><td>Cache a read result</td><td>Repeated lookup work and latency</td><td>Freshness, invalidation, memory and cache misses</td></tr><tr><td>Move work to a queue</td><td>Absorb bursts and schedule workers separately</td><td>User-visible delay, backlog, retries and duplicate work</td></tr><tr><td>Coordinate reads or writes across replicas</td><td>Stronger visibility or ordering guarantees</td><td>Network waits; some operations may stop when required participants cannot communicate</td></tr><tr><td>Store a derived copy of data</td><td>Simpler or faster reads</td><td>Extra writes and keeping the copies in agreement</td></tr><tr><td>Split a service</td><td>Independent ownership, scaling or deployment</td><td>Remote-call failure, observability and additional operations work</td></tr><tr><td>Add detailed metric labels</td><td>More ways to isolate a problem</td><td>More time series to store and query</td></tr></tbody></table>A queue does not create processing capacity. If workers cannot keep up, the waiting time grows. Similarly, adding a metric label containing every user ID can make a small set of measurements expand with the user population. The cost follows the behavior, not the number of boxes in the drawing.
-
+<table><thead><tr><th>Choice</th><th>What it can improve</th><th>What the design must also handle</th></tr></thead><tbody><tr><td>Cache a read result</td><td>Repeated lookup work and latency</td><td>Freshness, invalidation, memory and cache misses</td></tr><tr><td>Move work to a queue</td><td>Absorb bursts and schedule workers separately</td><td>User-visible delay, backlog, retries and duplicate work</td></tr><tr><td>Coordinate reads or writes across replicas</td><td>Stronger visibility or ordering guarantees</td><td>Network waits; some operations may stop when required participants cannot communicate</td></tr><tr><td>Store a derived copy of data</td><td>Simpler or faster reads</td><td>Extra writes and keeping the copies in agreement</td></tr><tr><td>Split a service</td><td>Independent ownership, scaling or deployment</td><td>Remote-call failure, observability and additional operations work</td></tr><tr><td>Add detailed metric labels</td><td>More ways to isolate a problem</td><td>More time series to store and query</td></tr></tbody></table>
+<p>A queue does not create processing capacity. If workers cannot keep up, the waiting time grows. Similarly, adding a metric label containing every user ID can make a small set of measurements expand with the user population. The cost follows the behavior, not the number of boxes in the drawing.</p>
 <p>These are possibilities to investigate, not universal verdicts. A cache with few hits may add work. Services with shared release dependencies may still have to deploy together. Test whether the proposed change actually buys the property being claimed.</p>
-
 <h2>Record when to reconsider</h2>
-
 <p>A useful decision also names the evidence that would change it. Revisit the display-name cache if stale names create support problems, if its hit rate is too low to justify it, or if an indexed database read already meets the target cheaply.</p>
-
 <p>Keep the rejected alternative in the design note. The next engineer should be able to tell why a direct read was insufficient, what freshness delay was accepted, and how that assumption was checked.</p>
-
 <p>Not every improvement requires a sacrifice. Removing an unnecessary query can reduce latency, cost, and failure exposure together. Look for such fixes before negotiating away a product promise.</p>
-
-<p>For your next design choice, name the alternative and trace one failure. If the cost is still only “more complexity,” say which retry, migration, stale result, or on-call task creates that complexity. <a href="#" data-nav="topic" data-slug="when-not-to-add-infrastructure">When not to add infrastructure</a> applies this test before introducing another service to operate.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>For your next design choice, name the alternative and trace one failure. If the cost is still only “more complexity,” say which retry, migration, stale result, or on-call task creates that complexity. <a href="#" data-nav="topic" data-slug="when-not-to-add-infrastructure">When not to add infrastructure</a> applies this test before introducing another service to operate.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
 <h2>System design tradeoffs</h2>
 <p>A design tradeoff is a choice between useful properties that the available options cannot all provide equally well. A cache may reduce read work while serving older data. A separate service may allow independent releases while adding network failures to handle.</p>
 <p>The useful explanation names the benefit, the cost, and the requirement that makes the choice reasonable. We will work through one cache decision, then use the same method on other common choices.</p>
@@ -1282,7 +1264,7 @@
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

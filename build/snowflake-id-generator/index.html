@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -340,47 +340,20 @@
         
       </section>
 
-      <div id="build-walkthrough-pane">
-        <div class="build-run">
-          <div class="build-run__text">
-            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
-            <code>node demo.js</code> and <code>node test.js</code>.
-          </div>
-          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="snowflake-id-generator">Copy setup script</button>
-        </div>
-
-        <div class="build-files"><a href="#build-file-snowflake-id-generator-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-snowflake-id-generator-README_md">README.md</a><a href="#build-file-snowflake-id-generator-snowflake_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-snowflake-id-generator-snowflake_js">snowflake.js</a><a href="#build-file-snowflake-id-generator-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-snowflake-id-generator-demo_js">demo.js</a><a href="#build-file-snowflake-id-generator-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-snowflake-id-generator-test_js">test.js</a></div><article class="prose" id="build-file-snowflake-id-generator-README_md"><h2>Snowflake 64-bit ID Generator</h2>
-
-<p>This lab generates unique 64-bit ids at millions per second per process. The</p>
-<p>ids sort roughly by creation time, and generating one needs no coordination</p>
-<p>with other processes. Workers only need to agree on a worker id when they start.</p>
-
+      <div id="build-walkthrough-pane"><article class="prose" id="build-file-snowflake-id-generator-README_md"><p>This lab generates unique 64-bit ids at millions per second per process. The ids sort roughly by creation time, and generating one needs no coordination with other processes. Workers only need to agree on a worker id when they start.</p>
 <h2>Where it shows up</h2>
-
 <ul>
-<li><strong>Primary keys for sharded databases</strong>: auto-increment only works on a single</li>
-  primary, and random UUIDv4 keys fragment B-tree indexes.
-  Time-ordered ids append to the right edge of the index.
+<li><strong>Primary keys for sharded databases</strong>: auto-increment only works on a single primary, and random UUIDv4 keys fragment B-tree indexes. Time-ordered ids append to the right edge of the index.</li>
 <li><strong>Public object ids</strong>: tweets, Discord messages, Instagram media, Mastodon statuses.</li>
-<li><strong>Event and log ids</strong>: they sort by time without needing a separate timestamp</li>
-  column, and you can pull the creation time back out of the id.
-<li><strong>Cursor pagination</strong>: an id that is ordered by time works as a stable</li>
-  cursor on its own (see the <code>keyset-pagination</code> lesson).
+<li><strong>Event and log ids</strong>: they sort by time without needing a separate timestamp column, and you can pull the creation time back out of the id.</li>
+<li><strong>Cursor pagination</strong>: an id that is ordered by time works as a stable cursor on its own (see the <code>keyset-pagination</code> lesson).</li>
 </ul>
 <h2>Layout</h2>
-
 <pre><code class="language-text">63 | 62 ....................................... 22 | 21 ...... 12 | 11 ...... 0
   0 |      41 bits: ms since custom epoch           | 10: worker   | 12: sequence
     |      2^41 ms ≈ 69.7 years                     | 1024 workers | 4096 ids/ms</code></pre>
-
-<code>id = (now - epoch) << 22 | workerId << 12 | sequence</code>. The top bit stays 0, so
-<p>ids fit a signed int64 (Java <code>long</code>, Postgres <code>BIGINT</code>). Everything here is</p>
-<code>BigInt</code>, because JS <code>Number</code> is exact only up to 2^53. Demo step 6 shows a
-<p>real id losing its low bits. Send ids to clients as decimal strings. Twitter's</p>
-<p>API added <code>id_str</code> for this reason.</p>
-
+<p><code>id = (now - epoch) &lt;&lt; 22 | workerId &lt;&lt; 12 | sequence</code>. The top bit stays 0, so ids fit a signed int64 (Java <code>long</code>, Postgres <code>BIGINT</code>). Everything here is <code>BigInt</code>, because JS <code>Number</code> is exact only up to 2^53. Demo step 6 shows a real id losing its low bits. Send ids to clients as decimal strings. Twitter's API added <code>id_str</code> for this reason.</p>
 <h2>Algorithm and invariants</h2>
-
 <pre><code class="language-text">now = clock()
 if now &lt; last:                              # clock went backwards
     if last - now &gt; tolerance: throw ClockRollbackError
@@ -392,568 +365,46 @@ else:
     seq = 0
 last = now
 return compose(now, worker, seq)</code></pre>
-
 <ol>
-<li><strong>Unique per worker.</strong> For a fixed <code>(timestamp, worker)</code>, the sequence</li>
-   values are distinct. The timestamp never goes backwards, because a rollback
-   is either waited out or refused.
-<li><strong>Strictly increasing per worker.</strong> The timestamp is non-decreasing and the</li>
-   sequence increases within a millisecond.
-<li><strong>Unique globally, <em>if</em> worker ids are unique among live processes.</strong> This</li>
-   is the one piece of coordination the scheme needs. Worker ids are usually
-   handed out by ZooKeeper or etcd leases, a DB table, or a Kubernetes
-   StatefulSet ordinal.
-<li><strong>K-sorted across workers.</strong> Ids are ordered by millisecond. Within the same</li>
-   millisecond, the worker id breaks ties, not the true issue order (demo
-   step 3). Clock skew between machines blurs ordering by that many milliseconds.
+<li><strong>Unique per worker.</strong> For a fixed <code>(timestamp, worker)</code>, the sequence values are distinct. The timestamp never goes backwards, because a rollback is either waited out or refused.</li>
+<li><strong>Strictly increasing per worker.</strong> The timestamp is non-decreasing and the sequence increases within a millisecond.</li>
+<li>*<em>Unique globally, </em>if<em> worker ids are unique among live processes.<strong> This is the one piece of coordination the scheme needs. Worker ids are usually handed out by ZooKeeper or etcd leases, a DB table, or a Kubernetes StatefulSet ordinal.</li>
+<li></strong>K-sorted across workers.<strong> Ids are ordered by millisecond. Within the same millisecond, the worker id breaks ties, not the true issue order (demo step 3). Clock skew between machines blurs ordering by that many milliseconds.</li>
 </ol>
-<strong>Custom epoch.</strong> A recent epoch gives you the full ~69.7 years going forward.
-<p>Counting from 1970 would run out in 2039 (demo step 5). Once chosen, the epoch</p>
-<p>can never change, because every decoder needs it.</p>
-
-<strong>Clock rollback.</strong> NTP can <em>step</em> a clock backwards, and restoring a VM from a
-<p>snapshot can move it back by hours. Issuing ids with a past timestamp could</p>
-<p>repeat <code>(ts, seq)</code> pairs that were already handed out. A small drift (at most</p>
-<code>rollbackToleranceMs</code>, default 5) is waited out. A larger drift throws
-<code>ClockRollbackError</code>, and the caller should fail over or alert. Twitter's
-<p>original implementation refused all rollbacks.</p>
-
+<p></strong>Custom epoch.<strong> A recent epoch gives you the full ~69.7 years going forward. Counting from 1970 would run out in 2039 (demo step 5). Once chosen, the epoch can never change, because every decoder needs it.</p>
+<p></strong>Clock rollback.</em><em> NTP can </em>step* a clock backwards, and restoring a VM from a snapshot can move it back by hours. Issuing ids with a past timestamp could repeat <code>(ts, seq)</code> pairs that were already handed out. A small drift (at most <code>rollbackToleranceMs</code>, default 5) is waited out. A larger drift throws <code>ClockRollbackError</code>, and the caller should fail over or alert. Twitter's original implementation refused all rollbacks.</p>
 <h2>Complexity</h2>
-
 <ul>
-<li><code>nextId</code>: O(1) amortized. In the worst case it spins for up to 1 ms when the</li>
-  sequence overflows, or up to <code>tolerance</code> ms on a rollback.
+<li><code>nextId</code>: O(1) amortized. In the worst case it spins for up to 1 ms when the sequence overflows, or up to <code>tolerance</code> ms on a rollback.</li>
 <li><code>decode</code> / <code>compose</code>: O(1). Space: O(1) per generator.</li>
-<li>Throughput ceiling: 4096 ids/ms per worker, about 4.1M/s. Across all 1024</li>
-  workers that is about 4.2 billion ids/s.
+<li>Throughput ceiling: 4096 ids/ms per worker, about 4.1M/s. Across all 1024 workers that is about 4.2 billion ids/s.</li>
 </ul>
 <h2>Failure modes and trade-offs</h2>
-
 <ul>
-<li><strong>Duplicate worker ids.</strong> Two processes sharing a worker id will collide</li>
-  within the same millisecond. This is the most common real-world bug. Use
-  leases that expire, and fence them.
-<li><strong>Restart inside the same millisecond.</strong> A process that restarts and reuses</li>
-  its worker id right away could reissue ids from its last millisecond. Keep a
-  persisted high-water mark, or wait for at least one tolerance window on startup.
-<li><strong>Busy-waiting.</strong> The spin burns CPU. An async generator could <code>await</code> the</li>
-  next tick instead, at the cost of latency jitter.
-<li><strong>Information leakage.</strong> Ids reveal creation time, which shard or worker</li>
-  issued them, and roughly how many ids that worker issues. Don't expose them
-  where that is sensitive.
-<li><strong>Low traffic means sequence 0 most of the time.</strong> If you shard by</li>
-  <code>id % N</code>, the shards will be badly skewed. Hash the id first.
-<li><strong>Bit budget.</strong> More worker bits leave fewer sequence bits or less lifetime.</li>
-  Choose the split for your fleet size and peak rate per worker.
+<li><strong>Duplicate worker ids.</strong> Two processes sharing a worker id will collide within the same millisecond. This is the most common real-world bug. Use leases that expire, and fence them.</li>
+<li><strong>Restart inside the same millisecond.</strong> A process that restarts and reuses its worker id right away could reissue ids from its last millisecond. Keep a persisted high-water mark, or wait for at least one tolerance window on startup.</li>
+<li><strong>Busy-waiting.</strong> The spin burns CPU. An async generator could <code>await</code> the next tick instead, at the cost of latency jitter.</li>
+<li><strong>Information leakage.</strong> Ids reveal creation time, which shard or worker issued them, and roughly how many ids that worker issues. Don't expose them where that is sensitive.</li>
+<li><strong>Low traffic means sequence 0 most of the time.</strong> If you shard by <code>id % N</code>, the shards will be badly skewed. Hash the id first.</li>
+<li><strong>Bit budget.</strong> More worker bits leave fewer sequence bits or less lifetime. Choose the split for your fleet size and peak rate per worker.</li>
 </ul>
 <h2>How production systems do it</h2>
-
 <ul>
-<li><strong>Twitter Snowflake (2010)</strong>: a Scala Thrift service using this exact 41/10/12</li>
-  split, where the 10 bits were 5 datacenter plus 5 worker. It used the epoch
-  <code>1288834974657</code>, claimed its configured worker id in ZooKeeper at startup, and refused to issue ids
-  while the clock was behind the last timestamp.
-<li><strong>Discord</strong>: 42-bit ms timestamp from epoch 2015-01-01, 5-bit worker, 5-bit</li>
-  process, 12-bit increment. Anyone can decode message creation times from the ids.
-<li><strong>Instagram</strong>: generates ids inside PostgreSQL with PL/pgSQL. The layout is</li>
-  41-bit ms, 13-bit logical shard id, and 10-bit per-shard sequence
-  (<code>nextval % 1024</code>), so an id also encodes where its row lives.
-<li><strong>Sonyflake</strong>: 39 bits of 10 ms units (about 174 years), 8-bit sequence and</li>
-  16-bit machine id. It trades throughput (256 ids per 10 ms) for lifetime and
-  number of machines.
-<li><strong>Baidu UidGenerator</strong>: seconds-resolution timestamp. Its <code>CachedUidGenerator</code></li>
-  pre-fills a ring buffer and "borrows" future seconds to absorb bursts.
-<li><strong>UUIDv7 (RFC 9562, 2024)</strong>: a 48-bit Unix-ms timestamp plus random bits in</li>
-  128 bits. It sorts by time like Snowflake but needs no worker id, at the cost
-  of being twice as wide.
+<li><strong>Twitter Snowflake (2010)</strong>: a Scala Thrift service using this exact 41/10/12 split, where the 10 bits were 5 datacenter plus 5 worker. It used the epoch <code>1288834974657</code>, claimed its configured worker id in ZooKeeper at startup, and refused to issue ids while the clock was behind the last timestamp.</li>
+<li><strong>Discord</strong>: 42-bit ms timestamp from epoch 2015-01-01, 5-bit worker, 5-bit process, 12-bit increment. Anyone can decode message creation times from the ids.</li>
+<li><strong>Instagram</strong>: generates ids inside PostgreSQL with PL/pgSQL. The layout is 41-bit ms, 13-bit logical shard id, and 10-bit per-shard sequence (<code>nextval % 1024</code>), so an id also encodes where its row lives.</li>
+<li><strong>Sonyflake</strong>: 39 bits of 10 ms units (about 174 years), 8-bit sequence and 16-bit machine id. It trades throughput (256 ids per 10 ms) for lifetime and number of machines.</li>
+<li><strong>Baidu UidGenerator</strong>: seconds-resolution timestamp. Its <code>CachedUidGenerator</code> pre-fills a ring buffer and "borrows" future seconds to absorb bursts.</li>
+<li><strong>UUIDv7 (RFC 9562, 2024)</strong>: a 48-bit Unix-ms timestamp plus random bits in 128 bits. It sorts by time like Snowflake but needs no worker id, at the cost of being twice as wide.</li>
 </ul>
-<h2>How to run</h2>
-
-<pre><code class="language-bash">node demo.js   # layout, overflow at 4096/ms, k-sorting across workers, rollback, epochs, BigInt
-node test.js   # 14 tests: exact bit layout, overflow boundary, rollback tolerance edges, validation</code></pre>
-
 <h2>Extension exercises</h2>
-
 <ol>
-<li>Add a <strong>lease-based worker id allocator</strong>. It claims <code>workerId</code> from a shared</li>
-   table with a TTL and renews it. What must the generator do if renewal fails?
-<li>Persist a <strong>high-water mark</strong> (last ms) to a file in <code>os.tmpdir()</code> every</li>
-   second. On startup, refuse to issue ids until <code>clock() > mark</code>. Test it with
-   a simulated restart.
-<li>Make the layout configurable, for example Sonyflake's 39/8/16 with 10 ms</li>
-   ticks. Keep <code>decode</code> and <code>compose</code> consistent, and add a test that the
-   lifetime is about 174 years.
-<li>Implement "borrow the future": within the tolerance, keep issuing ids at</li>
-   <code>lastMs</code> instead of waiting. When is this safe, and what breaks if the process
-   restarts before real time catches up?
-<li>Write a UUIDv7 generator with a monotonic counter (RFC 9562 method 1) and</li>
-   compare index-insert locality against UUIDv4 in a simple sorted-array model.
+<li>Add a <strong>lease-based worker id allocator</strong>. It claims <code>workerId</code> from a shared table with a TTL and renews it. What must the generator do if renewal fails?</li>
+<li>Persist a <strong>high-water mark</strong> (last ms) to a file in <code>os.tmpdir()</code> every second. On startup, refuse to issue ids until <code>clock() &gt; mark</code>. Test it with a simulated restart.</li>
+<li>Make the layout configurable, for example Sonyflake's 39/8/16 with 10 ms ticks. Keep <code>decode</code> and <code>compose</code> consistent, and add a test that the lifetime is about 174 years.</li>
+<li>Implement "borrow the future": within the tolerance, keep issuing ids at <code>lastMs</code> instead of waiting. When is this safe, and what breaks if the process restarts before real time catches up?</li>
+<li>Write a UUIDv7 generator with a monotonic counter (RFC 9562 method 1) and compare index-insert locality against UUIDv4 in a simple sorted-array model.</li>
 </ol></article>
-          <div class="code-block" id="build-file-snowflake-id-generator-snowflake_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">snowflake.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-/**
- * Snowflake 64-bit ID generator (Twitter layout).
- *
- *   bit 63      62 ........... 22  21 ...... 12  11 ...... 0
- *   [ 0 ]  [ 41-bit ms since epoch ][ 10-bit worker ][ 12-bit seq ]
- *
- * The sign bit is always 0, so ids fit in a signed int64 (Java long, Postgres
- * BIGINT). Ids from one worker strictly increase. Ids from different workers
- * are &quot;k-sorted&quot;: they are ordered by millisecond, and only ids issued in the
- * same millisecond on different workers can be out of order.
- *
- * JavaScript numbers are only exact up to 2^53, and a real Snowflake id is
- * ~2^60, so everything is BigInt. Serialize ids as decimal strings in JSON.
- */
-
-const TIMESTAMP_BITS = 41n;
-const WORKER_BITS = 10n;
-const SEQUENCE_BITS = 12n;
-
-const MAX_WORKER = (1n &lt;&lt; WORKER_BITS) - 1n;       // 1023
-const MAX_SEQUENCE = (1n &lt;&lt; SEQUENCE_BITS) - 1n;   // 4095
-const MAX_TIMESTAMP = (1n &lt;&lt; TIMESTAMP_BITS) - 1n; // ~69.7 years of ms
-const WORKER_SHIFT = SEQUENCE_BITS;                // 12
-const TIMESTAMP_SHIFT = SEQUENCE_BITS + WORKER_BITS; // 22
-
-const TWITTER_EPOCH = 1288834974657; // 2010-11-04T01:42:54.657Z
-const DEFAULT_EPOCH = Date.UTC(2020, 0, 1);
-
-class ClockRollbackError extends Error {
-  constructor(driftMs, toleranceMs) {
-    super(`clock moved backwards by ${driftMs}ms (tolerance ${toleranceMs}ms); refusing to generate ids`);
-    this.name = &#039;ClockRollbackError&#039;;
-    this.driftMs = driftMs;
-  }
-}
-
-function toEpochMs(epoch) {
-  const ms = epoch instanceof Date ? epoch.getTime() : epoch;
-  if (!Number.isSafeInteger(ms) || ms &lt; 0) throw new RangeError(&#039;epoch must be a non-negative integer ms timestamp or a Date&#039;);
-  return ms;
-}
-
-class SnowflakeGenerator {
-  /**
-   * @param {object} opts
-   * @param {number} opts.workerId              0..1023, must be unique per live process
-   * @param {number|Date} [opts.epoch]          custom epoch (default 2020-01-01T00:00:00Z)
-   * @param {() =&gt; number} [opts.clock]         integer ms wall clock (default Date.now)
-   * @param {number} [opts.rollbackToleranceMs] wait out backwards jumps up to this size (default 5)
-   * @param {number} [opts.maxSpin]             safety cap on clock polls while waiting (default 1e7)
-   */
-  constructor({ workerId, epoch = DEFAULT_EPOCH, clock = Date.now, rollbackToleranceMs = 5, maxSpin = 1e7 } = {}) {
-    if (!Number.isInteger(workerId) || workerId &lt; 0 || BigInt(workerId) &gt; MAX_WORKER) {
-      throw new RangeError(`workerId must be an integer in [0, ${MAX_WORKER}]`);
-    }
-    if (!Number.isInteger(rollbackToleranceMs) || rollbackToleranceMs &lt; 0) throw new RangeError(&#039;rollbackToleranceMs must be an integer &gt;= 0&#039;);
-    if (typeof clock !== &#039;function&#039;) throw new TypeError(&#039;clock must be a function&#039;);
-    this.epoch = toEpochMs(epoch);
-    this.workerId = BigInt(workerId);
-    this.clock = clock;
-    this.rollbackToleranceMs = rollbackToleranceMs;
-    this.maxSpin = maxSpin;
-    const now = this._now();
-    if (now &lt; this.epoch) throw new RangeError(&#039;epoch is in the future&#039;);
-    this.lastMs = -1; // last timestamp used, in absolute ms
-    this.sequence = 0n;
-    this.stats = { issued: 0, sequenceOverflowWaits: 0, rollbacksWaited: 0, rollbacksRejected: 0 };
-  }
-
-  _now() {
-    const t = this.clock();
-    if (!Number.isSafeInteger(t)) throw new TypeError(&#039;clock() must return an integer number of ms&#039;);
-    return t;
-  }
-
-  /** Poll the clock until it returns a value &gt; ms. Busy-waits, like Twitter&#039;s tilNextMillis. */
-  _waitUntilAfter(ms) {
-    let t = this._now();
-    for (let spins = 0; t &lt;= ms; spins++) {
-      if (spins &gt;= this.maxSpin) throw new Error(`clock did not advance past ${ms} after ${this.maxSpin} polls`);
-      t = this._now();
-    }
-    return t;
-  }
-
-  /** Returns the next id as a BigInt. */
-  nextId() {
-    let now = this._now();
-
-    if (now &lt; this.lastMs) {
-      const drift = this.lastMs - now;
-      if (drift &gt; this.rollbackToleranceMs) {
-        this.stats.rollbacksRejected++;
-        throw new ClockRollbackError(drift, this.rollbackToleranceMs);
-      }
-      // Small step back (e.g. an NTP slew/step): wait for the clock to reach
-      // lastMs again. Reusing lastMs with seq+1 would also be safe; waiting
-      // keeps &quot;timestamp in id ≈ real time&quot;.
-      this.stats.rollbacksWaited++;
-      now = this._waitUntilAfter(this.lastMs - 1);
-    }
-
-    if (now === this.lastMs) {
-      this.sequence = (this.sequence + 1n) &amp; MAX_SEQUENCE;
-      if (this.sequence === 0n) {
-        // 4096 ids already issued this millisecond: block until the next one.
-        this.stats.sequenceOverflowWaits++;
-        now = this._waitUntilAfter(this.lastMs);
-      }
-    } else {
-      this.sequence = 0n;
-    }
-
-    const delta = BigInt(now - this.epoch);
-    if (delta &gt; MAX_TIMESTAMP) throw new RangeError(&#039;timestamp overflowed 41 bits: epoch exhausted (~69.7 years)&#039;);
-    this.lastMs = now;
-    this.stats.issued++;
-    return (delta &lt;&lt; TIMESTAMP_SHIFT) | (this.workerId &lt;&lt; WORKER_SHIFT) | this.sequence;
-  }
-
-  /** Decimal string form; safe to put in JSON. */
-  nextIdString() { return this.nextId().toString(); }
-
-  /** Decode using this generator&#039;s epoch. */
-  decode(id) { return decode(id, { epoch: this.epoch }); }
-}
-
-function toBigIntId(id) {
-  let v;
-  if (typeof id === &#039;bigint&#039;) v = id;
-  else if (typeof id === &#039;string&#039; &amp;&amp; /^\d+$/.test(id)) v = BigInt(id);
-  else if (typeof id === &#039;number&#039;) {
-    // Accepting a Number would silently lose precision above 2^53.
-    if (!Number.isSafeInteger(id)) throw new RangeError(&#039;numeric id exceeds 2^53; pass a BigInt or decimal string&#039;);
-    v = BigInt(id);
-  } else throw new TypeError(&#039;id must be a BigInt, decimal string or safe integer&#039;);
-  if (v &lt; 0n || v &gt;= 1n &lt;&lt; 63n) throw new RangeError(&#039;id must be in [0, 2^63)&#039;);
-  return v;
-}
-
-/** Split an id into its fields. */
-function decode(id, { epoch = DEFAULT_EPOCH } = {}) {
-  const v = toBigIntId(id);
-  const epochMs = toEpochMs(epoch);
-  const deltaMs = Number(v &gt;&gt; TIMESTAMP_SHIFT);
-  const timestampMs = epochMs + deltaMs;
-  return {
-    timestampMs,
-    date: new Date(timestampMs),
-    workerId: Number((v &gt;&gt; WORKER_SHIFT) &amp; MAX_WORKER),
-    sequence: Number(v &amp; MAX_SEQUENCE),
-  };
-}
-
-/** Build an id from its parts (useful for tests and for range scans). */
-function compose({ timestampMs, workerId = 0, sequence = 0 }, { epoch = DEFAULT_EPOCH } = {}) {
-  const delta = BigInt(timestampMs - toEpochMs(epoch));
-  if (delta &lt; 0n || delta &gt; MAX_TIMESTAMP) throw new RangeError(&#039;timestamp outside the 41-bit window for this epoch&#039;);
-  if (workerId &lt; 0 || BigInt(workerId) &gt; MAX_WORKER) throw new RangeError(&#039;workerId out of range&#039;);
-  if (sequence &lt; 0 || BigInt(sequence) &gt; MAX_SEQUENCE) throw new RangeError(&#039;sequence out of range&#039;);
-  return (delta &lt;&lt; TIMESTAMP_SHIFT) | (BigInt(workerId) &lt;&lt; WORKER_SHIFT) | BigInt(sequence);
-}
-
-/**
- * Smallest id that could be issued at or after `timestampMs`, by any worker.
- * Enables &quot;WHERE id &gt;= lowerBoundFor(t)&quot; time-range queries on the primary key.
- */
-function lowerBoundFor(timestampMs, opts) { return compose({ timestampMs, workerId: 0, sequence: 0 }, opts); }
-
-module.exports = {
-  SnowflakeGenerator, ClockRollbackError, decode, compose, lowerBoundFor,
-  TWITTER_EPOCH, DEFAULT_EPOCH,
-  LAYOUT: { TIMESTAMP_BITS: 41, WORKER_BITS: 10, SEQUENCE_BITS: 12, TIMESTAMP_SHIFT: 22, WORKER_SHIFT: 12 },
-};
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-snowflake-id-generator-demo_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">demo.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-// Deterministic walkthrough using simulated clocks (no real waiting).
-const { SnowflakeGenerator, decode, lowerBoundFor, TWITTER_EPOCH, DEFAULT_EPOCH } = require(&#039;./snowflake&#039;);
-
-const line = (s = &#039;&#039;) =&gt; console.log(s);
-const T0 = Date.UTC(2026, 8, 30, 12, 0, 0); // 2026-09-30T12:00:00Z
-
-/** A clock that advances 1 ms every `callsPerMs` reads (models a machine&#039;s throughput). */
-function throughputClock(start, callsPerMs) {
-  let calls = 0;
-  const c = () =&gt; start + Math.floor(calls++ / callsPerMs);
-  return c;
-}
-
-line(&#039;1) Bit layout&#039;);
-const g = new SnowflakeGenerator({ workerId: 37, clock: () =&gt; T0 });
-const id = g.nextId();
-const bin = id.toString(2).padStart(64, &#039;0&#039;);
-line(`   id = ${id}`);
-line(`   ${bin[0]} ${bin.slice(1, 42)} ${bin.slice(42, 52)} ${bin.slice(52)}`);
-line(&#039;   &#039; + &#039;^&#039;.padEnd(2) + &#039;^ 41-bit ms since epoch&#039;.padEnd(42) + &#039;^ worker&#039;.padEnd(11) + &#039;^ sequence&#039;);
-line(&#039;   (the first ^ is the sign bit, always 0 so the id fits a signed int64)&#039;);
-const d = g.decode(id);
-line(`   decode -&gt; ${d.date.toISOString()}, worker=${d.workerId}, seq=${d.sequence}`);
-line();
-
-line(&#039;2) Sequence overflow: a burst of 10,000 ids when the CPU could do ~10,000 clock reads/ms&#039;);
-const burst = new SnowflakeGenerator({ workerId: 1, clock: throughputClock(T0, 10_000) });
-const perMs = new Map();
-let prev = -1n, monotonic = true;
-for (let i = 0; i &lt; 10_000; i++) {
-  const x = burst.nextId();
-  if (x &lt;= prev) monotonic = false;
-  prev = x;
-  const ms = decode(x).timestampMs - T0;
-  perMs.set(ms, (perMs.get(ms) || 0) + 1);
-}
-line(`   ids per ms: ${[...perMs].map(([ms, n]) =&gt; `+${ms}ms:${n}`).join(&#039;  &#039;)}`);
-line(`   overflow waits: ${burst.stats.sequenceOverflowWaits}; strictly increasing: ${monotonic}`);
-line(&#039;   A 12-bit sequence caps a worker at 4096 ids/ms (~4.1M/s); the 4097th waits for the next ms.&#039;);
-line();
-
-line(&#039;3) Two workers: globally k-sorted, not strictly ordered&#039;);
-let shared = T0;
-const a = new SnowflakeGenerator({ workerId: 1, clock: () =&gt; shared });
-const b = new SnowflakeGenerator({ workerId: 2, clock: () =&gt; shared });
-const issued = [];
-for (let step = 0; step &lt; 6; step++) {
-  issued.push({ who: &#039;B&#039;, id: b.nextId() });
-  issued.push({ who: &#039;A&#039;, id: a.nextId() });
-  if (step % 2 === 1) shared++;
-}
-const sorted = [...issued].sort((x, y) =&gt; (x.id &lt; y.id ? -1 : 1));
-line(`   issue order: ${issued.map((x) =&gt; x.who).join(&#039; &#039;)}`);
-line(`   sorted by id: ${sorted.map((x) =&gt; x.who).join(&#039; &#039;)}   (within a ms, worker id decides)`);
-line();
-
-line(&#039;4) Clock rollback handling (tolerance 5 ms)&#039;);
-let wall = T0;
-let polls = 0;
-const rb = new SnowflakeGenerator({
-  workerId: 9, rollbackToleranceMs: 5,
-  // Every clock read lets 0.5 ms of simulated time pass.
-  clock: () =&gt; { polls++; const t = Math.floor(wall); wall += 0.5; return t; },
-});
-const first = rb.nextId();
-wall -= 3; // NTP steps the clock back 3 ms
-const before = polls;
-const afterSmall = rb.nextId();
-line(`   step back 3 ms  -&gt; waited ${polls - before} clock polls until time caught up; ids still increasing: ${afterSmall &gt; first}`);
-wall -= 50; // big jump back: e.g. VM restored from snapshot
-try { rb.nextId(); } catch (e) {
-  line(`   step back 50 ms -&gt; ${e.name}: ${e.message}`);
-}
-line(&#039;   Refusing is the safe choice: issuing ids in the past risks duplicates with ids already handed out.&#039;);
-line();
-
-line(&#039;5) Custom epoch: how long 41 bits of milliseconds last&#039;);
-for (const [name, ep] of [[&#039;Unix 1970&#039;, 0], [&#039;Twitter 2010-11-04&#039;, TWITTER_EPOCH], [&#039;default 2020-01-01&#039;, DEFAULT_EPOCH]]) {
-  const end = new Date(ep + 2 ** 41 - 1);
-  line(`   ${name.padEnd(20)} -&gt; ids run out at ${end.toISOString()}`);
-}
-line();
-
-line(&#039;6) Why BigInt and string serialization matter&#039;);
-const bigGen = new SnowflakeGenerator({ workerId: 1023, clock: () =&gt; T0 });
-bigGen.nextId();
-const big = bigGen.nextId(); // sequence 1 -&gt; low bit set
-line(`   BigInt id       : ${big}`);
-line(`   as JS Number    : ${Number(big)}  &lt;- ${BigInt(Number(big)) === big ? &#039;exact&#039; : &#039;precision lost above 2^53&#039;}`);
-line(`   JSON-safe string: &quot;${big.toString()}&quot; (Twitter&#039;s API added &quot;id_str&quot; for exactly this reason)`);
-line();
-
-line(&#039;7) Time-range queries on the primary key&#039;);
-const lo = lowerBoundFor(T0), hi = lowerBoundFor(T0 + 60_000);
-line(`   &quot;created in the first minute after 12:00&quot; == WHERE id &gt;= ${lo} AND id &lt; ${hi}`);
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-snowflake-id-generator-test_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">test.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-const assert = require(&#039;node:assert&#039;);
-const {
-  SnowflakeGenerator, ClockRollbackError, decode, compose, lowerBoundFor, TWITTER_EPOCH, DEFAULT_EPOCH,
-} = require(&#039;./snowflake&#039;);
-
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`✓ ${name}`); }
-  catch (e) { failed++; console.log(`✗ ${name}\n  ${e.stack}`); }
-}
-
-const T0 = Date.UTC(2026, 0, 1);
-
-/** Returns `start` for the first `perMs` reads, then start+1, and so on. */
-function steppingClock(start, perMs) {
-  let n = 0;
-  return () =&gt; start + Math.floor(n++ / perMs);
-}
-
-test(&#039;bit layout: 41/10/12 fields at shifts 22 and 12&#039;, () =&gt; {
-  const epoch = T0;
-  const g = new SnowflakeGenerator({ workerId: 1, epoch, clock: () =&gt; epoch + 1 });
-  assert.strictEqual(g.nextId(), (1n &lt;&lt; 22n) | (1n &lt;&lt; 12n) | 0n);
-  assert.strictEqual(g.nextId(), (1n &lt;&lt; 22n) | (1n &lt;&lt; 12n) | 1n);
-  const max = compose({ timestampMs: epoch + 2 ** 41 - 1, workerId: 1023, sequence: 4095 }, { epoch });
-  assert.strictEqual(max, (1n &lt;&lt; 63n) - 1n, &#039;all 63 payload bits set, sign bit clear&#039;);
-});
-
-test(&#039;decode inverts compose&#039;, () =&gt; {
-  for (const [ts, w, s] of [[T0, 0, 0], [T0 + 123456789, 513, 4095], [T0 + 7, 1023, 1]]) {
-    const id = compose({ timestampMs: ts, workerId: w, sequence: s });
-    assert.deepStrictEqual((({ timestampMs, workerId, sequence }) =&gt; [timestampMs, workerId, sequence])(decode(id)), [ts, w, s]);
-  }
-});
-
-test(&#039;Twitter epoch: id &gt;&gt; 22 is milliseconds since 2010-11-04T01:42:54.657Z&#039;, () =&gt; {
-  assert.strictEqual(new Date(TWITTER_EPOCH).toISOString(), &#039;2010-11-04T01:42:54.657Z&#039;);
-  const ts = Date.UTC(2019, 11, 31, 19, 26, 16, 771);
-  const g = new SnowflakeGenerator({ workerId: 0, epoch: TWITTER_EPOCH, clock: () =&gt; ts });
-  const id = g.nextId();
-  assert.strictEqual(id, BigInt(ts - TWITTER_EPOCH) &lt;&lt; 22n);
-  assert.strictEqual(decode(id.toString(), { epoch: TWITTER_EPOCH }).date.toISOString(), &#039;2019-12-31T19:26:16.771Z&#039;);
-});
-
-test(&#039;ids from one worker are unique and strictly increasing&#039;, () =&gt; {
-  const g = new SnowflakeGenerator({ workerId: 5, clock: steppingClock(T0, 3) });
-  let prev = -1n;
-  const seen = new Set();
-  for (let i = 0; i &lt; 50_000; i++) {
-    const id = g.nextId();
-    assert.ok(id &gt; prev);
-    seen.add(id);
-    prev = id;
-  }
-  assert.strictEqual(seen.size, 50_000);
-});
-
-test(&#039;sequence overflow waits for the next millisecond&#039;, () =&gt; {
-  // Clock stays on T0 for 10k reads: only 4096 ids fit, the 4097th must roll to T0+1.
-  const g = new SnowflakeGenerator({ workerId: 0, clock: steppingClock(T0, 10_000) });
-  const ids = Array.from({ length: 4097 }, () =&gt; g.nextId());
-  const last = decode(ids[4095]), next = decode(ids[4096]);
-  assert.strictEqual(last.timestampMs, T0);
-  assert.strictEqual(last.sequence, 4095);
-  assert.strictEqual(next.timestampMs, T0 + 1);
-  assert.strictEqual(next.sequence, 0);
-  assert.strictEqual(g.stats.sequenceOverflowWaits, 1);
-});
-
-test(&#039;sequence resets to 0 when the millisecond changes&#039;, () =&gt; {
-  let t = T0;
-  const g = new SnowflakeGenerator({ workerId: 0, clock: () =&gt; t });
-  g.nextId(); g.nextId();
-  t += 1;
-  assert.strictEqual(decode(g.nextId()).sequence, 0);
-});
-
-test(&#039;small clock rollback (within tolerance) is waited out; ids stay increasing&#039;, () =&gt; {
-  let t = T0 + 100;
-  let reads = 0;
-  const g = new SnowflakeGenerator({ workerId: 3, rollbackToleranceMs: 5, clock: () =&gt; { reads++; return t; } });
-  const a = g.nextId();
-  t -= 4;
-  // Simulate time passing while the generator polls.
-  const orig = g.clock;
-  g.clock = () =&gt; { const v = orig(); t += 1; return v; };
-  const b = g.nextId();
-  assert.ok(b &gt; a);
-  assert.ok(decode(b).timestampMs &gt;= decode(a).timestampMs);
-  assert.strictEqual(g.stats.rollbacksWaited, 1);
-});
-
-test(&#039;rollback exactly at tolerance waits; one beyond throws ClockRollbackError&#039;, () =&gt; {
-  let t = T0 + 100;
-  const g = new SnowflakeGenerator({ workerId: 3, rollbackToleranceMs: 5, clock: () =&gt; t });
-  g.nextId();
-  t = T0 + 95; // exactly 5 ms back: tolerated, waits while time advances
-  const orig = g.clock;
-  g.clock = () =&gt; { const v = orig(); if (t &lt; T0 + 100) t += 1; return v; };
-  assert.strictEqual(decode(g.nextId()).timestampMs, T0 + 100);
-  assert.strictEqual(g.stats.rollbacksWaited, 1);
-  g.clock = orig;
-  t = T0 + 94; // 6 ms back
-  assert.throws(() =&gt; g.nextId(), (e) =&gt; e instanceof ClockRollbackError &amp;&amp; e.driftMs === 6);
-  assert.strictEqual(g.stats.rollbacksRejected, 1);
-  const g2 = new SnowflakeGenerator({ workerId: 3, rollbackToleranceMs: 0, clock: () =&gt; t });
-  t = T0 + 100; g2.nextId();
-  t = T0 + 99;
-  assert.throws(() =&gt; g2.nextId(), ClockRollbackError, &#039;tolerance 0 rejects any rollback&#039;);
-});
-
-test(&#039;a clock that never advances surfaces an error instead of hanging&#039;, () =&gt; {
-  const g = new SnowflakeGenerator({ workerId: 0, clock: () =&gt; T0, maxSpin: 1000 });
-  for (let i = 0; i &lt; 4096; i++) g.nextId();
-  assert.throws(() =&gt; g.nextId(), /did not advance/);
-});
-
-test(&#039;different workers never collide within the same millisecond&#039;, () =&gt; {
-  const t = T0;
-  const all = new Set();
-  for (let w = 0; w &lt; 8; w++) {
-    const g = new SnowflakeGenerator({ workerId: w * 127, clock: () =&gt; t });
-    for (let i = 0; i &lt; 500; i++) all.add(g.nextId());
-  }
-  assert.strictEqual(all.size, 8 * 500);
-});
-
-test(&#039;custom epoch: Date or ms accepted; future epoch rejected; decode honors epoch&#039;, () =&gt; {
-  const epoch = new Date(&#039;2024-01-01T00:00:00Z&#039;);
-  const g = new SnowflakeGenerator({ workerId: 1, epoch, clock: () =&gt; epoch.getTime() + 1000 });
-  const id = g.nextId();
-  assert.strictEqual(id &gt;&gt; 22n, 1000n);
-  assert.strictEqual(g.decode(id).date.toISOString(), &#039;2024-01-01T00:00:01.000Z&#039;);
-  assert.strictEqual(decode(id, { epoch }).timestampMs, epoch.getTime() + 1000);
-  assert.throws(() =&gt; new SnowflakeGenerator({ workerId: 1, epoch: T0 + 10, clock: () =&gt; T0 }), /future/);
-});
-
-test(&#039;41-bit timestamp exhaustion is detected&#039;, () =&gt; {
-  const epoch = 0;
-  const g = new SnowflakeGenerator({ workerId: 1, epoch, clock: () =&gt; 2 ** 41 });
-  assert.throws(() =&gt; g.nextId(), /41 bits/);
-  assert.strictEqual(new Date(DEFAULT_EPOCH + 2 ** 41 - 1).getUTCFullYear(), 2089);
-});
-
-test(&#039;input validation&#039;, () =&gt; {
-  assert.throws(() =&gt; new SnowflakeGenerator({ workerId: 1024 }), RangeError);
-  assert.throws(() =&gt; new SnowflakeGenerator({ workerId: -1 }), RangeError);
-  assert.throws(() =&gt; new SnowflakeGenerator({ workerId: 1.5 }), RangeError);
-  assert.throws(() =&gt; new SnowflakeGenerator({}), RangeError);
-  assert.throws(() =&gt; new SnowflakeGenerator({ workerId: 1, clock: () =&gt; 1.5 }), TypeError);
-  assert.throws(() =&gt; decode(2 ** 60), /2\^53/, &#039;unsafe Number ids must be rejected&#039;);
-  assert.throws(() =&gt; decode(&#039;-5&#039;), TypeError);
-  assert.throws(() =&gt; decode(1n &lt;&lt; 63n), RangeError);
-  assert.throws(() =&gt; compose({ timestampMs: T0, sequence: 4096 }), RangeError);
-});
-
-test(&#039;lowerBoundFor enables time-range scans over ids&#039;, () =&gt; {
-  let t = T0;
-  const g = new SnowflakeGenerator({ workerId: 1023, clock: () =&gt; t });
-  const early = g.nextId();
-  t += 10;
-  const mid = g.nextId();
-  t += 10;
-  const late = g.nextId();
-  const lo = lowerBoundFor(T0 + 5), hi = lowerBoundFor(T0 + 15);
-  assert.ok(!(early &gt;= lo &amp;&amp; early &lt; hi));
-  assert.ok(mid &gt;= lo &amp;&amp; mid &lt; hi);
-  assert.ok(!(late &gt;= lo &amp;&amp; late &lt; hi));
-});
-
-if (failed) { console.log(`\n${failed} test(s) failed`); process.exit(1); }
-console.log(&#039;\nall tests passed&#039;);
-</code></pre>
-          </div>
       </div>
 
       <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
@@ -1029,9 +480,9 @@ console.log(&#039;\nall tests passed&#039;);
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
-  <script type="text/plain" data-defer src="js/code-lab.js?v=20ce3ba328"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=7f68b9d746"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
   

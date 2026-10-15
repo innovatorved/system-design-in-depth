@@ -20,17 +20,21 @@ const SRC_DIR = path.join(PKG_DIR, 'src');
 const DIST_DIR = path.join(PKG_DIR, 'dist');
 
 const runtimeCode = fs.readFileSync(path.join(SRC_DIR, 'runtime.js'), 'utf8');
+const shellCode = fs.readFileSync(path.join(SRC_DIR, 'shell.js'), 'utf8');
+const terminalCode = fs.readFileSync(path.join(SRC_DIR, 'terminal.js'), 'utf8');
 const workbenchCode = fs.readFileSync(path.join(SRC_DIR, 'workbench.js'), 'utf8');
 const cssPath = path.join(ROOT, 'css', 'code-lab.css');
 
 const BANNER = `/**
  * ============================================================
- * @innovatorved/code-lab v1.2.0 — Standalone Browser Code IDE & Virtual Runtime
+ * @innovatorved/code-lab v1.3.0 — Standalone Browser Code IDE & Virtual Runtime
  * ============================================================
  * Features:
  *   - Sandboxed Web Worker Execution Engine with Multi-Instance Isolation & Watchdog Timer
- *   - TypeScript/ESM Compiler & CommonJS/NPM Module Bundler
- *   - 24 Virtual Node.js Built-in Modules (fs, net, http, stream, crypto, events, test, console, etc.)
+ *   - First-Class Node.js and Bun Runtimes (Bun.serve, bun:test, bun:sqlite, Bun.*)
+ *   - Full POSIX Shell AST & 40+ UNIX Coreutils (pipes, redirects, globs, env vars)
+ *   - Interactive PTY Terminal Emulator with inline prompt, Tab completion & ANSI colors
+ *   - Persistent HTTP/TCP Servers, CLI curl & Live Port/HTTP Preview
  *   - VS Code Workbench: Hierarchical File Tree, Decoupled Tabs, Command Palette (Cmd+Shift+P), Quick Open (Cmd+P), Breadcrumbs, Context Menus & Solution Diff Viewer
  *   - Third-Party Imperative SDK (getFiles, setFiles, getFile, setFile, on, off, use, exportWorkspace)
  * ============================================================
@@ -47,7 +51,21 @@ ${runtimeCode}
 
   const CodeLabRuntime = root.CodeLabRuntime;
 
-  // --- Module 2: IDE Workbench & Web Component ---
+  // --- Module 2: POSIX Shell & Coreutils ---
+  (function () {
+${shellCode}
+  })();
+
+  const CodeLabShell = root.CodeLabShell;
+
+  // --- Module 3: PTY Terminal Engine ---
+  (function () {
+${terminalCode}
+  })();
+
+  const CodeLabTerminal = root.CodeLabTerminal;
+
+  // --- Module 4: IDE Workbench & Web Component ---
   (function () {
 ${workbenchCode}
   })();
@@ -63,6 +81,11 @@ ${workbenchCode}
       CodeLabWorkbench: CodeLabWorkbench,
       CodeLabElement: CodeLabElement,
       CodeLabRuntime: CodeLabRuntime,
+      CodeLabShell: CodeLabShell,
+      CodeLabTerminal: CodeLabTerminal,
+      createPosixShell: CodeLabShell ? CodeLabShell.createPosixShell : null,
+      createTerminal: CodeLabTerminal ? CodeLabTerminal.createTerminal : null,
+      PTYTerminalEngine: CodeLabTerminal ? CodeLabTerminal.PTYTerminalEngine : null,
       executeInVirtualRuntime: CodeLabRuntime.executeInVirtualRuntime,
       executeInWorker: CodeLabRuntime.executeInWorker,
       cancelWorkerExecution: CodeLabRuntime.cancelWorkerExecution,
@@ -84,12 +107,24 @@ const ESM_BUNDLE = `${BANNER}const _root = typeof globalThis !== 'undefined' ? g
 ${runtimeCode}
 })();
 
-// --- Module 2: IDE Workbench & Web Component ---
+// --- Module 2: POSIX Shell & Coreutils ---
+(function () {
+${shellCode}
+})();
+
+// --- Module 3: PTY Terminal Engine ---
+(function () {
+${terminalCode}
+})();
+
+// --- Module 4: IDE Workbench & Web Component ---
 (function () {
 ${workbenchCode}
 })();
 
 const CodeLabRuntime = _root.CodeLabRuntime;
+const CodeLabShell = _root.CodeLabShell;
+const CodeLabTerminal = _root.CodeLabTerminal;
 const CodeLabWorkbench = _root.CodeLabWorkbench;
 const CodeLabElement = _root.CodeLabElement;
 const CodeLab = _root.CodeLab;
@@ -102,12 +137,20 @@ const transpileTS = CodeLabRuntime.transpileTS;
 const createVirtualFs = CodeLabRuntime.createVirtualFs;
 const createVirtualHttp = CodeLabRuntime.createVirtualHttp;
 const createVirtualNet = CodeLabRuntime.createVirtualNet;
+const createPosixShell = CodeLabShell ? CodeLabShell.createPosixShell : null;
+const createTerminal = CodeLabTerminal ? CodeLabTerminal.createTerminal : null;
+const PTYTerminalEngine = CodeLabTerminal ? CodeLabTerminal.PTYTerminalEngine : null;
 
 export {
   CodeLab,
   CodeLabWorkbench,
   CodeLabElement,
   CodeLabRuntime,
+  CodeLabShell,
+  CodeLabTerminal,
+  createPosixShell,
+  createTerminal,
+  PTYTerminalEngine,
   executeInVirtualRuntime,
   executeInWorker,
   cancelWorkerExecution,
@@ -159,6 +202,70 @@ export {
   createVirtualNet
 };
 export default CodeLabRuntime;
+`;
+
+const SHELL_IIFE = `${BANNER}(function (root) {
+  'use strict';
+  (function () {
+${shellCode}
+  })();
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = root.CodeLabShell;
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this);
+`;
+
+const SHELL_ESM = `${BANNER}const _root = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : {};
+(function () {
+${shellCode}
+})();
+
+const CodeLabShell = _root.CodeLabShell;
+const createPosixShell = CodeLabShell.createPosixShell;
+const PosixShell = CodeLabShell.PosixShell;
+const parseShellCommand = CodeLabShell.parseShellCommand;
+const COREUTILS = CodeLabShell.COREUTILS;
+
+export {
+  CodeLabShell,
+  createPosixShell,
+  PosixShell,
+  parseShellCommand,
+  COREUTILS
+};
+export default CodeLabShell;
+`;
+
+const TERMINAL_IIFE = `${BANNER}(function (root) {
+  'use strict';
+  (function () {
+${terminalCode}
+  })();
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = root.CodeLabTerminal;
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this);
+`;
+
+const TERMINAL_ESM = `${BANNER}const _root = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : {};
+(function () {
+${terminalCode}
+})();
+
+const CodeLabTerminal = _root.CodeLabTerminal;
+const PTYTerminalEngine = CodeLabTerminal.PTYTerminalEngine;
+const createTerminal = CodeLabTerminal.createTerminal;
+const ansiToHtml = CodeLabTerminal.ansiToHtml;
+
+export {
+  CodeLabTerminal,
+  PTYTerminalEngine,
+  createTerminal,
+  ansiToHtml
+};
+export default CodeLabTerminal;
 `;
 
 const DTS_CONTENT = `/**
@@ -415,11 +522,32 @@ export declare const createVirtualFs: CodeLabRuntimeAPI['createVirtualFs'];
 export declare const createVirtualHttp: CodeLabRuntimeAPI['createVirtualHttp'];
 export declare const createVirtualNet: CodeLabRuntimeAPI['createVirtualNet'];
 
+export interface CodeLabShellAPI {
+  createPosixShell(options?: any): any;
+  PosixShell: any;
+  parseShellCommand(cmd: string): any;
+  COREUTILS: Record<string, any>;
+}
+
+export interface CodeLabTerminalAPI {
+  PTYTerminalEngine: any;
+  createTerminal(container: HTMLElement | string, options?: any): any;
+  ansiToHtml(text: string): string;
+}
+
+export declare const CodeLabShell: CodeLabShellAPI;
+export declare const CodeLabTerminal: CodeLabTerminalAPI;
+export declare const createPosixShell: CodeLabShellAPI['createPosixShell'];
+export declare const createTerminal: CodeLabTerminalAPI['createTerminal'];
+export declare const PTYTerminalEngine: any;
+
 export interface CodeLabStatic {
   Workbench: typeof CodeLabWorkbench;
   CodeLabWorkbench: typeof CodeLabWorkbench;
   CodeLabElement: typeof CodeLabElement;
   Runtime: CodeLabRuntimeAPI;
+  Shell: CodeLabShellAPI;
+  Terminal: CodeLabTerminalAPI;
   create(container: HTMLElement | string, options?: CodeLabOptions): CodeLabWorkbench | null;
   mount(container: HTMLElement | string, options?: CodeLabOptions): CodeLabWorkbench | null;
   unmount(container: HTMLElement | string): void;
@@ -440,6 +568,10 @@ fs.writeFileSync(path.join(DIST_DIR, 'code-lab.js'), IIFE_BUNDLE, 'utf8');
 fs.writeFileSync(path.join(DIST_DIR, 'code-lab.esm.js'), ESM_BUNDLE, 'utf8');
 fs.writeFileSync(path.join(DIST_DIR, 'runtime.js'), RUNTIME_IIFE, 'utf8');
 fs.writeFileSync(path.join(DIST_DIR, 'runtime.esm.js'), RUNTIME_ESM, 'utf8');
+fs.writeFileSync(path.join(DIST_DIR, 'shell.js'), SHELL_IIFE, 'utf8');
+fs.writeFileSync(path.join(DIST_DIR, 'shell.esm.js'), SHELL_ESM, 'utf8');
+fs.writeFileSync(path.join(DIST_DIR, 'terminal.js'), TERMINAL_IIFE, 'utf8');
+fs.writeFileSync(path.join(DIST_DIR, 'terminal.esm.js'), TERMINAL_ESM, 'utf8');
 fs.writeFileSync(path.join(DIST_DIR, 'code-lab.d.ts'), DTS_CONTENT, 'utf8');
 
 // 3. Copy CSS to projects/code-lab/dist/code-lab.css
@@ -451,5 +583,7 @@ console.log('✓ Built js/code-lab.js (' + ( Buffer.byteLength(IIFE_BUNDLE) / 10
 console.log('✓ Built projects/code-lab/dist/code-lab.js (UMD/IIFE)');
 console.log('✓ Built projects/code-lab/dist/code-lab.esm.js (ESM)');
 console.log('✓ Built projects/code-lab/dist/runtime.js & runtime.esm.js');
+console.log('✓ Built projects/code-lab/dist/shell.js & shell.esm.js');
+console.log('✓ Built projects/code-lab/dist/terminal.js & terminal.esm.js');
 console.log('✓ Built projects/code-lab/dist/code-lab.d.ts');
 console.log('✓ Copied projects/code-lab/dist/code-lab.css');

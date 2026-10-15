@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -956,45 +956,25 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="when-not-to-add-infrastructure" id="audio-speed-when-not-to-add-infrastructure" title="Playback speed">1x</button>
         <audio id="audio-when-not-to-add-infrastructure" src="audio/when-not-to-add-infrastructure.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>When not to add infrastructure</h2>
-
 <p>Every new running component needs configuration, capacity, monitoring, upgrades, and a plan for failure. Add it when those obligations buy a property the product needs: capacity, latency, availability, isolation, or easier operation.</p>
-
 <p>The useful question is what the current design cannot do, and whether this component fixes that limitation.</p>
-
 <h2>Name the missing property</h2>
-
 <p>“The database will get large” does not establish a need for a cache. “Repeated destination lookups dominate a measured latency problem” is a more useful starting point. It identifies both the work to remove and a result to compare afterward.</p>
-
 <p>Performance is only one reason to change the design. A service may meet its traffic target but fail the requirement to survive losing a host. You do not need to wait for a production outage to act on an explicit recovery requirement.</p>
-
 <p>For our shortener, the historical warm lookup measurement supports investigating a simple indexed database path. It excludes the application and required event write. It cannot establish complete-service capacity or recovery behavior.</p>
-
 <h2>Try the smaller change first</h2>
-
-<table><thead><tr><th>Proposed addition</th><th>Simpler candidate to examine</th><th>What could justify the addition</th></tr></thead><tbody><tr><td>Redis for every read</td><td>Fix query shape, indexes and connection reuse</td><td>Repeated hot reads still miss the agreed target</td></tr><tr><td>A streaming platform for every background task</td><td>A task queue or database outbox</td><td>Replay, multiple independent consumers, or measured throughput needs</td></tr><tr><td>Microservices to divide ownership</td><td>Clear modules and internal interfaces</td><td>Independent releases, resources, permissions or failure boundaries</td></tr><tr><td>Kubernetes for a small application</td><td>A managed platform or simpler deployment</td><td>Concrete scheduling or operating needs that justify the platform</td></tr><tr><td>Writes accepted in several regions</td><td>A single writer, with replicas where useful</td><td>A product requirement for regional write availability or latency</td></tr></tbody></table>These are starting comparisons, not bans. A managed platform or task queue still has costs and limits. Likewise, read replicas do not remove the single writer's failure or latency constraints.
-
+<table><thead><tr><th>Proposed addition</th><th>Simpler candidate to examine</th><th>What could justify the addition</th></tr></thead><tbody><tr><td>Redis for every read</td><td>Fix query shape, indexes and connection reuse</td><td>Repeated hot reads still miss the agreed target</td></tr><tr><td>A streaming platform for every background task</td><td>A task queue or database outbox</td><td>Replay, multiple independent consumers, or measured throughput needs</td></tr><tr><td>Microservices to divide ownership</td><td>Clear modules and internal interfaces</td><td>Independent releases, resources, permissions or failure boundaries</td></tr><tr><td>Kubernetes for a small application</td><td>A managed platform or simpler deployment</td><td>Concrete scheduling or operating needs that justify the platform</td></tr><tr><td>Writes accepted in several regions</td><td>A single writer, with replicas where useful</td><td>A product requirement for regional write availability or latency</td></tr></tbody></table>
+<p>These are starting comparisons, not bans. A managed platform or task queue still has costs and limits. Likewise, read replicas do not remove the single writer's failure or latency constraints.</p>
 <p>If the product requirement is still changing, avoid committing to a difficult-to-reverse arrangement before the boundary is understood. Preserve a straightforward path to introduce it later.</p>
-
 <h2>Trace the new failure path</h2>
-
 <p>A cache can reduce database reads while creating a second place that serves an old answer. For short links, ask how quickly a disabled unsafe destination stops being returned. Also ask whether the database can handle the traffic when the cache is cold or unavailable.</p>
-
 <p>A queue can move report calculation out of a redirect's wait. It still needs durable acceptance if the event must survive a crash. Returning success after an unawaited in-memory enqueue weakens that promise.</p>
-
 <p>The first shortener design can record an event in the existing database and calculate reports later. A separate queue becomes worth considering when the shared database path or processing arrangement no longer meets the requirement. Measure the combined path; the lookup-only benchmark did not test it.</p>
-
-
-
 <h2>Decide who can operate it</h2>
-
 <p>An additional service needs someone who can recognize failure, find the relevant evidence, and recover or disable it safely. Include that work in the comparison even when the vendor offers a free tier.</p>
-
 <p>Before adopting the component, establish its owner, its failure signal, and the first recovery action. If nobody can investigate it during an incident, simplify the design or build that operating capability before relying on it.</p>
-
 <p>Deferring a component should leave a useful decision record. Save the current workload, the required behavior, the rejected alternative, and the condition for reopening the choice. “Revisit caching if repeated lookups still dominate the missed latency target after query fixes” gives the next engineer something to test.</p>
-
-<p>The aim is a system whose parts have a clear job and an understood cost. A small design that misses the recovery promise is insufficient; a larger design full of unused mechanisms is harder to maintain. Keep the components that earn their place.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>The aim is a system whose parts have a clear job and an understood cost. A small design that misses the recovery promise is insufficient; a larger design full of unused mechanisms is harder to maintain. Keep the components that earn their place.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
 <h2>When not to add infrastructure</h2>
 <p>Every new running component needs configuration, capacity, monitoring, upgrades, and a plan for failure. Add it when those obligations buy a property the product needs: capacity, latency, availability, isolation, or easier operation.</p>
 <p>The useful question is what the current design cannot do, and whether this component fixes that limitation.</p>
@@ -1245,7 +1225,7 @@
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

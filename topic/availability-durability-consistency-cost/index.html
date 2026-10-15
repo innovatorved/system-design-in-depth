@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -956,49 +956,28 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="availability-durability-consistency-cost" id="audio-speed-availability-durability-consistency-cost" title="Playback speed">1x</button>
         <audio id="audio-availability-durability-consistency-cost" src="audio/availability-durability-consistency-cost.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Availability, durability, consistency, cost</h2>
-
 <p>A service can keep answering requests while losing saved data. It can also preserve every record while being temporarily unreachable. Availability, durability, consistency, and cost describe different properties; saying a system is “reliable” does not tell us which of them it provides.</p>
-
 <p>We will follow a newly created short link through three failures, then account for the work needed to prevent or recover from each one.</p>
-
 <h2>Can the reader use the link now?</h2>
-
 <p>Suppose the shortener's database is stopped. Its files are intact, but the application cannot look up a destination. The redirect path is unavailable even though the mapping has not been lost.</p>
-
 <p>Availability belongs to a particular operation. The reporting page can be down while redirects work, or creation can fail while existing links still resolve. Measure the paths that matter to users instead of treating an answering process as proof that the whole product works.</p>
-
 <p>Dependencies affect this promise. Our shortener requires an accepted redirect event to be stored before returning success. If the mapping can be read but that event cannot be stored, this design returns an error. Letting the redirect continue would improve availability during that failure, but would change the agreed event-retention requirement.</p>
-
 <h2>Will an acknowledged mapping survive?</h2>
-
 <p>The creator receives a successful response, then the application process crashes. The saved mapping must remain after restart. <strong>Durability</strong> concerns whether acknowledged data survives the failures the system claims to tolerate.</p>
-
 <p>The application must wait for the database's commit acknowledgement before promising that creation succeeded. That acknowledgement still depends on the database configuration and storage honoring durable writes. Data left only in volatile memory cannot survive losing that memory.</p>
-
 <p>A process restart with intact storage is different from destruction of the only disk. Surviving disk loss requires a recoverable copy elsewhere. A replica can help, but may also copy an accidental deletion; a backup and a tested restore procedure address a different recovery need.</p>
-
 <p>Name the failure you tested. “The record survived a restart” is useful evidence. It does not establish recovery from a lost region or from an operator deleting the record.</p>
-
 <h2>What may the next read observe?</h2>
-
 <p>Now creation succeeds, but the creator immediately follows the short link through a replica that has not received the new mapping. It returns “unknown code.” The data may be durable on the writer, yet the read violates the user's expectation.</p>
-
-<strong>Consistency</strong> describes the rules relating reads and writes, including their visibility and ordering. For this path, the concrete requirement is that a read started after successful creation can find the valid mapping. An immutable destination does not remove this first-read problem.
-
+<p><strong>Consistency</strong> describes the rules relating reads and writes, including their visibility and ordering. For this path, the concrete requirement is that a read started after successful creation can find the valid mapping. An immutable destination does not remove this first-read problem.</p>
 <p>A straightforward initial choice is to read from the database that accepted the creation. In PostgreSQL's default Read Committed isolation, a new ordinary query sees rows committed before that query began. A lagging replica or an older transaction snapshot needs separate consideration.</p>
-
 <p>A report can have a looser freshness requirement. It may omit recent events while the calculation catches up, even though those events are safely stored. <a href="#" data-nav="topic" data-slug="consistency-models">Consistency models</a> develops these guarantees without treating every operation as having the same needs.</p>
-
 <h2>What does keeping those promises cost?</h2>
-
 <p>Waiting for commits adds work to the request path. Extra copies consume storage and network capacity. Failover and restoration need tests, monitoring, and people who can operate them.</p>
-
 <p>Use four questions when reviewing a proposed saving:</p>
-
-<table><thead><tr><th>Property</th><th>Question</th></tr></thead><tbody><tr><td>Availability</td><td>Which operations can continue during the specified failure?</td></tr><tr><td>Durability</td><td>Which acknowledged records can be lost?</td></tr><tr><td>Consistency</td><td>Which old, missing, or conflicting results may a reader observe?</td></tr><tr><td>Cost</td><td>What resources and operating work does the design require?</td></tr></tbody></table>Removing the shortener's event write makes a redirect cheaper by dropping a promise. Moving report calculation out of that request removes work that never had to finish synchronously. These are different kinds of saving.
-
-<p>A higher uptime percentage cannot compensate for losing records the product must retain. Choose the required behavior first, then use <a href="#" data-nav="topic" data-slug="cost-aware-architecture">cost-aware architecture</a> to compare ways of providing it.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<table><thead><tr><th>Property</th><th>Question</th></tr></thead><tbody><tr><td>Availability</td><td>Which operations can continue during the specified failure?</td></tr><tr><td>Durability</td><td>Which acknowledged records can be lost?</td></tr><tr><td>Consistency</td><td>Which old, missing, or conflicting results may a reader observe?</td></tr><tr><td>Cost</td><td>What resources and operating work does the design require?</td></tr></tbody></table>
+<p>Removing the shortener's event write makes a redirect cheaper by dropping a promise. Moving report calculation out of that request removes work that never had to finish synchronously. These are different kinds of saving.</p>
+<p>A higher uptime percentage cannot compensate for losing records the product must retain. Choose the required behavior first, then use <a href="#" data-nav="topic" data-slug="cost-aware-architecture">cost-aware architecture</a> to compare ways of providing it.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
 <h2>Availability, durability, consistency, cost</h2>
 <p>A service can keep answering requests while losing saved data. It can also preserve every record while being temporarily unreachable. Availability, durability, consistency, and cost describe different properties; saying a system is “reliable” does not tell us which of them it provides.</p>
 <p>We will follow a newly created short link through three failures, then account for the work needed to prevent or recover from each one.</p>
@@ -1251,7 +1230,7 @@
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

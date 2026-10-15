@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -949,42 +949,27 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="blocklist-versioned-file-metadata" id="audio-speed-blocklist-versioned-file-metadata" title="Playback speed">1x</button>
         <audio id="audio-blocklist-versioned-file-metadata" src="audio/blocklist-versioned-file-metadata.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>Blocklists and file revisions</h2>
-
 <p>A blocklist records which pieces make up a file and in what order. An immutable revision preserves that recipe, while a mutable path pointer selects the version users currently see. Publishing the recipe must wait until its referenced bytes are ready to read.</p>
-
 <p>We'll connect the blocklist to a namespace journal, follow the publication transaction, and test missing bytes, corruption and retries in the local sync service.</p>
-
 <h2>One file, several kinds of identity</h2>
-
 <p>A path names a location within a namespace. A revision identifies an accepted publication. A digest identifies bytes. Two revisions can contain identical bytes, and two positions in one file can reference the same blob.</p>
-
 <p>Our sixteen-byte file still contains <code>AAAA</code>, <code>BBBB</code>, <code>CCCC</code>, <code>AAAA</code>. Its four ordered references need three stored blobs. Turning the blocklist into a set loses the final <code>AAAA</code>; sorting the references can produce a different file.</p>
-
-<table><thead><tr><th>Record</th><th>Key</th><th>Relevant content</th></tr></thead><tbody><tr><td>Journal entry</td><td>Namespace and revision</td><td>Path, ordered blocks, size, digest, deletion state</td></tr><tr><td>Current path</td><td>Namespace and path</td><td>Selected revision</td></tr><tr><td>Operation receipt</td><td>Device and operation</td><td>Exact proposal and accepted result</td></tr><tr><td>Blob</td><td>Content digest within allowed storage</td><td>Verified immutable bytes</td></tr></tbody></table>A fuller file model may also retain timestamps, permissions and application metadata. Keep server acceptance order separate from client modification time. Dropbox's 2016 Magic Pocket account describes the same broad separation of mutable file history from immutable stored blocks; our SQLite schema is a teaching implementation, not its production database.
-
+<table><thead><tr><th>Record</th><th>Key</th><th>Relevant content</th></tr></thead><tbody><tr><td>Journal entry</td><td>Namespace and revision</td><td>Path, ordered blocks, size, digest, deletion state</td></tr><tr><td>Current path</td><td>Namespace and path</td><td>Selected revision</td></tr><tr><td>Operation receipt</td><td>Device and operation</td><td>Exact proposal and accepted result</td></tr><tr><td>Blob</td><td>Content digest within allowed storage</td><td>Verified immutable bytes</td></tr></tbody></table>
+<p>A fuller file model may also retain timestamps, permissions and application metadata. Keep server acceptance order separate from client modification time. Dropbox's 2016 Magic Pocket account describes the same broad separation of mutable file history from immutable stored blocks; our SQLite schema is a teaching implementation, not its production database.</p>
 <h2>The cursor spans the namespace</h2>
-
 <p>A journal cursor answers “which accepted changes have I learned about?” across the file tree. A file's base revision answers “which version of this path did I edit?” Those numbers can differ.</p>
-
 <p>For example, suppose <code>notes.txt</code> is revision 14 and another file changes at revision 15. A device can read through cursor 15 while still proposing a new <code>notes.txt</code> version against base 14. Rejecting it merely because 14 is not the namespace head would create a conflict with an unrelated edit.</p>
-
 <p>The proposed query has this shape:</p>
-
 <pre><code class="language-sql">SELECT revision, path, blocks, digest, size, deleted
 FROM file_journal
 WHERE namespace_id = :namespace
   AND revision &gt; :after
 ORDER BY revision
 LIMIT :page_size;</code></pre>
-
 <p>The server derives the permitted namespace from authenticated access. A page returns a continuation position for the rows it actually supplies; a client must not skip straight to a later head while earlier pages remain unread. Receiving metadata also does not mean its files have been applied locally.</p>
-
 <p>Our fixture holds only Ada's namespace, so its tables omit a namespace column. It caps history and returns all later rows without pagination. Publication allocates revisions inside the transaction. Its restricted append/rollback path maintains contiguous history; SQLite <code>AUTOINCREMENT</code> alone does not promise gap-free IDs.</p>
-
 <h2>Prepare bytes before selecting the revision</h2>
-
 <p>The <a href="#" data-nav="topic" data-slug="metadata-db-for-object-storage">object-metadata lesson</a> separated stored bytes from published state. Apply the same ordering here:</p>
-
 <div class="mermaid">flowchart TD
   accTitle: Publishing a reconstructable revision
   accDescr: For a new proposal, the local authority checks permission and base, verifies and synchronizes referenced blobs, then commits the journal entry, path pointer and receipt together before replying. Missing or corrupt bytes stop publication.
@@ -992,19 +977,12 @@ LIMIT :page_size;</code></pre>
   B --> C[Synchronize blob files]
   C --> D[Commit metadata and receipt]
   D --> E[Reply with revision]</div>
-
 <p>A new blob is written to a temporary file, flushed and synchronized, then renamed to its final address and followed by directory synchronization. The lab repeats synchronization for an identical existing blob: a previous attempt may have left complete bytes but failed before reporting preparation success.</p>
-
 <p>Publication verifies each referenced length and digest and the assembled whole-file identity. One SQLite transaction then appends the revision, moves the path pointer and records the operation's result. A failure rolls back these metadata changes together.</p>
-
 <p>The file writes occur outside SQLite's storage format; this is not one atomic transaction spanning arbitrary files and a database. The ordering allows unreferenced prepared blobs after a failed publication, which cleanup can handle. It avoids intentionally committing a reference before preparation succeeds.</p>
-
 <p>The fixture serializes upload, publication and cleanup through SQLite write transactions, including verification and synchronization. That makes the boundary straightforward but holds the writer while doing file I/O. Preparing outside that lock in a larger service needs a pin or equivalent ownership rule so cleanup cannot remove bytes before commitment.</p>
-
 <h2>Run the publication boundary</h2>
-
 <p>Download the publication example. The command uses temporary private files and SQLite. The corruption step alters only its own fixture and restores the original bytes before retrying.</p>
-
 <pre><code class="language-bash">uv venv --quiet --allow-existing --python 3.12.12 /tmp/fanout-m25
 /tmp/fanout-m25/bin/python m25-sync.py publication</code></pre>
 <pre><code class="language-output">before blocks=409
@@ -1016,25 +994,15 @@ corrupt referenced block=503
 restored-byte retry=201
 stale base=409
 reopened revisions=2; first ordered digests=[&#039;63c1dd95&#039;, &#039;4a8d8134&#039;, &#039;90b4853e&#039;, &#039;63c1dd95&#039;]</code></pre>
-
 <p>Twelve uploaded bytes initially expose zero paths. Publication selects four references, and the other device reconstructs all sixteen bytes. The last digest display repeats the first because the file repeats that block; storage uses full digests, not these eight-character labels.</p>
-
 <p>Changing stored <code>BBBB</code> to same-length <code>xxxx</code> defeats a size-only check but fails digest verification. No revision is published until the bytes are restored and synchronized again. The stale base still refuses afterward.</p>
-
 <p>The database uses <code>synchronous=EXTRA</code>; files and directories have explicit synchronization calls. Reopening verifies retained records, but this experiment does not test power loss, disk-controller behavior or replicated durability.</p>
-
 <h2>Recover an operation without authorizing a new one</h2>
-
 <p>A matching receipt must be checked before rejecting its now-old base: the original proposal may already have advanced the path. Current device permission still comes first. Reusing an operation ID with a different path, base or payload is a conflict.</p>
-
 <p>That distinction lets a lost reply recover the original revision while a new stale proposal receives a conflict. Receipt device/operation fields are non-null and unique together; missing identity must not bypass the rule. The original payload is retained so equality can be checked.</p>
-
 <p>Revision history also creates lifecycle work. A deletion record, or tombstone, tells an offline client that absence is intentional. Renames need a defined identity model: this fixture atomically tombstones the old path and appends the destination; a stable file ID can instead preserve identity while its path changes.</p>
-
 <p>Keep blocks while any retained revision still needs them, including history retained after deletion. Then separately decide when history expires, how an old cursor recovers, and how privacy deletion reaches shared blobs and backups. Immutability makes old versions readable; it does not decide how long they should remain.</p>
-
-<p>The <a href="#" data-nav="topic" data-slug="file-sync-system-design">complete file-sync service</a> exercises those rename, replay and cleanup paths. <a href="#" data-nav="topic" data-slug="data-retention-and-deletion">Data retention and deletion</a> develops the broader lifecycle policy.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>The <a href="#" data-nav="topic" data-slug="file-sync-system-design">complete file-sync service</a> exercises those rename, replay and cleanup paths. <a href="#" data-nav="topic" data-slug="data-retention-and-deletion">Data retention and deletion</a> develops the broader lifecycle policy.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>Representing Versioned Files as Blocklists</h2>
       <p>To support file versioning, rollbacks, and instant directory renames, file metadata is decoupled completely from block storage. A file version is represented as an ordered array of block hashes (a <strong>blocklist</strong>):</p>
       <pre><code>{
@@ -1283,7 +1251,7 @@ reopened revisions=2; first ordered digests=[&#039;63c1dd95&#039;, &#039;4a8d813
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>

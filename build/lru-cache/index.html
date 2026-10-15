@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -340,26 +340,9 @@
         
       </section>
 
-      <div id="build-walkthrough-pane">
-        <div class="build-run">
-          <div class="build-run__text">
-            <strong>Run locally</strong> (Node 18+, zero dependencies): save the files below or copy the setup script, then run
-            <code>node demo.js</code> and <code>node test.js</code>.
-          </div>
-          <button class="btn btn--sm btn--outline" data-action="copy-build-script" data-build-id="lru-cache">Copy setup script</button>
-        </div>
-
-        <div class="build-files"><a href="#build-file-lru-cache-README_md" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lru-cache-README_md">README.md</a><a href="#build-file-lru-cache-lru_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lru-cache-lru_js">lru.js</a><a href="#build-file-lru-cache-demo_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lru-cache-demo_js">demo.js</a><a href="#build-file-lru-cache-test_js" class="build-files__item" data-action="scroll-to-file" data-target="build-file-lru-cache-test_js">test.js</a></div><article class="prose" id="build-file-lru-cache-README_md"><h2>LRU Cache (Doubly Linked List + Hash Map)</h2>
-
-<p>A bounded in-memory cache that, when full, throws away the entry that was used least recently.</p>
-<p>Every operation is O(1).</p>
-
+      <div id="build-walkthrough-pane"><article class="prose" id="build-file-lru-cache-README_md"><p>A bounded in-memory cache that, when full, throws away the entry that was used least recently. Every operation is O(1).</p>
 <h2>The problem and where it shows up</h2>
-
-<p>Memory is finite, and access patterns are usually skewed: a small hot set gets most of the reads.</p>
-<p>An eviction policy decides what to drop when the cache is full. Least-recently-used is the usual</p>
-<p>default because recency is a cheap, decent predictor of reuse. You find it in:</p>
-
+<p>Memory is finite, and access patterns are usually skewed: a small hot set gets most of the reads. An eviction policy decides what to drop when the cache is full. Least-recently-used is the usual default because recency is a cheap, decent predictor of reuse. You find it in:</p>
 <ul>
 <li><strong>Application caches</strong> in the process: Guava/Caffeine (Java), <code>lru-cache</code> (npm), <code>functools.lru_cache</code> (Python).</li>
 <li><strong>Database buffer pools</strong>: InnoDB's buffer pool is an LRU list split into young and old sublists. PostgreSQL uses clock-sweep, which approximates LRU.</li>
@@ -368,12 +351,10 @@
 <li><strong>OS page cache</strong>: Linux keeps active and inactive LRU lists (two-list approximation).</li>
 </ul>
 <h2>Design</h2>
-
 <pre><code class="language-text">map: key -&gt; node                 (O(1) lookup)
 
 head &lt;-&gt; [MRU] &lt;-&gt; ... &lt;-&gt; [LRU] &lt;-&gt; tail     (O(1) reorder / evict)
  ^ sentinel                         sentinel ^</code></pre>
-
 <ul>
 <li><code>get(k)</code>: look up the node in the Map and splice it to the front.</li>
 <li><code>set(k, v)</code>: insert at the front (or update in place and move to front), then pop from the back until the bounds hold.</li>
@@ -381,632 +362,44 @@ head &lt;-&gt; [MRU] &lt;-&gt; ... &lt;-&gt; [LRU] &lt;-&gt; tail     (O(1) reor
 <li>The Map holds node references, so removing an arbitrary node (for <code>delete</code> or expiry) is O(1). A singly linked list can't do this.</li>
 </ul>
 <h3>Invariants (checked by <code>_checkInvariants()</code> and the tests)</h3>
-
 <ol>
 <li>Every list node is in the Map under its own key, and every Map entry is in the list.</li>
 <li><code>node.next.prev === node</code> for every node.</li>
-<li><code>size <= maxEntries</code> and <code>calculatedSize <= maxSize</code> after every public call returns.</li>
+<li><code>size &lt;= maxEntries</code> and <code>calculatedSize &lt;= maxSize</code> after every public call returns.</li>
 <li>List order is exactly recency order: the result of <code>get</code> / <code>set</code>. <code>peek</code>, <code>has</code> and <code>keys</code> do not change it.</li>
 </ol>
 <h3>Features</h3>
-
-<table><thead><tr><th>Option</th><th>Meaning</th></tr></thead><tbody><tr><td><code>maxEntries</code></td><td>Entry count bound</td></tr><tr><td><code>maxSize</code> + <code>sizeOf(value, key)</code></td><td>Weight bound, e.g. bytes. Per-entry <code>size</code> override on <code>set</code></td></tr><tr><td><code>ttlMs</code></td><td>Default TTL. <code>set(k, v, { ttlMs })</code> overrides it. <code>0</code> = never expires</td></tr><tr><td><code>now</code></td><td>Injectable clock, so tests and the demo never sleep</td></tr><tr><td><code>onEvict(key, value, reason)</code></td><td><code>capacity</code>, <code>expired</code>, <code>deleted</code>, <code>replaced</code>, <code>cleared</code></td></tr><tr><td><code>stats()</code></td><td>hits, misses, sets, evictions, expirations, rejected, hitRate</td></tr></tbody></table><strong>Expiry</strong> is <em>lazy</em>: an expired entry is removed when you touch it. There's also an explicit
-<code>prune()</code> sweep, the same split as Redis's passive and active expiry. When capacity eviction reaches an
-<p>expired tail node, it reports it as <code>expired</code>, not <code>capacity</code>.</p>
-
-<strong>Oversized items</strong> (<code>size > maxSize</code>) are rejected (<code>set</code> returns <code>false</code>). Accepting one would flush
-<p>the entire cache and still not fit it. Any older value under the same key is removed, so readers</p>
-<p>never see data the writer meant to replace.</p>
-
+<table><thead><tr><th>Option</th><th>Meaning</th></tr></thead><tbody><tr><td><code>maxEntries</code></td><td>Entry count bound</td></tr><tr><td><code>maxSize</code> + <code>sizeOf(value, key)</code></td><td>Weight bound, e.g. bytes. Per-entry <code>size</code> override on <code>set</code></td></tr><tr><td><code>ttlMs</code></td><td>Default TTL. <code>set(k, v, { ttlMs })</code> overrides it. <code>0</code> = never expires</td></tr><tr><td><code>now</code></td><td>Injectable clock, so tests and the demo never sleep</td></tr><tr><td><code>onEvict(key, value, reason)</code></td><td><code>capacity</code>, <code>expired</code>, <code>deleted</code>, <code>replaced</code>, <code>cleared</code></td></tr><tr><td><code>stats()</code></td><td>hits, misses, sets, evictions, expirations, rejected, hitRate</td></tr></tbody></table>
+<p><strong>Expiry</strong> is <em>lazy</em>: an expired entry is removed when you touch it. There's also an explicit <code>prune()</code> sweep, the same split as Redis's passive and active expiry. When capacity eviction reaches an expired tail node, it reports it as <code>expired</code>, not <code>capacity</code>.</p>
+<p><strong>Oversized items</strong> (<code>size &gt; maxSize</code>) are rejected (<code>set</code> returns <code>false</code>). Accepting one would flush the entire cache and still not fit it. Any older value under the same key is removed, so readers never see data the writer meant to replace.</p>
 <h2>Complexity</h2>
-
-<table><thead><tr><th>Operation</th><th>Time</th><th>Notes</th></tr></thead><tbody><tr><td>get / set / delete / has / peek</td><td>O(1) amortised</td><td>Map ops + constant pointer swaps</td></tr><tr><td>eviction per set</td><td>O(k)</td><td>k = entries evicted. Amortised O(1) because each entry is evicted once</td></tr><tr><td>prune / keys / clear</td><td>O(n)</td></tr><tr><td>Space</td><td>O(n)</td><td>One Map entry + one node (key, value, size, expiresAt, 2 pointers) per item</td></tr></tbody></table>The per-entry overhead is roughly 100+ bytes in V8, which matters when values are small. Production
-<p>caches often store entries in flat arrays indexed by integer slots to avoid per-node objects</p>
-<p>(<code>lru-cache</code> v7+ does this).</p>
-
+<table><thead><tr><th>Operation</th><th>Time</th><th>Notes</th></tr></thead><tbody><tr><td>get / set / delete / has / peek</td><td>O(1) amortised</td><td>Map ops + constant pointer swaps</td></tr><tr><td>eviction per set</td><td>O(k)</td><td>k = entries evicted. Amortised O(1) because each entry is evicted once</td></tr><tr><td>prune / keys / clear</td><td>O(n)</td><td></td></tr><tr><td>Space</td><td>O(n)</td><td>One Map entry + one node (key, value, size, expiresAt, 2 pointers) per item</td></tr></tbody></table>
+<p>The per-entry overhead is roughly 100+ bytes in V8, which matters when values are small. Production caches often store entries in flat arrays indexed by integer slots to avoid per-node objects (<code>lru-cache</code> v7+ does this).</p>
 <h2>Failure modes and trade-offs</h2>
-
 <ul>
-<li><strong>Scan pollution</strong>: a one-off sequential scan (a batch job or a crawler) pushes the whole hot set out.</li>
-  LRU has no notion of frequency. Fixes: segmented LRU / midpoint insertion (InnoDB inserts new pages
-  at the 3/8 point), 2Q, ARC, or W-TinyLFU (Caffeine), which admits a new item only if it's
-  estimated to be more popular than the victim.
-<li><strong>Lock contention</strong>: every <code>get</code> <em>writes</em> (it reorders the list). A multithreaded LRU needs a lock</li>
-  on reads. Caffeine buffers reorders in ring buffers and replays them in batches. RocksDB and
-  memcached shard the cache so each shard has its own lock.
-<li><strong>Stale reads with TTL-only invalidation</strong>: TTL bounds staleness but doesn't remove it. Pair with</li>
-  explicit invalidation on writes if correctness matters.
-<li><strong>Thundering herd on miss</strong>: when a hot key expires, many callers miss together and all hit the</li>
-  database. Use single-flight (request coalescing) or refresh-ahead. Not implemented here.
-<li><strong>Size estimation lies</strong>: <code>sizeOf</code> is only as accurate as you make it. JS object size is hard to</li>
-  measure, so a byte bound on objects is approximate.
-<li><strong>Callback reentrancy</strong>: <code>onEvict</code> runs synchronously after internal state is consistent, and</li>
-  exceptions it throws are swallowed. Calling back into the cache from it works, but it can cascade.
+<li><strong>Scan pollution</strong>: a one-off sequential scan (a batch job or a crawler) pushes the whole hot set out. LRU has no notion of frequency. Fixes: segmented LRU / midpoint insertion (InnoDB inserts new pages at the 3/8 point), 2Q, ARC, or W-TinyLFU (Caffeine), which admits a new item only if it's estimated to be more popular than the victim.</li>
+<li><strong>Lock contention</strong>: every <code>get</code> <em>writes</em> (it reorders the list). A multithreaded LRU needs a lock on reads. Caffeine buffers reorders in ring buffers and replays them in batches. RocksDB and memcached shard the cache so each shard has its own lock.</li>
+<li><strong>Stale reads with TTL-only invalidation</strong>: TTL bounds staleness but doesn't remove it. Pair with explicit invalidation on writes if correctness matters.</li>
+<li><strong>Thundering herd on miss</strong>: when a hot key expires, many callers miss together and all hit the database. Use single-flight (request coalescing) or refresh-ahead. Not implemented here.</li>
+<li><strong>Size estimation lies</strong>: <code>sizeOf</code> is only as accurate as you make it. JS object size is hard to measure, so a byte bound on objects is approximate.</li>
+<li><strong>Callback reentrancy</strong>: <code>onEvict</code> runs synchronously after internal state is consistent, and exceptions it throws are swallowed. Calling back into the cache from it works, but it can cascade.</li>
 </ul>
 <h2>How production systems do it</h2>
-
 <ul>
-<li><strong>Redis</strong> (<code>maxmemory-policy allkeys-lru</code> / <code>volatile-lru</code>) keeps no linked list. Each object stores</li>
-  a 24-bit LRU clock. On eviction Redis <em>samples</em> <code>maxmemory-samples</code> keys (default 5) and evicts the
-  oldest of the sample, using an eviction pool that carries candidates between rounds. It's approximate
-  LRU with zero per-access list maintenance. <code>allkeys-lfu</code> uses a probabilistic log counter instead.
-<li><strong>Memcached</strong> uses a per-slab-class LRU. The modern "segmented LRU" splits it into HOT, WARM and COLD</li>
-  sublists maintained by a background thread, and items are bumped at most once every 60 s to
-  limit lock traffic.
-<li><strong>Caffeine</strong> (Java) uses W-TinyLFU: a small admission window LRU, a Count-Min-style frequency sketch,</li>
-  and a segmented main LRU (probation and protected). Its hit rates are close to optimal on most traces.
-<li><strong>RocksDB block cache</strong> uses a sharded LRU (<code>num_shard_bits</code>) with a charge per block, plus a</li>
-  newer HyperClockCache that avoids a global list mutex entirely.
-<li><strong>Linux page cache</strong> uses active/inactive two-list LRU approximation, and more recently MGLRU</li>
-  (multi-generational LRU).
+<li><strong>Redis</strong> (<code>maxmemory-policy allkeys-lru</code> / <code>volatile-lru</code>) keeps no linked list. Each object stores a 24-bit LRU clock. On eviction Redis <em>samples</em> <code>maxmemory-samples</code> keys (default 5) and evicts the oldest of the sample, using an eviction pool that carries candidates between rounds. It's approximate LRU with zero per-access list maintenance. <code>allkeys-lfu</code> uses a probabilistic log counter instead.</li>
+<li><strong>Memcached</strong> uses a per-slab-class LRU. The modern "segmented LRU" splits it into HOT, WARM and COLD sublists maintained by a background thread, and items are bumped at most once every 60 s to limit lock traffic.</li>
+<li><strong>Caffeine</strong> (Java) uses W-TinyLFU: a small admission window LRU, a Count-Min-style frequency sketch, and a segmented main LRU (probation and protected). Its hit rates are close to optimal on most traces.</li>
+<li><strong>RocksDB block cache</strong> uses a sharded LRU (<code>num_shard_bits</code>) with a charge per block, plus a newer HyperClockCache that avoids a global list mutex entirely.</li>
+<li><strong>Linux page cache</strong> uses active/inactive two-list LRU approximation, and more recently MGLRU (multi-generational LRU).</li>
 </ul>
-<h2>How to run</h2>
-
-<pre><code class="language-bash">node demo.js   # narrative walkthrough: promotion, size eviction, TTL, stats on a skewed workload
-node test.js   # 16 assertion-based tests, including a randomized comparison with a reference model</code></pre>
-
-<p>Node ≥ 18, no dependencies.</p>
-
 <h2>Extension exercises</h2>
-
 <ol>
-<li><strong>Sampled LRU à la Redis</strong>: drop the list. Store <code>lastAccess</code> per entry and, on eviction, sample</li>
-   5 random keys and evict the oldest. Measure the hit-rate loss against exact LRU on the demo's workload.
-<li><strong>Scan resistance</strong>: implement midpoint insertion (new entries go into an "old" sublist and are</li>
-   promoted only on a second hit). Show that a 10k-key scan no longer destroys the hot set.
-<li><strong>TinyLFU admission</strong>: add a 4-bit Count-Min sketch and admit a new key only if its estimated</li>
-   frequency is higher than the LRU victim's.
-<li><strong>Single-flight loader</strong>: add <code>async fetch(key, loader)</code> so concurrent misses for the same key</li>
-   share one loader promise, with negative caching for errors.
-<li><strong>Sharded cache</strong>: hash keys into N independent <code>LRUCache</code>s and discuss how that changes global</li>
-   LRU ordering, and why real systems accept that.
+<li><strong>Sampled LRU à la Redis</strong>: drop the list. Store <code>lastAccess</code> per entry and, on eviction, sample 5 random keys and evict the oldest. Measure the hit-rate loss against exact LRU on the demo's workload.</li>
+<li><strong>Scan resistance</strong>: implement midpoint insertion (new entries go into an "old" sublist and are promoted only on a second hit). Show that a 10k-key scan no longer destroys the hot set.</li>
+<li><strong>TinyLFU admission</strong>: add a 4-bit Count-Min sketch and admit a new key only if its estimated frequency is higher than the LRU victim's.</li>
+<li><strong>Single-flight loader</strong>: add <code>async fetch(key, loader)</code> so concurrent misses for the same key share one loader promise, with negative caching for errors.</li>
+<li><strong>Sharded cache</strong>: hash keys into N independent <code>LRUCache</code>s and discuss how that changes global LRU ordering, and why real systems accept that.</li>
 </ol></article>
-          <div class="code-block" id="build-file-lru-cache-lru_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">lru.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-/**
- * LRU cache: Map (key -&gt; node) + intrusive doubly linked list (recency order).
- *
- *   head (sentinel) &lt;-&gt; MRU &lt;-&gt; ... &lt;-&gt; LRU &lt;-&gt; tail (sentinel)
- *
- * Every operation that &quot;uses&quot; a key splices its node to the front in O(1);
- * eviction pops from the back in O(1). Sentinels remove all null checks.
- *
- * Bounds (either or both):
- *   maxEntries - maximum number of entries
- *   maxSize    - maximum total &quot;size&quot; (bytes, weight...) as computed by sizeOf
- * Optional TTL: per-cache default ttlMs, overridable per set(). Expiry is lazy
- * (checked on access) plus an explicit prune() sweep, like Redis&#039; passive +
- * active expiry.
- */
-
-class Node {
-  constructor(key, value, size, expiresAt) {
-    this.key = key;
-    this.value = value;
-    this.size = size;
-    this.expiresAt = expiresAt; // Infinity = never
-    this.prev = null;
-    this.next = null;
-  }
-}
-
-function isPositiveIntOrInf(n) {
-  return n === Infinity || (Number.isInteger(n) &amp;&amp; n &gt; 0);
-}
-
-class LRUCache {
-  /**
-   * @param {object} opts
-   * @param {number} [opts.maxEntries=Infinity]
-   * @param {number} [opts.maxSize=Infinity]
-   * @param {(value:any, key:any) =&gt; number} [opts.sizeOf] default: 1 per entry
-   * @param {number} [opts.ttlMs=0]  0 = no default TTL
-   * @param {() =&gt; number} [opts.now=Date.now] injectable clock (ms)
-   * @param {(key, value, reason) =&gt; void} [opts.onEvict]
-   *        reason: &#039;capacity&#039; | &#039;expired&#039; | &#039;deleted&#039; | &#039;replaced&#039; | &#039;cleared&#039;
-   */
-  constructor(opts = {}) {
-    const {
-      maxEntries = Infinity,
-      maxSize = Infinity,
-      sizeOf = () =&gt; 1,
-      ttlMs = 0,
-      now = Date.now,
-      onEvict = null,
-    } = opts;
-    if (!isPositiveIntOrInf(maxEntries)) throw new RangeError(&#039;maxEntries must be a positive integer&#039;);
-    if (!(maxSize === Infinity || (typeof maxSize === &#039;number&#039; &amp;&amp; maxSize &gt; 0))) {
-      throw new RangeError(&#039;maxSize must be a positive number&#039;);
-    }
-    if (maxEntries === Infinity &amp;&amp; maxSize === Infinity) {
-      throw new RangeError(&#039;at least one of maxEntries / maxSize must be bounded&#039;);
-    }
-    if (typeof sizeOf !== &#039;function&#039;) throw new TypeError(&#039;sizeOf must be a function&#039;);
-    if (!(typeof ttlMs === &#039;number&#039; &amp;&amp; ttlMs &gt;= 0)) throw new RangeError(&#039;ttlMs must be &gt;= 0&#039;);
-    if (typeof now !== &#039;function&#039;) throw new TypeError(&#039;now must be a function&#039;);
-    if (onEvict !== null &amp;&amp; typeof onEvict !== &#039;function&#039;) throw new TypeError(&#039;onEvict must be a function&#039;);
-
-    this.maxEntries = maxEntries;
-    this.maxSize = maxSize;
-    this.sizeOf = sizeOf;
-    this.ttlMs = ttlMs;
-    this.now = now;
-    this.onEvict = onEvict;
-
-    this.map = new Map();
-    this.head = new Node(null, null, 0, Infinity);
-    this.tail = new Node(null, null, 0, Infinity);
-    this.head.next = this.tail;
-    this.tail.prev = this.head;
-    this.totalSize = 0;
-    this._stats = { hits: 0, misses: 0, sets: 0, evictions: 0, expirations: 0, rejected: 0 };
-  }
-
-  // ---- linked-list primitives (all O(1)) ----
-  _unlink(node) {
-    node.prev.next = node.next;
-    node.next.prev = node.prev;
-    node.prev = node.next = null;
-  }
-  _pushFront(node) {
-    node.prev = this.head;
-    node.next = this.head.next;
-    this.head.next.prev = node;
-    this.head.next = node;
-  }
-  _moveToFront(node) {
-    if (this.head.next === node) return;
-    this._unlink(node);
-    this._pushFront(node);
-  }
-
-  /** Remove a node from both structures and fire the callback. */
-  _remove(node, reason) {
-    this._unlink(node);
-    this.map.delete(node.key);
-    this.totalSize -= node.size;
-    if (reason === &#039;capacity&#039;) this._stats.evictions++;
-    else if (reason === &#039;expired&#039;) this._stats.expirations++;
-    if (this.onEvict) {
-      // A throwing callback must not corrupt the cache: state is already consistent.
-      try { this.onEvict(node.key, node.value, reason); } catch (_) { /* swallow */ }
-    }
-  }
-
-  _isExpired(node, t = this.now()) {
-    return node.expiresAt &lt;= t;
-  }
-
-  /** Returns a live node or undefined, expiring lazily. Does not touch recency. */
-  _live(key) {
-    const node = this.map.get(key);
-    if (!node) return undefined;
-    if (this._isExpired(node)) {
-      this._remove(node, &#039;expired&#039;);
-      return undefined;
-    }
-    return node;
-  }
-
-  get size() { return this.map.size; }
-  get calculatedSize() { return this.totalSize; }
-
-  /** Read and promote to MRU. */
-  get(key) {
-    const node = this._live(key);
-    if (!node) { this._stats.misses++; return undefined; }
-    this._stats.hits++;
-    this._moveToFront(node);
-    return node.value;
-  }
-
-  /** Read without promoting and without counting stats. */
-  peek(key) {
-    const node = this._live(key);
-    return node ? node.value : undefined;
-  }
-
-  has(key) { return this._live(key) !== undefined; }
-
-  /**
-   * Insert or replace. Returns true if stored, false if the item alone exceeds maxSize.
-   * @param {object} [o] { ttlMs, size }  per-entry overrides
-   */
-  set(key, value, o = {}) {
-    const ttl = o.ttlMs !== undefined ? o.ttlMs : this.ttlMs;
-    if (!(typeof ttl === &#039;number&#039; &amp;&amp; ttl &gt;= 0)) throw new RangeError(&#039;ttlMs must be &gt;= 0&#039;);
-    const size = o.size !== undefined ? o.size : this.sizeOf(value, key);
-    if (!(typeof size === &#039;number&#039; &amp;&amp; Number.isFinite(size) &amp;&amp; size &gt;= 0)) {
-      throw new RangeError(&#039;size must be a finite number &gt;= 0&#039;);
-    }
-
-    const existing = this.map.get(key);
-    if (size &gt; this.maxSize) {
-      // Storing it would evict everything and still not fit. Reject, and drop any
-      // stale older value so a reader never sees data the writer tried to replace.
-      if (existing) this._remove(existing, &#039;replaced&#039;);
-      this._stats.rejected++;
-      return false;
-    }
-    this._stats.sets++;
-    const expiresAt = ttl &gt; 0 ? this.now() + ttl : Infinity;
-
-    if (existing) {
-      const oldValue = existing.value;
-      this.totalSize += size - existing.size;
-      existing.value = value;
-      existing.size = size;
-      existing.expiresAt = expiresAt;
-      this._moveToFront(existing);
-      if (this.onEvict &amp;&amp; oldValue !== value) {
-        try { this.onEvict(key, oldValue, &#039;replaced&#039;); } catch (_) { /* swallow */ }
-      }
-    } else {
-      const node = new Node(key, value, size, expiresAt);
-      this.map.set(key, node);
-      this._pushFront(node);
-      this.totalSize += size;
-    }
-    this._evictIfNeeded();
-    return true;
-  }
-
-  /** Evict from the LRU end until both bounds hold. Expired tail entries go first. */
-  _evictIfNeeded() {
-    while (this.map.size &gt; this.maxEntries || this.totalSize &gt; this.maxSize) {
-      const lru = this.tail.prev;
-      // The just-inserted node is at the head and always fits (size &lt;= maxSize),
-      // so this loop terminates before reaching it.
-      this._remove(lru, this._isExpired(lru) ? &#039;expired&#039; : &#039;capacity&#039;);
-    }
-  }
-
-  delete(key) {
-    const node = this.map.get(key);
-    if (!node) return false;
-    this._remove(node, &#039;deleted&#039;);
-    return true;
-  }
-
-  clear() {
-    for (let n = this.head.next; n !== this.tail;) {
-      const next = n.next;
-      this._remove(n, &#039;cleared&#039;);
-      n = next;
-    }
-  }
-
-  /** Active expiry sweep: O(n). Returns number removed. */
-  prune() {
-    const t = this.now();
-    let removed = 0;
-    for (let n = this.head.next; n !== this.tail;) {
-      const next = n.next;
-      if (this._isExpired(n, t)) { this._remove(n, &#039;expired&#039;); removed++; }
-      n = next;
-    }
-    return removed;
-  }
-
-  /** Remaining TTL in ms (Infinity if none, undefined if absent). */
-  ttl(key) {
-    const node = this._live(key);
-    if (!node) return undefined;
-    return node.expiresAt === Infinity ? Infinity : node.expiresAt - this.now();
-  }
-
-  /** Keys from most- to least-recently used (skips expired, no promotion). */
-  *keys() {
-    const t = this.now();
-    for (let n = this.head.next; n !== this.tail; n = n.next) {
-      if (!this._isExpired(n, t)) yield n.key;
-    }
-  }
-
-  *entries() {
-    const t = this.now();
-    for (let n = this.head.next; n !== this.tail; n = n.next) {
-      if (!this._isExpired(n, t)) yield [n.key, n.value];
-    }
-  }
-
-  stats() {
-    const s = this._stats;
-    const lookups = s.hits + s.misses;
-    return { ...s, entries: this.map.size, size: this.totalSize, hitRate: lookups ? s.hits / lookups : 0 };
-  }
-
-  /** Debug helper: verify list/map agreement. Throws on corruption. */
-  _checkInvariants() {
-    let count = 0, size = 0;
-    for (let n = this.head.next; n !== this.tail; n = n.next) {
-      if (n.next.prev !== n) throw new Error(&#039;broken back-link at &#039; + String(n.key));
-      if (this.map.get(n.key) !== n) throw new Error(&#039;map/list mismatch at &#039; + String(n.key));
-      count++; size += n.size;
-    }
-    if (count !== this.map.size) throw new Error(&#039;count mismatch&#039;);
-    if (size !== this.totalSize) throw new Error(&#039;size mismatch&#039;);
-    if (count &gt; this.maxEntries || size &gt; this.maxSize) throw new Error(&#039;bound violated&#039;);
-    return true;
-  }
-}
-
-module.exports = { LRUCache };
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-lru-cache-demo_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">demo.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-const { LRUCache } = require(&#039;./lru&#039;);
-
-// Deterministic fake clock: time only moves when we say so.
-let t = 0;
-const now = () =&gt; t;
-const order = (c) =&gt; &#039;[&#039; + [...c.keys()].join(&#039;, &#039;) + &#039;]  (MRU -&gt; LRU)&#039;;
-
-console.log(&#039;=== 1. Entry-bounded LRU (maxEntries = 3) ===&#039;);
-const evicted = [];
-const c = new LRUCache({ maxEntries: 3, now, onEvict: (k, _v, why) =&gt; evicted.push(`${k}:${why}`) });
-c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2); c.set(&#039;c&#039;, 3);
-console.log(&#039;after set a,b,c       &#039;, order(c));
-c.get(&#039;a&#039;);
-console.log(&#039;after get a           &#039;, order(c), &#039;-&gt; a promoted to MRU&#039;);
-c.set(&#039;d&#039;, 4);
-console.log(&#039;after set d           &#039;, order(c), &#039;-&gt; b was LRU, evicted&#039;);
-c.peek(&#039;c&#039;);
-console.log(&#039;after peek c          &#039;, order(c), &#039;-&gt; peek does not promote&#039;);
-console.log(&#039;evictions so far:&#039;, evicted.join(&#039;, &#039;));
-
-console.log(&#039;\n=== 2. Size-aware eviction (maxSize = 100 bytes) ===&#039;);
-const bytes = new LRUCache({ maxSize: 100, sizeOf: (v) =&gt; Buffer.byteLength(v), now });
-bytes.set(&#039;small1&#039;, &#039;x&#039;.repeat(20));
-bytes.set(&#039;small2&#039;, &#039;x&#039;.repeat(20));
-bytes.set(&#039;small3&#039;, &#039;x&#039;.repeat(20));
-console.log(`3 x 20B entries: size=${bytes.calculatedSize}B`, order(bytes));
-bytes.set(&#039;big&#039;, &#039;x&#039;.repeat(70));
-console.log(`insert 70B &#039;big&#039;: size=${bytes.calculatedSize}B`, order(bytes), &#039;-&gt; two LRU entries evicted to fit&#039;);
-const ok = bytes.set(&#039;huge&#039;, &#039;x&#039;.repeat(150));
-console.log(`insert 150B &#039;huge&#039; -&gt; stored=${ok} (larger than the whole cache; rejected instead of flushing it)`);
-
-console.log(&#039;\n=== 3. TTL with an injected clock ===&#039;);
-const ttl = new LRUCache({ maxEntries: 10, ttlMs: 1000, now });
-ttl.set(&#039;session&#039;, &#039;alice&#039;);
-ttl.set(&#039;config&#039;, { v: 7 }, { ttlMs: 0 }); // per-entry override: never expires
-t = 400;
-console.log(`t=${t}ms  get(session) = ${ttl.get(&#039;session&#039;)}, ttl remaining = ${ttl.ttl(&#039;session&#039;)}ms`);
-t = 1000;
-console.log(`t=${t}ms get(session) = ${ttl.get(&#039;session&#039;)}  (expired exactly at deadline: lazy expiry on access)`);
-ttl.set(&#039;a&#039;, 1, { ttlMs: 50 }); ttl.set(&#039;b&#039;, 2, { ttlMs: 50 });
-t = 1100;
-console.log(`t=${t}ms prune() removed ${ttl.prune()} expired entries; remaining keys: ${[...ttl.keys()].join(&#039;, &#039;)}`);
-
-console.log(&#039;\n=== 4. Stats on a skewed workload ===&#039;);
-// Seeded PRNG (mulberry32) so the numbers are reproducible run to run.
-function mulberry32(seed) {
-  return () =&gt; {
-    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-    let x = Math.imul(seed ^ (seed &gt;&gt;&gt; 15), 1 | seed);
-    x = (x + Math.imul(x ^ (x &gt;&gt;&gt; 7), 61 | x)) ^ x;
-    return ((x ^ (x &gt;&gt;&gt; 14)) &gt;&gt;&gt; 0) / 4294967296;
-  };
-}
-const rand = mulberry32(42);
-const hot = new LRUCache({ maxEntries: 100, now });
-for (let i = 0; i &lt; 20000; i++) {
-  // 80% of requests hit 50 hot keys, 20% spread across 5000 cold keys.
-  const key = rand() &lt; 0.8 ? &#039;hot&#039; + Math.floor(rand() * 50) : &#039;cold&#039; + Math.floor(rand() * 5000);
-  if (hot.get(key) === undefined) hot.set(key, i); // cache-aside fill on miss
-}
-const s = hot.stats();
-console.log(`20k requests, 100-slot cache: hits=${s.hits} misses=${s.misses} evictions=${s.evictions} hitRate=${(s.hitRate * 100).toFixed(1)}%`);
-console.log(&#039;invariants hold:&#039;, hot._checkInvariants());
-</code></pre>
-          </div>
-          <div class="code-block" id="build-file-lru-cache-test_js">
-            <div class="code-block__header">
-              <span class="code-block__lang">test.js</span>
-              <button class="code-block__copy" data-action="copy-code">Copy</button>
-            </div>
-            <pre><code>&#039;use strict&#039;;
-const assert = require(&#039;node:assert/strict&#039;);
-const { LRUCache } = require(&#039;./lru&#039;);
-
-let failed = 0, passed = 0;
-function test(name, fn) {
-  try { fn(); passed++; console.log(&#039;✓ &#039; + name); }
-  catch (e) { failed++; console.log(&#039;✗ &#039; + name + &#039;\n    &#039; + (e &amp;&amp; e.stack || e)); }
-}
-const clock = () =&gt; { const c = { t: 0 }; c.now = () =&gt; c.t; return c; };
-
-test(&#039;evicts least-recently-used entry when entry bound exceeded&#039;, () =&gt; {
-  const c = new LRUCache({ maxEntries: 2 });
-  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2); c.set(&#039;c&#039;, 3);
-  assert.equal(c.has(&#039;a&#039;), false);
-  assert.deepEqual([...c.keys()], [&#039;c&#039;, &#039;b&#039;]);
-});
-
-test(&#039;get promotes to MRU; peek and has do not&#039;, () =&gt; {
-  const c = new LRUCache({ maxEntries: 3 });
-  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2); c.set(&#039;c&#039;, 3);
-  c.peek(&#039;a&#039;); c.has(&#039;a&#039;);
-  assert.deepEqual([...c.keys()], [&#039;c&#039;, &#039;b&#039;, &#039;a&#039;]);
-  c.get(&#039;a&#039;);
-  assert.deepEqual([...c.keys()], [&#039;a&#039;, &#039;c&#039;, &#039;b&#039;]);
-  c.set(&#039;d&#039;, 4); // b is now LRU
-  assert.equal(c.has(&#039;b&#039;), false);
-});
-
-test(&#039;overwriting a key updates value, promotes it, and does not grow count&#039;, () =&gt; {
-  const c = new LRUCache({ maxEntries: 2 });
-  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2); c.set(&#039;a&#039;, 10);
-  assert.equal(c.size, 2);
-  assert.equal(c.get(&#039;a&#039;), 10);
-  c.set(&#039;c&#039;, 3);
-  assert.equal(c.has(&#039;b&#039;), false, &#039;b should be LRU after a was overwritten&#039;);
-});
-
-test(&#039;size-aware eviction keeps total size within maxSize&#039;, () =&gt; {
-  const c = new LRUCache({ maxSize: 10, sizeOf: (v) =&gt; v.length });
-  c.set(&#039;a&#039;, &#039;xxxx&#039;); c.set(&#039;b&#039;, &#039;xxxx&#039;);
-  assert.equal(c.calculatedSize, 8);
-  c.set(&#039;c&#039;, &#039;xxxxx&#039;); // 13 &gt; 10 -&gt; evict a (LRU) -&gt; 9
-  assert.deepEqual([...c.keys()], [&#039;c&#039;, &#039;b&#039;]);
-  assert.equal(c.calculatedSize, 9);
-  c.set(&#039;b&#039;, &#039;x&#039;); // shrink in place
-  assert.equal(c.calculatedSize, 6);
-  c._checkInvariants();
-});
-
-test(&#039;item larger than maxSize is rejected and removes a stale older value&#039;, () =&gt; {
-  const c = new LRUCache({ maxSize: 5, sizeOf: (v) =&gt; v.length });
-  c.set(&#039;k&#039;, &#039;abc&#039;); c.set(&#039;other&#039;, &#039;z&#039;);
-  assert.equal(c.set(&#039;k&#039;, &#039;abcdefgh&#039;), false);
-  assert.equal(c.has(&#039;k&#039;), false);
-  assert.equal(c.get(&#039;other&#039;), &#039;z&#039;, &#039;rejection must not flush other entries&#039;);
-  assert.equal(c.stats().rejected, 1);
-});
-
-test(&#039;both bounds enforced at once&#039;, () =&gt; {
-  const c = new LRUCache({ maxEntries: 3, maxSize: 100, sizeOf: (v) =&gt; v });
-  c.set(&#039;a&#039;, 10); c.set(&#039;b&#039;, 10); c.set(&#039;c&#039;, 10); c.set(&#039;d&#039;, 10);
-  assert.equal(c.size, 3);
-  c.set(&#039;e&#039;, 90); // 30+90=120 &gt; 100 -&gt; evict b (110), then c (100)
-  assert.deepEqual([...c.keys()], [&#039;e&#039;, &#039;d&#039;]);
-  assert.equal(c.calculatedSize, 100);
-  c._checkInvariants();
-});
-
-test(&#039;TTL: entry expires exactly at deadline, lazily on access&#039;, () =&gt; {
-  const k = clock();
-  const c = new LRUCache({ maxEntries: 5, ttlMs: 100, now: k.now });
-  c.set(&#039;a&#039;, 1);
-  k.t = 99; assert.equal(c.get(&#039;a&#039;), 1);
-  assert.equal(c.ttl(&#039;a&#039;), 1);
-  k.t = 100; assert.equal(c.get(&#039;a&#039;), undefined);
-  assert.equal(c.size, 0);
-  assert.equal(c.stats().expirations, 1);
-});
-
-test(&#039;TTL: per-entry override, 0 means never expire, re-set refreshes deadline&#039;, () =&gt; {
-  const k = clock();
-  const c = new LRUCache({ maxEntries: 5, ttlMs: 100, now: k.now });
-  c.set(&#039;forever&#039;, 1, { ttlMs: 0 });
-  c.set(&#039;short&#039;, 2, { ttlMs: 10 });
-  c.set(&#039;refresh&#039;, 3);
-  k.t = 90; c.set(&#039;refresh&#039;, 4);
-  k.t = 150;
-  assert.equal(c.get(&#039;forever&#039;), 1);
-  assert.equal(c.ttl(&#039;forever&#039;), Infinity);
-  assert.equal(c.get(&#039;short&#039;), undefined);
-  assert.equal(c.get(&#039;refresh&#039;), 4);
-});
-
-test(&#039;prune() sweeps expired entries and keys() skips them&#039;, () =&gt; {
-  const k = clock();
-  const c = new LRUCache({ maxEntries: 10, now: k.now });
-  for (let i = 0; i &lt; 6; i++) c.set(&#039;e&#039; + i, i, { ttlMs: i % 2 ? 10 : 0 });
-  k.t = 10;
-  assert.deepEqual([...c.keys()].sort(), [&#039;e0&#039;, &#039;e2&#039;, &#039;e4&#039;]);
-  assert.equal(c.prune(), 3);
-  assert.equal(c.size, 3);
-  c._checkInvariants();
-});
-
-test(&#039;onEvict receives key, value and reason for every removal path&#039;, () =&gt; {
-  const k = clock();
-  const log = [];
-  const c = new LRUCache({ maxEntries: 2, now: k.now, onEvict: (key, v, r) =&gt; log.push([key, v, r]) });
-  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2); c.set(&#039;c&#039;, 3);  // a capacity
-  c.set(&#039;b&#039;, 20);                               // b replaced (old value 2)
-  c.delete(&#039;c&#039;);                                // c deleted
-  c.set(&#039;x&#039;, 9, { ttlMs: 5 }); k.t = 5; c.get(&#039;x&#039;); // x expired
-  c.clear();                                    // b cleared
-  assert.deepEqual(log, [[&#039;a&#039;, 1, &#039;capacity&#039;], [&#039;b&#039;, 2, &#039;replaced&#039;], [&#039;c&#039;, 3, &#039;deleted&#039;], [&#039;x&#039;, 9, &#039;expired&#039;], [&#039;b&#039;, 20, &#039;cleared&#039;]]);
-});
-
-test(&#039;a throwing onEvict callback does not corrupt the cache&#039;, () =&gt; {
-  const c = new LRUCache({ maxEntries: 1, onEvict: () =&gt; { throw new Error(&#039;boom&#039;); } });
-  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2);
-  assert.equal(c.get(&#039;b&#039;), 2);
-  c._checkInvariants();
-});
-
-test(&#039;stats track hits, misses, evictions and hitRate&#039;, () =&gt; {
-  const c = new LRUCache({ maxEntries: 2 });
-  c.set(&#039;a&#039;, 1); c.set(&#039;b&#039;, 2);
-  c.get(&#039;a&#039;); c.get(&#039;a&#039;); c.get(&#039;zzz&#039;); c.set(&#039;c&#039;, 3);
-  const s = c.stats();
-  assert.equal(s.hits, 2); assert.equal(s.misses, 1); assert.equal(s.evictions, 1);
-  assert.equal(s.hitRate, 2 / 3);
-});
-
-test(&#039;falsy values and non-string keys are stored correctly&#039;, () =&gt; {
-  const c = new LRUCache({ maxEntries: 10 });
-  const objKey = {};
-  c.set(0, 0); c.set(&#039;&#039;, &#039;&#039;); c.set(objKey, null); c.set(NaN, false);
-  assert.equal(c.get(0), 0); assert.equal(c.get(&#039;&#039;), &#039;&#039;);
-  assert.equal(c.get(objKey), null); assert.equal(c.has(objKey), true);
-  assert.equal(c.get(NaN), false);
-  assert.equal(c.stats().misses, 0);
-});
-
-test(&#039;randomized ops agree with a naive reference model&#039;, () =&gt; {
-  let seed = 7;
-  const rnd = (n) =&gt; { seed = (seed * 1103515245 + 12345) &gt;&gt;&gt; 0; return seed % n; };
-  const c = new LRUCache({ maxEntries: 8 });
-  let ref = []; // array of [key, value], index 0 = MRU
-  for (let i = 0; i &lt; 5000; i++) {
-    const key = rnd(20), op = rnd(3);
-    const idx = ref.findIndex(([k]) =&gt; k === key);
-    if (op === 0) {
-      c.set(key, i);
-      if (idx &gt;= 0) ref.splice(idx, 1);
-      ref.unshift([key, i]);
-      if (ref.length &gt; 8) ref.pop();
-    } else if (op === 1) {
-      const expect = idx &gt;= 0 ? ref[idx][1] : undefined;
-      assert.equal(c.get(key), expect);
-      if (idx &gt;= 0) ref.unshift(ref.splice(idx, 1)[0]);
-    } else {
-      assert.equal(c.delete(key), idx &gt;= 0);
-      if (idx &gt;= 0) ref.splice(idx, 1);
-    }
-  }
-  assert.deepEqual([...c.keys()], ref.map(([k]) =&gt; k));
-  c._checkInvariants();
-});
-
-test(&#039;rejects invalid configuration and inputs&#039;, () =&gt; {
-  assert.throws(() =&gt; new LRUCache({}), RangeError);
-  assert.throws(() =&gt; new LRUCache({ maxEntries: 0 }), RangeError);
-  assert.throws(() =&gt; new LRUCache({ maxEntries: 1.5 }), RangeError);
-  assert.throws(() =&gt; new LRUCache({ maxSize: -1 }), RangeError);
-  assert.throws(() =&gt; new LRUCache({ maxEntries: 2, ttlMs: -5 }), RangeError);
-  const c = new LRUCache({ maxSize: 10, sizeOf: () =&gt; NaN });
-  assert.throws(() =&gt; c.set(&#039;a&#039;, 1), RangeError);
-  assert.throws(() =&gt; c.set(&#039;a&#039;, 1, { size: 1, ttlMs: -1 }), RangeError);
-});
-
-test(&#039;get/set are O(1): 200k ops on a 50k cache stay fast&#039;, () =&gt; {
-  const c = new LRUCache({ maxEntries: 50000 });
-  const start = process.hrtime.bigint();
-  for (let i = 0; i &lt; 200000; i++) { c.set(i, i); c.get(i - 1000); }
-  const ms = Number(process.hrtime.bigint() - start) / 1e6;
-  assert.equal(c.size, 50000);
-  assert.ok(ms &lt; 2000, `took ${ms}ms`);
-});
-
-console.log(`\n${passed} passed, ${failed} failed`);
-if (failed) process.exit(1);
-</code></pre>
-          </div>
       </div>
 
       <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
@@ -1082,9 +475,9 @@ if (failed) process.exit(1);
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
-  <script type="text/plain" data-defer src="js/code-lab.js?v=20ce3ba328"></script>
+  <script type="text/plain" data-defer src="js/code-lab.js?v=7f68b9d746"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
   

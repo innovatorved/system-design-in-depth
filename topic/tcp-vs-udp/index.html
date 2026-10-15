@@ -35,11 +35,11 @@
   <link rel="stylesheet" href="css/components.css?v=cb46eb8263">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
-  <link rel="stylesheet" href="css/code-lab.css?v=46bbe7e313">
+  <link rel="stylesheet" href="css/code-lab.css?v=b9ca52c69b">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=4546aa4334"></script>
+  <script src="js/manifest.js?v=720c6ecc5a"></script>
 
   <script type="application/ld+json">
 {
@@ -956,87 +956,46 @@
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="tcp-vs-udp" id="audio-speed-tcp-vs-udp" title="Playback speed">1x</button>
         <audio id="audio-tcp-vs-udp" src="audio/tcp-vs-udp.mp3" preload="metadata"></audio>
       </div><article class="prose"><h2>TCP vs UDP</h2>
-
 <p>TCP and UDP are transport protocols: rules for moving data between applications over an IP network. They differ in how the receiving program gets that data and what happens when some of it goes missing.</p>
-
 <p>TCP provides an ordered stream of bytes and retransmits missing data. UDP sends separate messages, called datagrams, without adding delivery or ordering guarantees.</p>
-
-
-
-<table><thead><tr><th>Behavior</th><th>TCP</th><th>UDP</th></tr></thead><tbody><tr><td>Connection setup</td><td>Establishes a connection before the usual data transfer.</td><td>No transport handshake.</td></tr><tr><td>What the app reads</td><td>A byte stream; reads can split or combine messages.</td><td>Separate datagrams that arrive.</td></tr><tr><td>Missing data</td><td>Retransmits; later bytes wait behind a gap.</td><td>No automatic retransmission.</td></tr></tbody></table>IP, the Internet Protocol, routes packets: chunks of data with addressing information. Packets can be lost, duplicated or delivered out of order. The transport protocol determines how much of that the app has to handle.
-
+<table><thead><tr><th>Behavior</th><th>TCP</th><th>UDP</th></tr></thead><tbody><tr><td>Connection setup</td><td>Establishes a connection before the usual data transfer.</td><td>No transport handshake.</td></tr><tr><td>What the app reads</td><td>A byte stream; reads can split or combine messages.</td><td>Separate datagrams that arrive.</td></tr><tr><td>Missing data</td><td>Retransmits; later bytes wait behind a gap.</td><td>No automatic retransmission.</td></tr></tbody></table>
+<p>IP, the Internet Protocol, routes packets: chunks of data with addressing information. Packets can be lost, duplicated or delivered out of order. The transport protocol determines how much of that the app has to handle.</p>
 <h2>TCP message boundaries</h2>
-
 <p>TCP keeps bytes in order, but it doesn't preserve the boundaries between the sender's writes. This matters when your program needs to recognize a complete message.</p>
-
 <p>For example, a server writes <code>cat</code> and then <code>nap</code>. TCP carries the six bytes <code>catnap</code>. The client could read them as <code>cat</code> and <code>nap</code>, as <code>ca</code> and <code>tnap</code>, or all at once.</p>
-
 <p>The application protocol needs a rule for finding the end of each message. This is called <strong>framing</strong>. A simple text protocol could put a newline after each word.</p>
-
 <p>The receiver collects bytes until it reaches that newline, then processes the completed word. Another protocol might put a message length before the message contents.</p>
-
 <p>HTTP libraries handle their protocol's framing for you. If you work directly with TCP, a single read is not proof that the whole message has arrived.</p>
-
 <p>UDP preserves the boundary of each datagram. Sending <code>cat</code> in one and <code>nap</code> in another gives the receiver two distinguishable messages if both arrive. Their arrival order can differ from their send order.</p>
-
 <h2>TCP loss recovery</h2>
-
 <p>TCP numbers bytes and uses acknowledgements, or ACKs, to track what has arrived. An ACK identifies the next byte the receiver expects after the continuous sequence it has already received.</p>
-
 <p>The sender keeps unacknowledged data. It can resend that data when acknowledgements or a timeout indicate possible loss.</p>
-
 <p>Consider <code>catnap</code> again. Number the bytes from 1 to 6 for this example, and split them into packets carrying <code>ca</code>, <code>tn</code> and <code>ap</code>. The packet containing <code>tn</code> is lost.</p>
-
-<table><thead><tr><th>Event</th><th>Bytes available to the app so far</th><th>Next expected byte</th></tr></thead><tbody><tr><td><code>ca</code> arrives</td><td><code>ca</code></td><td>3</td></tr><tr><td><code>ap</code> arrives, but <code>tn</code> is missing</td><td><code>ca</code></td><td>3</td></tr><tr><td>Retransmitted <code>tn</code> arrives</td><td><code>catnap</code></td><td>7</td></tr></tbody></table>The receiver holds <code>ap</code> until the gap is filled. This is <strong>head-of-line blocking</strong>: missing earlier bytes prevent later bytes from being delivered to the application.
-
+<table><thead><tr><th>Event</th><th>Bytes available to the app so far</th><th>Next expected byte</th></tr></thead><tbody><tr><td><code>ca</code> arrives</td><td><code>ca</code></td><td>3</td></tr><tr><td><code>ap</code> arrives, but <code>tn</code> is missing</td><td><code>ca</code></td><td>3</td></tr><tr><td>Retransmitted <code>tn</code> arrives</td><td><code>catnap</code></td><td>7</td></tr></tbody></table>
+<p>The receiver holds <code>ap</code> until the gap is filled. This is <strong>head-of-line blocking</strong>: missing earlier bytes prevent later bytes from being delivered to the application.</p>
 <p>The byte positions are illustrative; the connection is already open. ACK 7 means all six bytes have arrived. The receiving program can still read them in smaller chunks.</p>
-
 <p>Retransmission doesn't promise a deadline. If the connection fails before recovery, the transfer remains incomplete.</p>
-
 <p>An ACK also doesn't prove that the server program processed the data. The server's TCP implementation can acknowledge a request before the application reads it.</p>
-
 <p>For a save operation, the client needs an application response confirming the save. If that response is lost, the client can still be unsure whether the save succeeded.</p>
-
-
-
 <h2>Connection setup and traffic control</h2>
-
 <p>A usual new TCP connection starts with three messages: SYN, SYN-ACK and ACK. The two ends establish their starting sequence numbers and connection settings during this handshake.</p>
-
 <p>The client normally waits one round trip before sending application data. Reusing an open connection avoids repeating this setup. Packet travel time and waiting in network queues still apply to either protocol.</p>
-
 <p>TCP also limits how much data is in flight. <strong>Flow control</strong> respects the receiver's available buffer space. <strong>Congestion control</strong> adjusts sending to conditions on the network path.</p>
-
 <p>They address different bottlenecks. A receiving machine can have plenty of memory while the network link leading to it is overloaded.</p>
-
 <h2>When skipping a message is acceptable</h2>
-
 <p>A game might send a player's complete position in updates numbered 501, 502 and 503. If 502 is lost, the game can use 503 without waiting. If 502 arrives later, the game can discard it.</p>
-
 <p>The update numbers and the rule for ignoring older positions belong to the game protocol. UDP doesn't supply them.</p>
-
 <p>This only works if each update contains enough information on its own. If 503 describes movement since 502, losing 502 leaves the receiver without the position needed to apply that change.</p>
-
 <p>A voice call has a similar timing constraint: a sound fragment arriving after its playback time may no longer be useful. A protocol over UDP can skip it and continue.</p>
-
 <p>Other traffic in the same product may need reliable delivery. A chat message or purchase can't be treated like an outdated position update.</p>
-
 <p>UDP applications also need traffic control. Retrying every lost message immediately can overload a link that is already dropping packets.</p>
-
 <h2>HTTP/3 and QUIC</h2>
-
 <p>Using UDP doesn't necessarily mean giving up reliability. QUIC implements encrypted connections, congestion control and reliable byte streams over UDP. HTTP/3 uses QUIC.</p>
-
 <p>QUIC orders bytes separately in each stream. With HTTP/2 over one TCP connection, a gap in the shared TCP stream can delay both an image and a stylesheet.</p>
-
 <p>With HTTP/3, received stylesheet bytes can continue along their stream while missing image bytes are recovered. If a lost packet contains data for both streams, both can be affected. They also share congestion control.</p>
-
 <p>For an ordinary web API, use HTTPS and let its transport implementation handle these details. The <a href="#" data-nav="topic" data-slug="http-rest-grpc">HTTP lesson</a> explains the protocol versions further.</p>
-
 <p>Database clients also commonly use TCP. DNS uses both UDP and TCP, including retrying a truncated UDP answer over TCP. A familiar application name does not always imply one transport.</p>
-
-<p>Building directly on UDP makes sense when you need control over which messages can be skipped or recovered. You also take responsibility for the delivery behavior and traffic control your application requires.</p>
-<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
+<p>Building directly on UDP makes sense when you need control over which messages can be skipped or recovered. You also take responsibility for the delivery behavior and traffic control your application requires.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
       <h2>Under the Hood: Transport Layer Primitives</h2>
       <p>All internet communication sits on top of the Internet Protocol (IP), which provides best-effort, unordered packet delivery. The choice between <strong>TCP (Transmission Control Protocol)</strong> and <strong>UDP (User Datagram Protocol)</strong> represents the fundamental trade-off between guaranteed reliability and minimal transmission latency.</p>
 
@@ -1366,7 +1325,7 @@ sequenceDiagram
   <script type="text/plain" data-defer src="js/progress.js?v=b0489dbd4a"></script>
   <script type="text/plain" data-defer src="js/search.js?v=859f7a9efc"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=f10642f58c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=d837bc439f"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
