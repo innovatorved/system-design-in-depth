@@ -12,10 +12,38 @@ const crypto = require('crypto');
 
 const root = path.join(__dirname, '..');
 const check = process.argv.includes('--check');
-const pages = ['index.html', 'projects/index.html', '404.html'].filter(p => fs.existsSync(path.join(root, p)));
 
 // Normalise CRLF so a Windows checkout (core.autocrlf) hashes the same as the deployed LF files
 const hashOf = buf => crypto.createHash('sha1').update(buf.toString('utf8').replace(/\r\n/g, '\n')).digest('hex').slice(0, 10);
+
+const assetHashCache = new Map();
+function getAssetHash(abs) {
+  if (!assetHashCache.has(abs)) {
+    assetHashCache.set(abs, hashOf(fs.readFileSync(abs)));
+  }
+  return assetHashCache.get(abs);
+}
+
+// Discover all HTML entry points across the repository (root pages, build/*/index.html, topic/*/index.html)
+function findHtmlPages() {
+  const discovered = [];
+  function walk(dir, rel = '') {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'dist') continue;
+      const relPath = rel ? path.join(rel, entry.name) : entry.name;
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath, relPath);
+      } else if (entry.isFile() && entry.name.endsWith('.html')) {
+        discovered.push(relPath);
+      }
+    }
+  }
+  walk(root);
+  return discovered.sort();
+}
+const pages = findHtmlPages();
 
 function hashDir(rel) {
   const dir = path.join(root, rel);
@@ -106,7 +134,7 @@ for (const page of pages) {
     if (/^(https?:)?\/\//.test(url)) return all;
     const abs = path.join(root, url); // all pages are served from root-relative URLs (/projects is a rewrite)
     if (!fs.existsSync(abs)) { console.warn(`  ! ${page}: missing ${url}`); return all; }
-    return `${pre}${url}?v=${hashOf(fs.readFileSync(abs))}${post}`;
+    return `${pre}${url}?v=${getAssetHash(abs)}${post}`;
   });
   if (page === 'index.html') {
     out = out.replace(/(<!-- landing:start[^>]*-->\n)[\s\S]*?(\s*<!-- landing:end -->)/, (all, open, close) => open + landing + close);
@@ -117,4 +145,14 @@ for (const page of pages) {
     console.log(`${check ? 'stale' : 'stamped'}: ${page}`);
   } else console.log(`up to date: ${page}`);
 }
-if (check && stale) process.exit(1);
+
+if (check) {
+  if (stale) {
+    console.error(`\nAsset stamp check failed: ${stale} stale file(s) found out of ${pages.length} HTML files.`);
+    process.exit(1);
+  } else {
+    console.log(`\nAsset stamp check passed: 0 stale files across ${pages.length} HTML files.`);
+  }
+} else {
+  console.log(`\nAsset stamping complete: ${stale} file(s) stamped across ${pages.length} HTML files.`);
+}

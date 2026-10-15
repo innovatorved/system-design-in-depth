@@ -497,6 +497,7 @@ let missingBuildStaticCount = 0;
 let invalidBuildCanonicalCount = 0;
 let emptyBuildReaderCount = 0;
 let lowBuildWordCount = 0;
+let legacyBuildTabCount = 0;
 
 if (fs.existsSync(buildBaseDir)) {
   for (const buildId of allBuildIds) {
@@ -517,6 +518,12 @@ if (fs.existsSync(buildBaseDir)) {
       reportError(`Empty or un-prerendered reader container in build/${buildId}/index.html`);
     }
 
+    // Assert no legacy build-view-tabs markup or duplicate tab buttons
+    if (html.includes('build-view-tabs') || html.includes('Architecture & Reference Code') || html.includes('Architecture &amp; Reference Code')) {
+      legacyBuildTabCount++;
+      reportError(`Legacy tab switcher markup found in build/${buildId}/index.html`);
+    }
+
     const readerMatch = html.match(/id="reader"[^>]*>([\s\S]*?)<\/div>\s*<\/main>/);
     if (!readerMatch) {
       emptyBuildReaderCount++;
@@ -531,8 +538,8 @@ if (fs.existsSync(buildBaseDir)) {
     }
   }
 
-  if (missingBuildStaticCount === 0 && invalidBuildCanonicalCount === 0 && emptyBuildReaderCount === 0 && lowBuildWordCount === 0) {
-    reportSuccess(`Static build pages: all ${allBuildIds.size} interactive build lab pages prerendered with canonical URLs & >= 300 words`);
+  if (missingBuildStaticCount === 0 && invalidBuildCanonicalCount === 0 && emptyBuildReaderCount === 0 && lowBuildWordCount === 0 && legacyBuildTabCount === 0) {
+    reportSuccess(`Static build pages: all ${allBuildIds.size} interactive build lab pages prerendered with canonical URLs, >= 300 words, and no legacy tabs`);
   }
 } else {
   reportError('Static build pages directory not found: build/');
