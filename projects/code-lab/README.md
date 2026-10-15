@@ -119,6 +119,7 @@ Complete documentation is published on the [GitHub Wiki](https://github.com/inno
 - **[HTTP Servers & Networking](https://github.com/innovatorved/code-lab/wiki/HTTP-Servers-and-Networking)**: Virtual port table, background servers, `curl`, and Port Preview.
 - **[Headless Runtime](https://github.com/innovatorved/code-lab/wiki/Headless-Runtime)**: Run code and tests programmatically with zero UI.
 - **[Authoring Guided Labs](https://github.com/innovatorved/code-lab/wiki/Authoring-Guided-Labs)**: Schema and invariants for creating interactive coding challenges.
+- **[Plugin System & Custom Extensions](https://github.com/innovatorved/code-lab/wiki/Plugin-System)**: Extend CodeLab with `.use(plugin)` and `.on()` event hooks.
 
 ---
 

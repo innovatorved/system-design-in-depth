@@ -31,6 +31,7 @@ It runs entirely inside the client browser with zero backend server dependencies
 6. **[HTTP Servers & Networking](HTTP-Servers-and-Networking)** — Port table, background servers, `curl`, and port preview.
 7. **[Headless Runtime](Headless-Runtime)** — Run code programmatically without mounting an editor.
 8. **[Authoring Guided Labs](Authoring-Guided-Labs)** — Schema and instructions for creating step-by-step coding challenges.
+9. **[Plugin System & Custom Extensions](Plugin-System)** — Extend CodeLab with `.use(plugin)` and `.on()` event hooks.
 
 ---
 
