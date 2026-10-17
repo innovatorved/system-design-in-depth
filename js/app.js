@@ -575,9 +575,9 @@ window.App = (() => {
           link.onerror = function () {
             this.onerror = function () {
               this.onerror = null;
-              this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.4/dist/code-lab.css';
+              this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.5/dist/code-lab.css';
             };
-            this.href = 'https://cdn.jsdelivr.net/gh/innovatorved/code-lab@v0.1.4/dist/code-lab.css';
+            this.href = 'https://cdn.jsdelivr.net/gh/innovatorved/code-lab@v0.1.5/dist/code-lab.css';
           };
           document.head.appendChild(link);
         }
