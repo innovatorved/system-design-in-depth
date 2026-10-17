@@ -330,10 +330,10 @@ test('Tier 1: Feature Coverage (F7 - Code-Lab Test Suite)', async (t) => {
     assert.strictEqual(res.code, 0, `bun run test:all exited with non-zero code ${res.code}:\n${res.stdout}\n${res.stderr}`);
   });
 
-  await t.test('T1.33_F7_bun_test_total_count_105', () => {
+  await t.test('T1.33_F7_bun_test_total_count_106', () => {
     assert.ok(
-      res.stdout.includes('105 tests') || res.stdout.includes('105 / 105') || res.stdout.includes('105 passed'),
-      `bun run test:all should execute 105 tests:\n${res.stdout}`
+      res.stdout.includes('106 tests') || res.stdout.includes('106 / 106') || res.stdout.includes('106 passed'),
+      `bun run test:all should execute 106 tests:\n${res.stdout}`
     );
   });
 
