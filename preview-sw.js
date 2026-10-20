@@ -17,6 +17,49 @@
 const PREVIEW_PREFIX = '/__preview/';
 const DISPATCH_TIMEOUT_MS = 15000;
 
+// Content-Security-Policy applied to every HTML preview response.
+//
+// The preview is untrusted user code. Inline/eval are allowed because previews
+// are built from arbitrary user source, but network access is restricted to
+// the preview origin plus data:/blob: so a preview cannot exfiltrate host data
+// to a third party. Keep this string in sync with PREVIEW_CSP in workbench.js.
+const PREVIEW_CSP = [
+  "default-src 'self' data: blob:",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self' data: blob:",
+  "media-src 'self' data: blob:",
+  "worker-src 'self' blob:",
+  "frame-src 'self' data: blob:",
+  "form-action 'self'",
+  "frame-ancestors 'self'"
+].join('; ');
+
+function injectPreviewHead(html, port) {
+  const tags = [];
+  if (!/<meta[^>]+http-equiv=["']?content-security-policy/i.test(html)) {
+    tags.push(`<meta http-equiv="Content-Security-Policy" content="${PREVIEW_CSP}">`);
+  }
+  if (!/<base\b/i.test(html)) {
+    tags.push(`<base href="${PREVIEW_PREFIX}${port}/">`);
+  }
+  if (tags.length === 0) return html;
+
+  const injection = tags.join('');
+  if (/<head\b[^>]*>/i.test(html)) {
+    return html.replace(/<head\b[^>]*>/i, (match) => match + injection);
+  }
+  if (/<html\b[^>]*>/i.test(html)) {
+    return html.replace(/<html\b[^>]*>/i, (match) => `${match}<head>${injection}</head>`);
+  }
+  return `<head>${injection}</head>${html}`;
+}
+
+
 self.addEventListener('install', () => {
   self.skipWaiting();
 });
@@ -32,12 +75,18 @@ function parsePreviewPath(pathname) {
 }
 
 function previewErrorResponse(status, title, message) {
-  const body = `<!doctype html><meta charset="utf-8"><title>${title}</title>` +
+  const body = `<!doctype html><meta charset="utf-8">` +
+    `<meta http-equiv="Content-Security-Policy" content="${PREVIEW_CSP}">` +
+    `<title>${title}</title>` +
     `<body style="font-family:system-ui,-apple-system,sans-serif;padding:32px;color:#666;background:#0a0a0a">` +
     `<h1 style="color:#e5e5e5;font-size:18px">${title}</h1><p>${message}</p></body>`;
   return new Response(body, {
     status,
-    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Security-Policy': PREVIEW_CSP,
+      'X-Content-Type-Options': 'nosniff'
+    }
   });
 }
 
@@ -102,13 +151,12 @@ async function proxyVirtualRequest(event, port, targetPath) {
   const responseHeaders = new Headers((response && response.headers) || {});
   const contentType = responseHeaders.get('content-type') || '';
 
-  // Inject a <base> so relative asset URLs in HTML responses resolve under the
-  // `/__preview/:port/` namespace rather than the host document root.
+  // Inject a CSP and a <base> so relative asset URLs in HTML responses resolve
+  // under the `/__preview/:port/` namespace rather than the host document root.
   if (/text\/html/i.test(contentType) && typeof responseBody === 'string') {
-    const baseTag = `<base href="${PREVIEW_PREFIX}${port}/">`;
-    if (!/<base\b/i.test(responseBody) && /<head\b/i.test(responseBody)) {
-      responseBody = responseBody.replace(/<head\b[^>]*>/i, (match) => match + baseTag);
-    }
+    responseBody = injectPreviewHead(responseBody, port);
+    responseHeaders.set('Content-Security-Policy', PREVIEW_CSP);
+    responseHeaders.set('X-Content-Type-Options', 'nosniff');
   }
 
   return new Response(responseBody, {

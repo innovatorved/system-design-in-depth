@@ -567,22 +567,19 @@ window.App = (() => {
         if (!window.GUIDED_LABS_DATA) {
           neededBuildScripts.push('data/guided_labs.js');
         }
-        if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"], link[href*="code-lab-3dr.pages.dev"]')) {
+        if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
-          link.href = 'https://code-lab-3dr.pages.dev/dist/code-lab.css';
+          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.7/dist/code-lab.css';
           link.crossOrigin = 'anonymous';
           link.onerror = function () {
-            this.onerror = function () {
-              this.onerror = null;
-              this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.6/dist/code-lab.css';
-            };
-            this.href = 'https://cdn.jsdelivr.net/gh/innovatorved/code-lab@v0.1.6/dist/code-lab.css';
+            this.onerror = null;
+            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.7/dist/code-lab.css';
           };
           document.head.appendChild(link);
         }
         if (!window.CodeLab) {
-          neededBuildScripts.push('https://code-lab-3dr.pages.dev/dist/code-lab.js');
+          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.7/dist/code-lab.js');
         }
 
         if (neededBuildScripts.length > 0 && window.loadScript) {

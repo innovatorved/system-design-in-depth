@@ -304,7 +304,11 @@ test('Tier 1: Feature Coverage (F6 - Full Viewport & Offline Fallback Editor)', 
   });
 
   await t.test('T1.29_F6_offline_fallback_editor_in_workbench', () => {
-    const workbenchCode = fs.readFileSync(path.join(CODE_LAB_ROOT, 'src/workbench.js'), 'utf8');
+    const workbenchPath = ['src/workbench.ts', 'src/workbench.js']
+      .map(p => path.join(CODE_LAB_ROOT, p))
+      .find(p => fs.existsSync(p));
+    assert.ok(workbenchPath, 'code-lab workbench source must exist');
+    const workbenchCode = fs.readFileSync(workbenchPath, 'utf8');
     assert.ok(workbenchCode.includes('cl-fallback-editor'), 'workbench must include fallback editor textarea');
     assert.ok(workbenchCode.includes('cl-fallback-gutter'), 'workbench must include fallback gutter line numbers');
   });
