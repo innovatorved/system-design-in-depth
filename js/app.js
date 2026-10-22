@@ -467,7 +467,7 @@ window.App = (() => {
     document.body.classList.toggle('view-ecosystem', isEcosystemView);
 
     // Highlight active topbar link
-    document.querySelectorAll('.topbar__link[data-nav]').forEach(link => {
+    document.querySelectorAll('.topbar__link[data-nav], .topbar__nav-link[data-nav]').forEach(link => {
       link.classList.toggle('active', link.getAttribute('data-nav') === currentView);
     });
 

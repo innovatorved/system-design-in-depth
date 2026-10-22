@@ -122,8 +122,8 @@
             '<div class="view-header__top">' +
               '<div class="view-header__content">' +
                 '<div class="view-badge-row">' +
-                  '<span class="eco-pill eco-pill--accent">⚡ ' + xp + ' Total XP</span>' +
-                  '<span class="eco-pill">🔥 ' + (streak.current || 0) + ' Day Streak</span>' +
+                  '<span class="eco-pill eco-pill--accent">' + xp + ' Total XP</span>' +
+                  '<span class="eco-pill">' + (streak.current || 0) + ' Day Streak</span>' +
                 '</div>' +
                 '<h1 class="view-title">Learner Dashboard &amp; Study Hub</h1>' +
                 '<p class="view-subtitle">Track your mastery streak, review SuperMemo SM-2 spaced-repetition flashcards, and manage study notes.</p>' +
@@ -272,7 +272,7 @@
       if (deck.length === 0) {
         return (
           '<div class="srs-empty-state eco-card">' +
-            '<h2>🎉 All Due Flashcards Reviewed!</h2>' +
+            '<h2>All Due Flashcards Reviewed</h2>' +
             '<p>You have completed all due cards in this category for today.</p>' +
             '<button class="eco-btn eco-btn--primary" data-srs-reset-filter="true">Show All Categories</button>' +
           '</div>'

@@ -139,13 +139,13 @@
       nodes.forEach(function(n) { nodeMap[n.id] = n; });
 
       var stageSwimlanesSvg = stages.map(function(st, idx) {
-        var yTop = 55 + idx * 195;
-        var yHeight = 180;
+        var yTop = 40 + idx * 195;
+        var yHeight = 186;
         return (
           '<g class="roadmap-stage-lane" data-stage="' + st.number + '">' +
-            '<rect x="20" y="' + yTop + '" width="1210" height="' + yHeight + '" rx="12" fill="var(--bg-elevated)" stroke="' + st.color + '" stroke-opacity="0.28" stroke-width="1.5" />' +
-            '<rect x="20" y="' + yTop + '" width="6" height="' + yHeight + '" rx="3" fill="' + st.color + '" />' +
-            '<text x="42" y="' + (yTop + 26) + '" fill="' + st.color + '" font-size="11" font-weight="700" letter-spacing="0.06em">STAGE ' + st.number + ' — ' + escapeHtml(st.title.toUpperCase()) + ' (' + st.hours + 'H)</text>' +
+            '<rect x="20" y="' + yTop + '" width="1210" height="' + yHeight + '" rx="8" fill="var(--surface)" stroke="var(--border)" stroke-width="1" />' +
+            '<rect x="20" y="' + yTop + '" width="4" height="' + yHeight + '" rx="2" fill="' + st.color + '" />' +
+            '<text x="40" y="' + (yTop + 20) + '" fill="var(--fg-muted)" font-family="var(--font-mono)" font-size="10.5" font-weight="600" letter-spacing="0.06em">STAGE 0' + st.number + ' · ' + escapeHtml(st.title.toUpperCase()) + ' · ' + st.hours + 'H</text>' +
           '</g>'
         );
       }).join('');
@@ -154,10 +154,10 @@
         var src = nodeMap[e.source];
         var tgt = nodeMap[e.target];
         if (!src || !tgt) return '';
-        var x1 = src.x + 80;
-        var y1 = src.y + 32;
-        var x2 = tgt.x + 80;
-        var y2 = tgt.y + 32;
+        var x1 = src.x + 82;
+        var y1 = src.y + 39;
+        var x2 = tgt.x + 82;
+        var y2 = tgt.y + 39;
         var dx = x2 - x1;
         var dy = y2 - y1;
         var cx1 = x1 + dx * 0.45;
@@ -167,7 +167,7 @@
         var pathD = 'M ' + x1 + ' ' + y1 + ' C ' + cx1 + ' ' + cy1 + ', ' + cx2 + ' ' + cy2 + ', ' + x2 + ' ' + y2;
         return (
           '<g class="roadmap-edge" data-edge-id="' + escapeHtml(e.id) + '">' +
-            '<path d="' + pathD + '" fill="none" stroke="var(--border)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#roadmap-arrow)" />' +
+            '<path d="' + pathD + '" fill="none" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#roadmap-arrow)" />' +
           '</g>'
         );
       }).join('');
@@ -176,22 +176,22 @@
       var nodesSvg = nodes.map(function(n) {
         var status = self.getNodeStatus(n);
         var isSelected = self._selectedNodeId === n.id;
-        var statusColor = status === 'done' ? '#00e599' : (status === 'in-progress' ? '#f5a623' : '#64748b');
+        var statusColor = status === 'done' ? 'var(--success)' : (status === 'in-progress' ? 'var(--warning)' : 'var(--fg-faint)');
         var typeBadge = (n.type || 'concept').toUpperCase();
-        var strokeColor = isSelected ? '#3291ff' : (status === 'done' ? '#00e599' : 'var(--border)');
-        var strokeW = isSelected ? '2.5' : '1.5';
-        var labelShort = n.label.length > 25 ? n.label.slice(0, 23) + '…' : n.label;
+        var strokeColor = isSelected ? 'var(--fg)' : (status === 'done' ? 'var(--success)' : 'var(--border-strong)');
+        var strokeW = isSelected ? '2' : '1.25';
+        var labelShort = n.label.length > 24 ? n.label.slice(0, 22) + '…' : n.label;
 
         return (
           '<g class="roadmap-node roadmap-node--' + status + (isSelected ? ' selected' : '') + '" ' +
              'data-node-id="' + escapeHtml(n.id) + '" ' +
              'data-node-status="' + status + '" ' +
-             'transform="translate(' + n.x + ',' + n.y + ')" ' +
+             'transform="translate(' + n.x + ',' + (n.y + 8) + ')" ' +
              'style="cursor:pointer;" role="button" tabindex="0" aria-label="' + escapeHtml(n.label) + '">' +
-            '<rect width="165" height="62" rx="9" fill="var(--bg)" stroke="' + strokeColor + '" stroke-width="' + strokeW + '" />' +
-            '<circle cx="16" cy="18" r="5" fill="' + statusColor + '" />' +
-            '<text x="27" y="21" fill="var(--fg-muted)" font-size="9" font-weight="700" letter-spacing="0.05em">' + escapeHtml(typeBadge) + '</text>' +
-            '<text x="14" y="42" fill="var(--fg)" font-size="11.5" font-weight="600">' + escapeHtml(labelShort) + '</text>' +
+            '<rect width="165" height="62" rx="6" fill="var(--bg)" stroke="' + strokeColor + '" stroke-width="' + strokeW + '" />' +
+            '<circle cx="15" cy="18" r="4" fill="' + statusColor + '" />' +
+            '<text x="25" y="21" fill="var(--fg-faint)" font-family="var(--font-mono)" font-size="9" font-weight="600" letter-spacing="0.05em">' + escapeHtml(typeBadge) + '</text>' +
+            '<text x="14" y="42" fill="var(--fg)" font-family="var(--font-sans)" font-size="11.5" font-weight="600">' + escapeHtml(labelShort) + '</text>' +
           '</g>'
         );
       }).join('');
@@ -372,8 +372,8 @@
             '<h3 class="eco-card__title">' + escapeHtml(m.title) + '</h3>' +
             '<p class="eco-card__desc">' + escapeHtml(m.summary) + '</p>' +
             '<div class="module-meta-chips">' +
-              (m.builds && m.builds.length ? '<span class="eco-chip">🛠 ' + m.builds.length + ' Build Labs</span>' : '') +
-              (m.simulators && m.simulators.length ? '<span class="eco-chip">⚡ ' + m.simulators.length + ' Simulators</span>' : '') +
+              (m.builds && m.builds.length ? '<span class="eco-chip">' + m.builds.length + ' Build Labs</span>' : '') +
+              (m.simulators && m.simulators.length ? '<span class="eco-chip">' + m.simulators.length + ' Simulators</span>' : '') +
             '</div>' +
             '<div class="module-card__footer">' +
               '<div class="eco-progress-bar"><div class="eco-progress-fill" style="width:' + pct + '%"></div></div>' +

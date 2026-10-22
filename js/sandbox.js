@@ -166,7 +166,7 @@
               '</div>' +
               '<div class="sandbox-canvas-actions">' +
                 '<button class="eco-btn eco-btn--sm ' + (this._connectMode ? 'eco-btn--primary' : '') + '" data-sandbox-action="toggle-connect">' +
-                  (this._connectMode ? '🔗 Connect Mode: ON (Click 2 Nodes)' : '🔗 Connect Nodes') +
+                  (this._connectMode ? 'Connect Mode: ON (Click 2 Nodes)' : 'Connect Nodes') +
                 '</button>' +
                 '<button class="eco-btn eco-btn--sm" data-sandbox-action="clear-canvas">Clear Canvas</button>' +
               '</div>' +
@@ -194,42 +194,61 @@
       var nodeMap = {};
       this._nodes.forEach(function(n) { nodeMap[n.id] = n; });
 
-      var edgesSvg = this._connections.map(function(c, idx) {
+      var edgesSvg = [];
+      var labelsSvg = [];
+      this._connections.forEach(function(c, idx) {
         var src = nodeMap[c.from];
         var tgt = nodeMap[c.to];
-        if (!src || !tgt) return '';
-        var x1 = src.x + 80;
-        var y1 = src.y + 30;
-        var x2 = tgt.x + 80;
-        var y2 = tgt.y + 30;
-        var mx = Math.round((x1 + x2) / 2);
-        var my = Math.round((y1 + y2) / 2) - 6;
-        return (
+        if (!src || !tgt) return;
+        var x1 = tgt.x > src.x + 110 ? src.x + 150 : src.x + 75;
+        var y1 = src.y + 29;
+        var x2 = tgt.x > src.x + 110 ? tgt.x : tgt.x + 75;
+        var y2 = tgt.y + 29;
+        var dx = x2 - x1;
+        var cx1 = Math.round(x1 + dx * 0.45);
+        var cx2 = Math.round(x1 + dx * 0.55);
+        var pathD = 'M ' + x1 + ' ' + y1 + ' C ' + cx1 + ' ' + y1 + ', ' + cx2 + ' ' + y2 + ', ' + x2 + ' ' + y2;
+        edgesSvg.push(
           '<g class="wb-edge" data-edge-index="' + idx + '">' +
-            '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="var(--fg-muted)" stroke-width="2" marker-end="url(#wb-arrow)" />' +
-            (c.label ? '<text x="' + mx + '" y="' + my + '" text-anchor="middle" fill="var(--fg-muted)" font-size="10" font-weight="600">' + escapeHtml(c.label) + '</text>' : '') +
+            '<path d="' + pathD + '" fill="none" stroke="var(--border-focus)" stroke-width="1.5" marker-end="url(#wb-arrow)" />' +
           '</g>'
         );
-      }).join('');
+        if (c.label) {
+          var isHoriz = Math.abs(y2 - y1) < 30;
+          var t = isHoriz ? 0.5 : (idx % 2 === 0 ? 0.34 : 0.66);
+          var mt = 1 - t;
+          var mx = Math.round(mt*mt*mt*x1 + 3*mt*mt*t*cx1 + 3*mt*t*t*cx2 + t*t*t*x2);
+          var my = isHoriz
+            ? Math.min(src.y, tgt.y) - 12
+            : Math.round(mt*mt*mt*y1 + 3*mt*mt*t*y1 + 3*mt*t*t*y2 + t*t*t*y2);
+          var lblW = Math.max(48, Math.round(c.label.length * 5.6 + 12));
+          labelsSvg.push(
+            '<g class="wb-edge-label" pointer-events="none">' +
+              '<rect x="' + Math.round(mx - lblW / 2) + '" y="' + (my - 9) + '" width="' + lblW + '" height="16" rx="4" fill="var(--bg)" stroke="var(--border-strong)" stroke-width="1" />' +
+              '<text x="' + mx + '" y="' + (my + 2) + '" text-anchor="middle" fill="var(--fg-muted)" font-family="var(--font-mono)" font-size="8.5" font-weight="500">' + escapeHtml(c.label) + '</text>' +
+            '</g>'
+          );
+        }
+      });
 
       var self = this;
       var nodesSvg = this._nodes.map(function(n) {
         var color = blockColorMap[n.type] || '#3291ff';
         var isSelected = self._selectedNodeId === n.id || self._connectSourceId === n.id;
-        var labelShort = (n.name || n.type).length > 22 ? (n.name || n.type).slice(0, 20) + '…' : (n.name || n.type);
+        var labelShort = (n.name || n.type).length > 21 ? (n.name || n.type).slice(0, 19) + '…' : (n.name || n.type);
         return (
           '<g class="wb-node ' + (isSelected ? 'selected' : '') + '" data-wb-node-id="' + escapeHtml(n.id) + '" data-wb-node-type="' + escapeHtml(n.type) + '" transform="translate(' + n.x + ',' + n.y + ')" style="cursor:grab;">' +
-            '<rect width="160" height="58" rx="8" fill="var(--bg)" stroke="' + (isSelected ? '#3291ff' : color) + '" stroke-width="' + (isSelected ? '2.5' : '1.5') + '" />' +
-            '<rect x="0" y="0" width="6" height="58" rx="3" fill="' + color + '" />' +
-            '<text x="16" y="21" fill="' + color + '" font-size="9.5" font-weight="700" letter-spacing="0.04em">' + escapeHtml(n.type.toUpperCase()) + '</text>' +
-            '<text x="16" y="40" fill="var(--fg)" font-size="11.5" font-weight="600">' + escapeHtml(labelShort) + '</text>' +
+            '<rect width="150" height="58" rx="6" fill="var(--surface)" stroke="' + (isSelected ? 'var(--fg)' : 'var(--border-strong)') + '" stroke-width="' + (isSelected ? '2' : '1.25') + '" />' +
+            '<rect x="0" y="0" width="4" height="58" rx="2" fill="' + color + '" />' +
+            '<text x="13" y="21" fill="var(--fg-faint)" font-family="var(--font-mono)" font-size="9" font-weight="600" letter-spacing="0.05em">' + escapeHtml(n.type.toUpperCase()) + '</text>' +
+            '<text x="13" y="40" fill="var(--fg)" font-family="var(--font-sans)" font-size="11" font-weight="600">' + escapeHtml(labelShort) + '</text>' +
           '</g>'
         );
       }).join('');
 
       return (
         '<div class="wb-canvas-surface" id="wb-canvas-surface">' +
-          '<svg class="wb-svg" id="wb-svg-canvas" viewBox="0 0 1180 470" width="100%" height="470">' +
+          '<svg class="wb-svg" id="wb-svg-canvas" viewBox="0 0 1250 470" width="100%" height="470">' +
             '<defs>' +
               '<pattern id="wb-grid" width="24" height="24" patternUnits="userSpaceOnUse">' +
                 '<circle cx="2" cy="2" r="1" fill="var(--border)" />' +
@@ -239,8 +258,9 @@
               '</marker>' +
             '</defs>' +
             '<rect width="100%" height="100%" fill="url(#wb-grid)" />' +
-            '<g id="wb-edges-layer">' + edgesSvg + '</g>' +
+            '<g id="wb-edges-layer">' + edgesSvg.join('') + '</g>' +
             '<g id="wb-nodes-layer">' + nodesSvg + '</g>' +
+            '<g id="wb-labels-layer">' + labelsSvg.join('') + '</g>' +
           '</svg>' +
         '</div>'
       );
