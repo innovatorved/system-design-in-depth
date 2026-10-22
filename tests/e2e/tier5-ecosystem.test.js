@@ -230,4 +230,42 @@ describe('Tier 5: All-in-One Ecosystem Hubs (Roadmap, Challenges, Dashboard, San
       await page.close();
     }
   });
+
+  test('T5.6: Reference & Capacity Toolkit (Live Napkin-Math Calculator, 1ns=1s Latency Explorer, Trade-Off Matrix & Universal Search)', async () => {
+    const page = await browser.newPage();
+    try {
+      await page.goto(`${server.baseUrl}/dashboard`, { waitUntil: 'networkidle2' });
+      await page.waitForSelector('.dashboard-view', { timeout: 10000 });
+
+      // Switch to Reference & Capacity Toolkit tab
+      await page.click('.view-tab[data-dash-tab="toolkit"]');
+      await page.waitForSelector('.dashboard-toolkit-wrap', { timeout: 5000 });
+
+      const initialQps = await page.$eval('#cap-peak-qps', el => el.textContent);
+      assert.ok(initialQps.includes('Peak QPS'), 'Toolkit should display calculated Peak QPS');
+
+      // Toggle Humanized Latency Scale (1 ns = 1 sec)
+      await page.click('[data-latency-scale="human"]');
+      const tableText = await page.$eval('.dashboard-toolkit-wrap', el => el.textContent);
+      assert.ok(tableText.includes('4.8 years'), 'Humanized latency scale should show 4.8 years for Cross-Continent Packet RTT');
+
+      // Filter Staff Trade-Off Matrix by messaging
+      await page.click('[data-matrix-cat="messaging"]');
+      const matrixRows = await page.$$eval('.dashboard-toolkit-wrap section:last-child tbody tr', els => els.length);
+      assert.equal(matrixRows, 2, 'Messaging filter should show 2 broker trade-off rows (Kafka vs RabbitMQ/SQS)');
+
+      // Verify Universal Search indexes Toolkit and all 20 Build Labs
+      const searchHits = await page.evaluate(() => {
+        window.Search.buildIndex();
+        return {
+          toolkitHits: window.Search.search('latency numbers').length,
+          raftHits: window.Search.search('raft leader').length
+        };
+      });
+      assert.ok(searchHits.toolkitHits >= 1, 'Universal Search should find Reference & Capacity Toolkit by latency numbers');
+      assert.ok(searchHits.raftHits >= 1, 'Universal Search should find Raft build lab / topic');
+    } finally {
+      await page.close();
+    }
+  });
 });

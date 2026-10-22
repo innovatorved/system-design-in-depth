@@ -42,7 +42,7 @@ window.Search = (() => {
           kind: 'build-lab',
           moduleTitle: 'Interactive Build Lab (JS & TS)',
           moduleNumber: 'Lab',
-          partTitle: '15 Builds',
+          partTitle: '20 Builds',
           tags: ['build', 'lab', 'interactive', 'code', id],
           excerpt: b.summary || '',
           searchText: [
@@ -62,6 +62,7 @@ window.Search = (() => {
       { slug: '', title: 'Production Incident & Troubleshooting Challenges', kind: 'challenge', moduleTitle: '12 Hands-On Outage Simulators', tags: ['challenges', 'incidents', 'outage', 'troubleshooting', 'sre'] },
       { slug: 'overview', title: 'Learner Dashboard, XP & Streak Hub', kind: 'dashboard', moduleTitle: 'Gamified Progress & Study Hub', tags: ['dashboard', 'xp', 'streak', 'progress'] },
       { slug: 'srs', title: 'Spaced Repetition (SRS) Flashcard Deck', kind: 'dashboard', moduleTitle: '1,200+ SM-2 Active Recall Flashcards', tags: ['srs', 'flashcards', 'spaced', 'repetition', 'review', 'dashboard'] },
+      { slug: 'toolkit', title: 'Reference & Capacity Toolkit (Latency Numbers, Napkin Math & Trade-Off Matrix)', kind: 'dashboard', moduleTitle: 'Back-of-the-Envelope Calculator, 1ns=1s Latency Explorer & Staff Decision Matrix', tags: ['toolkit', 'latency', 'numbers', 'capacity', 'calculator', 'napkin', 'math', 'tradeoff', 'matrix', 'dashboard'] },
       { slug: '', title: 'Architecture Whiteboard & Capacity Estimator Sandbox', kind: 'sandbox', moduleTitle: 'Interactive Topology Canvas & Back-of-Envelope Math', tags: ['sandbox', 'whiteboard', 'capacity', 'estimator', 'qps', 'excalidraw'] }
     ];
     for (const v of ecosystemViews) {
@@ -257,6 +258,22 @@ window.Search = (() => {
     input.value = '';
     input.focus();
     renderResults(search(''), '');
+
+    if (window.loadScript) {
+      const lazyData = [];
+      if (!window.IMPLEMENTATIONS_DATA) lazyData.push('data/implementations_code.js');
+      if (!window.CHALLENGES_DATA) lazyData.push('data/challenges.js');
+      if (!window.WHITEBOARD_DATA) lazyData.push('data/whiteboard-blueprints.js');
+      if (!window.ROADMAP_DATA) lazyData.push('data/roadmap.js');
+      if (lazyData.length > 0) {
+        Promise.all(lazyData.map(s => window.loadScript(s).catch(() => null))).then(() => {
+          buildIndex();
+          if (isOpen) {
+            renderResults(search(input.value), input.value);
+          }
+        });
+      }
+    }
 
     if (window.Analytics?.trackSearchOpen) {
       window.Analytics.trackSearchOpen();
