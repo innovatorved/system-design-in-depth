@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1098,43 +1098,99 @@ flowchart TD
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box" id="exercise-database-indexing" data-slug="database-indexing">
+      <div class="exercise-box quiz-card" id="quiz-database-indexing-n1" data-type="numeric" data-slug="database-indexing">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Architecture Challenge: B-Tree Composite Index Column Ordering</span>
+            <span>Napkin Math: B+Tree Index Memory Footprint</span>
           </div>
-          <span class="exercise-box__difficulty">Intermediate</span>
+          <span class="exercise-box__difficulty">apply</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> Table with 50M records. Status has 4 distinct values; created_at is a timestamp.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> You have a query: WHERE status = &#039;ACTIVE&#039; AND created_at &gt; &#039;2026-01-01&#039; ORDER BY created_at. Which composite index definition gives optimal performance?</div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A PostgreSQL table has 500 million rows. You add a secondary B+Tree index on an 8-byte `BIGINT` column. Including tuple pointer (`ctid`), page header, and fill-factor overhead, each index entry consumes 32 bytes.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How much RAM (in GB, using 1 GB = 10^9 bytes) is required to keep this entire secondary index resident in the buffer pool?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Multiply 500,000,000 rows × 32 bytes/entry and divide by 10^9 bytes/GB.</div>
         
-        <div class="exercise-options">
+        <div class="quiz-options exercise-options" id="quiz-options-database-indexing-n1" style="margin-top: 15px;">
           
-            <div class="exercise-option" data-action="exercise-option" data-idx="0">
-              <span class="exercise-option__bullet">A</span>
-              <span class="exercise-option__text">No index needed; the query planner automatically parallelizes the table scan</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="1">
-              <span class="exercise-option__bullet">B</span>
-              <span class="exercise-option__text">Two separate single-column indexes: INDEX (status) and INDEX (created_at)</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="2">
-              <span class="exercise-option__bullet">C</span>
-              <span class="exercise-option__text">INDEX (status, created_at)</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="3">
-              <span class="exercise-option__bullet">D</span>
-              <span class="exercise-option__text">INDEX (created_at, status)</span>
-            </div>
-          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-database-indexing-n1" placeholder="Enter numeric estimate (GB)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">GB</span>
+         </div>
+       
         </div>
 
-        <div class="exercise-feedback" id="feedback-database-indexing">
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="database-indexing-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="database-indexing" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-database-indexing-n1" style="display: none;">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> In composite B-Tree indexes, equality filter columns must precede range/order columns: (Equality, Range). An index on (status, created_at) allows the B-Tree to zoom directly to &#039;ACTIVE&#039; and scan the sorted timestamps without a filesort.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 500,000,000 entries × 32 bytes = 16,000,000,000 bytes = 16 GB. Every additional secondary index both consumes gigabytes of buffer pool RAM and adds a random page read/write on every non-HOT row update.</div>
+        </div>
+      </div>
+    
+      <div class="exercise-box quiz-card" id="quiz-database-indexing-t1" data-type="tradeoff" data-slug="database-indexing">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Composite Index Column Ordering &amp; Write Amplification</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> An orders table receives 8,000 inserts/sec and serves a hot query: `SELECT id, total FROM orders WHERE tenant_id = $1 AND status = &#039;PENDING&#039; ORDER BY created_at DESC LIMIT 50`. Currently, 98% of rows have `status = &#039;COMPLETED&#039;`.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Which indexing strategy best balances read latency, sort elimination, and buffer pool footprint, and why?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Consider both the 98% completed rows and the equality-then-range/sort rule for B+Trees.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-database-indexing-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-database-indexing-t1" value="0" />
+               <span>Create three separate single-column indexes on `(tenant_id)`, `(status)`, and `(created_at)`</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-database-indexing-t1" value="1" />
+               <span>Create a partial covering index on `(tenant_id, created_at DESC) INCLUDE (total) WHERE status = &#039;PENDING&#039;`</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-database-indexing-t1" value="2" />
+               <span>Create a full composite index on `(created_at DESC, status, tenant_id)` across all rows</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-database-indexing-t1" value="0" />
+               <span>PostgreSQL merges three single-column indexes with zero CPU or heap fetches</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-database-indexing-t1" value="1" />
+               <span>Filtering on `status = &#039;PENDING&#039;` shrinks the index by 98%, `(tenant_id, created_at DESC)` satisfies equality + sort order, and `INCLUDE (total)` enables an index-only scan</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-database-indexing-t1" value="2" />
+               <span>Leading with `created_at` lets the engine jump directly to a specific `tenant_id` without scanning</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="database-indexing-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="database-indexing" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-database-indexing-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> A partial index (`WHERE status = &#039;PENDING&#039;`) excludes 98% of historical rows, keeping the index tiny in RAM. Ordering keys as `(tenant_id, created_at DESC)` matches the equality predicate followed by the `ORDER BY`, and `INCLUDE (total)` avoids heap page fetches.</div>
         </div>
       </div>
     
@@ -1148,7 +1204,10 @@ flowchart TD
         <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
         
           <a class="lesson-builds__item" href="/build/keyset-pagination-cursors/" data-action="navigate-build" data-build-id="keyset-pagination-cursors">
-            <span class="lesson-builds__name">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+              
+            </div>
             <span class="lesson-builds__summary">An in-memory table ordered by (created_at DESC, id DESC) that compares OFFSET and keyset pagination under concurrent inserts and deletes, shows why the id tie-breaker matters, and issues opaque base64url cursors signed with HMAC and bound to their query.</span>
             <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
           </a>
@@ -1243,29 +1302,29 @@ flowchart TD
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

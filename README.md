@@ -15,8 +15,8 @@
   <img src="https://img.shields.io/badge/Tracks-6-8b5cf6?style=flat-square" alt="6 Tracks">
   <img src="https://img.shields.io/badge/Units-200-3b82f6?style=flat-square" alt="200 Units">
   <img src="https://img.shields.io/badge/Simulators-32-059669?style=flat-square" alt="32 Simulators">
-  <img src="https://img.shields.io/badge/From--Scratch%20Builds-15-f59e0b?style=flat-square" alt="15 From-Scratch Builds">
-  <img src="https://img.shields.io/badge/Practice%20Questions-600-ec4899?style=flat-square" alt="600 Practice Questions">
+  <img src="https://img.shields.io/badge/From--Scratch%20Builds-20-f59e0b?style=flat-square" alt="20 From-Scratch Builds">
+  <img src="https://img.shields.io/badge/Practice%20Questions-708-ec4899?style=flat-square" alt="708 Practice Questions">
 </p>
 
 <p align="center">
@@ -68,7 +68,7 @@ Interactive sandboxes let you tweak parameters, simulate network partitions, ind
 - **Resilience & Traffic:** Cache Stampede Defense (XFetch), Circuit Breakers, Retry Storms, SLO Burn Rate Alerts, Little's Law Queuing.
 - **Algorithms & Data Structures:** Consistent Hashing Ring, Sliding Window Rate Limiter, Cache Eviction (LRU/LFU/FIFO), Bloom Filter, HyperLogLog, Count-Min Sketch, BM25 Scoring, CRDT Conflict Resolution, Geohash Explorer.
 
-### 15 Interactive System Design Build Labs (`/build/<slug>/`)
+### 20 Interactive System Design Build Labs (`/build/<slug>/`)
 Each reference implementation runs in the browser at `/build/<slug>/` using **`@innovatorved/code-lab`** ([GitHub](https://github.com/innovatorved/code-lab) · [Docs Wiki](https://github.com/innovatorved/code-lab/wiki) · [npm](https://www.npmjs.com/package/@innovatorved/code-lab)), an in-browser editor and Web Worker Node.js/Bun runtime with guided steps and a sandbox mode:
 
 1. [`/build/load-balancer-from-scratch/`](build/load-balancer-from-scratch/) — Layer 7 Load Balancer (`node:http` reverse proxy, Round-Robin, Least-Connections, P2C, active/passive health checks)
@@ -86,6 +86,11 @@ Each reference implementation runs in the browser at `/build/<slug>/` using **`@
 13. [`/build/merkle-anti-entropy/`](build/merkle-anti-entropy/) — Merkle-Tree Anti-Entropy Replica Synchronization
 14. [`/build/hyperloglog-cardinality/`](build/hyperloglog-cardinality/) — HyperLogLog Cardinality Estimator with Small/Large Range Corrections
 15. [`/build/tiny-search-engine/`](build/tiny-search-engine/) — Inverted Index Search Engine with Variable-Byte Posting Lists & BM25F
+16. [`/build/circuit-breaker/`](build/circuit-breaker/) — Circuit Breaker State Machine (`CLOSED` → `OPEN` → `HALF_OPEN`) & Priority-Aware Adaptive Load Shedder
+17. [`/build/singleflight-coalescer/`](build/singleflight-coalescer/) — Singleflight Request Coalescer (`do(key, fn)`), Stale-While-Revalidate & XFetch Stampede Protection
+18. [`/build/raft-consensus/`](build/raft-consensus/) — Raft Consensus Leader Election (`RequestVote`) & Quorum Log Replication (`AppendEntries`)
+19. [`/build/mini-kafka-log/`](build/mini-kafka-log/) — Partitioned Commit Log, MurmurHash Key Routing & Consumer Group Offset Rebalancing
+20. [`/build/outbox-cdc-relay/`](build/outbox-cdc-relay/) — Transactional Outbox Pattern, Polling CDC Relay & Idempotent Consumer Deduplication
 
 ### `@innovatorved/code-lab`
 The interactive build labs run on [`@innovatorved/code-lab`](https://github.com/innovatorved/code-lab) (`v0.1.12`), a standalone browser IDE, public GitHub repository cloner (`git clone`), modular guided lab engine, and Web Worker Node.js/Bun runtime. The embedded labs pin the npm bundle (`0.1.12`) via jsDelivr with an unpkg fallback:

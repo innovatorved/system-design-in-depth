@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,10 +116,10 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab" data-tab="curriculum" role="tab" aria-selected="false">Curriculum</button>
-      <button class="sidebar__tab active" data-tab="builds" role="tab" aria-selected="true">15 Builds</button>
+      <button class="sidebar__tab active" data-tab="builds" role="tab" aria-selected="true">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
-<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (15)</div><a class="unit-item" data-build="load-balancer-from-scratch" href="/build/load-balancer-from-scratch/">
+<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (20)</div><a class="unit-item" data-build="load-balancer-from-scratch" href="/build/load-balancer-from-scratch/">
         <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
         <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
       </a><a class="unit-item" data-build="consistent-hashing-ring" href="/build/consistent-hashing-ring/">
@@ -164,6 +164,21 @@
       </a><a class="unit-item" data-build="tiny-search-engine" href="/build/tiny-search-engine/">
         <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
         <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+      </a><a class="unit-item" data-build="circuit-breaker" href="/build/circuit-breaker/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Circuit Breaker &amp; Adaptive Load Shedder</span>
+      </a><a class="unit-item" data-build="singleflight-coalescer" href="/build/singleflight-coalescer/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Singleflight &amp; Stampede Coalescer</span>
+      </a><a class="unit-item" data-build="raft-consensus" href="/build/raft-consensus/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Raft Leader Election &amp; Quorum Log</span>
+      </a><a class="unit-item" data-build="mini-kafka-log" href="/build/mini-kafka-log/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Partitioned Commit Log &amp; Consumer Group Broker</span>
+      </a><a class="unit-item" data-build="outbox-cdc-relay" href="/build/outbox-cdc-relay/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Transactional Outbox &amp; Idempotent CDC Relay</span>
       </a>
     </div>
   </aside>
@@ -285,13 +300,13 @@
 <p>"How many distinct users/IPs/search terms/devices?" An exact answer needs memory proportional to the number of distinct items (a hash set of 100M ids is gigabytes), and exact sets from different shards or days can't be combined without shipping all of them. HyperLogLog answers within about 1% using <strong>12 KB</strong>, and sketches merge with a register-wise max. That means per-shard, per-minute or per-partition sketches can be rolled up to any window or grouping later.</p>
 <p>Where it shows up: Redis <code>PFADD</code>/<code>PFCOUNT</code>/<code>PFMERGE</code>, BigQuery <code>APPROX_COUNT_DISTINCT</code> and <code>HLL_COUNT.*</code>, Trino/Presto <code>approx_distinct</code>, Elasticsearch/OpenSearch <code>cardinality</code> aggregations, Druid and Apache DataSketches, Snowflake/Redshift approximate distinct, and the <code>postgresql-hll</code> extension.</p>
 <h2>Design</h2>
-<pre><code class="language-text">item ─► 64-bit hash ─► [ top p bits: register index j ][ remaining 64-p bits ]
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">text</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-text">item ─► 64-bit hash ─► [ top p bits: register index j ][ remaining 64-p bits ]
                                                           └─► rank = leading zeros + 1   (1 .. 64-p+1)
-registers[j] = max(registers[j], rank)</code></pre>
+registers[j] = max(registers[j], rank)</code></pre></div>
 <p>The intuition: in a stream of uniformly random bit strings, seeing a run of <code>r-1</code> leading zeros suggests about <code>2^r</code> distinct values. One register would be hopelessly noisy, so HLL splits the stream into <code>m = 2^p</code> sub-streams by the top bits and combines them with a <strong>harmonic mean</strong>, which resists outliers:</p>
-<pre><code class="language-text">E_raw = alpha_m * m^2 / sum_j 2^(-M[j])
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">text</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-text">E_raw = alpha_m * m^2 / sum_j 2^(-M[j])
 alpha_16 = 0.673, alpha_32 = 0.697, alpha_64 = 0.709, alpha_m = 0.7213 / (1 + 1.079/m) for m &gt;= 128
-if E_raw &lt;= 2.5m and V registers are still zero:  E = m * ln(m / V)     (linear counting)</code></pre>
+if E_raw &lt;= 2.5m and V registers are still zero:  E = m * ln(m / V)     (linear counting)</code></pre></div>
 <p>With a 64-bit hash, the 32-bit large-range correction from the original paper isn't needed: hash collisions stay negligible far beyond any realistic cardinality (Heule et al. 2013).</p>
 <p><strong>Hash.</strong> <code>hash64</code> runs MurmurHash3_x86_32 twice with independent seeds to produce <code>hi</code> and <code>lo</code>. The test suite checks the implementation against the reference vectors and checks that all 64 output bits are balanced. Rank extraction crosses from <code>hi</code> into <code>lo</code> when the low <code>32-p</code> bits of <code>hi</code> are all zero, so ranks up to <code>64-p+1</code> really occur. There is a unit test for each boundary.</p>
 <p><strong>Invariants</strong></p>
@@ -396,31 +411,31 @@ if E_raw &lt;= 2.5m and V registers are still zero:  E = m * ln(m / V)     (line
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/implementations_code.js?v=6e35b8cc29"></script>
-  <script type="text/plain" data-defer src="data/guided_labs.js?v=3a663a9cad"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=7189880a2f"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=e41a33646f"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

@@ -63,6 +63,59 @@ window.QUESTION_BANK["nearby-geospatial-search-system-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "nearby-geospatial-search-system-design-n1",
+    "topic": "nearby-geospatial-search-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Driver Location Ping Write Throughput",
+    "scenario": "A ride-hailing platform has 2,000,000 concurrently active drivers on the road globally. Every active driver's app transmits a GPS coordinate ping once every 4 seconds.",
+    "prompt": "What is the sustained global location update write rate in thousands of requests per second (k req/s)?",
+    "question": "What is the sustained global location update write rate in thousands of requests per second (k req/s)?",
+    "unit": "k req/s",
+    "answer": 500,
+    "tolerance": 0.25,
+    "hint": "Divide 2,000,000 active drivers by 4 seconds per ping, and express in thousands (k req/s).",
+    "explanation": "2,000,000 drivers ÷ 4 seconds = 500,000 location pings/sec = 500 k req/s of continuous mutable coordinate writes—far too high for unsharded disk-backed B+Tree updates.",
+    "tags": [
+      "nearby-geospatial-search-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "nearby-geospatial-search-system-design-t1",
+    "topic": "nearby-geospatial-search-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Ephemeral In-Memory Spatial Index vs Durable SQL Row Updates for Live GPS Pings",
+    "scenario": "Your location ingestion service receives 500,000 GPS pings/sec from active drivers and must serverider nearby-driver queries (`radius <= 3 km`) within 15 ms p99.",
+    "prompt": "How should live driver coordinates be stored and indexed vs historical trip traces, and why?",
+    "question": "How should live driver coordinates be stored and indexed vs historical trip traces, and why?",
+    "options": [
+      "Execute synchronous `UPDATE drivers SET lat=?, lng=?` + R-Tree re-indexing in PostgreSQL on all 500,000 pings/sec",
+      "Maintain live driver positions in a city-sharded in-memory spatial index (H3/S2/Geohash cells in RAM/Redis) for sub-10ms matching, while asynchronously batching pings to an append-only stream (Kafka → columnar/object store) for trip history",
+      "Have rider apps broadcast Bluetooth beacons to discover drivers within 3 km"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Synchronous disk B+Tree/R-Tree page splits handle 500,000 random updates/sec on a single database effortlessly",
+      "A 4-second-old GPS coordinate is ephemeral state; decoupling the in-memory H3/Geohash matching hot path from batched async archival avoids random disk write amplification",
+      "Bluetooth Low Energy has a 3 km urban non-line-of-sight range"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Separate the mutable ephemeral 'current location' hot path from the immutable 'historical breadcrumb' log.",
+    "explanation": "Current driver location is overwritten every 4 seconds. Holding the latest coordinate in an in-memory city-sharded H3/Geohash index serves K-ring lookups in <5 ms, while async streaming batches historical breadcrumbs to cold storage.",
+    "tags": [
+      "nearby-geospatial-search-system-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -194,6 +247,59 @@ window.QUESTION_BANK["geospatial-grid-systems-h3-s2-geohash"] = [
       "geospatial-grid-systems-h3-s2-geohash",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "geospatial-grid-systems-h3-s2-geohash-n1",
+    "topic": "geospatial-grid-systems-h3-s2-geohash",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: H3 Hexagonal K-Ring Neighbor Cell Count",
+    "scenario": "To find all drivers within ~1.5 km of a rider without boundary blind spots, your matching service queries the rider's H3 hexagon cell plus its immediate `k = 1` ring of adjacent hexagons (`kRing(origin, 1)`), and for wider searches its `k = 2` ring (`1 + 6×1 + 6×2`).",
+    "prompt": "How many total H3 hexagonal cells are queried in a `k = 2` ring (`1 + 6 + 12`)?",
+    "question": "How many total H3 hexagonal cells are queried in a `k = 2` ring (`1 + 6 + 12`)?",
+    "unit": "cells",
+    "answer": 19,
+    "tolerance": 0.25,
+    "hint": "Ring 0 = 1 center cell; Ring 1 = 6 neighbor cells; Ring 2 = 12 outer cells. Sum: 1 + 6 + 12.",
+    "explanation": "A hexagonal grid has `3k(k + 1) + 1` cells within distance `k`. For `k = 1`, that is `1 + 6 = 7` cells; for `k = 2`, that is `1 + 6 + 12 = 19` cells, all with uniform center-to-center neighbor distances.",
+    "tags": [
+      "geospatial-grid-systems-h3-s2-geohash",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "geospatial-grid-systems-h3-s2-geohash-t1",
+    "topic": "geospatial-grid-systems-h3-s2-geohash",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Uber H3 Hexagons vs Rectangular Geohash for Surge Pricing & Smoothing",
+    "scenario": "You are building a real-time dynamic surge pricing engine that computes supply-to-demand ratios per spatial cell and smooths surge multipliers across neighboring cells via convolution.",
+    "prompt": "Why did Uber choose H3 hexagonal cells over rectangular Geohash / S2 squares for surge smoothing, and what trade-off do hexagons introduce?",
+    "question": "Why did Uber choose H3 hexagonal cells over rectangular Geohash / S2 squares for surge smoothing, and what trade-off do hexagons introduce?",
+    "options": [
+      "Hexagons subdivide into 4 exact child hexagons with zero boundary distortion",
+      "Every neighbor of a hexagon shares an edge and has an identical center-to-center distance (6 equidistant neighbors), eliminating the corner-vs-edge distance bias of squares at the cost of approximate (1-to-7) hierarchical parent-child containment",
+      "Geohash rectangles have identical area at the equator and at 75° latitude"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "A regular hexagon can be tiled cleanly into smaller congruent hexagons without overhanging edges",
+      "Squares have 4 edge neighbors (distance 1) and 4 diagonal corner neighbors (distance √2 ≈ 1.414), whereas hexagons have 6 equidistant neighbors ideal for isotropic radial smoothing, trading off exact hierarchical containment",
+      "Mercator/lat-lng Geohash boxes never distort cell width near the poles"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Compare neighbor distances in a square grid (edge = 1, diagonal = √2) vs a hexagonal grid (all 6 neighbors = 1).",
+    "explanation": "In a square grid, diagonal neighbors are 41% farther away than edge neighbors, biasing radial gradients and surge smoothing. Hexagons have 6 equidistant neighbors, making radial k-ring expansion and spatial smoothing isotropic, at the cost of approximate 7-child subdivision.",
+    "tags": [
+      "geospatial-grid-systems-h3-s2-geohash",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -458,6 +564,59 @@ window.QUESTION_BANK["seen-filtering-bloom-vs-exact-sets"] = [
       "seen-filtering-bloom-vs-exact-sets",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "seen-filtering-bloom-vs-exact-sets-n1",
+    "topic": "seen-filtering-bloom-vs-exact-sets",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Per-User Seen-Post Bloom Filter Fleet Memory",
+    "scenario": "A short-video feed tracks the last 50,000 watched video IDs for each of 20 million Daily Active Users (DAU) so users aren't shown duplicate videos. Using a Bloom filter at 10 bits per item, each user's filter takes `50,000 × 10 bits = 500,000 bits = 62.5 KB ≈ 60 KB` (compared to 400 KB for raw 8-byte IDs).",
+    "prompt": "Using 60 KB per active user, how many gigabytes (GB, using 1 GB = 1,000,000 KB) of storage/memory are required across the 20 million DAU?",
+    "question": "Using 60 KB per active user, how many gigabytes (GB, using 1 GB = 1,000,000 KB) of storage/memory are required across the 20 million DAU?",
+    "unit": "GB",
+    "answer": 1200,
+    "tolerance": 0.25,
+    "hint": "Multiply 20,000,000 users × 60 KB/user and divide by 1,000,000 KB/GB.",
+    "explanation": "20,000,000 × 60 KB = 1,200,000,000 KB = 1,200 GB (1.2 TB), compared to 8 TB for raw 64-bit integer arrays—savingnearly 7 TB of cluster memory.",
+    "tags": [
+      "seen-filtering-bloom-vs-exact-sets",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "seen-filtering-bloom-vs-exact-sets-t1",
+    "topic": "seen-filtering-bloom-vs-exact-sets",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Bloom Filter False Positives in Content Feed Seen-Filtering",
+    "scenario": "You use a per-user Bloom filter (1% false-positive rate) to filter out previously watched videos from a recommendation candidate pool of 500 videos per feed refresh.",
+    "prompt": "Why is a 1% false-positive rate acceptable for feed seen-filtering (unlike financial/security blocklists), and how do you prevent the filter from saturating over years?",
+    "question": "Why is a 1% false-positive rate acceptable for feed seen-filtering (unlike financial/security blocklists), and how do you prevent the filter from saturating over years?",
+    "options": [
+      "A false positive shows the user an already-watched video 1% of the time",
+      "A false positive merely skips 1% of unseen candidate videos (harmless when millions of unseen videos exist), and time-bucketed / rotating sliding-window Bloom filters prevent bit saturation as history grows",
+      "Bloom filters automatically evict old bits when 100% of bits become 1"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Bloom filters have false negatives that let watched videos slip through",
+      "In seen-filtering, a false positive means 'falsely marked as already seen', which only drops ~5 of 500 candidate recommendations; rotating time-windowed filters (e.g., 30-day buckets) bounds fill ratio",
+      "A single fixed-size Bloom filter maintains a 1% false-positive rate even after 100 million insertions"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "In a seen-filter, what does a false positive ('filter says seen when actually unseen') do to the user experience?",
+    "explanation": "Bloom filters have zero false negatives (so a watched video is never re-shown). A 1% false positive simply hides 1% of unseen candidate videos—invisible to the user when the catalog has millions of videos. Rotating time-bucketed filters retires old epochs before bit density saturates.",
+    "tags": [
+      "seen-filtering-bloom-vs-exact-sets",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

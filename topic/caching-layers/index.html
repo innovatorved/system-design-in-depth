@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1142,6 +1142,102 @@ flowchart TD
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-caching-layers-n1" data-type="numeric" data-slug="caching-layers">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Origin Database QPS Reduction via Multi-Tier Cache</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A product catalog service receives 100,000 read req/s. Requests first check an L1 in-process cache (50% hit rate), and L1 misses check an L2 distributed Redis cluster (90% hit rate of the traffic reaching L2).</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How many read requests per second (in req/s) miss both cache tiers and hit the origin database?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> L1 misses = 100,000 × (1 - 0.50) = 50,000 req/s. L2 misses = 50,000 × (1 - 0.90) = 5,000 req/s.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-caching-layers-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-caching-layers-n1" placeholder="Enter numeric estimate (req/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">req/s</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="caching-layers-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="caching-layers" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-caching-layers-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Of 100,000 req/s, 50% (50,000 req/s) miss L1 and reach L2 Redis. Of those 50,000 req/s, 10% (5,000 req/s) miss L2 and hit the database—an effective combined hit rate of 95%.</div>
+        </div>
+      </div>
+    
+      <div class="exercise-box quiz-card" id="quiz-caching-layers-t1" data-type="tradeoff" data-slug="caching-layers">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: L1 In-Process Cache Invalidation vs Redis Hot-Key Bottleneck</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A celebrity post receives 250,000 reads/sec, saturating the single Redis shard holding that key (`100% CPU` on one Redis node), even though the overall Redis cluster is at 15% CPU.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Which caching architecture resolves the single-shard hot-key bottleneck while keeping staleness bounded, and why?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Consistent hashing maps a single key to a single shard no matter how many shards exist.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-caching-layers-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-caching-layers-t1" value="0" />
+               <span>Double the number of shards in the Redis cluster using consistent hashing</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-caching-layers-t1" value="1" />
+               <span>Add a tiny L1 in-memory cache (or key replication across N sub-keys `key#1..N`) with a 1–2 second TTL + Redis client-side invalidation broadcasts for detected hot keys</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-caching-layers-t1" value="2" />
+               <span>Bypass Redis for hot keys and query the primary SQL database directly</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-caching-layers-t1" value="0" />
+               <span>Adding more consistent-hashing shards splits a single key across multiple nodes automatically</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-caching-layers-t1" value="1" />
+               <span>Asingle key always hashes to one shard; absorbing hot-key reads in stateless app-tier L1 memory (with short TTL / pub-sub invalidation) eliminates the network and single-thread Redis bottleneck</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-caching-layers-t1" value="2" />
+               <span>Primary SQL databases handle 250,000 point reads/sec more cheaply than in-memory caches</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="caching-layers-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="caching-layers" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-caching-layers-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Adding shards to Redis does not split a single hot key. Absorbing hot keys in an application-local L1 cache with a 1-2s micro-TTL (or salting the key across N replicas) spreads the 250k req/s across all stateless app servers.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1152,14 +1248,40 @@ flowchart TD
         <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
         
           <a class="lesson-builds__item" href="/build/lru-cache/" data-action="navigate-build" data-build-id="lru-cache">
-            <span class="lesson-builds__name">LRU Cache (Doubly Linked List + Hash Map)</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">LRU Cache (Doubly Linked List + Hash Map)</span>
+              
+            </div>
             <span class="lesson-builds__summary">An O(1) LRU cache built from a Map and an intrusive doubly linked list, with entry- and size-based bounds, optional per-entry TTL, hit/miss stats and an eviction callback. Tests check it against a naive reference model under randomized operations.</span>
             <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
           </a>
           <a class="lesson-builds__item" href="/build/ttl-cache-reaper/" data-action="navigate-build" data-build-id="ttl-cache-reaper">
-            <span class="lesson-builds__name">TTL Cache with a Redis-Style Adaptive Reaper</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">TTL Cache with a Redis-Style Adaptive Reaper</span>
+              
+            </div>
             <span class="lesson-builds__summary">A TTL cache that combines lazy expiry on read with Redis&#039;s adaptive active-expire cycle (sample 20 volatile keys, repeat while &gt;25% are expired, stop at a time budget), using an injectable clock and PRNG so the stale-memory versus CPU trade-off can be measured deterministically.</span>
             <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
+          </a>
+          <a class="lesson-builds__item" href="/build/singleflight-coalescer/" data-action="navigate-build" data-build-id="singleflight-coalescer">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Singleflight &amp; Stampede Coalescer</span>
+              
+            </div>
+            <span class="lesson-builds__summary">In-flight request deduplication (Go singleflight pattern) combined with stale-while-revalidate soft TTL caching and probabilistic XFetch early recomputation to eliminate cache stampedes.</span>
+            <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
+          </a>
+      </div>
+      <div class="lesson-builds lesson-challenges">
+        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        
+          <a class="lesson-builds__item" href="/challenges/cache-stampede-meltdown/" data-nav="challenges" data-challenge="cache-stampede-meltdown">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Midnight Flash Sale Cache Stampede</span>
+              <span class="badge">SEV-1 · easy</span>
+            </div>
+            
+            <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Launch Production Incident &amp; CodeLab Hotfix →</span>
           </a>
       </div>
         <div class="further-reading">
@@ -1252,29 +1374,29 @@ flowchart TD
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

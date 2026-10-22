@@ -178,4 +178,56 @@ describe('Tier 5: All-in-One Ecosystem Hubs (Roadmap, Challenges, Dashboard, San
       await page.close();
     }
   });
+
+  test('T5.5: 5-Pillar Expansion (20 Build Labs, Root-Cause Spoiler Fix & CodeLab Hotfix, 10 Sandbox Blueprints & Rubric Audit, End-of-Lesson Numeric/Tradeoff Drills)', async () => {
+    const page = await browser.newPage();
+    try {
+      // 1. Verify 20 Build Labs in IMPLEMENTATIONS_DATA and GUIDED_LABS_DATA + /projects Explore in CodeLab
+      await page.goto(`${server.baseUrl}/projects/`, { waitUntil: 'networkidle2' });
+      const repoButtons = await page.$$eval('[data-action="open-repo-codelab"]', els => els.length);
+      assert.ok(repoButtons >= 1, 'Projects hub should render Explore in CodeLab buttons');
+
+      await page.goto(`${server.baseUrl}/build/raft-consensus/`, { waitUntil: 'networkidle2' });
+      const counts = await page.evaluate(() => ({
+        implCount: Object.keys(window.IMPLEMENTATIONS_DATA || {}).length,
+        labCount: Object.keys(window.GUIDED_LABS_DATA || {}).length
+      }));
+      assert.equal(counts.implCount, 20, 'Should have 20 Build Labs in IMPLEMENTATIONS_DATA');
+      assert.equal(counts.labCount, 20, 'Should have 20 Guided Labs in GUIDED_LABS_DATA');
+
+      // 2. Verify Challenge root-cause starts unselected (no spoiler) and has CodeLab Hotfix button
+      await page.goto(`${server.baseUrl}/challenges/retry-storm-meltdown/`, { waitUntil: 'networkidle2' });
+      await page.waitForSelector('.incident-room', { timeout: 5000 });
+      const challengeCheck = await page.evaluate(() => ({
+        selectedRootCause: window.ChallengesController._selectedRootCauseId,
+        hasHotfixBtn: !!document.querySelector('[data-action="open-challenge-codelab"]')
+      }));
+      assert.equal(challengeCheck.selectedRootCause, null, 'Root cause must start unselected (null) so diagnosis is not spoiled');
+      assert.equal(challengeCheck.hasHotfixBtn, true, 'Challenge workspace should render Open Hotfix in CodeLab button');
+
+      // 3. Verify ?blueprint=uber-geo-dispatch auto-loads in /sandbox + Architecture Rubric Audit + 10 blueprints
+      await page.goto(`${server.baseUrl}/sandbox/?blueprint=uber-geo-dispatch`, { waitUntil: 'networkidle2' });
+      await page.waitForSelector('.sandbox-view', { timeout: 5000 });
+      const sandboxCheck = await page.evaluate(() => ({
+        blueprintCount: (window.WHITEBOARD_DATA && window.WHITEBOARD_DATA.blueprints || []).length,
+        activeNodes: document.querySelectorAll('.wb-node').length,
+        hasRubricAudit: document.body.textContent.includes('Architecture Rubric Audit')
+      }));
+      assert.equal(sandboxCheck.blueprintCount, 10, 'WHITEBOARD_DATA should contain 10 reference blueprints');
+      assert.ok(sandboxCheck.activeNodes >= 5, 'URL query ?blueprint=uber-geo-dispatch should auto-load blueprint nodes');
+      assert.equal(sandboxCheck.hasRubricAudit, true, 'Sandbox inspector should render Architecture Rubric Audit');
+
+      // 4. Verify Lesson page renders End-of-Lesson Numeric/Tradeoff Drills & Cross-links
+      await page.goto(`${server.baseUrl}/topic/circuit-breakers-and-timeouts/`, { waitUntil: 'networkidle2' });
+      const lessonCheck = await page.evaluate(() => ({
+        hasBuildCard: !!document.querySelector('.lesson-builds'),
+        hasChallengeCard: !!document.querySelector('.lesson-challenges'),
+        hasRunSnippetBtn: document.querySelectorAll('[data-action="run-snippet-codelab"]').length
+      }));
+      assert.equal(lessonCheck.hasBuildCard, true, 'circuit-breakers-and-timeouts should link to Circuit Breaker Build Lab');
+      assert.equal(lessonCheck.hasChallengeCard, true, 'circuit-breakers-and-timeouts should link to related Incident Challenges');
+    } finally {
+      await page.close();
+    }
+  });
 });

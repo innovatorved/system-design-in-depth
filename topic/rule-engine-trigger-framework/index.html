@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -980,19 +980,19 @@
 <h2>A versioned replay</h2>
 <p>The workflow replay stores evaluations and action obligations in a private temporary database; it creates no real review tasks or customer messages.</p>
 <p>The evaluation key is event identity plus rule-set version, and the saved canonical input must agree on repeat delivery. <code>dispatch</code> records the first action obligation. <code>audit</code> records a new evaluation for comparison without issuing another action. A change of rule set on an ordinary repeat delivery is refused until someone explicitly requests that audit replay.</p>
-<pre><code class="language-bash">python3 m15-workflows.py rules</code></pre>
-<pre><code class="language-output">v1: matches=review-large,review-all winner=review-large mode=dispatch
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE">⚡ Run in CodeLab</button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">python3 m15-workflows.py rules</code></pre></div>
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">output</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-output">v1: matches=review-large,review-all winner=review-large mode=dispatch
 same input: duplicate
 changed input: payload-conflict
 v2 ordinary delivery: requires-explicit-replay
 v2 explicit replay: matches=review-all winner=review-all mode=audit
 action feedback: ignored-type-or-schema
-evaluations=2 action obligations=1</code></pre>
+evaluations=2 action obligations=1</code></pre></div>
 <p>The two evaluations explain different policy decisions about the same order. They leave one business action because the original action identity, <code>order-A/review</code>, survives the rule edit. The changed-input probe submits 151 units under the original event identity and receives a conflict. That prevents an event producer from rewriting the explanation of an already accepted decision.</p>
 <h2>The rule representation</h2>
 <p>Ordinary code is the simplest representation when developers own a small policy and deploy it with the application. Reviewers can use the existing code tools, and conditions can use the language's type checks. Its cost appears when a product operator needs to adjust a threshold independently or compare many historical policy versions.</p>
 <p>A restricted data representation makes those versions explicit. For example, this proposed JSON format describes the first review rule:</p>
-<pre><code class="language-json">{
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">json</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-json">{
   &quot;rule_id&quot;: &quot;review-large&quot;,
   &quot;event_type&quot;: &quot;order.submitted&quot;,
   &quot;version&quot;: 1,
@@ -1003,7 +1003,7 @@ evaluations=2 action obligations=1</code></pre>
     &quot;value&quot;: 100
   },
   &quot;action&quot;: { &quot;type&quot;: &quot;create_review&quot; }
-}</code></pre>
+}</code></pre></div>
 <p>This is our schema, not JsonLogic or a format parsed by the replay. A larger schema could compose allowed predicates with <code>and</code> and <code>or</code>. Define missing-field and type behavior explicitly: a numeric quantity and a string containing digits should not acquire accidental equivalence through an interpreter's coercion rules.</p>
 <p>Start with allowed fields, typed operators and named actions, and reject unknown combinations before publication. The fixture is narrower still: trusted tuples supply integer thresholds and fixed action names. It never evaluates arbitrary expression text, and it exposes no user scripting interface.</p>
 <p>User-authored scripts can express more complex conditions but add execution limits, isolation and authorization requirements. Choose that capability only when a restricted language demonstrably cannot express the needed decisions. Moving an <code>if</code> statement into a string creates those obligations without making the policy more understandable.</p>
@@ -1261,29 +1261,29 @@ flowchart TD
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

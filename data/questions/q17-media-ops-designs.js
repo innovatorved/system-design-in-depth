@@ -195,6 +195,59 @@ window.QUESTION_BANK["file-sync-system-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "file-sync-system-design-n1",
+    "topic": "file-sync-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Content-Defined Chunking Bandwidth Savings on Large File Edits",
+    "scenario": "A user edits 1 slide inside a 100 MB PowerPoint presentation and saves the file. Instead of re-uploading the entire 100 MB file, the client splits the file using Rabin-Karp Content-Defined Chunking (CDC) with a 4 MB average chunk size and only uploads the single modified 4 MB chunk.",
+    "prompt": "What percentage of upload bandwidth is saved by uploading only the 1 modified 4 MB chunk instead of the full 100 MB file?",
+    "question": "What percentage of upload bandwidth is saved by uploading only the 1 modified 4 MB chunk instead of the full 100 MB file?",
+    "unit": "%",
+    "answer": 96,
+    "tolerance": 0.25,
+    "hint": "(100 MB - 4 MB) ÷ 100 MB = 96%.",
+    "explanation": "Uploading only the single dirty 4 MB content-addressed block (`SHA-256` hash) instead of the 100 MB file transfers 4 MB instead of 100 MB, saving `(100 - 4) / 100 = 96%` of network bandwidth and cloud storage.",
+    "tags": [
+      "file-sync-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "file-sync-system-design-t1",
+    "topic": "file-sync-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Fixed-Size Block Chunking vs Rabin-Karp Content-Defined Chunking (CDC)",
+    "scenario": "A user inserts 100 bytes at the very beginning (byte offset 0) of a 1 GB video project file. Your file sync client must determine which blocks to upload to object storage.",
+    "prompt": "Why does Fixed-Size Block Chunking fail on byte-shifting insertions, and how does Content-Defined Chunking (CDC) solve it?",
+    "question": "Why does Fixed-Size Block Chunking fail on byte-shifting insertions, and how does Content-Defined Chunking (CDC) solve it?",
+    "options": [
+      "Fixed-size 4 MB chunking detects the 100-byte shift and leaves all subsequent 249 chunk hashes unchanged",
+      "Inserting 100 bytes at offset 0 shifts every fixed 4 MB boundary across the entire 1 GB file (invalidating 100% of chunk SHA-256 hashes); Content-Defined Chunking uses a rolling Rabin fingerprint to cut chunk boundaries based on local content patterns so only the first chunk changes",
+      "Use 1-byte chunks so each byte has its own 32-byte SHA-256 hash in the metadata database"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Shifting bytes by 100 positions never changes fixed-offset `0..4MB`, `4MB..8MB` slices",
+      "A rolling hash (Rabin-Karp / Gear) anchors chunk boundaries to local byte sequences (`fingerprint % mask == 0`), localizing insertions/deletions to 1–2 chunks and preserving deduplication for the rest of the file",
+      "Storing 32 bytes of SHA-256 metadata per 1 byte of file data reduces storage costs by 32x"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "What happens to `file[0..4MB]`, `file[4MB..8MB]` when you prepend 100 bytes at index 0?",
+    "explanation": "With fixed-offset chunks, prepending 100 bytes shifts every single byte boundary, changing the SHA-256 of all 250 chunks in a 1 GB file. Rolling-hash Content-Defined Chunking locks back onto the same natural content boundary right after the edit, so 249 of 250 chunks remain deduplicated.",
+    "tags": [
+      "file-sync-system-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -327,6 +380,59 @@ window.QUESTION_BANK["zero-downtime-database-migration-case-study"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "zero-downtime-database-migration-case-study-n1",
+    "topic": "zero-downtime-database-migration-case-study",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Dual-Write Backfill Duration With Throttled Batching",
+    "scenario": "You are migrating a 500 million row `orders` table to a new sharded database without downtime. Alongside live CDC / dual-writing, a background backfill worker migrates historical rows in batches at a throttled rate of 50,000 rows/sec so primary OLTP latency is unaffected.",
+    "prompt": "How many seconds (in thousands of seconds, i.e., `500,000,000 ÷ 50,000 ÷ 1,000`) does the historical backfill take to scan all 500 million rows?",
+    "question": "How many seconds (in thousands of seconds, i.e., `500,000,000 ÷ 50,000 ÷ 1,000`) does the historical backfill take to scan all 500 million rows?",
+    "unit": "k seconds",
+    "answer": 10,
+    "tolerance": 0.25,
+    "hint": "500,000,000 rows ÷ 50,000 rows/s = 10,000 seconds = 10 k seconds (~2.78 hours).",
+    "explanation": "500,000,000 rows ÷ 50,000 rows/sec = 10,000 seconds (`10 k seconds`, or ~2 hours 47 minutes), allowing the entire backfill and shadow-read verification to complete safely within a single workday.",
+    "tags": [
+      "zero-downtime-database-migration-case-study",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "zero-downtime-database-migration-case-study-t1",
+    "topic": "zero-downtime-database-migration-case-study",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Backfill vs Live Write Race Condition & Cutover Verification",
+    "scenario": "During a zero-downtime migration from `DB_Old` to `DB_New`, the historical backfill worker reads row `id = 42` (`version = 1`) from `DB_Old`. Before the backfill worker writes `version = 1` to `DB_New`, a live user request updates row `id = 42` to `version = 2` in both `DB_Old` and `DB_New`. The backfill worker then finishes and overwrites `DB_New` with stale `version = 1`.",
+    "prompt": "How do you prevent the historical backfill from overwriting newer live writes in `DB_New`, and how do you validate readiness before switching reads?",
+    "question": "How do you prevent the historical backfill from overwriting newer live writes in `DB_New`, and how do you validate readiness before switching reads?",
+    "options": [
+      "Pause all live user writes for 3 hours while the backfill runs",
+      "Make backfill writes conditional (`INSERT ... ON CONFLICT DO UPDATE WHERE excluded.version > existing.version` or drive both backfill and live updates through the same ordered CDC/LSN stream), and run asynchronous shadow-read parity checks (`dark reads`) before shifting read/write authority",
+      "Switch 100% of production reads and writes to `DB_New` before starting the backfill"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "3 hours of write downtime meets a zero-downtime migration requirement",
+      "Conditional version/LSN guards ensure an older backfill snapshot never clobbers a newer live mutation, and dark shadow-read comparison proves data parity before any user sees `DB_New` data",
+      "Cutting over to an empty database before backfilling avoids stale data races"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "What guard condition on `DB_New` ensures `v1` from a slow backfill thread never overwrites `v2` from a live request?",
+    "explanation": "Enforcing monotonic version/LSN predicates (`WHERE incoming.version > target.version`, or `INSERT ... ON CONFLICT DO NOTHING` when live dual-writes always write the latest version) prevents backfill races, while shadow-comparing reads (`DB_Old` vs `DB_New`) verifies 100% parity prior to cutover.",
+    "tags": [
+      "zero-downtime-database-migration-case-study",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -392,6 +498,59 @@ window.QUESTION_BANK["interview-design-instagram"] = [
       "interview-design-instagram",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "interview-design-instagram-n1",
+    "topic": "interview-design-instagram",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Instagram Daily Photo Storage Across 4 Resolutions",
+    "scenario": "Users upload 100 million new photos per day. Your media pipeline stores 4 resized/compressed WebP/AVIF variants per uploaded photo (thumbnail, small, medium, large) with a combined total size of 500 KB per uploaded photo.",
+    "prompt": "How many terabytes per day (TB/day, using 1 TB = 1,000,000,000 KB) of logical object storage are required for the 100 million daily photo uploads?",
+    "question": "How many terabytes per day (TB/day, using 1 TB = 1,000,000,000 KB) of logical object storage are required for the 100 million daily photo uploads?",
+    "unit": "TB/day",
+    "answer": 50,
+    "tolerance": 0.25,
+    "hint": "Multiply 100,000,000 photos/day × 500 KB/photo and divide by 10^9 KB/TB.",
+    "explanation": "100,000,000 photos/day × 500 KB = 50,000,000,000 KB/day = 50 TB/day of new media objects (~18.25 PB/year).",
+    "tags": [
+      "interview-design-instagram",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "interview-design-instagram-t1",
+    "topic": "interview-design-instagram",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Pre-Generating All 30 Image Sizes on Upload vs On-Demand Edge Resizing with Origin Caching",
+    "scenario": "Over 10 years, mobile screen densities and aspect ratios evolve, creating 30 possible image crop/resolution variants. However, 70% of uploaded photos are never viewed again after their first 48 hours.",
+    "prompt": "Which image resizing and caching architecture optimizes compute and storage across hot recent photos and the 10-year cold tail?",
+    "question": "Which image resizing and caching architecture optimizes compute and storage across hot recent photos and the 10-year cold tail?",
+    "options": [
+      "Eagerly pre-generate and store all 30 resolution/format variants for every single photo on upload, and keep all 30 variants in hot SSD storage forever",
+      "Eagerly generate only the 2–3 canonical feed resolutions on upload (or resize on-the-fly at an Origin-Shield image proxy on first cache miss and cache in CDN), while tiering original/cold media older than 30 days to erasure-coded cold object storage",
+      "Resize images on the primary PostgreSQL metadata database using PL/pgSQL triggers"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Storing 30 copies of unviewed photos reduces cloud storage bills by 30x",
+      "On-demand edge/shield resizing (cached in CDN after first request) plus hot/cold storage tiering avoids burning CPU and storage on the 27 unused variants and the 70% cold tail",
+      "PostgreSQL triggers are the industry standard for SIMD WebP image encoding"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why pre-compute 30 variants for photos that only ever get viewed in 2 sizes during their first 48 hours?",
+    "explanation": "Generating only the core feed sizes (or resizing lazily on first CDN miss behind an Origin Shield with URL signature verification) avoids 90% of wasted transcoding CPU and storage bloat, while lifecycle tiering moves cold originals to low-cost erasure-coded storage.",
+    "tags": [
+      "interview-design-instagram",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

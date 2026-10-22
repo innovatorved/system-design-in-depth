@@ -129,6 +129,59 @@ window.QUESTION_BANK["storage-engine-tradeoffs"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "storage-engine-tradeoffs-n1",
+    "topic": "storage-engine-tradeoffs",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: B-Tree Random Update Page Write Amplification",
+    "scenario": "A B-tree storage engine uses 16 KB (16,384-byte) disk pages (like MySQL InnoDB). A workload performs random in-place updates of 128-byte rows scattered across uncached leaf pages, flushing the full dirty 16 KB page to disk for each updated row.",
+    "prompt": "What is the page-level write amplification factor (physical bytes written divided by logical row bytes modified: 16,384 ÷ 128)?",
+    "question": "What is the page-level write amplification factor (physical bytes written divided by logical row bytes modified: 16,384 ÷ 128)?",
+    "unit": "x",
+    "answer": 128,
+    "tolerance": 0.25,
+    "hint": "Divide the page size (16,384 bytes) by the modified row size (128 bytes).",
+    "explanation": "Writing a full 16,384-byte page (plus redo/doublewrite buffer overhead) to persist a single 128-byte random row modification produces a 16,384 / 128 = 128x page write amplification factor.",
+    "tags": [
+      "storage-engine-tradeoffs",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "storage-engine-tradeoffs-t1",
+    "topic": "storage-engine-tradeoffs",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: RUM Conjecture Selection for IoT Time-Series vs OLTP Banking",
+    "scenario": "According to the RUM Conjecture, a storage engine can optimize at most two of Read overhead (R), Update/write overhead (U), and Memory/space overhead (M). You must choose engines for (1) an IoT telemetry ingestion pipeline (500k writes/sec, sequential range scans) and (2) an OLTP account lookup table (95% point reads, strict disk quota).",
+    "prompt": "Which engine pairing aligns with the RUM Conjecture, and why?",
+    "question": "Which engine pairing aligns with the RUM Conjecture, and why?",
+    "options": [
+      "Use a B+Tree with 6 secondary indexes for the 500k writes/sec IoT pipeline and an uncompacted append-only log for the OLTP banking table",
+      "Use an LSM-tree (with time-window compaction) for the write-heavy IoT pipeline (optimizing U + M) and a B+Tree for the point-read-heavy OLTP table (optimizing R + M)",
+      "Use in-memory linear array scans for both workloads"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "B+Trees with many secondary indexes excel at random write ingestion by doing in-place 16 KB page writes",
+      "LSM-trees convert random writes into sequential append I/O (low U), whereas B+Trees maintain a single canonical location per key for predictable low-latency point reads (low R)",
+      "The RUM Conjecture states that B+Trees have zero read, write, and space overhead simultaneously"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Match LSM sequential appends to high-throughput write ingestion and B+Tree single-page lookups to low-latency reads.",
+    "explanation": "LSM-trees absorb massive write rates sequentially in memory/WAL and compact time-series windows cleanly without random page I/O. Conversely, B+Trees update keys in a single canonical leaf page, offering superior point-read latency without checking multiple SSTable levels.",
+    "tags": [
+      "storage-engine-tradeoffs",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -591,6 +644,59 @@ window.QUESTION_BANK["lsm-tree-storage-engine"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "lsm-tree-storage-engine-n1",
+    "topic": "lsm-tree-storage-engine",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Leveled Compaction Write Amplification",
+    "scenario": "An LSM-tree storage engine uses leveled compaction with a level size multiplier of `T = 10` across `L = 4` disk levels (`L1` through `L4`). In the worst case, compacting an SSTable from level `i` into level `i+1` reads and rewrites ~10 overlapping SSTables in level `i+1`.",
+    "prompt": "Approximating total compaction write amplification across the 4 levels as `T × L` (10 × 4), how many megabytes of physical disk writes occur per 1 MB of logical user data written?",
+    "question": "Approximating total compaction write amplification across the 4 levels as `T × L` (10 × 4), how many megabytes of physical disk writes occur per 1 MB of logical user data written?",
+    "unit": "MB",
+    "answer": 40,
+    "tolerance": 0.25,
+    "hint": "Multiply the fanout factor T = 10 by the number of compacted levels L = 4.",
+    "explanation": "In leveled compaction with fanout `T = 10` across 4 levels, each byte flushed from the MemTable is rewritten up to ~10 times per level transition, yielding a write amplification factor of ~40 MB of physical SSD writes per 1 MB of logical ingestion.",
+    "tags": [
+      "lsm-tree-storage-engine",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "lsm-tree-storage-engine-t1",
+    "topic": "lsm-tree-storage-engine",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Size-Tiered (STCS) vs Leveled (LCS) Compaction",
+    "scenario": "You operate a RocksDB/Cassandra cluster on NVMe SSDs that is currently at 72% disk utilization and serves latency-sensitive point reads (p99 < 8 ms) alongside steady writes.",
+    "prompt": "Which compaction strategy should you configure, and what is the primary engineering justification?",
+    "question": "Which compaction strategy should you configure, and what is the primary engineering justification?",
+    "options": [
+      "Size-Tiered Compaction (STCS), because it needs zero temporary disk headroom during major compactions",
+      "Leveled Compaction (LCS), because it bounds space amplification to ~10-15% (functioning safely at 72% disk usage) and bounds the number of SSTables checked on point/range reads",
+      "Disable compaction entirely so SSTables accumulate forever without background I/O"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Size-Tiered Compaction requires up to 50% free disk space to compact the largest tier and leaves many overlapping SSTables that hurt p99 read latency",
+      "Leveled Compaction trades higher write amplification for tight space amplification (~10%) and predictable read latency (at most one SSTable per level L1+ for point lookups)",
+      "Disabling compaction keeps p99 read latency constant as thousands of SSTables accumulate"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "At 72% disk usage, can Size-Tiered Compaction rewrite the largest SSTable tier (requiring ~50% free space)?",
+    "explanation": "Size-Tiered Compaction (STCS) can require up to 50% free disk space for major compactions (which will fail at 72% disk fullness) and degrades read latency across overlapping tables. Leveled Compaction (LCS) keeps space overhead around ~10% and guarantees non-overlapping key ranges within each level `L1..Ln`.",
+    "tags": [
+      "lsm-tree-storage-engine",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -920,6 +1026,59 @@ window.QUESTION_BANK["s3-object-storage-architecture"] = [
       "s3-object-storage-architecture",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "s3-object-storage-architecture-n1",
+    "topic": "s3-object-storage-architecture",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Erasure Coding vs 3x Replication Storage Savings",
+    "scenario": "An object store holds 100 PB (petabytes) of logical user objects. Previously it used 3-way full replication (3.0x overhead = 300 PB raw disk). It migrates to Reed-Solomon `(k = 8, m = 4)` erasure coding across 12 storage racks (1.5x overhead = 150 PB raw disk).",
+    "prompt": "How many petabytes (PB) of raw physical disk capacity are saved by migrating from 3x replication to `(8, 4)` erasure coding?",
+    "question": "How many petabytes (PB) of raw physical disk capacity are saved by migrating from 3x replication to `(8, 4)` erasure coding?",
+    "unit": "PB",
+    "answer": 150,
+    "tolerance": 0.25,
+    "hint": "Raw disk with 3x replication = 300 PB. Raw disk with (8+4)/8 = 1.5x erasure coding = 150 PB. Subtract the two.",
+    "explanation": "3x replication requires 300 PB of raw disk for 100 PB of logical data, whereas `(8, 4)` Reed-Solomon splits each object into 8 data chunks + 4 parity chunks (`12/8 = 1.5x` overhead = 150 PB), saving 300 - 150 = 150 PB while tolerating up to 4 simultaneous rack/node failures (vs 2 in 3x replication).",
+    "tags": [
+      "s3-object-storage-architecture",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "s3-object-storage-architecture-t1",
+    "topic": "s3-object-storage-architecture",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Small-Object Packing vs Direct Per-Object Files on Disk",
+    "scenario": "A workload uploads 10 billion tiny 4 KB JSON objects into your object storage engine. Storing each 4 KB object as a separate Linux filesystem file exhausts inode tables and turns every read/scrubber pass into random metadata I/O.",
+    "prompt": "How do hyperscale object stores (like Haystack / S3 / Tectonic) store billions of small objects efficiently, and what is the trade-off?",
+    "question": "How do hyperscale object stores (like Haystack / S3 / Tectonic) store billions of small objects efficiently, and what is the trade-off?",
+    "options": [
+      "Format the storage drives with 512-byte blocks and create 10 billion nested subdirectories",
+      "Append small objects sequentially into large immutable multi-gigabyte volume/extent files and store `(volume_id, byte_offset, length)` in a separate partitioned metadata index, requiring background garbage collection to reclaim deleted extents",
+      "Reject all objects smaller than 64 MB at the API gateway"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Deep nested POSIX directories eliminate inode lookups and disk seeks",
+      "Packing small objects into large append-only extents eliminates filesystem inode overhead and enables single-seek byte-range reads, trading off background compaction/GC for deleted objects",
+      "Object stores are only used for multi-gigabyte video archives"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Think about Facebook Haystack / S3 extent storage: how do you avoid 3 POSIX disk seeks per small file read?",
+    "explanation": "Appending small blobs into large immutable extent/log files (e.g., 1–64 GB volumes) and indexing `(volume_id, offset, size)` in a fast metadata KV store reduces object retrieval to a single disk read while eliminating POSIX inode bloat, at the cost of periodic compaction to reclaim space from deleted objects.",
+    "tags": [
+      "s3-object-storage-architecture",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

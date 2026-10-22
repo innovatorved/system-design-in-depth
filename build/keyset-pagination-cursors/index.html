@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,10 +116,10 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab" data-tab="curriculum" role="tab" aria-selected="false">Curriculum</button>
-      <button class="sidebar__tab active" data-tab="builds" role="tab" aria-selected="true">15 Builds</button>
+      <button class="sidebar__tab active" data-tab="builds" role="tab" aria-selected="true">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
-<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (15)</div><a class="unit-item" data-build="load-balancer-from-scratch" href="/build/load-balancer-from-scratch/">
+<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (20)</div><a class="unit-item" data-build="load-balancer-from-scratch" href="/build/load-balancer-from-scratch/">
         <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
         <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
       </a><a class="unit-item" data-build="consistent-hashing-ring" href="/build/consistent-hashing-ring/">
@@ -164,6 +164,21 @@
       </a><a class="unit-item" data-build="tiny-search-engine" href="/build/tiny-search-engine/">
         <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
         <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+      </a><a class="unit-item" data-build="circuit-breaker" href="/build/circuit-breaker/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Circuit Breaker &amp; Adaptive Load Shedder</span>
+      </a><a class="unit-item" data-build="singleflight-coalescer" href="/build/singleflight-coalescer/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Singleflight &amp; Stampede Coalescer</span>
+      </a><a class="unit-item" data-build="raft-consensus" href="/build/raft-consensus/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Raft Leader Election &amp; Quorum Log</span>
+      </a><a class="unit-item" data-build="mini-kafka-log" href="/build/mini-kafka-log/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Partitioned Commit Log &amp; Consumer Group Broker</span>
+      </a><a class="unit-item" data-build="outbox-cdc-relay" href="/build/outbox-cdc-relay/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Transactional Outbox &amp; Idempotent CDC Relay</span>
       </a>
     </div>
   </aside>
@@ -289,7 +304,7 @@
 <li><strong>Search engines</strong>: Elasticsearch <code>search_after</code>. Deep <code>from + size</code> paging is capped by <code>index.max_result_window</code>, which defaults to 10,000.</li>
 </ul>
 <h2>The two queries</h2>
-<pre><code class="language-sql">CREATE INDEX posts_feed_idx ON posts (created_at DESC, id DESC);
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">sql</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-sql">CREATE INDEX posts_feed_idx ON posts (created_at DESC, id DESC);
 
 -- OFFSET: the database walks and discards :offset index entries first.
 SELECT id, created_at, title FROM posts
@@ -308,7 +323,7 @@ WHERE created_at &lt; :c OR (created_at = :c AND id &lt; :i)
 
 -- Previous page: flip the comparison and the sort, then reverse in the app.
 SELECT ... WHERE (created_at, id) &gt; (:c, :i)
-ORDER BY created_at ASC, id ASC LIMIT 21;</code></pre>
+ORDER BY created_at ASC, id ASC LIMIT 21;</code></pre></div>
 <p><code>Table</code> in <code>pagination.js</code> simulates that index. Rows are kept sorted by <code>(created_at DESC, id DESC)</code>, <code>seek()</code> binary-searches to the cursor the way a B-tree descent would, and <code>rowsExamined</code> counts the index entries each query touches.</p>
 <h2>Design and key invariants</h2>
 <ol>
@@ -410,31 +425,31 @@ ORDER BY created_at ASC, id ASC LIMIT 21;</code></pre>
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/implementations_code.js?v=6e35b8cc29"></script>
-  <script type="text/plain" data-defer src="data/guided_labs.js?v=3a663a9cad"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=7189880a2f"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=e41a33646f"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

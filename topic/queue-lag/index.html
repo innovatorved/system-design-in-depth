@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1101,6 +1101,37 @@ flowchart LR
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-queue-lag-n1" data-type="numeric" data-slug="queue-lag">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Queue Backlog Drain Time After a Traffic Spike</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A Kafka topic normally receives 5,000 msg/s. During a 10-minute (600-second) flash event, producer traffic spikes to 15,000 msg/s while your consumer fleet processes at its fixed maximum capacity of 10,000 msg/s. After the 10-minute spike ends, producer traffic drops back to 5,000 msg/s.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How many minutes does it take for the consumer fleet (processing 10,000 msg/s against 5,000 msg/s new arrivals) to completely drain the accumulated backlog?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Backlog accumulated = (15,000 - 10,000) × 10 min. Net drain rate after spike = (10,000 - 5,000) msg/s.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-queue-lag-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-queue-lag-n1" placeholder="Enter numeric estimate (minutes)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">minutes</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="queue-lag-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="queue-lag" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-queue-lag-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> During the 10-minute spike, the queue accumulates `(15,000 - 10,000) = 5,000 msg/s` of lag, totaling `5,000 × 600 s = 3,000,000` messages. Once arrivals return to 5,000 msg/s, the consumer fleet has `10,000 - 5,000 = 5,000 msg/s` of net catch-up capacity, taking `3,000,000 / 5,000 = 600 seconds = 10 minutes` to drain.</div>
+        </div>
+      </div>
+    
         <div class="simulator-card" id="sim-queue-lag">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Queue Backpressure & Lag</div>
@@ -1132,12 +1163,101 @@ flowchart LR
           <button class="btn btn--secondary" id="ql-toggle" style="margin-top:12px;">Start Simulation</button>
         </div>
       
+      <div class="exercise-box quiz-card" id="quiz-queue-lag-t1" data-type="tradeoff" data-slug="queue-lag">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Scaling Kafka Consumers Past Partition Count</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A single Kafka topic has 12 partitions and is experiencing growing consumer lag because each message invokes a slow external webhook (50 ms RTT). An engineer scales the consumer group deployment from 12 pods to 48 pods, but throughput does not change.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Why did scaling to 48 pods fail, and what architectural change fixes consumer throughput safely?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> How many consumers in a single consumer group can actively read from a 12-partition topic?</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-queue-lag-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-queue-lag-t1" value="0" />
+               <span>Kafka only allows 1 consumer group per cluster; you must deploy 48 separate Kafka clusters</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-queue-lag-t1" value="1" />
+               <span>In a Kafka consumer group, each partition is assigned to at most one consumer instance (leaving 36 pods idle); either increase partitions (mindful of key ordering) or decouple polling from bounded async worker pools per partition with ordered offset commits</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-queue-lag-t1" value="2" />
+               <span>Have all 48 pods read Partition 0 simultaneously without consumer group coordination</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-queue-lag-t1" value="0" />
+               <span>Kafka brokers crash when more than 12 pods join a consumer group</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-queue-lag-t1" value="1" />
+               <span>Kafka&#039;s partition-to-consumer assignment rule caps active consumers in a group at the partition count; bounded per-partition async worker pools (or repartitioning) hide webhook I/O latency without losing offset safety</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-queue-lag-t1" value="2" />
+               <span>Reading the same partition from 48 uncoordinated pods prevents duplicate webhook calls</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="queue-lag-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="queue-lag" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-queue-lag-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Because a Kafka partition is assigned to at most one consumer within a consumer group, 36 of the 48 pods sit completely idle. Increasing partition count or using bounded non-blocking I/O worker pools per partition (committing contiguous high-water offsets) unlocks concurrency.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
             <div class="takeaways__item">Consumer lag measures the delta between the broker high watermark and consumer committed offset.</div><div class="takeaways__item">Pull-based consumption naturally enforces backpressure by allowing workers to control their ingestion rate.</div><div class="takeaways__item">Automated scaling (via KEDA/Kubernetes HPA) dynamically adds worker pods when consumer lag breaches thresholds.</div>
           </div>
         </div>
+      <div class="lesson-builds">
+        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
+        
+          <a class="lesson-builds__item" href="/build/mini-kafka-log/" data-action="navigate-build" data-build-id="mini-kafka-log">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Partitioned Commit Log &amp; Consumer Group Broker</span>
+              
+            </div>
+            <span class="lesson-builds__summary">Append-only partitioned commit log broker with deterministic key-hash routing, monotonic per-partition offsets, consumer group cooperative partition rebalancing, and independent offset commits.</span>
+            <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
+          </a>
+      </div>
+      <div class="lesson-builds lesson-challenges">
+        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        
+          <a class="lesson-builds__item" href="/challenges/slow-consumer-queue-spiral/" data-nav="challenges" data-challenge="slow-consumer-queue-spiral">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">RabbitMQ Memory Alarm Publisher Blockade</span>
+              <span class="badge">SEV-1 · medium</span>
+            </div>
+            
+            <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Launch Production Incident &amp; CodeLab Hotfix →</span>
+          </a>
+      </div>
         <div class="further-reading">
           <h3 class="further-reading__title">Further Reading</h3>
           <div class="further-reading__list">
@@ -1228,30 +1348,30 @@ flowchart LR
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

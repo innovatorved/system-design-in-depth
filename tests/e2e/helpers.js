@@ -10,6 +10,7 @@ const PUPPETEER_PATH = '/Users/vedgupta/Desktop/code-lab/examples/cloud-ide/node
 
 const BUILD_SLUGS = [
   'bloom-filter-membership',
+  'circuit-breaker',
   'consistent-hashing-ring',
   'gossip-protocol',
   'hyperloglog-cardinality',
@@ -19,6 +20,10 @@ const BUILD_SLUGS = [
   'lru-cache',
   'lsm-tree-kv-store',
   'merkle-anti-entropy',
+  'mini-kafka-log',
+  'outbox-cdc-relay',
+  'raft-consensus',
+  'singleflight-coalescer',
   'sliding-window-rate-limiter',
   'snowflake-id-generator',
   'tiny-search-engine',

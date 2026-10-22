@@ -566,12 +566,12 @@
       {
         id: 'staff-faang-mock-exam',
         label: 'Sandbox: Staff Architecture Studio',
-        slug: 'payment-system',
+        slug: 'stripe-ledger',
         stage: 6,
         trackId: 'track-6',
         moduleId: 'design-services',
         type: 'sandbox',
-        blueprintId: 'payment-system',
+        blueprintId: 'stripe-ledger',
         difficulty: 'Expert',
         x: 920,
         y: 1120,
@@ -662,7 +662,7 @@
           { type: 'simulator', id: 'consistent-hashing', title: 'Consistent Hashing Ring Simulator' },
           { type: 'challenge', id: 'wal-torn-write-corruption', title: 'Incident: WAL Torn-Write Recovery' },
           { type: 'challenge', id: 'hot-partition-herd', title: 'Incident: Hot Partition Celebrity Herd' },
-          { type: 'sandbox', id: 'payment-system', title: 'Sandbox: Transactional Ledger Topology' }
+          { type: 'sandbox', id: 'stripe-ledger', title: 'Sandbox: Transactional Ledger Topology' }
         ]
       },
       {
@@ -681,11 +681,12 @@
           { type: 'simulator', id: 'vector-clocks', title: 'Vector Clocks Causality Explorer' },
           { type: 'topic', slug: 'consensus', title: 'Raft & Paxos Consensus Internals' },
           { type: 'simulator', id: 'raft-election', title: 'Raft Election & Quorum Simulator' },
+          { type: 'build', slug: 'raft-consensus', title: 'Build: Raft Leader Election & Quorum Log' },
           { type: 'build', slug: 'lease-leader-election', title: 'Lease-Based Leader Election' },
           { type: 'build', slug: 'gossip-protocol', title: 'SWIM Gossip Cluster Membership' },
           { type: 'challenge', id: 'split-brain-quorum-loss', title: 'Incident: Split-Brain Quorum Loss' },
           { type: 'challenge', id: 'two-phase-commit-coordinator-hang', title: 'Incident: 2PC Coordinator Crash Hang' },
-          { type: 'sandbox', id: 'kafka-event-pipeline', title: 'Sandbox: Distributed Consensus & Log Pipeline' }
+          { type: 'sandbox', id: 'notification-pipeline', title: 'Sandbox: Distributed Consensus & Log Pipeline' }
         ]
       },
       {
@@ -702,13 +703,14 @@
           { type: 'topic', slug: 'slos-and-error-budgets', title: 'SLOs & Error Budget Economics' },
           { type: 'simulator', id: 'slo-burn', title: 'Multi-Window Burn-Rate Alerting Simulator' },
           { type: 'topic', slug: 'circuit-breakers-and-timeouts', title: 'Circuit Breakers & Degradation' },
+          { type: 'build', slug: 'circuit-breaker', title: 'Build: Circuit Breaker & Load Shedder' },
           { type: 'simulator', id: 'circuit-breaker', title: 'Circuit Breaker State Machine Simulator' },
           { type: 'simulator', id: 'retry-storm', title: 'Retry Storm & Jitter Simulator' },
           { type: 'challenge', id: 'retry-storm-meltdown', title: 'Incident: Client Retry Storm Outage' },
           { type: 'challenge', id: 'cache-stampede-meltdown', title: 'Incident: Cache Stampede Meltdown' },
           { type: 'topic', slug: 'zero-downtime-database-migration-case-study', title: 'Zero-Downtime Schema Migrations' },
           { type: 'topic', slug: 'disaster-recovery', title: 'Disaster Recovery & Multi-Region HA' },
-          { type: 'sandbox', id: 'uber-dispatch', title: 'Sandbox: Multi-Region Geo Dispatch Architecture' }
+          { type: 'sandbox', id: 'uber-geo-dispatch', title: 'Sandbox: Multi-Region Geo Dispatch Architecture' }
         ]
       },
       {
@@ -728,6 +730,7 @@
           { type: 'topic', slug: 'chat-and-messaging-system-design', title: 'Distributed Chat Architecture' },
           { type: 'topic', slug: 'social-feed-system-design-case-study', title: 'Twitter / Social Feed at Scale' },
           { type: 'topic', slug: 'payment-system-design', title: 'Payment Ledger & Idempotency' },
+          { type: 'build', slug: 'outbox-cdc-relay', title: 'Build: Transactional Outbox & CDC Relay' },
           { type: 'challenge', id: 'replication-lag-read-drift', title: 'Incident: Read-Your-Writes Invariant Drift' },
           { type: 'challenge', id: 'cascading-deadlock-depletion', title: 'Incident: Thread Pool Starvation Meltdown' },
           { type: 'sandbox', id: 'twitter-feed', title: 'Sandbox: Staff Architecture Whiteboard Studio' }
@@ -746,13 +749,14 @@
         steps: [
           { type: 'topic', slug: 'partitioned-log-system-design', title: 'Partitioned Logs & Kafka Internals' },
           { type: 'simulator', id: 'queue-lag', title: 'Queue Backpressure & Lag Simulator' },
+          { type: 'build', slug: 'mini-kafka-log', title: 'Build: Partitioned Commit Log Broker' },
           { type: 'topic', slug: 'hyperloglog-cardinality-estimation', title: 'HyperLogLog Cardinality Estimation' },
           { type: 'build', slug: 'hyperloglog-cardinality', title: 'HyperLogLog from Scratch' },
           { type: 'build', slug: 'sliding-window-rate-limiter', title: 'Sliding Window Rate Limiter' },
           { type: 'topic', slug: 'realtime-database-and-websocket-scaling', title: 'WebSockets & Real-Time Presence' },
           { type: 'challenge', id: 'slow-consumer-queue-spiral', title: 'Incident: Kafka Consumer Lag Spiral' },
           { type: 'challenge', id: 'rate-limiter-leak', title: 'Incident: Sliding Window Clock Drift Leak' },
-          { type: 'exam', id: 'realtime-streaming-analytics-exam', title: 'High-Scale Real-Time & Streaming Exam' }
+          { type: 'sandbox', id: 'whatsapp-chat', title: 'Sandbox: Real-Time Gateway & Stream Topology' }
         ]
       }
     ],
@@ -832,7 +836,7 @@
         title: 'Distributed Coordination, Consensus & Leases',
         difficulty: 'Expert',
         unitCount: 13,
-        builds: ['lease-leader-election', 'gossip-protocol', 'merkle-anti-entropy'],
+        builds: ['raft-consensus', 'lease-leader-election', 'gossip-protocol', 'merkle-anti-entropy'],
         simulators: ['cap-theorem', 'raft-election', 'vector-clocks', 'quorum-nrw', 'gossip-spread'],
         summary: 'Clock skew, vector clocks, CAP/PACELC tradeoffs, Raft leader election, distributed leases, and SWIM gossip clusters.',
         icon: 'cpu'
@@ -845,7 +849,7 @@
         title: 'Caching Strategies & In-Memory State',
         difficulty: 'Intermediate',
         unitCount: 6,
-        builds: ['lru-cache', 'ttl-cache-reaper'],
+        builds: ['lru-cache', 'ttl-cache-reaper', 'singleflight-coalescer'],
         simulators: ['cache-eviction', 'cache-stampede'],
         summary: 'In-memory caching patterns (cache-aside, write-through), TTL reaper routines, and cache stampede prevention.',
         icon: 'zap'
@@ -858,7 +862,7 @@
         title: 'Asynchronous Workflows & Partitioned Logs',
         difficulty: 'Advanced',
         unitCount: 10,
-        builds: [],
+        builds: ['mini-kafka-log', 'outbox-cdc-relay'],
         simulators: ['queue-lag', 'fan-out'],
         summary: 'Task queues vs event logs, Kafka partitioning internals, consumer group rebalancing, and event schemas.',
         icon: 'git-commit'
@@ -897,7 +901,7 @@
         title: 'Production Reliability, SLOs & Resilience',
         difficulty: 'Advanced',
         unitCount: 13,
-        builds: [],
+        builds: ['circuit-breaker'],
         simulators: ['slo-burn', 'circuit-breaker', 'retry-storm'],
         summary: 'Service Level Objectives, multi-window burn rate alerts, circuit breakers, load shedding, and disaster recovery.',
         icon: 'shield'

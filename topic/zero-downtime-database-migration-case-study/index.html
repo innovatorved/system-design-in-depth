@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1121,6 +1121,102 @@ flowchart LR
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-zero-downtime-database-migration-case-study-n1" data-type="numeric" data-slug="zero-downtime-database-migration-case-study">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Dual-Write Backfill Duration With Throttled Batching</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> You are migrating a 500 million row `orders` table to a new sharded database without downtime. Alongside live CDC / dual-writing, a background backfill worker migrates historical rows in batches at a throttled rate of 50,000 rows/sec so primary OLTP latency is unaffected.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How many seconds (in thousands of seconds, i.e., `500,000,000 ÷ 50,000 ÷ 1,000`) does the historical backfill take to scan all 500 million rows?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 500,000,000 rows ÷ 50,000 rows/s = 10,000 seconds = 10 k seconds (~2.78 hours).</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-zero-downtime-database-migration-case-study-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-zero-downtime-database-migration-case-study-n1" placeholder="Enter numeric estimate (k seconds)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">k seconds</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="zero-downtime-database-migration-case-study-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="zero-downtime-database-migration-case-study" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-zero-downtime-database-migration-case-study-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 500,000,000 rows ÷ 50,000 rows/sec = 10,000 seconds (`10 k seconds`, or ~2 hours 47 minutes), allowing the entire backfill and shadow-read verification to complete safely within a single workday.</div>
+        </div>
+      </div>
+    
+      <div class="exercise-box quiz-card" id="quiz-zero-downtime-database-migration-case-study-t1" data-type="tradeoff" data-slug="zero-downtime-database-migration-case-study">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Backfill vs Live Write Race Condition &amp; Cutover Verification</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> During a zero-downtime migration from `DB_Old` to `DB_New`, the historical backfill worker reads row `id = 42` (`version = 1`) from `DB_Old`. Before the backfill worker writes `version = 1` to `DB_New`, a live user request updates row `id = 42` to `version = 2` in both `DB_Old` and `DB_New`. The backfill worker then finishes and overwrites `DB_New` with stale `version = 1`.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How do you prevent the historical backfill from overwriting newer live writes in `DB_New`, and how do you validate readiness before switching reads?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> What guard condition on `DB_New` ensures `v1` from a slow backfill thread never overwrites `v2` from a live request?</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-zero-downtime-database-migration-case-study-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-zero-downtime-database-migration-case-study-t1" value="0" />
+               <span>Pause all live user writes for 3 hours while the backfill runs</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-zero-downtime-database-migration-case-study-t1" value="1" />
+               <span>Make backfill writes conditional (`INSERT ... ON CONFLICT DO UPDATE WHERE excluded.version &gt; existing.version` or drive both backfill and live updates through the same ordered CDC/LSN stream), and run asynchronous shadow-read parity checks (`dark reads`) before shifting read/write authority</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-zero-downtime-database-migration-case-study-t1" value="2" />
+               <span>Switch 100% of production reads and writes to `DB_New` before starting the backfill</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-zero-downtime-database-migration-case-study-t1" value="0" />
+               <span>3 hours of write downtime meets a zero-downtime migration requirement</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-zero-downtime-database-migration-case-study-t1" value="1" />
+               <span>Conditional version/LSN guards ensure an older backfill snapshot never clobbers a newer live mutation, and dark shadow-read comparison proves data parity before any user sees `DB_New` data</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-zero-downtime-database-migration-case-study-t1" value="2" />
+               <span>Cutting over to an empty database before backfilling avoids stale data races</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="zero-downtime-database-migration-case-study-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="zero-downtime-database-migration-case-study" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-zero-downtime-database-migration-case-study-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Enforcing monotonic version/LSN predicates (`WHERE incoming.version &gt; target.version`, or `INSERT ... ON CONFLICT DO NOTHING` when live dual-writes always write the latest version) prevents backfill races, while shadow-comparing reads (`DB_Old` vs `DB_New`) verifies 100% parity prior to cutover.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1217,29 +1313,29 @@ flowchart LR
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

@@ -129,6 +129,59 @@ window.QUESTION_BANK["slos-and-error-budgets"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "slos-and-error-budgets-n1",
+    "topic": "slos-and-error-budgets",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Monthly 99.9% Availability Error Budget in Minutes",
+    "scenario": "Your checkout service commits to a 99.9% ('three nines') monthly availability SLO over a 30-day window (`30 days × 24 hours × 60 minutes = 43,200 minutes`).",
+    "prompt": "How many minutes of total downtime (or equivalent 100%-error minutes) are allowed in a 30-day month under a 99.9% availability SLO (rounded to the nearest integer)?",
+    "question": "How many minutes of total downtime (or equivalent 100%-error minutes) are allowed in a 30-day month under a 99.9% availability SLO (rounded to the nearest integer)?",
+    "unit": "minutes",
+    "answer": 43,
+    "tolerance": 0.25,
+    "hint": "Error budget fraction = 1 - 0.999 = 0.001. Multiply 43,200 minutes × 0.001.",
+    "explanation": "In a 30-day month (43,200 minutes), a 99.9% SLO permits `0.1%` unavailability: `43,200 × 0.001 = 43.2 minutes` (~43 minutes). At 99.99% ('four nines'), that drops to just 4.32 minutes per month!",
+    "tags": [
+      "slos-and-error-budgets",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "slos-and-error-budgets-t1",
+    "topic": "slos-and-error-budgets",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Multi-Window Multi-Burn-Rate Alerting vs Static 1-Minute Error Thresholds",
+    "scenario": "Your team pages the on-call engineer whenever the 1-minute HTTP 5xx error rate exceeds 0.1%. On-call engineers are paged 15 times a week for 20-second transient blips that consume less than 0.05% of the monthly error budget, causing severe alert fatigue.",
+    "prompt": "Which SRE alerting strategy eliminates false-positive pages while still catching catastrophic outages in minutes?",
+    "question": "Which SRE alerting strategy eliminates false-positive pages while still catching catastrophic outages in minutes?",
+    "options": [
+      "Raise the 1-minute threshold to 50% errors so only complete outages page on-call",
+      "Use Multi-Window, Multi-Burn-Rate alerts (e.g., paging only when BOTH a 1-hour window AND a 5-minute confirmation window exceed a 14.4x error-budget burn rate, and creating a ticket for slow 1x–3x burns)",
+      "Disable all automated alerts and rely on customers posting on social media"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "A 40% error rate for 30 days preserves a 99.9% availability SLO",
+      "Requiring both a short window (fast detection + fast reset when resolved) and a longer window at a high burn-rate multiplier guarantees pages only fire when a meaningful fraction (e.g., 2%) of the 30-day error budget is actually threatened",
+      "Customer tweets have a guaranteed sub-minute MTTD (Mean Time To Detect)"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "From the Google SRE Workbook: why pair a 1-hour window with a 5-minute window at a 14.4x burn rate?",
+    "explanation": "A 14.4x burn rate consumes 2% of a 30-day error budget in 1 hour. Requiring both the 1-hour and 5-minute windows to exceed 14.4x prevents brief 30-second blips from paging while firing within minutes of a real incident and clearing within 5 minutes of mitigation.",
+    "tags": [
+      "slos-and-error-budgets",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -789,6 +842,59 @@ window.QUESTION_BANK["sliding-window-rate-limiter"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "sliding-window-rate-limiter-n1",
+    "topic": "sliding-window-rate-limiter",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Sliding-Window Counter Weighted Approximation",
+    "scenario": "A rate limiter uses the 2-bucket Sliding-Window Counter approximation with a 60-second window size and a limit of 100 requests. For a given API key, the previous minute (`00:00–01:00`) recorded `80` requests, and the current minute (`01:00–02:00`) has recorded `30` requests so far at timestamp `01:15` (25% into the current minute, so 75% overlap with the previous minute).",
+    "prompt": "What is the estimated sliding-window request count at `01:15` (`80 × 0.75 + 30`)?",
+    "question": "What is the estimated sliding-window request count at `01:15` (`80 × 0.75 + 30`)?",
+    "unit": "requests",
+    "answer": 90,
+    "tolerance": 0.25,
+    "hint": "Weighted count = prev_count × (1 - elapsed_fraction) + curr_count = 80 × 0.75 + 30.",
+    "explanation": "At `01:15`, the 60-second sliding window covers the last 45 seconds (75%) of the previous minute plus the first 15 seconds of the current minute: `80 × 0.75 + 30 = 60 + 30 = 90` requests (which is <= 100, so the request is allowed using only 2 integer counters!).",
+    "tags": [
+      "sliding-window-rate-limiter",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "sliding-window-rate-limiter-t1",
+    "topic": "sliding-window-rate-limiter",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Redis ZSET Sliding Log vs 2-Counter Sliding Window Approximation",
+    "scenario": "Cloudflare-scale edge rate limiting must enforce a 10,000 req/min limit across 50 million active IPs. Storing an exact Redis Sorted Set (`ZSET`) of request timestamps per IP requires ~64 bytes per request (`10,000 × 64 B = 640 KB` per heavy IP).",
+    "prompt": "Which algorithm should you deploy for high-volume rate limiting, and what is the primary engineering justification?",
+    "question": "Which algorithm should you deploy for high-volume rate limiting, and what is the primary engineering justification?",
+    "options": [
+      "Store every request timestamp in a Redis `ZSET` and run `ZREMRANGEBYSCORE` + `ZADD` + `ZCARD` on every packet",
+      "Use a Fixed-Window Counter so callers can burst 2x the limit (`20,000` requests in 2 seconds) across every minute boundary",
+      "Use the 2-bucket Sliding-Window Counter approximation (`prev_count × overlap + curr_count`), which smooths boundary bursts using O(1) memory (just 2 integers per key) and a single atomic increment"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "A `ZSET` with 10,000 timestamps per IP uses less RAM than two 64-bit integers",
+      "Allowing 2x boundary bursts at `00:59.9` and `01:00.1` protects fragile downstream origins from spike overload",
+      "The 2-counter sliding window eliminates the 2x fixed-window boundary burst while reducing memory footprint from O(N_requests) to O(1) (16 bytes per active key)"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Compare memory per IP for a `ZSET` of 10,000 timestamps (~640 KB) vs two 64-bit counters (16 bytes).",
+    "explanation": "A `ZSET` sliding log consumes `O(limit)` memory and `O(log N)` CPU per request, exploding on high-rate limits. The 2-bucket Sliding-Window Counter requires only 2 integers per key (`O(1)` space and time) while preventing fixed-window boundary double-bursts.",
+    "tags": [
+      "sliding-window-rate-limiter",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -854,6 +960,59 @@ window.QUESTION_BANK["multi-tenant-design"] = [
       "multi-tenant-design",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "multi-tenant-design-n1",
+    "topic": "multi-tenant-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Shuffle Sharding Blast Radius Reduction",
+    "scenario": "You operate an 8-worker-node stateless cluster and assign each customer a virtual shard of 2 nodes using Shuffle Sharding. The total number of unique 2-node combinations from 8 nodes is `C(8, 2) = (8 × 7) / 2`.",
+    "prompt": "How many distinct 2-node virtual shards (`C(8, 2)`) exist in an 8-node cluster (such that a noisy neighbor Poison Pill affecting both of its assigned nodes only impacts the `1 / C(8, 2)` fraction of tenants sharing that exact pair)?",
+    "question": "How many distinct 2-node virtual shards (`C(8, 2)`) exist in an 8-node cluster (such that a noisy neighbor Poison Pill affecting both of its assigned nodes only impacts the `1 / C(8, 2)` fraction of tenants sharing that exact pair)?",
+    "unit": "virtual shards",
+    "answer": 28,
+    "tolerance": 0.25,
+    "hint": "Compute C(8, 2) = (8 × 7) ÷ 2.",
+    "explanation": "`C(8, 2) = 56 / 2 = 28` unique 2-node combinations. If one tenant sends a poison-pill request that crashes both of its assigned nodes, any other tenant with a different 2-node pair still has at least 1 healthy node—cutting the multi-tenant outage blast radius from 25% (simple 4-shard partitioning) down to `1/28 ≈ 3.57%`!",
+    "tags": [
+      "multi-tenant-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "multi-tenant-design-t1",
+    "topic": "multi-tenant-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Pool vs Bridge (Schema-per-Tenant) vs Silo Multi-Tenant Database Isolation",
+    "scenario": "Your B2B SaaS platform serves 50,000 free/SMB tenants (each storing <10 MB) and 25 regulated Enterprise healthcare tenants (each storing 500 GB, requiring customer-managed KMS encryption keys, custom maintenance windows, and contractual noisy-neighbor isolation).",
+    "prompt": "Which multi-tenant storage architecture best serves this hybrid customer base, and why?",
+    "question": "Which multi-tenant storage architecture best serves this hybrid customer base, and why?",
+    "options": [
+      "Provision 50,025 dedicated RDS instances (one physical database cluster per free and enterprise tenant)",
+      "Put all 50,025 tenants into a single unsharded shared table with no tenant-level quotas or row-level security",
+      "Use a tiered Cell/Silo + Pool model: pack the 50,000 SMB tenants into shared multi-tenant Pooled shards (enforcing `tenant_id` RLS + per-tenant rate quotas), and provision dedicated Silo instances/cells for the 25 high-value Enterprise tenants"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Running 50,000 idle RDS instances for free-tier users minimizes cloud infrastructure cost",
+      "A single unsharded table supports per-tenant KMS keys and isolates 500 GB enterprise batch jobs from SMB queries",
+      "Tiered Pool + Silo isolation matches unit economics: pooled shards amortize fixed baseline costs across 50k small tenants, while enterprise silos satisfy strict KMS, noisy-neighbor, and blast-radius SLAs"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Match infrastructure isolation cost to tenant revenue and compliance requirements.",
+    "explanation": "Dedicated silos for 50,000 free-tier tenants would bankrupt the business in idle compute, while forcing regulated 500 GB enterprise tenants into a shared pool violates KMS/noisy-neighbor requirements. A hybrid Pool (with tenant routing + RLS + quotas) + Enterprise Silo architecture optimizes both margin and compliance.",
+    "tags": [
+      "multi-tenant-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

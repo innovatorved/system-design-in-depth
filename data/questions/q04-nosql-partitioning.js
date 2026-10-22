@@ -327,6 +327,59 @@ window.QUESTION_BANK["sharding-and-partitioning"] = [
       "apply",
       "inline"
     ]
+  },
+  {
+    "id": "sharding-and-partitioning-n1",
+    "topic": "sharding-and-partitioning",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Shard Count Calculation by Storage vs IOPS",
+    "scenario": "You are sharding a multi-tenant ledger storing 20 TB of data with a peak workload of 120,000 write IOPS. Each database shard instance can safely hold at most 2 TB of data and sustain 6,000 write IOPS.",
+    "prompt": "What is the minimum number of shards required to satisfy BOTH the storage capacity and write IOPS constraints?",
+    "question": "What is the minimum number of shards required to satisfy BOTH the storage capacity and write IOPS constraints?",
+    "unit": "shards",
+    "answer": 20,
+    "tolerance": 0.25,
+    "hint": "Compute shards_by_storage = 20 TB / 2 TB = 10, and shards_by_iops = 120,000 / 6,000 = 20. Take the maximum.",
+    "explanation": "Sharding must satisfy the tightest bottleneck: storage requires 20 TB / 2 TB = 10 shards, whereas write throughput requires 120,000 / 6,000 = 20 shards. Therefore, you must provision at least max(10, 20) = 20 shards.",
+    "tags": [
+      "sharding-and-partitioning",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "sharding-and-partitioning-t1",
+    "topic": "sharding-and-partitioning",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Partition Key Selection for Multi-Regional E-Commerce Orders",
+    "scenario": "An orders service supports two primary queries: (1) customer order history (`WHERE user_id = ? ORDER BY created_at DESC`, 85% of traffic) and (2) merchant order fulfillment (`WHERE merchant_id = ? AND status = 'PAID'`, 15% of traffic).",
+    "prompt": "How should you partition the orders data across 32 shards, and what is the primary engineering justification?",
+    "question": "How should you partition the orders data across 32 shards, and what is the primary engineering justification?",
+    "options": [
+      "Shard by `order_id` and execute scatter-gather queries across all 32 shards for both customers and merchants",
+      "Shard the primary orders table by `user_id` and maintain an asynchronously projected (or CDC-replicated) merchant-view table sharded by `merchant_id`",
+      "Shard by `created_at` date so all of today's orders land on a single shard"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Scatter-gather across 32 shards on 100% of queries minimizes tail latency and connection overhead",
+      "Dual-partitioned projections turn both access patterns into single-shard point/range lookups at the cost of extra storage and bounded CDC lag",
+      "Date-based sharding distributes current writes evenly across all 32 shards"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "How do you avoid 32-way scatter-gather fan-out when two access patterns have orthogonal keys?",
+    "explanation": "Sharding by `order_id` forces 32-shard scatter-gather on both hot queries, and sharding by `created_at` creates a 100% write hotspot on today's shard. Partitioning the primary table by `user_id` and projecting a merchant-keyed view via CDC ensures single-shard reads for both access paths.",
+    "tags": [
+      "sharding-and-partitioning",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -657,6 +710,59 @@ window.QUESTION_BANK["snowflake-id-design"] = [
       "apply",
       "inline"
     ]
+  },
+  {
+    "id": "snowflake-id-design-n1",
+    "topic": "snowflake-id-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Per-Node Snowflake ID Throughput Ceiling",
+    "scenario": "A standard 64-bit Snowflake ID allocates 1 sign bit, 41 timestamp bits (in milliseconds), 10 worker/machine ID bits, and 12 sequence number bits per millisecond.",
+    "prompt": "Given 2^12 = 4,096 sequence values per millisecond, how many unique IDs (in millions of IDs per second, rounded to the nearest integer) can a single worker node generate at theoretical peak?",
+    "question": "Given 2^12 = 4,096 sequence values per millisecond, how many unique IDs (in millions of IDs per second, rounded to the nearest integer) can a single worker node generate at theoretical peak?",
+    "unit": "million IDs/s",
+    "answer": 4,
+    "tolerance": 0.25,
+    "hint": "4,096 IDs/ms × 1,000 ms/s = 4,096,000 IDs/s ≈ 4 million IDs/s.",
+    "explanation": "With 12 sequence bits, a single worker can allocate 2^12 = 4,096 IDs per millisecond, or 4,096 × 1,000 = 4,096,000 (~4.1 million) unique, k-sortable 64-bit IDs per second without any network coordination.",
+    "tags": [
+      "snowflake-id-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "snowflake-id-design-t1",
+    "topic": "snowflake-id-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Handling NTP Backward Clock Jumps in Snowflake Generators",
+    "scenario": "An NTP step adjustment moves a Snowflake worker's wall clock backward by 12 milliseconds. If the generator immediately emits IDs using the regressed timestamp, it risks colliding with IDs generated 12 ms ago.",
+    "prompt": "How should the Snowflake generator handle small backward clock skews (< 20 ms) vs large regressions, and why?",
+    "question": "How should the Snowflake generator handle small backward clock skews (< 20 ms) vs large regressions, and why?",
+    "options": [
+      "Ignore the backward jump and reset the 12-bit sequence counter to 0 immediately",
+      "Pin `last_timestamp`, pause/spin-wait (or advance sequence bits on the logical high-water timestamp) for small skews up to a bounded threshold, and refuse ID generation (circuit-break + alert) if skew exceeds the safety bound",
+      "Switch to random UUIDv4 strings stored as 36-byte `VARCHAR` keys on clock skew"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Resetting the sequence to 0 on a repeated millisecond guarantees uniqueness",
+      "Monotonic high-water clamping preserves uniqueness across brief NTP adjustments, while failing fast on large regressions prevents unbounded thread stalls or duplicate IDs",
+      "Mixing 36-byte string UUIDs into a 64-bit `BIGINT` column requires zero schema changes"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Track the highest millisecond seen so far (`last_timestamp`) and never emit a smaller timestamp.",
+    "explanation": "A Snowflake worker must enforce `timestamp >= last_timestamp`. For tiny NTP adjustments (a few ms), holding `last_timestamp` (consuming remaining sequence numbers or waiting until wall clock catches up) prevents collisions safely; for large regressions, failing health checks protects data integrity.",
+    "tags": [
+      "snowflake-id-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -854,6 +960,59 @@ window.QUESTION_BANK["bloom-filters"] = [
       "bloom-filters",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "bloom-filters-n1",
+    "topic": "bloom-filters",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Sizing a 1% False-Positive Bloom Filter",
+    "scenario": "You want to hold 100 million keys in an in-memory Bloom filter with a 1% false-positive rate. A 1% false-positive rate requires approximately 10 bits per key (optimal k = 7 hash functions).",
+    "prompt": "How many megabytes (MB, using 1 MB = 10^6 bytes and 8 bits = 1 byte) of RAM does this Bloom filter require?",
+    "question": "How many megabytes (MB, using 1 MB = 10^6 bytes and 8 bits = 1 byte) of RAM does this Bloom filter require?",
+    "unit": "MB",
+    "answer": 125,
+    "tolerance": 0.25,
+    "hint": "Total bits = 100,000,000 × 10 = 1,000,000,000 bits. Divide by 8 bits/byte and 10^6 bytes/MB.",
+    "explanation": "100,000,000 keys × 10 bits/key = 10^9 bits = 125,000,000 bytes = 125 MB. Compare that 125 MB footprint to storing 100M 64-bit keys in a hash set (~1.6–2.4 GB).",
+    "tags": [
+      "bloom-filters",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "bloom-filters-t1",
+    "topic": "bloom-filters",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Standard Bloom vs Counting/Cuckoo Filter for Mutable Sets",
+    "scenario": "You place a filter in front of a user-blocklist database to short-circuit negative lookups at 200,000 req/s. However, users frequently unblock accounts (deletions), and false negatives (failing to block a blocked pair) are strictly forbidden.",
+    "prompt": "Which probabilistic filter structure and update strategy should you choose, and why?",
+    "question": "Which probabilistic filter structure and update strategy should you choose, and why?",
+    "options": [
+      "Clear the corresponding bits to 0 in a standard single-bit Bloom filter whenever an unblock event occurs",
+      "Use a Cuckoo filter (or Counting Bloom filter with periodic full rebuilds) that supports deletions without introducing false negatives",
+      "Invert the Bloom filter to store non-blocked pairs instead of blocked pairs"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Clearing bits in a standard Bloom filter never affects other keys that hashed to the same bit positions",
+      "Zeroing shared bits in a standard Bloom filter causes false negatives for colliding keys; Cuckoo or Counting filters support safe deletion while preserving zero false negatives",
+      "Storing all non-blocked pairs among 100M users uses less memory than storing blocked pairs"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "What happens to Key A if Key B shares bit index 42 and unblocking Key B sets bit 42 to 0?",
+    "explanation": "Zeroing a bit in a standard Bloom filter can erase a bit set by another active key, creating a false negative (violating the blocklist invariant). Counting Bloom filters (4-bit counters per slot) or Cuckoo filters support deletions without false negatives.",
+    "tags": [
+      "bloom-filters",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -980,10 +980,10 @@
 <p>Download the quantile example and pinned requirements into one directory, keeping their filenames. The package license accompanies the dependency. The setup below requires Python 3.12.</p>
 <p>The chosen input has 360 dimensionless observations: 0 through 89 repeated three times each, then 100 through 990 in steps of 10. These are constructed values, not measured service latencies. The example processes forward, reverse and shuffled orders, resetting the package's random seed to 23 for each build.</p>
 <p>In the output, <code>m</code> is centroid mean and <code>c</code> is its weight. Centroid count measures stored entries, not complete memory allocation.</p>
-<pre><code class="language-bash">python3.12 -m venv .venv-quantiles
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE">⚡ Run in CodeLab</button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">python3.12 -m venv .venv-quantiles
 .venv-quantiles/bin/python -m pip install -r m18-tdigest-requirements.txt
-.venv-quantiles/bin/python m18-tdigest.py quantiles</code></pre>
-<pre><code class="language-output">tdigest=0.5.2.2 accumulation-tree=0.6.4 pyudorandom=1.0.0
+.venv-quantiles/bin/python m18-tdigest.py quantiles</code></pre></div>
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">output</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-output">tdigest=0.5.2.2 accumulation-tree=0.6.4 pyudorandom=1.0.0
 values=360; 0..89 each repeated3, then 100..990 step10; delta=0.05 K=25 seed=23
 forward: centroids=102 total_weight=360 first={&#039;m&#039;: 0.0, &#039;c&#039;: 3.0} last={&#039;m&#039;: 990.0, &#039;c&#039;: 1.0}
   q=0.50 nearest_rank=59 estimate=59.500000 value_difference=0.500000 rank_distance=0.000000
@@ -1000,7 +1000,7 @@ shuffle: centroids=69 total_weight=360 first={&#039;m&#039;: 0.0, &#039;c&#039;:
   q=0.90 nearest_rank=630 estimate=635.000000 value_difference=5.000000 rank_distance=0.000000
   q=0.95 nearest_rank=810 estimate=815.000000 value_difference=5.000000 rank_distance=0.000000
   q=0.99 nearest_rank=960 estimate=959.000000 value_difference=-1.000000 rank_distance=0.001111
-repeated-zero control: n=1000 exact_median=0 estimate=0.110988 empirical_rank_interval=[0.90,0.90] rank_distance=0.40</code></pre>
+repeated-zero control: n=1000 exact_median=0 estimate=0.110988 empirical_rank_interval=[0.90,0.90] rank_distance=0.40</code></pre></div>
 <p>The forward and reverse runs retain 102 centroids; shuffled order retains 69. All preserve total weight 360. At p99, each estimates 959 against nearest-rank 960. At the median, interpolation returns roughly 59.5 instead of 59, with zero rank distance under our stated measure.</p>
 <p>Those results look useful, but the final line tests a different shape.</p>
 <h2>A small value error can hide a bad median</h2>
@@ -1166,6 +1166,102 @@ repeated-zero control: n=1000 exact_median=0 estimate=0.110988 empirical_rank_in
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-tdigest-quantile-sketch-n1" data-type="numeric" data-slug="tdigest-quantile-sketch">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Aggregating Distributed Latency Sketches vs Raw Samples</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> You monitor p99.9 API latency across 200 microservice pods handling 1,000,000 req/s total. Shipping raw 8-byte float64 latency samples for every request requires 8 MB/s. Instead, each of the 200 pods ships a 5 KB mergeable t-digest sketch once every 10 seconds.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> What is the total network bandwidth (in KB/s) required to ship the 200 t-digest sketches every 10 seconds?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Total data per 10s window = 200 pods × 5 KB = 1,000 KB. Divide by 10 seconds.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-tdigest-quantile-sketch-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-tdigest-quantile-sketch-n1" placeholder="Enter numeric estimate (KB/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">KB/s</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="tdigest-quantile-sketch-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="tdigest-quantile-sketch" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-tdigest-quantile-sketch-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 200 pods × 5 KB = 1,000 KB every 10 seconds = 100 KB/s (an 80x reduction compared to 8,000 KB/s of raw samples), and bandwidth stays constant at 100 KB/s even if traffic surges from 1M to 50M req/s.</div>
+        </div>
+      </div>
+    
+      <div class="exercise-box quiz-card" id="quiz-tdigest-quantile-sketch-t1" data-type="tradeoff" data-slug="tdigest-quantile-sketch">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Averaging Pod p99s vs Merging t-Digest / DDSketch Centroids</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> An observability dashboard computes the fleet-wide p99 latency across 50 pods by taking the arithmetic mean of each pod&#039;s local p99 gauge (`avg(pod_p99)`). During an incident where 2 pods receive 60% of traffic and stall at 4,000 ms while 48 pods sit nearly idle at 10 ms, the dashboard reports fleet p99 = 169 ms.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Why did the dashboard hide the outage, and how should fleet percentiles be computed?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Why is &#039;averaging percentiles&#039; one of the classic observability anti-patterns?</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-tdigest-quantile-sketch-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-tdigest-quantile-sketch-t1" value="0" />
+               <span>Use `max(pod_p99)` across all pods because the maximum of p99s equals the true fleet-wide p99</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-tdigest-quantile-sketch-t1" value="1" />
+               <span>Percentiles are non-additive across skewed partitions; each pod must emit mergeable quantile sketches (t-digest centroids or log-bucketed histograms) so the aggregator merges the distributions before extracting the true fleet p99</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-tdigest-quantile-sketch-t1" value="2" />
+               <span>Compute the harmonic mean of each pod&#039;s local p50 and multiply by 2</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-tdigest-quantile-sketch-t1" value="0" />
+               <span>A single idle pod that processes 1 slow health check represents the 99th percentile of 10 million requests</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-tdigest-quantile-sketch-t1" value="1" />
+               <span>Averaging percentiles treats a pod handling 10 req/s identically to a pod handling 100,000 req/s; merging t-digest centroids or histograms preserves sample weights across the entire fleet</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-tdigest-quantile-sketch-t1" value="2" />
+               <span>Percentiles commute with arithmetic averages whenever request counts differ across nodes</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="tdigest-quantile-sketch-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="tdigest-quantile-sketch" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-tdigest-quantile-sketch-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Percentiles cannot be averaged or maxed across nodes with unequal traffic volumes or distribution shapes. Merging t-digest centroids (or Prometheus/DDSketch histogram buckets) weights every observation properly before computing the true global quantile.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1262,29 +1358,29 @@ repeated-zero control: n=1000 exact_median=0 estimate=0.110988 empirical_rank_in
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

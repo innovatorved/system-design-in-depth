@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="no-shell">
+<head>
+  <meta charset="UTF-8">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Circuit Breaker &amp; Adaptive Load Shedder — Interactive Build Lab | System Design In Depth</title>
+  <meta name="description" content="Circuit Breaker &amp; Adaptive Load Shedder: Three-state rolling-window circuit breaker CLOSED, OPEN, HALFOPEN with single-probe half-open recovery, error-rate...">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#000000">
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Circuit Breaker &amp; Adaptive Load Shedder — Interactive Build Lab | System Design In Depth">
+  <meta property="og:description" content="Circuit Breaker &amp; Adaptive Load Shedder: Three-state rolling-window circuit breaker CLOSED, OPEN, HALFOPEN with single-probe half-open recovery, error-rate...">
+  <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/build/circuit-breaker/">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Circuit Breaker &amp; Adaptive Load Shedder — Interactive Build Lab | System Design In Depth">
+  <meta name="twitter:description" content="Circuit Breaker &amp; Adaptive Load Shedder: Three-state rolling-window circuit breaker CLOSED, OPEN, HALFOPEN with single-probe half-open recovery, error-rate...">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/circuit-breaker/">
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
+  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
+  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+
+  <!-- Core scripts: head initializer & asset manifest -->
+  <script src="js/init.js?v=6e3af86ba6"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Circuit Breaker & Adaptive Load Shedder — Interactive Build Lab",
+  "description": "Circuit Breaker & Adaptive Load Shedder: Three-state rolling-window circuit breaker CLOSED, OPEN, HALFOPEN with single-probe half-open recovery, error-rate...",
+  "url": "https://system-design-in-depth.vedgupta.in/build/circuit-breaker/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="topbar__hamburger" aria-label="Toggle sidebar" id="hamburger-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+
+    <a href="/" class="topbar__brand" data-nav="home">
+      <span class="topbar__brand-icon">SD</span>
+      <span class="topbar__brand-text">System Design</span>
+      <span class="topbar__track-badge">In Depth</span>
+    </a>
+
+    <div class="topbar__search">
+      <button class="topbar__search-trigger" id="search-trigger" aria-label="Search topics">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Search topics…</span>
+        <span class="topbar__search-kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="topbar__actions">
+      <nav class="topbar__nav" aria-label="Primary navigation">
+        <a href="/roadmap" class="topbar__nav-link" data-nav="roadmap">Roadmap</a>
+        <a href="/challenges" class="topbar__nav-link" data-nav="challenges">Challenges</a>
+        <a href="/dashboard" class="topbar__nav-link" data-nav="dashboard">Dashboard</a>
+        <a href="/sandbox" class="topbar__nav-link" data-nav="sandbox">Sandbox</a>
+        <a href="/glossary/" class="topbar__nav-link" data-nav="glossary">Glossary</a>
+      </nav>
+
+      <div class="topbar__progress-pill" id="progress-pill" title="Overall progress">
+        <svg class="topbar__progress-ring" viewBox="0 0 20 20">
+          <circle class="track" cx="10" cy="10" r="8"/>
+          <circle class="fill" cx="10" cy="10" r="8" stroke-dasharray="50.27" stroke-dashoffset="50.27" id="progress-ring-fill"/>
+        </svg>
+        <span id="progress-text">0%</span>
+      </div>
+
+      <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener noreferrer" class="topbar__btn topbar__btn--github" id="github-repo-btn" aria-label="GitHub Repository" title="GitHub Repository" data-repo-placement="topbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+
+      <button class="topbar__btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <nav class="sidebar__tabs" role="tablist">
+      <button class="sidebar__tab" data-tab="curriculum" role="tab" aria-selected="false">Curriculum</button>
+      <button class="sidebar__tab active" data-tab="builds" role="tab" aria-selected="true">20 Builds</button>
+    </nav>
+    <div class="sidebar__content" id="sidebar-content">
+<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (20)</div><a class="unit-item" data-build="load-balancer-from-scratch" href="/build/load-balancer-from-scratch/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
+      </a><a class="unit-item" data-build="consistent-hashing-ring" href="/build/consistent-hashing-ring/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Consistent Hashing Ring with Virtual Nodes</span>
+      </a><a class="unit-item" data-build="sliding-window-rate-limiter" href="/build/sliding-window-rate-limiter/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+      </a><a class="unit-item" data-build="lru-cache" href="/build/lru-cache/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">LRU Cache (Doubly Linked List + Hash Map)</span>
+      </a><a class="unit-item" data-build="ttl-cache-reaper" href="/build/ttl-cache-reaper/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">TTL Cache with a Redis-Style Adaptive Reaper</span>
+      </a><a class="unit-item" data-build="bloom-filter-membership" href="/build/bloom-filter-membership/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Bloom Filter Membership Testing</span>
+      </a><a class="unit-item" data-build="snowflake-id-generator" href="/build/snowflake-id-generator/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Snowflake 64-bit ID Generator</span>
+      </a><a class="unit-item" data-build="keyset-pagination-cursors" href="/build/keyset-pagination-cursors/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+      </a><a class="unit-item" data-build="write-ahead-log" href="/build/write-ahead-log/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Write-Ahead Log (WAL) &amp; Crash Recovery</span>
+      </a><a class="unit-item" data-build="lsm-tree-kv-store" href="/build/lsm-tree-kv-store/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">LSM-Tree Key/Value Store (WAL, Memtable, SSTables, Compaction)</span>
+      </a><a class="unit-item" data-build="lease-leader-election" href="/build/lease-leader-election/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Lease-Based Leader Election with Fencing Tokens</span>
+      </a><a class="unit-item" data-build="gossip-protocol" href="/build/gossip-protocol/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Gossip: Push-Pull Anti-Entropy &amp; SWIM Failure Detection</span>
+      </a><a class="unit-item" data-build="merkle-anti-entropy" href="/build/merkle-anti-entropy/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Merkle-Tree Anti-Entropy Repair (Dynamo/Cassandra style)</span>
+      </a><a class="unit-item" data-build="hyperloglog-cardinality" href="/build/hyperloglog-cardinality/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+      </a><a class="unit-item" data-build="tiny-search-engine" href="/build/tiny-search-engine/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+      </a><a class="unit-item active" data-build="circuit-breaker" href="/build/circuit-breaker/">
+        <span class="unit-item__status unit-item__status--active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Circuit Breaker &amp; Adaptive Load Shedder</span>
+      </a><a class="unit-item" data-build="singleflight-coalescer" href="/build/singleflight-coalescer/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Singleflight &amp; Stampede Coalescer</span>
+      </a><a class="unit-item" data-build="raft-consensus" href="/build/raft-consensus/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Raft Leader Election &amp; Quorum Log</span>
+      </a><a class="unit-item" data-build="mini-kafka-log" href="/build/mini-kafka-log/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Partitioned Commit Log &amp; Consumer Group Broker</span>
+      </a><a class="unit-item" data-build="outbox-cdc-relay" href="/build/outbox-cdc-relay/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Transactional Outbox &amp; Idempotent CDC Relay</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <div class="main__content" id="reader" data-prerendered-build="circuit-breaker">
+
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="#" data-nav="home">Home</a>
+        <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+        <span class="breadcrumbs__current">Circuit Breaker &amp; Adaptive Load Shedder</span>
+      </nav>
+
+      <div class="lesson-header">
+        <div class="lesson-header__badge">
+          <span class="lesson-header__kind lesson-header__kind--build"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> From-Scratch Build</span>
+        </div>
+        <h1 class="lesson-header__title">Circuit Breaker &amp; Adaptive Load Shedder</h1>
+        <p class="build-summary">Three-state rolling-window circuit breaker (CLOSED, OPEN, HALF_OPEN) with single-probe half-open recovery, error-rate threshold tripping, and priority-aware Little’s Law concurrency load shedding.</p>
+        <div class="lesson-header__meta">
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~35 min</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Intermediate</span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="#" data-nav="topic" data-slug="circuit-breakers-and-timeouts">Circuit breakers and timeouts</a>, <a href="#" data-nav="topic" data-slug="retries-timeouts-idempotency">Retries, timeouts, and idempotency</a>, <a href="#" data-nav="topic" data-slug="load-shedding">Load shedding</a>, <a href="#" data-nav="topic" data-slug="tail-latency">Tail latency</a>, <a href="#" data-nav="topic" data-slug="backpressure">Backpressure</a></span>
+        </div>
+      </div>
+
+      <section class="build-lab-card" aria-label="Interactive Build Lab Overview">
+        <div class="build-lab-card__top">
+          <div class="build-lab-card__intro">
+            <div class="build-lab-card__eyebrow">
+              <span>Interactive Build Lab</span>
+              <span class="build-lab-card__progress" id="build-lab-progress-badge">0/4 Steps Completed</span>
+            </div>
+            <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
+            <p class="build-lab-card__desc">
+              Complete 4 progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+            </p>
+            <div class="build-lab-progress-track" aria-hidden="true">
+              <div class="build-lab-progress-track__fill" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="build-lab-card__cta-col">
+            <button type="button" class="btn btn--primary build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="guided">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <span>Launch Guided Lab</span>
+            </button>
+            <button type="button" class="btn btn--outline build-lab-card__launch-btn" data-action="open-code-lab" data-lab-mode="sandbox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>Open Full Solution</span>
+            </button>
+          </div>
+        </div>
+
+        
+          <div class="build-lab-steps-grid" id="build-lab-steps-grid">
+            
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="0">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">01</span>
+                    <span class="build-lab-step-card__target">breaker.js · CircuitBreaker.canExecute</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Priority-Aware Concurrency Gate &amp; Cooldown Evaluation</div>
+                  <div class="build-lab-step-card__concept">Little’s Law Concurrency Bulkhead &amp; OPEN -&gt; HALF_OPEN Cooldown Transition</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>1 test</span>
+                    <span class="build-lab-step-card__open">Step 1 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="1">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">02</span>
+                    <span class="build-lab-step-card__target">breaker.js · CircuitBreaker.recordFailure</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Rolling Window Failure-Rate Tripping</div>
+                  <div class="build-lab-step-card__concept">Minimum Call Volume Gate &amp; Error-Rate Threshold in recordFailure()</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>1 test</span>
+                    <span class="build-lab-step-card__open">Step 2 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="2">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">03</span>
+                    <span class="build-lab-step-card__target">breaker.js · CircuitBreaker.recordSuccess</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Half-Open Probe Recovery &amp; State Reset</div>
+                  <div class="build-lab-step-card__concept">Consecutive Trial Probe Verification in recordSuccess()</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>1 test</span>
+                    <span class="build-lab-step-card__open">Step 3 →</span>
+                  </div>
+                </button>
+              
+                <button type="button" class="build-lab-step-card " data-action="open-code-lab" data-lab-mode="guided" data-step-index="3">
+                  <div class="build-lab-step-card__header">
+                    <span class="build-lab-step-card__num">04</span>
+                    <span class="build-lab-step-card__target">breaker.js · CircuitBreaker.execute</span>
+                  </div>
+                  <div class="build-lab-step-card__title">Async Execution Wrapper &amp; Fallback Isolation</div>
+                  <div class="build-lab-step-card__concept">In-Flight Tracking, Exception-Safe Cleanup &amp; Graceful Degradation Fallbacks</div>
+                  <div class="build-lab-step-card__footer">
+                    <span>1 test</span>
+                    <span class="build-lab-step-card__open">Step 4 →</span>
+                  </div>
+                </button>
+              
+          </div>
+        
+      </section>
+
+      <div id="build-walkthrough-pane"><article class="prose" id="build-file-circuit-breaker-README_md"><h2>1. Architectural Overview & Why Naive Retries Cause Cascading Meltdowns</h2>
+<p>In a distributed microservices topology, when a downstream database or payment gateway slows down from 15ms to 2,500ms, upstream worker pools quickly saturate their thread/connection limits waiting on doomed sockets. Without a <strong>Circuit Breaker</strong> and <strong>Priority-Aware Load Shedder</strong>, every slow downstream dependency turns into a fleet-wide cascading outage.</p>
+<div class="mermaid">stateDiagram-v2
+    [*] --> CLOSED
+    CLOSED --> OPEN : Window Calls >= MinVolume AND Failure Rate >= Threshold
+    OPEN --> HALF_OPEN : Cooldown Timer Elapsed (Single/Bounded Trial Probe)
+    HALF_OPEN --> CLOSED : Consecutive Probe Successes >= Threshold
+    HALF_OPEN --> OPEN : Any Probe Failure / Timeout</div>
+<h3>Core Engineering Invariants</h3>
+<ol>
+<li><strong>Minimum Volume Gate (<code>minimumCalls</code>):</strong> Never trip a circuit on 1 failure out of 1 request during low-traffic intervals. Require a statistically meaningful sample within the sliding time window (<code>windowSizeMs</code>).</li>
+<li><strong>Fast-Fail Isolation in <code>OPEN</code> State:</strong> While open, reject calls in $O(1)$ memory without allocating sockets or timers, returning a degraded fallback or <code>CircuitOpenError</code>.</li>
+<li><strong>Bounded <code>HALF_OPEN</code> Probing:</strong> When <code>cooldownMs</code> expires, prevent a thundering herd of 10,000 concurrent requests from hammering a recovering service. Admit at most <code>halfOpenMaxCalls</code> trial probes; if any probe fails, immediately re-open the circuit.</li>
+<li><strong>Priority-Aware Concurrency Shedding (Little's Law $L = \lambda W$):</strong> Before the circuit even trips, bound in-flight concurrency (<code>maxConcurrency</code>). Once utilization crosses <code>shedLowPriorityAt</code> (e.g., 75%), shed <code>LOW</code> priority background/analytics requests so capacity remains reserved for <code>HIGH</code>/<code>NORMAL</code> user-facing traffic.</li>
+</ol>
+<hr>
+<h2>2. State Machine & Sliding Health Window Deep Dive</h2>
+<h3>Rolling Time-Window Pruning</h3>
+<p>Instead of resetting counters on arbitrary fixed clock ticks (which suffers from boundary blind spots), <code>_pruneWindow(now)</code> evicts call outcomes older than <code>now - windowSizeMs</code>. Every <code>recordSuccess()</code> and <code>recordFailure()</code> evaluates live health across the trailing window.</p>
+<h3>Graceful Degradation & Fallback Hooks</h3>
+<p>When <code>execute(fn, { priority, fallback })</code> rejects due to <code>CIRCUIT_OPEN</code> or <code>ELOADSHED</code>, callers can supply a deterministic <code>fallback(err)</code> handler—serving stale cache entries, queued acknowledgments, or default recommendations instead of HTTP 500s.</p>
+<hr>
+<h2>3. Verification & Running the Lab</h2>
+<p>Run the interactive demonstration:</p>
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE">⚡ Run in CodeLab</button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">node demo.js</code></pre></div>
+<p>Run the automated assertion suite:</p>
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE">⚡ Run in CodeLab</button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">node test.js</code></pre></div></article>
+      </div>
+
+      <div class="build-lab-overlay" id="build-lab-overlay" aria-hidden="true">
+        <div id="codelab-mount-circuit-breaker" class="build-lab-overlay__mount" data-build-id="circuit-breaker"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
+    <div class="search-modal__backdrop" id="search-backdrop"></div>
+    <div class="search-modal__dialog">
+      <div class="search-modal__input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="search-modal__results" id="search-results"></div>
+      <div class="search-modal__footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>↵</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagram Lightbox Modal -->
+  <div class="diagram-lightbox" id="diagram-lightbox" role="dialog" aria-label="Architecture diagram viewer" aria-modal="true">
+    <div class="diagram-lightbox__backdrop" id="diagram-lightbox-backdrop"></div>
+    <div class="diagram-lightbox__dialog">
+      <div class="diagram-lightbox__header">
+        <div class="diagram-lightbox__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+          <span>Architecture Diagram</span>
+        </div>
+        <div class="diagram-lightbox__actions">
+          <button class="diagram-lightbox__btn" id="diagram-zoom-out" title="Zoom Out" aria-label="Zoom out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="diagram-lightbox__btn diagram-lightbox__btn--text" id="diagram-zoom-reset" title="Reset Zoom" aria-label="Reset zoom">
+            <span id="diagram-zoom-level">100%</span>
+          </button>
+          <button class="diagram-lightbox__btn" id="diagram-zoom-in" title="Zoom In" aria-label="Zoom in">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="diagram-lightbox__divider"></div>
+          <button class="diagram-lightbox__btn diagram-lightbox__close" id="diagram-lightbox-close" title="Close (Esc)" aria-label="Close dialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="diagram-lightbox__body" id="diagram-lightbox-body">
+        <div class="diagram-lightbox__stage" id="diagram-lightbox-stage"></div>
+      </div>
+      <div class="diagram-lightbox__footer">
+        <span>Click and drag to pan • Scroll to zoom • Press <kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Scripts -->
+  <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
+  <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=7189880a2f"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=e41a33646f"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
+  <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
+
+  <!-- App Scripts -->
+  <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
+  <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
+  
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+
+  <!-- App bootstrap & deferred script loader -->
+  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+</body>
+</html>

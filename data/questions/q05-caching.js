@@ -63,6 +63,59 @@ window.QUESTION_BANK["caching-layers"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "caching-layers-n1",
+    "topic": "caching-layers",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Origin Database QPS Reduction via Multi-Tier Cache",
+    "scenario": "A product catalog service receives 100,000 read req/s. Requests first check an L1 in-process cache (50% hit rate), and L1 misses check an L2 distributed Redis cluster (90% hit rate of the traffic reaching L2).",
+    "prompt": "How many read requests per second (in req/s) miss both cache tiers and hit the origin database?",
+    "question": "How many read requests per second (in req/s) miss both cache tiers and hit the origin database?",
+    "unit": "req/s",
+    "answer": 5000,
+    "tolerance": 0.25,
+    "hint": "L1 misses = 100,000 × (1 - 0.50) = 50,000 req/s. L2 misses = 50,000 × (1 - 0.90) = 5,000 req/s.",
+    "explanation": "Of 100,000 req/s, 50% (50,000 req/s) miss L1 and reach L2 Redis. Of those 50,000 req/s, 10% (5,000 req/s) miss L2 and hit the database—an effective combined hit rate of 95%.",
+    "tags": [
+      "caching-layers",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "caching-layers-t1",
+    "topic": "caching-layers",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: L1 In-Process Cache Invalidation vs Redis Hot-Key Bottleneck",
+    "scenario": "A celebrity post receives 250,000 reads/sec, saturating the single Redis shard holding that key (`100% CPU` on one Redis node), even though the overall Redis cluster is at 15% CPU.",
+    "prompt": "Which caching architecture resolves the single-shard hot-key bottleneck while keeping staleness bounded, and why?",
+    "question": "Which caching architecture resolves the single-shard hot-key bottleneck while keeping staleness bounded, and why?",
+    "options": [
+      "Double the number of shards in the Redis cluster using consistent hashing",
+      "Add a tiny L1 in-memory cache (or key replication across N sub-keys `key#1..N`) with a 1–2 second TTL + Redis client-side invalidation broadcasts for detected hot keys",
+      "Bypass Redis for hot keys and query the primary SQL database directly"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Adding more consistent-hashing shards splits a single key across multiple nodes automatically",
+      "Asingle key always hashes to one shard; absorbing hot-key reads in stateless app-tier L1 memory (with short TTL / pub-sub invalidation) eliminates the network and single-thread Redis bottleneck",
+      "Primary SQL databases handle 250,000 point reads/sec more cheaply than in-memory caches"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Consistent hashing maps a single key to a single shard no matter how many shards exist.",
+    "explanation": "Adding shards to Redis does not split a single hot key. Absorbing hot keys in an application-local L1 cache with a 1-2s micro-TTL (or salting the key across N replicas) spreads the 250k req/s across all stateless app servers.",
+    "tags": [
+      "caching-layers",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -327,6 +380,59 @@ window.QUESTION_BANK["cache-concurrency-control"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "cache-concurrency-control-n1",
+    "topic": "cache-concurrency-control",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Cache Stampede In-Flight Database Concurrency",
+    "scenario": "A cached homepage payload expires at t = 0 while receiving 4,000 req/s. Recomputing the payload in the database takes 250 ms (0.25 seconds), and no singleflight / request coalescing lock is used.",
+    "prompt": "How many duplicate database recomputation queries execute concurrently during that 250 ms cache-miss window?",
+    "question": "How many duplicate database recomputation queries execute concurrently during that 250 ms cache-miss window?",
+    "unit": "queries",
+    "answer": 1000,
+    "tolerance": 0.25,
+    "hint": "Apply Little's Law: L = λ × W = 4,000 req/s × 0.25 s.",
+    "explanation": "Before the first request finishes its 250 ms database query and repopulates the cache, 4,000 req/s × 0.25 s = 1,000 concurrent requests observe a cache miss and stampede the database with identical expensive queries.",
+    "tags": [
+      "cache-concurrency-control",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "cache-concurrency-control-t1",
+    "topic": "cache-concurrency-control",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Cache-Aside Delete vs Write-Through on Concurrent Updates",
+    "scenario": "Thread A misses the cache and reads `v1` from the DB. Before Thread A writes `v1` into Redis, Thread B updates the DB to `v2` and deletes the cache key. Thread A then finishes and writes stale `v1` into Redis with a 1-hour TTL.",
+    "prompt": "Which concurrency control mechanism prevents this permanent stale-cache race without serializing all reads behind distributed locks?",
+    "question": "Which concurrency control mechanism prevents this permanent stale-cache race without serializing all reads behind distributed locks?",
+    "options": [
+      "Have writers update the cache before updating the database",
+      "Use versioned/CAS cache writes (e.g., storing the DB `version` or `xmin`/LSN and rejecting cache writes whose version is older than the current entry or tombstone lease token)",
+      "Increase the cache TTL from 1 hour to 24 hours"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Updating cache before DB guarantees consistency when the DB transaction subsequently rolls back",
+      "Monotonic version comparison (or leased cache-miss tokens as in Meta's Memcached `gets/cas`) ensures a delayed reader cannot overwrite a newer mutation or active invalidation tombstone",
+      "Longer TTLs automatically resolve race conditions between concurrent readers and writers"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "How did Facebook's 'Scaling Memcache at Facebook' paper solve the stale-set race using leases/CAS?",
+    "explanation": "Issuing a lease token on cache miss (which is invalidated when a delete occurs) or comparing monotonic row version numbers via Redis Lua / Memcached `cas` prevents a slow reader from overwriting newer data with `v1`.",
+    "tags": [
+      "cache-concurrency-control",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -392,6 +498,59 @@ window.QUESTION_BANK["cache-availability-and-database-fallback"] = [
       "cache-availability-and-database-fallback",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "cache-availability-and-database-fallback-n1",
+    "topic": "cache-availability-and-database-fallback",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Database Load Surge on Cache Cluster Outage",
+    "scenario": "Your caching tier serves 80,000 req/s at a 95% cache hit rate, leaving 4,000 req/s hitting the database. Your database cluster is provisioned for a maximum of 8,000 req/s.",
+    "prompt": "If the cache cluster fails completely and all 80,000 req/s fall back directly to the database, by what factor (multiplier) does the incoming load exceed the database's 8,000 req/s maximum capacity?",
+    "question": "If the cache cluster fails completely and all 80,000 req/s fall back directly to the database, by what factor (multiplier) does the incoming load exceed the database's 8,000 req/s maximum capacity?",
+    "unit": "x",
+    "answer": 10,
+    "tolerance": 0.25,
+    "hint": "Divide total fallback traffic (80,000 req/s) by maximum database capacity (8,000 req/s).",
+    "explanation": "80,000 req/s ÷ 8,000 req/s = 10x over capacity (and a 20x jump from the normal 4,000 req/s DB load). Without load shedding or circuit breaking on the DB fallback path, a cache outage triggers immediate database collapse.",
+    "tags": [
+      "cache-availability-and-database-fallback",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "cache-availability-and-database-fallback-t1",
+    "topic": "cache-availability-and-database-fallback",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Protecting the Origin Database During a Cold-Cache Restart",
+    "scenario": "After a regional power event, your Redis cluster restarts completely empty while user traffic is at 80,000 req/s and the database can only sustain 8,000 req/s.",
+    "prompt": "Which recovery and fallback strategy prevents the database from crashing during cache warm-up, and why?",
+    "question": "Which recovery and fallback strategy prevents the database from crashing during cache warm-up, and why?",
+    "options": [
+      "Route 100% of cache misses directly to the database so the cache warms up as fast as possible",
+      "Enforce a strict concurrency/token-bucket rate limiter on the DB fallback path (capping DB queries at <8,000 req/s), coalesce duplicate misses via singleflight, and serve degraded/stale responses for shed misses while warming the cache",
+      "Block all traffic at the load balancer until a single-threaded script sequentially loads 500M rows into Redis"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Sending 10x over-capacity traffic to the DB warms the cache without exhausting DB connection pools",
+      "Rate-limiting the cache-miss fallback path protects DB survival while allowing up to 8,000 unique keys/sec to populate the cache organically",
+      "Multi-hour total site downtime is preferable to serving degraded fallback responses"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "The database must never receive more than its 8,000 req/s ceiling, even when the cache hit rate is 0%.",
+    "explanation": "When a high-hit-rate cache goes cold, the cache acts as a load-bearing component. Capping DB fallback concurrency via a circuit breaker / token bucket at <8,000 req/s lets successful queries warm the hot working set within seconds without crashing the DB.",
+    "tags": [
+      "cache-availability-and-database-fallback",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

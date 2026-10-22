@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1114,6 +1114,37 @@
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-nearby-geospatial-search-system-design-n1" data-type="numeric" data-slug="nearby-geospatial-search-system-design">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Driver Location Ping Write Throughput</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A ride-hailing platform has 2,000,000 concurrently active drivers on the road globally. Every active driver&#039;s app transmits a GPS coordinate ping once every 4 seconds.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> What is the sustained global location update write rate in thousands of requests per second (k req/s)?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Divide 2,000,000 active drivers by 4 seconds per ping, and express in thousands (k req/s).</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-nearby-geospatial-search-system-design-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-nearby-geospatial-search-system-design-n1" placeholder="Enter numeric estimate (k req/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">k req/s</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="nearby-geospatial-search-system-design" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-nearby-geospatial-search-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 2,000,000 drivers ÷ 4 seconds = 500,000 location pings/sec = 500 k req/s of continuous mutable coordinate writes—far too high for unsharded disk-backed B+Tree updates.</div>
+        </div>
+      </div>
+    
         <div class="simulator-card" id="sim-geohash">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Geohash Explorer</div>
@@ -1134,6 +1165,71 @@
           </div>
         </div>
       
+      <div class="exercise-box quiz-card" id="quiz-nearby-geospatial-search-system-design-t1" data-type="tradeoff" data-slug="nearby-geospatial-search-system-design">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Ephemeral In-Memory Spatial Index vs Durable SQL Row Updates for Live GPS Pings</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> Your location ingestion service receives 500,000 GPS pings/sec from active drivers and must serverider nearby-driver queries (`radius &lt;= 3 km`) within 15 ms p99.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How should live driver coordinates be stored and indexed vs historical trip traces, and why?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Separate the mutable ephemeral &#039;current location&#039; hot path from the immutable &#039;historical breadcrumb&#039; log.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-nearby-geospatial-search-system-design-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-nearby-geospatial-search-system-design-t1" value="0" />
+               <span>Execute synchronous `UPDATE drivers SET lat=?, lng=?` + R-Tree re-indexing in PostgreSQL on all 500,000 pings/sec</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-nearby-geospatial-search-system-design-t1" value="1" />
+               <span>Maintain live driver positions in a city-sharded in-memory spatial index (H3/S2/Geohash cells in RAM/Redis) for sub-10ms matching, while asynchronously batching pings to an append-only stream (Kafka → columnar/object store) for trip history</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-nearby-geospatial-search-system-design-t1" value="2" />
+               <span>Have rider apps broadcast Bluetooth beacons to discover drivers within 3 km</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-nearby-geospatial-search-system-design-t1" value="0" />
+               <span>Synchronous disk B+Tree/R-Tree page splits handle 500,000 random updates/sec on a single database effortlessly</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-nearby-geospatial-search-system-design-t1" value="1" />
+               <span>A 4-second-old GPS coordinate is ephemeral state; decoupling the in-memory H3/Geohash matching hot path from batched async archival avoids random disk write amplification</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-nearby-geospatial-search-system-design-t1" value="2" />
+               <span>Bluetooth Low Energy has a 3 km urban non-line-of-sight range</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="nearby-geospatial-search-system-design" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-nearby-geospatial-search-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Current driver location is overwritten every 4 seconds. Holding the latest coordinate in an in-memory city-sharded H3/Geohash index serves K-ring lookups in &lt;5 ms, while async streaming batches historical breadcrumbs to cold storage.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1230,30 +1326,30 @@
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

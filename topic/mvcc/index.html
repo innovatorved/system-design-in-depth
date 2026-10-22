@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1104,6 +1104,37 @@ flowchart LR
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-mvcc-n1" data-type="numeric" data-slug="mvcc">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: MVCC Dead Tuple Bloat During Long Transactions</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A PostgreSQL database processes 5,000 row updates/sec where each updated tuple version occupies 200 bytes. An analytics script opens a transaction (`BEGIN; SELECT ...`) and holds its snapshot open for 1,000 seconds, preventing `VACUUM` from reclaiming dead tuples.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How many gigabytes (GB, using 1 GB = 10^9 bytes) of unreclaimable dead-tuple bloat accumulate during that 1,000-second window?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Dead tuples = 5,000 updates/s × 1,000 s = 5,000,000 tuples. Multiply by 200 bytes and convert to GB.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-mvcc-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-mvcc-n1" placeholder="Enter numeric estimate (GB)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">GB</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="mvcc-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="mvcc" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-mvcc-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 5,000 updates/s × 1,000 s = 5,000,000 dead tuple versions. At 200 bytes each, that creates 1,000,000,000 bytes = 1 GB of dead heap tuples in just 16.7 minutes (10 GB if held for ~2.7 hours), degrading sequential and index scan performance.</div>
+        </div>
+      </div>
+    
         <div class="simulator-card" id="sim-mvcc">
           <div class="simulator-card__header">
             <div class="simulator-card__title">MVCC and Isolation Levels (PostgreSQL)</div>
@@ -1128,12 +1159,89 @@ flowchart LR
           <div class="simulator-card__label" style="margin-top: var(--space-4)">What each level does (each script run to the end)</div>
           <div class="sim-grid-wrap"><table class="sim-grid" id="mv-matrix"></table></div>
         </div>
+      <div class="exercise-box quiz-card" id="quiz-mvcc-t1" data-type="tradeoff" data-slug="mvcc">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Append-Only Heap MVCC (Postgres) vs Undo-Log In-Place MVCC (InnoDB)</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A ride-sharing location table updates each active driver&#039;s `(lat, lng, updated_at)` row every 3 seconds (20,000 updates/sec) and has 4 secondary indexes on non-coordinate columns (`city_id`, `vehicle_type`, `status`, `rating`).</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How does PostgreSQL&#039;s append-only heap MVCC behave on this workload compared to InnoDB&#039;s undo-log MVCC, and what mitigates it in PostgreSQL?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> What two conditions are required for a PostgreSQL HOT (Heap-Only Tuple) update?</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-mvcc-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-mvcc-t1" value="0" />
+               <span>PostgreSQL updates rows in place by default, so secondary indexes never need updating</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-mvcc-t1" value="1" />
+               <span>Unindexed column updates can use PostgreSQL Heap-Only Tuples (HOT) if page fillfactor leaves free space; otherwise every update writes a new heap tuple AND entries in all 4 secondary indexes</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-mvcc-t1" value="2" />
+               <span>Adding more secondary indexes in PostgreSQL increases the probability of HOT updates</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-mvcc-t1" value="0" />
+               <span>PostgreSQL stores old versions in a separate rollback segment outside the heap</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-mvcc-t1" value="1" />
+               <span>Lowering table `fillfactor` (e.g., to 70-80) reserves intra-page space so updates to unindexed columns stay on the same 8 KB page and skip all 4 secondary index writes</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-mvcc-t1" value="2" />
+               <span>Secondary indexes automatically compress dead heap tuples during writes</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="mvcc-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="mvcc" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-mvcc-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> In PostgreSQL, updating a row writes a new tuple version. If no indexed column changed AND the new version fits on the same 8 KB heap page, PostgreSQL performs a HOT update—chaining the tuple inside the page and avoiding writes to the 4 secondary indexes.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
             <div class="takeaways__item">MVCC ensures readers never block writers and writers never block readers by maintaining multiple tuple versions.</div><div class="takeaways__item">In PostgreSQL, updates never modify data in place; they set xmax on the old tuple and insert a new tuple with xmin (InnoDB and Oracle update in place and keep old versions in undo).</div><div class="takeaways__item">Dead tuples accumulate on disk until VACUUM marks their space reusable (VACUUM FULL or pg_repack is needed to shrink the file).</div>
           </div>
         </div>
+      <div class="lesson-builds lesson-challenges">
+        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        
+          <a class="lesson-builds__item" href="/challenges/cascading-deadlock-depletion/" data-nav="challenges" data-challenge="cascading-deadlock-depletion">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Bidirectional Transfer Distributed Deadlock Pool Exhaustion</span>
+              <span class="badge">SEV-1 · hard</span>
+            </div>
+            
+            <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Launch Production Incident &amp; CodeLab Hotfix →</span>
+          </a>
+      </div>
         <div class="further-reading">
           <h3 class="further-reading__title">Further Reading</h3>
           <div class="further-reading__list">
@@ -1224,30 +1332,30 @@ flowchart LR
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-data.js?v=accc3870f9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

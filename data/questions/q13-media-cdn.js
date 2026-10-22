@@ -63,6 +63,59 @@ window.QUESTION_BANK["direct-to-object-storage-upload"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "direct-to-object-storage-upload-n1",
+    "topic": "direct-to-object-storage-upload",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: App-Server Bandwidth Saved via Presigned S3 Uploads",
+    "scenario": "Users upload 1,000 videos/sec with an average file size of 50 MB. Originally, clients uploaded the 50 MB binary through your API servers (50 GB/s ingress + 50 GB/s egress to S3 = 100 GB/s total NIC traffic on app servers). You migrate to presigned S3 multipart URLs where the API server only returns a 2 KB JSON presigned URL.",
+    "prompt": "How many gigabytes per second (GB/s) of total network traffic (ingress + egress) do your API servers save by switching to direct-to-object-storage uploads?",
+    "question": "How many gigabytes per second (GB/s) of total network traffic (ingress + egress) do your API servers save by switching to direct-to-object-storage uploads?",
+    "unit": "GB/s",
+    "answer": 100,
+    "tolerance": 0.25,
+    "hint": "App server ingress (50 GB/s) + app server egress to S3 (50 GB/s) = 100 GB/s eliminated (replaced by 2 MB/s of JSON).",
+    "explanation": "Proxying 1,000 × 50 MB/s through stateless API servers consumes 50 GB/s inbound and 50 GB/s outbound (100 GB/s = 800 Gbps total). Presigned URLs reduce API traffic to 1,000 × 2 KB/s = 2 MB/s, saving ~100 GB/s.",
+    "tags": [
+      "direct-to-object-storage-upload",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "direct-to-object-storage-upload-t1",
+    "topic": "direct-to-object-storage-upload",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Presigned Upload Completion Verification & Orphan Cleanup",
+    "scenario": "When clients upload directly to S3 via presigned URLs, the API server is no longer in the data path. Some clients crash mid-upload, while malicious clients call your `POST /upload-complete` API without actually uploading a valid image.",
+    "prompt": "How should the control plane track upload lifecycle and enforce validation safely?",
+    "question": "How should the control plane track upload lifecycle and enforce validation safely?",
+    "options": [
+      "Trust the client's `POST /upload-complete` call blindly and immediately publish the object URL to all users",
+      "Record a `PENDING` metadata row when issuing the presigned URL (with strict Content-Length / SHA-256 policy conditions), transition to `READY` only upon verified S3 Event Notification (`ObjectCreated`) + magic-byte/virus scan, and expire incomplete multipart uploads via S3 Lifecycle rules",
+      "Make the S3 bucket publicly writable without presigned URLs"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Clients never lie about completing an upload or uploading malicious executables disguised as JPEGs",
+      "Storage-emitted event notifications (`ObjectCreated`) provide ground-truth confirmation out-of-band from the untrusted client, while S3 lifecycle policies garbage-collect abandoned multipart chunks automatically",
+      "Publicly writable buckets prevent unauthorized overwrites and storage-cost attacks"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Who is the source of truth that the bytes actually landed in S3: the untrusted browser or S3's own event notification?",
+    "explanation": "Never trust the client to self-report upload completion. Enforce size/hash constraints in the presigned policy, trigger post-upload validation from S3 `ObjectCreated` event notifications, and configure S3 `AbortIncompleteMultipartUpload` lifecycle rules.",
+    "tags": [
+      "direct-to-object-storage-upload",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -327,6 +380,59 @@ window.QUESTION_BANK["video-transcoding-pipeline"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "video-transcoding-pipeline-n1",
+    "topic": "video-transcoding-pipeline",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Video Transcoding Worker Core Sizing",
+    "scenario": "Creators upload 600 hours of raw video per hour (a 10-minute video every second). Each uploaded hour of raw video is transcoded into an ABR ladder (1080p, 720p, 480p, 360p) requiring a combined 20 CPU-core-hours of compute per 1 hour of source video.",
+    "prompt": "What is the minimum number of CPU cores required to keep up with the 600 hours/hour upload rate in real time (at 100% utilization)?",
+    "question": "What is the minimum number of CPU cores required to keep up with the 600 hours/hour upload rate in real time (at 100% utilization)?",
+    "unit": "cores",
+    "answer": 12000,
+    "tolerance": 0.25,
+    "hint": "Multiply 600 source video hours/hour × 20 CPU-core-hours per source hour.",
+    "explanation": "600 source hours/hour × 20 core-hours/source hour = 12,000 CPU cores running continuously (or ~16,000 cores at 75% target utilization) just to transcode incoming uploads without growing queue lag.",
+    "tags": [
+      "video-transcoding-pipeline",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "video-transcoding-pipeline-t1",
+    "topic": "video-transcoding-pipeline",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Whole-File Sequential Transcoding vs GOP-Aligned Chunk-Parallel DAG",
+    "scenario": "A creator uploads a 2-hour 4K keynote video before a live product launch. Sequential single-worker transcoding takes 3 hours, missing the launch window.",
+    "prompt": "How should the transcoding pipeline minimize time-to-publish AND optimize compute cost across the catalog?",
+    "question": "How should the transcoding pipeline minimize time-to-publish AND optimize compute cost across the catalog?",
+    "options": [
+      "Transcode the entire 2-hour file on a single thread into AV1, HEVC, and H.264 before making any resolution playable",
+      "Split the source video along keyframe (GOP) boundaries into independent 4–10 second chunks, transcode chunks + resolutions in parallel across a DAG worker pool (publishing 360p/720p H.264 first for fast startup), and defer expensive AV1 encoding to popular videos only",
+      "Serve the raw 80 GB uncompressed camera file directly to mobile viewers over cellular networks"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Single-threaded 2-hour AV1 encoding completes in milliseconds",
+      "GOP-aligned chunking turns a 3-hour serial job into数百 parallel 5-second tasks, while popularity-tiered codec selection avoids burning 10x AV1 CPU on videos that get <10 views",
+      "Mobile phones on 4G can stream 90 Mbps raw studio files without buffering"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why transcode into expensive AV1 for the 80% of uploaded videos that receive fewer than 10 views?",
+    "explanation": "Splitting along GOP (Group of Pictures) boundaries allows hundreds of workers to transcode 4-second segments in parallel (cutting latency from hours to seconds), while gating compute-heavy codecs (AV1/VP9) behind view-count thresholds saves massive fleet CPU.",
+    "tags": [
+      "video-transcoding-pipeline",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -392,6 +498,59 @@ window.QUESTION_BANK["adaptive-bitrate-and-cdn-decider"] = [
       "adaptive-bitrate-and-cdn-decider",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "adaptive-bitrate-and-cdn-decider-n1",
+    "topic": "adaptive-bitrate-and-cdn-decider",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: CDN Origin Shield Bandwidth Offload",
+    "scenario": "A live HLS/DASH video stream has 500,000 concurrent viewers distributed across 50 edge POPs. The video bitrate is 4 Mbps (0.5 MB/s), so edge POPs deliver `500,000 × 4 Mbps = 2,000 Gbps` (2 Tbps) to eyeballs. With an Origin Shield and 99.9% overall CDN offload, only 1 request per segment per edge POP reaches the shield, and only 1 request per segment (4 Mbps) reaches the origin storage bucket.",
+    "prompt": "How many Tera-bits per second (Tbps) of egress bandwidth do the 50 edge POPs serve to the 500,000 viewers (500,000 × 4 Mbps, where 1 Tbps = 1,000,000 Mbps)?",
+    "question": "How many Tera-bits per second (Tbps) of egress bandwidth do the 50 edge POPs serve to the 500,000 viewers (500,000 × 4 Mbps, where 1 Tbps = 1,000,000 Mbps)?",
+    "unit": "Tbps",
+    "answer": 2,
+    "tolerance": 0.25,
+    "hint": "Multiply 500,000 viewers × 4 Mbps = 2,000,000 Mbps = 2 Tbps.",
+    "explanation": "500,000 concurrent streams × 4 Mbps = 2,000,000 Mbps = 2 Tbps of edge delivery—all collapsed down to a single 4 Mbps origin fetch via request coalescing at the CDN edge and Origin Shield!",
+    "tags": [
+      "adaptive-bitrate-and-cdn-decider",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "adaptive-bitrate-and-cdn-decider-t1",
+    "topic": "adaptive-bitrate-and-cdn-decider",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: HLS/DASH Segment Duration (2s vs 10s) and Multi-CDN Steering",
+    "scenario": "You are configuring HLS/DASH segment length and multi-CDN control plane steering for a live sports streaming platform.",
+    "prompt": "What is the fundamental trade-off when shrinking segment duration from 10 seconds to 1–2 seconds (or CMAF chunks), and how should multi-CDN traffic be steered?",
+    "question": "What is the fundamental trade-off when shrinking segment duration from 10 seconds to 1–2 seconds (or CMAF chunks), and how should multi-CDN traffic be steered?",
+    "options": [
+      "10-second segments reduce glass-to-glass live latency and allow faster bitrate adaptation on cellular drops",
+      "Shorter segments (1–2s / Low-Latency CMAF) reduce live latency and react faster to bandwidth drops, at the cost of higher keyframe compression overhead and 5–10x higher HTTP request QPS (mitigated by client-side telemetry-driven Multi-CDN manifest/DNS steering)",
+      "Hardcode a single CDN URL inside the mobile app binary so switching CDNs requires an App Store release"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "A 10-second segment requires zero keyframes and adapts bitrate every 100 ms",
+      "Every segment starts with an IDR keyframe (reducing compression efficiency when segments are very short) and multiplies request rate, while dynamic control-plane manifest steering routes around regional CDN brownouts in real time",
+      "App Store review cycles (24-48 hours) are fast enough for live mid-match CDN failover"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Each segment must begin with a standalone IDR keyframe and requires a separate HTTP GET request.",
+    "explanation": "Shortening segments reduces glass-to-glass latency and lets the ABR player downshift quickly when cellular throughput drops, but increases keyframe bitrate overhead and request QPS. A real-time Multi-CDN decider steers players between CDNs via manifest URL rewriting based on client QoE telemetry.",
+    "tags": [
+      "adaptive-bitrate-and-cdn-decider",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

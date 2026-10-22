@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1139,6 +1139,37 @@ flowchart TD
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-tail-latency-n1" data-type="numeric" data-slug="tail-latency">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Fan-Out Tail Latency Probability</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> An aggregator service fans out each search request in parallel to 100 leaf shards and waits for all 100 shards to respond. Each individual leaf shard has an independent 1% probability (p99) of taking longer than 50 ms.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Using the approximation (1 - 0.99^100 ≈ 0.63), what percentage of aggregated user requests will experience latency &gt; 50 ms?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> P(at least one shard &gt; 50 ms) = 1 - P(all 100 shards &lt;= 50 ms) = 1 - (0.99)^100 ≈ 63%.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-tail-latency-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-tail-latency-n1" placeholder="Enter numeric estimate (%)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">%</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="tail-latency-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="tail-latency" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-tail-latency-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> For all 100 shards to finish within 50 ms, every single shard must beat its p99 threshold: 0.99^100 ≈ 0.366. Thus 1 - 0.366 = 63.4% of user requests suffer the &gt;50 ms tail latency of the slowest leaf shard.</div>
+        </div>
+      </div>
+    
       <div class="simulator-card" id="sim-latency">
         <div class="simulator-card__header">
           <div class="simulator-card__title"><span>Latency Budget Builder</span></div>
@@ -1163,6 +1194,71 @@ flowchart TD
         </div>
       </div>
     
+      <div class="exercise-box quiz-card" id="quiz-tail-latency-t1" data-type="tradeoff" data-slug="tail-latency">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Hedged Requests vs Backend Load Amplification</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> Your 100-shard search fan-out suffers 63% p99 tail amplification due to occasional GC pauses on individual leaf replicas. Each shard has 3 replicas currently running at 35% CPU utilization.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Which tail-latency mitigation should you deploy, and what is the primary engineering justification?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> From Google&#039;s &#039;The Tail at Scale&#039;: how do you cut p99 latency while adding &lt;= 5% extra backend work?</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-tail-latency-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-tail-latency-t1" value="0" />
+               <span>Send duplicate requests to all 3 replicas for 100% of queries immediately at t = 0 ms</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-tail-latency-t1" value="1" />
+               <span>Issue a hedged request to a second replica only when a shard call exceeds its p95 latency threshold, with cross-replica cancellation</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-tail-latency-t1" value="2" />
+               <span>Increase the client timeout from 100 ms to 10 seconds and disable retries</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-tail-latency-t1" value="0" />
+               <span>Tripling cluster QPS at t = 0 ms is free and never causes queueing delay</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-tail-latency-t1" value="1" />
+               <span>Waiting until the p95 threshold limits extra cluster load to at most ~5% while routing around GC-stalled replicas</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-tail-latency-t1" value="2" />
+               <span>Longer timeouts reduce p99 response latency for end users</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="tail-latency-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="tail-latency" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-tail-latency-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Hedging after the p95 delay threshold means 95% of shard requests never trigger a second call, bounding extra load to ~5% while eliminating single-replica GC stalls from the fan-out tail.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1173,9 +1269,32 @@ flowchart TD
         <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
         
           <a class="lesson-builds__item" href="/build/load-balancer-from-scratch/" data-action="navigate-build" data-build-id="load-balancer-from-scratch">
-            <span class="lesson-builds__name">Layer 7 Load Balancer From Scratch</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Layer 7 Load Balancer From Scratch</span>
+              
+            </div>
             <span class="lesson-builds__summary">A real node:http reverse proxy with round-robin, least-connections and power-of-two-choices selection. It adds active health checks with thresholds, passive outlier ejection with backoff and a max-ejection cap, safe retries, 502/504 handling and X-Forwarded-* header rules.</span>
             <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
+          </a>
+          <a class="lesson-builds__item" href="/build/circuit-breaker/" data-action="navigate-build" data-build-id="circuit-breaker">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Circuit Breaker &amp; Adaptive Load Shedder</span>
+              
+            </div>
+            <span class="lesson-builds__summary">Three-state rolling-window circuit breaker (CLOSED, OPEN, HALF_OPEN) with single-probe half-open recovery, error-rate threshold tripping, and priority-aware Little’s Law concurrency load shedding.</span>
+            <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
+          </a>
+      </div>
+      <div class="lesson-builds lesson-challenges">
+        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        
+          <a class="lesson-builds__item" href="/challenges/circuit-breaker-flapping/" data-nav="challenges" data-challenge="circuit-breaker-flapping">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Payment Gateway Circuit Breaker Flapping Loop</span>
+              <span class="badge">SEV-1 · medium</span>
+            </div>
+            
+            <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Launch Production Incident &amp; CodeLab Hotfix →</span>
           </a>
       </div>
         <div class="further-reading">
@@ -1268,30 +1387,30 @@ flowchart TD
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

@@ -418,7 +418,10 @@ if (fs.existsSync(questionsDir)) {
       }
       for (const q of questions) {
         totalQuestions++;
-        if (!q.id || !q.type || !q.difficulty || !q.prompt || !q.options || q.answer === undefined || !q.explanation) {
+        const hasPrompt = Boolean(q.prompt || q.question);
+        const hasOptions = q.type === 'numeric' || Array.isArray(q.options);
+        const hasAnswer = q.answer !== undefined || (q.type === 'tradeoff' && q.correctOption !== undefined && q.correctReason !== undefined);
+        if (!q.id || !q.type || !q.difficulty || !hasPrompt || !hasOptions || !hasAnswer || !q.explanation) {
           reportError(`Question bank invalid question: ${q.id || JSON.stringify(q).slice(0, 100)}`);
           invalidQuestions++;
         }

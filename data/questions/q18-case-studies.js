@@ -129,6 +129,59 @@ window.QUESTION_BANK["case-stripe-idempotency-keys"] = [
       "recall",
       "inline"
     ]
+  },
+  {
+    "id": "case-stripe-idempotency-keys-n1",
+    "topic": "case-stripe-idempotency-keys",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Idempotency Key Table Storage Footprint (24-Hour Retention)",
+    "scenario": "A Stripe-like payment API processes 5,000 mutating POST requests per second (`5,000 × 86,400 = 432,000,000` requests/day, or using 100,000 s/day napkin math = 500,000,000 requests/day). Each idempotency record (key, request fingerprint, status, cached HTTP response, indexes) occupies 1 KB and is retained for 24 hours.",
+    "prompt": "Using 500,000,000 requests/day × 1 KB/record, how many gigabytes (GB, using 1 GB = 1,000,000 KB) of active storage does the 24-hour idempotency key table require?",
+    "question": "Using 500,000,000 requests/day × 1 KB/record, how many gigabytes (GB, using 1 GB = 1,000,000 KB) of active storage does the 24-hour idempotency key table require?",
+    "unit": "GB",
+    "answer": 500,
+    "tolerance": 0.25,
+    "hint": "500,000,000 records × 1 KB ÷ 1,000,000 KB/GB = 500 GB (or 432 GB using exact 86,400 s/day).",
+    "explanation": "At 5,000 mutating req/s (~432M–500M requests/day) and 1 KB per cached response envelope, a 24-hour rolling idempotency window requires ~432–500 GB of fast storage, after which keys are pruned via background reaper/partition drop.",
+    "tags": [
+      "case-stripe-idempotency-keys",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "case-stripe-idempotency-keys-t1",
+    "topic": "case-stripe-idempotency-keys",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Atomic Recovery Points vs Replay of Mismatched Request Payloads",
+    "scenario": "A buggy merchant integration generates a single `Idempotency-Key` at app startup and accidentally reuses that same key for two different customers' checkout requests (`$10.00 for Alice`, then `$250.00 for Bob`). Later, a third request fails mid-way at a recoverable network error.",
+    "prompt": "How does Stripe's Atomic Phase / Recovery Point architecture handle parameter mismatches and partial failures on an `Idempotency-Key`?",
+    "question": "How does Stripe's Atomic Phase / Recovery Point architecture handle parameter mismatches and partial failures on an `Idempotency-Key`?",
+    "options": [
+      "Silently return Alice's `$10.00` HTTP 200 receipt to Bob's `$250.00` request without checking the request body",
+      "Store a cryptographic hash of the request parameters alongside the `Idempotency-Key` (returning `422/400 Parameter Mismatch` if a retry changes the payload), and checkpoint deterministic recovery points after each local ACID transaction phase so retries resume from the last committed phase",
+      "Delete the idempotency key whenever any downstream call returns a 500 error so the next retry starts from scratch even if the card was already charged"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Returning Customer A's payment receipt for Customer B's order prevents bugs",
+      "Validating the request payload fingerprint catches accidental key reuse across distinct operations immediately, while transactional recovery points ensure multi-step mutations resume deterministically without repeating completed side effects",
+      "Deleting idempotency state after an ambiguous network error guarantees at-most-once execution"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "What should happen if a client sends the same `Idempotency-Key` with different request parameters?",
+    "explanation": "Comparing a hash of the incoming request body against the stored fingerprint prevents silent corruption when a client reuses an idempotency key across different payloads. Recording atomic recovery points in the same ACID transaction as local state transitions allows safe resumption or replay.",
+    "tags": [
+      "case-stripe-idempotency-keys",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -194,6 +247,59 @@ window.QUESTION_BANK["case-discord-message-storage"] = [
       "case-discord-message-storage",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "case-discord-message-storage-n1",
+    "topic": "case-discord-message-storage",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Request Coalescing Amplification on Hot Discord Channels",
+    "scenario": "In Discord's migration from Cassandra to ScyllaDB with a Rust data-service intermediary, a popular announcement channel has 1,000 users open the channel in the same 20 ms window. Without coalescing, all 1,000 requests query the database for `(channel_id, bucket)`. With the Rust data service coalescing concurrent in-flight reads for the same `(channel_id, bucket)`, only 1 query hits ScyllaDB.",
+    "prompt": "By what factor (`1,000 ÷ 1`) does singleflight request coalescing reduce database read QPS for that 20 ms burst on the hot channel?",
+    "question": "By what factor (`1,000 ÷ 1`) does singleflight request coalescing reduce database read QPS for that 20 ms burst on the hot channel?",
+    "unit": "x",
+    "answer": 1000,
+    "tolerance": 0.25,
+    "hint": "1,000 concurrent requests collapsed into 1 database query = 1,000x reduction.",
+    "explanation": "When an `@everyone` ping triggers 1,000 simultaneous channel history reads within a 20 ms window, routing by `channel_id` to a single Rust service instance that coalesces identical in-flight queries collapses 1,000 DB reads into 1 DB read (a 1,000x reduction on the hot partition).",
+    "tags": [
+      "case-discord-message-storage",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "case-discord-message-storage-t1",
+    "topic": "case-discord-message-storage",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Why Discord's `(channel_id, bucket)` Partition Key Still Suffered Hot Partitions in Cassandra",
+    "scenario": "Discord partitioned messages by `(channel_id, time_bucket)` so partitions wouldn't grow unboundedly. Yet large servers still caused 10-second latency spikes in Cassandra when a single channel received a burst of reads alongside background compactions and JVM GC pauses.",
+    "prompt": "What combination of architectural changes resolved Discord's hot-partition tail latency when migrating from Cassandra to ScyllaDB?",
+    "question": "What combination of architectural changes resolved Discord's hot-partition tail latency when migrating from Cassandra to ScyllaDB?",
+    "options": [
+      "Remove `channel_id` from the partition key and shard randomly by `message_id`",
+      "Introduce a consistent-hashed Rust data-service layer in front of the DB to coalesce concurrent identical `(channel_id, bucket)` reads (singleflight), and migrate storage from JVM-based Cassandra to C++ shard-per-core ScyllaDB to eliminate JVM stop-the-world GC pauses",
+      "Move trillions of chat messages into a single unsharded SQLite file"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Sharding by random `message_id` makes fetching a channel's last 50 messages a fast single-node query",
+      "`(channel_id, bucket)` bounds partition size on disk but still concentrates concurrent live reads on one replica set; coalescing duplicate reads in the Rust proxy eliminated hot-channel read amplification while ScyllaDB eliminated JVM GC stalls",
+      "A single SQLite file easily stores trillions of messages at millions of QPS"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Time-bucketing bounds *storage size* per partition, but what bounds *concurrent read QPS* when 50,000 users open the same channel at once?",
+    "explanation": "Time-bucketing `(channel_id, bucket)` stops partitions from growing forever on disk, but all current activity in a hot channel still hits the current time bucket! Consistent-routing requests by `channel_id` through a Rust proxy that deduplicates concurrent in-flight reads, paired with GC-free ScyllaDB, solved both hot-partition amplification and GC tail latency.",
+    "tags": [
+      "case-discord-message-storage",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -326,6 +432,59 @@ window.QUESTION_BANK["case-gitlab-database-incident"] = [
       "case-gitlab-database-incident",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "case-gitlab-database-incident-n1",
+    "topic": "case-gitlab-database-incident",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: PostgreSQL WAL Retention Lag During Replication Outage",
+    "scenario": "A primary PostgreSQL database generates 50 MB/s of Write-Ahead Log (WAL) traffic during a spam/load surge. A secondary replica disconnects, and WAL archiving/slots retain un-replayed WAL segments on the primary's disk, which only has 180 GB (180,000 MB) of free space.",
+    "prompt": "How many minutes (`180,000 MB ÷ 50 MB/s ÷ 60 s/min`) does it take for retained WAL files to completely fill the primary's 180 GB of free disk space?",
+    "question": "How many minutes (`180,000 MB ÷ 50 MB/s ÷ 60 s/min`) does it take for retained WAL files to completely fill the primary's 180 GB of free disk space?",
+    "unit": "minutes",
+    "answer": 60,
+    "tolerance": 0.25,
+    "hint": "Seconds to fill = 180,000 MB ÷ 50 MB/s = 3,600 seconds. Divide by 60 seconds/minute.",
+    "explanation": "`180,000 MB / 50 MB/s = 3,600 seconds = 60 minutes` (1 hour). Conversely, if `max_wal_size` recycles WAL segments before a lagging replica fetches them, the replica falls behind permanently and requires a full multi-terabyte `pg_basebackup` rebuild.",
+    "tags": [
+      "case-gitlab-database-incident",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "case-gitlab-database-incident-t1",
+    "topic": "case-gitlab-database-incident",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Untested Backup Cron Jobs vs Automated Restore Verification & Destructive Command Guardrails",
+    "scenario": "In the 2017 GitLab database incident, 5 backup/replication mechanisms failed silently (e.g., `pg_dump` silently skipped due to a version mismatch with 0-byte files and cron stderr redirected to `/dev/null`), and a tired engineer ran `rm -rf` on `db1.cluster` instead of `db2.staging`.",
+    "prompt": "Which operational controls directly prevent both failure modes in a Staff-level reliability architecture?",
+    "question": "Which operational controls directly prevent both failure modes in a Staff-level reliability architecture?",
+    "options": [
+      "Write a wiki page reminding engineers to be careful when running `rm -rf` at 11 PM",
+      "Automate daily backup-restore verification pipelines (booting an ephemeral instance from backup + WAL and running row-count/checksum assertions with dead-man's-switch alerting) AND enforce environment-tagged CLI/IAM guardrails (immutable production role tags, two-person approval for data directory deletion)",
+      "Add 5 more unverified backup scripts that also redirect `stderr` to `/dev/null`"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Wiki reminders eliminate human fatigue during high-severity midnight outages",
+      "A backup only exists if its restore path is continuously tested and alerted on absence (dead-man's switch), and destructive operations must be gated by technical environment guardrails rather than human terminal prompts",
+      "Silent `0-byte` backup files provide defense in depth as long as there are many of them"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "'Schrödinger's Backup': the condition of any backup is unknown until you attempt to restore it.",
+    "explanation": "The GitLab postmortem proved two timeless SRE laws: (1) unverified backups with silenced alerts rot silently—you must continuously test restores and alert when a restore check fails to report success (dead-man's switch); and (2) destructive prod operations require automated technical guardrails, not human vigilance under sleep deprivation.",
+    "tags": [
+      "case-gitlab-database-incident",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

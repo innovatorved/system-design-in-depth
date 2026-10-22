@@ -63,6 +63,59 @@ window.QUESTION_BANK["url-shortener-system-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "url-shortener-system-design-n1",
+    "topic": "url-shortener-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Base62 Short Code Namespace Capacity",
+    "scenario": "You design a short code generator using a Base62 alphabet (`a-z`, `A-Z`, `0-9` = 62 characters). A 6-character code provides `62^6 ≈ 56.8 billion` codes, and a 7-character code provides `62^7 ≈ 3.52 trillion` (`3,521 billion`) codes.",
+    "prompt": "At a write rate of 1 billion new links per year, how many years would it take to exhaust 56 billion 6-character Base62 codes (rounded to the nearest integer)?",
+    "question": "At a write rate of 1 billion new links per year, how many years would it take to exhaust 56 billion 6-character Base62 codes (rounded to the nearest integer)?",
+    "unit": "years",
+    "answer": 56,
+    "tolerance": 0.25,
+    "hint": "Divide 56 billion total codes by 1 billion codes per year.",
+    "explanation": "`62^6 = 56,800,235,584` (~56.8 billion) unique codes. At 1 billion links/year (~31.7 writes/sec), a 6-character Base62 namespace lasts ~56–57 years (and a 7-character namespace lasts ~3,521 years).",
+    "tags": [
+      "url-shortener-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "url-shortener-system-design-t1",
+    "topic": "url-shortener-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: HTTP 301 (Permanent) vs HTTP 302 (Temporary) Redirect Status Codes",
+    "scenario": "Product management wants your URL shortener to provide accurate real-time click analytics (total clicks, referrer, geo, device breakdown) AND allow enterprise customers to update a link's destination URL during a campaign.",
+    "prompt": "Which HTTP redirect status code and caching policy must you choose, and what is the trade-off?",
+    "question": "Which HTTP redirect status code and caching policy must you choose, and what is the trade-off?",
+    "options": [
+      "Return `HTTP 301 Moved Permanently` with `Cache-Control: max-age=31536000` so browsers never contact your servers again",
+      "Return `HTTP 302 Found` (or `307` with controlled `Cache-Control: no-cache` / edge beacon logging) so every click reaches your edge/service to record analytics and respect destination updates, trading off higher edge request QPS",
+      "Return `HTTP 200 OK` with an HTML `<iframe src='...'>` wrapping the destination site"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Browsers cache HTTP 301 permanently in local disk cache and still send click analytics to the shortener on subsequent clicks",
+      "HTTP 301 causes browsers to bypass the shortener on repeat clicks (losing analytics and serving stale destinations if edited); HTTP 302 (handled at CDN edge with log streaming) preserves click telemetry and mutability",
+      "All websites allow being embedded in third-party iframes (`X-Frame-Options: DENY` does not exist)"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "What does a browser do on the second click of an `HTTP 301` redirect?",
+    "explanation": "With `HTTP 301`, browsers cache the redirect locally and jump straight to the target URL on repeat clicks, blinding your analytics pipeline and ignoring destination edits. `HTTP 302` ensures repeat clicks hit your edge (or API) where click events are captured.",
+    "tags": [
+      "url-shortener-system-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -327,6 +380,59 @@ window.QUESTION_BANK["collaborative-editing-system-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "collaborative-editing-system-design-n1",
+    "topic": "collaborative-editing-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Collaborative Document Keystroke Fan-Out Rate",
+    "scenario": "50 editors are simultaneously typing in the same shared document room. Each editor emits 4 keystroke/cursor operations per second (after 250 ms micro-batching), and the room coordinator broadcasts every operation to the other 49 connected editors (`50 × 4 × 49 ≈ 50 × 4 × 50`).",
+    "prompt": "Approximating `50 senders × 4 ops/s × 50 recipients`, how many outbound operation messages per second does the document room coordinator fan out?",
+    "question": "Approximating `50 senders × 4 ops/s × 50 recipients`, how many outbound operation messages per second does the document room coordinator fan out?",
+    "unit": "msg/s",
+    "answer": 10000,
+    "tolerance": 0.25,
+    "hint": "50 editors × 4 ops/sec = 200 inbound ops/sec. Multiply by ~50 recipients (or 49 exact = 9,800).",
+    "explanation": "With `N = 50` active editors each sending 4 ops/sec, inbound traffic is 200 ops/sec, and outbound broadcast scales quadratically (`O(N^2)`): `200 × 49 = 9,800 msg/s` (~10,000 msg/s)—which is why active editors per document are capped (e.g., ~100 writers + read-only viewers).",
+    "tags": [
+      "collaborative-editing-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "collaborative-editing-system-design-t1",
+    "topic": "collaborative-editing-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Operational Transformation (OT) vs Conflict-Free Replicated Data Types (CRDTs)",
+    "scenario": "You are designing a local-first collaborative note-taking app where users frequently edit documents offline on airplanes for hours, sync with peers over P2P or edge relays, and merge without a single central ordering server.",
+    "prompt": "Should you choose central-server Operational Transformation (OT) or a sequence CRDT (like Yjs / Automerge RGA), and why?",
+    "question": "Should you choose central-server Operational Transformation (OT) or a sequence CRDT (like Yjs / Automerge RGA), and why?",
+    "options": [
+      "Use classic Google Docs single-server OT because it requires no central sequencing server to merge multi-hour offline branches",
+      "Use a sequence CRDT (with run-length encoded Lamport/actor IDs and periodic snapshot compaction), because CRDT operations commute idempotently across arbitrary offline/decentralized merge orders, trading off tombstone metadata overhead",
+      "Use `Last-Write-Wins` on the entire document blob so the second user to come online overwrites the first user's 3-hour flight edits"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Classic OT transformation functions (`TP1/TP2`) easily scale to decentralized multi-peer offline merges without a central sequencer",
+      "Sequence CRDTs assign immutable unique IDs to character/block insertions so concurrent offline edits converge deterministically without a central ordering authority, at the cost of tombstone metadata that must be compacted",
+      "Overwriting 3 hours of offline edits on reconnect delights collaborative users"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why did Figma and Notion/Linear/Yjs adopt CRDT-style structures when offline and decentralized sync mattered?",
+    "explanation": "Classic OT (like Jupiter/Google Wave) relies on a single authoritative server to assign a total order of state revisions (`TP1`). When clients work offline for hours or sync across edge nodes, sequence CRDTs (like Yjs) guarantee strong eventual convergence without central coordination.",
+    "tags": [
+      "collaborative-editing-system-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -458,6 +564,59 @@ window.QUESTION_BANK["partitioned-log-system-design"] = [
       "partitioned-log-system-design",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "partitioned-log-system-design-n1",
+    "topic": "partitioned-log-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Kafka Broker Disk Capacity With 7-Day Retention & RF=3",
+    "scenario": "A partitioned log cluster ingests 200 MB/s of compressed events (`200 MB/s × 86,400 s/day ≈ 17.28 TB/day`, or using 100,000 s/day napkin math = 20 TB/day). Events are retained for 5 days with a Replication Factor of `RF = 3`.",
+    "prompt": "Using the napkin figure of 20 TB/day of logical ingress, how many terabytes (TB) of raw broker disk storage are required for 5 days of retention at `RF = 3`?",
+    "question": "Using the napkin figure of 20 TB/day of logical ingress, how many terabytes (TB) of raw broker disk storage are required for 5 days of retention at `RF = 3`?",
+    "unit": "TB",
+    "answer": 300,
+    "tolerance": 0.25,
+    "hint": "20 TB/day × 5 days × 3 replicas = 300 TB (or ~259 TB using exact 86,400 s/day).",
+    "explanation": "At ~20 TB/day (17.28 TB/day exact), 5 days of logical data is 86.4–100 TB. Multiplying by `RF = 3` requires 259–300 TB of physical broker disk capacity before headroom.",
+    "tags": [
+      "partitioned-log-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "partitioned-log-system-design-t1",
+    "topic": "partitioned-log-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Zero-Copy `sendfile` + OS Page Cache vs Application-Heap Buffering",
+    "scenario": "Your partitioned log broker must serve 1 primary real-time consumer group (reading the tail within 10 ms of write) and 1 backfill consumer group (reading 3-day-old segments) at 2 GB/s per broker without JVM GC stalls.",
+    "prompt": "How should the broker manage segment caching and network socket writes, and what happens when a backfill consumer scans cold disk?",
+    "question": "How should the broker manage segment caching and network socket writes, and what happens when a backfill consumer scans cold disk?",
+    "options": [
+      "Cache all log messages as deserialized Java objects inside a 128 GB JVM heap",
+      "Write binary batches directly to append-only segment files backed by the OS page cache and stream to consumers via `sendfile()` zero-copy DMA (and use tiered object storage / `fadvise(DONTNEED)` for cold backfills so historical scans don't evict the hot tail from page cache)",
+      "Call `fsync()` synchronously on every single 100-byte message before writing to the OS page cache"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Storing 100 GB of small objects in JVM heap eliminates garbage collection pauses",
+      "OS page cache + `sendfile()` DMA transfers bytes from page cache to NIC buffer without copying into user space or touching JVM heap, while isolating cold backfill reads prevents page-cache thrashing",
+      "Single-message unbatched `fsync()` maximizes NVMe sequential write throughput"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why does Kafka rely on the Linux page cache + `sendfile()` syscall, and how can a cold backfill ruin tail latency?",
+    "explanation": "`sendfile()` streams bytes directly from the kernel page cache to the NIC via DMA without user-space copies or JVM heap allocation. However, a cold historical backfill can thrash the OS page cache and evict the hot tail unless cold segments are served from tiered storage or isolated via `POSIX_FADV_DONTNEED` / direct I/O.",
+    "tags": [
+      "partitioned-log-system-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

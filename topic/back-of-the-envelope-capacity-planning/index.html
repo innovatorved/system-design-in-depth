@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1130,6 +1130,37 @@
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-back-of-the-envelope-capacity-planning-n1" data-type="numeric" data-slug="back-of-the-envelope-capacity-planning">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Peak Egress Bandwidth for Feed Service</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A social feed serves 10 million Daily Active Users (DAU), each fetching their home feed 20 times per day. Assume 100,000 seconds/day, a 10x peak-to-average traffic ratio, and an average compressed JSON response payload of 20 KB per feed request.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> What is the peak outbound network bandwidth required at the API boundary in MB/s (using 1 MB = 1,000 KB)?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Average QPS = (10M × 20) / 100,000 = 2,000 req/s. Peak QPS = 2,000 × 10 = 20,000 req/s. Multiply by 20 KB and convert to MB/s.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-back-of-the-envelope-capacity-planning-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-back-of-the-envelope-capacity-planning-n1" placeholder="Enter numeric estimate (MB/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">MB/s</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="back-of-the-envelope-capacity-planning-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="back-of-the-envelope-capacity-planning" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-back-of-the-envelope-capacity-planning-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Total daily requests = 10M × 20 = 200M/day. Dividing by ~100,000 sec/day yields ~2,000 req/s average, and 20,000 req/s at 10x peak (or ~23,000 req/s using exact 86,400 s). Multiplying 20,000 req/s × 20 KB/req = 400,000 KB/s = 400 MB/s (~3.2 Gbps) of sustained peak egress.</div>
+        </div>
+      </div>
+    
         <div class="simulator-card" id="sim-capacity">
           <div class="simulator-card__header">
             <div class="simulator-card__title">
@@ -1184,43 +1215,68 @@
           </div>
         </div>
       
-      <div class="exercise-box" id="exercise-back-of-the-envelope-capacity-planning" data-slug="back-of-the-envelope-capacity-planning">
+      <div class="exercise-box quiz-card" id="quiz-back-of-the-envelope-capacity-planning-t1" data-type="tradeoff" data-slug="back-of-the-envelope-capacity-planning">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Architecture Challenge: Back-of-the-Envelope Math: Storage &amp; QPS Estimation</span>
+            <span>Trade-Off Matrix: Sizing Storage From Assumptions vs Fixture Measurements</span>
           </div>
-          <span class="exercise-box__difficulty">Intermediate</span>
+          <span class="exercise-box__difficulty">staff</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> 50M uploads/day × 200 KB/photo = 10,000,000,000 KB/day = 10 TB/day.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> A photo-sharing service receives 50 million photo uploads per day. Each photo is compressed to 200 KB on average. How much disk storage is needed per year (excluding replication factor)?</div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> Your initial napkin estimate assumed 500 bytes per URL row (0.91 TB for 1.825B rows over 5 years), but a 1M-row PostgreSQL 16 benchmark fixture measured 138 bytes per row including B-tree indexes (0.25 TB).</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How should you translate this fixture measurement into the production capacity plan, and why?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Distinguish between static tuple+index bytes in a clean load vs live operational disk usage (MVCC, WAL, replicas).</div>
         
-        <div class="exercise-options">
+        <div class="quiz-options exercise-options" id="quiz-options-back-of-the-envelope-capacity-planning-t1" style="margin-top: 15px;">
           
-            <div class="exercise-option" data-action="exercise-option" data-idx="0">
-              <span class="exercise-option__bullet">A</span>
-              <span class="exercise-option__text">~365 GB per year</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="1">
-              <span class="exercise-option__bullet">B</span>
-              <span class="exercise-option__text">~365 TB per year</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="2">
-              <span class="exercise-option__bullet">C</span>
-              <span class="exercise-option__text">~36.5 PB (Petabytes) per year</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="3">
-              <span class="exercise-option__bullet">D</span>
-              <span class="exercise-option__text">~3.65 PB (Petabytes) per year</span>
-            </div>
-          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-back-of-the-envelope-capacity-planning-t1" value="0" />
+               <span>Provision exactly 0.25 TB of disk across production with zero headroom since the fixture was measured on real PostgreSQL</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-back-of-the-envelope-capacity-planning-t1" value="1" />
+               <span>Anchor the baseline to the 138 B/row measurement, but apply explicit multipliers for MVCC dead-tuple bloat, WAL retention, replicas, and URL-length variance</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-back-of-the-envelope-capacity-planning-t1" value="2" />
+               <span>Discard the PostgreSQL benchmark entirely and provision a 50 TB sharded NoSQL cluster immediately</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-back-of-the-envelope-capacity-planning-t1" value="0" />
+               <span>A static 1M-row insert fixture captures all future vacuum bloat, WAL spikes, and backup overhead</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-back-of-the-envelope-capacity-planning-t1" value="1" />
+               <span>Empirical row+index measurements replace guesswork on tuple layout, while explicit operational multipliers account for MVCC churn, WAL, and replication</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-back-of-the-envelope-capacity-planning-t1" value="2" />
+               <span>Sharding on day one avoids having to measure storage overhead</span>
+             </label>
+           
+         </div>
+       
         </div>
 
-        <div class="exercise-feedback" id="feedback-back-of-the-envelope-capacity-planning">
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="back-of-the-envelope-capacity-planning-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="back-of-the-envelope-capacity-planning" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-back-of-the-envelope-capacity-planning-t1" style="display: none;">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> 10 TB/day × 365 days = 3,650 TB = ~3.65 Petabytes per year. Factoring in 3x replication, the total physical storage capacity required is approximately 10.95 PB/year.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Empirical fixture measurements replace arbitrary row-size guesses, proving a single node easily holds the 5-year dataset. However, a clean fixture load omits MVCC dead tuples, B-tree page split fragmentation (~20-30%), WAL segments, and replica copies, which must be budgeted explicitly.</div>
         </div>
       </div>
     
@@ -1320,30 +1376,30 @@
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators.js?v=b8038d5a4b"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

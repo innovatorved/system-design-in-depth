@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1112,6 +1112,37 @@ flowchart TD
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-storage-engine-tradeoffs-n1" data-type="numeric" data-slug="storage-engine-tradeoffs">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: B-Tree Random Update Page Write Amplification</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A B-tree storage engine uses 16 KB (16,384-byte) disk pages (like MySQL InnoDB). A workload performs random in-place updates of 128-byte rows scattered across uncached leaf pages, flushing the full dirty 16 KB page to disk for each updated row.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> What is the page-level write amplification factor (physical bytes written divided by logical row bytes modified: 16,384 ÷ 128)?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Divide the page size (16,384 bytes) by the modified row size (128 bytes).</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-storage-engine-tradeoffs-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-storage-engine-tradeoffs-n1" placeholder="Enter numeric estimate (x)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">x</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="storage-engine-tradeoffs-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="storage-engine-tradeoffs" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-storage-engine-tradeoffs-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Writing a full 16,384-byte page (plus redo/doublewrite buffer overhead) to persist a single 128-byte random row modification produces a 16,384 / 128 = 128x page write amplification factor.</div>
+        </div>
+      </div>
+    
       <div class="simulator-card" id="sim-lsm">
         <div class="simulator-card__header">
           <div class="simulator-card__title"><span>Storage Write Amplifier</span></div>
@@ -1144,6 +1175,71 @@ flowchart TD
            </div>
         </div>
         <div id="sim-lsm-desc" style="padding: 1rem; font-size:0.9rem; background:var(--bg-surface);"></div>
+      </div>
+    
+      <div class="exercise-box quiz-card" id="quiz-storage-engine-tradeoffs-t1" data-type="tradeoff" data-slug="storage-engine-tradeoffs">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: RUM Conjecture Selection for IoT Time-Series vs OLTP Banking</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> According to the RUM Conjecture, a storage engine can optimize at most two of Read overhead (R), Update/write overhead (U), and Memory/space overhead (M). You must choose engines for (1) an IoT telemetry ingestion pipeline (500k writes/sec, sequential range scans) and (2) an OLTP account lookup table (95% point reads, strict disk quota).</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Which engine pairing aligns with the RUM Conjecture, and why?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Match LSM sequential appends to high-throughput write ingestion and B+Tree single-page lookups to low-latency reads.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-storage-engine-tradeoffs-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-storage-engine-tradeoffs-t1" value="0" />
+               <span>Use a B+Tree with 6 secondary indexes for the 500k writes/sec IoT pipeline and an uncompacted append-only log for the OLTP banking table</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-storage-engine-tradeoffs-t1" value="1" />
+               <span>Use an LSM-tree (with time-window compaction) for the write-heavy IoT pipeline (optimizing U + M) and a B+Tree for the point-read-heavy OLTP table (optimizing R + M)</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-storage-engine-tradeoffs-t1" value="2" />
+               <span>Use in-memory linear array scans for both workloads</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-storage-engine-tradeoffs-t1" value="0" />
+               <span>B+Trees with many secondary indexes excel at random write ingestion by doing in-place 16 KB page writes</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-storage-engine-tradeoffs-t1" value="1" />
+               <span>LSM-trees convert random writes into sequential append I/O (low U), whereas B+Trees maintain a single canonical location per key for predictable low-latency point reads (low R)</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-storage-engine-tradeoffs-t1" value="2" />
+               <span>The RUM Conjecture states that B+Trees have zero read, write, and space overhead simultaneously</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="storage-engine-tradeoffs-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="storage-engine-tradeoffs" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-storage-engine-tradeoffs-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> LSM-trees absorb massive write rates sequentially in memory/WAL and compact time-series windows cleanly without random page I/O. Conversely, B+Trees update keys in a single canonical leaf page, offering superior point-read latency without checking multiple SSTable levels.</div>
+        </div>
       </div>
     
         <div class="takeaways">
@@ -1242,30 +1338,30 @@ flowchart TD
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

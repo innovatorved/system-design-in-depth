@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1108,6 +1108,37 @@ flowchart TD
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-fanout-patterns-n1" data-type="numeric" data-slug="fanout-patterns">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Celebrity Push Fan-Out Write Amplification</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A social platform uses pure push fan-out-on-write into follower home-timeline caches. A celebrity with 30 million followers publishes 1 post, and your Redis timeline cluster can sustain 300,000 `LPUSH` writes/sec dedicated to fan-out.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How many seconds does it take to complete the fan-out of that single celebrity post across all 30 million follower timelines?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Divide 30,000,000 follower writes by 300,000 writes/sec.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-fanout-patterns-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-fanout-patterns-n1" placeholder="Enter numeric estimate (seconds)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">seconds</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="fanout-patterns-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="fanout-patterns" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-fanout-patterns-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 30,000,000 timeline writes ÷ 300,000 writes/sec = 100 seconds of saturated cluster write capacity for a single post—demonstrating why pure fan-out-on-write breaks down for high-follower accounts.</div>
+        </div>
+      </div>
+    
       <div class="simulator-card" id="sim-fanout">
         <div class="simulator-card__header">
           <div class="simulator-card__title"><span>Feed Fan-out Calculator</span></div>
@@ -1137,6 +1168,71 @@ flowchart TD
              <p>Writes/sec: <span id="sim-fo-pull-w">0</span></p>
              <p>Read Amplification: High (Compute intensive)</p>
            </div>
+        </div>
+      </div>
+    
+      <div class="exercise-box quiz-card" id="quiz-fanout-patterns-t1" data-type="tradeoff" data-slug="fanout-patterns">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Push (Fan-Out-on-Write) vs Hybrid Push-Pull Timeline Architecture</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> 99.9% of users on your social network have fewer than 5,000 followers, while 0.1% of accounts (celebrities/news outlets) have 1M–50M followers and post 20 times a day.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Which timeline architecture should you adopt, and what is the primary engineering justification?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> How did Twitter/X solve the &#039;Justin Bieber problem&#039; on timeline fan-out?</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-fanout-patterns-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-fanout-patterns-t1" value="0" />
+               <span>Use pure fan-out-on-write (push) for all accounts and provision 100x more Redis RAM for inactive followers</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-fanout-patterns-t1" value="1" />
+               <span>Use pure fan-out-on-read (pull) for all accounts, querying 1,000 followed users&#039; outboxes on every home-feed read</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-fanout-patterns-t1" value="2" />
+               <span>Use hybrid fan-out: push posts on write for normal accounts (&lt;50k followers) into active followers&#039; inbox caches, and merge celebrity outbox caches at read time</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-fanout-patterns-t1" value="0" />
+               <span>Pushing 50M writes per celebrity tweet keeps write queues small and predictable</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-fanout-patterns-t1" value="1" />
+               <span>Fanning out 1,000 database queries on every timeline read guarantees sub-5ms p99 read latency</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-fanout-patterns-t1" value="2" />
+               <span>Hybrid push-pull bounds write amplification to O(1) outbox writes for celebrities while preserving O(1) precomputed inbox reads plus a tiny K-way merge of followed celebrities on read</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="fanout-patterns-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="fanout-patterns" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-fanout-patterns-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Hybrid fan-out pushes normal users&#039; posts into followers&#039; precomputed timelines (fast reads) while keeping high-follower celebrity posts in a per-author outbox cache that is merged into the reader&#039;s timeline at read time (preventing 50M-write storms).</div>
         </div>
       </div>
     
@@ -1236,30 +1332,30 @@ flowchart TD
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

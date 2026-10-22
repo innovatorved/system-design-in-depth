@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1078,6 +1078,37 @@
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-consensus-n1" data-type="numeric" data-slug="consensus">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Raft Quorum Size and Fault Tolerance</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> You deploy a 5-node Raft consensus cluster across 5 availability zones to store cluster metadata.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How many simultaneous node failures can a 5-node Raft cluster tolerate while still maintaining a majority quorum to commit writes?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> For N = 2f + 1 = 5 nodes, majority quorum is floor(5/2) + 1 = 3 nodes, so f = 2 failures are tolerated.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-consensus-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-consensus-n1" placeholder="Enter numeric estimate (nodes)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">nodes</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="consensus-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="consensus" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-consensus-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> A 5-node Raft cluster requires a majority quorum of 3 nodes (`floor(5/2) + 1 = 3`) to elect a leader and commit log entries. Thus it can lose at most 5 - 3 = 2 nodes while remaining available for writes.</div>
+        </div>
+      </div>
+    
       <div class="simulator-card" id="sim-raft">
         <div class="simulator-card__header">
           <div class="simulator-card__title"><span>Raft Consensus (3 Nodes)</span></div>
@@ -1092,43 +1123,68 @@
         <div id="sim-raft-log" style="padding: 1rem; font-family: monospace; font-size: 0.85rem; background: var(--bg-surface); max-height: 80px; overflow-y: auto;"></div>
       </div>
     
-      <div class="exercise-box" id="exercise-consensus" data-slug="consensus">
+      <div class="exercise-box quiz-card" id="quiz-consensus-t1" data-type="tradeoff" data-slug="consensus">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Architecture Challenge: Raft &amp; Paxos Quorum Math</span>
+            <span>Trade-Off Matrix: 3-Node vs 5-Node vs 6-Node Consensus Cluster Topologies</span>
           </div>
-          <span class="exercise-box__difficulty">Staff Level</span>
+          <span class="exercise-box__difficulty">staff</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> Cluster size N = 5. Majority quorum rule applies.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> A Raft consensus cluster consists of 5 nodes. What is the minimum number of healthy nodes required to elect a leader and commit write entries?</div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A team proposes upgrading a 5-node etcd/Raft cluster to 6 nodes across 3 Availability Zones (2 nodes per AZ) to &#039;increase fault tolerance and survive an entire AZ outage&#039;.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> What should you advise in the architecture review, and what is the primary engineering justification?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Compare `N - (floor(N/2) + 1)` for N = 5 vs N = 6.</div>
         
-        <div class="exercise-options">
+        <div class="quiz-options exercise-options" id="quiz-options-consensus-t1" style="margin-top: 15px;">
           
-            <div class="exercise-option" data-action="exercise-option" data-idx="0">
-              <span class="exercise-option__bullet">A</span>
-              <span class="exercise-option__text">All 5 nodes must agree unanimously</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="1">
-              <span class="exercise-option__bullet">B</span>
-              <span class="exercise-option__text">3 nodes (floor(N/2) + 1)</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="2">
-              <span class="exercise-option__bullet">C</span>
-              <span class="exercise-option__text">2 nodes</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="3">
-              <span class="exercise-option__bullet">D</span>
-              <span class="exercise-option__text">4 nodes</span>
-            </div>
-          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-consensus-t1" value="0" />
+               <span>Approve the 6-node cluster across 3 AZs because 6 nodes tolerate more failures than 5 nodes</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-consensus-t1" value="1" />
+               <span>Reject the 6-node cluster and use a 3-node or 5-node odd-sized topology (or 5 nodes across 3 AZs with 2-2-1 placement), because a 6-node cluster requires a quorum of 4 and still only tolerates 2 node failures</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-consensus-t1" value="2" />
+               <span>Use a 2-node cluster across 2 AZs so either node can commit writes independently</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-consensus-t1" value="0" />
+               <span>Even-numbered Raft clusters increase fault tolerance while reducing replication overhead</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-consensus-t1" value="1" />
+               <span>Moving from 5 to 6 nodes raises the majority requirement from 3 to 4 (still tolerating only 6 - 4 = 2 failures) while adding replication traffic and making split-brain 3v3 partitions more likely</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-consensus-t1" value="2" />
+               <span>A 2-node Raft cluster can lose 1 node and still form a majority quorum of 2</span>
+             </label>
+           
+         </div>
+       
         </div>
 
-        <div class="exercise-feedback" id="feedback-consensus">
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="consensus-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="consensus" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-consensus-t1" style="display: none;">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> Majority quorum requires floor(N/2) + 1 nodes. For a 5-node cluster, a quorum is floor(5/2) + 1 = 3. The cluster can survive the loss of up to 2 nodes without losing consensus.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> For N = 5, quorum is 3 (tolerates 2 failures). For N = 6, quorum is 4 (tolerates 6 - 4 = 2 failures). A 6-node cluster adds extra network replication overhead and worsens availability (since 4 nodes must stay up instead of 3) without tolerating a single additional failure.</div>
         </div>
       </div>
     
@@ -1141,10 +1197,33 @@
       <div class="lesson-builds">
         <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
         
+          <a class="lesson-builds__item" href="/build/raft-consensus/" data-action="navigate-build" data-build-id="raft-consensus">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Raft Leader Election &amp; Quorum Log</span>
+              
+            </div>
+            <span class="lesson-builds__summary">Deterministic multi-node Raft consensus state machine implementing term monotonicity, RequestVote log-completeness safety, AppendEntries prevLogIndex/prevLogTerm consistency checks, and majority quorum commit advancement.</span>
+            <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
+          </a>
           <a class="lesson-builds__item" href="/build/lease-leader-election/" data-action="navigate-build" data-build-id="lease-leader-election">
-            <span class="lesson-builds__name">Lease-Based Leader Election with Fencing Tokens</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Lease-Based Leader Election with Fencing Tokens</span>
+              
+            </div>
             <span class="lesson-builds__summary">A lease store that issues monotonic fencing tokens, clients that renew and step down early using a clock-drift safety margin, and a storage layer that rejects stale tokens, so a leader that was paused by GC cannot corrupt data. All time is injected, so every scenario is deterministic.</span>
             <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
+          </a>
+      </div>
+      <div class="lesson-builds lesson-challenges">
+        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        
+          <a class="lesson-builds__item" href="/challenges/split-brain-quorum-loss/" data-nav="challenges" data-challenge="split-brain-quorum-loss">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Raft Cluster AZ Partition Phantom Leader Split-Brain</span>
+              <span class="badge">SEV-1 · hard</span>
+            </div>
+            
+            <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Launch Production Incident &amp; CodeLab Hotfix →</span>
           </a>
       </div>
         <div class="further-reading">
@@ -1237,30 +1316,30 @@
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

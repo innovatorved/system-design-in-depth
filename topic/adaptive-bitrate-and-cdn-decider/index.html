@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -964,8 +964,8 @@
 <h2>A three-request experiment</h2>
 <p>The lab and media helper generate the same HLS files as the preceding lesson. Use its pinned Python environment and FFmpeg 8.1.2. File sizes are measured; download times and stalls are calculated under a chosen capacity schedule, with no real congested network.</p>
 <p>Both policies start with one second buffered. Fixed-high always requests the larger rendition. Adaptive requests high if its previous observed capacity is at least 200,000 bits/s, otherwise low. Its initial observation is 400,000 bits/s; neither policy can see the next capacity before choosing.</p>
-<pre><code class="language-bash">/tmp/fanout-m24/bin/python m24-lab.py abr</code></pre>
-<pre><code class="language-output">#EXTM3U
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE">⚡ Run in CodeLab</button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">/tmp/fanout-m24/bin/python m24-lab.py abr</code></pre></div>
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">output</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-output">#EXTM3U
 #EXT-X-VERSION:6
 #EXT-X-STREAM-INF:BANDWIDTH=55648,RESOLUTION=160x90
 low/index.m3u8
@@ -974,7 +974,7 @@ high/index.m3u8
 chosen capacity bits/s=[400000, 40000, 400000] initial buffer=1.000s
 fixed-high download/buffer/stall: high:0.447s/1.553s/0.000s, high:4.474s/1.000s/2.922s, high:0.470s/1.530s/0.000s total_stall=2.922s
 adaptive download/buffer/stall: high:0.447s/1.553s/0.000s, high:4.474s/1.000s/2.922s, low:0.139s/1.861s/0.000s total_stall=2.922s
-simulated origin observations: A age=4 refused; B age=1 selected=B</code></pre>
+simulated origin observations: A age=4 refused; B age=1 selected=B</code></pre></div>
 <p>Each generated segment lasts one second. The largest high segment contains 23,500 bytes, giving the advertised peak of 188,000 bits/s. This calculation is valid for the fixture's equal one-second segments and one-second target duration; it is not a promise of network capacity.</p>
 <p>For a segment of <code>S</code> bytes and a path capacity of <code>C</code> bits/s, ideal transfer time is <code>8*S/C</code>. If the player starts that request with <code>B</code> seconds buffered, the stall is <code>max(0, transfer time − B)</code>. Afterward, the buffer is <code>max(0, B − transfer time) + segment duration</code>.</p>
 <p>The first high segment is 22,372 bytes. At 400,000 bits/s it takes 0.44744 seconds, leaving 1.55256 seconds buffered after adding the new second of media. The next high segment has the same size, but capacity drops to 40,000 bits/s.</p>
@@ -1155,6 +1155,37 @@ simulated origin observations: A age=4 refused; B age=1 selected=B</code></pre>
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-adaptive-bitrate-and-cdn-decider-n1" data-type="numeric" data-slug="adaptive-bitrate-and-cdn-decider">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: CDN Origin Shield Bandwidth Offload</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A live HLS/DASH video stream has 500,000 concurrent viewers distributed across 50 edge POPs. The video bitrate is 4 Mbps (0.5 MB/s), so edge POPs deliver `500,000 × 4 Mbps = 2,000 Gbps` (2 Tbps) to eyeballs. With an Origin Shield and 99.9% overall CDN offload, only 1 request per segment per edge POP reaches the shield, and only 1 request per segment (4 Mbps) reaches the origin storage bucket.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How many Tera-bits per second (Tbps) of egress bandwidth do the 50 edge POPs serve to the 500,000 viewers (500,000 × 4 Mbps, where 1 Tbps = 1,000,000 Mbps)?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Multiply 500,000 viewers × 4 Mbps = 2,000,000 Mbps = 2 Tbps.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-adaptive-bitrate-and-cdn-decider-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-adaptive-bitrate-and-cdn-decider-n1" placeholder="Enter numeric estimate (Tbps)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">Tbps</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="adaptive-bitrate-and-cdn-decider-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="adaptive-bitrate-and-cdn-decider" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-adaptive-bitrate-and-cdn-decider-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 500,000 concurrent streams × 4 Mbps = 2,000,000 Mbps = 2 Tbps of edge delivery—all collapsed down to a single 4 Mbps origin fetch via request coalescing at the CDN edge and Origin Shield!</div>
+        </div>
+      </div>
+    
         <div class="simulator-card" id="sim-abr">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Adaptive Bitrate: throughput vs buffer-based</div>
@@ -1173,6 +1204,71 @@ simulated origin observations: A age=4 refused; B age=1 selected=B</code></pre>
           <div class="sim-grid-wrap"><table class="sim-grid" id="abr-table"></table></div>
           <div class="sim-verdict" id="abr-verdict"></div>
         </div>
+      <div class="exercise-box quiz-card" id="quiz-adaptive-bitrate-and-cdn-decider-t1" data-type="tradeoff" data-slug="adaptive-bitrate-and-cdn-decider">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: HLS/DASH Segment Duration (2s vs 10s) and Multi-CDN Steering</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> You are configuring HLS/DASH segment length and multi-CDN control plane steering for a live sports streaming platform.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> What is the fundamental trade-off when shrinking segment duration from 10 seconds to 1–2 seconds (or CMAF chunks), and how should multi-CDN traffic be steered?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Each segment must begin with a standalone IDR keyframe and requires a separate HTTP GET request.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-adaptive-bitrate-and-cdn-decider-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-adaptive-bitrate-and-cdn-decider-t1" value="0" />
+               <span>10-second segments reduce glass-to-glass live latency and allow faster bitrate adaptation on cellular drops</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-adaptive-bitrate-and-cdn-decider-t1" value="1" />
+               <span>Shorter segments (1–2s / Low-Latency CMAF) reduce live latency and react faster to bandwidth drops, at the cost of higher keyframe compression overhead and 5–10x higher HTTP request QPS (mitigated by client-side telemetry-driven Multi-CDN manifest/DNS steering)</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-adaptive-bitrate-and-cdn-decider-t1" value="2" />
+               <span>Hardcode a single CDN URL inside the mobile app binary so switching CDNs requires an App Store release</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-adaptive-bitrate-and-cdn-decider-t1" value="0" />
+               <span>A 10-second segment requires zero keyframes and adapts bitrate every 100 ms</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-adaptive-bitrate-and-cdn-decider-t1" value="1" />
+               <span>Every segment starts with an IDR keyframe (reducing compression efficiency when segments are very short) and multiplies request rate, while dynamic control-plane manifest steering routes around regional CDN brownouts in real time</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-adaptive-bitrate-and-cdn-decider-t1" value="2" />
+               <span>App Store review cycles (24-48 hours) are fast enough for live mid-match CDN failover</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="adaptive-bitrate-and-cdn-decider-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="adaptive-bitrate-and-cdn-decider" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-adaptive-bitrate-and-cdn-decider-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Shortening segments reduces glass-to-glass latency and lets the ABR player downshift quickly when cellular throughput drops, but increases keyframe bitrate overhead and request QPS. A real-time Multi-CDN decider steers players between CDNs via manifest URL rewriting based on client QoE telemetry.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1269,30 +1365,30 @@ simulated origin observations: A age=4 refused; B age=1 selected=B</code></pre>
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-data.js?v=accc3870f9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1137,6 +1137,37 @@ flowchart LR
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-inverted-index-and-posting-lists-n1" data-type="numeric" data-slug="inverted-index-and-posting-lists">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Delta + VarInt Posting List Compression Savings</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A popular search term appears in 10 million documents. Uncompressed, each posting stores an 8-byte (64-bit) document ID, totaling 80 MB. By sorting document IDs and encoding gaps (`deltas`) with Variable-Byte / PForDelta compression, each posting averages 1.6 bytes.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How many megabytes (MB) does the compressed posting list occupy (10,000,000 × 1.6 bytes, using 1 MB = 10^6 bytes)?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 10,000,000 postings × 1.6 bytes/posting ÷ 1,000,000 bytes/MB.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-inverted-index-and-posting-lists-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-inverted-index-and-posting-lists-n1" placeholder="Enter numeric estimate (MB)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">MB</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="inverted-index-and-posting-lists-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="inverted-index-and-posting-lists" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-inverted-index-and-posting-lists-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Sorting docIDs converts large 64-bit integers into small positive gaps (`d_i - d_{i-1}`), shrinking the 10M-entry posting list from 80 MB down to 16 MB (a 5x reduction in RAM and memory-bandwidth footprint).</div>
+        </div>
+      </div>
+    
         <div class="simulator-card" id="sim-bm25">
           <div class="simulator-card__header">
             <div class="simulator-card__title">BM25 Search Ranking</div>
@@ -1150,6 +1181,71 @@ flowchart LR
           </div>
         </div>
       
+      <div class="exercise-box quiz-card" id="quiz-inverted-index-and-posting-lists-t1" data-type="tradeoff" data-slug="inverted-index-and-posting-lists">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Document-Partitioned (Local Index) vs Term-Partitioned (Global Index) Sharding</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> You are designing a 50-shard full-text search cluster executing 3-word conjunctive (`AND`) queries at 20,000 queries/sec with a strict p99 latency SLO of 40 ms.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Should you partition the inverted index by Document ID (local index per shard) or by Term (global posting list per term), and why?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Consider network bandwidth when intersecting `term1 AND term2` if `term1` is on Shard A and `term2` is on Shard B.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-inverted-index-and-posting-lists-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-inverted-index-and-posting-lists-t1" value="0" />
+               <span>Partition by Term so a 3-word `AND` query streams multi-megabyte posting lists across the network between shards to intersect them</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-inverted-index-and-posting-lists-t1" value="1" />
+               <span>Partition by Document ID so each shard intersects all 3 posting lists locally in memory and returns only its top-K scored documents to the coordinator</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-inverted-index-and-posting-lists-t1" value="2" />
+               <span>Replicate the entire 50-shard index onto every client browser via WebAssembly</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-inverted-index-and-posting-lists-t1" value="0" />
+               <span>Streaming millions of compressed docIDs over the network on every multi-term query minimizes network bandwidth</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-inverted-index-and-posting-lists-t1" value="1" />
+               <span>Document partitioning performs posting-list intersection locally on each shard (shipping only tiny top-K results over the network) and isolates document indexing writes to a single shard</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-inverted-index-and-posting-lists-t1" value="2" />
+               <span>Browser memory can hold petabytes of enterprise search indexes</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="inverted-index-and-posting-lists-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="inverted-index-and-posting-lists" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-inverted-index-and-posting-lists-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> In term partitioning, intersecting `term1 AND term2` requires transferring giant posting lists across the network between shards. Document partitioning executes the entire intersection and BM25 scoring locally within each shard and sends only `K` lightweight `{docId, score}` pairs back to the coordinator.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1160,7 +1256,10 @@ flowchart LR
         <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
         
           <a class="lesson-builds__item" href="/build/tiny-search-engine/" data-action="navigate-build" data-build-id="tiny-search-engine">
-            <span class="lesson-builds__name">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+              
+            </div>
             <span class="lesson-builds__summary">A complete in-memory search engine: tokenizer, positional inverted index, delta + VByte posting compression, Boolean intersection, champion lists, phrase search and BM25 ranking, with a test suite.</span>
             <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
           </a>
@@ -1255,30 +1354,30 @@ flowchart LR
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

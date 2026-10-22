@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -991,8 +991,8 @@
 <h2>Run the arrival race</h2>
 <p>Save the standard-library inbox service and shared helpers together. They use a private temporary SQLite file and an actual loopback HTTP server with fake account-bound credentials.</p>
 <p>Bo sends twice and Cy once. Device A fetches through 3, then two threads race Dee's fourth message against acknowledgement of that snapshot. A later device acknowledges through 4 before the first device submits its older snapshot again.</p>
-<pre><code class="language-bash">python3 m22-inbox.py</code></pre>
-<pre><code class="language-output">offline arrivals: events=3 distinct senders=2
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE">⚡ Run in CodeLab</button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">python3 m22-inbox.py</code></pre></div>
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">output</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-output">offline arrivals: events=3 distinct senders=2
 duplicate message: 200
 changed message: 409
 device A observes through: 3
@@ -1007,27 +1007,27 @@ malformed framing: [[&quot;empty transfer encoding&quot;,400],[&quot;ambiguous l
 thread read positions: [0, 0, 0]
 retained events=4 serialized message bytes=245
 unavailable authority: 503
-HTTP requests: application=15 malformed=5</code></pre>
+HTTP requests: application=15 malformed=5</code></pre></div>
 <p>The badge finds Dee both before projection and after it. Only <code>tail_rows</code> changes from four to zero. The thread-read positions stay at zero, confirming that the overview acknowledgement did not mark conversations read.</p>
 <p>The interruption is an exception before commit followed by reopening the database, not an operating-system crash. The replay also checks retry identity, ownership and malformed HTTP requests. Its 245-byte count covers only compact message JSON, not database size or network overhead.</p>
 <p>Those protocol probes exercise this small server's rules: one bounded Content-Length, no Transfer-Encoding, complete bodies and valid JSON Unicode. They are not a production authentication or load test. An unavailable source returns 503, so the client should retain a clearly stale display or show unavailability rather than invent zero.</p>
 <h2>Where a Redis sorted set fits</h2>
 <p>A sorted set is useful for the prepared sender summary: the recipient identifies the key, the sender ID is the unique member, and the latest accepted position is its score. Updating Bo changes his score without creating another member. Resolve display names separately so a rename does not change identity.</p>
 <p>For small exact integer positions, the core operations look like this:</p>
-<pre><code class="language-text">ZADD newly_unread:Ada GT 2 Bo
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">text</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-text">ZADD newly_unread:Ada GT 2 Bo
 ZADD newly_unread:Ada GT 3 Cy
 ZADD newly_unread:Ada GT 4 Dee
-ZCOUNT newly_unread:Ada (3 +inf</code></pre>
+ZCOUNT newly_unread:Ada (3 +inf</code></pre></div>
 <p><code>GT</code> prevents an older delivery from lowering an existing score. The exclusive bound <code>(3</code> counts only positions above acknowledgement 3. The result is one sender. This sketch assumes A=3 is already known; it does not implement cross-store acknowledgement or projection recovery.</p>
 <p><code>ZCARD</code> is sufficient only if every retained member is newly unread. Once old entries remain, use the acknowledgement boundary. Deleting scores through A can reclaim space, but a late event can reinsert an old sender; counting above A still excludes that activity.</p>
 <p>The Redis control starts a private process with TCP disabled and demonstrates the unsafe alternatives:</p>
-<pre><code class="language-bash">python3 m22-redis-badge.py</code></pre>
-<pre><code class="language-output">Redis server v=8.4.0
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE">⚡ Run in CodeLab</button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">python3 m22-redis-badge.py</code></pre></div>
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">output</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-output">Redis server v=8.4.0
 snapshot through3: distinct senders=2
 arrival4 then clear-all: count=0
 remove through3: senders=Dee
 delayed older update: ZCARD=2; ZCOUNT above ACK3=1
-equal timestamp100: remove-through100 removes both senders</code></pre>
+equal timestamp100: remove-through100 removes both senders</code></pre></div>
 <p>Redis scores are floating-point numbers. Integers through 2^53 are exact, but arbitrary 64-bit source positions are not. Choose a representation that preserves the actual position range before using scores as acknowledgement boundaries.</p>
 <p>A separate Redis deployment also adds a consistency boundary. Preserve message acceptance in the source, use replayable work to maintain the projection, and keep acknowledgement authoritative during cache loss. A cache miss means “state unavailable or not yet built,” not necessarily “no new messages.”</p>
 <h2>Retain enough to recover</h2>
@@ -1271,29 +1271,29 @@ equal timestamp100: remove-through100 removes both senders</code></pre>
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

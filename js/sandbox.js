@@ -14,8 +14,43 @@
 
   var BLUEPRINT_ALIASES = {
     'payment-system': 'stripe-ledger',
-    'uber-dispatch': 'whatsapp-chat',
-    'kafka-event-pipeline': 'twitter-feed'
+    'uber-dispatch': 'uber-geo-dispatch',
+    'kafka-event-pipeline': 'twitter-feed',
+    'case-url-shortener': 'url-shortener',
+    'case-social-feed': 'twitter-feed',
+    'case-chat-system': 'whatsapp-chat',
+    'case-payment-ledger': 'stripe-ledger',
+    'case-ride-sharing': 'uber-geo-dispatch',
+    'case-video-streaming': 'youtube-video-cdn',
+    'case-rate-limiter': 'distributed-rate-limiter',
+    'case-notification-service': 'notification-pipeline',
+    'case-web-crawler': 'web-crawler',
+    'case-llm-inference-gateway': 'ai-rag-gateway',
+    'case-rag-pipeline': 'ai-rag-gateway'
+  };
+
+  var NODE_TYPE_TO_CODELAB = {
+    gateway: 'sliding-window-rate-limiter',
+    APIGateway: 'sliding-window-rate-limiter',
+    lb: 'consistent-hashing-ring',
+    L4LB: 'consistent-hashing-ring',
+    L7LB: 'load-balancer-from-scratch',
+    cache: 'lru-cache',
+    RedisCache: 'lru-cache',
+    cdn: 'ttl-cache-reaper',
+    CDN: 'ttl-cache-reaper',
+    db: 'lsm-tree-kv-store',
+    SQLShard: 'lsm-tree-kv-store',
+    NoSQLKV: 'lsm-tree-kv-store',
+    search: 'tiny-search-engine',
+    queue: 'mini-kafka-log',
+    KafkaQueue: 'mini-kafka-log',
+    worker: 'circuit-breaker',
+    WorkerPool: 'circuit-breaker',
+    storage: 'write-ahead-log',
+    ObjectStorage: 'write-ahead-log',
+    service: 'singleflight-coalescer',
+    Microservice: 'singleflight-coalescer'
   };
 
   function escapeHtml(str) {
@@ -39,6 +74,8 @@
     // Multi-board tab state
     _boards: [],
     _activeBoardId: null,
+    _lastQueryBlueprint: null,
+    _simMetrics: null,
 
     // Active canvas state (synced with active board)
     _activeBlueprintId: 'url-shortener',
@@ -71,6 +108,17 @@
     _interaction: null,
     _hasDragged: false,
 
+    _getQueryBlueprintId: function() {
+      try {
+        if (root.location && root.location.search) {
+          var params = new URLSearchParams(root.location.search);
+          var bp = params.get('blueprint') || params.get('bp');
+          if (bp) return BLUEPRINT_ALIASES[bp] || bp;
+        }
+      } catch (e) {}
+      return null;
+    },
+
     mount: function(container, options) {
       if (this._abortController) {
         this._abortController.abort();
@@ -79,14 +127,32 @@
       this._container = container;
       if (!container) return;
       options = options || {};
-      var requestedBp = options.blueprintId || null;
+      var queryBp = this._getQueryBlueprintId();
+      var requestedBp = options.blueprintId || queryBp || null;
       if (requestedBp && BLUEPRINT_ALIASES[requestedBp]) {
         requestedBp = BLUEPRINT_ALIASES[requestedBp];
       }
+      if (queryBp) {
+        this._lastQueryBlueprint = queryBp;
+      }
 
-      this._initBoards(requestedBp || 'url-shortener', Boolean(options.blueprintId));
+      this._initBoards(requestedBp || 'url-shortener', Boolean(requestedBp));
       this.render();
       this._bindEvents();
+    },
+
+    _ensureInitialized: function() {
+      var queryBp = this._getQueryBlueprintId();
+      if (!this._boards || this._boards.length === 0) {
+        this._initBoards(queryBp || 'url-shortener', Boolean(queryBp));
+      } else if (queryBp && queryBp !== this._lastQueryBlueprint) {
+        this._lastQueryBlueprint = queryBp;
+        this._loadBlueprint(queryBp, false);
+      }
+    },
+
+    _loadBlueprint: function(bpId, shouldRender) {
+      return this.loadBlueprint(bpId, shouldRender);
     },
 
     unmount: function() {
@@ -153,13 +219,15 @@
         title: customTitle || shortTitle,
         blueprintId: found.id,
         nodes: (found.nodes || []).map(function(n) {
+          var rep = n.replicas || n.instances || 2;
           return {
             id: n.id,
             type: n.type,
             name: n.name,
             x: n.x,
             y: n.y,
-            replicas: n.replicas || 2
+            replicas: rep,
+            instances: rep
           };
         }),
         connections: (found.connections || []).map(function(c, i) {
@@ -717,10 +785,12 @@
     // ── Rendering ──────────────────────────────────────────────
     render: function() {
       if (!this._container) return;
+      this._ensureInitialized();
       var data = this._getData();
       var blocks = data.buildingBlocks || [];
       var bps = data.blueprints || [];
       var cap = typeof data.calculateCapacity === 'function' ? data.calculateCapacity(this._inputs) : { bottlenecks: [] };
+      this._simMetrics = cap;
       var activeBoard = this._getActiveBoard();
 
       var self = this;
@@ -1041,6 +1111,10 @@
       );
     },
 
+    _renderInspector: function(blocks) {
+      return this._renderInspectorPanel(blocks);
+    },
+
     _renderInspectorPanel: function(blocks) {
       var sel = this._selectedItem;
       if (!sel && this._selectedNodeId) {
@@ -1053,6 +1127,10 @@
         var node = this._nodes.find(function(n) { return n.id === sel.id; });
         if (!node) return '';
         var blockMeta = (blocks || []).find(function(b) { return b.type === node.type; });
+        var buildSlug = NODE_TYPE_TO_CODELAB[node.type] || NODE_TYPE_TO_CODELAB[String(node.type || '').toLowerCase()] || null;
+        var codelabBtnHtml = buildSlug
+          ? '<a href="/build/' + escapeHtml(buildSlug) + '/?lab=open&amp;mode=guided" class="eco-btn eco-btn--sm eco-btn--primary" data-codelab-slug="' + escapeHtml(buildSlug) + '" title="Open ' + escapeHtml(buildSlug) + ' implementation in CodeLab">Inspect Internals in CodeLab →</a>'
+          : '';
         return (
           '<div class="wb-inspector-bar" id="wb-inspector-bar">' +
             '<div class="wb-inspector-bar__left">' +
@@ -1063,11 +1141,12 @@
               '</label>' +
               '<label class="wb-insp-field">' +
                 '<span>Replicas/Shards:</span>' +
-                '<input type="number" class="eco-number-input wb-insp-num" data-inspect-node-replicas="' + escapeHtml(node.id) + '" value="' + (node.replicas || 1) + '" min="1" max="128" />' +
+                '<input type="number" class="eco-number-input wb-insp-num" data-inspect-node-replicas="' + escapeHtml(node.id) + '" value="' + (node.replicas || node.instances || 1) + '" min="1" max="128" />' +
               '</label>' +
               (blockMeta ? '<span class="wb-insp-desc">' + escapeHtml(blockMeta.badge) + '</span>' : '') +
             '</div>' +
             '<div class="wb-inspector-bar__actions">' +
+              codelabBtnHtml +
               '<button class="eco-btn eco-btn--sm" data-sandbox-action="start-connect-from-selected">Connect From Node →</button>' +
               '<button class="eco-btn eco-btn--sm wb-btn-danger" data-sandbox-action="delete-selected">Delete Node (⌫)</button>' +
             '</div>' +
@@ -1145,9 +1224,86 @@
       );
     },
 
+    _evaluateRubricAudit: function(cap) {
+      cap = cap || this._simMetrics || {};
+      var nodes = this._nodes || [];
+      var bp = this._findBlueprint(this._activeBlueprintId);
+      var targetLatencyMs = (bp && bp.targetLatencyMs) ? bp.targetLatencyMs : 150;
+
+      // 1. No Single Points of Failure (SPOF)
+      var spofTypes = ['Microservice', 'SQLShard', 'NoSQLKV', 'RedisCache', 'L4LB', 'L7LB', 'APIGateway', 'service', 'db', 'cache', 'lb', 'gateway'];
+      var coreNodes = nodes.filter(function(n) { return spofTypes.indexOf(n.type) !== -1; });
+      var spofNodes = coreNodes.filter(function(n) {
+        var instances = Number(n.instances != null ? n.instances : n.replicas) || 1;
+        return instances < 2;
+      });
+      var spofPassed = coreNodes.length > 0 && spofNodes.length === 0;
+
+      // 2. Read Path Caching / Offload
+      var readQps = Number(cap.readQps) || 0;
+      var hasCacheOrCdn = nodes.some(function(n) {
+        return n.type === 'RedisCache' || n.type === 'CDN' || n.type === 'cache' || n.type === 'cdn';
+      });
+      var cachePassed = readQps < 5000 || hasCacheOrCdn;
+
+      // 3. Async Write / Burst Buffering
+      var writeQps = Number(cap.writeQps) || 0;
+      var writeUtilization = (writeQps / 40000) * 100;
+      var hasQueueOrWorker = nodes.some(function(n) {
+        return n.type === 'KafkaQueue' || n.type === 'WorkerPool' || n.type === 'queue' || n.type === 'worker';
+      });
+      var asyncPassed = hasQueueOrWorker || writeUtilization < 80;
+
+      // 4. Latency & Saturation SLO
+      var bottlenecks = cap.bottlenecks || [];
+      var overloadedCount = bottlenecks.filter(function(b) { return b.severity === 'critical'; }).length;
+      var estLatency = Number(cap.avgLatencyMs) || 0;
+      var sloPassed = overloadedCount === 0 && estLatency <= targetLatencyMs;
+
+      return [
+        {
+          id: 'spof',
+          title: 'No Single Points of Failure (SPOF)',
+          passed: spofPassed,
+          detail: spofPassed
+            ? 'All ' + coreNodes.length + ' stateful/compute tiers run with >= 2 instances.'
+            : (coreNodes.length === 0
+              ? 'Add compute/storage nodes with >= 2 instances.'
+              : 'Single-instance bottleneck on: ' + spofNodes.map(function(n) { return n.name || n.type; }).join(', '))
+        },
+        {
+          id: 'read-cache',
+          title: 'Read Path Caching / Offload',
+          passed: cachePassed,
+          detail: cachePassed
+            ? (hasCacheOrCdn ? 'Redis/CDN tier active for ' + readQps.toLocaleString() + ' read QPS.' : 'Read QPS (' + readQps.toLocaleString() + ') below 5,000 QPS threshold.')
+            : 'Read QPS is ' + readQps.toLocaleString() + ' (>= 5,000) without a Cache or CDN node.'
+        },
+        {
+          id: 'async-buffer',
+          title: 'Async Write / Burst Buffering',
+          passed: asyncPassed,
+          detail: asyncPassed
+            ? (hasQueueOrWorker ? 'Kafka / Worker pool buffers async write bursts.' : 'Write utilization (' + writeUtilization.toFixed(1) + '%) is under 80% threshold.')
+            : 'Write utilization is ' + writeUtilization.toFixed(1) + '% (>= 80%) without a Queue or Worker pool.'
+        },
+        {
+          id: 'latency-slo',
+          title: 'Latency & Saturation SLO',
+          passed: sloPassed,
+          detail: sloPassed
+            ? '0 overloaded tiers · Est. latency ' + estLatency + 'ms <= ' + targetLatencyMs + 'ms target.'
+            : overloadedCount + ' critical bottleneck(s) · Est. latency ' + estLatency + 'ms (target <= ' + targetLatencyMs + 'ms).'
+        }
+      ];
+    },
+
     _renderCapacityEstimator: function(cap) {
+      this._simMetrics = cap;
       var inp = this._inputs;
       var bottlenecks = cap.bottlenecks || [];
+      var rubricChecks = this._evaluateRubricAudit(cap);
+      var passedCount = rubricChecks.filter(function(c) { return c.passed; }).length;
 
       var bottlenecksHtml = bottlenecks.length > 0 ? bottlenecks.map(function(b) {
         return (
@@ -1160,6 +1316,18 @@
           '</div>'
         );
       }).join('') : '<div class="bottleneck-alert bottleneck--healthy">✓ No architectural bottlenecks detected at current workload parameters.</div>';
+
+      var rubricHtml = rubricChecks.map(function(chk) {
+        return (
+          '<div class="bottleneck-alert ' + (chk.passed ? 'bottleneck--healthy' : 'bottleneck--warning') + '" data-rubric-check="' + escapeHtml(chk.id) + '">' +
+            '<div class="bottleneck-header">' +
+              '<span class="eco-pill ' + (chk.passed ? 'eco-pill--accent' : 'eco-pill--danger') + '">' + (chk.passed ? 'PASS' : 'WARN') + '</span>' +
+              '<strong>' + escapeHtml(chk.title) + '</strong>' +
+            '</div>' +
+            '<p>' + escapeHtml(chk.detail) + '</p>' +
+          '</div>'
+        );
+      }).join('');
 
       return (
         '<section class="sandbox-capacity-section eco-card" id="sandbox-capacity-panel">' +
@@ -1204,6 +1372,12 @@
               '<div class="bottlenecks-box" id="sb-bottlenecks-list">' +
                 '<h4>Real-Time Bottleneck &amp; Failure Mode Detection</h4>' +
                 bottlenecksHtml +
+              '</div>' +
+              '<div class="bottlenecks-box" id="sb-rubric-audit">' +
+                '<h4>Architecture Rubric Audit (' + passedCount + '/' + rubricChecks.length + ' Checks Passed)</h4>' +
+                '<div class="eco-grid eco-grid--2">' +
+                  rubricHtml +
+                '</div>' +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -1312,6 +1486,17 @@
             self._connections[rIdx].to = tmp;
             self._syncToActiveBoard();
             self.render();
+          }
+          return;
+        }
+
+        // Inspect Internals in CodeLab button
+        var codelabBtn = e.target.closest('[data-codelab-slug]');
+        if (codelabBtn) {
+          var buildSlug = codelabBtn.getAttribute('data-codelab-slug');
+          if (buildSlug && root.App && typeof root.App.navigate === 'function') {
+            e.preventDefault();
+            root.App.navigate('/build/' + buildSlug + '?lab=open&mode=guided');
           }
           return;
         }
@@ -1496,8 +1681,18 @@
           var rNodeId = nodeRepInp.getAttribute('data-inspect-node-replicas');
           var rNode = self._nodes.find(function(n) { return n.id === rNodeId; });
           if (rNode) {
-            rNode.replicas = Math.max(1, Number(nodeRepInp.value) || 1);
+            var nextRep = Math.max(1, Number(nodeRepInp.value) || 1);
+            rNode.replicas = nextRep;
+            rNode.instances = nextRep;
             self._syncToActiveBoard();
+            var data = self._getData();
+            var cap = data.calculateCapacity(self._inputs);
+            var panel = container.querySelector('#sandbox-capacity-panel');
+            if (panel) {
+              var wrapper = document.createElement('div');
+              wrapper.innerHTML = self._renderCapacityEstimator(cap);
+              panel.replaceWith(wrapper.firstElementChild);
+            }
           }
           return;
         }

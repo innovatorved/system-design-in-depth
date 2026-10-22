@@ -129,6 +129,59 @@ window.QUESTION_BANK["ticket-booking-system-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "ticket-booking-system-design-n1",
+    "topic": "ticket-booking-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Stadium Seat Map Memory Footprint",
+    "scenario": "A global ticketing platform hosts 5,000 concurrent high-demand concerts/games on sale simultaneously. Each venue has 20,000 seats, and each seat state (`seat_id`, `status`, `hold_user_id`, `hold_expires_at`, `version`) occupies 64 bytes in memory.",
+    "prompt": "How many gigabytes (GB, using 1 GB = 10^9 bytes) of RAM are required to hold all 5,000 active venue seat maps in memory simultaneously?",
+    "question": "How many gigabytes (GB, using 1 GB = 10^9 bytes) of RAM are required to hold all 5,000 active venue seat maps in memory simultaneously?",
+    "unit": "GB",
+    "answer": 6.4,
+    "tolerance": 0.25,
+    "hint": "Total seats = 5,000 venues × 20,000 seats = 100,000,000 seats. Multiply by 64 bytes and divide by 10^9 bytes/GB.",
+    "explanation": "`5,000 × 20,000 = 100,000,000` total active seats across all concurrent events. At 64 bytes/seat, the entire active seat inventory of 5,000 stadiums fits in just `6,400,000,000 bytes = 6.4 GB` of RAM!",
+    "tags": [
+      "ticket-booking-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "ticket-booking-system-design-t1",
+    "topic": "ticket-booking-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Two-Phase Seat Hold With Bounded TTL vs Lock-Until-Payment",
+    "scenario": "500,000 fans attempt to book 20,000 Taylor Swift stadium seats at 10:00:00 AM. Completing credit card 3D-Secure verification and payment takes 45–120 seconds per fan.",
+    "prompt": "How should the seat reservation and checkout flow be architected to prevent double-booking, database collapse, and abandoned-cart deadlocks?",
+    "question": "How should the seat reservation and checkout flow be architected to prevent double-booking, database collapse, and abandoned-cart deadlocks?",
+    "options": [
+      "Allow multiple users to pay for the same seat concurrently and refund the losers 24 hours later",
+      "Gate ingress with a virtual waiting room queue per event, then use a two-phase booking state machine: (1) atomic `AVAILABLE -> HELD` transition with a strict 5–10 minute lease TTL + fencing token, and (2) `HELD -> BOOKED` upon payment webhook (provided lease token is still valid)",
+      "Hold a PostgreSQL `SERIALIZABLE` transaction open across the 2-minute user checkout form"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Charging 50 people for Seat A1 and issuing 49 refunds avoids payment gateway fees",
+      "A virtual waiting room absorbs the 500k bot/fan spike at the edge, while a short-lived atomic `HELD` state gives the user time to pay without holding DB connection locks and automatically releases abandoned seats on TTL expiry",
+      "Holding open SQL connections for 120 seconds per user scales to 500,000 concurrent fans"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Decouple millisecond seat claiming (`AVAILABLE -> HELD`) from multi-minute human payment (`HELD -> BOOKED`).",
+    "explanation": "Two-phase reservation converts a 2-minute human interaction into two sub-millisecond atomic state transitions (`AVAILABLE -> HELD` with TTL, and `HELD -> BOOKED` verified by fencing token/hold ID), while an edge virtual waiting room smooths the 500k fan stampede.",
+    "tags": [
+      "ticket-booking-system-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -194,6 +247,59 @@ window.QUESTION_BANK["payment-system-design"] = [
       "payment-system-design",
       "recall",
       "inline"
+    ]
+  },
+  {
+    "id": "payment-system-design-n1",
+    "topic": "payment-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Double-Entry Ledger Storage Growth Over 5 Years",
+    "scenario": "A payment platform processes 20 million payment transactions per day. Each payment writes 1 transaction header row plus 2 double-entry ledger lines (debit + credit), totaling 1,000 bytes (1 KB) per payment including indexes.",
+    "prompt": "Using 365 days/year, how many terabytes (TB, using 1 TB = 10^12 bytes) of primary ledger storage accumulate over 5 years (rounded to the nearest integer)?",
+    "question": "Using 365 days/year, how many terabytes (TB, using 1 TB = 10^12 bytes) of primary ledger storage accumulate over 5 years (rounded to the nearest integer)?",
+    "unit": "TB",
+    "answer": 36.5,
+    "tolerance": 0.25,
+    "hint": "Daily storage = 20,000,000 × 1,000 B = 20 GB/day. Over 5 years (1,825 days): 20 GB × 1,825 = 36,500 GB = 36.5 TB.",
+    "explanation": "20M payments/day × 1 KB = 20 GB/day. Over `5 × 365 = 1,825` days, the immutable ledger grows by `20 GB × 1,825 = 36,500 GB = 36.5 TB` (~37 TB).",
+    "tags": [
+      "payment-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "payment-system-design-t1",
+    "topic": "payment-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Two-Phase Commit (2PC) Across External PSPs vs Transactional Outbox + Reconciliation Saga",
+    "scenario": "Executing a payment requires updating your internal SQL ledger AND calling an external Payment Service Provider (PSP like Stripe/Adyen) over HTTPS. External PSPs do not expose XA/2PC transactions, and network timeouts leave it ambiguous whether the PSP charged the card.",
+    "prompt": "Which architecture guarantees zero lost or double-charged payments across crashes and timeouts?",
+    "question": "Which architecture guarantees zero lost or double-charged payments across crashes and timeouts?",
+    "options": [
+      "Hold an open SQL serializable transaction lock while making the synchronous 2-second HTTPS call to the external PSP, and roll back the SQL transaction if the HTTPS call times out",
+      "Persist the payment intent + client `Idempotency-Key` in state `PENDING` via a local ACID transaction (Outbox pattern) before calling the PSP with a deterministic PSP idempotency key; on timeout, never blindly mark failed—poll/reconcile PSP state and verify T+1 settlement files against the immutable double-entry ledger",
+      "Charge the external PSP first and ignore database write failures"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Rolling back the local DB when an HTTP call times out guarantees the remote PSP did not already capture the customer's money",
+      "Because a network timeout can occur after the PSP succeeded, persisting `PENDING` state first and driving retries/status checks with a deterministic idempotency key + daily settlement reconciliation prevents both phantom charges and double captures",
+      "Dropping database ledger writes after charging a credit card passes financial audits"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "If your HTTPS request to Visa/Stripe times out after 3 seconds, did the charge succeed or fail?",
+    "explanation": "Rolling back the local DB on an HTTP timeout is a classic catastrophic bug: if the PSP actually processed the charge before the response packet was dropped, rolling back erases your record of taking the user's money! You must persist `PENDING` state before the external call and drive convergence via idempotent retries, webhooks, and T+1 settlement reconciliation.",
+    "tags": [
+      "payment-system-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -392,6 +498,59 @@ window.QUESTION_BANK["chat-and-messaging-system-design"] = [
       "chat-and-messaging-system-design",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "chat-and-messaging-system-design-n1",
+    "topic": "chat-and-messaging-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Group Chat Typing-Indicator Amplification",
+    "scenario": "A workspace messaging app has 10,000 active large channels, each with 200 online members. In each channel, 2 members are typing concurrently, emitting 1 `user_typing` event every 3 seconds. If the server broadcasts every typing event to all 200 online members in each channel, traffic is `(10,000 × 2 / 3) × 200 ≈ 1.33M msg/s`.",
+    "prompt": "Using `10,000 channels × 1 typing event/sec per channel × 200 members`, how many millions of outbound typing-indicator messages per second are sent across the fleet?",
+    "question": "Using `10,000 channels × 1 typing event/sec per channel × 200 members`, how many millions of outbound typing-indicator messages per second are sent across the fleet?",
+    "unit": "million msg/s",
+    "answer": 2,
+    "tolerance": 0.25,
+    "hint": "10,000 channels × 1 event/s × 200 recipients = 2,000,000 msg/s = 2 million msg/s.",
+    "explanation": "Even at just 1 typing event/sec per channel across 10,000 channels of 200 members, outbound fan-out reaches `10,000 × 200 = 2,000,000 (2 million) msg/s`—often exceeding actual persisted chat message traffic!",
+    "tags": [
+      "chat-and-messaging-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "chat-and-messaging-system-design-t1",
+    "topic": "chat-and-messaging-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Per-Channel Partitioning & Ephemeral Presence Suppression in Large Groups",
+    "scenario": "Your chat platform supports both 1-on-1 DMs and 10,000-member community channels. In 10,000-member channels, broadcasting typing indicators, read receipts, and online-presence flips to all 10,000 members saturates WebSocket gateways.",
+    "prompt": "How should message ordering, storage partitioning, and ephemeral signals (typing/presence/read-receipts) be designed across small vs large channels?",
+    "question": "How should message ordering, storage partitioning, and ephemeral signals (typing/presence/read-receipts) be designed across small vs large channels?",
+    "options": [
+      "Partition messages by `sender_user_id` and broadcast full read-receipts and typing events in 10,000-member channels",
+      "Partition messages by `(channel_id, bucket_id)` with per-channel monotonic sequence numbers (`Snowflake`), and dynamically degrade/disable broadcast of typing indicators, per-user read receipts, and push presence in channels exceeding a member threshold (e.g., >100 members, switching to pull-based presence on viewport)",
+      "Use a single global SQL sequence for all messages across all channels worldwide"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Partitioning by `sender_user_id` allows fetching a channel's conversation history in a single range scan",
+      "Partitioning by `(channel_id, time_bucket)` co-locates a channel's history for single-partition range scans, while adaptive feature degradation prevents `O(N^2)` ephemeral presence/typing storms in large rooms",
+      "A single global counter across continents adds zero latency to every chat message"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why do Slack, Discord, and WhatsApp disable per-user read receipts and typing indicators in large channels?",
+    "explanation": "Chat reads always query a chronological slice of a single `channel_id`, so partitioning by `(channel_id, time_bucket)` guarantees single-partition reads. For large channels (>100–500 members), disabling `O(N^2)` typing/read-receipt broadcasts and switching to viewport/pull presence prevents gateway overload.",
+    "tags": [
+      "chat-and-messaging-system-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

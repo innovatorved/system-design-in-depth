@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1095,43 +1095,99 @@ flowchart LR
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box" id="exercise-url-shortener-system-design" data-slug="url-shortener-system-design">
+      <div class="exercise-box quiz-card" id="quiz-url-shortener-system-design-n1" data-type="numeric" data-slug="url-shortener-system-design">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Architecture Challenge: URL Shortener Collision &amp; Key Space</span>
+            <span>Napkin Math: Base62 Short Code Namespace Capacity</span>
           </div>
-          <span class="exercise-box__difficulty">Intermediate</span>
+          <span class="exercise-box__difficulty">apply</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> Scale: Generating 1 billion short URLs per month without database lookup overhead.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Why is an auto-incrementing counter encoded in Base62 preferred over an MD5 hash prefix for generating 7-character short codes?</div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> You design a short code generator using a Base62 alphabet (`a-z`, `A-Z`, `0-9` = 62 characters). A 6-character code provides `62^6 ≈ 56.8 billion` codes, and a 7-character code provides `62^7 ≈ 3.52 trillion` (`3,521 billion`) codes.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> At a write rate of 1 billion new links per year, how many years would it take to exhaust 56 billion 6-character Base62 codes (rounded to the nearest integer)?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Divide 56 billion total codes by 1 billion codes per year.</div>
         
-        <div class="exercise-options">
+        <div class="quiz-options exercise-options" id="quiz-options-url-shortener-system-design-n1" style="margin-top: 15px;">
           
-            <div class="exercise-option" data-action="exercise-option" data-idx="0">
-              <span class="exercise-option__bullet">A</span>
-              <span class="exercise-option__text">A counter converted to Base62 mathematically guarantees 100% uniqueness with zero hash collisions.</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="1">
-              <span class="exercise-option__bullet">B</span>
-              <span class="exercise-option__text">Base62 uses fewer bytes in JSON payloads.</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="2">
-              <span class="exercise-option__bullet">C</span>
-              <span class="exercise-option__text">MD5 hashing is deprecated for security reasons and cannot be used in URLs.</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="3">
-              <span class="exercise-option__bullet">D</span>
-              <span class="exercise-option__text">Base62 can be decrypted back into the original long URL without a database.</span>
-            </div>
-          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-url-shortener-system-design-n1" placeholder="Enter numeric estimate (years)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">years</span>
+         </div>
+       
         </div>
 
-        <div class="exercise-feedback" id="feedback-url-shortener-system-design">
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="url-shortener-system-design" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-url-shortener-system-design-n1" style="display: none;">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> Taking the first 7 characters of an MD5 hash inevitably suffers from hash collisions due to the Birthday Paradox, requiring expensive database collision lookups. Converting sequential or Snowflake IDs to Base62 guarantees zero collisions.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> `62^6 = 56,800,235,584` (~56.8 billion) unique codes. At 1 billion links/year (~31.7 writes/sec), a 6-character Base62 namespace lasts ~56–57 years (and a 7-character namespace lasts ~3,521 years).</div>
+        </div>
+      </div>
+    
+      <div class="exercise-box quiz-card" id="quiz-url-shortener-system-design-t1" data-type="tradeoff" data-slug="url-shortener-system-design">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: HTTP 301 (Permanent) vs HTTP 302 (Temporary) Redirect Status Codes</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> Product management wants your URL shortener to provide accurate real-time click analytics (total clicks, referrer, geo, device breakdown) AND allow enterprise customers to update a link&#039;s destination URL during a campaign.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Which HTTP redirect status code and caching policy must you choose, and what is the trade-off?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> What does a browser do on the second click of an `HTTP 301` redirect?</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-url-shortener-system-design-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-url-shortener-system-design-t1" value="0" />
+               <span>Return `HTTP 301 Moved Permanently` with `Cache-Control: max-age=31536000` so browsers never contact your servers again</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-url-shortener-system-design-t1" value="1" />
+               <span>Return `HTTP 302 Found` (or `307` with controlled `Cache-Control: no-cache` / edge beacon logging) so every click reaches your edge/service to record analytics and respect destination updates, trading off higher edge request QPS</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-url-shortener-system-design-t1" value="2" />
+               <span>Return `HTTP 200 OK` with an HTML `&lt;iframe src=&#039;...&#039;&gt;` wrapping the destination site</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-url-shortener-system-design-t1" value="0" />
+               <span>Browsers cache HTTP 301 permanently in local disk cache and still send click analytics to the shortener on subsequent clicks</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-url-shortener-system-design-t1" value="1" />
+               <span>HTTP 301 causes browsers to bypass the shortener on repeat clicks (losing analytics and serving stale destinations if edited); HTTP 302 (handled at CDN edge with log streaming) preserves click telemetry and mutability</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-url-shortener-system-design-t1" value="2" />
+               <span>All websites allow being embedded in third-party iframes (`X-Frame-Options: DENY` does not exist)</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="url-shortener-system-design" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-url-shortener-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> With `HTTP 301`, browsers cache the redirect locally and jump straight to the target URL on repeat clicks, blinding your analytics pipeline and ignoring destination edits. `HTTP 302` ensures repeat clicks hit your edge (or API) where click events are captured.</div>
         </div>
       </div>
     
@@ -1231,29 +1287,29 @@ flowchart LR
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

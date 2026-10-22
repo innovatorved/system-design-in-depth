@@ -195,6 +195,59 @@ window.QUESTION_BANK["replication"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "replication-n1",
+    "topic": "replication",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Sloppy vs Strict Quorum Overlap (R + W > N)",
+    "scenario": "A leaderless Dynamo-style data store uses replication factor `N = 5` and write quorum `W = 3`.",
+    "prompt": "What is the minimum read quorum `R` required to guarantee strict quorum intersection (`R + W > N`) so every read sees at least one replica with the latest write?",
+    "question": "What is the minimum read quorum `R` required to guarantee strict quorum intersection (`R + W > N`) so every read sees at least one replica with the latest write?",
+    "unit": "replicas",
+    "answer": 3,
+    "tolerance": 0.25,
+    "hint": "Solve R + 3 > 5 for integer R: R > 2, so minimum integer R = 3.",
+    "explanation": "by the Pigeonhole Principle, `R + W > N` guarantees at least one overlapping node between the `W` written replicas and the `R` read replicas. With `N = 5` and `W = 3`, we need `R + 3 > 5`, so `R >= 3`.",
+    "tags": [
+      "replication",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "replication-t1",
+    "topic": "replication",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Multi-Region Synchronous vs Semi-Synchronous Replication",
+    "scenario": "A cloud database spans 3 AZs within `us-east-1` (1 ms intra-region RTT) and 1 disaster-recovery region in `us-west-2` (70 ms cross-region RTT). The product requires `RPO = 0` for single-AZ failures and write latency `< 10 ms`.",
+    "prompt": "Which replication commit policy should you configure, and why?",
+    "question": "Which replication commit policy should you configure, and why?",
+    "options": [
+      "Require synchronous commit acknowledgment from all 3 local AZs AND `us-west-2` before returning success",
+      "Use synchronous quorum / semi-synchronous commit across at least 1 remote AZ within `us-east-1` (~1–2 ms RTT) and asynchronous WAL streaming to `us-west-2`",
+      "Use purely local un-replicated memory commits on the primary and batch-copy backups once per night"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Waiting for a 70 ms cross-country RTT on every write easily meets a <10 ms write latency budget",
+      "Synchronous intra-region cross-AZ replication satisfies RPO = 0 for AZ loss within ~2 ms, while async cross-region streaming avoids the 70 ms speed-of-light tax on every commit",
+      "Nightly backups guarantee RPO = 0 when the primary AZ loses power at midday"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Speed of light across the US takes ~65-70 ms RTT—incompatible with a <10 ms write budget.",
+    "explanation": "Synchronous acknowledgment from a peer AZ in the same region adds only ~1–2 ms, meeting the <10 ms write SLO while guaranteeing zero data loss (`RPO = 0`) if an entire AZ fails.",
+    "tags": [
+      "replication",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -393,6 +446,59 @@ window.QUESTION_BANK["consensus"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "consensus-n1",
+    "topic": "consensus",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Raft Quorum Size and Fault Tolerance",
+    "scenario": "You deploy a 5-node Raft consensus cluster across 5 availability zones to store cluster metadata.",
+    "prompt": "How many simultaneous node failures can a 5-node Raft cluster tolerate while still maintaining a majority quorum to commit writes?",
+    "question": "How many simultaneous node failures can a 5-node Raft cluster tolerate while still maintaining a majority quorum to commit writes?",
+    "unit": "nodes",
+    "answer": 2,
+    "tolerance": 0.25,
+    "hint": "For N = 2f + 1 = 5 nodes, majority quorum is floor(5/2) + 1 = 3 nodes, so f = 2 failures are tolerated.",
+    "explanation": "A 5-node Raft cluster requires a majority quorum of 3 nodes (`floor(5/2) + 1 = 3`) to elect a leader and commit log entries. Thus it can lose at most 5 - 3 = 2 nodes while remaining available for writes.",
+    "tags": [
+      "consensus",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "consensus-t1",
+    "topic": "consensus",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: 3-Node vs 5-Node vs 6-Node Consensus Cluster Topologies",
+    "scenario": "A team proposes upgrading a 5-node etcd/Raft cluster to 6 nodes across 3 Availability Zones (2 nodes per AZ) to 'increase fault tolerance and survive an entire AZ outage'.",
+    "prompt": "What should you advise in the architecture review, and what is the primary engineering justification?",
+    "question": "What should you advise in the architecture review, and what is the primary engineering justification?",
+    "options": [
+      "Approve the 6-node cluster across 3 AZs because 6 nodes tolerate more failures than 5 nodes",
+      "Reject the 6-node cluster and use a 3-node or 5-node odd-sized topology (or 5 nodes across 3 AZs with 2-2-1 placement), because a 6-node cluster requires a quorum of 4 and still only tolerates 2 node failures",
+      "Use a 2-node cluster across 2 AZs so either node can commit writes independently"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Even-numbered Raft clusters increase fault tolerance while reducing replication overhead",
+      "Moving from 5 to 6 nodes raises the majority requirement from 3 to 4 (still tolerating only 6 - 4 = 2 failures) while adding replication traffic and making split-brain 3v3 partitions more likely",
+      "A 2-node Raft cluster can lose 1 node and still form a majority quorum of 2"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Compare `N - (floor(N/2) + 1)` for N = 5 vs N = 6.",
+    "explanation": "For N = 5, quorum is 3 (tolerates 2 failures). For N = 6, quorum is 4 (tolerates 6 - 4 = 2 failures). A 6-node cluster adds extra network replication overhead and worsens availability (since 4 nodes must stay up instead of 3) without tolerating a single additional failure.",
+    "tags": [
+      "consensus",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -590,6 +696,59 @@ window.QUESTION_BANK["redis-redlock-and-fencing-tokens"] = [
       "redis-redlock-and-fencing-tokens",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "redis-redlock-and-fencing-tokens-n1",
+    "topic": "redis-redlock-and-fencing-tokens",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Lock Lease Expiry vs Stop-the-World GC Pause",
+    "scenario": "Worker 1 acquires a distributed lock with a `10,000 ms` (10 s) TTL at `t = 0 ms`. At `t = 8,000 ms`, Worker 1 enters a 6,000 ms stop-the-world JVM GC pause before writing to storage.",
+    "prompt": "By how many milliseconds has Worker 1's lock lease already expired when Worker 1 wakes up at `t = 14,000 ms` and attempts its storage write?",
+    "question": "By how many milliseconds has Worker 1's lock lease already expired when Worker 1 wakes up at `t = 14,000 ms` and attempts its storage write?",
+    "unit": "ms",
+    "answer": 4000,
+    "tolerance": 0.25,
+    "hint": "Wake-up time (8,000 + 6,000 = 14,000 ms) minus lock expiration time (10,000 ms).",
+    "explanation": "The lock expired at `t = 10,000 ms`, while Worker 1 resumed execution at `t = 8,000 + 6,000 = 14,000 ms`—meaning its lease has been expired for 4,000 ms (4 seconds), during which Worker 2 may have acquired the lock and mutated the storage resource.",
+    "tags": [
+      "redis-redlock-and-fencing-tokens",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "redis-redlock-and-fencing-tokens-t1",
+    "topic": "redis-redlock-and-fencing-tokens",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Time-Based Lock Leases vs Monotonic Fencing Tokens",
+    "scenario": "Two inventory workers coordinate via a distributed lock before updating an object store or relational row. Occasionally, a worker experiences a multi-second GC pause or network delay that outlasts the lock TTL.",
+    "prompt": "How do you guarantee mutual exclusion at the storage resource even when a lock holder pauses past its lease TTL?",
+    "question": "How do you guarantee mutual exclusion at the storage resource even when a lock holder pauses past its lease TTL?",
+    "options": [
+      "Have the worker check `if (System.currentTimeMillis() < leaseExpiry)` right before sending the network write",
+      "Issue a strictly increasing fencing token (epoch number) with each lock acquisition and require the storage layer to reject any write with `token < max_seen_token`",
+      "Set the Redis lock TTL to 10 minutes instead of 10 seconds"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Checking local wall clock before sending a packet prevents pauses inside the OS kernel or network switch after the `if` statement",
+      "Storage-enforced monotonic fencing tokens turn safety into a state comparison at the target resource rather than an assumption about bounded process/network timing",
+      "A 10-minute TTL guarantees GC pauses or network delays never corrupt state while enabling sub-second failover"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Kleppmann's critique of Redlock: why can't a client-side clock check prevent a delayed network packet or post-check pause?",
+    "explanation": "A client can pause *after* checking its local clock or have its TCP packet delayed in flight. Only when the storage system itself validates a monotonically increasing fencing token (`epoch`) is an expired lock holder guaranteed to have its zombie write rejected.",
+    "tags": [
+      "redis-redlock-and-fencing-tokens",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

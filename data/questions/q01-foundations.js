@@ -63,6 +63,59 @@ window.QUESTION_BANK["requirements-clarification"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "requirements-clarification-n1",
+    "topic": "requirements-clarification",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Write-to-Read Event Amplification",
+    "scenario": "During requirements clarification for a URL shortener, you establish that links are created at 1,000,000 new links/day with a 100:1 read-to-write ratio, and every redirect must durably record a 200-byte click analytics event before returning HTTP 302.",
+    "prompt": "Assuming 100,000 seconds per day for napkin estimation, what is the average daily storage growth (in GB/day, using 1 GB = 10^9 bytes) generated solely by the redirect click events?",
+    "question": "Assuming 100,000 seconds per day for napkin estimation, what is the average daily storage growth (in GB/day, using 1 GB = 10^9 bytes) generated solely by the redirect click events?",
+    "unit": "GB/day",
+    "answer": 20,
+    "tolerance": 0.25,
+    "hint": "Daily redirects = 1,000,000 × 100 = 100,000,000 events/day. Multiply by 200 bytes/event and divide by 10^9 bytes/GB.",
+    "explanation": "With 1M link creations/day and a 100:1 read-to-write ratio, the service handles 100M redirects/day. Because the requirements mandate recording a 200-byte click event per redirect, event storage grows by 100,000,000 × 200 bytes = 20 × 10^9 bytes = 20 GB/day—turning an apparently read-heavy service into a sustained 1,000 writes/sec event ingestion workload.",
+    "tags": [
+      "requirements-clarification",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "requirements-clarification-t1",
+    "topic": "requirements-clarification",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Malicious Link Takedown Freshness vs Redirect Latency",
+    "scenario": "Trust & Safety requires that when an admin disables a phishing short link, all edge POPs stop redirecting within 5 seconds, while the core product SLO demands p99 redirect latency under 15 ms globally.",
+    "prompt": "Which caching and invalidation architecture should you commit to in the requirements contract, and what is the primary engineering justification?",
+    "question": "Which caching and invalidation architecture should you commit to in the requirements contract, and what is the primary engineering justification?",
+    "options": [
+      "Cache links at the CDN edge with a 24-hour TTL and rely on passive expiration",
+      "Bypass caching entirely and route every redirect to the strongly consistent primary SQL region",
+      "Serve redirects from regional edge caches with a short TTL backed by an active pub/sub invalidation stream and fail-closed revocation bloom filter"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Passive 24-hour TTLs eliminate invalidation traffic while meeting the 5-second takedown SLA",
+      "Cross-continental synchronous SQL reads easily stay under 15 ms p99 globally",
+      "Bounded push invalidation plus local edge reads satisfies both the 15 ms p99 latency budget and the 5-second revocation window"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Consider speed-of-light RTT across continents (~150-250 ms) vs a 24-hour passive cache window.",
+    "explanation": "Routing globally to a single SQL primary violates the 15 ms p99 target due to cross-continental RTT, while a passive 24-hour TTL violates the 5-second phishing takedown requirement. Regional edge caches with active pub/sub purge events keep p99 local (<15 ms) while bounding revocation propagation to seconds.",
+    "tags": [
+      "requirements-clarification",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -261,6 +314,59 @@ window.QUESTION_BANK["system-design-tradeoffs"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "system-design-tradeoffs-n1",
+    "topic": "system-design-tradeoffs",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Metric Cardinality Explosion",
+    "scenario": "An engineer adds a `user_id` Prometheus label to 5 HTTP latency histogram metrics (each histogram exposes 12 bucket series) for a service with 500,000 active users per scrape window.",
+    "prompt": "How many millions of active time series are created by tagging those 5 histograms with `user_id`?",
+    "question": "How many millions of active time series are created by tagging those 5 histograms with `user_id`?",
+    "unit": "million series",
+    "answer": 30,
+    "tolerance": 0.25,
+    "hint": "Total series = 5 histograms × 12 buckets × 500,000 users. Express the result in millions.",
+    "explanation": "5 histograms × 12 buckets/histogram = 60 series per user. Multiplying by 500,000 active users yields 30,000,000 (30 million) active time series—enough to OOM-crash standard TSDB ingesters and inflate observability bills by tens of thousands of dollars per month.",
+    "tags": [
+      "system-design-tradeoffs",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "system-design-tradeoffs-t1",
+    "topic": "system-design-tradeoffs",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Caching Seller Display Names vs Payment Eligibility",
+    "scenario": "A marketplace checkout page reads both the seller's `display_name` and `can_accept_payments` status at 15,000 req/s. Compliance mandates zero orders processed after a seller is suspended for fraud.",
+    "prompt": "Which data-access split should you implement, and what is the primary engineering justification?",
+    "question": "Which data-access split should you implement, and what is the primary engineering justification?",
+    "options": [
+      "Cache both `display_name` and `can_accept_payments` with a 5-minute TTL to minimize database load",
+      "Serve `display_name` from a TTL cache while verifying `can_accept_payments` synchronously against the authoritative store (or strongly consistent revocation list) at order submission",
+      "Remove caching for all seller fields and run serializable transactions on every product page view"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Identical data schemas always share the same freshness and correctness invariants",
+      "Separating cosmetic read-heavy attributes from compliance-critical invariants preserves read scalability without violating the zero-fraud-order invariant",
+      "Serializable reads on every page view are required to render cosmetic seller strings"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Ask which field tolerates staleness and which operation enforces a hard correctness invariant.",
+    "explanation": "Fields living in the same table often have radically different staleness tolerances. A slightly stale `display_name` is harmless, whereas a stale `can_accept_payments` flag violates a hard compliance invariant during order placement.",
+    "tags": [
+      "system-design-tradeoffs",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -392,6 +498,59 @@ window.QUESTION_BANK["back-of-the-envelope-capacity-planning"] = [
       "back-of-the-envelope-capacity-planning",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "back-of-the-envelope-capacity-planning-n1",
+    "topic": "back-of-the-envelope-capacity-planning",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Peak Egress Bandwidth for Feed Service",
+    "scenario": "A social feed serves 10 million Daily Active Users (DAU), each fetching their home feed 20 times per day. Assume 100,000 seconds/day, a 10x peak-to-average traffic ratio, and an average compressed JSON response payload of 20 KB per feed request.",
+    "prompt": "What is the peak outbound network bandwidth required at the API boundary in MB/s (using 1 MB = 1,000 KB)?",
+    "question": "What is the peak outbound network bandwidth required at the API boundary in MB/s (using 1 MB = 1,000 KB)?",
+    "unit": "MB/s",
+    "answer": 400,
+    "tolerance": 0.25,
+    "hint": "Average QPS = (10M × 20) / 100,000 = 2,000 req/s. Peak QPS = 2,000 × 10 = 20,000 req/s. Multiply by 20 KB and convert to MB/s.",
+    "explanation": "Total daily requests = 10M × 20 = 200M/day. Dividing by ~100,000 sec/day yields ~2,000 req/s average, and 20,000 req/s at 10x peak (or ~23,000 req/s using exact 86,400 s). Multiplying 20,000 req/s × 20 KB/req = 400,000 KB/s = 400 MB/s (~3.2 Gbps) of sustained peak egress.",
+    "tags": [
+      "back-of-the-envelope-capacity-planning",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "back-of-the-envelope-capacity-planning-t1",
+    "topic": "back-of-the-envelope-capacity-planning",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Sizing Storage From Assumptions vs Fixture Measurements",
+    "scenario": "Your initial napkin estimate assumed 500 bytes per URL row (0.91 TB for 1.825B rows over 5 years), but a 1M-row PostgreSQL 16 benchmark fixture measured 138 bytes per row including B-tree indexes (0.25 TB).",
+    "prompt": "How should you translate this fixture measurement into the production capacity plan, and why?",
+    "question": "How should you translate this fixture measurement into the production capacity plan, and why?",
+    "options": [
+      "Provision exactly 0.25 TB of disk across production with zero headroom since the fixture was measured on real PostgreSQL",
+      "Anchor the baseline to the 138 B/row measurement, but apply explicit multipliers for MVCC dead-tuple bloat, WAL retention, replicas, and URL-length variance",
+      "Discard the PostgreSQL benchmark entirely and provision a 50 TB sharded NoSQL cluster immediately"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "A static 1M-row insert fixture captures all future vacuum bloat, WAL spikes, and backup overhead",
+      "Empirical row+index measurements replace guesswork on tuple layout, while explicit operational multipliers account for MVCC churn, WAL, and replication",
+      "Sharding on day one avoids having to measure storage overhead"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Distinguish between static tuple+index bytes in a clean load vs live operational disk usage (MVCC, WAL, replicas).",
+    "explanation": "Empirical fixture measurements replace arbitrary row-size guesses, proving a single node easily holds the 5-year dataset. However, a clean fixture load omits MVCC dead tuples, B-tree page split fragmentation (~20-30%), WAL segments, and replica copies, which must be budgeted explicitly.",
+    "tags": [
+      "back-of-the-envelope-capacity-planning",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

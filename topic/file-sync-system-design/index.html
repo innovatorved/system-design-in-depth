@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1133,6 +1133,102 @@ flowchart TD
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-file-sync-system-design-n1" data-type="numeric" data-slug="file-sync-system-design">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Content-Defined Chunking Bandwidth Savings on Large File Edits</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A user edits 1 slide inside a 100 MB PowerPoint presentation and saves the file. Instead of re-uploading the entire 100 MB file, the client splits the file using Rabin-Karp Content-Defined Chunking (CDC) with a 4 MB average chunk size and only uploads the single modified 4 MB chunk.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> What percentage of upload bandwidth is saved by uploading only the 1 modified 4 MB chunk instead of the full 100 MB file?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> (100 MB - 4 MB) ÷ 100 MB = 96%.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-file-sync-system-design-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-file-sync-system-design-n1" placeholder="Enter numeric estimate (%)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">%</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="file-sync-system-design-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="file-sync-system-design" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-file-sync-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Uploading only the single dirty 4 MB content-addressed block (`SHA-256` hash) instead of the 100 MB file transfers 4 MB instead of 100 MB, saving `(100 - 4) / 100 = 96%` of network bandwidth and cloud storage.</div>
+        </div>
+      </div>
+    
+      <div class="exercise-box quiz-card" id="quiz-file-sync-system-design-t1" data-type="tradeoff" data-slug="file-sync-system-design">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Fixed-Size Block Chunking vs Rabin-Karp Content-Defined Chunking (CDC)</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A user inserts 100 bytes at the very beginning (byte offset 0) of a 1 GB video project file. Your file sync client must determine which blocks to upload to object storage.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Why does Fixed-Size Block Chunking fail on byte-shifting insertions, and how does Content-Defined Chunking (CDC) solve it?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> What happens to `file[0..4MB]`, `file[4MB..8MB]` when you prepend 100 bytes at index 0?</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-file-sync-system-design-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-file-sync-system-design-t1" value="0" />
+               <span>Fixed-size 4 MB chunking detects the 100-byte shift and leaves all subsequent 249 chunk hashes unchanged</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-file-sync-system-design-t1" value="1" />
+               <span>Inserting 100 bytes at offset 0 shifts every fixed 4 MB boundary across the entire 1 GB file (invalidating 100% of chunk SHA-256 hashes); Content-Defined Chunking uses a rolling Rabin fingerprint to cut chunk boundaries based on local content patterns so only the first chunk changes</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-file-sync-system-design-t1" value="2" />
+               <span>Use 1-byte chunks so each byte has its own 32-byte SHA-256 hash in the metadata database</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-file-sync-system-design-t1" value="0" />
+               <span>Shifting bytes by 100 positions never changes fixed-offset `0..4MB`, `4MB..8MB` slices</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-file-sync-system-design-t1" value="1" />
+               <span>A rolling hash (Rabin-Karp / Gear) anchors chunk boundaries to local byte sequences (`fingerprint % mask == 0`), localizing insertions/deletions to 1–2 chunks and preserving deduplication for the rest of the file</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-file-sync-system-design-t1" value="2" />
+               <span>Storing 32 bytes of SHA-256 metadata per 1 byte of file data reduces storage costs by 32x</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="file-sync-system-design-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="file-sync-system-design" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-file-sync-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> With fixed-offset chunks, prepending 100 bytes shifts every single byte boundary, changing the SHA-256 of all 250 chunks in a 1 GB file. Rolling-hash Content-Defined Chunking locks back onto the same natural content boundary right after the edit, so 249 of 250 chunks remain deduplicated.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1229,29 +1325,29 @@ flowchart TD
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

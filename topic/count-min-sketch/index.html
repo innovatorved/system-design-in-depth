@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1114,6 +1114,37 @@
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-count-min-sketch-n1" data-type="numeric" data-slug="count-min-sketch">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Count-Min Sketch Matrix Memory Size</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> You size a Count-Min Sketch with `d = 5` hash rows and `w = 20,000` counter columns per row to track heavy-hitter IP frequencies in an L7 DDoS scrubber. Each counter is a 4-byte (32-bit) unsigned integer.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How many kilobytes (KB, using 1 KB = 1,000 bytes) of memory does this `5 × 20,000` Count-Min Sketch matrix occupy?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Total cells = 5 × 20,000 = 100,000 counters. Multiply by 4 bytes/counter and divide by 1,000 bytes/KB.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-count-min-sketch-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-count-min-sketch-n1" placeholder="Enter numeric estimate (KB)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">KB</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="count-min-sketch-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="count-min-sketch" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-count-min-sketch-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 5 rows × 20,000 columns = 100,000 counters. At 4 bytes per counter, the entire sketch fits in 400,000 bytes = 400 KB—small enough to reside entirely in a CPU core&#039;s L2/L3 cache for line-rate packet inspection.</div>
+        </div>
+      </div>
+    
         <div class="simulator-card" id="sim-cms">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Count-Min Sketch (d = 3 rows)</div>
@@ -1134,6 +1165,71 @@
           <div class="sim-verdict" id="cms-verdict">Add items or stream a skewed workload.</div>
           <div class="sim-topk" id="cms-topk"></div>
         </div>
+      <div class="exercise-box quiz-card" id="quiz-count-min-sketch-t1" data-type="tradeoff" data-slug="count-min-sketch">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Count-Min Sketch Overestimation Bias &amp; Heavy-Hitter Min-Heap Pairing</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> You need to return the Top-100 most frequent search queries every minute from a stream of 500,000 queries/sec. A Count-Min Sketch alone only answers point frequency queries `estimate(item)` and does not store the item keys.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How do you combine a Count-Min Sketch with an auxiliary structure to output the Top-100 keys in bounded memory, and what error direction can occur?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Why does `estimate(x)` return `min_i table[i][h_i(x)]` and how do you remember which keys are in the top K?</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-count-min-sketch-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-count-min-sketch-t1" value="0" />
+               <span>Iterate over all `2^128` possible string keys every minute to query the Count-Min Sketch</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-count-min-sketch-t1" value="1" />
+               <span>Pair the Count-Min Sketch with a bounded Min-Heap of size K=100 (updating the heap whenever an item&#039;s `min_i CMS[i][h_i(x)]` estimate exceeds the heap minimum), noting CMS can only overestimate (never underestimate) due to hash collisions</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-count-min-sketch-t1" value="2" />
+               <span>Use the maximum counter across the `d` hash rows (`max_i CMS[i][h_i(x)]`) to minimize collision noise</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-count-min-sketch-t1" value="0" />
+               <span>Enumerating infinite string spaces is O(1) in production</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-count-min-sketch-t1" value="1" />
+               <span>Taking the minimum across `d` rows minimizes positive collision bias (one-sided overestimation error), while a K-element Min-Heap retains the top-K keys in O(K) space</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-count-min-sketch-t1" value="2" />
+               <span>Taking the maximum across rows reduces positive hash-collision increments</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="count-min-sketch-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="count-min-sketch" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-count-min-sketch-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Because hash collisions only add positive counts to shared buckets, every row `i` satisfies `table[i][h_i(x)] &gt;= true_count(x)`. Returning the `min` across rows gives the tightest upper bound, and maintaining a size-K Min-Heap alongside the sketch tracks the current Top-K keys in O(K) memory.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1144,7 +1240,10 @@
         <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
         
           <a class="lesson-builds__item" href="/build/hyperloglog-cardinality/" data-action="navigate-build" data-build-id="hyperloglog-cardinality">
-            <span class="lesson-builds__name">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">HyperLogLog Cardinality Sketch (64-bit hash, merge, serialization)</span>
+              
+            </div>
             <span class="lesson-builds__summary">A HyperLogLog with precision 4–16, a 64-bit hash, max-rank registers, the harmonic-mean estimator with alpha_m and linear counting (plus Ertl&#039;s improved estimator), exact cross-precision merge and 6-bit packed serialization. Tests check the 1.04/sqrt(m) error bound on up to 1M seeded distinct items.</span>
             <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
           </a>
@@ -1239,30 +1338,30 @@
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-distributed.js?v=30d663cc4e"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

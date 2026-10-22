@@ -63,6 +63,59 @@ window.QUESTION_BANK["realtime-database-and-websocket-scaling"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "realtime-database-and-websocket-scaling-n1",
+    "topic": "realtime-database-and-websocket-scaling",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: WebSocket Gateway Fleet Sizing by Connection Memory",
+    "scenario": "You need to terminate 10 million concurrent WebSocket connections. Each open connection consumes 25 KB of kernel socket buffer + application session state, and each gateway server has 50 GB (50,000,000 KB) of RAM dedicated to connection state.",
+    "prompt": "How many WebSocket gateway servers are required to hold all 10 million concurrent connections?",
+    "question": "How many WebSocket gateway servers are required to hold all 10 million concurrent connections?",
+    "unit": "servers",
+    "answer": 5,
+    "tolerance": 0.25,
+    "hint": "Connections per server = 50,000,000 KB ÷ 25 KB = 2,000,000 connections/server. Divide 10,000,000 by 2,000,000.",
+    "explanation": "Each server holds `50,000,000 KB / 25 KB = 2,000,000` concurrent connections. Thus 10M connections require `10,000,000 / 2,000,000 = 5` servers minimum (typically provisioned as 7–8 servers for N+2 rolling deploy & failover capacity).",
+    "tags": [
+      "realtime-database-and-websocket-scaling",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "realtime-database-and-websocket-scaling-t1",
+    "topic": "realtime-database-and-websocket-scaling",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Reconnection Thundering Herd After WebSocket Gateway Crash",
+    "scenario": "One WebSocket gateway server holding 500,000 active client connections crashes abruptly. All 500,000 clients detect TCP `FIN/RST` within the same 100 ms window and immediately attempt TLS handshakes + auth token validation + initial state sync against the remaining gateways.",
+    "prompt": "Which defense layers prevent this reconnection storm from cascading across the remaining fleet?",
+    "question": "Which defense layers prevent this reconnection storm from cascading across the remaining fleet?",
+    "options": [
+      "Configure clients to retry every 50 ms with zero jitter so users reconnect as quickly as possible",
+      "Enforce client-side randomized exponential backoff with full jitter, perform stateless JWT verification + TLS session resumption at the edge, and shed non-essential state-sync queries when gateway handshake queues saturate",
+      "Store all WebSocket TCP sockets inside the primary PostgreSQL database"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Synchronized 50 ms retries spread 500,000 RSA/ECDSA TLS handshakes evenly across time",
+      "Full-jitter backoff desynchronizes the 500k reconnects over tens of seconds, while TLS session tickets and stateless JWTs prevent auth-DB collapse during handshake bursts",
+      "PostgreSQL natively terminates raw client WebSocket connections"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Consider both the CPU cost of 500k simultaneous TLS handshakes and the DB cost of 500k simultaneous auth lookups.",
+    "explanation": "When a stateful gateway drops 500k connections at once, synchronized reconnects overwhelm both LB CPU (TLS handshakes) and the auth/state backend. Full-jitter client backoff, TLS session resumption, and edge admission control smooth the burst.",
+    "tags": [
+      "realtime-database-and-websocket-scaling",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -128,6 +181,59 @@ window.QUESTION_BANK["websockets-vs-sse-vs-long-polling"] = [
       "websockets-vs-sse-vs-long-polling",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "websockets-vs-sse-vs-long-polling-n1",
+    "topic": "websockets-vs-sse-vs-long-polling",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Short-Polling Header Overhead vs Server-Sent Events (SSE)",
+    "scenario": "100,000 browsers track a live order status page where state changes only once every 5 minutes. A naive implementation polls `GET /status` every 2 seconds, exchanging 1 KB (1,000 bytes) of HTTP headers + empty JSON per poll.",
+    "prompt": "How many megabytes per second (MB/s, using 1 MB = 1,000 KB) of wasted polling bandwidth is consumed across the 100,000 clients?",
+    "question": "How many megabytes per second (MB/s, using 1 MB = 1,000 KB) of wasted polling bandwidth is consumed across the 100,000 clients?",
+    "unit": "MB/s",
+    "answer": 50,
+    "tolerance": 0.25,
+    "hint": "Polls/sec = 100,000 clients ÷ 2 seconds = 50,000 req/s. Multiply by 1 KB/req and convert to MB/s.",
+    "explanation": "100,000 clients polling every 2 seconds generate 50,000 req/s. At 1 KB per request/response cycle, the server burns 50,000 KB/s = 50 MB/s (400 Mbps) just saying 'nothing changed', whereas SSE sends 1 event every 5 minutes (~333 req/s).",
+    "tags": [
+      "websockets-vs-sse-vs-long-polling",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "websockets-vs-sse-vs-long-polling-t1",
+    "topic": "websockets-vs-sse-vs-long-polling",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: WebSockets vs Server-Sent Events (SSE) over HTTP/2 for AI Token Streaming",
+    "scenario": "You are building an LLM chat interface (like ChatGPT/Claude) where the user submits one prompt via HTTP and receives a unidirectional stream of generated tokens for 20 seconds through enterprise corporate proxies.",
+    "prompt": "Should you use Server-Sent Events (SSE) over HTTP/2+ or bidirectional WebSockets, and what is the primary engineering justification?",
+    "question": "Should you use Server-Sent Events (SSE) over HTTP/2+ or bidirectional WebSockets, and what is the primary engineering justification?",
+    "options": [
+      "Use custom raw UDP sockets directly from the browser",
+      "Use Server-Sent Events (`text/event-stream`) over HTTP/2+, because traffic is unidirectional after the prompt POST, SSE multiplexes over a single HTTP/2 TCP connection, traverses L7 proxies/firewalls natively, and supports automatic `Last-Event-ID` resumption",
+      "Use short polling every 10 milliseconds to fetch each generated token"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Unprivileged browser JavaScript can open raw UDP sockets without WebRTC",
+      "SSE avoids the HTTP/1.1 `Upgrade` handshake fragility on enterprise proxies, multiplexes streams over HTTP/2, and matches the request-then-stream interaction pattern natively",
+      "10 ms HTTP polling has lower latency and header overhead than streaming"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why do OpenAI, Anthropic, and most LLM APIs stream tokens over SSE (`text/event-stream`) instead of WebSockets?",
+    "explanation": "LLM token streaming is request-response where the response happens to stream over time. SSE over HTTP/2 works with standard HTTP auth headers, L7 load balancers, and corporate firewalls without a special WebSocket `Upgrade` state machine.",
+    "tags": [
+      "websockets-vs-sse-vs-long-polling",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -656,6 +762,59 @@ window.QUESTION_BANK["live-commentary-system-design"] = [
       "live-commentary-system-design",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "live-commentary-system-design-n1",
+    "topic": "live-commentary-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Live Event Broadcast Egress Bandwidth",
+    "scenario": "During a World Cup final, 2 million concurrent viewers watch a live commentary stream. You batch and broadcast a 500-byte (0.5 KB) compressed commentary delta frame once per second to every connected viewer.",
+    "prompt": "What is the total outbound payload bandwidth across the edge broadcast tier in GB/s (using 1 GB = 1,000 MB = 1,000,000 KB)?",
+    "question": "What is the total outbound payload bandwidth across the edge broadcast tier in GB/s (using 1 GB = 1,000 MB = 1,000,000 KB)?",
+    "unit": "GB/s",
+    "answer": 1,
+    "tolerance": 0.25,
+    "hint": "2,000,000 viewers × 0.5 KB/s = 1,000,000 KB/s = 1 GB/s.",
+    "explanation": "2,000,000 viewers × 0.5 KB/s = 1,000,000 KB/s = 1 GB/s (8 Gbps) of pure payload egress. Notice that if you sent 20 unbatched comments/sec individually with frame overhead, egress and packet-per-second rates would jump 10–20x.",
+    "tags": [
+      "live-commentary-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "live-commentary-system-design-t1",
+    "topic": "live-commentary-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Per-Comment Push vs Windowed Reservoir Sampling & Edge Coalescing",
+    "scenario": "When a goal is scored in a live match with 2 million concurrent viewers, 50,000 viewers submit a comment in the same second. Pushing all 50,000 comments/sec to all 2 million viewers would require 100 billion message deliveries/sec and render the client UI unreadable.",
+    "prompt": "How should a Staff engineer design the live comment ingestion and broadcast pipeline for mega-events?",
+    "question": "How should a Staff engineer design the live comment ingestion and broadcast pipeline for mega-events?",
+    "options": [
+      "Broadcast all 50,000 comments/sec to all 2 million clients and let the browser DOM sort and render them at 60 fps",
+      "Echo the author's own comment locally immediately (optimistic UI), sample/rank incoming comments in 250–500 ms micro-batches (e.g., reservoir/quality sampling to ~5–10 comments/sec), and fan out via a hierarchical pub/sub tree or short-TTL edge CDN micro-cache",
+      "Lock the comment box globally so only 1 user per minute can submit a comment"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Human eyes can read 50,000 scrolling chat messages per second and mobile browsers never drop frames rendering 50,000 DOM nodes/sec",
+      "Humans can only read ~5–10 messages/sec; optimistic local echo satisfies the sender's Read-Your-Own-Writes expectation while micro-batch sampling caps broadcast egress by 5,000x",
+      "Blocking 99.999% of users from commenting meets the product engagement goal"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Can a human read 50,000 messages/sec? What does the sender of a comment need to see vs everyone else?",
+    "explanation": "In mega-event live chat (YouTube Live / Twitch / Hotstar), no human can read 50,000 messages/sec. Echoing the sender's own message locally preserves instant feedback, while window-sampling the global firehose down to ~10 messages/sec caps egress bandwidth and client CPU.",
+    "tags": [
+      "live-commentary-system-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

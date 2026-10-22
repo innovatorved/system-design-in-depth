@@ -19,6 +19,7 @@ window.Progress = (() => {
       streak: { current: 0, longest: 0, lastActiveDay: null },
       notes: {},
       bookmarks: [],
+      builds: {},
       xp: 0
     };
   }
@@ -99,6 +100,19 @@ window.Progress = (() => {
     }
     if (Array.isArray(parsed.bookmarks)) {
       clean.bookmarks = parsed.bookmarks.filter(item => typeof item === 'string' && item.trim().length > 0);
+    }
+    if (parsed.builds && typeof parsed.builds === 'object' && !Array.isArray(parsed.builds)) {
+      const cleanBuilds = {};
+      for (const [k, v] of Object.entries(parsed.builds)) {
+        if (typeof k === 'string' && v && typeof v === 'object' && !Array.isArray(v)) {
+          cleanBuilds[k] = {
+            completedSteps: Array.isArray(v.completedSteps) ? v.completedSteps.filter(s => typeof s === 'string' || typeof s === 'number') : [],
+            completed: Boolean(v.completed),
+            updatedAt: typeof v.updatedAt === 'string' ? v.updatedAt : null
+          };
+        }
+      }
+      clean.builds = cleanBuilds;
     }
 
     return clean;
@@ -191,6 +205,74 @@ window.Progress = (() => {
       save();
       updateProgressUI();
     }
+  }
+
+  function getBuildProgress(buildId) {
+    if (!buildId) return { completedSteps: [], totalSteps: 4, completed: false, pct: 0 };
+    const steps = (typeof window !== 'undefined' && window.GUIDED_LABS_DATA?.[buildId]?.steps) || [];
+    const totalSteps = steps.length || 4;
+    let completedSteps = Array.isArray(state.builds?.[buildId]?.completedSteps)
+      ? [...state.builds[buildId].completedSteps]
+      : [];
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const raw =
+          localStorage.getItem('sd-codelab-v1:' + buildId) ||
+          localStorage.getItem('sd_codelab_' + buildId) ||
+          localStorage.getItem('codelab_progress_' + buildId);
+        const saved = JSON.parse(raw || 'null');
+        const ext = Array.isArray(saved?.completedSteps) ? saved.completedSteps : (Array.isArray(saved) ? saved : []);
+        for (const item of ext) {
+          if (!completedSteps.includes(item)) completedSteps.push(item);
+        }
+      }
+    } catch {}
+    const completed = Boolean(state.builds?.[buildId]?.completed) || isCompleted('build:' + buildId) || (totalSteps > 0 && completedSteps.length >= totalSteps);
+    const pct = Math.min(100, Math.round((completedSteps.length / Math.max(1, totalSteps)) * 100));
+    return { completedSteps, totalSteps, completed, pct };
+  }
+
+  function markBuildStepComplete(buildId, stepIdOrIndex) {
+    if (!buildId) return getBuildProgress(buildId);
+    if (!state.builds) state.builds = {};
+    if (!state.builds[buildId]) {
+      state.builds[buildId] = { completedSteps: [], completed: false, updatedAt: null };
+    }
+    const steps = (typeof window !== 'undefined' && window.GUIDED_LABS_DATA?.[buildId]?.steps) || [];
+    let stepKey = stepIdOrIndex;
+    if (typeof stepIdOrIndex === 'number' && steps[stepIdOrIndex]?.id) {
+      stepKey = steps[stepIdOrIndex].id;
+    } else if (stepIdOrIndex && typeof stepIdOrIndex === 'object' && stepIdOrIndex.id) {
+      stepKey = stepIdOrIndex.id;
+    }
+    if (stepKey !== undefined && stepKey !== null && !state.builds[buildId].completedSteps.includes(stepKey)) {
+      state.builds[buildId].completedSteps.push(stepKey);
+    }
+    state.builds[buildId].updatedAt = new Date().toISOString();
+    const totalSteps = steps.length || 4;
+    if (state.builds[buildId].completedSteps.length >= totalSteps) {
+      state.builds[buildId].completed = true;
+      markComplete('build:' + buildId);
+    } else {
+      updateStreak();
+      save();
+      updateProgressUI();
+    }
+    return getBuildProgress(buildId);
+  }
+
+  function markBuildComplete(buildId) {
+    if (!buildId) return;
+    if (!state.builds) state.builds = {};
+    const steps = (typeof window !== 'undefined' && window.GUIDED_LABS_DATA?.[buildId]?.steps) || [];
+    const allStepIds = steps.map((s, i) => s.id || i);
+    state.builds[buildId] = {
+      completedSteps: allStepIds.length ? allStepIds : (state.builds[buildId]?.completedSteps || []),
+      completed: true,
+      updatedAt: new Date().toISOString()
+    };
+    markComplete('build:' + buildId);
+    return getBuildProgress(buildId);
   }
 
   function getXP() {
@@ -507,6 +589,9 @@ window.Progress = (() => {
     isCompleted,
     toggleComplete,
     markComplete,
+    getBuildProgress,
+    markBuildStepComplete,
+    markBuildComplete,
     setLastVisited,
     getLastVisited,
     getCompletedCount,

@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,10 +116,10 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab" data-tab="curriculum" role="tab" aria-selected="false">Curriculum</button>
-      <button class="sidebar__tab active" data-tab="builds" role="tab" aria-selected="true">15 Builds</button>
+      <button class="sidebar__tab active" data-tab="builds" role="tab" aria-selected="true">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
-<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (15)</div><a class="unit-item" data-build="load-balancer-from-scratch" href="/build/load-balancer-from-scratch/">
+<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (20)</div><a class="unit-item" data-build="load-balancer-from-scratch" href="/build/load-balancer-from-scratch/">
         <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
         <span class="unit-item__title">Layer 7 Load Balancer From Scratch</span>
       </a><a class="unit-item" data-build="consistent-hashing-ring" href="/build/consistent-hashing-ring/">
@@ -164,6 +164,21 @@
       </a><a class="unit-item" data-build="tiny-search-engine" href="/build/tiny-search-engine/">
         <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
         <span class="unit-item__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
+      </a><a class="unit-item" data-build="circuit-breaker" href="/build/circuit-breaker/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Circuit Breaker &amp; Adaptive Load Shedder</span>
+      </a><a class="unit-item" data-build="singleflight-coalescer" href="/build/singleflight-coalescer/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Singleflight &amp; Stampede Coalescer</span>
+      </a><a class="unit-item" data-build="raft-consensus" href="/build/raft-consensus/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Raft Leader Election &amp; Quorum Log</span>
+      </a><a class="unit-item" data-build="mini-kafka-log" href="/build/mini-kafka-log/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Partitioned Commit Log &amp; Consumer Group Broker</span>
+      </a><a class="unit-item" data-build="outbox-cdc-relay" href="/build/outbox-cdc-relay/">
+        <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        <span class="unit-item__title">Transactional Outbox &amp; Idempotent CDC Relay</span>
       </a>
     </div>
   </aside>
@@ -281,9 +296,9 @@
       </section>
 
       <div id="build-walkthrough-pane"><article class="prose" id="build-file-sliding-window-rate-limiter-README_md"><p>Three per-key limiters with one result shape, so you can swap them and compare:</p>
-<pre><code class="language-js">const r = limiter.consume(&#039;api-key:123&#039;, cost = 1);
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">js</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="run-snippet-codelab" data-lang="js" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE">⚡ Run in CodeLab</button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-js">const r = limiter.consume(&#039;api-key:123&#039;, cost = 1);
 // { allowed, limit, remaining, retryAfterMs, resetMs }
-res.set(toHeaders(r)); // RateLimit-Limit / -Remaining / -Reset, Retry-After on 429</code></pre>
+res.set(toHeaders(r)); // RateLimit-Limit / -Remaining / -Reset, Retry-After on 429</code></pre></div>
 <h2>The problem and where it shows up</h2>
 <p>A rate limiter caps how much work one principal can cause per unit of time. It protects shared capacity, enforces pricing tiers, and slows abuse such as credential stuffing and scraping. You'll find it in API gateways (Kong, AWS API Gateway usage plans), edge proxies (Envoy <code>local_ratelimit</code> and the global <code>ratelimit</code> service, NGINX <code>limit_req</code>), CDNs (Cloudflare Rate Limiting), and public APIs (GitHub's <code>x-ratelimit-*</code> headers, Stripe's per-account limits).</p>
 <p>The naive <strong>fixed window</strong> ("reset the counter every minute") admits up to <strong>2x the limit</strong> in a short burst that straddles a boundary. <code>demo.js</code> section 1 shows 20 requests admitted in 2 s against a 10/min limit. All three algorithms here avoid that.</p>
@@ -297,7 +312,7 @@ res.set(toHeaders(r)); // RateLimit-Limit / -Remaining / -Reset, Retry-After on 
 </ul>
 <h3>2. Sliding-window counter (<code>SlidingWindowCounter</code>): O(1) approximation</h3>
 <p>Keep only the counts for the current and previous fixed windows:</p>
-<pre><code class="language-text">estimate = prev * (1 - elapsed / W) + curr        admit if estimate + cost &lt;= limit</code></pre>
+<div class="code-block"><div class="code-block__header"><span class="code-block__lang">text</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-text">estimate = prev * (1 - elapsed / W) + curr        admit if estimate + cost &lt;= limit</code></pre></div>
 <p>This assumes the previous window's hits were spread uniformly. <strong>Retry-After</strong> is solved in closed form for two cases. (A) Room opens later in this window as <code>prev</code> decays: <code>f &gt;= 1 - (L - curr - cost) / prev</code>. (B) <code>curr</code> alone is too full, so wait into the next window, where <code>prev := curr</code>: <code>g &gt;= 1 - (L - cost) / curr</code>. The result is rounded up to whole ms and nudged forward if floating-point error left it a hair short. A randomized test checks that it is never early and never late.</p>
 <ul>
 <li><strong>Error</strong>: when traffic in the previous window was <em>not</em> uniform (bunched at its end), the counter under-estimates and over-admits. In the demo's Poisson workload it admits about 0.6% more overall, and its worst true 60 s window reaches 113 against a limit of 100. Cloudflare has reported very low error on real traffic. The trade is exactness for 3 numbers per key.</li>
@@ -410,31 +425,31 @@ res.set(toHeaders(r)); // RateLimit-Limit / -Remaining / -Reset, Retry-After on 
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/implementations_code.js?v=6e35b8cc29"></script>
-  <script type="text/plain" data-defer src="data/guided_labs.js?v=3a663a9cad"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/implementations_code.js?v=7189880a2f"></script>
+  <script type="text/plain" data-defer src="data/guided_labs.js?v=e41a33646f"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

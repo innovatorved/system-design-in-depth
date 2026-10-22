@@ -129,6 +129,59 @@ window.QUESTION_BANK["inverted-index-and-posting-lists"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "inverted-index-and-posting-lists-n1",
+    "topic": "inverted-index-and-posting-lists",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Delta + VarInt Posting List Compression Savings",
+    "scenario": "A popular search term appears in 10 million documents. Uncompressed, each posting stores an 8-byte (64-bit) document ID, totaling 80 MB. By sorting document IDs and encoding gaps (`deltas`) with Variable-Byte / PForDelta compression, each posting averages 1.6 bytes.",
+    "prompt": "How many megabytes (MB) does the compressed posting list occupy (10,000,000 × 1.6 bytes, using 1 MB = 10^6 bytes)?",
+    "question": "How many megabytes (MB) does the compressed posting list occupy (10,000,000 × 1.6 bytes, using 1 MB = 10^6 bytes)?",
+    "unit": "MB",
+    "answer": 16,
+    "tolerance": 0.25,
+    "hint": "10,000,000 postings × 1.6 bytes/posting ÷ 1,000,000 bytes/MB.",
+    "explanation": "Sorting docIDs converts large 64-bit integers into small positive gaps (`d_i - d_{i-1}`), shrinking the 10M-entry posting list from 80 MB down to 16 MB (a 5x reduction in RAM and memory-bandwidth footprint).",
+    "tags": [
+      "inverted-index-and-posting-lists",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "inverted-index-and-posting-lists-t1",
+    "topic": "inverted-index-and-posting-lists",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Document-Partitioned (Local Index) vs Term-Partitioned (Global Index) Sharding",
+    "scenario": "You are designing a 50-shard full-text search cluster executing 3-word conjunctive (`AND`) queries at 20,000 queries/sec with a strict p99 latency SLO of 40 ms.",
+    "prompt": "Should you partition the inverted index by Document ID (local index per shard) or by Term (global posting list per term), and why?",
+    "question": "Should you partition the inverted index by Document ID (local index per shard) or by Term (global posting list per term), and why?",
+    "options": [
+      "Partition by Term so a 3-word `AND` query streams multi-megabyte posting lists across the network between shards to intersect them",
+      "Partition by Document ID so each shard intersects all 3 posting lists locally in memory and returns only its top-K scored documents to the coordinator",
+      "Replicate the entire 50-shard index onto every client browser via WebAssembly"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Streaming millions of compressed docIDs over the network on every multi-term query minimizes network bandwidth",
+      "Document partitioning performs posting-list intersection locally on each shard (shipping only tiny top-K results over the network) and isolates document indexing writes to a single shard",
+      "Browser memory can hold petabytes of enterprise search indexes"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Consider network bandwidth when intersecting `term1 AND term2` if `term1` is on Shard A and `term2` is on Shard B.",
+    "explanation": "In term partitioning, intersecting `term1 AND term2` requires transferring giant posting lists across the network between shards. Document partitioning executes the entire intersection and BM25 scoring locally within each shard and sends only `K` lightweight `{docId, score}` pairs back to the coordinator.",
+    "tags": [
+      "inverted-index-and-posting-lists",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -855,6 +908,59 @@ window.QUESTION_BANK["vector-search-and-hybrid-retrieval"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "vector-search-and-hybrid-retrieval-n1",
+    "topic": "vector-search-and-hybrid-retrieval",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Uncompressed Float32 HNSW Vector Index RAM Sizing",
+    "scenario": "You are indexing 10 million document chunks using 768-dimensional `float32` embeddings (4 bytes per dimension) inside an in-memory HNSW graph. Assume HNSW graph adjacency links add ~25% overhead on top of the raw vector bytes (`3,072 bytes × 1.25 ≈ 3,840 bytes ≈ 4,000 bytes` per vector).",
+    "prompt": "Using 4,000 bytes (4 KB) per indexed vector including HNSW graph overhead, how many gigabytes (GB, using 1 GB = 10^9 bytes) of RAM are required for 10 million vectors?",
+    "question": "Using 4,000 bytes (4 KB) per indexed vector including HNSW graph overhead, how many gigabytes (GB, using 1 GB = 10^9 bytes) of RAM are required for 10 million vectors?",
+    "unit": "GB",
+    "answer": 40,
+    "tolerance": 0.25,
+    "hint": "10,000,000 vectors × 4,000 bytes/vector ÷ 10^9 bytes/GB.",
+    "explanation": "Raw vectors alone require `10M × 768 × 4 B = 30.72 GB`. Adding ~25% HNSW neighbor-list graph overhead brings the memory footprint to ~38.4–40 GB of RAM per replica for just 10M vectors.",
+    "tags": [
+      "vector-search-and-hybrid-retrieval",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "vector-search-and-hybrid-retrieval-t1",
+    "topic": "vector-search-and-hybrid-retrieval",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Dense Vector ANN vs Hybrid Lexical (BM25) + Vector Retrieval with RRF",
+    "scenario": "An enterprise e-commerce search engine switches 100% of queries from BM25 lexical search to dense `float32` vector embeddings. Support tickets immediately spike because searches for exact SKU model numbers (e.g., `WH-1000XM5` or `error_code_0x80070005`) return semantically vague headphones instead of the exact model.",
+    "prompt": "Which retrieval architecture fixes exact-token recall while preserving semantic understanding, and why?",
+    "question": "Which retrieval architecture fixes exact-token recall while preserving semantic understanding, and why?",
+    "options": [
+      "Increase vector embedding dimensions from 768 to 4096 and remove all text indexes",
+      "Run parallel hybrid retrieval combining sparse lexical BM25 (exact token/SKU matching) with dense ANN vector search, fusing candidate lists via Reciprocal Rank Fusion (RRF) and a cross-encoder reranker",
+      "Replace vector search with SQL `LIKE '%query%'` full-table scans"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Dense bi-encoder embeddings natively memorize every arbitrary alphanumeric SKU and hex error code without compression loss",
+      "BM25 provides exact rare-token precision while dense ANN captures semantic synonyms; fusing top candidates via RRF and reranking the top 50–100 delivers high recall and precision within latency bounds",
+      "Full-table `LIKE '%...%'` scans scale to 100M documents at <20 ms latency"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why do dense bi-encoder embeddings struggle with out-of-vocabulary SKUs, part numbers, and exact identifiers?",
+    "explanation": "Dense embeddings compress passages into fixed-width semantic vectors, losing fidelity on exact rare tokens like SKUs or hex codes. Hybrid retrieval (BM25 + dense ANN fused via Reciprocal Rank Fusion and top-K cross-encoder reranking) combines exact lexical precision with semantic recall.",
+    "tags": [
+      "vector-search-and-hybrid-retrieval",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -920,6 +1026,59 @@ window.QUESTION_BANK["autocomplete-system-design"] = [
       "autocomplete-system-design",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "autocomplete-system-design-n1",
+    "topic": "autocomplete-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Keystroke Autocomplete QPS With Client Debouncing",
+    "scenario": "500,000 concurrent users are actively typing search queries. Each user types an average of 6 characters per second. Without debouncing, every keystroke fires an RPC (3,000,000 req/s). You add a 150 ms client-side debounce / throttle that coalesces rapid keystrokes so only 1 request is sent per 3 characters typed.",
+    "prompt": "What is the resulting autocomplete request rate (in millions of req/s) reaching the edge after a 3-to-1 debounce reduction?",
+    "question": "What is the resulting autocomplete request rate (in millions of req/s) reaching the edge after a 3-to-1 debounce reduction?",
+    "unit": "million req/s",
+    "answer": 1,
+    "tolerance": 0.25,
+    "hint": "Unthrottled rate = 500,000 × 6 = 3,000,000 req/s. Divide by 3 for the debounced rate.",
+    "explanation": "500,000 concurrent typists × 6 chars/s = 3,000,000 keystrokes/s. Coalescing 3 keystrokes per network call via a ~150 ms debounce cuts edge QPS by 67% down to 1,000,000 (1 million) req/s.",
+    "tags": [
+      "autocomplete-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "autocomplete-system-design-t1",
+    "topic": "autocomplete-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Runtime Trie Traversal vs Precomputed Top-K per Prefix Node",
+    "scenario": "Your autocomplete service must return the top 10 completions for popular short prefixes (like `'s'` or `'st'`, which match millions of completions in the trie) within a 10 ms p99 budget.",
+    "prompt": "How should the prefix trie be structured and updated in production, and why?",
+    "question": "How should the prefix trie be structured and updated in production, and why?",
+    "options": [
+      "Traverse the entire subtree under prefix `'s'` at query time and sort all 2 million matching leaves on every keystroke",
+      "Materialize the pre-sorted top-K (e.g., top 10) completions directly inside every prefix node/key in an immutable memory-mapped FST/KV snapshot, rebuilt periodically by an offline/nearline aggregation pipeline",
+      "Increment node counters synchronously inside the live serving trie on every single search query using global write locks"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Sorting 2 million subtree nodes per keystroke takes less than 1 microsecond",
+      "Caching top-K completions at each prefix node reduces query complexity from O(subtree_size) to O(prefix_length) (an O(1) key lookup), while immutable snapshot swaps avoid read/write lock contention",
+      "Global write locks on the root trie node scale cleanly to 1 million QPS"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "What is the time complexity of looking up a prefix if its top 10 completions are pre-stored directly on the prefix node?",
+    "explanation": "Precomputing and storing the top-10 completions at every prefix node turns runtime query serving into an `O(1)` hash/FST lookup with zero subtree traversal, while building immutable trie snapshots off-path prevents lock contention on hot root prefixes.",
+    "tags": [
+      "autocomplete-system-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

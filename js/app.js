@@ -180,7 +180,7 @@ window.App = (() => {
       }
       currentRouteParams = new URLSearchParams(window.location.search);
       currentView = 'sandbox';
-      currentSlug = sub || null;
+      currentSlug = sub || currentRouteParams.get('blueprint') || null;
       activeTab = 'curriculum';
       syncSidebarTabs();
       return;
@@ -263,11 +263,43 @@ window.App = (() => {
   function navigateToBuild(buildId, event) {
     if (event && event.preventDefault) event.preventDefault();
     if (!buildId) return;
-    history.pushState(null, '', '/build/' + buildId + '/');
+    const [rawSlug, queryStr] = String(buildId).replace(/^\/build\//, '').split('?');
+    const cleanId = rawSlug.replace(/\/+$/, '');
+    history.pushState(null, '', '/build/' + cleanId + '/' + (queryStr ? '?' + queryStr : ''));
     parseRoute();
     renderCurrentView();
     updateSidebarActive();
     closeSidebar();
+    window.scrollTo(0, 0);
+  }
+
+  function navigate(pathOrUrl, event) {
+    if (event && event.preventDefault) event.preventDefault();
+    if (!pathOrUrl) return;
+    const str = String(pathOrUrl);
+    if (str.startsWith('/build/')) {
+      navigateToBuild(str.slice(7), event);
+      return;
+    }
+    if (str.startsWith('/topic/')) {
+      navigateTo(str.slice(7).replace(/\/+$/, ''), event);
+      return;
+    }
+    if (str.startsWith('/challenges')) {
+      const sub = str.replace(/^\/challenges\/?/, '').replace(/\/+$/, '');
+      navigateToChallenges(sub || null, event);
+      return;
+    }
+    if (str.startsWith('/sandbox')) {
+      const qIdx = str.indexOf('?');
+      const params = qIdx >= 0 ? new URLSearchParams(str.slice(qIdx)) : null;
+      const sub = str.split('?')[0].replace(/^\/sandbox\/?/, '').replace(/\/+$/, '');
+      navigateToSandbox(sub || params?.get('blueprint') || null, event);
+      return;
+    }
+    history.pushState(null, '', str);
+    parseRoute();
+    renderCurrentView();
     window.scrollTo(0, 0);
   }
 
@@ -709,8 +741,19 @@ window.App = (() => {
                 guided: guidedEntry || null,
                 backLabel: 'Back to Build Guide',
                 onClose: closeBuildLab,
-                onStepComplete: syncOverviewProgress,
-                onLabComplete: syncOverviewProgress
+                onStepComplete: (step) => {
+                  if (window.Progress?.markBuildStepComplete) {
+                    const stepId = (step && typeof step === 'object') ? (step.id || step.index) : step;
+                    window.Progress.markBuildStepComplete(currentSlug, stepId);
+                  }
+                  syncOverviewProgress();
+                },
+                onLabComplete: () => {
+                  if (window.Progress?.markBuildComplete) {
+                    window.Progress.markBuildComplete(currentSlug);
+                  }
+                  syncOverviewProgress();
+                }
               };
               if (opts.mode === 'guided' || opts.mode === 'sandbox') {
                 mountOpts.mode = opts.mode;
@@ -831,11 +874,21 @@ window.App = (() => {
     if (!mod || loadedModules.has(mod.id) || !window.Lazy) return;
     loadedModules.add(mod.id);
     const num = mod.legacyNumber || mod.number;
-    window.Lazy.module(num).then(() => {
+    const tasks = [window.Lazy.module(num)];
+    if (window.loadScript) {
+      if (!window.IMPLEMENTATIONS_DATA) tasks.push(window.loadScript('data/implementations_code.js').catch(() => {}));
+      if (!window.CHALLENGES_DATA) tasks.push(window.loadScript('data/challenges.js').catch(() => {}));
+      if (!window.WHITEBOARD_DATA) tasks.push(window.loadScript('data/whiteboard-blueprints.js').catch(() => {}));
+    }
+    Promise.all(tasks).then(() => {
       // Re-render if the learner is still on a view that needs this module
       const needed = (currentView === 'topic' && getModuleIdForSlug(currentSlug) === mod.id) ||
         (currentView === 'cheatsheet' && findModule(currentSlug)?.id === mod.id);
-      if (needed) renderCurrentView();
+      if (needed) {
+        const reader = document.getElementById('reader');
+        if (reader) reader.removeAttribute('data-prerendered');
+        renderCurrentView();
+      }
     }).catch(err => {
       loadedModules.delete(mod.id);
       console.warn('Failed to load content for module:', mod.id, err);
@@ -911,22 +964,17 @@ window.App = (() => {
       return;
     }
 
-    let html = '<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (15)</div>';
+    const buildCount = Object.keys(impls).length;
+    let html = `<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (${buildCount})</div>`;
 
     for (const [id, build] of Object.entries(impls)) {
       const active = currentView === 'build' && currentSlug === id;
       let doneSteps = 0;
-      try {
-        const raw = localStorage.getItem('sd-codelab-v1:' + id) || localStorage.getItem('sd_codelab_' + id);
-        const savedNew = JSON.parse(raw || 'null');
-        if (Array.isArray(savedNew?.completedSteps)) {
-          doneSteps = savedNew.completedSteps.length;
-        } else {
-          const savedLegacy = JSON.parse(localStorage.getItem('codelab_progress_' + id) || '[]');
-          if (Array.isArray(savedLegacy)) doneSteps = savedLegacy.length;
-        }
-      } catch (_) {}
-      const isComplete = doneSteps >= 4;
+      const prog = window.Progress?.getBuildProgress ? window.Progress.getBuildProgress(id) : null;
+      if (prog && Array.isArray(prog.completedSteps)) {
+        doneSteps = prog.completedSteps.length;
+      }
+      const isComplete = Boolean(prog?.completed) || doneSteps >= 4;
       const statusClass = isComplete ? 'completed' : active ? 'active' : 'pending';
       const statusIcon = isComplete ? window.Renderer.icons.check : window.Renderer.icons.code;
 
@@ -1628,6 +1676,42 @@ window.App = (() => {
         return;
       }
 
+      const runSnippetBtn = target.closest('[data-action="run-snippet-codelab"]');
+      if (runSnippetBtn) {
+        e.preventDefault();
+        const block = runSnippetBtn.closest('.code-block');
+        const codeEl = block?.querySelector('code');
+        const code = codeEl ? codeEl.textContent : '';
+        const lang = runSnippetBtn.getAttribute('data-lang') || 'javascript';
+        const titleEl = document.querySelector('.lesson__title, h1');
+        const title = titleEl ? `${titleEl.textContent.trim()} — Live Snippet` : 'Lesson Code Snippet';
+        openSnippetInCodeLab(code, lang, title);
+        return;
+      }
+
+      const openRepoBtn = target.closest('[data-action="open-repo-codelab"]');
+      if (openRepoBtn) {
+        e.preventDefault();
+        const repo = openRepoBtn.getAttribute('data-repo');
+        const title = openRepoBtn.getAttribute('data-title') || repo;
+        if (repo) openRepoInCodeLab(repo, title);
+        return;
+      }
+
+      const openChallengeLabBtn = target.closest('[data-action="open-challenge-codelab"]');
+      if (openChallengeLabBtn) {
+        e.preventDefault();
+        const chId = openChallengeLabBtn.getAttribute('data-challenge-id') || currentSlug;
+        if (chId) {
+          openChallengeCodeLab(chId, () => {
+            if (window.ChallengesController && typeof window.ChallengesController.markCodeHotfixPassed === 'function') {
+              window.ChallengesController.markCodeHotfixPassed(chId);
+            }
+          });
+        }
+        return;
+      }
+
       // 6. Video player & embed
       const ytBtn = target.closest('[data-action="load-youtube"]');
       if (ytBtn) {
@@ -1667,20 +1751,43 @@ window.App = (() => {
         return;
       }
 
-      // 9. Intercept internal /build/<slug>/ and /topic/<slug>/ links for SPA navigation
+      // 9. Intercept internal /build/<slug>/, /topic/<slug>/, /challenges/<id>, /sandbox?blueprint=<id> links for SPA navigation
       const anchor = target.closest('a[href]');
       if (anchor && !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0 || anchor.target === '_blank')) {
         const href = anchor.getAttribute('href') || '';
-        const buildMatch = href.match(/^\/build\/([^/#?]+)\/?$/);
+        const buildMatch = href.match(/^\/build\/([^/#?]+)\/?(\?.*)?$/);
         if (buildMatch) {
           e.preventDefault();
-          navigateToBuild(buildMatch[1], e);
+          if (buildMatch[2]) {
+            history.pushState(null, '', href);
+            currentView = 'build';
+            currentSlug = buildMatch[1];
+            activeTab = 'builds';
+            syncSidebarTabs();
+            closeSidebar();
+            renderCurrentView();
+            window.scrollTo(0, 0);
+          } else {
+            navigateToBuild(buildMatch[1], e);
+          }
           return;
         }
         const topicMatch = href.match(/^\/topic\/([^/#?]+)\/?$/);
         if (topicMatch) {
           e.preventDefault();
           navigateTo(topicMatch[1], e);
+          return;
+        }
+        const challengeMatch = href.match(/^\/challenges\/([^/#?]+)\/?$/);
+        if (challengeMatch) {
+          e.preventDefault();
+          navigateToChallenges(challengeMatch[1], e);
+          return;
+        }
+        const sandboxBpMatch = href.match(/^\/sandbox\/?\?blueprint=([^&#]+)/);
+        if (sandboxBpMatch) {
+          e.preventDefault();
+          navigateToSandbox(decodeURIComponent(sandboxBpMatch[1]), e);
           return;
         }
       }
@@ -1697,6 +1804,193 @@ window.App = (() => {
       if (e.key === ' ' && currentView === 'topic' && !isInputFocused()) {
         e.preventDefault();
         if (currentSlug) toggleComplete(currentSlug);
+      }
+    });
+  }
+
+  let globalCodeLabInstance = null;
+
+  function ensureCodeLabLoaded() {
+    if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.12/dist/code-lab.css';
+      link.crossOrigin = 'anonymous';
+      link.onerror = function () {
+        this.onerror = null;
+        this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.12/dist/code-lab.css';
+      };
+      document.head.appendChild(link);
+    }
+    if (window.CodeLab) return Promise.resolve(window.CodeLab);
+    if (window.loadScript) {
+      return window.loadScript('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.12/dist/code-lab.js').then(() => window.CodeLab);
+    }
+    return Promise.resolve(null);
+  }
+
+  function closeGlobalCodeLab() {
+    const overlay = document.getElementById('global-codelab-overlay');
+    if (overlay) {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+    document.body.classList.remove('codelab-fullscreen-lock');
+    if (globalCodeLabInstance) {
+      if (window.CodeLab?.unmount) window.CodeLab.unmount(globalCodeLabInstance);
+      else if (globalCodeLabInstance.destroy) globalCodeLabInstance.destroy();
+      globalCodeLabInstance = null;
+    }
+  }
+
+  function openGlobalCodeLab(mountOpts = {}) {
+    let overlay = document.getElementById('global-codelab-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'global-codelab-overlay';
+      overlay.className = 'build-lab-overlay';
+      overlay.setAttribute('aria-hidden', 'true');
+      overlay.innerHTML = '<div id="global-codelab-mount" class="build-lab-mount"></div>';
+      document.body.appendChild(overlay);
+    }
+    const mountEl = document.getElementById('global-codelab-mount');
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('codelab-fullscreen-lock');
+
+    if (globalCodeLabInstance) {
+      if (window.CodeLab?.unmount) window.CodeLab.unmount(globalCodeLabInstance);
+      else if (globalCodeLabInstance.destroy) globalCodeLabInstance.destroy();
+      globalCodeLabInstance = null;
+    }
+    if (mountEl) {
+      mountEl.innerHTML = '<div style="padding:2rem;color:var(--fg-muted);font-family:var(--font-mono);">Loading @innovatorved/code-lab@0.1.12 IDE...</div>';
+    }
+
+    return ensureCodeLabLoaded().then((CodeLab) => {
+      if (!CodeLab || !mountEl) return null;
+      mountEl.innerHTML = '';
+      const opts = Object.assign({
+        backLabel: 'Close CodeLab',
+        onClose: closeGlobalCodeLab
+      }, mountOpts);
+      globalCodeLabInstance = CodeLab.mount(mountEl, opts);
+      setTimeout(() => {
+        const ed = globalCodeLabInstance?._editor || globalCodeLabInstance?.editor;
+        if (ed && typeof ed.layout === 'function') ed.layout();
+      }, 220);
+      return globalCodeLabInstance;
+    });
+  }
+
+  function openSnippetInCodeLab(code, lang, title) {
+    const norm = (lang || 'javascript').toLowerCase();
+    let fileName = 'snippet.js';
+    let runCmd = 'node snippet.js';
+    if (norm === 'py' || norm === 'python') {
+      fileName = 'snippet.py';
+      runCmd = 'python3 snippet.py';
+    } else if (norm === 'ts' || norm === 'typescript') {
+      fileName = 'snippet.ts';
+      runCmd = 'npx tsx snippet.ts';
+    } else if (norm === 'go' || norm === 'golang') {
+      fileName = 'main.go';
+      runCmd = 'go run main.go';
+    } else if (norm === 'sh' || norm === 'bash' || norm === 'shell') {
+      fileName = 'script.sh';
+      runCmd = 'sh script.sh';
+    } else if (norm === 'sql') {
+      fileName = 'schema.sql';
+      runCmd = 'cat schema.sql';
+    }
+    return openGlobalCodeLab({
+      labId: 'snippet-' + (currentSlug || 'lesson'),
+      title: title || 'Interactive Code Snippet',
+      summary: `Run and experiment with this ${norm.toUpperCase()} snippet inside @innovatorved/code-lab (${runCmd}).`,
+      mode: 'sandbox',
+      files: {
+        [fileName]: code.trim() + '\n',
+        'README.md': `# ${title || 'Lesson Snippet'}\n\nRun inside the terminal:\n\n\`\`\`bash\n${runCmd}\n\`\`\`\n`
+      }
+    });
+  }
+
+  function openRepoInCodeLab(repo, title) {
+    const cleanRepo = String(repo || '').replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, '');
+    const repoName = cleanRepo.split('/')[1] || 'repo';
+    return openGlobalCodeLab({
+      labId: 'repo-' + repoName,
+      title: `${title || cleanRepo} — Repository Explorer`,
+      summary: `Clone and inspect https://github.com/${cleanRepo} inside the CodeLab terminal.`,
+      mode: 'sandbox',
+      files: {
+        'explore.sh': `#!/bin/sh\necho "Cloning https://github.com/${cleanRepo} ..."\ngit clone --depth 1 https://github.com/${cleanRepo}.git ${repoName} 2>&1 || true\nls -la ${repoName} 2>/dev/null || true\n`,
+        'README.md': `# ${title || cleanRepo}\n\nRepository: \`https://github.com/${cleanRepo}\`\n\nRun in the CodeLab terminal:\n\n\`\`\`bash\nsh explore.sh\n\`\`\`\n`
+      }
+    });
+  }
+
+  function openChallengeCodeLab(challengeId, onPassCallback) {
+    const raw = window.CHALLENGES_DATA || window.ChallengesData;
+    const challenges = Array.isArray(raw) ? raw : (raw?.challenges || []);
+    const ch = challenges.find(c => c.id === challengeId);
+    const cf = ch?.codeFix;
+    if (!cf) return Promise.resolve(null);
+
+    const stepId = 'hotfix-verify';
+    const steps = [
+      {
+        id: stepId,
+        title: cf.title || 'Apply Production Hotfix',
+        concept: 'Incident Code Remediation',
+        instructions: cf.summary || 'Fix the root cause bug in hotfix.js and run node test.js to verify under simulated load.',
+        targetFile: 'hotfix.js',
+        hint: 'Compare the buggy code path against the incident logs and root cause hypothesis, or inspect the solution tab.',
+        solutionSnippet: cf.solutionCode || '',
+        testCommand: 'node test.js',
+        expectedOutput: 'PASS'
+      }
+    ];
+
+    return openGlobalCodeLab({
+      labId: 'challenge-' + ch.id,
+      title: `${ch.id}: ${cf.title || ch.title}`,
+      summary: cf.summary || ch.summary,
+      mode: 'guided',
+      files: {
+        'hotfix.js': cf.buggyCode || '',
+        'test.js': cf.testCode || '',
+        'README.md': `# ${ch.id} — ${cf.title || ch.title}\n\n${cf.summary || ''}\n\nRun \`node test.js\` to verify your hotfix.\n`
+      },
+      starterFiles: {
+        'hotfix.js': cf.buggyCode || '',
+        'test.js': cf.testCode || ''
+      },
+      solutionFiles: {
+        'hotfix.js': cf.solutionCode || '',
+        'test.js': cf.testCode || ''
+      },
+      steps,
+      guided: {
+        id: 'challenge-' + ch.id,
+        title: cf.title || ch.title,
+        summary: cf.summary || '',
+        starterFiles: {
+          'hotfix.js': cf.buggyCode || '',
+          'test.js': cf.testCode || ''
+        },
+        solutionFiles: {
+          'hotfix.js': cf.solutionCode || '',
+          'test.js': cf.testCode || ''
+        },
+        steps
+      },
+      backLabel: 'Back to Incident War-Room',
+      onStepComplete: () => {
+        if (typeof onPassCallback === 'function') onPassCallback(ch.id);
+      },
+      onLabComplete: () => {
+        if (typeof onPassCallback === 'function') onPassCallback(ch.id);
       }
     });
   }
@@ -1733,6 +2027,7 @@ window.App = (() => {
   }
 
   const App = {
+    navigate,
     navigateTo,
     navigateToBuild,
     navigateToProject,
@@ -1751,6 +2046,11 @@ window.App = (() => {
     initMermaid,
     openDiagramLightbox,
     closeDiagramLightbox,
+    openGlobalCodeLab,
+    closeGlobalCodeLab,
+    openSnippetInCodeLab,
+    openRepoInCodeLab,
+    openChallengeCodeLab,
     getCurrentSlug: () => currentSlug,
     getCurrentView: () => currentView,
     getActiveTab: () => activeTab

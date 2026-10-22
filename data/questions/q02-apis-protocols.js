@@ -393,6 +393,59 @@ window.QUESTION_BANK["load-balancers"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "load-balancers-n1",
+    "topic": "load-balancers",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: L7 Load Balancer Ephemeral Port Exhaustion",
+    "scenario": "An L7 reverse proxy opens a new non-pooled TCP connection to a single upstream backend IP:port for every incoming request, and closed connections remain in `TIME_WAIT` for 60 seconds. The OS ephemeral port range has 60,000 usable ports.",
+    "prompt": "What is the maximum sustained request rate (in req/s) to that single backend IP:port before ephemeral ports are exhausted?",
+    "question": "What is the maximum sustained request rate (in req/s) to that single backend IP:port before ephemeral ports are exhausted?",
+    "unit": "req/s",
+    "answer": 1000,
+    "tolerance": 0.25,
+    "hint": "Max rate = usable ephemeral ports (60,000) ÷ TIME_WAIT duration in seconds (60 s).",
+    "explanation": "Each unique 4-tuple (LB IP, ephemeral port, backend IP, backend port) is locked for the 60-second `TIME_WAIT` window. With 60,000 ephemeral ports and no HTTP keep-alive connection pooling, the LB can sustain at most 60,000 / 60 = 1,000 connections/sec to that backend IP:port.",
+    "tags": [
+      "load-balancers",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "load-balancers-t1",
+    "topic": "load-balancers",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: L4 Direct Server Return (DSR) vs L7 Reverse Proxy",
+    "scenario": "You are designing the edge ingress for a video chunk CDN origin serving 400 Gbps of egress traffic where requests are 500-byte HTTP GETs and responses are 4 MB video segments.",
+    "prompt": "Which load-balancing topology should you deploy at the edge, and why?",
+    "question": "Which load-balancing topology should you deploy at the edge, and why?",
+    "options": [
+      "Full L7 proxy where all 4 MB response payloads traverse the load balancer CPU and NICs",
+      "L4 load balancer with Direct Server Return (DSR / Maglev-style encapsulation) so backend servers send response packets directly to clients",
+      "DNS round-robin directly to backend server IPs with no health checks or anycast"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "L7 proxies double the NIC bandwidth capacity without adding packet processing overhead",
+      "Because egress bytes are 8,000x larger than ingress bytes, bypassing the load balancer on the return path prevents LB egress NIC saturation",
+      "DNS round-robin guarantees instantaneous sub-second failover when a node crashes"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Compare the ingress request size (500 B) to the egress response size (4 MB).",
+    "explanation": "In asymmetric media workloads (500 B request vs 4 MB response), routing return traffic through an L7 load balancer forces the LB fleet to handle 400 Gbps of egress. L4 DSR lets the LB process only tiny ingress packets while backends stream responses directly to the client IP.",
+    "tags": [
+      "load-balancers",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -591,6 +644,59 @@ window.QUESTION_BANK["retries-timeouts-idempotency"] = [
       "recall",
       "inline"
     ]
+  },
+  {
+    "id": "retries-timeouts-idempotency-n1",
+    "topic": "retries-timeouts-idempotency",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Cascading Retry Amplification Across 3 Tiers",
+    "scenario": "An API Gateway calls Service A, which calls Service B, which queries a Database (3 sequential hops). Each hop is configured with 1 initial attempt plus 2 retries (3 total attempts per failed call) and no retry budget.",
+    "prompt": "When the database experiences a transient brownout, how many database query attempts are triggered by a single incoming user request?",
+    "question": "When the database experiences a transient brownout, how many database query attempts are triggered by a single incoming user request?",
+    "unit": "attempts",
+    "answer": 27,
+    "tolerance": 0.25,
+    "hint": "Multiply total attempts per tier across the 3 tiers: 3 × 3 × 3.",
+    "explanation": "Without per-tier retry budgets or single-layer retry ownership, retries multiply exponentially across call depth: 3 (Gateway→A) × 3 (A→B) × 3 (B→DB) = 3^3 = 27 database attempts per user request, turning a brief brownout into a 27x load spike.",
+    "tags": [
+      "retries-timeouts-idempotency",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "retries-timeouts-idempotency-t1",
+    "topic": "retries-timeouts-idempotency",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Idempotency Key Storage & Concurrency Locking",
+    "scenario": "A payment capture API receives duplicate POST requests with the same `Idempotency-Key` 15 ms apart when a mobile client retries on a flaky cellular handoff while the first request is still in flight.",
+    "prompt": "How should the server coordinate concurrent requests sharing an `Idempotency-Key`, and why?",
+    "question": "How should the server coordinate concurrent requests sharing an `Idempotency-Key`, and why?",
+    "options": [
+      "Write the idempotency record only after the downstream payment gateway returns HTTP 200",
+      "Atomically insert the `Idempotency-Key` with state `IN_PROGRESS` (and a lease timestamp) before calling the gateway, returning `409 Conflict` or awaiting completion for concurrent duplicates",
+      "Hash the request timestamp into the idempotency key so both requests execute independently"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Post-execution writes prevent concurrent in-flight duplicates from racing to the payment gateway",
+      "Atomic pre-execution reservation serializes concurrent retries so the side effect is triggered at most once",
+      "Including the client timestamp guarantees duplicate retries are deduplicated"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "What happens if the second request arrives before the first request finishes calling Stripe/Visa?",
+    "explanation": "If the idempotency key is only recorded after execution completes, two concurrent retries arriving 15 ms apart will both pass the lookup check and double-charge the card. Atomically claiming the key as `IN_PROGRESS` before invoking external side effects closes the race window.",
+    "tags": [
+      "retries-timeouts-idempotency",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -788,6 +894,59 @@ window.QUESTION_BANK["tail-latency"] = [
       "tail-latency",
       "recall",
       "inline"
+    ]
+  },
+  {
+    "id": "tail-latency-n1",
+    "topic": "tail-latency",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Fan-Out Tail Latency Probability",
+    "scenario": "An aggregator service fans out each search request in parallel to 100 leaf shards and waits for all 100 shards to respond. Each individual leaf shard has an independent 1% probability (p99) of taking longer than 50 ms.",
+    "prompt": "Using the approximation (1 - 0.99^100 ≈ 0.63), what percentage of aggregated user requests will experience latency > 50 ms?",
+    "question": "Using the approximation (1 - 0.99^100 ≈ 0.63), what percentage of aggregated user requests will experience latency > 50 ms?",
+    "unit": "%",
+    "answer": 63,
+    "tolerance": 0.25,
+    "hint": "P(at least one shard > 50 ms) = 1 - P(all 100 shards <= 50 ms) = 1 - (0.99)^100 ≈ 63%.",
+    "explanation": "For all 100 shards to finish within 50 ms, every single shard must beat its p99 threshold: 0.99^100 ≈ 0.366. Thus 1 - 0.366 = 63.4% of user requests suffer the >50 ms tail latency of the slowest leaf shard.",
+    "tags": [
+      "tail-latency",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "tail-latency-t1",
+    "topic": "tail-latency",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Hedged Requests vs Backend Load Amplification",
+    "scenario": "Your 100-shard search fan-out suffers 63% p99 tail amplification due to occasional GC pauses on individual leaf replicas. Each shard has 3 replicas currently running at 35% CPU utilization.",
+    "prompt": "Which tail-latency mitigation should you deploy, and what is the primary engineering justification?",
+    "question": "Which tail-latency mitigation should you deploy, and what is the primary engineering justification?",
+    "options": [
+      "Send duplicate requests to all 3 replicas for 100% of queries immediately at t = 0 ms",
+      "Issue a hedged request to a second replica only when a shard call exceeds its p95 latency threshold, with cross-replica cancellation",
+      "Increase the client timeout from 100 ms to 10 seconds and disable retries"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Tripling cluster QPS at t = 0 ms is free and never causes queueing delay",
+      "Waiting until the p95 threshold limits extra cluster load to at most ~5% while routing around GC-stalled replicas",
+      "Longer timeouts reduce p99 response latency for end users"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "From Google's 'The Tail at Scale': how do you cut p99 latency while adding <= 5% extra backend work?",
+    "explanation": "Hedging after the p95 delay threshold means 95% of shard requests never trigger a second call, bounding extra load to ~5% while eliminating single-replica GC stalls from the fan-out tail.",
+    "tags": [
+      "tail-latency",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

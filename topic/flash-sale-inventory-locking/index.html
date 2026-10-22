@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1130,12 +1130,120 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-flash-sale-inventory-locking-n1" data-type="numeric" data-slug="flash-sale-inventory-locking">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Single-Row Lock Contention Ceiling</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> During a flash sale for 1,000 limited-edition GPUs, 50,000 buyers click &#039;Buy&#039; in the same second. Each SQL transaction locks the single SKU row `WHERE sku_id = &#039;GPU-99&#039;` and holds the row lock for 2 milliseconds (0.002 s) before committing.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> What is the maximum number of serial row-lock transactions per second that a single SQL row can complete when each lock is held for 2 ms?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 1,000 ms/sec ÷ 2 ms/transaction = 500 transactions/sec.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-flash-sale-inventory-locking-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-flash-sale-inventory-locking-n1" placeholder="Enter numeric estimate (tx/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">tx/s</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="flash-sale-inventory-locking" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-flash-sale-inventory-locking-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Because exclusive row locks on a single row serialize execution (`Amdahl&#039;s Law`), holding the lock for 2 ms caps throughput at `1,000 ms / 2 ms = 500 tx/s`, regardless of whether the database server has 64 or 128 CPU cores.</div>
+        </div>
+      </div>
+    
+      <div class="exercise-box quiz-card" id="quiz-flash-sale-inventory-locking-t1" data-type="tradeoff" data-slug="flash-sale-inventory-locking">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Pessimistic SQL Row Locking vs Striped Inventory / Atomic Lua Reservation</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A flash sale receives 100,000 checkout requests/sec for a hot SKU with 10,000 units in stock. You must guarantee zero overselling (`sold &lt;= 10,000`) while keeping checkout response latency under 50 ms.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Which inventory reservation architecture should you deploy, and why?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Never hold a database lock across an external network RPC, and avoid a single hot lock point.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-flash-sale-inventory-locking-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-flash-sale-inventory-locking-t1" value="0" />
+               <span>Open a `SELECT ... FOR UPDATE` SQL transaction before calling the external payment gateway and hold the row lock until payment succeeds</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-flash-sale-inventory-locking-t1" value="1" />
+               <span>Pre-allocate inventory into striped sub-buckets (or execute an atomic Redis Lua `DECR` reservation with a TTL hold token) at the edge, then asynchronously persist confirmed orders and release expired holds</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-flash-sale-inventory-locking-t1" value="2" />
+               <span>Check `if (stock &gt; 0)` in application memory without synchronization and reconcile oversold orders via customer support emails</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-flash-sale-inventory-locking-t1" value="0" />
+               <span>Holding a database row lock across a 600 ms external HTTP payment call maximizes database concurrency</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-flash-sale-inventory-locking-t1" value="1" />
+               <span>Atomic in-memory reservation (or inventory striping across K rows) removes the single-row lock bottleneck and fast-rejects excess buyers in &lt;1 ms without touching SQL</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-flash-sale-inventory-locking-t1" value="2" />
+               <span>Overselling 90,000 units and canceling paid orders satisfies the zero-oversell invariant</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="flash-sale-inventory-locking" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-flash-sale-inventory-locking-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Atomic in-memory token decrement (via Redis Lua script) or striping the 10,000 units across 100 inventory sub-rows absorbs 100k req/s in sub-millisecond time, immediately shedding the 90,000 excess requests before they ever reach the relational database.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
             <div class="takeaways__item">Relational database row-level locking (FOR UPDATE) collapses under flash sales due to thread lock convoys.</div><div class="takeaways__item">In-memory Redis atomic Lua scripts decrement inventory in sub-milliseconds without database contention, but Redis replication is asynchronous, so a failover can lose decrements and oversell unless counts are reconciled against the database.</div><div class="takeaways__item">Successful reservations are queued asynchronously to Kafka for batched database persistence with delayed release timers.</div>
           </div>
         </div>
+      <div class="lesson-builds lesson-challenges">
+        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        
+          <a class="lesson-builds__item" href="/challenges/cascading-deadlock-depletion/" data-nav="challenges" data-challenge="cascading-deadlock-depletion">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Bidirectional Transfer Distributed Deadlock Pool Exhaustion</span>
+              <span class="badge">SEV-1 · hard</span>
+            </div>
+            
+            <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Launch Production Incident &amp; CodeLab Hotfix →</span>
+          </a>
+      </div>
         <div class="further-reading">
           <h3 class="further-reading__title">Further Reading</h3>
           <div class="further-reading__list">
@@ -1226,29 +1334,29 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

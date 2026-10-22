@@ -195,6 +195,59 @@ window.QUESTION_BANK["database-indexing"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "database-indexing-n1",
+    "topic": "database-indexing",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: B+Tree Index Memory Footprint",
+    "scenario": "A PostgreSQL table has 500 million rows. You add a secondary B+Tree index on an 8-byte `BIGINT` column. Including tuple pointer (`ctid`), page header, and fill-factor overhead, each index entry consumes 32 bytes.",
+    "prompt": "How much RAM (in GB, using 1 GB = 10^9 bytes) is required to keep this entire secondary index resident in the buffer pool?",
+    "question": "How much RAM (in GB, using 1 GB = 10^9 bytes) is required to keep this entire secondary index resident in the buffer pool?",
+    "unit": "GB",
+    "answer": 16,
+    "tolerance": 0.25,
+    "hint": "Multiply 500,000,000 rows × 32 bytes/entry and divide by 10^9 bytes/GB.",
+    "explanation": "500,000,000 entries × 32 bytes = 16,000,000,000 bytes = 16 GB. Every additional secondary index both consumes gigabytes of buffer pool RAM and adds a random page read/write on every non-HOT row update.",
+    "tags": [
+      "database-indexing",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "database-indexing-t1",
+    "topic": "database-indexing",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Composite Index Column Ordering & Write Amplification",
+    "scenario": "An orders table receives 8,000 inserts/sec and serves a hot query: `SELECT id, total FROM orders WHERE tenant_id = $1 AND status = 'PENDING' ORDER BY created_at DESC LIMIT 50`. Currently, 98% of rows have `status = 'COMPLETED'`.",
+    "prompt": "Which indexing strategy best balances read latency, sort elimination, and buffer pool footprint, and why?",
+    "question": "Which indexing strategy best balances read latency, sort elimination, and buffer pool footprint, and why?",
+    "options": [
+      "Create three separate single-column indexes on `(tenant_id)`, `(status)`, and `(created_at)`",
+      "Create a partial covering index on `(tenant_id, created_at DESC) INCLUDE (total) WHERE status = 'PENDING'`",
+      "Create a full composite index on `(created_at DESC, status, tenant_id)` across all rows"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "PostgreSQL merges three single-column indexes with zero CPU or heap fetches",
+      "Filtering on `status = 'PENDING'` shrinks the index by 98%, `(tenant_id, created_at DESC)` satisfies equality + sort order, and `INCLUDE (total)` enables an index-only scan",
+      "Leading with `created_at` lets the engine jump directly to a specific `tenant_id` without scanning"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Consider both the 98% completed rows and the equality-then-range/sort rule for B+Trees.",
+    "explanation": "A partial index (`WHERE status = 'PENDING'`) excludes 98% of historical rows, keeping the index tiny in RAM. Ordering keys as `(tenant_id, created_at DESC)` matches the equality predicate followed by the `ORDER BY`, and `INCLUDE (total)` avoids heap page fetches.",
+    "tags": [
+      "database-indexing",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -459,6 +512,59 @@ window.QUESTION_BANK["mvcc"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "mvcc-n1",
+    "topic": "mvcc",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: MVCC Dead Tuple Bloat During Long Transactions",
+    "scenario": "A PostgreSQL database processes 5,000 row updates/sec where each updated tuple version occupies 200 bytes. An analytics script opens a transaction (`BEGIN; SELECT ...`) and holds its snapshot open for 1,000 seconds, preventing `VACUUM` from reclaiming dead tuples.",
+    "prompt": "How many gigabytes (GB, using 1 GB = 10^9 bytes) of unreclaimable dead-tuple bloat accumulate during that 1,000-second window?",
+    "question": "How many gigabytes (GB, using 1 GB = 10^9 bytes) of unreclaimable dead-tuple bloat accumulate during that 1,000-second window?",
+    "unit": "GB",
+    "answer": 1,
+    "tolerance": 0.25,
+    "hint": "Dead tuples = 5,000 updates/s × 1,000 s = 5,000,000 tuples. Multiply by 200 bytes and convert to GB.",
+    "explanation": "5,000 updates/s × 1,000 s = 5,000,000 dead tuple versions. At 200 bytes each, that creates 1,000,000,000 bytes = 1 GB of dead heap tuples in just 16.7 minutes (10 GB if held for ~2.7 hours), degrading sequential and index scan performance.",
+    "tags": [
+      "mvcc",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "mvcc-t1",
+    "topic": "mvcc",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Append-Only Heap MVCC (Postgres) vs Undo-Log In-Place MVCC (InnoDB)",
+    "scenario": "A ride-sharing location table updates each active driver's `(lat, lng, updated_at)` row every 3 seconds (20,000 updates/sec) and has 4 secondary indexes on non-coordinate columns (`city_id`, `vehicle_type`, `status`, `rating`).",
+    "prompt": "How does PostgreSQL's append-only heap MVCC behave on this workload compared to InnoDB's undo-log MVCC, and what mitigates it in PostgreSQL?",
+    "question": "How does PostgreSQL's append-only heap MVCC behave on this workload compared to InnoDB's undo-log MVCC, and what mitigates it in PostgreSQL?",
+    "options": [
+      "PostgreSQL updates rows in place by default, so secondary indexes never need updating",
+      "Unindexed column updates can use PostgreSQL Heap-Only Tuples (HOT) if page fillfactor leaves free space; otherwise every update writes a new heap tuple AND entries in all 4 secondary indexes",
+      "Adding more secondary indexes in PostgreSQL increases the probability of HOT updates"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "PostgreSQL stores old versions in a separate rollback segment outside the heap",
+      "Lowering table `fillfactor` (e.g., to 70-80) reserves intra-page space so updates to unindexed columns stay on the same 8 KB page and skip all 4 secondary index writes",
+      "Secondary indexes automatically compress dead heap tuples during writes"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "What two conditions are required for a PostgreSQL HOT (Heap-Only Tuple) update?",
+    "explanation": "In PostgreSQL, updating a row writes a new tuple version. If no indexed column changed AND the new version fits on the same 8 KB heap page, PostgreSQL performs a HOT update—chaining the tuple inside the page and avoiding writes to the 4 secondary indexes.",
+    "tags": [
+      "mvcc",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -656,6 +762,59 @@ window.QUESTION_BANK["relational-database-scaling"] = [
       "relational-database-scaling",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "relational-database-scaling-n1",
+    "topic": "relational-database-scaling",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Read Replica Fleet Sizing With Write Replay Overhead",
+    "scenario": "A primary SQL node handles 4,000 writes/sec (consuming 40% of a node's CPU capacity). Every read replica must also replay all 4,000 writes/sec (consuming 40% CPU on each replica), leaving 60% CPU capacity per replica to serve read queries (which equates to 6,000 reads/sec per replica).",
+    "prompt": "How many read replicas are required to serve 30,000 reads/sec while keeping every replica within its 6,000 reads/sec net read capacity?",
+    "question": "How many read replicas are required to serve 30,000 reads/sec while keeping every replica within its 6,000 reads/sec net read capacity?",
+    "unit": "replicas",
+    "answer": 5,
+    "tolerance": 0.25,
+    "hint": "Divide total read QPS (30,000) by net read capacity per replica after write replay (6,000).",
+    "explanation": "Because every read replica must replay 100% of the primary's write WAL stream (using 40% of its CPU/IO), each replica only has 6,000 reads/sec of remaining headroom. Serving 30,000 reads/sec requires 30,000 / 6,000 = 5 read replicas (or 6 for N+1 failover).",
+    "tags": [
+      "relational-database-scaling",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "relational-database-scaling-t1",
+    "topic": "relational-database-scaling",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Read-Your-Own-Writes Consistency Across Async Replicas",
+    "scenario": "After offloading 90% of SELECT queries to asynchronous read replicas (replication lag 50–300 ms), users complain that when they update their profile bio and the page immediately reloads, their old bio is displayed.",
+    "prompt": "Which routing pattern resolves the stale read-after-write anomaly without routing all traffic back to the primary, and why?",
+    "question": "Which routing pattern resolves the stale read-after-write anomaly without routing all traffic back to the primary, and why?",
+    "options": [
+      "Switch all 5 read replicas to synchronous commit (`synchronous_commit = remote_apply`) across availability zones",
+      "Attach the primary's commit LSN (Log Sequence Number) or a short-lived write timestamp token to the user's session, routing that user's reads to replicas that have caught up to that LSN (or falling back to the primary briefly)",
+      "Add a 1-second `sleep(1000)` before returning from every HTTP POST request"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Synchronous replication across 5 replicas has zero impact on write latency or availability",
+      "Causal LSN/session pinning scopes strong freshness solely to the mutating user for a few hundred milliseconds while keeping global reads on async replicas",
+      "Sleeping in application threads scales throughput under heavy write load"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Only the user who just performed a write needs to see at least commit position `LSN_w`.",
+    "explanation": "Tracking the commit LSN (or a 1-second sticky-primary cookie) per mutating user enforces causal Read-Your-Own-Writes consistency without penalizing write latency with synchronous multi-replica commits.",
+    "tags": [
+      "relational-database-scaling",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

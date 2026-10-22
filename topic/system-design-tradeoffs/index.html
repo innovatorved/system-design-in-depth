@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1122,43 +1122,99 @@
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box" id="exercise-system-design-tradeoffs" data-slug="system-design-tradeoffs">
+      <div class="exercise-box quiz-card" id="quiz-system-design-tradeoffs-n1" data-type="numeric" data-slug="system-design-tradeoffs">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Architecture Challenge: Evaluating Architectural Tradeoffs</span>
+            <span>Napkin Math: Metric Cardinality Explosion</span>
           </div>
-          <span class="exercise-box__difficulty">Staff Level</span>
+          <span class="exercise-box__difficulty">apply</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> Financial ledger with multi-currency transfers across international banks.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> When designing a financial transactions ledger (like Stripe or PayPal), which tradeoff priority is strictly mandatory?</div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> An engineer adds a `user_id` Prometheus label to 5 HTTP latency histogram metrics (each histogram exposes 12 bucket series) for a service with 500,000 active users per scrape window.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How many millions of active time series are created by tagging those 5 histograms with `user_id`?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Total series = 5 histograms × 12 buckets × 500,000 users. Express the result in millions.</div>
         
-        <div class="exercise-options">
+        <div class="quiz-options exercise-options" id="quiz-options-system-design-tradeoffs-n1" style="margin-top: 15px;">
           
-            <div class="exercise-option" data-action="exercise-option" data-idx="0">
-              <span class="exercise-option__bullet">A</span>
-              <span class="exercise-option__text">Use single-leader asynchronous replication across continents without idempotency keys.</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="1">
-              <span class="exercise-option__bullet">B</span>
-              <span class="exercise-option__text">Prioritize extreme low latency (&lt; 1ms) by accepting eventual consistency and asynchronous dirty writes.</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="2">
-              <span class="exercise-option__bullet">C</span>
-              <span class="exercise-option__text">Prioritize Strict Serializability and Strong Consistency (ACID) over availability (preferring CP in CAP) to prevent duplicate balances.</span>
-            </div>
-          
-            <div class="exercise-option" data-action="exercise-option" data-idx="3">
-              <span class="exercise-option__bullet">D</span>
-              <span class="exercise-option__text">Store account balances in Redis in-memory caches without Write-Ahead Logging to maximize write throughput.</span>
-            </div>
-          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-system-design-tradeoffs-n1" placeholder="Enter numeric estimate (million series)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">million series</span>
+         </div>
+       
         </div>
 
-        <div class="exercise-feedback" id="feedback-system-design-tradeoffs">
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="system-design-tradeoffs-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="system-design-tradeoffs" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-system-design-tradeoffs-n1" style="display: none;">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> In financial ledgers, double-spending and corrupted balances are catastrophic. Systems choose Strong Consistency (CP) and double-entry bookkeeping over raw availability or sub-millisecond writes.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 5 histograms × 12 buckets/histogram = 60 series per user. Multiplying by 500,000 active users yields 30,000,000 (30 million) active time series—enough to OOM-crash standard TSDB ingesters and inflate observability bills by tens of thousands of dollars per month.</div>
+        </div>
+      </div>
+    
+      <div class="exercise-box quiz-card" id="quiz-system-design-tradeoffs-t1" data-type="tradeoff" data-slug="system-design-tradeoffs">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Caching Seller Display Names vs Payment Eligibility</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A marketplace checkout page reads both the seller&#039;s `display_name` and `can_accept_payments` status at 15,000 req/s. Compliance mandates zero orders processed after a seller is suspended for fraud.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Which data-access split should you implement, and what is the primary engineering justification?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Ask which field tolerates staleness and which operation enforces a hard correctness invariant.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-system-design-tradeoffs-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-system-design-tradeoffs-t1" value="0" />
+               <span>Cache both `display_name` and `can_accept_payments` with a 5-minute TTL to minimize database load</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-system-design-tradeoffs-t1" value="1" />
+               <span>Serve `display_name` from a TTL cache while verifying `can_accept_payments` synchronously against the authoritative store (or strongly consistent revocation list) at order submission</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-system-design-tradeoffs-t1" value="2" />
+               <span>Remove caching for all seller fields and run serializable transactions on every product page view</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-system-design-tradeoffs-t1" value="0" />
+               <span>Identical data schemas always share the same freshness and correctness invariants</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-system-design-tradeoffs-t1" value="1" />
+               <span>Separating cosmetic read-heavy attributes from compliance-critical invariants preserves read scalability without violating the zero-fraud-order invariant</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-system-design-tradeoffs-t1" value="2" />
+               <span>Serializable reads on every page view are required to render cosmetic seller strings</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="system-design-tradeoffs-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="system-design-tradeoffs" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-system-design-tradeoffs-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Fields living in the same table often have radically different staleness tolerances. A slightly stale `display_name` is harmless, whereas a stale `can_accept_payments` flag violates a hard compliance invariant during order placement.</div>
         </div>
       </div>
     
@@ -1258,29 +1314,29 @@
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

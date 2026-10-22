@@ -67,6 +67,11 @@
         if (prog.isCompleted('sandbox:' + node.blueprintId) || prog.isCompleted(node.blueprintId)) return 'done';
       }
       if (node.type === 'build' && node.slug) {
+        if (typeof prog.getBuildProgress === 'function') {
+          var bp = prog.getBuildProgress(node.slug);
+          if (bp.completed) return 'done';
+          if (bp.completedSteps && bp.completedSteps.length > 0) return 'in-progress';
+        }
         if (prog.isCompleted('build:' + node.slug) || prog.isCompleted(node.slug)) return 'done';
       }
       if (node.slug && prog.isCompleted(node.slug)) {
@@ -83,15 +88,11 @@
       var prog = root.Progress;
       if (!prog) return false;
       if (step.type === 'challenge') return prog.isCompleted('challenge:' + step.id) || prog.isCompleted(step.id);
-      if (step.type === 'exam') {
-        var aliasMap = {
-          'staff-faang-45m-mock': 'faang-staff-mock-45min',
-          'distributed-storage-consensus-exam': 'distributed-storage-consensus-mastery'
-        };
-        var exId = aliasMap[step.id] || step.id;
-        return prog.isCompleted('exam:' + exId) || prog.isCompleted('exam:' + step.id) || prog.isCompleted(exId);
+      if (step.type === 'sandbox') return prog.isCompleted('sandbox:' + step.id) || prog.isCompleted(step.id);
+      if (step.type === 'build') {
+        if (typeof prog.getBuildProgress === 'function' && prog.getBuildProgress(step.slug).completed) return true;
+        return prog.isCompleted('build:' + step.slug) || prog.isCompleted(step.slug);
       }
-      if (step.type === 'build') return prog.isCompleted('build:' + step.slug) || prog.isCompleted(step.slug);
       if (step.slug) return prog.isCompleted(step.slug);
       return false;
     },
@@ -270,9 +271,15 @@
       var statusLabel = status === 'done' ? 'Completed' : (status === 'in-progress' ? 'In Progress' : 'Not Started');
       var actionLabel = 'Open Topic Lesson';
       if (node.type === 'challenge') actionLabel = 'Enter Incident Challenge';
-      else if (node.type === 'exam') actionLabel = 'Launch Timed Mock Exam';
+      else if (node.type === 'sandbox') actionLabel = 'Launch Architecture Blueprint';
       else if (node.type === 'build') actionLabel = 'Open Interactive Build Lab';
       else if (node.type === 'simulator') actionLabel = 'Launch Interactive Simulator';
+
+      var buildProgHtml = '';
+      if (node.type === 'build' && node.slug && root.Progress && typeof root.Progress.getBuildProgress === 'function') {
+        var bp = root.Progress.getBuildProgress(node.slug);
+        buildProgHtml = '<span class="eco-pill">' + bp.completedSteps.length + '/' + bp.totalSteps + ' Lab Steps</span>';
+      }
 
       return (
         '<div class="roadmap-node-card" data-inspected-node="' + escapeHtml(node.id) + '">' +
@@ -280,6 +287,7 @@
             '<span class="eco-pill eco-pill--accent">Stage ' + node.stage + '</span>' +
             '<span class="eco-pill">' + escapeHtml(node.difficulty || 'Intermediate') + '</span>' +
             '<span class="eco-pill">' + escapeHtml(statusLabel) + '</span>' +
+            buildProgHtml +
           '</div>' +
           '<h3 class="inspector-title">' + escapeHtml(node.label) + '</h3>' +
           '<p class="inspector-desc">' + escapeHtml(node.description || '') + '</p>' +

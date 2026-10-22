@@ -108,7 +108,8 @@ const context = {
       getPercentage: () => 0,
       getStreak: () => ({ current: 0 }),
       getModuleProgress: () => ({ completed: 0, total: 0 }),
-      getCompletedCount: () => 0
+      getCompletedCount: () => 0,
+      getBuildProgress: () => ({ completedSteps: [], isComplete: false })
     }
   },
   document: {
@@ -146,6 +147,9 @@ if (fs.existsSync(path.join(root, 'data/guided_labs.js'))) {
 }
 if (fs.existsSync(path.join(root, 'data/challenges.js'))) {
   vm.runInNewContext(fs.readFileSync(path.join(root, 'data/challenges.js'), 'utf8'), context);
+}
+if (fs.existsSync(path.join(root, 'data/whiteboard-blueprints.js'))) {
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'data/whiteboard-blueprints.js'), 'utf8'), context);
 }
 
 for (const dir of ['data/content', 'data/archive', 'data/questions']) {
@@ -232,7 +236,7 @@ function renderStaticSidebar(curriculum, currentSlug) {
 }
 
 function renderStaticBuildsSidebar(implementations, currentBuildId) {
-  let html = '<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (15)</div>';
+  let html = `<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (${Object.keys(implementations).length})</div>`;
   for (const [id, item] of Object.entries(implementations)) {
     const active = id === currentBuildId;
     const statusClass = active ? 'active' : 'pending';

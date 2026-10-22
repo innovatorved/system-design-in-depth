@@ -261,6 +261,59 @@ window.QUESTION_BANK["queue-lag"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "queue-lag-n1",
+    "topic": "queue-lag",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Queue Backlog Drain Time After a Traffic Spike",
+    "scenario": "A Kafka topic normally receives 5,000 msg/s. During a 10-minute (600-second) flash event, producer traffic spikes to 15,000 msg/s while your consumer fleet processes at its fixed maximum capacity of 10,000 msg/s. After the 10-minute spike ends, producer traffic drops back to 5,000 msg/s.",
+    "prompt": "How many minutes does it take for the consumer fleet (processing 10,000 msg/s against 5,000 msg/s new arrivals) to completely drain the accumulated backlog?",
+    "question": "How many minutes does it take for the consumer fleet (processing 10,000 msg/s against 5,000 msg/s new arrivals) to completely drain the accumulated backlog?",
+    "unit": "minutes",
+    "answer": 10,
+    "tolerance": 0.25,
+    "hint": "Backlog accumulated = (15,000 - 10,000) × 10 min. Net drain rate after spike = (10,000 - 5,000) msg/s.",
+    "explanation": "During the 10-minute spike, the queue accumulates `(15,000 - 10,000) = 5,000 msg/s` of lag, totaling `5,000 × 600 s = 3,000,000` messages. Once arrivals return to 5,000 msg/s, the consumer fleet has `10,000 - 5,000 = 5,000 msg/s` of net catch-up capacity, taking `3,000,000 / 5,000 = 600 seconds = 10 minutes` to drain.",
+    "tags": [
+      "queue-lag",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "queue-lag-t1",
+    "topic": "queue-lag",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Scaling Kafka Consumers Past Partition Count",
+    "scenario": "A single Kafka topic has 12 partitions and is experiencing growing consumer lag because each message invokes a slow external webhook (50 ms RTT). An engineer scales the consumer group deployment from 12 pods to 48 pods, but throughput does not change.",
+    "prompt": "Why did scaling to 48 pods fail, and what architectural change fixes consumer throughput safely?",
+    "question": "Why did scaling to 48 pods fail, and what architectural change fixes consumer throughput safely?",
+    "options": [
+      "Kafka only allows 1 consumer group per cluster; you must deploy 48 separate Kafka clusters",
+      "In a Kafka consumer group, each partition is assigned to at most one consumer instance (leaving 36 pods idle); either increase partitions (mindful of key ordering) or decouple polling from bounded async worker pools per partition with ordered offset commits",
+      "Have all 48 pods read Partition 0 simultaneously without consumer group coordination"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Kafka brokers crash when more than 12 pods join a consumer group",
+      "Kafka's partition-to-consumer assignment rule caps active consumers in a group at the partition count; bounded per-partition async worker pools (or repartitioning) hide webhook I/O latency without losing offset safety",
+      "Reading the same partition from 48 uncoordinated pods prevents duplicate webhook calls"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "How many consumers in a single consumer group can actively read from a 12-partition topic?",
+    "explanation": "Because a Kafka partition is assigned to at most one consumer within a consumer group, 36 of the 48 pods sit completely idle. Increasing partition count or using bounded non-blocking I/O worker pools per partition (committing contiguous high-water offsets) unlocks concurrency.",
+    "tags": [
+      "queue-lag",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -591,6 +644,59 @@ window.QUESTION_BANK["fanout-patterns"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "fanout-patterns-n1",
+    "topic": "fanout-patterns",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Celebrity Push Fan-Out Write Amplification",
+    "scenario": "A social platform uses pure push fan-out-on-write into follower home-timeline caches. A celebrity with 30 million followers publishes 1 post, and your Redis timeline cluster can sustain 300,000 `LPUSH` writes/sec dedicated to fan-out.",
+    "prompt": "How many seconds does it take to complete the fan-out of that single celebrity post across all 30 million follower timelines?",
+    "question": "How many seconds does it take to complete the fan-out of that single celebrity post across all 30 million follower timelines?",
+    "unit": "seconds",
+    "answer": 100,
+    "tolerance": 0.25,
+    "hint": "Divide 30,000,000 follower writes by 300,000 writes/sec.",
+    "explanation": "30,000,000 timeline writes ÷ 300,000 writes/sec = 100 seconds of saturated cluster write capacity for a single post—demonstrating why pure fan-out-on-write breaks down for high-follower accounts.",
+    "tags": [
+      "fanout-patterns",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "fanout-patterns-t1",
+    "topic": "fanout-patterns",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Push (Fan-Out-on-Write) vs Hybrid Push-Pull Timeline Architecture",
+    "scenario": "99.9% of users on your social network have fewer than 5,000 followers, while 0.1% of accounts (celebrities/news outlets) have 1M–50M followers and post 20 times a day.",
+    "prompt": "Which timeline architecture should you adopt, and what is the primary engineering justification?",
+    "question": "Which timeline architecture should you adopt, and what is the primary engineering justification?",
+    "options": [
+      "Use pure fan-out-on-write (push) for all accounts and provision 100x more Redis RAM for inactive followers",
+      "Use pure fan-out-on-read (pull) for all accounts, querying 1,000 followed users' outboxes on every home-feed read",
+      "Use hybrid fan-out: push posts on write for normal accounts (<50k followers) into active followers' inbox caches, and merge celebrity outbox caches at read time"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Pushing 50M writes per celebrity tweet keeps write queues small and predictable",
+      "Fanning out 1,000 database queries on every timeline read guarantees sub-5ms p99 read latency",
+      "Hybrid push-pull bounds write amplification to O(1) outbox writes for celebrities while preserving O(1) precomputed inbox reads plus a tiny K-way merge of followed celebrities on read"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How did Twitter/X solve the 'Justin Bieber problem' on timeline fan-out?",
+    "explanation": "Hybrid fan-out pushes normal users' posts into followers' precomputed timelines (fast reads) while keeping high-follower celebrity posts in a per-author outbox cache that is merged into the reader's timeline at read time (preventing 50M-write storms).",
+    "tags": [
+      "fanout-patterns",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -656,6 +762,59 @@ window.QUESTION_BANK["flash-sale-inventory-locking"] = [
       "flash-sale-inventory-locking",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "flash-sale-inventory-locking-n1",
+    "topic": "flash-sale-inventory-locking",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Single-Row Lock Contention Ceiling",
+    "scenario": "During a flash sale for 1,000 limited-edition GPUs, 50,000 buyers click 'Buy' in the same second. Each SQL transaction locks the single SKU row `WHERE sku_id = 'GPU-99'` and holds the row lock for 2 milliseconds (0.002 s) before committing.",
+    "prompt": "What is the maximum number of serial row-lock transactions per second that a single SQL row can complete when each lock is held for 2 ms?",
+    "question": "What is the maximum number of serial row-lock transactions per second that a single SQL row can complete when each lock is held for 2 ms?",
+    "unit": "tx/s",
+    "answer": 500,
+    "tolerance": 0.25,
+    "hint": "1,000 ms/sec ÷ 2 ms/transaction = 500 transactions/sec.",
+    "explanation": "Because exclusive row locks on a single row serialize execution (`Amdahl's Law`), holding the lock for 2 ms caps throughput at `1,000 ms / 2 ms = 500 tx/s`, regardless of whether the database server has 64 or 128 CPU cores.",
+    "tags": [
+      "flash-sale-inventory-locking",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "flash-sale-inventory-locking-t1",
+    "topic": "flash-sale-inventory-locking",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Pessimistic SQL Row Locking vs Striped Inventory / Atomic Lua Reservation",
+    "scenario": "A flash sale receives 100,000 checkout requests/sec for a hot SKU with 10,000 units in stock. You must guarantee zero overselling (`sold <= 10,000`) while keeping checkout response latency under 50 ms.",
+    "prompt": "Which inventory reservation architecture should you deploy, and why?",
+    "question": "Which inventory reservation architecture should you deploy, and why?",
+    "options": [
+      "Open a `SELECT ... FOR UPDATE` SQL transaction before calling the external payment gateway and hold the row lock until payment succeeds",
+      "Pre-allocate inventory into striped sub-buckets (or execute an atomic Redis Lua `DECR` reservation with a TTL hold token) at the edge, then asynchronously persist confirmed orders and release expired holds",
+      "Check `if (stock > 0)` in application memory without synchronization and reconcile oversold orders via customer support emails"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Holding a database row lock across a 600 ms external HTTP payment call maximizes database concurrency",
+      "Atomic in-memory reservation (or inventory striping across K rows) removes the single-row lock bottleneck and fast-rejects excess buyers in <1 ms without touching SQL",
+      "Overselling 90,000 units and canceling paid orders satisfies the zero-oversell invariant"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Never hold a database lock across an external network RPC, and avoid a single hot lock point.",
+    "explanation": "Atomic in-memory token decrement (via Redis Lua script) or striping the 10,000 units across 100 inventory sub-rows absorbs 100k req/s in sub-millisecond time, immediately shedding the 90,000 excess requests before they ever reach the relational database.",
+    "tags": [
+      "flash-sale-inventory-locking",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

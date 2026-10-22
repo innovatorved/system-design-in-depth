@@ -6,7 +6,7 @@ window.Quiz = (() => {
   }
   
   // End-of-lesson questions: those not already placed inline after a section
-  const endQuestions = slug => (window.QUESTION_BANK?.[slug] || []).filter(q => !q.section);
+  const endQuestions = slug => (window.QUESTION_BANK?.[slug] || []).filter(q => !q.section && q.section !== 0);
 
   function hasEndQuestions(slug) {
     return endQuestions(slug).length > 0;
@@ -17,9 +17,9 @@ window.Quiz = (() => {
     const available = questions.filter(q => !seenQuestions.has(q.id));
     if (available.length === 0) {
       questions.forEach(q => seenQuestions.delete(q.id));
-      return questions[Math.floor(Math.random() * questions.length)];
+      return questions[0];
     }
-    return available[Math.floor(Math.random() * available.length)];
+    return available[0];
   }
 
   function escapeHtml(str) {
@@ -38,25 +38,38 @@ window.Quiz = (() => {
     if (!hasEndQuestions(slug)) return '';
     const q = getNextQuestion(slug);
     seenQuestions.add(q.id);
+    const allEnd = endQuestions(slug);
+    const defaultTitle = q.type === 'numeric'
+      ? 'Back-of-the-Envelope Napkin Math'
+      : q.type === 'tradeoff'
+        ? 'Staff Architecture Trade-Off Matrix'
+        : 'Knowledge Check';
+    const defaultDiff = q.type === 'numeric'
+      ? 'capacity estimation'
+      : q.type === 'tradeoff'
+        ? 'trade-off decision'
+        : 'recall';
+    const promptText = q.prompt || q.question || '';
     
     return `
       <div class="exercise-box quiz-card" id="quiz-${q.id}" data-type="${q.type}" data-slug="${slug}">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Quiz: ${escapeHtml(q.title || 'Knowledge Check')}</span>
+            <span>${escapeHtml(q.title || defaultTitle)}</span>
           </div>
-          <span class="exercise-box__difficulty">${escapeHtml(q.difficulty || 'recall')}</span>
+          <span class="exercise-box__difficulty">${escapeHtml(q.difficulty || defaultDiff)}</span>
         </div>
         ${q.scenario ? `<div class="exercise-box__scenario"><strong>Scenario:</strong> ${escapeHtml(q.scenario)}</div>` : ''}
-        <div class="exercise-box__prompt"><strong>Problem:</strong> ${escapeHtml(q.prompt)}</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> ${escapeHtml(promptText)}</div>
+        ${q.hint ? `<div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> ${escapeHtml(q.hint)}</div>` : ''}
         
         <div class="quiz-options exercise-options" id="quiz-options-${q.id}" style="margin-top: 15px;">
           ${renderOptions(q)}
         </div>
 
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="${q.id}">Submit</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="${slug}" style="display:none;">Try Another</button>
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="${q.id}">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="${slug}" style="${allEnd.length > 1 ? '' : 'display:none;'}">Next Drill (${allEnd.length} available) →</button>
         </div>
 
         <div class="exercise-feedback quiz-feedback" id="feedback-${q.id}" style="display: none;">
@@ -103,13 +116,16 @@ window.Quiz = (() => {
        html += `</ul>`;
     } else if (q.type === 'numeric') {
        html += `
-         <input type="number" class="quiz-number-input" name="quiz-${q.id}" placeholder="Enter a number" style="padding: 8px; width: 100%; box-sizing: border-box;" />
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-${q.id}" placeholder="Enter numeric estimate${q.unit ? ' (' + escapeHtml(q.unit) + ')' : ''}" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           ${q.unit ? `<span class="badge" style="font-family: var(--font-mono);">${escapeHtml(q.unit)}</span>` : ''}
+         </div>
        `;
     } else if (q.type === 'tradeoff') {
        html += `
-         <div style="margin-bottom: 10px;">
-           <strong>Select Option:</strong>
-           ${q.options.map((opt, i) => `
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           ${(q.options || []).map((opt, i) => `
              <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
                <input type="radio" name="quiz-tradeoff-opt-${q.id}" value="${i}" />
                <span>${escapeHtml(opt)}</span>
@@ -117,8 +133,8 @@ window.Quiz = (() => {
            `).join('')}
          </div>
          <div>
-           <strong>Select Reason:</strong>
-           ${q.reasons.map((rsn, j) => `
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           ${(q.reasons || []).map((rsn, j) => `
              <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
                <input type="radio" name="quiz-tradeoff-rsn-${q.id}" value="${j}" />
                <span>${escapeHtml(rsn)}</span>
@@ -163,11 +179,18 @@ window.Quiz = (() => {
            if (JSON.stringify(currentOrder) === JSON.stringify(q.answer)) correct = true;
         } else if (type === 'numeric') {
            const val = parseFloat(card.querySelector('.quiz-number-input').value);
-           if (val === q.answer) correct = true;
+           if (!Number.isNaN(val)) {
+             const tol = typeof q.tolerance === 'number' ? q.tolerance : 0.2;
+             if (val === q.answer || Math.abs(val - q.answer) / Math.max(1, Math.abs(q.answer)) <= tol) {
+               correct = true;
+             }
+           }
         } else if (type === 'tradeoff') {
            const opt = card.querySelector(`input[name="quiz-tradeoff-opt-${qid}"]:checked`);
            const rsn = card.querySelector(`input[name="quiz-tradeoff-rsn-${qid}"]:checked`);
-           if (opt && rsn && parseInt(opt.value) === q.answer.option && parseInt(rsn.value) === q.answer.reason) {
+           const expectedOpt = q.answer && typeof q.answer === 'object' ? q.answer.option : q.correctOption;
+           const expectedRsn = q.answer && typeof q.answer === 'object' ? q.answer.reason : q.correctReason;
+           if (opt && rsn && parseInt(opt.value) === expectedOpt && parseInt(rsn.value) === expectedRsn) {
              correct = true;
            }
         }
@@ -182,18 +205,34 @@ window.Quiz = (() => {
             if (parseInt(inp.value) === q.answer) label.classList.add('correct');
             else if (inp.checked) label.classList.add('incorrect');
           });
+        } else if (type === 'tradeoff') {
+          const expectedOpt = q.answer && typeof q.answer === 'object' ? q.answer.option : q.correctOption;
+          const expectedRsn = q.answer && typeof q.answer === 'object' ? q.answer.reason : q.correctReason;
+          card.querySelectorAll(`input[name="quiz-tradeoff-opt-${qid}"]`).forEach(inp => {
+            const label = inp.closest('.quiz-option-label');
+            if (!label) return;
+            if (parseInt(inp.value) === expectedOpt) label.classList.add('correct');
+            else if (inp.checked) label.classList.add('incorrect');
+          });
+          card.querySelectorAll(`input[name="quiz-tradeoff-rsn-${qid}"]`).forEach(inp => {
+            const label = inp.closest('.quiz-option-label');
+            if (!label) return;
+            if (parseInt(inp.value) === expectedRsn) label.classList.add('correct');
+            else if (inp.checked) label.classList.add('incorrect');
+          });
         }
         
         const fb = card.querySelector('.exercise-feedback');
         const msg = fb.querySelector('.feedback-msg');
         fb.style.display = 'block';
         fb.classList.add('show');
+        const targetLabel = type === 'numeric' ? ` (Reference Estimate: ${q.answer}${q.unit ? ' ' + escapeHtml(q.unit) : ''})` : '';
         if (correct) {
           fb.classList.add('success');
-          msg.innerHTML = '<strong>✓ Correct!</strong>';
+          msg.innerHTML = `<strong>✓ Correct!${targetLabel}</strong>`;
         } else {
           fb.classList.add('error');
-          msg.innerHTML = '<strong>✗ Incorrect.</strong>';
+          msg.innerHTML = `<strong>✗ Incorrect.${targetLabel}</strong>`;
         }
         
         const nextBtn = card.querySelector('.quiz-next-btn');

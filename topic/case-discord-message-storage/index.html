@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1148,6 +1148,102 @@ flowchart TD
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-case-discord-message-storage-n1" data-type="numeric" data-slug="case-discord-message-storage">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Request Coalescing Amplification on Hot Discord Channels</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> In Discord&#039;s migration from Cassandra to ScyllaDB with a Rust data-service intermediary, a popular announcement channel has 1,000 users open the channel in the same 20 ms window. Without coalescing, all 1,000 requests query the database for `(channel_id, bucket)`. With the Rust data service coalescing concurrent in-flight reads for the same `(channel_id, bucket)`, only 1 query hits ScyllaDB.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> By what factor (`1,000 ÷ 1`) does singleflight request coalescing reduce database read QPS for that 20 ms burst on the hot channel?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 1,000 concurrent requests collapsed into 1 database query = 1,000x reduction.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-case-discord-message-storage-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-case-discord-message-storage-n1" placeholder="Enter numeric estimate (x)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">x</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="case-discord-message-storage" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-case-discord-message-storage-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> When an `@everyone` ping triggers 1,000 simultaneous channel history reads within a 20 ms window, routing by `channel_id` to a single Rust service instance that coalesces identical in-flight queries collapses 1,000 DB reads into 1 DB read (a 1,000x reduction on the hot partition).</div>
+        </div>
+      </div>
+    
+      <div class="exercise-box quiz-card" id="quiz-case-discord-message-storage-t1" data-type="tradeoff" data-slug="case-discord-message-storage">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Why Discord&#039;s `(channel_id, bucket)` Partition Key Still Suffered Hot Partitions in Cassandra</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> Discord partitioned messages by `(channel_id, time_bucket)` so partitions wouldn&#039;t grow unboundedly. Yet large servers still caused 10-second latency spikes in Cassandra when a single channel received a burst of reads alongside background compactions and JVM GC pauses.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> What combination of architectural changes resolved Discord&#039;s hot-partition tail latency when migrating from Cassandra to ScyllaDB?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Time-bucketing bounds *storage size* per partition, but what bounds *concurrent read QPS* when 50,000 users open the same channel at once?</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-case-discord-message-storage-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-case-discord-message-storage-t1" value="0" />
+               <span>Remove `channel_id` from the partition key and shard randomly by `message_id`</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-case-discord-message-storage-t1" value="1" />
+               <span>Introduce a consistent-hashed Rust data-service layer in front of the DB to coalesce concurrent identical `(channel_id, bucket)` reads (singleflight), and migrate storage from JVM-based Cassandra to C++ shard-per-core ScyllaDB to eliminate JVM stop-the-world GC pauses</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-case-discord-message-storage-t1" value="2" />
+               <span>Move trillions of chat messages into a single unsharded SQLite file</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-case-discord-message-storage-t1" value="0" />
+               <span>Sharding by random `message_id` makes fetching a channel&#039;s last 50 messages a fast single-node query</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-case-discord-message-storage-t1" value="1" />
+               <span>`(channel_id, bucket)` bounds partition size on disk but still concentrates concurrent live reads on one replica set; coalescing duplicate reads in the Rust proxy eliminated hot-channel read amplification while ScyllaDB eliminated JVM GC stalls</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-case-discord-message-storage-t1" value="2" />
+               <span>A single SQLite file easily stores trillions of messages at millions of QPS</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="case-discord-message-storage" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-case-discord-message-storage-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Time-bucketing `(channel_id, bucket)` stops partitions from growing forever on disk, but all current activity in a hot channel still hits the current time bucket! Consistent-routing requests by `channel_id` through a Rust proxy that deduplicates concurrent in-flight reads, paired with GC-free ScyllaDB, solved both hot-partition amplification and GC tail latency.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1244,29 +1340,29 @@ flowchart TD
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

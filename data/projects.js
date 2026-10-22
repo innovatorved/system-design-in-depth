@@ -134,19 +134,20 @@ window.PROJECTS_DATA = [
     name: 'code-lab',
     title: 'code-lab — Browser IDE, POSIX Shell & Node/Bun Virtual Runtime',
     description: 'Zero-server, browser-native JS/TS IDE with public GitHub repository cloning (git clone), a full POSIX shell (pipes, redirects, 55+ UNIX coreutils), Node.js v22 + Bun v1.1 runtime, and modular Guided Lab extensions.',
-    stars: 'v2.0.0',
+    stars: 'v0.1.12',
     starsCount: 60,
     forks: 0,
     language: 'TypeScript',
     languageColor: '#3178c6',
     pinned: true,
     category: 'Developer Tools',
+    githubRepo: 'innovatorved/code-lab',
     githubUrl: 'https://github.com/innovatorved/code-lab',
     liveUrl: 'https://code-lab-3dr.pages.dev',
     tags: ['Monaco Editor', 'POSIX Shell & Git Clone', 'Virtual Node.js & Bun', 'Web Worker Sandbox', 'Web Component'],
     highlights: [
       'Clone & run any public GitHub repository (git clone owner/repo) directly in the browser with zero auth',
-      '100% browser-native Node.js v22 (28 modules) + Bun v1.1 (Bun.serve, bun:sqlite, bun:test)',
+      '100% browser-native Node.js v22 (50 modules) + Bun v1.1 (Bun.serve, bun:sqlite, bun:test)',
       'Interactive PTY terminal & POSIX shell with pipes, redirects, background jobs, curl, git, jq, npm & bun'
     ]
   }

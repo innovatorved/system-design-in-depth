@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1104,6 +1104,37 @@ Where Current Offset Ratio = (Current Timestamp - Window Start) / Window Duratio
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-sliding-window-rate-limiter-n1" data-type="numeric" data-slug="sliding-window-rate-limiter">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Sliding-Window Counter Weighted Approximation</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A rate limiter uses the 2-bucket Sliding-Window Counter approximation with a 60-second window size and a limit of 100 requests. For a given API key, the previous minute (`00:00–01:00`) recorded `80` requests, and the current minute (`01:00–02:00`) has recorded `30` requests so far at timestamp `01:15` (25% into the current minute, so 75% overlap with the previous minute).</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> What is the estimated sliding-window request count at `01:15` (`80 × 0.75 + 30`)?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Weighted count = prev_count × (1 - elapsed_fraction) + curr_count = 80 × 0.75 + 30.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-sliding-window-rate-limiter-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-sliding-window-rate-limiter-n1" placeholder="Enter numeric estimate (requests)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">requests</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="sliding-window-rate-limiter-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="sliding-window-rate-limiter" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-sliding-window-rate-limiter-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> At `01:15`, the 60-second sliding window covers the last 45 seconds (75%) of the previous minute plus the first 15 seconds of the current minute: `80 × 0.75 + 30 = 60 + 30 = 90` requests (which is &lt;= 100, so the request is allowed using only 2 integer counters!).</div>
+        </div>
+      </div>
+    
         <div class="simulator-card" id="sim-ratelimit">
           <div class="simulator-card__header">
             <div class="simulator-card__title">
@@ -1136,6 +1167,71 @@ Where Current Offset Ratio = (Current Timestamp - Window Start) / Window Duratio
           </div>
         </div>
       
+      <div class="exercise-box quiz-card" id="quiz-sliding-window-rate-limiter-t1" data-type="tradeoff" data-slug="sliding-window-rate-limiter">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Redis ZSET Sliding Log vs 2-Counter Sliding Window Approximation</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> Cloudflare-scale edge rate limiting must enforce a 10,000 req/min limit across 50 million active IPs. Storing an exact Redis Sorted Set (`ZSET`) of request timestamps per IP requires ~64 bytes per request (`10,000 × 64 B = 640 KB` per heavy IP).</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Which algorithm should you deploy for high-volume rate limiting, and what is the primary engineering justification?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Compare memory per IP for a `ZSET` of 10,000 timestamps (~640 KB) vs two 64-bit counters (16 bytes).</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-sliding-window-rate-limiter-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-sliding-window-rate-limiter-t1" value="0" />
+               <span>Store every request timestamp in a Redis `ZSET` and run `ZREMRANGEBYSCORE` + `ZADD` + `ZCARD` on every packet</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-sliding-window-rate-limiter-t1" value="1" />
+               <span>Use a Fixed-Window Counter so callers can burst 2x the limit (`20,000` requests in 2 seconds) across every minute boundary</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-sliding-window-rate-limiter-t1" value="2" />
+               <span>Use the 2-bucket Sliding-Window Counter approximation (`prev_count × overlap + curr_count`), which smooths boundary bursts using O(1) memory (just 2 integers per key) and a single atomic increment</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-sliding-window-rate-limiter-t1" value="0" />
+               <span>A `ZSET` with 10,000 timestamps per IP uses less RAM than two 64-bit integers</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-sliding-window-rate-limiter-t1" value="1" />
+               <span>Allowing 2x boundary bursts at `00:59.9` and `01:00.1` protects fragile downstream origins from spike overload</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-sliding-window-rate-limiter-t1" value="2" />
+               <span>The 2-counter sliding window eliminates the 2x fixed-window boundary burst while reducing memory footprint from O(N_requests) to O(1) (16 bytes per active key)</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="sliding-window-rate-limiter-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="sliding-window-rate-limiter" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-sliding-window-rate-limiter-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> A `ZSET` sliding log consumes `O(limit)` memory and `O(log N)` CPU per request, exploding on high-rate limits. The 2-bucket Sliding-Window Counter requires only 2 integers per key (`O(1)` space and time) while preventing fixed-window boundary double-bursts.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1146,9 +1242,24 @@ Where Current Offset Ratio = (Current Timestamp - Window Start) / Window Duratio
         <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
         
           <a class="lesson-builds__item" href="/build/sliding-window-rate-limiter/" data-action="navigate-build" data-build-id="sliding-window-rate-limiter">
-            <span class="lesson-builds__name">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Sliding Window Rate Limiter (Log, Counter, Token Bucket)</span>
+              
+            </div>
             <span class="lesson-builds__summary">Three per-key rate limiters with the same interface: an exact sliding log, an O(1) sliding-window counter and an integer-exact token bucket. All take an injectable clock and compute a Retry-After that tests confirm is correct to the millisecond.</span>
             <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
+          </a>
+      </div>
+      <div class="lesson-builds lesson-challenges">
+        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        
+          <a class="lesson-builds__item" href="/challenges/rate-limiter-leak/" data-nav="challenges" data-challenge="rate-limiter-leak">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">DDoS Attack Redis Rate Limiter Memory Leak</span>
+              <span class="badge">SEV-1 · easy</span>
+            </div>
+            
+            <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Launch Production Incident &amp; CodeLab Hotfix →</span>
           </a>
       </div>
         <div class="further-reading">
@@ -1241,30 +1352,30 @@ Where Current Offset Ratio = (Current Timestamp - Window Start) / Window Duratio
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators.js?v=b8038d5a4b"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

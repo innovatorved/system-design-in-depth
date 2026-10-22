@@ -38,7 +38,7 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=66a780db5e"></script>
+  <script src="js/manifest.js?v=9719c99831"></script>
 
   <script type="application/ld+json">
 {
@@ -116,7 +116,7 @@
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
     <nav class="sidebar__tabs" role="tablist">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
-      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">15 Builds</button>
+      <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
     </nav>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
@@ -1093,6 +1093,37 @@ J --> L["last_ts = now, return id"]
           <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
+      <div class="exercise-box quiz-card" id="quiz-snowflake-id-design-n1" data-type="numeric" data-slug="snowflake-id-design">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Napkin Math: Per-Node Snowflake ID Throughput Ceiling</span>
+          </div>
+          <span class="exercise-box__difficulty">apply</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> A standard 64-bit Snowflake ID allocates 1 sign bit, 41 timestamp bits (in milliseconds), 10 worker/machine ID bits, and 12 sequence number bits per millisecond.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Given 2^12 = 4,096 sequence values per millisecond, how many unique IDs (in millions of IDs per second, rounded to the nearest integer) can a single worker node generate at theoretical peak?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 4,096 IDs/ms × 1,000 ms/s = 4,096,000 IDs/s ≈ 4 million IDs/s.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-snowflake-id-design-n1" style="margin-top: 15px;">
+          
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <input type="number" step="any" class="quiz-number-input" name="quiz-snowflake-id-design-n1" placeholder="Enter numeric estimate (million IDs/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
+           <span class="badge" style="font-family: var(--font-mono);">million IDs/s</span>
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="snowflake-id-design-n1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="snowflake-id-design" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-snowflake-id-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> With 12 sequence bits, a single worker can allocate 2^12 = 4,096 IDs per millisecond, or 4,096 × 1,000 = 4,096,000 (~4.1 million) unique, k-sortable 64-bit IDs per second without any network coordination.</div>
+        </div>
+      </div>
+    
         <div class="simulator-card" id="sim-snowflake">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Snowflake ID: 1 + 41 + 10 + 12 bits</div>
@@ -1123,6 +1154,71 @@ J --> L["last_ts = now, return id"]
           <div class="sim-verdict" id="sf-decoded">Paste an ID (or click one in the log) to decode it with the current epoch.</div>
           <div class="simulator-card__log" id="sf-log"><div class="simulator-card__log-header">Event log (click an ID to decode it)</div></div>
         </div>
+      <div class="exercise-box quiz-card" id="quiz-snowflake-id-design-t1" data-type="tradeoff" data-slug="snowflake-id-design">
+        <div class="exercise-box__header">
+          <div class="exercise-box__title">
+            <span>Trade-Off Matrix: Handling NTP Backward Clock Jumps in Snowflake Generators</span>
+          </div>
+          <span class="exercise-box__difficulty">staff</span>
+        </div>
+        <div class="exercise-box__scenario"><strong>Scenario:</strong> An NTP step adjustment moves a Snowflake worker&#039;s wall clock backward by 12 milliseconds. If the generator immediately emits IDs using the regressed timestamp, it risks colliding with IDs generated 12 ms ago.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> How should the Snowflake generator handle small backward clock skews (&lt; 20 ms) vs large regressions, and why?</div>
+        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Track the highest millisecond seen so far (`last_timestamp`) and never emit a smaller timestamp.</div>
+        
+        <div class="quiz-options exercise-options" id="quiz-options-snowflake-id-design-t1" style="margin-top: 15px;">
+          
+         <div style="margin-bottom: 12px;">
+           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-snowflake-id-design-t1" value="0" />
+               <span>Ignore the backward jump and reset the 12-bit sequence counter to 0 immediately</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-snowflake-id-design-t1" value="1" />
+               <span>Pin `last_timestamp`, pause/spin-wait (or advance sequence bits on the logical high-water timestamp) for small skews up to a bounded threshold, and refuse ID generation (circuit-break + alert) if skew exceeds the safety bound</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-opt-snowflake-id-design-t1" value="2" />
+               <span>Switch to random UUIDv4 strings stored as 36-byte `VARCHAR` keys on clock skew</span>
+             </label>
+           
+         </div>
+         <div>
+           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-snowflake-id-design-t1" value="0" />
+               <span>Resetting the sequence to 0 on a repeated millisecond guarantees uniqueness</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-snowflake-id-design-t1" value="1" />
+               <span>Monotonic high-water clamping preserves uniqueness across brief NTP adjustments, while failing fast on large regressions prevents unbounded thread stalls or duplicate IDs</span>
+             </label>
+           
+             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
+               <input type="radio" name="quiz-tradeoff-rsn-snowflake-id-design-t1" value="2" />
+               <span>Mixing 36-byte string UUIDs into a 64-bit `BIGINT` column requires zero schema changes</span>
+             </label>
+           
+         </div>
+       
+        </div>
+
+        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+           <button class="btn btn--primary quiz-submit-btn" data-qid="snowflake-id-design-t1">Submit Answer</button>
+           <button class="btn btn--secondary quiz-next-btn" data-slug="snowflake-id-design" style="">Next Drill (2 available) →</button>
+        </div>
+
+        <div class="exercise-feedback quiz-feedback" id="feedback-snowflake-id-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> A Snowflake worker must enforce `timestamp &gt;= last_timestamp`. For tiny NTP adjustments (a few ms), holding `last_timestamp` (consuming remaining sequence numbers or waiting until wall clock catches up) prevents collisions safely; for large regressions, failing health checks protects data integrity.</div>
+        </div>
+      </div>
+    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1133,12 +1229,18 @@ J --> L["last_ts = now, return id"]
         <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
         
           <a class="lesson-builds__item" href="/build/snowflake-id-generator/" data-action="navigate-build" data-build-id="snowflake-id-generator">
-            <span class="lesson-builds__name">Snowflake 64-bit ID Generator</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Snowflake 64-bit ID Generator</span>
+              
+            </div>
             <span class="lesson-builds__summary">A BigInt Snowflake generator using the 41/10/12 layout. It supports a custom epoch, waits for the next millisecond when the sequence overflows, detects clock rollback with a configurable tolerance, and can decode an id back into its timestamp, worker and sequence.</span>
             <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
           </a>
           <a class="lesson-builds__item" href="/build/keyset-pagination-cursors/" data-action="navigate-build" data-build-id="keyset-pagination-cursors">
-            <span class="lesson-builds__name">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">Keyset (Cursor) Pagination vs SQL OFFSET</span>
+              
+            </div>
             <span class="lesson-builds__summary">An in-memory table ordered by (created_at DESC, id DESC) that compares OFFSET and keyset pagination under concurrent inserts and deletes, shows why the id tie-breaker matters, and issues opaque base64url cursors signed with HMAC and bound to their query.</span>
             <span class="lesson-builds__cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
           </a>
@@ -1233,30 +1335,30 @@ J --> L["last_ts = now, return id"]
 
   <!-- Data Scripts -->
   <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
-  <script type="text/plain" data-defer src="data/roadmap.js?v=a646e74ec6"></script>
-  <script type="text/plain" data-defer src="data/challenges.js?v=b42c5417ee"></script>
+  <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
+  <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=00a2d60e04"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=d64f0ba97a"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=348e725d62"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
-  <script type="text/plain" data-defer src="js/progress.js?v=6a77e0fc56"></script>
+  <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=8c7e87ae30"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
   <script type="text/plain" data-defer src="js/simulators-ops.js?v=ff1d2ff9b7"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=afe4425fe0"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=6925d26197"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3756585059"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=082a1c1a86"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
   <script type="text/plain" data-defer src="js/dashboard.js?v=bcfc92406b"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=4e7ae6e8c9"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=aa775fb6b2"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=f258b3b8c0"></script>

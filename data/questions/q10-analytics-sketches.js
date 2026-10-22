@@ -261,6 +261,59 @@ window.QUESTION_BANK["hyperloglog-cardinality-estimation"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "hyperloglog-cardinality-estimation-n1",
+    "topic": "hyperloglog-cardinality-estimation",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: HyperLogLog Memory Footprint vs Exact Set",
+    "scenario": "You track unique daily visitors across 10,000 high-traffic articles. Each HyperLogLog sketch uses `m = 16,384` registers (`2^14`, yielding ~0.81% standard error) where each register is 6 bits (`16,384 × 6 bits = 98,304 bits = 12,288 bytes ≈ 12 KB` per article).",
+    "prompt": "Using 12 KB per HyperLogLog sketch, how many megabytes (MB, using 1 MB = 1,000 KB) of RAM are needed to hold all 10,000 article sketches?",
+    "question": "Using 12 KB per HyperLogLog sketch, how many megabytes (MB, using 1 MB = 1,000 KB) of RAM are needed to hold all 10,000 article sketches?",
+    "unit": "MB",
+    "answer": 120,
+    "tolerance": 0.25,
+    "hint": "Multiply 10,000 sketches × 12 KB/sketch and divide by 1,000 KB/MB.",
+    "explanation": "10,000 sketches × 12 KB = 120,000 KB = 120 MB total—regardless of whether each article has 1,000 or 100,000,000 unique visitors!",
+    "tags": [
+      "hyperloglog-cardinality-estimation",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "hyperloglog-cardinality-estimation-t1",
+    "topic": "hyperloglog-cardinality-estimation",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Summing Daily Unique Counts vs Merging HyperLogLog Registers",
+    "scenario": "Product managers want a 7-day rolling 'Weekly Unique Viewers' metric per video. An engineer proposes summing the 7 daily HLL cardinality integers (`Mon + Tue + ... + Sun`).",
+    "prompt": "Why is summing the 7 daily cardinality integers incorrect, and what is the right sketch architecture?",
+    "question": "Why is summing the 7 daily cardinality integers incorrect, and what is the right sketch architecture?",
+    "options": [
+      "Summing daily unique counts under-counts users who visited on only one day",
+      "Summing daily integers double-counts repeat visitors across days; instead, persist one HLL register array per `(video_id, day)` and take the register-wise maximum (`HLL_union[j] = max_d HLL_d[j]`) across the 7 daily sketches",
+      "HyperLogLog sketches cannot be merged and require re-scanning raw logs from disk for every 7-day query"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Set union cardinality `|A ∪ B|` is always equal to `|A| + |B|`",
+      "HLL sketches are commutative monoids under register-wise `MAX`, enabling lossless set union across arbitrary time windows without double-counting returning users",
+      "Register-wise `MIN` computes the exact set union of two HyperLogLog sketches"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "How does `PFMERGE` in Redis combine two daily HyperLogLog sketches into a weekly unique count?",
+    "explanation": "If a user views a video on all 7 days, summing daily integers counts them 7 times. Storing daily HLL register arrays and merging them via register-wise `MAX` (`PFMERGE`) computes the true 7-day union `|D1 ∪ ... ∪ D7|` in microseconds.",
+    "tags": [
+      "hyperloglog-cardinality-estimation",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -525,6 +578,59 @@ window.QUESTION_BANK["count-min-sketch"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "count-min-sketch-n1",
+    "topic": "count-min-sketch",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Count-Min Sketch Matrix Memory Size",
+    "scenario": "You size a Count-Min Sketch with `d = 5` hash rows and `w = 20,000` counter columns per row to track heavy-hitter IP frequencies in an L7 DDoS scrubber. Each counter is a 4-byte (32-bit) unsigned integer.",
+    "prompt": "How many kilobytes (KB, using 1 KB = 1,000 bytes) of memory does this `5 × 20,000` Count-Min Sketch matrix occupy?",
+    "question": "How many kilobytes (KB, using 1 KB = 1,000 bytes) of memory does this `5 × 20,000` Count-Min Sketch matrix occupy?",
+    "unit": "KB",
+    "answer": 400,
+    "tolerance": 0.25,
+    "hint": "Total cells = 5 × 20,000 = 100,000 counters. Multiply by 4 bytes/counter and divide by 1,000 bytes/KB.",
+    "explanation": "5 rows × 20,000 columns = 100,000 counters. At 4 bytes per counter, the entire sketch fits in 400,000 bytes = 400 KB—small enough to reside entirely in a CPU core's L2/L3 cache for line-rate packet inspection.",
+    "tags": [
+      "count-min-sketch",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "count-min-sketch-t1",
+    "topic": "count-min-sketch",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Count-Min Sketch Overestimation Bias & Heavy-Hitter Min-Heap Pairing",
+    "scenario": "You need to return the Top-100 most frequent search queries every minute from a stream of 500,000 queries/sec. A Count-Min Sketch alone only answers point frequency queries `estimate(item)` and does not store the item keys.",
+    "prompt": "How do you combine a Count-Min Sketch with an auxiliary structure to output the Top-100 keys in bounded memory, and what error direction can occur?",
+    "question": "How do you combine a Count-Min Sketch with an auxiliary structure to output the Top-100 keys in bounded memory, and what error direction can occur?",
+    "options": [
+      "Iterate over all `2^128` possible string keys every minute to query the Count-Min Sketch",
+      "Pair the Count-Min Sketch with a bounded Min-Heap of size K=100 (updating the heap whenever an item's `min_i CMS[i][h_i(x)]` estimate exceeds the heap minimum), noting CMS can only overestimate (never underestimate) due to hash collisions",
+      "Use the maximum counter across the `d` hash rows (`max_i CMS[i][h_i(x)]`) to minimize collision noise"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Enumerating infinite string spaces is O(1) in production",
+      "Taking the minimum across `d` rows minimizes positive collision bias (one-sided overestimation error), while a K-element Min-Heap retains the top-K keys in O(K) space",
+      "Taking the maximum across rows reduces positive hash-collision increments"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why does `estimate(x)` return `min_i table[i][h_i(x)]` and how do you remember which keys are in the top K?",
+    "explanation": "Because hash collisions only add positive counts to shared buckets, every row `i` satisfies `table[i][h_i(x)] >= true_count(x)`. Returning the `min` across rows gives the tightest upper bound, and maintaining a size-K Min-Heap alongside the sketch tracks the current Top-K keys in O(K) memory.",
+    "tags": [
+      "count-min-sketch",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -722,6 +828,59 @@ window.QUESTION_BANK["tdigest-quantile-sketch"] = [
       "tdigest-quantile-sketch",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "tdigest-quantile-sketch-n1",
+    "topic": "tdigest-quantile-sketch",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Aggregating Distributed Latency Sketches vs Raw Samples",
+    "scenario": "You monitor p99.9 API latency across 200 microservice pods handling 1,000,000 req/s total. Shipping raw 8-byte float64 latency samples for every request requires 8 MB/s. Instead, each of the 200 pods ships a 5 KB mergeable t-digest sketch once every 10 seconds.",
+    "prompt": "What is the total network bandwidth (in KB/s) required to ship the 200 t-digest sketches every 10 seconds?",
+    "question": "What is the total network bandwidth (in KB/s) required to ship the 200 t-digest sketches every 10 seconds?",
+    "unit": "KB/s",
+    "answer": 100,
+    "tolerance": 0.25,
+    "hint": "Total data per 10s window = 200 pods × 5 KB = 1,000 KB. Divide by 10 seconds.",
+    "explanation": "200 pods × 5 KB = 1,000 KB every 10 seconds = 100 KB/s (an 80x reduction compared to 8,000 KB/s of raw samples), and bandwidth stays constant at 100 KB/s even if traffic surges from 1M to 50M req/s.",
+    "tags": [
+      "tdigest-quantile-sketch",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "tdigest-quantile-sketch-t1",
+    "topic": "tdigest-quantile-sketch",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Averaging Pod p99s vs Merging t-Digest / DDSketch Centroids",
+    "scenario": "An observability dashboard computes the fleet-wide p99 latency across 50 pods by taking the arithmetic mean of each pod's local p99 gauge (`avg(pod_p99)`). During an incident where 2 pods receive 60% of traffic and stall at 4,000 ms while 48 pods sit nearly idle at 10 ms, the dashboard reports fleet p99 = 169 ms.",
+    "prompt": "Why did the dashboard hide the outage, and how should fleet percentiles be computed?",
+    "question": "Why did the dashboard hide the outage, and how should fleet percentiles be computed?",
+    "options": [
+      "Use `max(pod_p99)` across all pods because the maximum of p99s equals the true fleet-wide p99",
+      "Percentiles are non-additive across skewed partitions; each pod must emit mergeable quantile sketches (t-digest centroids or log-bucketed histograms) so the aggregator merges the distributions before extracting the true fleet p99",
+      "Compute the harmonic mean of each pod's local p50 and multiply by 2"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "A single idle pod that processes 1 slow health check represents the 99th percentile of 10 million requests",
+      "Averaging percentiles treats a pod handling 10 req/s identically to a pod handling 100,000 req/s; merging t-digest centroids or histograms preserves sample weights across the entire fleet",
+      "Percentiles commute with arithmetic averages whenever request counts differ across nodes"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why is 'averaging percentiles' one of the classic observability anti-patterns?",
+    "explanation": "Percentiles cannot be averaged or maxed across nodes with unequal traffic volumes or distribution shapes. Merging t-digest centroids (or Prometheus/DDSketch histogram buckets) weights every observation properly before computing the true global quantile.",
+    "tags": [
+      "tdigest-quantile-sketch",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

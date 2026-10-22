@@ -14,8 +14,8 @@ const {
 } = require('./helpers.js');
 
 test('Tier 1: Feature Coverage (F1 - Comprehensive HTML Asset Stamping)', async (t) => {
-  await t.test('T1.1_F1_all_15_build_index_files_exist', () => {
-    assert.strictEqual(BUILD_SLUGS.length, 15, 'Must test exactly 15 build slugs');
+  await t.test('T1.1_F1_all_20_build_index_files_exist', () => {
+    assert.strictEqual(BUILD_SLUGS.length, 20, 'Must test exactly 20 build slugs');
     for (const slug of BUILD_SLUGS) {
       const p = path.join(SYSTEM_DESIGN_ROOT, 'build', slug, 'index.html');
       assert.ok(fs.existsSync(p), `Missing static build page: build/${slug}/index.html`);
@@ -129,7 +129,7 @@ test('Tier 1: Feature Coverage (F2 - Static Generation Pipeline Consistency)', a
     assert.ok(ctx.window.ASSET_VERSION, 'window.ASSET_VERSION must be defined');
     assert.ok(ctx.window.LAZY_MANIFEST, 'window.LAZY_MANIFEST must be defined');
     assert.ok(ctx.window.SITE_COUNTS, 'window.SITE_COUNTS must be defined');
-    assert.strictEqual(ctx.window.SITE_COUNTS.builds, 15, 'SITE_COUNTS.builds must equal 15');
+    assert.strictEqual(ctx.window.SITE_COUNTS.builds, 20, 'SITE_COUNTS.builds must equal 20');
   });
 });
 

@@ -23,6 +23,8 @@
     _selectedRootCauseId: null,
     _knobValues: {},
     _lastVerifyResult: null,
+    _codeHotfixPassed: false,
+    _hotfixSolvedMap: {},
     _abortController: null,
 
     mount: function(container, options) {
@@ -37,6 +39,7 @@
       this._selectedRootCauseId = null;
       this._knobValues = {};
       this._lastVerifyResult = null;
+      this._codeHotfixPassed = false;
 
       if (this._activeChallengeId) {
         this._initChallengeState(this._activeChallengeId);
@@ -76,18 +79,11 @@
       this._knobValues = {};
       this._selectedRootCauseId = null;
       this._lastVerifyResult = null;
+      this._codeHotfixPassed = Boolean(ch && this._hotfixSolvedMap && this._hotfixSolvedMap[ch.id]);
       if (!ch) return;
       var knobs = ch.interactiveTuning || [];
       for (var i = 0; i < knobs.length; i++) {
         this._knobValues[knobs[i].id] = knobs[i].defaultValue;
-      }
-      // Pre-select the correct root cause or first option if user hasn't picked yet so one-click tuning also works cleanly
-      var rcs = ch.rootCauses || [];
-      for (var j = 0; j < rcs.length; j++) {
-        if (rcs[j].correct) {
-          this._selectedRootCauseId = rcs[j].id;
-          break;
-        }
       }
     },
 
@@ -101,7 +97,7 @@
       var activeCh = this._activeChallengeId ? this._findChallenge(this._activeChallengeId) : null;
 
       if (activeCh) {
-        this._container.innerHTML = this._renderIncidentRoom(activeCh);
+        this._container.innerHTML = this._renderWorkspace(activeCh);
       } else {
         this._container.innerHTML = this._renderDirectory();
       }
@@ -198,6 +194,92 @@
       );
     },
 
+    _renderRootCauses: function(ch) {
+      var self = this;
+      var rootCausesHtml = (ch.rootCauses || []).map(function(rc) {
+        var isChecked = self._selectedRootCauseId === rc.id;
+        return (
+          '<label class="root-cause-option ' + (isChecked ? 'selected' : '') + '">' +
+            '<input type="radio" name="incident-root-cause" value="' + escapeHtml(rc.id) + '" ' + (isChecked ? 'checked' : '') + ' />' +
+            '<span>' + escapeHtml(rc.description) + '</span>' +
+          '</label>'
+        );
+      }).join('');
+
+      var statusMsg = '';
+      if (this._selectedRootCauseId === null) {
+        statusMsg = '<p class="root-cause-hint" id="root-cause-diagnosis-hint">Select a root cause hypothesis above to verify diagnosis</p>';
+      }
+
+      return (
+        '<div class="root-cause-box">' +
+          '<h4>Select Primary Root Cause</h4>' +
+          '<div class="root-causes-list">' + rootCausesHtml + '</div>' +
+          statusMsg +
+        '</div>'
+      );
+    },
+
+    _evaluateState: function(ch) {
+      if (!ch || typeof ch.verify !== 'function') return null;
+      var res = ch.verify(this._knobValues);
+      if (this._selectedRootCauseId === null) {
+        return {
+          success: false,
+          rootCauseSelected: false,
+          message: 'Select a root cause hypothesis above to verify diagnosis',
+          metrics: res ? res.metrics : null
+        };
+      }
+      var rcs = ch.rootCauses || [];
+      var selectedRc = null;
+      for (var i = 0; i < rcs.length; i++) {
+        if (rcs[i].id === this._selectedRootCauseId) {
+          selectedRc = rcs[i];
+          break;
+        }
+      }
+      if (!selectedRc || !selectedRc.correct) {
+        return {
+          success: false,
+          rootCauseSelected: true,
+          message: (selectedRc && selectedRc.feedback)
+            ? selectedRc.feedback
+            : 'Your infrastructure tuning stabilized the metrics, but the selected Root Cause diagnosis is incorrect. Please identify the accurate root cause.',
+          metrics: res ? res.metrics : null
+        };
+      }
+      return res;
+    },
+
+    _renderCodeHotfixCard: function(ch) {
+      if (!ch || !ch.codeFix) return '';
+      var cf = ch.codeFix;
+      var verified = Boolean(this._codeHotfixPassed || (this._hotfixSolvedMap && this._hotfixSolvedMap[ch.id]));
+      return (
+        '<div class="code-hotfix-card eco-card" id="challenge-code-hotfix-card">' +
+          '<div class="view-badge-row">' +
+            '<span class="eco-pill">Code-Level Hotfix (@innovatorved/code-lab)</span>' +
+            (verified
+              ? '<span class="eco-pill eco-pill--success" data-hotfix-status="verified">✓ Hotfix Verified</span>'
+              : '<span class="eco-pill eco-pill--warning" data-hotfix-status="pending">● Patch Unverified</span>') +
+          '</div>' +
+          '<h4 class="code-hotfix-card__title">' + escapeHtml(cf.title || 'Production Code Hotfix') + '</h4>' +
+          '<p class="code-hotfix-card__summary">' + escapeHtml(cf.summary || '') + '</p>' +
+          '<div class="code-hotfix-card__actions">' +
+            '<button type="button" class="eco-btn eco-btn--primary" data-action="open-challenge-codelab" data-challenge-id="' + escapeHtml(ch.id) + '">' +
+              'Open Hotfix in CodeLab IDE' +
+            '</button>' +
+          '</div>' +
+          '<div id="challenge-inline-codelab-mount" class="challenge-inline-codelab-mount"></div>' +
+        '</div>'
+      );
+    },
+
+    _renderWorkspace: function(ch) {
+      return this._renderIncidentRoom(ch);
+    },
+
     _renderIncidentRoom: function(ch) {
       var self = this;
       var solved = this.isChallengeSolved(ch.id);
@@ -237,15 +319,7 @@
         );
       }).join('');
 
-      var rootCausesHtml = (ch.rootCauses || []).map(function(rc) {
-        var isChecked = self._selectedRootCauseId === rc.id;
-        return (
-          '<label class="root-cause-option ' + (isChecked ? 'selected' : '') + '">' +
-            '<input type="radio" name="incident-root-cause" value="' + escapeHtml(rc.id) + '" ' + (isChecked ? 'checked' : '') + ' />' +
-            '<span>' + escapeHtml(rc.description) + '</span>' +
-          '</label>'
-        );
-      }).join('');
+      var rootCauseSectionHtml = this._renderRootCauses(ch);
 
       var knobsHtml = (ch.interactiveTuning || []).map(function(k) {
         var currentVal = self._knobValues[k.id] != null ? self._knobValues[k.id] : k.defaultValue;
@@ -273,6 +347,8 @@
           '</div>'
         );
       }).join('');
+
+      var hotfixCardHtml = this._renderCodeHotfixCard(ch);
 
       var verifyBanner = '';
       if (this._lastVerifyResult) {
@@ -334,14 +410,12 @@
                   '<h4>Required Recovery Invariants</h4>' +
                   '<ul class="incident-list">' + invariantsHtml + '</ul>' +
                 '</div>' +
-                '<div class="root-cause-box">' +
-                  '<h4>Select Primary Root Cause</h4>' +
-                  '<div class="root-causes-list">' + rootCausesHtml + '</div>' +
-                '</div>' +
+                rootCauseSectionHtml +
                 '<div class="tuning-knobs-box">' +
                   '<h4>Interactive Infrastructure Tuning Knobs</h4>' +
                   '<div class="tuning-knobs-grid">' + knobsHtml + '</div>' +
                 '</div>' +
+                hotfixCardHtml +
                 '<div class="incident-actions-bar">' +
                   '<button class="eco-btn eco-btn--primary eco-btn--lg" id="verify-incident-btn" data-action-verify="' + escapeHtml(ch.id) + '">Deploy Mitigation &amp; Verify Recovery</button>' +
                   '<button class="eco-btn" id="auto-tune-optimal-btn" data-action-autotune="' + escapeHtml(ch.id) + '">Apply Recommended Runbook Preset</button>' +
@@ -363,20 +437,20 @@
           break;
         }
       }
-      // Search knob combinations or apply known optimal presets
+      // Known optimal presets matching data/challenges.js interactiveTuning knob IDs
       var presets = {
         'retry-storm-meltdown': { maxRetries: 2, backoffBaseMs: 300, jitter: 'decorrelated', circuitBreakerThreshold: 30 },
-        'cache-stampede-meltdown': { singleflightCoalescing: 'enabled', earlyExpirationBeta: 1.5, staleWhileRevalidateSec: 30, cacheTtlJitterPct: 20 },
-        'rate-limiter-leak': { algorithm: 'sliding-window-log', clockSync: 'redis-time-lua', burstCapacity: 100, windowSizeMs: 1000 },
-        'hot-partition-herd': { keySaltingBuckets: 32, localL1CacheTtlMs: 2000, readReplicaRouting: 'adaptive-least-loaded', writeBatchingWindowMs: 50 },
-        'circuit-breaker-flapping': { minimumRequestVolume: 100, halfOpenTrialRequests: 25, openStateWaitDurationSec: 30, errorThresholdPct: 40 },
-        'wal-torn-write-corruption': { checksumAlgorithm: 'crc32c', fsyncPolicy: 'every-commit', tornWriteProtection: 'doublewrite-buffer', recoveryMode: 'aries-redo-undo' },
-        'slow-consumer-queue-spiral': { maxPollRecords: 50, maxPollIntervalMs: 300000, heartbeatIntervalMs: 3000, downstreamRpcTimeoutMs: 800 },
-        'split-brain-quorum-loss': { writeQuorum: 'majority-quorum', fencingTokens: 'monotonic-epoch', minSyncReplicas: 2, partitionDetectionTimeoutMs: 2000 },
-        'replication-lag-read-drift': { readRoutingPolicy: 'session-monotonic-lsn', causalTokenTracking: 'enabled', maxAllowedReplicaLagMs: 100, primaryStickinessWindowMs: 5000 },
-        'cascading-deadlock-depletion': { bulkheadIsolation: 'per-downstream-pool', lockOrderingPolicy: 'canonical-id-sort', dbQueryTimeoutMs: 500, maxWaitQueueSize: 50 },
-        'two-phase-commit-coordinator-hang': { transactionProtocol: 'saga-orchestrated-outbox', lockReservationTtlMs: 2000, idempotencyKeyEnforcement: 'strict-ledger-uuid', coordinatorHaMode: 'raft-replicated-state' },
-        'gossip-partition-flapping-cascade': { failureDetector: 'phi-accrual-adaptive', suspicionMultplier: 6, indirectPingProbes: 5, membershipChangeDampingSec: 30 }
+        'cache-stampede-meltdown': { singleflightMutex: 'enabled', earlyRecompute: 'x-fetch-optimal', cacheTtlJitterPercent: 20, dbConnectionPoolMax: 80 },
+        'rate-limiter-leak': { keyTtlSeconds: 180, evictionPolicy: 'volatile-ttl', failureMode: 'fail-open', algorithm: 'token-bucket-hash' },
+        'hot-partition-herd': { partitionKeyStrategy: 'order_id_murmur3', partitionCount: 16, consumerWorkers: 16, fetchMaxBytesMb: 5 },
+        'circuit-breaker-flapping': { rollingWindowSeconds: 20, minRequestThreshold: 50, failureRateThreshold: 55, sleepWindowSeconds: 20, halfOpenProbes: 5 },
+        'wal-torn-write-corruption': { walSyncMode: 'group_commit_fsync', groupCommitIntervalMs: 5, checksumAlgorithm: 'crc32c', tornWritePolicy: 'truncate_tail_if_uncommitted' },
+        'slow-consumer-queue-spiral': { consumerConcurrency: 64, prefetchCount: 10, httpTimeoutSeconds: 2, deadLetterQueue: 'dlq_after_3_retries' },
+        'split-brain-quorum-loss': { quorumPolicy: 'strict_cluster_majority', electionTimeoutMinMs: 300, electionTimeoutMaxMs: 600, heartbeatIntervalMs: 60 },
+        'replication-lag-read-drift': { readRouting: 'read_your_writes_session_token', idempotencyEnforcement: 'redis_setnx_idempotency_key', syncStandbyCount: 1, maxLagToleranceMs: 500 },
+        'cascading-deadlock-depletion': { lockOrdering: 'deterministic_sorted_id', deadlockTimeoutMs: 100, statementTimeoutMs: 500, transactionIsolation: 'read_committed_with_pessimistic_lock' },
+        'two-phase-commit-coordinator-hang': { architecturePattern: 'saga_orchestrator_with_compensation', participantLockTimeoutMs: 1000, coordinatorHaStandbys: 2, recoveryDaemonIntervalSec: 3 },
+        'gossip-partition-flapping-cascade': { phiConvictThreshold: 10, gossipIntervalMs: 500, suspectGracePeriodSeconds: 20, repairThrottlingMbSec: 50 }
       };
 
       var preset = presets[ch.id];
@@ -392,30 +466,42 @@
       var ch = this._findChallenge(this._activeChallengeId);
       if (!ch || typeof ch.verify !== 'function') return null;
 
-      var res = ch.verify(this._knobValues);
-      // Also check root cause if one is marked correct
-      var rcs = ch.rootCauses || [];
-      var selectedRc = null;
-      for (var i = 0; i < rcs.length; i++) {
-        if (rcs[i].id === this._selectedRootCauseId) {
-          selectedRc = rcs[i];
-          break;
-        }
-      }
-      if (selectedRc && !selectedRc.correct && res.success) {
-        res = {
-          success: false,
-          message: 'Your infrastructure tuning stabilized the metrics, but the selected Root Cause diagnosis is incorrect. Please identify the accurate root cause.',
-          metrics: res.metrics
-        };
-      }
-
+      var res = this._evaluateState(ch);
       this._lastVerifyResult = res;
       if (res && res.success && root.Progress) {
         root.Progress.markComplete('challenge:' + ch.id);
       }
       this.render();
       return res;
+    },
+
+    _openChallengeCodeLab: function(ch) {
+      if (!ch || !ch.codeFix) return;
+      var self = this;
+      var markHotfixVerified = function() {
+        self._codeHotfixPassed = true;
+        if (!self._hotfixSolvedMap) self._hotfixSolvedMap = {};
+        self._hotfixSolvedMap[ch.id] = true;
+        self.render();
+      };
+
+      if (root.App && typeof root.App.openChallengeCodeLab === 'function') {
+        root.App.openChallengeCodeLab(ch.id, markHotfixVerified);
+        return;
+      }
+
+      var mountEl = this._container && this._container.querySelector('#challenge-inline-codelab-mount');
+      if (mountEl && root.CodeLab && typeof root.CodeLab.create === 'function') {
+        mountEl.innerHTML = '';
+        root.CodeLab.create(mountEl, {
+          title: ch.codeFix.title || ch.title,
+          summary: ch.codeFix.summary || '',
+          starterCode: ch.codeFix.buggyCode || '',
+          solutionCode: ch.codeFix.solutionCode || '',
+          testCode: ch.codeFix.testCode || '',
+          onSuccess: markHotfixVerified
+        });
+      }
     },
 
     _bindEvents: function() {
@@ -457,6 +543,13 @@
           return;
         }
 
+        var codeLabBtn = e.target.closest('[data-action="open-challenge-codelab"]');
+        if (codeLabBtn) {
+          var activeCh = self._findChallenge(self._activeChallengeId);
+          self._openChallengeCodeLab(activeCh);
+          return;
+        }
+
         var verifyBtn = e.target.closest('[data-action-verify]');
         if (verifyBtn) {
           self.verifyActiveChallenge();
@@ -479,6 +572,8 @@
             var inp = el.querySelector('input');
             el.classList.toggle('selected', Boolean(inp && inp.checked));
           });
+          var hintEl = container.querySelector('#root-cause-diagnosis-hint');
+          if (hintEl) hintEl.remove();
           return;
         }
 

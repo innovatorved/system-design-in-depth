@@ -378,6 +378,9 @@ window.Renderer = (() => {
     // Check yourself: this lesson's questions as a one-at-a-time slider
     if (window.Quiz?.renderCheckSlider) html += window.Quiz.renderCheckSlider(slug);
 
+    // End-of-lesson Napkin Math (numeric) & Staff Trade-Off Matrix (tradeoff) drills
+    if (window.Quiz?.renderQuiz) html += window.Quiz.renderQuiz(slug);
+
     // Interactive Visual Simulator (if applicable for unit)
     if (window.Simulators && window.Simulators.getSimulatorForUnit) {
       const simData = window.Simulators.getSimulatorForUnit(slug);
@@ -406,8 +409,10 @@ window.Renderer = (() => {
         </div>`;
     }
 
-    // From-scratch builds for this lesson
+    // From-scratch builds, incident challenges, and architecture blueprints for this lesson
     html += renderLessonBuilds(slug);
+    html += renderLessonChallenges(slug);
+    html += renderLessonBlueprints(slug);
 
     // Further reading
     if (moduleContent?.furtherReading?.length) {
@@ -462,11 +467,69 @@ window.Renderer = (() => {
     return `
       <div class="lesson-builds">
         <h3 class="lesson-builds__title">${icons.code} Build it from scratch — Interactive Lab &amp; Guide</h3>
-        ${builds.map(([id, b]) => `
+        ${builds.map(([id, b]) => {
+          const prog = window.Progress?.getBuildProgress ? window.Progress.getBuildProgress(id) : null;
+          const stepCount = prog?.completedSteps?.length || 0;
+          const badgeHtml = prog?.completed
+            ? `<span class="badge" style="margin-left:auto;color:var(--success);border-color:var(--success);">✓ Lab Complete (4/4)</span>`
+            : stepCount > 0
+              ? `<span class="badge" style="margin-left:auto;">${stepCount}/4 Steps</span>`
+              : '';
+          return `
           <a class="lesson-builds__item" href="/build/${id}/" data-action="navigate-build" data-build-id="${id}">
-            <span class="lesson-builds__name">${escapeHtml(b.title || id)}</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">${escapeHtml(b.title || id)}</span>
+              ${badgeHtml}
+            </div>
             ${b.summary ? `<span class="lesson-builds__summary">${escapeHtml(b.summary)}</span>` : ''}
             <span class="lesson-builds__cta">${icons.terminal} Open Build Guide &amp; Interactive Lab (JS &amp; TS) →</span>
+          </a>`;
+        }).join('')}
+      </div>`;
+  }
+
+  function challengesForLesson(slug) {
+    const raw = window.CHALLENGES_DATA || window.ChallengesData;
+    const list = Array.isArray(raw) ? raw : (raw?.challenges || []);
+    return list.filter(c => (c.relatedSlugs || []).includes(slug));
+  }
+
+  function renderLessonChallenges(slug) {
+    const challenges = challengesForLesson(slug);
+    if (!challenges.length) return '';
+    return `
+      <div class="lesson-builds lesson-challenges">
+        <h3 class="lesson-builds__title">${icons.target} Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        ${challenges.map(c => `
+          <a class="lesson-builds__item" href="/challenges/${c.id}/" data-nav="challenges" data-challenge="${c.id}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">${escapeHtml(c.title)}</span>
+              <span class="badge">${escapeHtml(c.severity || 'SEV-1')} · ${escapeHtml(c.difficulty || 'Senior')}</span>
+            </div>
+            ${c.subtitle ? `<span class="lesson-builds__summary">${escapeHtml(c.subtitle)}</span>` : ''}
+            <span class="lesson-builds__cta">${icons.terminal} Launch Production Incident &amp; CodeLab Hotfix →</span>
+          </a>`).join('')}
+      </div>`;
+  }
+
+  function blueprintsForLesson(slug) {
+    return (window.WHITEBOARD_DATA?.blueprints || []).filter(bp => bp.id === slug.replace(/^case-/, '') || (bp.relatedSlugs || []).includes(slug));
+  }
+
+  function renderLessonBlueprints(slug) {
+    const bps = blueprintsForLesson(slug);
+    if (!bps.length) return '';
+    return `
+      <div class="lesson-builds lesson-blueprints">
+        <h3 class="lesson-builds__title">${icons.globe} Interactive Architecture Blueprint — Capacity Sandbox</h3>
+        ${bps.map(bp => `
+          <a class="lesson-builds__item" href="/sandbox/?blueprint=${bp.id}" data-nav="sandbox" data-blueprint="${bp.id}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span class="lesson-builds__name">${escapeHtml(bp.title)}</span>
+              ${bp.targetQps ? `<span class="badge">${escapeHtml(String(bp.targetQps))} QPS</span>` : ''}
+            </div>
+            ${bp.description ? `<span class="lesson-builds__summary">${escapeHtml(bp.description)}</span>` : ''}
+            <span class="lesson-builds__cta">${icons.target} Open Topology &amp; Stress-Test in Architecture Sandbox →</span>
           </a>`).join('')}
       </div>`;
   }
@@ -710,7 +773,23 @@ window.Renderer = (() => {
       // Code blocks (``` blocks) - handle info strings like title="terminal"
       .replace(/```(\S+)?[^\n]*\n([\s\S]*?)```/g, (_, lang, code) => {
         const idx = codeBlocks.length;
-        codeBlocks.push('<pre><code class="language-' + (lang || 'text') + '">' + escapeHtml(code.trim()) + '</code></pre>');
+        const cleanLang = (lang || 'text').toLowerCase();
+        const isRunnable = ['js', 'javascript', 'ts', 'typescript', 'node', 'sh', 'bash'].includes(cleanLang);
+        const runBtn = isRunnable
+          ? `<button type="button" class="code-block__copy" data-action="run-snippet-codelab" data-lang="${escapeHtml(cleanLang)}" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE">⚡ Run in CodeLab</button>`
+          : '';
+        codeBlocks.push(
+          '<div class="code-block">' +
+            '<div class="code-block__header">' +
+              '<span class="code-block__lang">' + escapeHtml(cleanLang) + '</span>' +
+              '<div style="display:flex;align-items:center;gap:6px;">' +
+                runBtn +
+                '<button type="button" class="code-block__copy" data-action="copy-code">Copy</button>' +
+              '</div>' +
+            '</div>' +
+            '<pre><code class="language-' + escapeHtml(cleanLang) + '">' + escapeHtml(code.trim()) + '</code></pre>' +
+          '</div>'
+        );
         return '\x00CODEBLOCK_' + idx + '\x00';
       })
       // Inline code (`...`) - escape HTML entities inside backticks & protect from markdown regexes
@@ -1153,7 +1232,7 @@ window.Renderer = (() => {
     const isPinned = project.pinned;
     const hasLive = Boolean(project.liveUrl);
     const tagsHtml = (project.tags || []).slice(0, 5).map(t => `<span class="project-card__tag">${escapeHtml(t)}</span>`).join('');
-    const safeName = escapeAttr(project.name);
+    const safeName = escapeHtml(project.name);
 
     return `
       <div class="project-card" id="project-${project.id}" data-project-id="${project.id}">
@@ -1184,6 +1263,10 @@ window.Renderer = (() => {
           </div>
 
           <div class="project-card__actions">
+            <button type="button" class="btn btn--sm btn--secondary project-card__btn" data-action="open-repo-codelab" data-repo="${escapeHtml(project.githubRepo || ('innovatorved/' + project.name))}" data-title="${safeName}" title="Clone and explore ${safeName} inside the in-browser CodeLab IDE">
+              ${icons.terminal}
+              <span>Explore in CodeLab</span>
+            </button>
             <a href="${project.githubUrl}" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--secondary project-card__btn" aria-label="${safeName} GitHub repository" data-repo-placement="card_footer_github">
               ${icons.github}
               <span>GitHub</span>
