@@ -6,13 +6,19 @@ window.MODULE_CONTENT = window.MODULE_CONTENT || {};
 
 window.App = (() => {
   // State
-  let currentView = 'home';     // home | topic | build
+  let currentView = 'home';     // home | topic | build | roadmap | challenges | exams | dashboard | sandbox
   let currentSlug = null;
   let activeTab = 'curriculum';  // curriculum | builds
   let sidebarOpen = false;
   let activeSimulator = null;
   let activeCodeLab = null;
+  let activeRoadmap = null;
+  let activeChallenge = null;
+  let activeExam = null;
+  let activeDashboard = null;
+  let activeSandbox = null;
   let currentBuildParams = new URLSearchParams();
+  let currentRouteParams = new URLSearchParams();
   let landingCleanup = null;  // live demo on the landing page
   const collapsedModules = new Set();
 
@@ -121,7 +127,83 @@ window.App = (() => {
       return;
     }
 
-    if (hash === '/review' || hash === 'review' || hash === '/paths' || hash === 'paths' || hash === '/cards' || hash === 'cards') {
+    // Roadmap route: /roadmap or #/roadmap
+    if (path === 'roadmap' || path.startsWith('roadmap/') || hash === 'roadmap' || hash === '/roadmap' || hash.startsWith('roadmap/') || hash.startsWith('/roadmap')) {
+      const query = window.location.search || (hash.includes('?') ? '?' + hash.split('?')[1] : '');
+      currentRouteParams = new URLSearchParams(query);
+      let sub = null;
+      if (path.startsWith('roadmap/')) sub = path.slice(8).replace(/\/+$/, '');
+      else if (hash.includes('roadmap/')) sub = hash.split('roadmap/')[1].split('?')[0].replace(/\/+$/, '');
+      currentView = 'roadmap';
+      currentSlug = sub || currentRouteParams.get('tab') || 'graph';
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+      return;
+    }
+
+    // Challenges route: /challenges, /challenges/<id> or #/challenges
+    if (path === 'challenges' || path.startsWith('challenges/') || hash === 'challenges' || hash === '/challenges' || hash.startsWith('challenges/') || hash.startsWith('/challenges')) {
+      let sub = null;
+      if (path.startsWith('challenges/')) {
+        sub = path.slice(11).replace(/\/+$/, '');
+      } else if (hash.includes('challenges/')) {
+        sub = hash.split('challenges/')[1].split('?')[0].replace(/\/+$/, '');
+      }
+      currentRouteParams = new URLSearchParams(window.location.search);
+      currentView = 'challenges';
+      currentSlug = sub || null;
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+      return;
+    }
+
+    // Exams route: /exams, /exams/<id> or #/exams
+    if (path === 'exams' || path.startsWith('exams/') || hash === 'exams' || hash === '/exams' || hash.startsWith('exams/') || hash.startsWith('/exams')) {
+      let sub = null;
+      if (path.startsWith('exams/')) {
+        sub = path.slice(6).replace(/\/+$/, '');
+      } else if (hash.includes('exams/')) {
+        sub = hash.split('exams/')[1].split('?')[0].replace(/\/+$/, '');
+      }
+      currentRouteParams = new URLSearchParams(window.location.search);
+      currentView = 'exams';
+      currentSlug = sub || null;
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+      return;
+    }
+
+    // Dashboard route: /dashboard or #/dashboard
+    if (path === 'dashboard' || path.startsWith('dashboard/') || hash === 'dashboard' || hash === '/dashboard' || hash.startsWith('dashboard/') || hash.startsWith('/dashboard')) {
+      const query = window.location.search || (hash.includes('?') ? '?' + hash.split('?')[1] : '');
+      currentRouteParams = new URLSearchParams(query);
+      let sub = null;
+      if (path.startsWith('dashboard/')) sub = path.slice(10).replace(/\/+$/, '');
+      else if (hash.includes('dashboard/')) sub = hash.split('dashboard/')[1].split('?')[0].replace(/\/+$/, '');
+      currentView = 'dashboard';
+      currentSlug = sub || currentRouteParams.get('tab') || 'overview';
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+      return;
+    }
+
+    // Sandbox route: /sandbox, /sandbox/<id> or #/sandbox
+    if (path === 'sandbox' || path.startsWith('sandbox/') || hash === 'sandbox' || hash === '/sandbox' || hash.startsWith('sandbox/') || hash.startsWith('/sandbox')) {
+      let sub = null;
+      if (path.startsWith('sandbox/')) {
+        sub = path.slice(8).replace(/\/+$/, '');
+      } else if (hash.includes('sandbox/')) {
+        sub = hash.split('sandbox/')[1].split('?')[0].replace(/\/+$/, '');
+      }
+      currentRouteParams = new URLSearchParams(window.location.search);
+      currentView = 'sandbox';
+      currentSlug = sub || null;
+      activeTab = 'curriculum';
+      syncSidebarTabs();
+      return;
+    }
+
+    if (hash === '/review' || hash === 'review' || hash === '/cards' || hash === 'cards') {
       window.location.hash = '';
       return;
     }
@@ -240,6 +322,89 @@ window.App = (() => {
     }
   }
 
+  function navigateToGlossary(event) {
+    if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)) return;
+    if (event) event.preventDefault();
+    if (window.location.pathname !== '/glossary/' || window.location.hash) {
+      history.pushState(null, '', '/glossary/');
+    }
+    currentView = 'glossary';
+    currentSlug = null;
+    closeSidebar();
+    renderCurrentView();
+    window.scrollTo(0, 0);
+  }
+
+  function navigateToRoadmap(tab, event) {
+    if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)) return;
+    if (event) event.preventDefault();
+    const targetPath = tab && tab !== 'graph' ? `/roadmap/${tab}` : '/roadmap';
+    if (window.location.pathname !== targetPath || window.location.hash) {
+      history.pushState(null, '', targetPath);
+    }
+    currentView = 'roadmap';
+    currentSlug = tab || 'graph';
+    closeSidebar();
+    renderCurrentView();
+    window.scrollTo(0, 0);
+  }
+
+  function navigateToChallenges(challengeId, event) {
+    if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)) return;
+    if (event) event.preventDefault();
+    const targetPath = challengeId ? `/challenges/${challengeId}` : '/challenges';
+    if (window.location.pathname !== targetPath || window.location.hash) {
+      history.pushState(null, '', targetPath);
+    }
+    currentView = 'challenges';
+    currentSlug = challengeId || null;
+    closeSidebar();
+    renderCurrentView();
+    window.scrollTo(0, 0);
+  }
+
+  function navigateToExams(examId, event) {
+    if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)) return;
+    if (event) event.preventDefault();
+    const targetPath = examId ? `/exams/${examId}` : '/exams';
+    if (window.location.pathname !== targetPath || window.location.hash) {
+      history.pushState(null, '', targetPath);
+    }
+    currentView = 'exams';
+    currentSlug = examId || null;
+    closeSidebar();
+    renderCurrentView();
+    window.scrollTo(0, 0);
+  }
+
+  function navigateToDashboard(tab, event) {
+    if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)) return;
+    if (event) event.preventDefault();
+    const targetPath = tab && tab !== 'overview' ? `/dashboard/${tab}` : '/dashboard';
+    if (window.location.pathname !== targetPath || window.location.hash) {
+      history.pushState(null, '', targetPath);
+    }
+    currentView = 'dashboard';
+    currentSlug = tab || 'overview';
+    closeSidebar();
+    renderCurrentView();
+    window.scrollTo(0, 0);
+  }
+
+  function navigateToSandbox(blueprintId, event) {
+    if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)) return;
+    if (event) event.preventDefault();
+    const targetPath = blueprintId ? `/sandbox/${blueprintId}` : '/sandbox';
+    if (window.location.pathname !== targetPath || window.location.hash) {
+      history.pushState(null, '', targetPath);
+    }
+    currentView = 'sandbox';
+    currentSlug = blueprintId || null;
+    closeSidebar();
+    renderCurrentView();
+    window.scrollTo(0, 0);
+  }
+
   function navigateHome() {
     if (window.location.pathname !== '/' || window.location.hash) {
       history.pushState(null, '', '/');
@@ -274,9 +439,37 @@ window.App = (() => {
       landingCleanup();
       landingCleanup = null;
     }
-    // Landing page is full-width (sidebar hidden until opened)
+    if (activeRoadmap) {
+      if (window.RoadmapController?.unmount) window.RoadmapController.unmount();
+      activeRoadmap = false;
+    }
+    if (activeChallenge) {
+      if (window.ChallengesController?.unmount) window.ChallengesController.unmount();
+      activeChallenge = false;
+    }
+    if (activeExam) {
+      if (window.ExamsController?.unmount) window.ExamsController.unmount();
+      activeExam = false;
+    }
+    if (activeDashboard) {
+      if (window.DashboardController?.unmount) window.DashboardController.unmount();
+      activeDashboard = false;
+    }
+    if (activeSandbox) {
+      if (window.SandboxController?.unmount) window.SandboxController.unmount();
+      activeSandbox = false;
+    }
+
+    // Landing page & ecosystem hubs are full-width
+    const isEcosystemView = ['roadmap', 'challenges', 'exams', 'dashboard', 'sandbox'].includes(currentView);
     document.body.classList.toggle('view-landing', currentView === 'home' && !!window.Landing);
     document.body.classList.toggle('view-build', currentView === 'build');
+    document.body.classList.toggle('view-ecosystem', isEcosystemView);
+
+    // Highlight active topbar link
+    document.querySelectorAll('.topbar__link[data-nav]').forEach(link => {
+      link.classList.toggle('active', link.getAttribute('data-nav') === currentView);
+    });
 
     switch (currentView) {
       case 'home':
@@ -291,6 +484,56 @@ window.App = (() => {
         }
         if (window.Analytics) {
           window.Analytics.trackPageView('System Design In Depth - Home', '/', window.location.href);
+        }
+        break;
+
+      case 'roadmap':
+        if (window.RoadmapController) {
+          window.RoadmapController.mount(reader, { tab: currentSlug || 'graph' });
+          activeRoadmap = true;
+        }
+        if (window.Analytics) {
+          window.Analytics.trackPageView('Interactive System Design Roadmap | System Design In Depth', '/roadmap', window.location.href);
+        }
+        break;
+
+      case 'challenges':
+        if (window.ChallengesController) {
+          window.ChallengesController.mount(reader, { challengeId: currentSlug });
+          activeChallenge = true;
+        }
+        if (window.Analytics) {
+          window.Analytics.trackPageView('Production Incident Challenges | System Design In Depth', '/challenges', window.location.href);
+        }
+        break;
+
+      case 'exams':
+        if (window.ExamsController) {
+          window.ExamsController.mount(reader, { examId: currentSlug });
+          activeExam = true;
+        }
+        if (window.Analytics) {
+          window.Analytics.trackPageView('Timed Architecture Mock Exams | System Design In Depth', '/exams', window.location.href);
+        }
+        break;
+
+      case 'dashboard':
+        if (window.DashboardController) {
+          window.DashboardController.mount(reader, { tab: currentSlug || 'overview' });
+          activeDashboard = true;
+        }
+        if (window.Analytics) {
+          window.Analytics.trackPageView('Learner Study Hub & SRS Flashcards | System Design In Depth', '/dashboard', window.location.href);
+        }
+        break;
+
+      case 'sandbox':
+        if (window.SandboxController) {
+          window.SandboxController.mount(reader, { blueprintId: currentSlug || 'url-shortener' });
+          activeSandbox = true;
+        }
+        if (window.Analytics) {
+          window.Analytics.trackPageView('Architecture Whiteboard & Capacity Sandbox | System Design In Depth', '/sandbox', window.location.href);
         }
         break;
 
@@ -570,16 +813,16 @@ window.App = (() => {
         if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
-          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.7/dist/code-lab.css';
+          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.8/dist/code-lab.css';
           link.crossOrigin = 'anonymous';
           link.onerror = function () {
             this.onerror = null;
-            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.7/dist/code-lab.css';
+            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.8/dist/code-lab.css';
           };
           document.head.appendChild(link);
         }
         if (!window.CodeLab) {
-          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.7/dist/code-lab.js');
+          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.8/dist/code-lab.js');
         }
 
         if (neededBuildScripts.length > 0 && window.loadScript) {
@@ -606,6 +849,12 @@ window.App = (() => {
         else if (nav === 'projects') navigateToProject(el.dataset.project);
         else if (nav === 'topic') navigateTo(el.dataset.slug);
         else if (nav === 'module') navigateToModule(el.dataset.module);
+        else if (nav === 'roadmap') navigateToRoadmap(el.dataset.tab);
+        else if (nav === 'challenges') navigateToChallenges(el.dataset.challenge);
+        else if (nav === 'exams') navigateToExams(el.dataset.exam);
+        else if (nav === 'dashboard') navigateToDashboard(el.dataset.tab);
+        else if (nav === 'sandbox') navigateToSandbox(el.dataset.blueprint);
+        else if (nav === 'glossary') navigateToGlossary();
       });
     });
   }
@@ -1323,6 +1572,12 @@ window.App = (() => {
         else if (nav === 'projects') navigateToProject(navEl.dataset.project);
         else if (nav === 'topic') navigateTo(navEl.dataset.slug);
         else if (nav === 'module') navigateToModule(navEl.dataset.module);
+        else if (nav === 'roadmap') navigateToRoadmap(navEl.dataset.tab);
+        else if (nav === 'challenges') navigateToChallenges(navEl.dataset.challenge);
+        else if (nav === 'exams') navigateToExams(navEl.dataset.exam);
+        else if (nav === 'dashboard') navigateToDashboard(navEl.dataset.tab);
+        else if (nav === 'sandbox') navigateToSandbox(navEl.dataset.blueprint);
+        else if (nav === 'glossary') navigateToGlossary();
         return;
       }
 
@@ -1529,6 +1784,12 @@ window.App = (() => {
     navigateToBuild,
     navigateToProject,
     navigateToModule,
+    navigateToRoadmap,
+    navigateToChallenges,
+    navigateToExams,
+    navigateToDashboard,
+    navigateToSandbox,
+    navigateToGlossary,
     navigateHome,
     toggleModule,
     toggleComplete,

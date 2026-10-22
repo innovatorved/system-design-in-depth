@@ -18,7 +18,8 @@ window.Progress = (() => {
       srs: {},
       streak: { current: 0, longest: 0, lastActiveDay: null },
       notes: {},
-      bookmarks: []
+      bookmarks: [],
+      xp: 0
     };
   }
 
@@ -35,6 +36,10 @@ window.Progress = (() => {
     }
 
     const clean = { ...def };
+
+    if (typeof parsed.xp === 'number' && !isNaN(parsed.xp) && parsed.xp >= 0) {
+      clean.xp = Math.round(parsed.xp);
+    }
 
     if (Array.isArray(parsed.completed)) {
       clean.completed = parsed.completed.filter(item => typeof item === 'string' && item.trim().length > 0);
@@ -138,11 +143,35 @@ window.Progress = (() => {
   // ── Completion tracking ──────────────────────────────────
 
   function isCompleted(slug) {
-    return state.completed.includes(slug);
+    if (!slug || typeof slug !== 'string') return false;
+    if (state.completed.includes(slug)) return true;
+    if (state.completed.includes('challenge:' + slug) ||
+        state.completed.includes('exam:' + slug) ||
+        state.completed.includes('build:' + slug)) {
+      return true;
+    }
+    const prefixes = ['challenge:', 'exam:', 'build:'];
+    for (const prefix of prefixes) {
+      if (slug.startsWith(prefix) && state.completed.includes(slug.slice(prefix.length))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function toggleComplete(slug) {
-    const idx = state.completed.indexOf(slug);
+    if (!slug || typeof slug !== 'string') return false;
+    let idx = state.completed.indexOf(slug);
+    if (idx < 0) {
+      const candidates = [
+        'challenge:' + slug, 'exam:' + slug, 'build:' + slug,
+        slug.replace(/^(challenge|exam|build):/, '')
+      ];
+      for (const c of candidates) {
+        idx = state.completed.indexOf(c);
+        if (idx >= 0) break;
+      }
+    }
     if (idx >= 0) {
       state.completed.splice(idx, 1);
     } else {
@@ -155,12 +184,88 @@ window.Progress = (() => {
   }
 
   function markComplete(slug) {
-    if (!state.completed.includes(slug)) {
+    if (!slug || typeof slug !== 'string') return;
+    if (!isCompleted(slug)) {
       state.completed.push(slug);
       updateStreak();
       save();
       updateProgressUI();
     }
+  }
+
+  function getXP() {
+    let xp = typeof state.xp === 'number' && !isNaN(state.xp) ? state.xp : 0;
+
+    for (const item of state.completed) {
+      if (typeof item !== 'string') continue;
+      if (item.startsWith('challenge:')) {
+        const chId = item.slice('challenge:'.length);
+        const list = (typeof window !== 'undefined' && window.CHALLENGES_DATA) || [];
+        const ch = Array.isArray(list) ? list.find(c => c.id === chId) : null;
+        xp += ch?.xp || 200;
+      } else if (item.startsWith('exam:')) {
+        const exId = item.slice('exam:'.length);
+        const list = (typeof window !== 'undefined' && window.EXAMS_DATA) || [];
+        const ex = Array.isArray(list) ? list.find(e => e.id === exId) : null;
+        xp += ex?.xpReward || 400;
+      } else if (item.startsWith('build:')) {
+        xp += 150;
+      } else {
+        xp += 50;
+      }
+    }
+
+    if (state.quiz) {
+      for (const q of Object.values(state.quiz)) {
+        if (q && q.correct) xp += 10;
+      }
+    }
+
+    if (state.srs) {
+      for (const card of Object.values(state.srs)) {
+        if (card && (card.repetition > 0 || card.interval > 0)) {
+          xp += 5;
+        }
+      }
+    }
+
+    const streak = getStreak();
+    if (streak && streak.current > 0) {
+      xp += Math.min(streak.current, 30) * 10;
+    }
+
+    return xp;
+  }
+
+  function addXP(amount, reason) {
+    if (typeof amount === 'number' && !isNaN(amount) && amount > 0) {
+      state.xp = (state.xp || 0) + Math.round(amount);
+      save();
+    }
+    return getXP();
+  }
+
+  function getTimeSpent() {
+    let totalSeconds = 0;
+    if (state.timeOnUnit) {
+      for (const s of Object.values(state.timeOnUnit)) {
+        if (typeof s === 'number' && !isNaN(s) && s > 0) {
+          totalSeconds += s;
+        }
+      }
+    }
+    if (timerSlug && timerStart) {
+      const activeElapsed = Math.round((Date.now() - timerStart) / 1000);
+      if (activeElapsed > 0 && activeElapsed < 7200) {
+        totalSeconds += activeElapsed;
+      }
+    }
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const formatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+
+    return { totalSeconds, formatted };
   }
 
   // ── Navigation ───────────────────────────────────────────
@@ -362,6 +467,7 @@ window.Progress = (() => {
   // ── UI update ────────────────────────────────────────────
 
   function updateProgressUI() {
+    if (typeof document === 'undefined') return;
     const pct = getPercentage();
     const textEl = document.getElementById('progress-text');
     const ringEl = document.getElementById('progress-ring-fill');
@@ -373,12 +479,11 @@ window.Progress = (() => {
     }
   }
 
-  // ── Flush timer on page unload ───────────────────────────
-
   if (typeof window !== 'undefined') {
-    window.addEventListener('beforeunload', stopTimer);
-    // Also flush periodically in case of crashes
-    setInterval(() => {
+    if (typeof window.addEventListener === 'function') {
+      window.addEventListener('beforeunload', stopTimer);
+    }
+    const periodicTimer = setInterval(() => {
       if (timerSlug && timerStart) {
         const elapsed = Math.round((Date.now() - timerStart) / 1000);
         if (elapsed > 0 && elapsed < 7200) {
@@ -388,6 +493,9 @@ window.Progress = (() => {
         }
       }
     }, 60000); // flush every 60 seconds
+    if (periodicTimer && typeof periodicTimer.unref === 'function') {
+      periodicTimer.unref();
+    }
   }
 
   // Initialize
@@ -419,6 +527,10 @@ window.Progress = (() => {
     updateSrs,
     getDueCardIds,
     getStreak,
+    updateStreak,
+    getXP,
+    addXP,
+    getTimeSpent,
     isBookmarked,
     toggleBookmark,
     getBookmarks,
@@ -428,3 +540,8 @@ window.Progress = (() => {
     importData
   };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = window.Progress;
+}
+

@@ -54,6 +54,98 @@ window.Search = (() => {
         });
       }
     }
+
+    // Ecosystem views
+    const ecosystemViews = [
+      { slug: 'graph', title: 'Interactive Visual System Design Roadmap', kind: 'roadmap', moduleTitle: 'Interactive Dependency DAG & Career Paths', tags: ['roadmap', 'dag', 'graph', 'career', 'paths'] },
+      { slug: 'paths', title: 'Career Learning Paths & Tracks', kind: 'roadmap', moduleTitle: '5 Curated Engineering Tracks', tags: ['roadmap', 'career', 'paths', 'tracks', 'faang'] },
+      { slug: '', title: 'Production Incident & Troubleshooting Challenges', kind: 'challenge', moduleTitle: '12 Hands-On Outage Simulators', tags: ['challenges', 'incidents', 'outage', 'troubleshooting', 'sre'] },
+      { slug: '', title: 'Timed Mock Interviews & Architecture Exams', kind: 'exam', moduleTitle: '4 Full-Length Proctored Simulators', tags: ['exams', 'mock', 'interview', 'rubric', 'timed'] },
+      { slug: 'overview', title: 'Learner Dashboard, XP & Streak Hub', kind: 'dashboard', moduleTitle: 'Gamified Progress & Study Hub', tags: ['dashboard', 'xp', 'streak', 'progress'] },
+      { slug: 'srs', title: 'Spaced Repetition (SRS) Flashcard Deck', kind: 'dashboard', moduleTitle: '1,200+ SM-2 Active Recall Flashcards', tags: ['srs', 'flashcards', 'spaced', 'repetition', 'review', 'dashboard'] },
+      { slug: '', title: 'Architecture Whiteboard & Capacity Estimator Sandbox', kind: 'sandbox', moduleTitle: 'Interactive Topology Canvas & Back-of-Envelope Math', tags: ['sandbox', 'whiteboard', 'capacity', 'estimator', 'qps'] }
+    ];
+    for (const v of ecosystemViews) {
+      index.push({
+        slug: v.slug,
+        title: v.title,
+        kind: v.kind,
+        moduleTitle: v.moduleTitle,
+        moduleNumber: 'Hub',
+        partTitle: 'Ecosystem',
+        tags: v.tags,
+        excerpt: v.moduleTitle,
+        searchText: [v.title, v.moduleTitle, ...v.tags].join(' ').toLowerCase()
+      });
+    }
+
+    // Career Paths
+    if (window.ROADMAP_DATA && Array.isArray(window.ROADMAP_DATA.careerPaths)) {
+      for (const p of window.ROADMAP_DATA.careerPaths) {
+        index.push({
+          slug: 'paths',
+          title: `${p.title} (${p.targetRole})`,
+          kind: 'roadmap',
+          moduleTitle: `Career Path · ${p.estimatedWeeks} Weeks`,
+          moduleNumber: 'Path',
+          partTitle: 'Roadmap',
+          tags: ['roadmap', 'career', 'path', p.id],
+          excerpt: p.description || '',
+          searchText: [p.title, p.targetRole, p.description, p.id, 'career path roadmap'].join(' ').toLowerCase()
+        });
+      }
+    }
+
+    // Incident Challenges
+    if (window.CHALLENGES_DATA && Array.isArray(window.CHALLENGES_DATA.challenges)) {
+      for (const c of window.CHALLENGES_DATA.challenges) {
+        index.push({
+          slug: c.id,
+          title: c.title,
+          kind: 'challenge',
+          moduleTitle: `Incident Challenge (${c.difficulty.toUpperCase()} · +${c.xp} XP)`,
+          moduleNumber: 'Incident',
+          partTitle: 'Challenges',
+          tags: ['challenge', 'incident', c.difficulty, c.category, c.id],
+          excerpt: c.summary || '',
+          searchText: [c.title, c.summary, c.category, c.difficulty, c.id, 'incident challenge outage'].join(' ').toLowerCase()
+        });
+      }
+    }
+
+    // Mock Exams
+    if (window.EXAMS_DATA && Array.isArray(window.EXAMS_DATA.exams)) {
+      for (const ex of window.EXAMS_DATA.exams) {
+        index.push({
+          slug: ex.id,
+          title: ex.title,
+          kind: 'exam',
+          moduleTitle: `Timed Exam (${ex.durationMinutes}m · ${ex.targetLevel})`,
+          moduleNumber: 'Exam',
+          partTitle: 'Exams',
+          tags: ['exam', 'mock', 'interview', ex.difficulty, ex.id],
+          excerpt: ex.prompt || '',
+          searchText: [ex.title, ex.targetLevel, ex.prompt, ex.id, 'timed mock exam interview'].join(' ').toLowerCase()
+        });
+      }
+    }
+
+    // Whiteboard Blueprints
+    if (window.WHITEBOARD_DATA && Array.isArray(window.WHITEBOARD_DATA.blueprints)) {
+      for (const bp of window.WHITEBOARD_DATA.blueprints) {
+        index.push({
+          slug: bp.id,
+          title: `Whiteboard Blueprint: ${bp.title}`,
+          kind: 'sandbox',
+          moduleTitle: 'Architecture Sandbox & Capacity Estimator',
+          moduleNumber: 'Blueprint',
+          partTitle: 'Sandbox',
+          tags: ['sandbox', 'whiteboard', 'blueprint', bp.id],
+          excerpt: bp.description || '',
+          searchText: [bp.title, bp.description, bp.id, 'whiteboard sandbox blueprint capacity'].join(' ').toLowerCase()
+        });
+      }
+    }
   }
 
   function search(query) {
@@ -96,6 +188,24 @@ window.Search = (() => {
     return result;
   }
 
+  function navigateResult(kind, slug) {
+    if (kind === 'build-lab' && window.App?.navigateToBuild) {
+      window.App.navigateToBuild(slug);
+    } else if (kind === 'roadmap' && window.App?.navigateToRoadmap) {
+      window.App.navigateToRoadmap(slug || 'graph');
+    } else if (kind === 'challenge' && window.App?.navigateToChallenges) {
+      window.App.navigateToChallenges(slug || null);
+    } else if (kind === 'exam' && window.App?.navigateToExams) {
+      window.App.navigateToExams(slug || null);
+    } else if (kind === 'dashboard' && window.App?.navigateToDashboard) {
+      window.App.navigateToDashboard(slug || 'overview');
+    } else if (kind === 'sandbox' && window.App?.navigateToSandbox) {
+      window.App.navigateToSandbox(slug || null);
+    } else if (window.App?.navigateTo) {
+      window.App.navigateTo(slug);
+    }
+  }
+
   function renderResults(results, query) {
     const container = document.getElementById('search-results');
     if (!container) return;
@@ -108,12 +218,19 @@ window.Search = (() => {
     const kindIcons = {
       lesson: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
       system: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
-      'build-lab': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>'
+      'build-lab': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+      roadmap: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>',
+      challenge: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+      exam: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      dashboard: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>',
+      sandbox: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
     };
+
+    const customMetaKinds = new Set(['build-lab', 'roadmap', 'challenge', 'exam', 'dashboard', 'sandbox']);
 
     container.innerHTML = results.map((r, i) => {
       const icon = kindIcons[r.kind] || kindIcons.lesson;
-      const metaLabel = r.kind === 'build-lab' ? r.moduleTitle : `Module ${r.moduleNumber}: ${r.moduleTitle}`;
+      const metaLabel = customMetaKinds.has(r.kind) ? r.moduleTitle : `Module ${r.moduleNumber}: ${r.moduleTitle}`;
       return `<div class="search-result${i === focusedIdx ? ' focused' : ''}" data-slug="${r.slug}" data-kind="${r.kind}" data-idx="${i}">
         <div class="search-result__icon">${icon}</div>
         <div class="search-result__info">
@@ -144,11 +261,7 @@ window.Search = (() => {
         }
 
         close();
-        if (kind === 'build-lab' && window.App?.navigateToBuild) {
-          window.App.navigateToBuild(slug);
-        } else if (window.App?.navigateTo) {
-          window.App.navigateTo(slug);
-        }
+        navigateResult(kind, slug);
       });
     });
   }
@@ -196,7 +309,7 @@ window.Search = (() => {
         const el = results[focusedIdx];
         const slug = el?.dataset.slug;
         const kind = el?.dataset.kind;
-        if (slug) {
+        if (slug !== undefined) {
           const input = document.getElementById('search-input');
           const query = input ? input.value : '';
           const title = el.querySelector('.search-result__title')?.textContent || slug;
@@ -211,11 +324,7 @@ window.Search = (() => {
           }
 
           close();
-          if (kind === 'build-lab' && window.App?.navigateToBuild) {
-            window.App.navigateToBuild(slug);
-          } else if (window.App?.navigateTo) {
-            window.App.navigateTo(slug);
-          }
+          navigateResult(kind, slug);
         }
       } else {
         const input = document.getElementById('search-input');

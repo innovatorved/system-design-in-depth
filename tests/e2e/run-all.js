@@ -6,7 +6,8 @@ const TEST_FILES = [
   'tier1-feature-coverage.test.js',
   'tier2-boundary-corner.test.js',
   'tier3-cross-feature.test.js',
-  'tier4-real-world.test.js'
+  'tier4-real-world.test.js',
+  'tier5-ecosystem.test.js'
 ];
 
 async function runTestFile(file) {
@@ -77,6 +78,9 @@ async function main() {
   console.log(`Tier 2: Boundary & Corner Cases       : ${results[1].passed} / ${results[1].passed + results[1].failed} passed (${results[1].duration}ms)`);
   console.log(`Tier 3: Cross-Feature Interactions    : ${results[2].passed} / ${results[2].passed + results[2].failed} passed (${results[2].duration}ms)`);
   console.log(`Tier 4: Real-World Scenarios          : ${results[3].passed} / ${results[3].passed + results[3].failed} passed (${results[3].duration}ms)`);
+  if (results[4]) {
+    console.log(`Tier 5: All-in-One Ecosystem Hubs     : ${results[4].passed} / ${results[4].passed + results[4].failed} passed (${results[4].duration}ms)`);
+  }
   console.log('--------------------------------------------------------------------------------');
   console.log(`Total Automated Test Cases Executed   : ${totalTests} tests`);
   console.log(`Passed                                : ${totalPassed}`);
