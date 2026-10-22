@@ -146,11 +146,11 @@ window.Progress = (() => {
     if (!slug || typeof slug !== 'string') return false;
     if (state.completed.includes(slug)) return true;
     if (state.completed.includes('challenge:' + slug) ||
-        state.completed.includes('exam:' + slug) ||
+        state.completed.includes('sandbox:' + slug) ||
         state.completed.includes('build:' + slug)) {
       return true;
     }
-    const prefixes = ['challenge:', 'exam:', 'build:'];
+    const prefixes = ['challenge:', 'sandbox:', 'build:'];
     for (const prefix of prefixes) {
       if (slug.startsWith(prefix) && state.completed.includes(slug.slice(prefix.length))) {
         return true;
@@ -164,8 +164,8 @@ window.Progress = (() => {
     let idx = state.completed.indexOf(slug);
     if (idx < 0) {
       const candidates = [
-        'challenge:' + slug, 'exam:' + slug, 'build:' + slug,
-        slug.replace(/^(challenge|exam|build):/, '')
+        'challenge:' + slug, 'sandbox:' + slug, 'build:' + slug,
+        slug.replace(/^(challenge|sandbox|build):/, '')
       ];
       for (const c of candidates) {
         idx = state.completed.indexOf(c);
@@ -203,11 +203,8 @@ window.Progress = (() => {
         const list = (typeof window !== 'undefined' && window.CHALLENGES_DATA) || [];
         const ch = Array.isArray(list) ? list.find(c => c.id === chId) : null;
         xp += ch?.xp || 200;
-      } else if (item.startsWith('exam:')) {
-        const exId = item.slice('exam:'.length);
-        const list = (typeof window !== 'undefined' && window.EXAMS_DATA) || [];
-        const ex = Array.isArray(list) ? list.find(e => e.id === exId) : null;
-        xp += ex?.xpReward || 400;
+      } else if (item.startsWith('sandbox:')) {
+        xp += 250;
       } else if (item.startsWith('build:')) {
         xp += 150;
       } else {

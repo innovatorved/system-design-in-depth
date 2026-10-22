@@ -6,7 +6,7 @@ window.MODULE_CONTENT = window.MODULE_CONTENT || {};
 
 window.App = (() => {
   // State
-  let currentView = 'home';     // home | topic | build | roadmap | challenges | exams | dashboard | sandbox
+  let currentView = 'home';     // home | topic | build | roadmap | challenges | dashboard | sandbox
   let currentSlug = null;
   let activeTab = 'curriculum';  // curriculum | builds
   let sidebarOpen = false;
@@ -14,7 +14,6 @@ window.App = (() => {
   let activeCodeLab = null;
   let activeRoadmap = null;
   let activeChallenge = null;
-  let activeExam = null;
   let activeDashboard = null;
   let activeSandbox = null;
   let currentBuildParams = new URLSearchParams();
@@ -151,22 +150,6 @@ window.App = (() => {
       }
       currentRouteParams = new URLSearchParams(window.location.search);
       currentView = 'challenges';
-      currentSlug = sub || null;
-      activeTab = 'curriculum';
-      syncSidebarTabs();
-      return;
-    }
-
-    // Exams route: /exams, /exams/<id> or #/exams
-    if (path === 'exams' || path.startsWith('exams/') || hash === 'exams' || hash === '/exams' || hash.startsWith('exams/') || hash.startsWith('/exams')) {
-      let sub = null;
-      if (path.startsWith('exams/')) {
-        sub = path.slice(6).replace(/\/+$/, '');
-      } else if (hash.includes('exams/')) {
-        sub = hash.split('exams/')[1].split('?')[0].replace(/\/+$/, '');
-      }
-      currentRouteParams = new URLSearchParams(window.location.search);
-      currentView = 'exams';
       currentSlug = sub || null;
       activeTab = 'curriculum';
       syncSidebarTabs();
@@ -363,20 +346,6 @@ window.App = (() => {
     window.scrollTo(0, 0);
   }
 
-  function navigateToExams(examId, event) {
-    if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)) return;
-    if (event) event.preventDefault();
-    const targetPath = examId ? `/exams/${examId}` : '/exams';
-    if (window.location.pathname !== targetPath || window.location.hash) {
-      history.pushState(null, '', targetPath);
-    }
-    currentView = 'exams';
-    currentSlug = examId || null;
-    closeSidebar();
-    renderCurrentView();
-    window.scrollTo(0, 0);
-  }
-
   function navigateToDashboard(tab, event) {
     if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)) return;
     if (event) event.preventDefault();
@@ -447,10 +416,6 @@ window.App = (() => {
       if (window.ChallengesController?.unmount) window.ChallengesController.unmount();
       activeChallenge = false;
     }
-    if (activeExam) {
-      if (window.ExamsController?.unmount) window.ExamsController.unmount();
-      activeExam = false;
-    }
     if (activeDashboard) {
       if (window.DashboardController?.unmount) window.DashboardController.unmount();
       activeDashboard = false;
@@ -461,7 +426,7 @@ window.App = (() => {
     }
 
     // Landing page & ecosystem hubs are full-width
-    const isEcosystemView = ['roadmap', 'challenges', 'exams', 'dashboard', 'sandbox'].includes(currentView);
+    const isEcosystemView = ['roadmap', 'challenges', 'dashboard', 'sandbox'].includes(currentView);
     document.body.classList.toggle('view-landing', currentView === 'home' && !!window.Landing);
     document.body.classList.toggle('view-build', currentView === 'build');
     document.body.classList.toggle('view-ecosystem', isEcosystemView);
@@ -504,16 +469,6 @@ window.App = (() => {
         }
         if (window.Analytics) {
           window.Analytics.trackPageView('Production Incident Challenges | System Design In Depth', '/challenges', window.location.href);
-        }
-        break;
-
-      case 'exams':
-        if (window.ExamsController) {
-          window.ExamsController.mount(reader, { examId: currentSlug });
-          activeExam = true;
-        }
-        if (window.Analytics) {
-          window.Analytics.trackPageView('Timed Architecture Mock Exams | System Design In Depth', '/exams', window.location.href);
         }
         break;
 
@@ -813,16 +768,16 @@ window.App = (() => {
         if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
-          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.8/dist/code-lab.css';
+          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.12/dist/code-lab.css';
           link.crossOrigin = 'anonymous';
           link.onerror = function () {
             this.onerror = null;
-            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.8/dist/code-lab.css';
+            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.12/dist/code-lab.css';
           };
           document.head.appendChild(link);
         }
         if (!window.CodeLab) {
-          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.8/dist/code-lab.js');
+          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.12/dist/code-lab.js');
         }
 
         if (neededBuildScripts.length > 0 && window.loadScript) {
@@ -851,7 +806,6 @@ window.App = (() => {
         else if (nav === 'module') navigateToModule(el.dataset.module);
         else if (nav === 'roadmap') navigateToRoadmap(el.dataset.tab);
         else if (nav === 'challenges') navigateToChallenges(el.dataset.challenge);
-        else if (nav === 'exams') navigateToExams(el.dataset.exam);
         else if (nav === 'dashboard') navigateToDashboard(el.dataset.tab);
         else if (nav === 'sandbox') navigateToSandbox(el.dataset.blueprint);
         else if (nav === 'glossary') navigateToGlossary();
@@ -1574,7 +1528,6 @@ window.App = (() => {
         else if (nav === 'module') navigateToModule(navEl.dataset.module);
         else if (nav === 'roadmap') navigateToRoadmap(navEl.dataset.tab);
         else if (nav === 'challenges') navigateToChallenges(navEl.dataset.challenge);
-        else if (nav === 'exams') navigateToExams(navEl.dataset.exam);
         else if (nav === 'dashboard') navigateToDashboard(navEl.dataset.tab);
         else if (nav === 'sandbox') navigateToSandbox(navEl.dataset.blueprint);
         else if (nav === 'glossary') navigateToGlossary();
@@ -1786,7 +1739,6 @@ window.App = (() => {
     navigateToModule,
     navigateToRoadmap,
     navigateToChallenges,
-    navigateToExams,
     navigateToDashboard,
     navigateToSandbox,
     navigateToGlossary,

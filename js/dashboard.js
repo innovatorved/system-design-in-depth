@@ -24,8 +24,13 @@
     _reviewedTodayCount: 0,
     _selectedNoteSlug: 'requirements-clarification',
     _importFeedback: null,
+    _abortController: null,
 
     mount: function(container, options) {
+      if (this._abortController) {
+        this._abortController.abort();
+        this._abortController = null;
+      }
       this._container = container;
       if (!container) return;
       options = options || {};
@@ -38,6 +43,10 @@
     },
 
     unmount: function(container) {
+      if (this._abortController) {
+        this._abortController.abort();
+        this._abortController = null;
+      }
       if (this._container) {
         this._container.innerHTML = '';
         this._container = null;
@@ -162,17 +171,14 @@
         return prog && prog.isCompleted && (prog.isCompleted('challenge:' + c.id) || prog.isCompleted(c.id));
       }).length;
 
-      var exams = Array.isArray(root.EXAMS_DATA) ? root.EXAMS_DATA : [];
-      var passedExams = exams.filter(function(e) {
-        return prog && prog.isCompleted && (prog.isCompleted('exam:' + e.id) || prog.isCompleted(e.id));
-      }).length;
+      var blueprints = Array.isArray(root.WHITEBOARD_BLUEPRINTS) ? root.WHITEBOARD_BLUEPRINTS : [];
 
       var paths = (root.ROADMAP_DATA && root.ROADMAP_DATA.paths) || [];
       var pathsHtml = paths.map(function(p) {
         var steps = p.steps || [];
         var done = 0;
         steps.forEach(function(s) {
-          if (prog && prog.isCompleted && (prog.isCompleted(s.slug || s.id) || prog.isCompleted('challenge:' + s.id) || prog.isCompleted('exam:' + s.id) || prog.isCompleted('build:' + s.slug))) {
+          if (prog && prog.isCompleted && (prog.isCompleted(s.slug || s.id) || prog.isCompleted('challenge:' + s.id) || prog.isCompleted('sandbox:' + s.id) || prog.isCompleted('build:' + s.slug))) {
             done++;
           }
         });
@@ -199,7 +205,7 @@
             '<div class="eco-card dash-kpi-card">' +
               '<span class="kpi-label">Experience Points</span>' +
               '<strong class="kpi-val" id="dash-xp-val">' + xp.toLocaleString() + ' XP</strong>' +
-              '<span class="kpi-sub">Lessons, Labs, Incidents &amp; Exams</span>' +
+              '<span class="kpi-sub">Lessons, Build Labs &amp; Incidents</span>' +
             '</div>' +
             '<div class="eco-card dash-kpi-card">' +
               '<span class="kpi-label">Curriculum Mastery</span>' +
@@ -209,7 +215,7 @@
             '<div class="eco-card dash-kpi-card">' +
               '<span class="kpi-label">Total Study Time</span>' +
               '<strong class="kpi-val" id="dash-time-val">' + escapeHtml(timeSpent.formatted || '0m') + '</strong>' +
-              '<span class="kpi-sub">' + solvedChallenges + '/12 Challenges · ' + passedExams + '/4 Exams</span>' +
+              '<span class="kpi-sub">' + solvedChallenges + '/12 Challenges · ' + blueprints.length + ' Blueprints</span>' +
             '</div>' +
           '</div>' +
 
@@ -235,11 +241,7 @@
                   '<button class="eco-btn eco-btn--sm" data-dash-nav="challenges">Open Challenges →</button>' +
                 '</div>' +
                 '<div class="rec-action-item">' +
-                  '<div><strong>Timed FAANG Staff Mock Exam</strong><p>Test capacity estimation &amp; architectural trade-offs under a 45m clock.</p></div>' +
-                  '<button class="eco-btn eco-btn--sm" data-dash-nav="exams">Take Mock Exam →</button>' +
-                '</div>' +
-                '<div class="rec-action-item">' +
-                  '<div><strong>Interactive Architecture Sandbox</strong><p>Model system topologies and run live capacity bottleneck checks.</p></div>' +
+                  '<div><strong>Interactive Architecture Sandbox</strong><p>Model multi-tab system topologies, sketch flows, and run live capacity checks.</p></div>' +
                   '<button class="eco-btn eco-btn--sm" data-dash-nav="sandbox">Launch Sandbox →</button>' +
                 '</div>' +
               '</div>' +
@@ -413,6 +415,9 @@
       var self = this;
       var container = this._container;
       if (!container) return;
+      if (this._abortController) this._abortController.abort();
+      this._abortController = new AbortController();
+      var sig = { signal: this._abortController.signal };
 
       container.addEventListener('click', function(e) {
         var tabBtn = e.target.closest('[data-dash-tab]');
@@ -427,7 +432,6 @@
           var dest = navBtn.getAttribute('data-dash-nav');
           if (dest === 'roadmap' && root.App.navigateToRoadmap) root.App.navigateToRoadmap();
           else if (dest === 'challenges' && root.App.navigateToChallenges) root.App.navigateToChallenges();
-          else if (dest === 'exams' && root.App.navigateToExams) root.App.navigateToExams();
           else if (dest === 'sandbox' && root.App.navigateToSandbox) root.App.navigateToSandbox();
           return;
         }
@@ -506,7 +510,7 @@
             self.render();
           }
         }
-      });
+      }, sig);
 
       container.addEventListener('change', function(e) {
         if (e.target && e.target.id === 'srs-category-select') {
@@ -521,7 +525,7 @@
           self._selectedNoteSlug = e.target.value;
           self.render();
         }
-      });
+      }, sig);
     }
   };
 

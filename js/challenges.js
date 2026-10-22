@@ -23,8 +23,13 @@
     _selectedRootCauseId: null,
     _knobValues: {},
     _lastVerifyResult: null,
+    _abortController: null,
 
     mount: function(container, options) {
+      if (this._abortController) {
+        this._abortController.abort();
+        this._abortController = null;
+      }
       this._container = container;
       if (!container) return;
       options = options || {};
@@ -42,6 +47,10 @@
     },
 
     unmount: function(container) {
+      if (this._abortController) {
+        this._abortController.abort();
+        this._abortController = null;
+      }
       if (this._container) {
         this._container.innerHTML = '';
         this._container = null;
@@ -413,6 +422,9 @@
       var self = this;
       var container = this._container;
       if (!container) return;
+      if (this._abortController) this._abortController.abort();
+      this._abortController = new AbortController();
+      var sig = { signal: this._abortController.signal };
 
       container.addEventListener('click', function(e) {
         var tierBtn = e.target.closest('[data-challenge-tier]');
@@ -458,7 +470,7 @@
           self.verifyActiveChallenge();
           return;
         }
-      });
+      }, sig);
 
       container.addEventListener('change', function(e) {
         if (e.target && e.target.name === 'incident-root-cause') {
@@ -476,7 +488,7 @@
           var val = knobEl.type === 'range' ? Number(knobEl.value) : knobEl.value;
           self._knobValues[kId] = val;
         }
-      });
+      }, sig);
 
       container.addEventListener('input', function(e) {
         if (e.target && e.target.id === 'challenges-search-input') {
@@ -502,7 +514,7 @@
             badge.textContent = knobRange.value + unit;
           }
         }
-      });
+      }, sig);
     }
   };
 

@@ -6,7 +6,7 @@ const {
   launchBrowser
 } = require('./helpers');
 
-describe('Tier 5: All-in-One Ecosystem Hubs (Roadmap, Challenges, Exams, Dashboard, Sandbox)', () => {
+describe('Tier 5: All-in-One Ecosystem Hubs (Roadmap, Challenges, Dashboard, Sandbox)', () => {
   let server;
   let browser;
 
@@ -79,35 +79,7 @@ describe('Tier 5: All-in-One Ecosystem Hubs (Roadmap, Challenges, Exams, Dashboa
     }
   });
 
-  test('T5.3: Timed Mock Exams directory, Exam Runner, Countdown Timer & Multi-Stage Grading', async () => {
-    const page = await browser.newPage();
-    try {
-      await page.goto(`${server.baseUrl}/exams`, { waitUntil: 'networkidle2' });
-      await page.waitForSelector('.exams-view', { timeout: 10000 });
-
-      const examCards = await page.$$eval('.exam-card', els => els.length);
-      assert.equal(examCards, 4, 'Should render all 4 timed mock exams');
-
-      // Start exam via alias or ID
-      await page.evaluate(() => window.App.navigateToExams('staff-faang-45m-mock'));
-      await page.waitForSelector('.exam-runner', { timeout: 5000 });
-
-      const timerText = await page.$eval('#exam-countdown-display', el => el.textContent);
-      assert.match(timerText, /^\d{2}:\d{2}$/, 'Countdown timer should render in MM:SS format');
-
-      // Fill reference answers & submit for grading
-      await page.click('#exam-autofill-btn');
-      await page.click('#submit-exam-btn');
-      await page.waitForSelector('#exam-grade-report', { timeout: 5000 });
-
-      const reportText = await page.$eval('#exam-grade-report', el => el.textContent);
-      assert.ok(reportText.includes('100%') && reportText.includes('PASSED'), 'Reference answers should score 100% and pass');
-    } finally {
-      await page.close();
-    }
-  });
-
-  test('T5.4: Learner Dashboard Overview, SRS SM-2 Flashcard Review, and Notes Persistence', async () => {
+  test('T5.3: Learner Dashboard Overview, SRS SM-2 Flashcard Review, and Notes Persistence', async () => {
     const page = await browser.newPage();
     try {
       await page.goto(`${server.baseUrl}/dashboard`, { waitUntil: 'networkidle2' });
@@ -142,23 +114,64 @@ describe('Tier 5: All-in-One Ecosystem Hubs (Roadmap, Challenges, Exams, Dashboa
     }
   });
 
-  test('T5.5: Architecture Whiteboard & Capacity Estimator Sandbox', async () => {
+  test('T5.4: Architecture Whiteboard & Capacity Estimator Sandbox (Multi-Tab, Excalidraw Tools, Delete, Single-Click Integrity)', async () => {
     const page = await browser.newPage();
     try {
       await page.goto(`${server.baseUrl}/sandbox`, { waitUntil: 'networkidle2' });
       await page.waitForSelector('.sandbox-view', { timeout: 10000 });
+
+      // 1. Navigate away and back to /sandbox to verify no listener stacking (single click = 1 item)
+      await page.evaluate(() => window.App.navigateToRoadmap());
+      await page.waitForSelector('.roadmap-view', { timeout: 5000 });
+      await page.evaluate(() => window.App.navigateToSandbox());
+      await page.waitForSelector('.sandbox-view', { timeout: 5000 });
 
       // Load Twitter Feed blueprint
       await page.click('[data-load-blueprint="twitter-feed"]');
       const nodeCount = await page.$$eval('.wb-node', els => els.length);
       assert.ok(nodeCount >= 5, 'Twitter blueprint should render multiple topology nodes');
 
-      // Add a new component block to canvas
+      // 2. Single click on palette block adds EXACTLY 1 node (not 2 or 3)
       await page.click('[data-add-block="CDN"]');
       const updatedNodeCount = await page.$$eval('.wb-node', els => els.length);
-      assert.equal(updatedNodeCount, nodeCount + 1, 'Clicking a palette block should add a node to the whiteboard');
+      assert.equal(updatedNodeCount, nodeCount + 1, 'Clicking a palette block once must add exactly 1 node even after SPA re-mount');
 
-      // Verify capacity metrics and bottleneck analysis
+      // 3. Delete selected node via floating dock delete button
+      await page.click('[data-sandbox-action="delete-selected"]');
+      const afterDeleteCount = await page.$$eval('.wb-node', els => els.length);
+      assert.equal(afterDeleteCount, nodeCount, 'Deleting selected node should remove it from the canvas');
+
+      // 4. Undo brings the deleted node back
+      await page.click('[data-sandbox-action="undo"]');
+      const afterUndoCount = await page.$$eval('.wb-node', els => els.length);
+      assert.equal(afterUndoCount, nodeCount + 1, 'Undo should restore the deleted node');
+
+      // 5. Excalidraw tools: Zone Frame and Sticky Note
+      const initialFrames = await page.$$eval('.wb-frame', els => els.length);
+      await page.click('[data-wb-tool="frame"]');
+      const afterFrameCount = await page.$$eval('.wb-frame', els => els.length);
+      assert.equal(afterFrameCount, initialFrames + 1, 'Frame tool should stamp a new VPC/Zone boundary frame');
+
+      const initialNotes = await page.$$eval('.wb-note', els => els.length);
+      await page.click('[data-wb-tool="note"]');
+      const afterNoteCount = await page.$$eval('.wb-note', els => els.length);
+      assert.equal(afterNoteCount, initialNotes + 1, 'Sticky Note tool should stamp a new annotation note');
+
+      // 6. Multi-Board Tabs: create new tab, verify tab count, close tab
+      const initialTabs = await page.$$eval('.wb-tab', els => els.length);
+      await page.click('[data-wb-tab-add]');
+      const afterAddTabs = await page.$$eval('.wb-tab', els => els.length);
+      assert.equal(afterAddTabs, initialTabs + 1, 'Clicking + New Board should open a new board tab');
+
+      const newTabNodes = await page.$$eval('.wb-node', els => els.length);
+      assert.equal(newTabNodes, 3, 'New blank board tab should start with 3 starter nodes');
+
+      // Close the active tab
+      await page.click('.wb-tab.active [data-wb-tab-close]');
+      const afterCloseTabs = await page.$$eval('.wb-tab', els => els.length);
+      assert.equal(afterCloseTabs, initialTabs, 'Closing a board tab should remove it and switch back');
+
+      // 7. Verify capacity metrics and bottleneck analysis
       const qpsText = await page.$eval('#sb-out-rw-qps', el => el.textContent);
       assert.ok(qpsText.includes('/'), 'Read / Write QPS should be calculated and formatted');
     } finally {

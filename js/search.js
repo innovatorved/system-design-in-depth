@@ -60,10 +60,9 @@ window.Search = (() => {
       { slug: 'graph', title: 'Interactive Visual System Design Roadmap', kind: 'roadmap', moduleTitle: 'Interactive Dependency DAG & Career Paths', tags: ['roadmap', 'dag', 'graph', 'career', 'paths'] },
       { slug: 'paths', title: 'Career Learning Paths & Tracks', kind: 'roadmap', moduleTitle: '5 Curated Engineering Tracks', tags: ['roadmap', 'career', 'paths', 'tracks', 'faang'] },
       { slug: '', title: 'Production Incident & Troubleshooting Challenges', kind: 'challenge', moduleTitle: '12 Hands-On Outage Simulators', tags: ['challenges', 'incidents', 'outage', 'troubleshooting', 'sre'] },
-      { slug: '', title: 'Timed Mock Interviews & Architecture Exams', kind: 'exam', moduleTitle: '4 Full-Length Proctored Simulators', tags: ['exams', 'mock', 'interview', 'rubric', 'timed'] },
       { slug: 'overview', title: 'Learner Dashboard, XP & Streak Hub', kind: 'dashboard', moduleTitle: 'Gamified Progress & Study Hub', tags: ['dashboard', 'xp', 'streak', 'progress'] },
       { slug: 'srs', title: 'Spaced Repetition (SRS) Flashcard Deck', kind: 'dashboard', moduleTitle: '1,200+ SM-2 Active Recall Flashcards', tags: ['srs', 'flashcards', 'spaced', 'repetition', 'review', 'dashboard'] },
-      { slug: '', title: 'Architecture Whiteboard & Capacity Estimator Sandbox', kind: 'sandbox', moduleTitle: 'Interactive Topology Canvas & Back-of-Envelope Math', tags: ['sandbox', 'whiteboard', 'capacity', 'estimator', 'qps'] }
+      { slug: '', title: 'Architecture Whiteboard & Capacity Estimator Sandbox', kind: 'sandbox', moduleTitle: 'Interactive Topology Canvas & Back-of-Envelope Math', tags: ['sandbox', 'whiteboard', 'capacity', 'estimator', 'qps', 'excalidraw'] }
     ];
     for (const v of ecosystemViews) {
       index.push({
@@ -109,23 +108,6 @@ window.Search = (() => {
           tags: ['challenge', 'incident', c.difficulty, c.category, c.id],
           excerpt: c.summary || '',
           searchText: [c.title, c.summary, c.category, c.difficulty, c.id, 'incident challenge outage'].join(' ').toLowerCase()
-        });
-      }
-    }
-
-    // Mock Exams
-    if (window.EXAMS_DATA && Array.isArray(window.EXAMS_DATA.exams)) {
-      for (const ex of window.EXAMS_DATA.exams) {
-        index.push({
-          slug: ex.id,
-          title: ex.title,
-          kind: 'exam',
-          moduleTitle: `Timed Exam (${ex.durationMinutes}m · ${ex.targetLevel})`,
-          moduleNumber: 'Exam',
-          partTitle: 'Exams',
-          tags: ['exam', 'mock', 'interview', ex.difficulty, ex.id],
-          excerpt: ex.prompt || '',
-          searchText: [ex.title, ex.targetLevel, ex.prompt, ex.id, 'timed mock exam interview'].join(' ').toLowerCase()
         });
       }
     }
@@ -195,8 +177,6 @@ window.Search = (() => {
       window.App.navigateToRoadmap(slug || 'graph');
     } else if (kind === 'challenge' && window.App?.navigateToChallenges) {
       window.App.navigateToChallenges(slug || null);
-    } else if (kind === 'exam' && window.App?.navigateToExams) {
-      window.App.navigateToExams(slug || null);
     } else if (kind === 'dashboard' && window.App?.navigateToDashboard) {
       window.App.navigateToDashboard(slug || 'overview');
     } else if (kind === 'sandbox' && window.App?.navigateToSandbox) {

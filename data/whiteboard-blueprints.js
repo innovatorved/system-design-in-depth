@@ -203,15 +203,23 @@
         replicationFactor: 3
       },
       nodes: [
-        { id: 'n-client', type: 'Client', name: 'Web / Mobile Clients', x: 60, y: 160 },
-        { id: 'n-cdn', type: 'CDN', name: 'Global CDN Edge', x: 240, y: 160 },
-        { id: 'n-gateway', type: 'APIGateway', name: 'API Gateway & Rate Limiter', x: 420, y: 160 },
-        { id: 'n-redirect-svc', type: 'Microservice', name: 'Redirect Service (Stateless)', x: 620, y: 100 },
-        { id: 'n-create-svc', type: 'Microservice', name: 'Link Creation Service', x: 620, y: 240 },
-        { id: 'n-redis', type: 'RedisCache', name: 'Redis Cache (Popular URLs)', x: 840, y: 80 },
-        { id: 'n-sql', type: 'SQLShard', name: 'URL Mappings DB (PostgreSQL)', x: 840, y: 220 },
-        { id: 'n-kafka', type: 'KafkaQueue', name: 'Click Events Stream', x: 840, y: 360 },
-        { id: 'n-analytics-worker', type: 'WorkerPool', name: 'Analytics Aggregation Workers', x: 1060, y: 360 }
+        { id: 'n-client', type: 'Client', name: 'Web / Mobile Clients', x: 60, y: 170, replicas: 1 },
+        { id: 'n-cdn', type: 'CDN', name: 'Global CDN Edge', x: 250, y: 170, replicas: 1 },
+        { id: 'n-gateway', type: 'APIGateway', name: 'API Gateway & Rate Limiter', x: 440, y: 170, replicas: 4 },
+        { id: 'n-redirect-svc', type: 'Microservice', name: 'Redirect Service (Stateless)', x: 650, y: 100, replicas: 12 },
+        { id: 'n-create-svc', type: 'Microservice', name: 'Link Creation Service', x: 650, y: 250, replicas: 4 },
+        { id: 'n-redis', type: 'RedisCache', name: 'Redis Cache (Popular URLs)', x: 880, y: 80, replicas: 6 },
+        { id: 'n-sql', type: 'SQLShard', name: 'URL Mappings DB (PostgreSQL)', x: 880, y: 220, replicas: 16 },
+        { id: 'n-kafka', type: 'KafkaQueue', name: 'Click Events Stream', x: 880, y: 360, replicas: 6 },
+        { id: 'n-analytics-worker', type: 'WorkerPool', name: 'Analytics Aggregation Workers', x: 1080, y: 360, replicas: 8 }
+      ],
+      frames: [
+        { id: 'f-edge', label: 'Edge & Ingress Tier', x: 40, y: 120, width: 575, height: 150 },
+        { id: 'f-compute', label: 'Stateless Compute (K8s)', x: 630, y: 55, width: 195, height: 285 },
+        { id: 'f-data', label: 'State, Cache & Async Pipeline', x: 855, y: 40, width: 395, height: 405 }
+      ],
+      notes: [
+        { id: 'note-1', text: 'SLO: 301/302 Redirect p99 < 15ms\n90% served via Redis + CDN Edge', x: 60, y: 310 }
       ],
       connections: [
         { from: 'n-client', to: 'n-cdn', label: 'HTTP GET /:shortCode' },
@@ -243,16 +251,22 @@
         replicationFactor: 3
       },
       nodes: [
-        { id: 'n-client', type: 'Client', name: 'Mobile / Web Clients', x: 50, y: 180 },
-        { id: 'n-l4lb', type: 'L4LB', name: 'L4 Anycast Load Balancer', x: 220, y: 180 },
-        { id: 'n-gateway', type: 'APIGateway', name: 'API Gateway (Auth & Routing)', x: 390, y: 180 },
-        { id: 'n-timeline-svc', type: 'Microservice', name: 'Timeline Read Service', x: 580, y: 100 },
-        { id: 'n-tweet-svc', type: 'Microservice', name: 'Tweet Post Service', x: 580, y: 260 },
-        { id: 'n-timeline-redis', type: 'RedisCache', name: 'Redis Timeline Inboxes (ZSET)', x: 790, y: 70 },
-        { id: 'n-tweet-db', type: 'NoSQLKV', name: 'Tweet Storage (ScyllaDB)', x: 790, y: 200 },
-        { id: 'n-kafka', type: 'KafkaQueue', name: 'Tweet Fanout Kafka Topic', x: 790, y: 340 },
-        { id: 'n-fanout-workers', type: 'WorkerPool', name: 'Fanout Worker Pool', x: 1000, y: 270 },
-        { id: 'n-media-store', type: 'ObjectStorage', name: 'Media Blob Store (S3)', x: 1000, y: 400 }
+        { id: 'n-client', type: 'Client', name: 'Mobile / Web Clients', x: 50, y: 180, replicas: 1 },
+        { id: 'n-l4lb', type: 'L4LB', name: 'L4 Anycast Load Balancer', x: 220, y: 180, replicas: 2 },
+        { id: 'n-gateway', type: 'APIGateway', name: 'API Gateway (Auth & Routing)', x: 390, y: 180, replicas: 8 },
+        { id: 'n-timeline-svc', type: 'Microservice', name: 'Timeline Read Service', x: 580, y: 100, replicas: 24 },
+        { id: 'n-tweet-svc', type: 'Microservice', name: 'Tweet Post Service', x: 580, y: 260, replicas: 8 },
+        { id: 'n-timeline-redis', type: 'RedisCache', name: 'Redis Timeline Inboxes (ZSET)', x: 790, y: 70, replicas: 16 },
+        { id: 'n-tweet-db', type: 'NoSQLKV', name: 'Tweet Storage (ScyllaDB)', x: 790, y: 200, replicas: 12 },
+        { id: 'n-kafka', type: 'KafkaQueue', name: 'Tweet Fanout Kafka Topic', x: 790, y: 340, replicas: 12 },
+        { id: 'n-fanout-workers', type: 'WorkerPool', name: 'Fanout Worker Pool', x: 1000, y: 270, replicas: 16 },
+        { id: 'n-media-store', type: 'ObjectStorage', name: 'Media Blob Store (S3)', x: 1000, y: 390, replicas: 1 }
+      ],
+      frames: [
+        { id: 'f-fanout', label: 'Hybrid Fanout & Timeline Storage Tier', x: 765, y: 35, width: 410, height: 430 }
+      ],
+      notes: [
+        { id: 'note-tw', text: 'Hybrid Fanout Policy:\n• Normal users: Push via Kafka\n• >50k followers: Pull on Read', x: 50, y: 320 }
       ],
       connections: [
         { from: 'n-client', to: 'n-l4lb', label: 'HTTPS / WSS' },
@@ -285,14 +299,20 @@
         replicationFactor: 3
       },
       nodes: [
-        { id: 'n-client', type: 'Client', name: 'WhatsApp Mobile Clients', x: 60, y: 180 },
-        { id: 'n-l4lb', type: 'L4LB', name: 'L4 Load Balancers (HAProxy / IPVS)', x: 230, y: 180 },
-        { id: 'n-chat-gateway', type: 'Microservice', name: 'Chat Gateway (WebSocket / Erlang)', x: 420, y: 180 },
-        { id: 'n-session-redis', type: 'RedisCache', name: 'Session & Connection Registry', x: 640, y: 80 },
-        { id: 'n-kafka', type: 'KafkaQueue', name: 'Message Dispatch Queue', x: 640, y: 220 },
-        { id: 'n-msg-store', type: 'NoSQLKV', name: 'Undelivered Messages (Cassandra)', x: 640, y: 350 },
-        { id: 'n-media-storage', type: 'ObjectStorage', name: 'Encrypted Media (S3 / CDN)', x: 860, y: 180 },
-        { id: 'n-push-workers', type: 'WorkerPool', name: 'APNs / FCM Push Workers', x: 860, y: 300 }
+        { id: 'n-client', type: 'Client', name: 'WhatsApp Mobile Clients', x: 60, y: 180, replicas: 1 },
+        { id: 'n-l4lb', type: 'L4LB', name: 'L4 Load Balancers (HAProxy / IPVS)', x: 230, y: 180, replicas: 4 },
+        { id: 'n-chat-gateway', type: 'Microservice', name: 'Chat Gateway (WebSocket / Erlang)', x: 420, y: 180, replicas: 32 },
+        { id: 'n-session-redis', type: 'RedisCache', name: 'Session & Connection Registry', x: 640, y: 80, replicas: 8 },
+        { id: 'n-kafka', type: 'KafkaQueue', name: 'Message Dispatch Queue', x: 640, y: 220, replicas: 12 },
+        { id: 'n-msg-store', type: 'NoSQLKV', name: 'Undelivered Messages (Cassandra)', x: 640, y: 350, replicas: 12 },
+        { id: 'n-media-storage', type: 'ObjectStorage', name: 'Encrypted Media (S3 / CDN)', x: 860, y: 180, replicas: 1 },
+        { id: 'n-push-workers', type: 'WorkerPool', name: 'APNs / FCM Push Workers', x: 860, y: 300, replicas: 8 }
+      ],
+      frames: [
+        { id: 'f-ws', label: 'Stateful WSS Connection & Routing Plane', x: 400, y: 40, width: 410, height: 390 }
+      ],
+      notes: [
+        { id: 'note-wa', text: 'Ephemeral Delivery Model:\nMessages deleted from Cassandra upon ACK', x: 60, y: 310 }
       ],
       connections: [
         { from: 'n-client', to: 'n-l4lb', label: 'Long-Lived TLS WSS' },
@@ -322,14 +342,20 @@
         replicationFactor: 3
       },
       nodes: [
-        { id: 'n-client', type: 'Client', name: 'Merchant API Callers', x: 50, y: 180 },
-        { id: 'n-gateway', type: 'APIGateway', name: 'API Gateway (Idempotency Validator)', x: 230, y: 180 },
-        { id: 'n-payment-svc', type: 'Microservice', name: 'Payment Orchestrator Service', x: 420, y: 180 },
-        { id: 'n-lock-redis', type: 'RedisCache', name: 'Redis Redlock (Concurrency Guard)', x: 620, y: 70 },
-        { id: 'n-ledger-sql', type: 'SQLShard', name: 'Double-Entry Ledger DB (PostgreSQL)', x: 620, y: 220 },
-        { id: 'n-audit-kafka', type: 'KafkaQueue', name: 'Outbox CDC / Kafka Event Bus', x: 620, y: 360 },
-        { id: 'n-bank-workers', type: 'WorkerPool', name: 'Bank Settlement & Webhook Workers', x: 850, y: 220 },
-        { id: 'n-cold-archive', type: 'ObjectStorage', name: 'Audit Compliance Archive (Glacier)', x: 850, y: 360 }
+        { id: 'n-client', type: 'Client', name: 'Merchant API Callers', x: 50, y: 180, replicas: 1 },
+        { id: 'n-gateway', type: 'APIGateway', name: 'API Gateway (Idempotency Validator)', x: 230, y: 180, replicas: 4 },
+        { id: 'n-payment-svc', type: 'Microservice', name: 'Payment Orchestrator Service', x: 420, y: 180, replicas: 8 },
+        { id: 'n-lock-redis', type: 'RedisCache', name: 'Redis Redlock (Concurrency Guard)', x: 620, y: 70, replicas: 5 },
+        { id: 'n-ledger-sql', type: 'SQLShard', name: 'Double-Entry Ledger DB (PostgreSQL)', x: 620, y: 220, replicas: 8 },
+        { id: 'n-audit-kafka', type: 'KafkaQueue', name: 'Outbox CDC / Kafka Event Bus', x: 620, y: 360, replicas: 6 },
+        { id: 'n-bank-workers', type: 'WorkerPool', name: 'Bank Settlement & Webhook Workers', x: 850, y: 220, replicas: 8 },
+        { id: 'n-cold-archive', type: 'ObjectStorage', name: 'Audit Compliance Archive (Glacier)', x: 850, y: 360, replicas: 1 }
+      ],
+      frames: [
+        { id: 'f-acid', label: 'PCI-DSS Isolated Transactional Core', x: 400, y: 40, width: 400, height: 400 }
+      ],
+      notes: [
+        { id: 'note-stripe', text: 'Zero-Data-Loss Invariant:\nIdempotency-Key + Transactional Outbox CDC', x: 50, y: 310 }
       ],
       connections: [
         { from: 'n-client', to: 'n-gateway', label: 'POST /v1/charges (Idempotency-Key)' },

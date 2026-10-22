@@ -28,8 +28,13 @@
     _isPanning: false,
     _panStartX: 0,
     _panStartY: 0,
+    _abortController: null,
 
     mount: function(container, options) {
+      if (this._abortController) {
+        this._abortController.abort();
+        this._abortController = null;
+      }
       this._container = container;
       if (!container) return;
       options = options || {};
@@ -41,6 +46,10 @@
     },
 
     unmount: function(container) {
+      if (this._abortController) {
+        this._abortController.abort();
+        this._abortController = null;
+      }
       if (this._container) {
         this._container.innerHTML = '';
         this._container = null;
@@ -54,8 +63,8 @@
       if (node.type === 'challenge' && node.challengeId) {
         if (prog.isCompleted('challenge:' + node.challengeId) || prog.isCompleted(node.challengeId)) return 'done';
       }
-      if (node.type === 'exam' && node.examId) {
-        if (prog.isCompleted('exam:' + node.examId) || prog.isCompleted(node.examId)) return 'done';
+      if (node.type === 'sandbox' && node.blueprintId) {
+        if (prog.isCompleted('sandbox:' + node.blueprintId) || prog.isCompleted(node.blueprintId)) return 'done';
       }
       if (node.type === 'build' && node.slug) {
         if (prog.isCompleted('build:' + node.slug) || prog.isCompleted(node.slug)) return 'done';
@@ -405,8 +414,8 @@
         root.App.navigateToChallenges(node.challengeId);
         return;
       }
-      if (node.type === 'exam' && node.examId && root.App && root.App.navigateToExams) {
-        root.App.navigateToExams(node.examId);
+      if (node.type === 'sandbox' && node.blueprintId && root.App && root.App.navigateToSandbox) {
+        root.App.navigateToSandbox(node.blueprintId);
         return;
       }
       if (node.type === 'build' && node.slug && root.App && root.App.navigateToBuild) {
@@ -422,8 +431,8 @@
       if (!target) return;
       if (type === 'challenge' && root.App && root.App.navigateToChallenges) {
         root.App.navigateToChallenges(target);
-      } else if (type === 'exam' && root.App && root.App.navigateToExams) {
-        root.App.navigateToExams(target);
+      } else if (type === 'sandbox' && root.App && root.App.navigateToSandbox) {
+        root.App.navigateToSandbox(target);
       } else if (type === 'build' && root.App && root.App.navigateToBuild) {
         root.App.navigateToBuild(target);
       } else if (root.App && root.App.navigateTo) {
@@ -443,6 +452,9 @@
       var self = this;
       var container = this._container;
       if (!container) return;
+      if (this._abortController) this._abortController.abort();
+      this._abortController = new AbortController();
+      var sig = { signal: this._abortController.signal };
 
       container.addEventListener('click', function(e) {
         var tabBtn = e.target.closest('[data-roadmap-tab]');
@@ -530,7 +542,7 @@
           root.App.navigateToModule(openModBtn.getAttribute('data-open-module'));
           return;
         }
-      });
+      }, sig);
 
       container.addEventListener('change', function(e) {
         var checkInput = e.target.closest('[data-toggle-node-slug]');
@@ -539,7 +551,7 @@
           root.Progress.toggleComplete(slug);
           self.render();
         }
-      });
+      }, sig);
 
       container.addEventListener('input', function(e) {
         if (e.target && e.target.id === 'roadmap-module-search') {
@@ -554,7 +566,7 @@
             }
           }
         }
-      });
+      }, sig);
 
       // Pointer drag panning on SVG viewport
       container.addEventListener('mousedown', function(e) {
@@ -563,18 +575,18 @@
         self._isPanning = true;
         self._panStartX = e.clientX - self._panX;
         self._panStartY = e.clientY - self._panY;
-      });
+      }, sig);
 
       container.addEventListener('mousemove', function(e) {
         if (!self._isPanning) return;
         self._panX = e.clientX - self._panStartX;
         self._panY = e.clientY - self._panStartY;
         self._updatePanZoomDOM();
-      });
+      }, sig);
 
       container.addEventListener('mouseup', function() {
         self._isPanning = false;
-      });
+      }, sig);
     }
   };
 

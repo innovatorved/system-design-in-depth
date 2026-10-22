@@ -66,6 +66,17 @@ if (fs.existsSync(implFile)) {
 }
 const allBuildIds = new Set(Object.keys(global.window.IMPLEMENTATIONS_DATA || {}));
 
+// Load challenges.js for incident challenge sitemap validation
+const challengesFile = path.join(dataDir, 'challenges.js');
+if (fs.existsSync(challengesFile)) {
+  try {
+    eval(fs.readFileSync(challengesFile, 'utf8'));
+  } catch (e) {
+    reportError(`Failed to load challenges.js: ${e.message}`);
+  }
+}
+const allChallengeIds = new Set((global.window.CHALLENGES_DATA || []).map(c => c.id).filter(Boolean));
+
 // 1. Validate curriculum structure
 const allSlugs = new Set();
 const allModuleIds = new Set();
@@ -549,6 +560,21 @@ if (fs.existsSync(buildBaseDir)) {
 if (fs.existsSync(sitemapFile)) {
   const sitemapContent = fs.readFileSync(sitemapFile, 'utf8');
   let missingSitemapUrls = 0;
+  const hubPaths = ['/roadmap/', '/challenges/', '/sandbox/', '/dashboard/', '/projects/'];
+  for (const hub of hubPaths) {
+    const expectedLoc = `<loc>https://system-design-in-depth.vedgupta.in${hub}</loc>`;
+    if (!sitemapContent.includes(expectedLoc)) {
+      missingSitemapUrls++;
+      reportError(`Sitemap missing hub URL: ${hub}`);
+    }
+  }
+  for (const challengeId of allChallengeIds) {
+    const expectedLoc = `<loc>https://system-design-in-depth.vedgupta.in/challenges/${challengeId}/</loc>`;
+    if (!sitemapContent.includes(expectedLoc)) {
+      missingSitemapUrls++;
+      reportError(`Sitemap missing challenge URL: ${challengeId}`);
+    }
+  }
   for (const slug of allSlugs) {
     const expectedLoc = `<loc>https://system-design-in-depth.vedgupta.in/topic/${slug}/</loc>`;
     if (!sitemapContent.includes(expectedLoc)) {
@@ -564,7 +590,7 @@ if (fs.existsSync(sitemapFile)) {
     }
   }
   if (missingSitemapUrls === 0) {
-    reportSuccess(`Sitemap: contains all ${allSlugs.size} topic URLs and ${allBuildIds.size} build URLs with trailing slashes`);
+    reportSuccess(`Sitemap: contains all ${allSlugs.size} topic URLs, ${allBuildIds.size} build URLs, ${allChallengeIds.size} challenge URLs, and ${hubPaths.length} hub URLs with trailing slashes`);
   }
 } else {
   reportError('sitemap.xml not found');

@@ -55,7 +55,7 @@ function startStaticServer(serveRoot) {
         filePath += '.html';
       }
       if (!fs.existsSync(filePath)) {
-        const spaPrefixes = ['/roadmap', '/challenges', '/exams', '/dashboard', '/sandbox'];
+        const spaPrefixes = ['/roadmap', '/challenges', '/dashboard', '/sandbox'];
         if (spaPrefixes.some(p => reqPath === p || reqPath.startsWith(p + '/'))) {
           filePath = path.join(serveRoot, 'index.html');
         }

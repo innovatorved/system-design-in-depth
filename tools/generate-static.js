@@ -144,6 +144,9 @@ if (fs.existsSync(path.join(root, 'data/implementations_code.js'))) {
 if (fs.existsSync(path.join(root, 'data/guided_labs.js'))) {
   vm.runInNewContext(fs.readFileSync(path.join(root, 'data/guided_labs.js'), 'utf8'), context);
 }
+if (fs.existsSync(path.join(root, 'data/challenges.js'))) {
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'data/challenges.js'), 'utf8'), context);
+}
 
 for (const dir of ['data/content', 'data/archive', 'data/questions']) {
   const abs = path.join(root, dir);
@@ -265,8 +268,24 @@ const defaultLastmod = '2026-09-18';
 
 const sitemapUrls = [
   { loc: `${baseUrl}/`, priority: '1.0', changefreq: 'weekly', lastmod: defaultLastmod },
+  { loc: `${baseUrl}/roadmap/`, priority: '0.8', changefreq: 'weekly', lastmod: defaultLastmod },
+  { loc: `${baseUrl}/challenges/`, priority: '0.8', changefreq: 'weekly', lastmod: defaultLastmod },
+  { loc: `${baseUrl}/sandbox/`, priority: '0.8', changefreq: 'weekly', lastmod: defaultLastmod },
+  { loc: `${baseUrl}/dashboard/`, priority: '0.7', changefreq: 'weekly', lastmod: defaultLastmod },
   { loc: `${baseUrl}/projects/`, priority: '0.8', changefreq: 'weekly', lastmod: defaultLastmod }
 ];
+
+const challengesData = context.window.CHALLENGES_DATA || [];
+for (const challenge of challengesData) {
+  if (challenge && challenge.id) {
+    sitemapUrls.push({
+      loc: `${baseUrl}/challenges/${challenge.id}/`,
+      priority: '0.7',
+      changefreq: 'weekly',
+      lastmod: defaultLastmod
+    });
+  }
+}
 
 let generatedCount = 0;
 const units = [];

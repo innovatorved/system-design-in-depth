@@ -492,18 +492,18 @@
       },
       {
         id: 'sre-exam',
-        label: 'Exam: Production SRE Readiness',
-        slug: 'production-sre-ha-exam',
+        label: 'Incident: Global Reconnection Herd',
+        slug: 'thundering-herd-reconnection',
         stage: 5,
         trackId: 'track-5',
         moduleId: 'learning-reliability-ops',
-        type: 'exam',
-        examId: 'production-sre-ha-exam',
+        type: 'challenge',
+        challengeId: 'thundering-herd-reconnection',
         difficulty: 'Advanced',
         x: 1080,
         y: 920,
         prerequisites: ['disaster-recovery', 'retry-storm-challenge'],
-        description: '45-minute timed SRE simulator: burn rate triage, circuit breaker tuning, and multi-region failover.'
+        description: 'Production SRE capstone incident: mitigate a multi-region failover reconnection herd and stabilize load balancers.'
       },
 
       // Stage 6: Architecture Labs & Capstones
@@ -565,18 +565,18 @@
       },
       {
         id: 'staff-faang-mock-exam',
-        label: 'Exam: 45-Min FAANG Staff Mock',
-        slug: 'staff-faang-45m-mock',
+        label: 'Sandbox: Staff Architecture Studio',
+        slug: 'payment-system',
         stage: 6,
         trackId: 'track-6',
         moduleId: 'design-services',
-        type: 'exam',
-        examId: 'staff-faang-45m-mock',
+        type: 'sandbox',
+        blueprintId: 'payment-system',
         difficulty: 'Expert',
         x: 920,
         y: 1120,
         prerequisites: ['social-feed-design', 'stripe-payment-design'],
-        description: 'Simulated Staff-level interview: requirements, capacity calculations, trade-off matrix, and failure mitigation.'
+        description: 'Interactive Staff-level architecture whiteboard: model end-to-end topology, capacity QPS, and failure boundaries.'
       }
     ],
 
@@ -662,7 +662,7 @@
           { type: 'simulator', id: 'consistent-hashing', title: 'Consistent Hashing Ring Simulator' },
           { type: 'challenge', id: 'wal-torn-write-corruption', title: 'Incident: WAL Torn-Write Recovery' },
           { type: 'challenge', id: 'hot-partition-herd', title: 'Incident: Hot Partition Celebrity Herd' },
-          { type: 'exam', id: 'distributed-storage-consensus-exam', title: 'Distributed Storage Mastery Exam' }
+          { type: 'sandbox', id: 'payment-system', title: 'Sandbox: Transactional Ledger Topology' }
         ]
       },
       {
@@ -685,7 +685,7 @@
           { type: 'build', slug: 'gossip-protocol', title: 'SWIM Gossip Cluster Membership' },
           { type: 'challenge', id: 'split-brain-quorum-loss', title: 'Incident: Split-Brain Quorum Loss' },
           { type: 'challenge', id: 'two-phase-commit-coordinator-hang', title: 'Incident: 2PC Coordinator Crash Hang' },
-          { type: 'exam', id: 'distributed-storage-consensus-exam', title: 'Distributed Storage & Consensus Mastery Exam' }
+          { type: 'sandbox', id: 'kafka-event-pipeline', title: 'Sandbox: Distributed Consensus & Log Pipeline' }
         ]
       },
       {
@@ -708,7 +708,7 @@
           { type: 'challenge', id: 'cache-stampede-meltdown', title: 'Incident: Cache Stampede Meltdown' },
           { type: 'topic', slug: 'zero-downtime-database-migration-case-study', title: 'Zero-Downtime Schema Migrations' },
           { type: 'topic', slug: 'disaster-recovery', title: 'Disaster Recovery & Multi-Region HA' },
-          { type: 'exam', id: 'production-sre-ha-exam', title: 'Production SRE Readiness Exam' }
+          { type: 'sandbox', id: 'uber-dispatch', title: 'Sandbox: Multi-Region Geo Dispatch Architecture' }
         ]
       },
       {
@@ -730,7 +730,7 @@
           { type: 'topic', slug: 'payment-system-design', title: 'Payment Ledger & Idempotency' },
           { type: 'challenge', id: 'replication-lag-read-drift', title: 'Incident: Read-Your-Writes Invariant Drift' },
           { type: 'challenge', id: 'cascading-deadlock-depletion', title: 'Incident: Thread Pool Starvation Meltdown' },
-          { type: 'exam', id: 'staff-faang-45m-mock', title: '45-Minute Staff Mock Interview Simulator' }
+          { type: 'sandbox', id: 'twitter-feed', title: 'Sandbox: Staff Architecture Whiteboard Studio' }
         ]
       },
       {
