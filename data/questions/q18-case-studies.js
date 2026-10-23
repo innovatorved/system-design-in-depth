@@ -63,6 +63,59 @@ window.QUESTION_BANK["case-instagram-early-architecture"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "case-instagram-early-architecture-n1",
+    "topic": "case-instagram-early-architecture",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Instagram PG Shard-Embedded 64-Bit ID Bit Allocation",
+    "scenario": "Instagram's famous PL/pgSQL ID generator packed a 64-bit integer with `41 bits` for millisecond timestamp (since custom epoch), `13 bits` for logical PostgreSQL shard ID, and `10 bits` for the per-shard auto-increment sequence modulus.",
+    "prompt": "How many distinct logical shards (`2^13`) could Instagram address directly from the 13-bit shard field embedded inside every 64-bit ID?",
+    "question": "How many distinct logical shards (`2^13`) could Instagram address directly from the 13-bit shard field embedded inside every 64-bit ID?",
+    "unit": "shards",
+    "answer": 8192,
+    "tolerance": 0.2,
+    "hint": "Compute `2^13`.",
+    "explanation": "`2^13 = 8,192` logical PostgreSQL schemas/shards mapped across physical DB servers, allowing any application server to route a lookup for `photo_id` directly to its owning shard via `(photo_id >> 10) & 0x1FFF` with zero external directory lookups!",
+    "tags": [
+      "case-instagram-early-architecture",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "case-instagram-early-architecture-t1",
+    "topic": "case-instagram-early-architecture",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Logical Schemas-Per-Shard Inside Fewer Physical PostgreSQL Nodes vs Re-Sharding Data Later",
+    "scenario": "With only 3 engineers and explosive user growth, early Instagram needed to shard PostgreSQL without building a complex dynamic tablet-splitting engine or running a separate ID-generation fleet.",
+    "prompt": "Why did Instagram create thousands of logical PostgreSQL schemas (`2^13 = 8,192` logical shards) across a small number of physical EC2 instances on day one?",
+    "question": "Why did Instagram create thousands of logical PostgreSQL schemas (`2^13 = 8,192` logical shards) across a small number of physical EC2 instances on day one?",
+    "options": [
+      "PostgreSQL runs faster when 8,192 empty schemas exist on a single laptop",
+      "They wanted to rewrite every row's primary key whenever they added a new database server",
+      "Pre-allocating thousands of logical shards (PostgreSQL schemas) decouples logical partitioning from physical hardware: scaling out to new DB servers only requires moving whole logical schemas via streaming replication + pgbouncer config swap with zero key hashing changes or application code rewrites"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Re-hashing and migrating half of every table row-by-row during an outage is trivial for a 3-person team",
+      "Embedding the physical IP address in the 64-bit ID makes server replacement easy",
+      "When the logical shard ID (`0..8191`) is baked into the 64-bit primary key, logical shard count can never change easily; starting with 8,192 logical schemas lets you rebalance whole schemas across physical hosts with zero downtime"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "If the shard ID is permanently embedded in every photo's 64-bit ID, how can you add physical database servers later without changing existing IDs?",
+    "explanation": "Because the 13-bit shard ID was immutable once minted inside a photo ID, mapping `user_id -> logical_shard (0..8191)` and `logical_shard -> physical_db_host` via PgBouncer meant scaling physical hardware only moved whole PostgreSQL schemas.",
+    "tags": [
+      "case-instagram-early-architecture",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -366,6 +419,59 @@ window.QUESTION_BANK["case-amazon-dynamo"] = [
       "case-amazon-dynamo",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "case-amazon-dynamo-n1",
+    "topic": "case-amazon-dynamo",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Tunable Sloppy vs Strict Quorum Overlap (`N, R, W`)",
+    "scenario": "An Amazon Dynamo ring configures replication factor `N = 3` across preference-list nodes. To guarantee strong read-your-writes overlap under strict quorum (`R + W > N`, so `R + W >= 4`) while optimizing for fast low-latency shopping-cart writes (`W = 2`), you choose the minimum strict read quorum `R`.",
+    "prompt": "What is the minimum read quorum `R` required when `N = 3` and `W = 2` so that `R + W > N`?",
+    "question": "What is the minimum read quorum `R` required when `N = 3` and `W = 2` so that `R + W > N`?",
+    "unit": "replicas",
+    "answer": 2,
+    "tolerance": 0.2,
+    "hint": "We need `R + 2 > 3`, so `R >= 2`.",
+    "explanation": "With `N = 3` and `W = 2`, setting `R = 2` gives `R + W = 4 > 3`, guaranteeing by the Pigeonhole Principle that the `R = 2` read set and `W = 2` write set overlap in at least `2 + 2 - 3 = 1` replica.",
+    "tags": [
+      "case-amazon-dynamo",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "case-amazon-dynamo-t1",
+    "topic": "case-amazon-dynamo",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: \"Always-Writable\" Shopping Cart (`Sloppy Quorum + Hinted Handoff + Vector Clocks`) vs Last-Write-Wins (`LWW`)",
+    "scenario": "In Amazon's original 2007 Dynamo paper, the primary business invariant was that a customer must *never* be blocked from adding an item to their shopping cart, and an item added to a cart must *never* be silently lost during network partitions or concurrent updates.",
+    "prompt": "Why did Dynamo reject Last-Write-Wins (`LWW`) for shopping carts, and how did it resolve concurrent cart writes?",
+    "question": "Why did Dynamo reject Last-Write-Wins (`LWW`) for shopping carts, and how did it resolve concurrent cart writes?",
+    "options": [
+      "Dynamo blocked `AddToCart` whenever 2 of 3 replicas were unreachable during a network partition",
+      "Dynamo used physical wall-clock LWW and silently deleted items added on the slower replica",
+      "Dynamo accepted writes on any reachable preference-list fallback node (`Sloppy Quorum + Hinted Handoff`), tracked causal branches with Vector Clocks, returned all concurrent sibling cart versions on read, and had the shopping-cart application perform a semantic set-union merge"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Failing `AddToCart` during a network blip increases e-commerce conversion",
+      "Wall-clock LWW preserves both items when two replicas accept concurrent additions to the same cart",
+      "Under concurrent partitioned updates (`Cart + Item A` on Node 1 and `Cart + Item B` on Node 2), LWW overwrites one branch and loses an item; retaining sibling versions via Vector Clocks lets the client take their union (`A ∪ B`)"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens if Replica 1 has `[Book A]` and Replica 2 has `[Book B]` and you resolve the conflict with Last-Write-Wins vs Set Union?",
+    "explanation": "LWW drops entire concurrent updates. Dynamo used Sloppy Quorums + Hinted Handoff for \"always-writable\" availability, Vector Clocks to detect concurrent sibling branches, and application-level semantic union reconciliation (with the small trade-off that a deleted item could occasionally reappear).",
+    "tags": [
+      "case-amazon-dynamo",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

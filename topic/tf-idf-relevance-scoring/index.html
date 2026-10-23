@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1006,12 +1006,18 @@ flowchart LR
 </tbody></table>
 <p><strong>Failure modes:</strong> IDF computed per shard can differ across shards when documents are unevenly distributed, which is why Elasticsearch offers a <code>dfs_query_then_fetch</code> mode that gathers global term statistics first; tiny corpora produce noisy IDF values.</p><h2>Interview framing</h2><p>If asked "how would you rank documents for a keyword query?", start with TF-IDF to show you understand the two forces, local frequency and global rarity, then say production engines use BM25 because it bounds repetition and normalises length with tunable parameters, and finally mention a learned re-ranker on top for non-text signals such as popularity and freshness. That three-step answer covers the evolution from 1970s vector space models to modern two-stage ranking.</p>
 </div></article>
-      <section class="check-slider" data-slug="tf-idf-relevance-scoring" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="tf-idf-relevance-scoring" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Role of IDF" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Raw versus log TF" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Per-shard IDF skew" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Role of IDF" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Raw versus log TF" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Per-shard IDF skew" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Inverse Document Frequency (IDF) Weighting Ratio" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Why Raw Linear Term Frequency (`TF`) Fails Without Sublinear Saturation" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-tf-idf-relevance-scoring-c1" data-type="mcq" data-slug="tf-idf-relevance-scoring" data-index="0">
@@ -1129,12 +1135,142 @@ flowchart LR
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="tf-idf-relevance-scoring-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-tf-idf-relevance-scoring-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Each shard scores with its own document frequencies, so uneven distribution gives the same term different IDF values; the DFS mode collects global statistics before scoring. A mapping mismatch would change which documents match, not just how the same documents score.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-tf-idf-relevance-scoring-n1" data-type="numeric" data-slug="tf-idf-relevance-scoring" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Inverse Document Frequency (IDF) Weighting Ratio</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">In a corpus of `N = 10,000,000` (`10^7`) documents, using base-10 `IDF(t) = log10(N / df(t))`, word A (`&quot;the&quot;`) appears in `1,000,000` (`10^6`) docs (`IDF = 1`), while rare technical term B (`&quot;pacelc&quot;`) appears in `100` (`10^2`) docs (`IDF = log10(10^7 / 10^2) = 5`).</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many times higher is the IDF weight of `&quot;pacelc&quot;` (`5`) compared to `&quot;the&quot;` (`1`)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-tf-idf-relevance-scoring-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-tf-idf-relevance-scoring-n1"
+              aria-label="Numeric estimate in x"
+              placeholder="Enter numeric estimate (x)..."
+            />
+            <span class="quiz-unit-badge">x</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Compute `log10(10^7 / 10^2) / log10(10^7 / 10^6) = 5 / 1`.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="tf-idf-relevance-scoring-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-tf-idf-relevance-scoring-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`IDF(&quot;pacelc&quot;) = log10(10^5) = 5`, while `IDF(&quot;the&quot;) = log10(10^1) = 1`, giving the rare discriminative term 5× the per-unit weight of the common term.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-tf-idf-relevance-scoring-t1" data-type="tradeoff" data-slug="tf-idf-relevance-scoring" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Why Raw Linear Term Frequency (`TF`) Fails Without Sublinear Saturation</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">In a naive `TF × IDF` scorer where `TF = raw_count(term, doc)`, an SEO spammer repeats a common query word 500 times at the bottom of a long document, outscoring a concise article that matches all 3 query terms once each.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What mathematical defect in raw linear `TF × IDF` causes this, and how is it corrected?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-tf-idf-relevance-scoring-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-tf-idf-relevance-scoring-t1" value="0" />
+                  <span>IDF assigns higher weights to stop words than rare words</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-tf-idf-relevance-scoring-t1" value="1" />
+                  <span>Short documents are artificially favored by raw TF</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-tf-idf-relevance-scoring-t1" value="2" />
+                  <span>Linear `TF` grows without bound as a single term repeats and ignores document length; applying sublinear TF saturation (e.g., `1 + log(tf)` or BM25 saturation `tf / (tf + k1)`) plus length normalization caps the boost of repeating a single word</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-tf-idf-relevance-scoring-t1" value="0" />
+                  <span>A document mentioning one word 500 times is 500× more relevant than a document matching all query terms</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-tf-idf-relevance-scoring-t1" value="1" />
+                  <span>Longer documents have lower raw term counts by default</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-tf-idf-relevance-scoring-t1" value="2" />
+                  <span>Relevance exhibits diminishing returns after the first few occurrences of a term; saturating TF ensures matching additional distinct high-IDF query terms always beats spamming a single term</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Does the 50th occurrence of a word add as much relevance signal as the 1st occurrence?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="tf-idf-relevance-scoring-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-tf-idf-relevance-scoring-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Raw linear TF allows one repeated term to dominate multi-term queries and favors long verbose documents. Sublinear TF saturation and length normalization lead directly to BM25.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1272,7 +1408,7 @@ flowchart LR
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1280,15 +1416,15 @@ flowchart LR
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

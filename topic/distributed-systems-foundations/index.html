@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -991,12 +991,18 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: why a timeout cannot tell you what happened</h2><p>Service A calls B to charge a card, with a 1-second timeout. Measured p99 latency is 300 ms, but during GC pauses B sometimes takes 4 seconds. A times out and retries.</p><ul><li><strong>Case 1:</strong> the request was lost. Retrying is correct.</li><li><strong>Case 2:</strong> B charged the card and the response was lost. Retrying double-charges.</li><li><strong>Case 3:</strong> B is mid-GC and will process both the original and the retry.</li></ul><p>The only safe design is an <strong>idempotency key</strong>. A sends <code>charge_id=abc</code>, and B stores it with the result in the same transaction, so the retry returns the stored result.</p><h2>Timing models</h2><table><thead><tr><th>Model</th><th>Assumption</th><th>What is possible</th><th>Reality check</th></tr></thead><tbody><tr><td>Synchronous</td><td>Known upper bounds on message delay and processing time</td><td>Perfect failure detection by timeout</td><td>Not true of real networks or GC runtimes</td></tr><tr><td>Partially synchronous</td><td>Bounds hold eventually, after some unknown time</td><td>Consensus (Raft, Paxos) with safety always and liveness once stable</td><td>The practical model for datacentres</td></tr><tr><td>Asynchronous</td><td>No timing bounds at all</td><td>No deterministic consensus (FLP, 1985)</td><td>A useful worst case for proving safety</td></tr></tbody></table><h2>Node failure models</h2><table><thead><tr><th>Model</th><th>Behaviour</th><th>Typical defence</th></tr></thead><tbody><tr><td>Crash-stop</td><td>Halts and never returns</td><td>Replication plus failover</td></tr><tr><td>Crash-recovery</td><td>Halts, restarts, may lose in-memory state</td><td>Durable logs (fsync), rejoin and catch up</td></tr><tr><td>Omission</td><td>Drops some messages</td><td>Retries with idempotency</td></tr><tr><td>Byzantine</td><td>Arbitrary or malicious behaviour</td><td>BFT protocols with 3f+1 nodes to tolerate f faults, plus signatures</td></tr></tbody></table><h2>Real-world evidence</h2><ul><li>Bailis and Kingsbury's survey "The Network is Reliable" documents real partitions at Google, Microsoft, Amazon and others, including partial and asymmetric ones.</li><li>Jepsen tests have repeatedly found data loss in databases whose designs assumed clocks or networks behave well.</li><li>Google's Chubby and Spanner papers both treat long process pauses and clock uncertainty as normal operating conditions.</li></ul><h2>Design checklist</h2><ul><li>Every remote call has a timeout, and every retried operation is idempotent.</li><li>Every piece of state has exactly one owner, or an explicit conflict-resolution rule.</li><li>Failure detection is treated as a suspicion, never a certainty. Anything that acts on a suspicion, such as failover, must fence the old owner.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="distributed-systems-foundations" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="distributed-systems-foundations" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Datacenter failure model" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Retrying a card charge" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Raft versus FLP" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Datacenter failure model" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Retrying a card charge" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Raft versus FLP" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Serial Call Chain Availability Degradation" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Partial Failure &amp; Ambiguous Network Timeouts" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-distributed-systems-foundations-c1" data-type="mcq" data-slug="distributed-systems-foundations" data-index="0">
@@ -1114,12 +1120,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-systems-foundations-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-systems-foundations-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Under partial synchrony, consensus keeps safety at all times and gains liveness once the network is stable enough, which is the practical model for datacentres. Randomisation helps avoid repeated split votes but does not by itself defeat FLP, and real networks are not synchronous.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-distributed-systems-foundations-n1" data-type="numeric" data-slug="distributed-systems-foundations" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Serial Call Chain Availability Degradation</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A user checkout request synchronously calls 5 independent microservices in series. Each service has an individual availability of 99.9% (0.999).</p>
+          </div>
+        
+        <p class="check-slider__prompt">Using the small-unavailability approximation (`5 × 0.1%`), what is the combined end-to-end availability percentage of the 5-service serial chain?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-systems-foundations-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-distributed-systems-foundations-n1"
+              aria-label="Numeric estimate in %"
+              placeholder="Enter numeric estimate (%)..."
+            />
+            <span class="quiz-unit-badge">%</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Compute `0.999^5 ≈ 1 - 5 × 0.001 = 0.995` (99.5%).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-systems-foundations-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-systems-foundations-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">In a synchronous serial dependency chain, availabilities multiply (`0.999^5 = 0.99501`), multiplying the failure rate by 5× (from 0.1% to 0.5% unavailability, or 99.5% uptime).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-distributed-systems-foundations-t1" data-type="tradeoff" data-slug="distributed-systems-foundations" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Partial Failure &amp; Ambiguous Network Timeouts</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An order service sends a `ChargeCard` RPC to a payment gateway and the socket times out after 2,000 ms with no response.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What can the caller conclude about whether the card was charged, and how must the retry protocol be designed?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-systems-foundations-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-systems-foundations-t1" value="0" />
+                  <span>A timeout proves the request never reached the payment server, so retry immediately with a new transaction ID</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-systems-foundations-t1" value="1" />
+                  <span>A timeout proves the charge succeeded, so mark the order paid without checking</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-systems-foundations-t1" value="2" />
+                  <span>A timeout is fundamentally ambiguous (the packet may have dropped on the request path, during remote execution, or on the ACK path); the caller must retry using the exact same deterministic `idempotency_key`</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-systems-foundations-t1" value="0" />
+                  <span>TCP timeouts distinguish network-drop-before-execution from network-drop-after-execution</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-systems-foundations-t1" value="1" />
+                  <span>Assuming success on timeout prevents unpaid orders</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-systems-foundations-t1" value="2" />
+                  <span>Because an asynchronous network cannot distinguish a slow/crashed server from a lost reply packet, safe retries require server-side deduplication keyed by a stable client idempotency token</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Can a client tell the difference between a packet lost before the server ran vs a response packet lost after the server committed?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-systems-foundations-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-systems-foundations-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">The defining property of distributed systems is partial failure with indistinguishable timeout states: only an idempotent retry with the same `idempotency_key` safely resolves the ambiguity.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1256,22 +1392,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

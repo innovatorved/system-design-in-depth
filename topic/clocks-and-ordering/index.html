@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -955,12 +955,18 @@
 <!-- enriched -->
 <h2>Worked example: Lamport versus vector clocks</h2><p>Three nodes, A, B and C, each start with a counter of 0.</p><ul><li>A performs a local event: Lamport A = 1. Vector A = [1,0,0].</li><li>A sends m1 to B: A = 2, and m1 carries 2 (vector [2,0,0]).</li><li>C performs a local event independently: C = 1, vector [0,0,1].</li><li>B receives m1: B = max(0,2)+1 = 3. Vector B = [2,1,0].</li><li>C sends m2 to B carrying 2 (vector [0,0,2]). B receives: B = max(3,2)+1 = 4. Vector B = [2,2,2].</li></ul><p>Compare A's send event (Lamport 2, vector [2,0,0]) with C's first event (Lamport 1, vector [0,0,1]). Lamport suggests C's event came first, but the vectors are incomparable (neither is less than or equal to the other in every component), so the events are really <strong>concurrent</strong>. Only vector clocks reveal that.</p><h2>Clock types</h2><table><thead><tr><th>Clock</th><th>Answers</th><th>Size</th><th>Detects concurrency</th><th>Used by</th></tr></thead><tbody><tr><td>Wall clock (NTP)</td><td>Calendar time, plus or minus a few ms (worse under load or skew)</td><td>8 bytes</td><td>No</td><td>Logs, TTLs, user-facing timestamps</td></tr><tr><td>Monotonic</td><td>Elapsed time on one host</td><td>8 bytes</td><td>Not applicable</td><td>Timeouts, latency metrics</td></tr><tr><td>Lamport</td><td>A total order consistent with causality</td><td>One integer</td><td>No</td><td>Log ordering, Raft terms (similar idea)</td></tr><tr><td>Vector / version vector</td><td>Exact causality</td><td>O(nodes)</td><td>Yes</td><td>Riak, Dynamo, CRDT libraries</td></tr><tr><td>Hybrid logical clock (HLC)</td><td>Causality plus closeness to physical time</td><td>Physical time plus a counter</td><td>No</td><td>CockroachDB, YugabyteDB, MongoDB cluster time</td></tr><tr><td>TrueTime</td><td>A bounded interval [earliest, latest]</td><td>Two timestamps</td><td>No, but supports external consistency</td><td>Google Spanner, which waits out the uncertainty, typically under 7 ms</td></tr></tbody></table><h2>How real systems order events</h2><ul><li><strong>Spanner</strong> uses GPS and atomic clocks to keep uncertainty small, and "commit-waits" until the timestamp is guaranteed to be in the past everywhere.</li><li><strong>CockroachDB</strong> uses HLC with a maximum offset (default 500 ms). A read that finds a value inside its uncertainty window restarts at a higher timestamp.</li><li><strong>Snowflake IDs</strong> (Twitter) combine milliseconds, a machine ID and a sequence number. They are roughly time-sortable, but they do not capture causality across machines.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="clocks-and-ordering" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="clocks-and-ordering" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Measuring timeouts" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Lamport after a receive" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: HLC uncertainty restart" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Measuring timeouts" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Lamport after a receive" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: HLC uncertainty restart" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: TrueTime Commit-Wait Uncertainty Window" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Wall-Clock LWW (Last-Write-Wins) vs Hybrid Logical Clocks / Vector Clocks" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-clocks-and-ordering-c1" data-type="mcq" data-slug="clocks-and-ordering" data-index="0">
@@ -1078,12 +1084,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="clocks-and-ordering-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-clocks-and-ordering-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">With clocks that may differ by up to the max offset, a value slightly &#039;in the future&#039; may really have been committed before the read began, so CockroachDB restarts the read above it. Ignoring it risks a stale read; commit-wait belongs to Spanner&#039;s TrueTime design, not HLC reads.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-clocks-and-ordering-n1" data-type="numeric" data-slug="clocks-and-ordering" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: TrueTime Commit-Wait Uncertainty Window</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">In a Spanner-like system using GPS + atomic clocks, the local clock uncertainty bound is `ε = 3 ms` (meaning true time lies in `[t - 3 ms, t + 3 ms]`). To guarantee that external timestamp intervals of causally ordered transactions never overlap, the coordinator waits `2ε` before releasing locks.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many milliseconds must the commit-wait step pause when `ε = 3 ms`?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-clocks-and-ordering-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-clocks-and-ordering-n1"
+              aria-label="Numeric estimate in ms"
+              placeholder="Enter numeric estimate (ms)..."
+            />
+            <span class="quiz-unit-badge">ms</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Commit wait duration is `2 × ε`.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="clocks-and-ordering-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-clocks-and-ordering-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Waiting `2ε = 2 × 3 ms = 6 ms` guarantees that any subsequent transaction starting after commit sees a timestamp strictly greater than the committed transaction&#039;s timestamp, achieving external consistency without cross-node clock negotiation.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-clocks-and-ordering-t1" data-type="tradeoff" data-slug="clocks-and-ordering" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Wall-Clock LWW (Last-Write-Wins) vs Hybrid Logical Clocks / Vector Clocks</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A multi-master key-value store resolves concurrent writes using `wall_clock_timestamp` Last-Write-Wins (LWW). Node A&#039;s NTP clock is skewed +80 ms ahead of Node B. Node A writes `v1`, and 10 ms later a user reads `v1` and writes an updated `v2` via Node B.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What happens to update `v2` under wall-clock LWW, and which clock mechanism fixes causal ordering?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-clocks-and-ordering-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-clocks-and-ordering-t1" value="0" />
+                  <span>Update `v2` wins because it happened 10 ms later in real physical time</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-clocks-and-ordering-t1" value="1" />
+                  <span>NTP guarantees zero microsecond skew across all cloud VMs</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-clocks-and-ordering-t1" value="2" />
+                  <span>Update `v2` is silently dropped because Node B&#039;s physical timestamp is still 70 ms behind Node A&#039;s timestamp; using a Hybrid Logical Clock (HLC) or Dotted Version Vectors preserves the causal `v1 -&gt; v2` ordering</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-clocks-and-ordering-t1" value="0" />
+                  <span>Servers automatically know real physical time without clocks</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-clocks-and-ordering-t1" value="1" />
+                  <span>Wall-clock LWW never drops causally newer writes</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-clocks-and-ordering-t1" value="2" />
+                  <span>An HLC advances its logical component whenever a node observes a message with a higher timestamp (`max(physical, msg.ts) + 1`), ensuring causally subsequent writes always receive a strictly higher timestamp</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Compare Node A&#039;s timestamp (`T + 80 ms`) with Node B&#039;s timestamp 10 ms later (`T + 10 ms`).</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="clocks-and-ordering-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-clocks-and-ordering-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Under physical wall-clock LWW, a node with a fast clock produces &quot;future&quot; timestamps that silently overwrite subsequent causal updates from nodes with accurate clocks. HLCs or version vectors track causality across messages.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1263,7 +1399,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1271,15 +1407,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

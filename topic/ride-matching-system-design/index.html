@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1007,12 +1007,18 @@ flowchart TD
   T -->|"trip complete"| A
   A -->|"no ping for 30 s"| X["OFFLINE"]</div><p>The move to OFFERED is a conditional write: <code>SET status = 'OFFERED', offer_id = :o WHERE driver_id = :d AND status = 'AVAILABLE'</code>. The driver's accept must quote the same <code>offer_id</code>, so a late accept for an expired offer is rejected and cannot steal the driver from a newer match.</p>
 </div></article>
-      <section class="check-slider" data-slug="ride-matching-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="ride-matching-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Ranking by ETA" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Location write rate" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Late accept" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Ranking by ETA" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Location write rate" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Late accept" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Driver Location Ingestion Memory &amp; Write Rate" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Greedy Nearest Straight-Line Match vs Batched Bipartite Road-Network ETA Matching + Dispatch Lock" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-ride-matching-system-design-c1" data-type="mcq" data-slug="ride-matching-system-design" data-index="0">
@@ -1130,12 +1136,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ride-matching-system-design-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ride-matching-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Binding the accept to the offer_id recorded by the compare-and-set to OFFERED makes a late accept for an expired offer match zero rows. Relying on the app to hide expired offers is fragile, because network delay means the accept may already be in flight.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-ride-matching-system-design-n1" data-type="numeric" data-slug="ride-matching-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Driver Location Ingestion Memory &amp; Write Rate</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A ride-sharing platform has `1,000,000` active online drivers sending GPS location pings every `4 seconds`. Each driver&#039;s current state in the in-memory Spatial Location Index (`driver_id`, `h3_cell`, `lat`, `lon`, `bearing`, `status`, `updated_at`) occupies `64 bytes`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many location updates per second (`1,000,000 / 4`, in thousands) hit the ingestion tier, while the entire 1M-driver spatial state takes only `64 MB` of RAM?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-ride-matching-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-ride-matching-system-design-n1"
+              aria-label="Numeric estimate in thousand updates/s"
+              placeholder="Enter numeric estimate (thousand updates/s)..."
+            />
+            <span class="quiz-unit-badge">thousand updates/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 1,000,000 active drivers by 4 seconds per ping and express in thousands.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ride-matching-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ride-matching-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`1,000,000 drivers / 4 seconds = 250,000 updates/sec` (`250` thousand updates/s), and because active driver state is only `1,000,000 × 64 B = 64 MB`, the entire global or regional live location index fits comfortably in RAM!</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-ride-matching-system-design-t1" data-type="tradeoff" data-slug="ride-matching-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Greedy Nearest Straight-Line Match vs Batched Bipartite Road-Network ETA Matching + Dispatch Lock</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Two riders 100 meters apart request a ride at the same second. Driver A is 200m from Rider 1 in straight-line distance (but on the wrong side of a highway divider requiring a 9-minute U-turn), while Driver B is 600m away on the same street (2-minute road ETA). Meanwhile, two dispatch workers might assign Driver B to both riders simultaneously.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which dispatch architecture avoids both the highway-divider trap and double-dispatching the same driver?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-ride-matching-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ride-matching-system-design-t1" value="0" />
+                  <span>Assign whichever driver has the smallest Euclidean straight-line distance with no locking</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ride-matching-system-design-t1" value="1" />
+                  <span>Broadcast the ride offer to 50 drivers at once and give the rider to whoever taps first without cancelling the other 49</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ride-matching-system-design-t1" value="2" />
+                  <span>Query H3 hex rings for candidate drivers, score candidates by road-graph ETA + heading, solve micro-batched bipartite matching (Hungarian / min-cost flow over 1–2s windows) to optimize fleet ETA, and acquire an atomic per-driver lease lock (`SET driver_lock NX EX 15`) when dispatching an offer</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ride-matching-system-design-t1" value="0" />
+                  <span>Cars can drive straight across rivers and highway concrete dividers</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ride-matching-system-design-t1" value="1" />
+                  <span>Assigning two riders to the same solo car improves utilization</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ride-matching-system-design-t1" value="2" />
+                  <span>H3 filters spatial candidates fast, road-graph routing accounts for one-way streets/U-turns/heading, micro-window bipartite matching prevents locally greedy globally suboptimal pairings, and an atomic per-driver TTL lease prevents double assignment</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why can a driver 200m away take 9 minutes to arrive while a driver 600m away takes 2 minutes?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ride-matching-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ride-matching-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Combining H3 spatial candidate filtering, road-network + heading ETA scoring, micro-batched bipartite optimization, and atomic per-driver offer leases delivers accurate, race-free dispatch.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1248,22 +1384,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

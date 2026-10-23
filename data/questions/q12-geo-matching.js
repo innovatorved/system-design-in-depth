@@ -182,6 +182,59 @@ window.QUESTION_BANK["geohash-prefix-spatial-index"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "geohash-prefix-spatial-index-n1",
+    "topic": "geohash-prefix-spatial-index",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Geohash 9-Cell Covering Candidate Fetch Size",
+    "scenario": "To guarantee full coverage of a 1.5 km search circle without edge blind spots, your query fetches points from the center precision-5 Geohash cell plus its 8 immediate neighbors (9 cells total). In a dense city district, each precision-5 cell (~24 km²) contains an average of 400 restaurants.",
+    "prompt": "How many total candidate restaurants are fetched across the 9 Geohash cells before exact Haversine distance filtering?",
+    "question": "How many total candidate restaurants are fetched across the 9 Geohash cells before exact Haversine distance filtering?",
+    "unit": "candidates",
+    "answer": 3600,
+    "tolerance": 0.2,
+    "hint": "Multiply 9 cells by 400 restaurants per cell.",
+    "explanation": "Fetching the center cell plus 8 neighbor cells inspects 9 cells × 400 restaurants/cell = 3,600 candidate points, which are then filtered in memory by exact geodesic distance in under a millisecond.",
+    "tags": [
+      "geohash-prefix-spatial-index",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "geohash-prefix-spatial-index-t1",
+    "topic": "geohash-prefix-spatial-index",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Single-Prefix Geohash Query vs Multi-Cell Covering + Exact Distance Filter",
+    "scenario": "A food-delivery app stores restaurant locations in a B-Tree indexed by a 6-character Geohash string and needs to return all restaurants within 1 km of a user.",
+    "prompt": "Which query strategy should you choose, and what is the primary justification?",
+    "question": "Which query strategy should you choose, and what is the primary justification?",
+    "options": [
+      "Run a single `WHERE geohash LIKE '9q8yyk%'` prefix query and return all matching rows directly",
+      "Compute the 9-cell (or bounding-box intersecting) Geohash prefixes covering the 1 km circle, issue a union/IN range scan, and post-filter candidates by exact Haversine/Euclidean distance",
+      "Scan the entire table computing exact `acos/sin/cos` spherical trigonometry on all 10 million rows per request"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Points that are 10 meters apart always share the exact same 6-character Geohash prefix",
+      "Z-order curve boundaries can assign completely different prefixes to points meters apart, and rectangular cells over-cover circles at the corners, requiring neighbor-cell covering plus exact distance filtering",
+      "Full-table trigonometric scans scale to 50,000 QPS with sub-10ms latency"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Consider what happens when a user stands 5 meters from a Geohash cell edge or near the prime meridian/equator.",
+    "explanation": "A single Geohash prefix lookup suffers from boundary cliff effects where a restaurant across the street sits in a neighbor cell with a different prefix. Querying all cells intersecting the search circle eliminates false negatives, and exact distance post-filtering removes false positives from cell corners.",
+    "tags": [
+      "geohash-prefix-spatial-index",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -367,6 +420,59 @@ window.QUESTION_BANK["redis-geo-spatial-hot-path"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "redis-geo-spatial-hot-path-n1",
+    "topic": "redis-geo-spatial-hot-path",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: City-Sharded Redis GEO Write QPS",
+    "scenario": "A major metro area has 60,000 active couriers online during dinner peak, each reporting their GPS location every 3 seconds. Each update executes a pipelined `GEOADD` + `ZADD` (for freshness tracking) on that city's Redis shard.",
+    "prompt": "How many location update batches per second reach that city's Redis primary?",
+    "question": "How many location update batches per second reach that city's Redis primary?",
+    "unit": "req/s",
+    "answer": 20000,
+    "tolerance": 0.2,
+    "hint": "Divide 60,000 active couriers by the 3-second reporting interval.",
+    "explanation": "60,000 couriers ÷ 3 seconds = 20,000 update batches/sec (40,000 Redis sorted-set operations/sec), well within the ~100k ops/sec capacity of a single city-dedicated Redis instance.",
+    "tags": [
+      "redis-geo-spatial-hot-path",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "redis-geo-spatial-hot-path-t1",
+    "topic": "redis-geo-spatial-hot-path",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Handling Stale Members in Redis GEO Sorted Sets",
+    "scenario": "Redis `GEOADD` stores all drivers in a city inside a single Sorted Set (`ZSET`), which only supports key-level TTLs rather than per-member TTLs. When driver apps lose cellular connectivity, their stale positions remain in the `GEO` index indefinitely.",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Create a separate top-level Redis key per driver with a 30-second TTL and run `KEYS driver:*` to scan all drivers on every rider search",
+      "Maintain a companion `last_seen` ZSET (scored by Unix timestamp) alongside the `GEO` ZSET, sweep expired members periodically via a Lua script, and verify `last_seen` freshness on query results",
+      "Set a 30-second `EXPIRE` on the entire city's `GEO` key so all 60,000 drivers are wiped every 30 seconds"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Scanning 60,000 individual keys in Redis takes O(1) time and supports spatial radius queries natively",
+      "Pairing the `GEO` ZSET with a timestamp-scored `last_seen` ZSET enables O(log N) background eviction of offline drivers via `ZRANGEBYSCORE` while read-time freshness validation guards against sweeper lag",
+      "Wiping the entire city index every 30 seconds guarantees 100% matching availability during the rebuild window"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "How do you combine fast spatial indexing (`GEOSEARCH`) with O(log N) expiration discovery when Redis ZSETs lack member TTLs?",
+    "explanation": "Because Redis Sorted Sets do not natively expire individual members, maintaining a parallel `last_seen` ZSET scored by epoch timestamp lets a periodic Lua job atomically prune drivers older than `now - 30s` from both sets, while read-time filtering ensures zero ghost matches even if the sweeper lags.",
+    "tags": [
+      "redis-geo-spatial-hot-path",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -433,6 +539,59 @@ window.QUESTION_BANK["geofencing-point-in-polygon"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "geofencing-point-in-polygon-n1",
+    "topic": "geofencing-point-in-polygon",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Two-Stage Bounding-Box R-Tree Speedup Factor",
+    "scenario": "A logistics platform tracks 50,000 delivery zones, each modeled as a 200-vertex polygon. Without spatial indexing, every GPS fix checks all 50,000 polygons (`10,000,000` edge checks). With an in-memory R-Tree of bounding boxes, each GPS fix narrows down to an average of 2.5 candidate polygons (`500` edge checks).",
+    "prompt": "By what factor (`50,000 ÷ 2.5`) does the R-Tree bounding-box filter reduce the number of exact polygon edge checks per GPS fix?",
+    "question": "By what factor (`50,000 ÷ 2.5`) does the R-Tree bounding-box filter reduce the number of exact polygon edge checks per GPS fix?",
+    "unit": "x",
+    "answer": 20000,
+    "tolerance": 0.2,
+    "hint": "Divide 50,000 total polygons by 2.5 candidate polygons after bounding-box pruning.",
+    "explanation": "Pruning 50,000 polygons down to 2.5 bounding-box hits reduces expensive O(V) vertex ray-casting checks by 50,000 ÷ 2.5 = 20,000x (from 10 million edge checks per ping to just 500).",
+    "tags": [
+      "geofencing-point-in-polygon",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "geofencing-point-in-polygon-t1",
+    "topic": "geofencing-point-in-polygon",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Stateless Per-Ping Polygon Checks vs Stateful Hysteresis for Geofence Transitions",
+    "scenario": "Scooter riders parked near the boundary of a 'no-parking' geofence experience ±12 meter urban-canyon GPS drift, causing raw point-in-polygon checks to flip between inside and outside every 3 seconds and triggering dozens of false penalty notifications.",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Emit an enter or exit webhook immediately whenever a single GPS ping's ray-casting result differs from the previous ping",
+      "Partition the GPS stream by `device_id` into stateful stream workers that enforce spatial hysteresis (separate inner/outer buffer thresholds) and require N consecutive fixes or a minimum dwell window before emitting a deterministic transition event",
+      "Round all GPS coordinates to 2 decimal places (~1.1 km resolution) so small movements never register"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Raw urban GPS coordinates have sub-millimeter accuracy and never jitter across polygon edges",
+      "Stateful per-device hysteresis and dwell-time debouncing absorb GPS multi-path noise at polygon boundaries without sacrificing spatial precision",
+      "Rounding coordinates to 1.1 km grids accurately enforces 50-meter scooter parking corrals"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Think about how a thermostat prevents rapid on/off cycling at the target temperature.",
+    "explanation": "Geofence enter/exit detection is inherently stateful. Routing pings by `device_id` to stateful workers that require both a spatial buffer margin (hysteresis) and temporal confirmation (e.g., 3 consecutive fixes or 15s dwell time) eliminates boundary flapping from GPS multipath noise.",
+    "tags": [
+      "geofencing-point-in-polygon",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -498,6 +657,59 @@ window.QUESTION_BANK["ray-casting-point-in-polygon"] = [
       "ray-casting-point-in-polygon",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "ray-casting-point-in-polygon-n1",
+    "topic": "ray-casting-point-in-polygon",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Polygon Decomposition Speedup for High-Vertex Delivery Zones",
+    "scenario": "A coastal city's delivery zone polygon has 4,000 vertices. A raw ray-casting check inspects all 4,000 edges per GPS ping. By pre-tiling the polygon into fine grid cells (interior cells, exterior cells, and boundary cells each clipped to an average of 16 edges), 90% of pings hit interior/exterior cells (0 edge checks) and 10% hit boundary cells (16 edge checks).",
+    "prompt": "What is the average number of edge checks per GPS ping (`0.9 × 0 + 0.1 × 16`) with pre-tiled boundary clipping?",
+    "question": "What is the average number of edge checks per GPS ping (`0.9 × 0 + 0.1 × 16`) with pre-tiled boundary clipping?",
+    "unit": "edge checks",
+    "answer": 1.6,
+    "tolerance": 0.2,
+    "hint": "90% of queries do 0 edge checks and 10% do 16 edge checks: 0.10 × 16.",
+    "explanation": "Pre-classifying interior and exterior grid cells answers 90% of queries in O(1) hash lookup (0 edge checks), while the remaining 10% near the border test against a clipped 16-edge fragment—averaging `0.1 × 16 = 1.6` edge checks instead of 4,000 (a 2,500x speedup).",
+    "tags": [
+      "ray-casting-point-in-polygon",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "ray-casting-point-in-polygon-t1",
+    "topic": "ray-casting-point-in-polygon",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Raw O(V) Ray Casting vs Pre-Tiled Interior/Boundary Cell Indexing",
+    "scenario": "Your compliance engine evaluates 250,000 GPS pings/sec against country and state borders represented by complex 50,000-vertex polygons that change only once a quarter.",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Run full 50,000-edge ray casting from scratch on every GPS ping",
+      "Pre-compute a spatial grid (H3/S2/quadtree) classifying cells as `FULLY_INSIDE`, `FULLY_OUTSIDE`, or `BOUNDARY` (storing only the clipped polygon edges intersecting each boundary cell), trading a modest offline build step for O(1) runtime lookups on >95% of pings",
+      "Approximate every country and state as a single circle centered on its capital city"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Iterating 50,000 floating-point divisions 250,000 times per second uses negligible CPU",
+      "Static high-vertex polygons amortize offline grid rasterization and edge-clipping across billions of runtime lookups, turning most O(V) ray casts into a single O(1) cell lookup",
+      "Circular country borders satisfy legal tax and regulatory compliance boundaries"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "If 95% of points fall deep inside a polygon's interior, why test 50,000 border edges on every query?",
+    "explanation": "When polygons are static or rarely updated, pre-indexing cells into `FULLY_INSIDE`, `FULLY_OUTSIDE`, and clipped `BOUNDARY` edge lists eliminates ray casting entirely for interior/exterior points and reduces boundary ray casts to a handful of local edges.",
+    "tags": [
+      "ray-casting-point-in-polygon",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -683,6 +895,59 @@ window.QUESTION_BANK["matching-and-recommendation-algorithms"] = [
       "matching-and-recommendation-algorithms",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "matching-and-recommendation-algorithms-n1",
+    "topic": "matching-and-recommendation-algorithms",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Multi-Stage Funnel Inference Compute Savings",
+    "scenario": "A recommendation catalog holds 10,000,000 items. A heavy deep-learning cross-network ranker costs 0.1 ms of GPU compute per item scored. Instead of scoring all 10,000,000 items (`1,000,000 ms` of GPU time), a two-tower ANN retrieval stage narrows the pool to 500 candidates before running the heavy ranker.",
+    "prompt": "How many milliseconds (ms) of GPU compute does the heavy ranker spend scoring the 500 retrieved candidates?",
+    "question": "How many milliseconds (ms) of GPU compute does the heavy ranker spend scoring the 500 retrieved candidates?",
+    "unit": "ms",
+    "answer": 50,
+    "tolerance": 0.2,
+    "hint": "Multiply 500 candidates by 0.1 ms per candidate.",
+    "explanation": "500 candidates × 0.1 ms/candidate = 50 ms of GPU compute (a 20,000x reduction compared to scoring all 10 million catalog items with the cross-feature ranker).",
+    "tags": [
+      "matching-and-recommendation-algorithms",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "matching-and-recommendation-algorithms-t1",
+    "topic": "matching-and-recommendation-algorithms",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Two-Tower Dot-Product Retrieval vs Cross-Attention Heavy Ranking",
+    "scenario": "Your ML team wants to use a single Transformer cross-attention model (which takes user-item interaction features jointly as input) to score all 20 million items in the catalog on every feed request within a 100 ms SLA.",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Run the cross-attention model over all 20 million items in real time on every user request",
+      "Use a decoupled Two-Tower architecture (where item embeddings are pre-computed offline and indexed in HNSW/IVF-PQ for sub-15ms ANN candidate retrieval of ~1,000 items), followed by the joint cross-feature ranker on only those ~1,000 candidates",
+      "Pre-compute and store all `100M users × 20M items` pairwise cross-attention scores every minute"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Evaluating 20 million Transformer forward passes per request easily finishes in 10 ms on one GPU",
+      "Decoupling user and item towers allows item embeddings to be indexed for sub-linear ANN lookup (sacrificing early cross-features for speed), while the second-stage ranker restores rich cross-feature precision on a bounded candidate set",
+      "Computing 2 quadrillion pairwise scores every minute is cheap and handles real-time session context"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why can a Two-Tower model use an HNSW vector index while a joint Cross-Encoder cannot?",
+    "explanation": "A joint cross-encoder cannot pre-index item vectors because its internal representations depend on the specific user query. A Two-Tower model restricts user-item interaction to a final dot product/cosine similarity, enabling O(log N) ANN retrieval over millions of items before heavy ranking.",
+    "tags": [
+      "matching-and-recommendation-algorithms",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

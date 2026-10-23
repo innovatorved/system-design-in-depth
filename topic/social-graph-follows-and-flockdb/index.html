@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1027,12 +1027,18 @@ LIMIT :page_size;</code></pre></div>
     Q --> FO["Optional backfill of recent posts into follower timeline"]
 </div><p>Each edge row carries a state (active, removed, blocked) and a position. An unfollow is a state change with a newer position, so a delayed retry of the original follow cannot resurrect the edge: the store keeps whichever write has the higher position. A background repair job compares forward and reverse lists and fixes drift.</p><h2>How real systems do it</h2><ul><li><strong>FlockDB</strong> (Twitter) stored edges as (source, destination, position, state) in MySQL via the Gizzard sharding framework, keeping forward and backward copies so both directions were cheap, and supported set operations like intersection for "who follows both".</li><li><strong>TAO</strong> (Facebook) stores associations with an inverse association type; the two directions live on different shards and are written separately, with the inverse write repaired if it fails.</li><li><strong>LinkedIn</strong> built dedicated in-memory graph services (most recently LIquid) because degree-of-connection queries need two and three hop answers quickly.</li></ul>
 </div></div></article>
-      <section class="check-slider" data-slug="social-graph-follows-and-flockdb" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="social-graph-follows-and-flockdb" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why store edges twice" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sizing the edge store" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Unfollow versus late retry" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why store edges twice" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sizing the edge store" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Unfollow versus late retry" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Fast Set Intersection for &quot;Followed by Friends&quot;" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Hard-Deleting Graph Edges vs State-Machine Rows (`ACTIVE`, `REMOVED`, `BLOCKED`, `ARCHIVED`)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-social-graph-follows-and-flockdb-c1" data-type="mcq" data-slug="social-graph-follows-and-flockdb" data-index="0">
@@ -1150,12 +1156,142 @@ LIMIT :page_size;</code></pre></div>
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="social-graph-follows-and-flockdb-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-social-graph-follows-and-flockdb-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Unfollow is a state change with a newer position, so the stale follow with its older position loses and the edge stays removed; a repair job fixes any remaining drift. Physically deleting the row is the tempting wrong answer: the late retry would simply insert a fresh active edge, which is exactly the resurrection bug.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-social-graph-follows-and-flockdb-n1" data-type="numeric" data-slug="social-graph-follows-and-flockdb" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Fast Set Intersection for &quot;Followed by Friends&quot;</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">User A views Celebrity C&#039;s profile (`50,000,000` followers) and the UI displays &quot;Followed by X, Y, and 12 others you follow&quot;. User A follows `400` accounts. Instead of intersecting a 50M-element set with a 400-element set, the query fetches User A&#039;s `400` followees and checks whether each `(followee_id, C)` edge exists (or intersects User A&#039;s 400 followees against C&#039;s adjacency bitmap/index).</p>
+          </div>
+        
+        <p class="check-slider__prompt">If each batched point existence check takes `0.01 ms` amortized across User A&#039;s 400 followees, how many milliseconds of total lookup work are required (`400 × 0.01 ms`)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-social-graph-follows-and-flockdb-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-social-graph-follows-and-flockdb-n1"
+              aria-label="Numeric estimate in ms"
+              placeholder="Enter numeric estimate (ms)..."
+            />
+            <span class="quiz-unit-badge">ms</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 400 probes by 0.01 ms per probe.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="social-graph-follows-and-flockdb-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-social-graph-follows-and-flockdb-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Driving the intersection from the smaller set (`|Followees(A)| = 400` vs `|Followers(C)| = 50,000,000`) bounds the work to 400 indexed point/bloom probes (~4 ms) instead of scanning 50 million followers!</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-social-graph-follows-and-flockdb-t1" data-type="tradeoff" data-slug="social-graph-follows-and-flockdb" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Hard-Deleting Graph Edges vs State-Machine Rows (`ACTIVE`, `REMOVED`, `BLOCKED`, `ARCHIVED`)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">When a user blocks another account, unfollows, or temporarily deactivates their profile with 500,000 followers, hard-deleting and re-inserting 500,000 edges across shards causes race conditions with out-of-order async retries and loses block/mute audit state.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How did Twitter&#039;s FlockDB design edge mutations to remain idempotent under concurrent out-of-order workers?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-social-graph-follows-and-flockdb-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-social-graph-follows-and-flockdb-t1" value="0" />
+                  <span>Execute synchronous distributed 2PC `DELETE` across all shards while the user waits</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-social-graph-follows-and-flockdb-t1" value="1" />
+                  <span>Ignore unfollow requests if the target shard is busy</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-social-graph-follows-and-flockdb-t1" value="2" />
+                  <span>Model every edge as a state machine `(source_id, state, updated_at_position, destination_id)` where mutations update `state` (`NORMAL`, `REMOVED`, `ARCHIVED`, `NEGATIVE/BLOCKED`) guarded by a monotonic timestamp (`WHERE updated_at &lt; :new_ts`)</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-social-graph-follows-and-flockdb-t1" value="0" />
+                  <span>Hard `DELETE` retains enough timestamp metadata to reject an older out-of-order `INSERT` retry</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-social-graph-follows-and-flockdb-t1" value="1" />
+                  <span>Dropping unfollow/block requests satisfies privacy expectations</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-social-graph-follows-and-flockdb-t1" value="2" />
+                  <span>Retaining the edge row with a state byte and monotonic timestamp makes `Follow`, `Unfollow`, `Block`, and `Archive` commutative/idempotent LWW transitions and keeps active edges sorted together via index `(source_id, state, position)`</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens if a delayed `Follow(t=10)` retry arrives *after* an `Unfollow(t=12)` has already hard-deleted the row?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="social-graph-follows-and-flockdb-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-social-graph-follows-and-flockdb-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">If `Unfollow(t=12)` hard-deletes the row, a delayed `Follow(t=10)` retry sees no row and re-creates the follow! Storing `state = REMOVED` with `updated_at = 12` allows the DB to reject the stale `t=10` retry.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1268,22 +1404,22 @@ LIMIT :page_size;</code></pre></div>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

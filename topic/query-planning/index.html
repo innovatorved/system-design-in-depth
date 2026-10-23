@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -994,12 +994,18 @@ K --> B["Pick cheapest plan"]
 B --> X["Execute"]
 </div><h3>How real systems differ</h3><ul><li><strong>PostgreSQL:</strong> exhaustive dynamic programming up to 12 relations (<code>geqo_threshold</code>), then a genetic optimizer. No built-in hints.</li><li><strong>MySQL:</strong> greedy join search, with hash joins only since 8.0.18. Supports optimizer hints.</li><li><strong>SQL Server and Oracle:</strong> plan caches with parameter sniffing, where a plan built for one parameter value is reused for very different values, a classic production incident.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="query-planning" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="query-planning" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Choosing a join algorithm" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Reading loops= correctly" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Fix the estimate, not the plan" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Choosing a join algorithm" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Reading loops= correctly" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Fix the estimate, not the plan" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Nested Loop vs Hash Join Cost" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Stale Cardinality Histograms &amp; Plan Regression" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-query-planning-c1" data-type="mcq" data-slug="query-planning" data-index="0">
@@ -1117,12 +1123,142 @@ B --> X["Execute"]
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="query-planning-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-query-planning-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">The first node with a large estimate mismatch is the root cause, and here it comes from stale statistics, so refreshing them lets the planner pick the right join by itself. Disabling nested loops is the tempting quick fix, but it fixes today&#039;s query and can break others as the data changes.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-query-planning-n1" data-type="numeric" data-slug="query-planning" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Nested Loop vs Hash Join Cost</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A query joins an outer batch of 500 rows against an indexed inner table where each index probe costs 0.2 ms of I/O, versus a full-table Hash Join that scans the entire inner table in 800 ms.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the total execution time (in ms) of the Indexed Nested Loop Join across all 500 outer rows?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-query-planning-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-query-planning-n1"
+              aria-label="Numeric estimate in ms"
+              placeholder="Enter numeric estimate (ms)..."
+            />
+            <span class="quiz-unit-badge">ms</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 500 outer rows by 0.2 ms per inner index lookup.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="query-planning-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-query-planning-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">500 outer rows × 0.2 ms/probe = 100 ms total, making Indexed Nested Loop 8× faster than the 800 ms Hash Join for small outer cardinality.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-query-planning-t1" data-type="tradeoff" data-slug="query-planning" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Stale Cardinality Histograms &amp; Plan Regression</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">After a bulk tenant import increases a tenant_id&#039;s row count from 50 to 5,000,000 within 10 minutes, p99 latency spikes because the optimizer still chooses an Indexed Nested Loop Join instead of a Hash Join.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the disciplined database engineering remediation, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-query-planning-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-query-planning-t1" value="0" />
+                  <span>Drop all indexes on tenant_id permanently so every tenant uses full table scans</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-query-planning-t1" value="1" />
+                  <span>Restart the database server after every bulk import to clear RAM</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-query-planning-t1" value="2" />
+                  <span>Trigger explicit `ANALYZE` statistics refresh after bulk loads and enable adaptive/plan-stability guardrails for skewed tenants</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-query-planning-t1" value="0" />
+                  <span>Full table scans are optimal for the 99% of tenants who still only have 50 rows</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-query-planning-t1" value="1" />
+                  <span>Rebooting the DB server does not recompute persistent table histograms</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-query-planning-t1" value="2" />
+                  <span>Refreshing column histograms and most-common-value (MCV) stats informs the cost-based optimizer of the new skew so it switches to a Hash/Merge plan for the heavy tenant</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why did the cost-based optimizer think tenant_id still had 50 rows?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="query-planning-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-query-planning-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Cost-based optimizers rely on sampled table statistics (histograms and MCV lists). When bulk writes skew data faster than autovacuum/auto-analyze runs, triggering `ANALYZE` updates the selectivity estimate.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1235,22 +1371,22 @@ B --> X["Execute"]
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

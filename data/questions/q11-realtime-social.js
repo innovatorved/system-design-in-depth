@@ -301,6 +301,59 @@ window.QUESTION_BANK["social-network-database-modeling"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "social-network-database-modeling-n1",
+    "topic": "social-network-database-modeling",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Bidirectional Edge Storage with Inverse Sharded Rows",
+    "scenario": "A social network has 200,000,000 users with an average of 150 follow edges per user (`30,000,000,000` directed edges). To support both single-shard \"Who do I follow?\" (`out_edges` partitioned by `follower_id`) and single-shard \"Who follows me?\" (`in_edges` partitioned by `followee_id`), each edge is stored in both tables (`64 bytes` per row including index overhead).",
+    "prompt": "How many terabytes (TB, where 1 TB = 10^12 bytes) of logical storage are required across both the forward and inverse edge tables combined (`30B × 2 × 64 bytes`)?",
+    "question": "How many terabytes (TB, where 1 TB = 10^12 bytes) of logical storage are required across both the forward and inverse edge tables combined (`30B × 2 × 64 bytes`)?",
+    "unit": "TB",
+    "answer": 3.84,
+    "tolerance": 0.2,
+    "hint": "Multiply `30 × 10^9` edges by 2 tables and by 64 bytes (`60 × 10^9 × 64`), then divide by `10^12`.",
+    "explanation": "`30 × 10^9 edges × 2 copies × 64 bytes = 3.84 × 10^12 bytes = 3.84 TB`, allowing both forward and reverse follower queries to hit a single partition key without cross-shard joins.",
+    "tags": [
+      "social-network-database-modeling",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "social-network-database-modeling-t1",
+    "topic": "social-network-database-modeling",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Joining Across Shards vs Dual Forward/Inverse Edge Partitioning (TAO / FlockDB Pattern)",
+    "scenario": "Your social graph is sharded by `user_id`. When User A (`Shard 3`) follows User B (`Shard 14`), you need to answer both \"List accounts User A follows\" and \"List followers of User B\" in <5 ms at 500,000 QPS.",
+    "prompt": "How should the follow edge `(A -> B)` be stored across the sharded cluster?",
+    "question": "How should the follow edge `(A -> B)` be stored across the sharded cluster?",
+    "options": [
+      "Store `(A -> B)` only on Shard 3 (`follower_id = A`) and scatter-gather across all shards whenever someone views User B's followers",
+      "Move User A and User B onto the same shard whenever they follow each other",
+      "Dual-write a forward edge `(A ->FOLLOWS-> B)` on Shard 3 (`partition_key = A`) and an inverse edge `(B <-FOLLOWED_BY<- A)` on Shard 14 (`partition_key = B`) via an idempotent async/coordinator workflow with materialized edge counts"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Scatter-gathering across 100 shards at 500,000 QPS is cheap",
+      "A connected social graph can be partitioned with zero cross-shard edges",
+      "Co-locating outgoing edges by `A` and incoming edges by `B` ensures both forward and reverse adjacency list queries resolve as single-partition contiguous range scans"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How did Facebook's TAO and Twitter's FlockDB serve both outgoing and incoming edges in 1 hop?",
+    "explanation": "In a sharded graph store (TAO/FlockDB), storing both the forward association on the source shard and the inverse association on the destination shard turns bidirectional traversals into single-key local lookups.",
+    "tags": [
+      "social-network-database-modeling",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -366,6 +419,59 @@ window.QUESTION_BANK["social-graph-follows-and-flockdb"] = [
       "social-graph-follows-and-flockdb",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "social-graph-follows-and-flockdb-n1",
+    "topic": "social-graph-follows-and-flockdb",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Fast Set Intersection for \"Followed by Friends\"",
+    "scenario": "User A views Celebrity C's profile (`50,000,000` followers) and the UI displays \"Followed by X, Y, and 12 others you follow\". User A follows `400` accounts. Instead of intersecting a 50M-element set with a 400-element set, the query fetches User A's `400` followees and checks whether each `(followee_id, C)` edge exists (or intersects User A's 400 followees against C's adjacency bitmap/index).",
+    "prompt": "If each batched point existence check takes `0.01 ms` amortized across User A's 400 followees, how many milliseconds of total lookup work are required (`400 × 0.01 ms`)?",
+    "question": "If each batched point existence check takes `0.01 ms` amortized across User A's 400 followees, how many milliseconds of total lookup work are required (`400 × 0.01 ms`)?",
+    "unit": "ms",
+    "answer": 4,
+    "tolerance": 0.2,
+    "hint": "Multiply 400 probes by 0.01 ms per probe.",
+    "explanation": "Driving the intersection from the smaller set (`|Followees(A)| = 400` vs `|Followers(C)| = 50,000,000`) bounds the work to 400 indexed point/bloom probes (~4 ms) instead of scanning 50 million followers!",
+    "tags": [
+      "social-graph-follows-and-flockdb",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "social-graph-follows-and-flockdb-t1",
+    "topic": "social-graph-follows-and-flockdb",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Hard-Deleting Graph Edges vs State-Machine Rows (`ACTIVE`, `REMOVED`, `BLOCKED`, `ARCHIVED`)",
+    "scenario": "When a user blocks another account, unfollows, or temporarily deactivates their profile with 500,000 followers, hard-deleting and re-inserting 500,000 edges across shards causes race conditions with out-of-order async retries and loses block/mute audit state.",
+    "prompt": "How did Twitter's FlockDB design edge mutations to remain idempotent under concurrent out-of-order workers?",
+    "question": "How did Twitter's FlockDB design edge mutations to remain idempotent under concurrent out-of-order workers?",
+    "options": [
+      "Execute synchronous distributed 2PC `DELETE` across all shards while the user waits",
+      "Ignore unfollow requests if the target shard is busy",
+      "Model every edge as a state machine `(source_id, state, updated_at_position, destination_id)` where mutations update `state` (`NORMAL`, `REMOVED`, `ARCHIVED`, `NEGATIVE/BLOCKED`) guarded by a monotonic timestamp (`WHERE updated_at < :new_ts`)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Hard `DELETE` retains enough timestamp metadata to reject an older out-of-order `INSERT` retry",
+      "Dropping unfollow/block requests satisfies privacy expectations",
+      "Retaining the edge row with a state byte and monotonic timestamp makes `Follow`, `Unfollow`, `Block`, and `Archive` commutative/idempotent LWW transitions and keeps active edges sorted together via index `(source_id, state, position)`"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens if a delayed `Follow(t=10)` retry arrives *after* an `Unfollow(t=12)` has already hard-deleted the row?",
+    "explanation": "If `Unfollow(t=12)` hard-deletes the row, a delayed `Follow(t=10)` retry sees no row and re-creates the follow! Storing `state = REMOVED` with `updated_at = 12` allows the DB to reject the stale `t=10` retry.",
+    "tags": [
+      "social-graph-follows-and-flockdb",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -433,6 +539,59 @@ window.QUESTION_BANK["feed-generation-push-pull-hybrid"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "feed-generation-push-pull-hybrid-n1",
+    "topic": "feed-generation-push-pull-hybrid",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Fan-Out-on-Write Amplification vs Hybrid Celebrity Cutoff",
+    "scenario": "A user with `300` followers posts a status update (`300` cache list appends). A celebrity with `40,000,000` followers posts a status update. By enforcing a hybrid threshold (`followers > 50,000` use fan-out-on-read instead of fan-out-on-write), how many millions of Redis list writes are avoided on that single celebrity post?",
+    "prompt": "A user with `300` followers posts a status update (`300` cache list appends). A celebrity with `40,000,000` followers posts a status update. By enforcing a hybrid threshold (`followers > 50,000` use fan-out-on-read instead of fan-out-on-write), how many millions of Redis list writes are avoided on that single celebrity post?",
+    "question": "A user with `300` followers posts a status update (`300` cache list appends). A celebrity with `40,000,000` followers posts a status update. By enforcing a hybrid threshold (`followers > 50,000` use fan-out-on-read instead of fan-out-on-write), how many millions of Redis list writes are avoided on that single celebrity post?",
+    "unit": "million writes",
+    "answer": 40,
+    "tolerance": 0.2,
+    "hint": "Skipping fan-out-on-write for the 40,000,000-follower celebrity avoids all 40 million inbox writes.",
+    "explanation": "Routing accounts above the celebrity threshold (~50k–100k followers) to fan-out-on-read avoids 40,000,000 Redis inbox writes (and minutes of replication lag) on a single tweet, merging the celebrity's recent posts at read time instead.",
+    "tags": [
+      "feed-generation-push-pull-hybrid",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "feed-generation-push-pull-hybrid-t1",
+    "topic": "feed-generation-push-pull-hybrid",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Pure Push (Fan-Out-on-Write) vs Pure Pull (Fan-Out-on-Read) vs Hybrid Push/Pull",
+    "scenario": "You are designing a home timeline for 300M daily active users. 99% of users have <500 followers, while 0.05% of verified accounts have 1M–100M followers.",
+    "prompt": "Which timeline architecture balances sub-50ms home-feed read latency with bounded write amplification?",
+    "question": "Which timeline architecture balances sub-50ms home-feed read latency with bounded write amplification?",
+    "options": [
+      "Pure Fan-Out-on-Write for all users, pushing every celebrity post into 100,000,000 follower inboxes",
+      "Pure Fan-Out-on-Read for all users, querying 800 followee outboxes on every timeline refresh",
+      "Hybrid Fan-Out: push `post_id` into active followers' home caches for normal authors (`< K` followers), and pull/merge posts from followed high-follower (`>= K`) accounts at read time"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "100M synchronous cache writes per celebrity post complete with zero lag",
+      "800-key scatter-gather reads on every mobile app open minimize read latency",
+      "Hybrid fan-out keeps read latency O(1) for the 99% normal graph via pre-computed inbox lists while bounding the worst-case write fan-out of celebrity posts"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Combine the read speed of Push for normal users with the write O(1) cost of Pull for celebrities.",
+    "explanation": "Pure push suffers from celebrity write storms (\"Justin Bieber problem\"); pure pull suffers from high read fan-out. Hybrid push/pull (and skipping push to inactive/dormant followers) captures the best of both.",
+    "tags": [
+      "feed-generation-push-pull-hybrid",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -498,6 +657,59 @@ window.QUESTION_BANK["newly-unread-indicator"] = [
       "newly-unread-indicator",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "newly-unread-indicator-n1",
+    "topic": "newly-unread-indicator",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Unread Indicator State Comparison (`last_read_ts` vs Per-Item Read Bit)",
+    "scenario": "A user subscribes to 50 channels that collectively produce 10,000 messages per day. Tracking a per-message `(user_id, message_id)` read receipt requires `10,000 rows/day` per user. Tracking only a monotonic `(user_id, channel_id, last_read_message_id)` watermark and comparing it against `channel.latest_message_id` requires only `50` watermark entries per user.",
+    "prompt": "How many watermark entries (`50 channels × 1 watermark`) are stored per user under the high-water-mark design?",
+    "question": "How many watermark entries (`50 channels × 1 watermark`) are stored per user under the high-water-mark design?",
+    "unit": "entries",
+    "answer": 50,
+    "tolerance": 0.2,
+    "hint": "1 watermark entry per subscribed channel (`50 × 1`).",
+    "explanation": "Storing 1 high-water mark (`last_seen_id`) per channel requires just 50 entries (~800 bytes) per user instead of 10,000 per-message rows/day—and checking whether a channel has unread items is a single comparison `channel.latest_id > user_channel.last_seen_id`!",
+    "tags": [
+      "newly-unread-indicator",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "newly-unread-indicator-t1",
+    "topic": "newly-unread-indicator",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Exact Unread Count vs Binary \"New Posts Available\" Pill (`latest_id > last_seen_id`)",
+    "scenario": "When a user opens a high-velocity feed or group channel, showing an exact badge like `\"437 unread\"` requires counting how many non-muted, non-deleted posts exist between `last_seen_id` and `latest_id`.",
+    "prompt": "How do high-scale social and chat systems keep unread badge rendering O(1) on app launch?",
+    "question": "How do high-scale social and chat systems keep unread badge rendering O(1) on app launch?",
+    "options": [
+      "Run `SELECT COUNT(*) FROM messages WHERE channel_id = ? AND id > ?` across 50 channels synchronously on every app launch",
+      "Push a write to every dormant user's database row whenever anyone posts anywhere",
+      "Compare cached `channel.latest_seq_id > user.last_read_seq_id` for a binary dot (or subtract contiguous per-channel sequence numbers `latest_seq - last_read_seq` capped at `\"99+\"`)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "50 range `COUNT(*)` queries per app open scale effortlessly at 500k QPS",
+      "Waking up dormant users' storage rows on every message minimizes write IOPS",
+      "Comparing two cached 64-bit integers (`latest_seq > last_read_seq`) or subtracting dense sequence numbers determines unread status in O(1) memory lookups without scanning message rows"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why do Slack, Discord, and Twitter show a binary dot or cap badges at `\"99+\"` using monotonic sequence numbers?",
+    "explanation": "By assigning a dense per-channel monotonic sequence number `seq_id` (or comparing Snowflake IDs for a binary dot), checking unread state across 50 channels reduces to comparing two cached integers in RAM.",
+    "tags": [
+      "newly-unread-indicator",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -565,6 +777,59 @@ window.QUESTION_BANK["hashtag-extraction-and-tag-store"] = [
       "apply",
       "inline"
     ]
+  },
+  {
+    "id": "hashtag-extraction-and-tag-store-n1",
+    "topic": "hashtag-extraction-and-tag-store",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Hot Hashtag Partition Write Load",
+    "scenario": "During a global event (e.g., `#WorldCup`), `400,000` posts per minute (`~6,667 posts/sec`) contain at least 3 hashtags on average (`20,000` hashtag-post index insertions per second), and `30%` of all hashtag insertions are for the single `#worldcup` tag.",
+    "prompt": "How many index writes per second (`30% of 20,000`) hit the single `#worldcup` hashtag key?",
+    "question": "How many index writes per second (`30% of 20,000`) hit the single `#worldcup` hashtag key?",
+    "unit": "writes/s",
+    "answer": 6000,
+    "tolerance": 0.2,
+    "hint": "Multiply 20,000 total tag writes/sec by 0.30.",
+    "explanation": "30% of 20,000 tag writes/sec = 6,000 writes/sec concentrated on the single `#worldcup` partition key—plus millions of concurrent readers opening the `#worldcup` feed.",
+    "tags": [
+      "hashtag-extraction-and-tag-store",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "hashtag-extraction-and-tag-store-t1",
+    "topic": "hashtag-extraction-and-tag-store",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Extracting Hashtags via Regex at Read Time vs Tokenizing at Ingest + Time-Bucketed Inverted Store",
+    "scenario": "Users click `#systemdesign` to view either \"Latest\" (chronological) or \"Top\" (high-engagement) posts containing that hashtag.",
+    "prompt": "How should hashtags be extracted, indexed, and served at scale?",
+    "question": "How should hashtags be extracted, indexed, and served at scale?",
+    "options": [
+      "Run `SELECT * FROM posts WHERE text LIKE '%#systemdesign%'` on the primary posts table on every click",
+      "Allow clients to pass arbitrary unvalidated hashtag lists that do not appear in the post text",
+      "Parse and canonicalize hashtags deterministically at ingest time into the post entity metadata, and write `(normalized_tag, time_bucket) -> post_id` into an asynchronous inverted tag index with a short-TTL edge cache for hot tags"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Leading-wildcard `LIKE '%#tag%'` queries use B-Tree indexes in O(1) time",
+      "Trusting client-supplied invisible tags prevents spam abuse",
+      "Deterministic server-side extraction prevents tag spoofing, while partitioning the inverted tag store by `(normalized_tag, time_bucket)` bounds partition size and serves \"Latest\" straight from the newest bucket"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why should the partition key for a hashtag posting list include a `time_bucket` (e.g., day or hour)?",
+    "explanation": "A popular hashtag like `#news` accumulates billions of posts over years. Partitioning the tag index by `(tag, time_bucket)` bounds partition size, keeps recent postings hot in RAM, and allows archiving old buckets cleanly.",
+    "tags": [
+      "hashtag-extraction-and-tag-store",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -631,6 +896,59 @@ window.QUESTION_BANK["reaction-modeling"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "reaction-modeling-n1",
+    "topic": "reaction-modeling",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Separate Reaction Counters vs `GROUP BY` Count on Every Feed Render",
+    "scenario": "A feed response renders 20 posts, and each post has an average of 5,000 reactions across 6 emoji types (`👍 ❤️ 😂 😮 😢 🙏`). Counting reactions via `SELECT emoji, COUNT(*) ... GROUP BY emoji` scans `20 × 5,000 = 100,000` rows per feed load; reading a materialized 6-integer reaction summary map (`6 × 8 bytes = 48 bytes`) per post reads `20` summary records.",
+    "prompt": "By what factor (`100,000 / 20`) does reading materialized reaction summary maps reduce records scanned per feed request?",
+    "question": "By what factor (`100,000 / 20`) does reading materialized reaction summary maps reduce records scanned per feed request?",
+    "unit": "x",
+    "answer": 5000,
+    "tolerance": 0.2,
+    "hint": "Divide 100,000 individual reaction rows by 20 post summary records.",
+    "explanation": "100,000 / 20 = 5,000× fewer records touched per feed render, plus the viewer's own reaction (`viewer_reaction`) is fetched via a single batched lookup on `(post_id, viewer_user_id)`.",
+    "tags": [
+      "reaction-modeling",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "reaction-modeling-t1",
+    "topic": "reaction-modeling",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Preventing Double-Counting When a User Switches Reaction from `👍` to `❤️`",
+    "scenario": "User U clicks `👍` on Post P, and 200 ms later changes their reaction to `❤️` (or double-clicks `👍`). If the service blindly emits `+1 ❤️` without knowing the previous state of `(post_id, user_id)`, the aggregate counters drift permanently.",
+    "prompt": "How do you keep decoupled aggregate emoji counters accurate when users toggle or switch reactions?",
+    "question": "How do you keep decoupled aggregate emoji counters accurate when users toggle or switch reactions?",
+    "options": [
+      "Increment the aggregate counter directly from the client without storing a per-user `(post_id, user_id)` record",
+      "Recompute `COUNT(*)` over all historical reactions synchronously on every read",
+      "Enforce a unique primary key on `(post_id, user_id)` in the authoritative reaction store so an upsert returns the previous state (`old_emoji -> new_emoji`), and emit the exact signed delta (`-1 old_emoji, +1 new_emoji`) via CDC/outbox to the sharded counter tier"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Stateless `+1` increments prevent a user from liking the same post 1,000 times",
+      "Full `COUNT(*)` scans scale to millions of reactions per post at 100k QPS",
+      "Only the authoritative `(post_id, user_id)` state transition knows whether an action was a net-new reaction (`+1 new`), an un-react (`-1 old`), or a switch (`-1 old, +1 new`)"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How can the counter pipeline know whether to decrement `👍` when a `❤️` request arrives?",
+    "explanation": "By keying the source-of-truth table on `(post_id, user_id)`, an atomic conditional upsert transitions `old_type -> new_type` and emits the exact transition delta (`-1 old, +1 new`) only when the state actually changed.",
+    "tags": [
+      "reaction-modeling",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -696,6 +1014,59 @@ window.QUESTION_BANK["photo-tagging-coordinate-model"] = [
       "photo-tagging-coordinate-model",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "photo-tagging-coordinate-model-n1",
+    "topic": "photo-tagging-coordinate-model",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Normalized Relative Coordinates (`[0.0, 1.0]`) Across Multi-Resolution Renditions",
+    "scenario": "A user uploads a `4000 × 3000` original photo and tags a friend's face at pixel `(x = 1000, y = 1500)`. The backend stores normalized coordinates `(u = x / width, v = y / height)`. Later, a mobile feed renders a `600 × 450` thumbnail rendition.",
+    "prompt": "At what horizontal pixel coordinate `x_thumb` (`u × 600`) should the mobile client render the tag pin on the `600 × 450` thumbnail?",
+    "question": "At what horizontal pixel coordinate `x_thumb` (`u × 600`) should the mobile client render the tag pin on the `600 × 450` thumbnail?",
+    "unit": "px",
+    "answer": 150,
+    "tolerance": 0.2,
+    "hint": "First compute `u = 1000 / 4000 = 0.25`, then multiply by the thumbnail width `600`.",
+    "explanation": "Normalized coordinate `u = 1000 / 4000 = 0.25` (and `v = 1500 / 3000 = 0.50`). Multiplying by any aspect-preserving rendition width `600 × 0.25 = 150 px` places the pin on the exact same facial feature across every resolution!",
+    "tags": [
+      "photo-tagging-coordinate-model",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "photo-tagging-coordinate-model-t1",
+    "topic": "photo-tagging-coordinate-model",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Storing Pixel Coordinates vs Normalized `[0,1]` Coordinates + Privacy Approval Workflow",
+    "scenario": "User A uploads a photo and tags User B. User B has enabled \"Review tags before they appear on my profile\", and User C has blocked User A.",
+    "prompt": "How should the photo-tag data model handle both multi-device coordinate rendering and privacy/approval visibility?",
+    "question": "How should the photo-tag data model handle both multi-device coordinate rendering and privacy/approval visibility?",
+    "options": [
+      "Burn the username text directly into the JPEG pixels at upload time and immediately publish the photo to User B's profile",
+      "Store raw device screen pixel coordinates from User A's iPhone viewport",
+      "Store normalized image-relative coordinates `(u, v ∈ [0.0, 1.0])` embedded on the photo metadata for O(1) feed rendering, paired with an inverse `(tagged_user_id, status, photo_id)` index where `status` transitions from `PENDING_REVIEW` to `APPROVED` before appearing on User B's profile"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Baking text into JPEG pixels allows instant tag removal and translation",
+      "iPhone screen coordinates align accurately on a 4K desktop monitor",
+      "Normalized `[0,1]` coordinates are resolution-independent, embedding approved tags on the photo avoids N+1 joins on feed load, and gating the inverse `tagged_user_id` profile index on `status = APPROVED` + block checks enforces privacy"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Separate (1) rendering the pin on the photo itself from (2) publishing the photo onto the tagged user's profile grid.",
+    "explanation": "Normalized `[0, 1]` coordinates survive CDN resizing, while dual-indexing `(photo_id -> tags[])` and `(tagged_user_id, approval_status -> photo_id)` enforces tag review and block rules cleanly.",
+    "tags": [
+      "photo-tagging-coordinate-model",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

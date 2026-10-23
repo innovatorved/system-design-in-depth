@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1044,12 +1044,18 @@ flowchart TD
 </tbody></table>
 <p>Lucene implements AND as a conjunction that leads with the lowest-cost iterator and advances the others to its current doc ID, which is the rarest-first strategy in code form. Web engines historically used tiered indexes keyed on PageRank-like static scores.</p>
 </div></div></article>
-      <section class="check-slider" data-slug="boolean-tiered-search" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="boolean-tiered-search" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: What tiers may change" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Rarest-first ordering" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Tier recall loss" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: What tiers may change" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Rarest-first ordering" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Tier recall loss" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Skip-Pointer Intersection Speedup" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Tiered Index (Hot Tier 0 in RAM vs Cold Tier 1 on SSD)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-boolean-tiered-search-c1" data-type="mcq" data-slug="boolean-tiered-search" data-index="0">
@@ -1167,12 +1173,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="boolean-tiered-search-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-boolean-tiered-search-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Stopping at K tier-1 matches trades recall for latency: a lower-quality document with a much better textual match can deserve to outrank tier-1 documents but is never examined. Zero matches is not the failure, because that case is exactly when the cascade to tier 2 fires.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-boolean-tiered-search-n1" data-type="numeric" data-slug="boolean-tiered-search" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Skip-Pointer Intersection Speedup</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A boolean `AND` query intersects a rare term `&quot;quorum&quot;` (`1,000` postings) with a common term `&quot;system&quot;` (`10,000,000` postings). Using skip pointers / block-max headers on the 10M posting list (with blocks of 128 docIDs), advancing to each of the 1,000 target docIDs inspects on average 3 block headers + 16 entries (`19` comparisons per probe).</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many thousands of comparisons does the skip-pointer intersection perform (`1,000 × 19` in thousands), compared to 10,001,000 in a naive linear merge?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-boolean-tiered-search-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-boolean-tiered-search-n1"
+              aria-label="Numeric estimate in thousand comparisons"
+              placeholder="Enter numeric estimate (thousand comparisons)..."
+            />
+            <span class="quiz-unit-badge">thousand comparisons</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 1,000 probes from the short list by 19 comparisons per probe, expressed in thousands.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="boolean-tiered-search-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-boolean-tiered-search-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Driving the intersection from the shortest posting list (`1,000` entries) and jumping across the 10M list via skip blocks performs only `1,000 × 19 = 19,000` comparisons (~526× fewer than scanning all 10M postings).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-boolean-tiered-search-t1" data-type="tradeoff" data-slug="boolean-tiered-search" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Tiered Index (Hot Tier 0 in RAM vs Cold Tier 1 on SSD)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A web search engine indexes 5 billion pages, but 90% of queries are satisfied by the top 100 million high-PageRank/high-authority pages (`Tier 0`).</p>
+          </div>
+        
+        <p class="check-slider__prompt">How does a tiered inverted index optimize latency and hardware cost across the 5B corpus?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-boolean-tiered-search-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-boolean-tiered-search-t1" value="0" />
+                  <span>Put all 5 billion documents in a single flat RAM tier across 10,000 servers</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-boolean-tiered-search-t1" value="1" />
+                  <span>Search only the bottom 100M spam pages first</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-boolean-tiered-search-t1" value="2" />
+                  <span>Query the compact in-memory `Tier 0` index first and only fall through to the larger SSD-backed `Tier 1 / Tier 2` indexes when `Tier 0` returns fewer than `K` high-confidence matches above the relevance threshold</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-boolean-tiered-search-t1" value="0" />
+                  <span>RAM is cheaper than NVMe SSDs per terabyte</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-boolean-tiered-search-t1" value="1" />
+                  <span>Low-quality pages have higher query hit rates</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-boolean-tiered-search-t1" value="2" />
+                  <span>Early termination at `Tier 0` serves ~85–90% of queries entirely from fast RAM, reserving SSD I/O on deep tiers for rare tail queries</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">If Tier 0 already contains 100 high-scoring exact matches, do you need to query Tier 1?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="boolean-tiered-search-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-boolean-tiered-search-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Tiered indexes partition documents by static quality/authority into decreasing tiers; most queries hit sufficient quality matches in Tier 0 and skip deeper tiers entirely.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1297,22 +1433,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

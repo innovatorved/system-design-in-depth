@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -966,12 +966,18 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: sizing the index</h2><ul><li>The catalog has 50 million SKUs at about 4 KB of indexed JSON each (title, description, brand, attributes, price and rating). That is about 200 GB of primary data, or roughly 400 GB with one replica. The on-disk index size varies with mappings, so measure it.</li><li>With shards targeted at 10 to 50 GB, about 8 to 12 primary shards is sensible. Too many small shards waste heap memory and slow down queries that fan out to every shard.</li><li>Merchants and inventory systems send about 3,000 updates per second at peak (price and stock). With <code>refresh_interval</code> at 1 s, changes become searchable within about a second. Bulk-index updates in batches of 1,000 to 5,000 documents instead of sending one request per document.</li><li>Queries peak at 5,000 per second, each with 6 facet aggregations. Scale reads by adding replicas, and cache common category landing pages (the first page of popular categories) for 30 to 60 s.</li></ul><h2>Where should faceting live?</h2><table><thead><tr><th>Option</th><th>Strength</th><th>Weakness</th><th>Good fit</th></tr></thead><tbody><tr><td>Relational DB (Postgres with GIN on JSONB, or generated columns)</td><td>Transactional, one system</td><td>Relevance ranking and many dynamic facet counts get hard beyond a few million rows</td><td>Small and medium catalogs</td></tr><tr><td>Search engine (Elasticsearch / OpenSearch / Solr)</td><td>BM25 relevance, fast aggregations over doc values, typo tolerance</td><td>Second system to run; eventual consistency</td><td>Large catalogs with rich search</td></tr><tr><td>Hosted search (Algolia, Typesense Cloud)</td><td>Low operational load, fast</td><td>Cost per record and per operation; less control</td><td>Teams without search specialists</td></tr><tr><td>Precomputed category pages in a KV store or cache</td><td>Fastest reads</td><td>Combinations of filters explode</td><td>The top N category and sort combinations only</td></tr></tbody></table><h2>Handling fast-changing inventory</h2><p>Stock levels change much more often than titles. Common patterns:</p><ul><li>Index a coarse <strong>stock bucket</strong> (in stock, low, out) instead of the exact count, so most stock changes do not require reindexing.</li><li>Apply exact availability at <strong>display time</strong>, by looking up the 24 SKUs on the page in an inventory cache.</li><li>Rank out-of-stock items lower rather than removing them, so pages do not reshuffle every time stock changes.</li></ul><p>Amazon, Shopify and Zalando have all described this split publicly: a source-of-truth catalog service, change streams, and a search layer tuned for relevance and facets.</p>
 </div></article>
-      <section class="check-slider" data-slug="ecommerce-product-listing-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="ecommerce-product-listing-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why CDC over dual write" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Choosing shard count" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Stock churn in the index" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why CDC over dual write" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Choosing shard count" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Stock churn in the index" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Flash-Sale Inventory Oversell Prevention Throughput" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Deducting Stock at &quot;Add to Cart&quot; vs &quot;Checkout Initiation TTL Reservation&quot; vs &quot;After Payment&quot;" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-ecommerce-product-listing-system-design-c1" data-type="mcq" data-slug="ecommerce-product-listing-system-design" data-index="0">
@@ -1089,12 +1095,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ecommerce-product-listing-system-design-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ecommerce-product-listing-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">A coarse bucket means most stock changes do not touch the index, the page&#039;s 24 SKUs get exact availability from an inventory cache, and demoting rather than removing keeps pages stable. A longer refresh interval cuts indexing cost but makes stock staler while still reshuffling pages.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-ecommerce-product-listing-system-design-n1" data-type="numeric" data-slug="ecommerce-product-listing-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Flash-Sale Inventory Oversell Prevention Throughput</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">During a flash drop of `1,000` limited-edition sneakers, `250,000` users click &quot;Buy Now&quot; within 2 seconds (`125,000 req/s`). An atomic Redis Lua inventory gate (`DECR` if `stock &gt; 0`) filters out the `249,000` excess requests in memory and forwards only the `1,000` winning reservation tokens to the PostgreSQL checkout database (`500 writes/sec` over 2 seconds).</p>
+          </div>
+        
+        <p class="check-slider__prompt">What percentage of the `250,000` flash-sale requests (`249,000 / 250,000 × 100%`) are absorbed and rejected at the Redis atomic gate without ever touching PostgreSQL?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-ecommerce-product-listing-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-ecommerce-product-listing-system-design-n1"
+              aria-label="Numeric estimate in %"
+              placeholder="Enter numeric estimate (%)..."
+            />
+            <span class="quiz-unit-badge">%</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 249,000 rejected requests by 250,000 total requests (`0.996 = 99.6%`).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ecommerce-product-listing-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ecommerce-product-listing-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`249,000 / 250,000 = 99.6%` of the traffic spike is shed in &lt;0.2 ms at the Redis Lua gate, reducing PostgreSQL load from a crushing 125,000 tx/s down to just 500 tx/s.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-ecommerce-product-listing-system-design-t1" data-type="tradeoff" data-slug="ecommerce-product-listing-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Deducting Stock at &quot;Add to Cart&quot; vs &quot;Checkout Initiation TTL Reservation&quot; vs &quot;After Payment&quot;</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">In an e-commerce store, 70% of shoppers who click &quot;Add to Cart&quot; never complete checkout, and external credit-card payment authorization takes 2–5 seconds.</p>
+          </div>
+        
+        <p class="check-slider__prompt">When and how should inventory be reserved so you neither oversell nor lock up stock in abandoned carts?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-ecommerce-product-listing-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ecommerce-product-listing-system-design-t1" value="0" />
+                  <span>Deduct inventory permanently on &quot;Add to Cart&quot; so bots can lock up 100% of store inventory without paying</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ecommerce-product-listing-system-design-t1" value="1" />
+                  <span>Only check and deduct inventory after charging the customer&#039;s credit card, then issue refunds when stock is gone</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ecommerce-product-listing-system-design-t1" value="2" />
+                  <span>Keep &quot;Add to Cart&quot; non-blocking, atomically reserve stock with a strict 10-minute TTL hold (`available -&gt; reserved`) when the user enters Checkout/Payment, commit `reserved -&gt; sold` on payment webhook/confirmation, and auto-release expired holds via a reaper</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ecommerce-product-listing-system-design-t1" value="0" />
+                  <span>Letting unauthenticated carts lock inventory prevents denial-of-inventory attacks</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ecommerce-product-listing-system-design-t1" value="1" />
+                  <span>Charging credit cards for out-of-stock items saves payment gateway fees</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ecommerce-product-listing-system-design-t1" value="2" />
+                  <span>A two-phase TTL reservation at checkout initiation guarantees no customer is charged for an out-of-stock item, avoids holding DB locks during 3-second Stripe calls, and reclaims abandoned checkout holds after 10 minutes</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens if you reserve too early (Add to Cart) vs too late (after charging the card)?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ecommerce-product-listing-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ecommerce-product-listing-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Reserving at checkout initiation with a bounded TTL (`reserved_until = NOW() + 10m`) prevents both cart-hoarding DoS and post-payment oversells.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1207,22 +1343,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

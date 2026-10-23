@@ -28,10 +28,10 @@
       document.body.appendChild(s);
     });
 
-    // Basic Consent Mode: Load GA4 library ONLY if consent has already been granted
-    let consentGranted = false;
+    // Load GA4 library by default unless user explicitly opted out
+    let consentGranted = true;
     try {
-      consentGranted = localStorage.getItem('sd-consent') === 'granted';
+      if (localStorage.getItem('sd-consent') === 'denied') consentGranted = false;
     } catch {}
     if (consentGranted) {
       loadGA4();

@@ -63,6 +63,59 @@ window.QUESTION_BANK["counting-at-scale"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "counting-at-scale-n1",
+    "topic": "counting-at-scale",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Write Coalescing Buffer Compression Ratio",
+    "scenario": "A viral post receives 150,000 like increments/sec across 50 stateless API servers. Instead of issuing 150,000 `UPDATE posts SET likes = likes + 1` SQL statements per second, each of the 50 API servers accumulates deltas in memory and flushes 1 aggregated `likes = likes + delta` statement every 2 seconds.",
+    "prompt": "How many total database `UPDATE` statements per second (`50 servers / 2 seconds`) hit the database after in-memory write coalescing?",
+    "question": "How many total database `UPDATE` statements per second (`50 servers / 2 seconds`) hit the database after in-memory write coalescing?",
+    "unit": "updates/s",
+    "answer": 25,
+    "tolerance": 0.2,
+    "hint": "50 servers each flush once every 2 seconds (`50 / 2`).",
+    "explanation": "50 servers flushing once per 2 seconds emit just `50 / 2 = 25` SQL updates/sec instead of 150,000 updates/sec—a 6,000× reduction in row-lock contention!",
+    "tags": [
+      "counting-at-scale",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "counting-at-scale-t1",
+    "topic": "counting-at-scale",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Single-Row SQL Counter vs Sharded Counter vs Write-Behind Aggregation",
+    "scenario": "You need to count page views at 200,000 increments/sec while displaying the approximate live count on the page and persisting durable hourly totals.",
+    "prompt": "Which counting architecture avoids single-row lock contention while protecting against node crashes?",
+    "question": "Which counting architecture avoids single-row lock contention while protecting against node crashes?",
+    "options": [
+      "Run `UPDATE pages SET views = views + 1 WHERE id = $1` synchronously on a single SQL row for every view",
+      "Hold the counter only in volatile process RAM and flush once a week",
+      "Ingest view events into a partitioned log (Kafka) or sharded Redis counters with periodic micro-batch checkpointing (`+delta` every few seconds) into the durable store"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "A single SQL row lock can sustain 200,000 serialized transactions/sec",
+      "Volatile weekly flushes guarantee zero data loss on deploy",
+      "Sharding/buffering increments in memory or a partitioned log removes the single-row lock bottleneck and coalesces thousands of `+1` events into a single periodic `+N` write"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why can't a single database row lock handle 200,000 increments per second?",
+    "explanation": "Serializing 200,000 row-level X-locks per second on one key is physically impossible. Coalescing increments in sharded counters or stream micro-batches reduces database writes by orders of magnitude.",
+    "tags": [
+      "counting-at-scale",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -129,6 +182,59 @@ window.QUESTION_BANK["view-counting-at-scale"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "view-counting-at-scale-n1",
+    "topic": "view-counting-at-scale",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: HyperLogLog vs Exact `SET` Memory for Unique Viewers",
+    "scenario": "A popular video has 50,000,000 unique viewers (`user_id` = 8 bytes). Tracking unique viewers via an exact Redis `SET` of 8-byte IDs (plus hash table entry overhead, ~24 bytes/member) takes `1.2 GB` (`1,200,000 KB`) for that single video. A Redis HyperLogLog with `16,384` 6-bit registers (`0.81%` standard error) uses a fixed `12 KB`.",
+    "prompt": "By what factor (`1,200,000 KB / 12 KB`) does HyperLogLog reduce memory usage for this video's unique viewer count?",
+    "question": "By what factor (`1,200,000 KB / 12 KB`) does HyperLogLog reduce memory usage for this video's unique viewer count?",
+    "unit": "x",
+    "answer": 100000,
+    "tolerance": 0.2,
+    "hint": "Divide 1,200,000 KB by 12 KB.",
+    "explanation": "1,200,000 KB / 12 KB = 100,000× less memory: a 12 KB HyperLogLog counts tens of millions of unique viewers with <1% error in 100,000× less RAM than an exact set.",
+    "tags": [
+      "view-counting-at-scale",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "view-counting-at-scale-t1",
+    "topic": "view-counting-at-scale",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Public Engagement View Counts vs Monetized Ad-Billing Counts",
+    "scenario": "A video platform displays both a public \"1.4M Views\" counter under the video player (requiring <100 ms update freshness) and a creator payout / advertiser billing ledger (requiring strict bot filtering and exact deduplication).",
+    "prompt": "Should both numbers be served by the same pipeline, or how should the architecture split them?",
+    "question": "Should both numbers be served by the same pipeline, or how should the architecture split them?",
+    "options": [
+      "Block the video player from playing until a synchronous fraud model and ACID billing transaction finish",
+      "Pay advertisers and creators directly from unvalidated client-side HyperLogLog counters",
+      "Use a Lambda/Dual-Path design: a fast real-time approximate path (in-memory/HLL + sharded counters) for the public UI badge, and a separate asynchronous verified pipeline (Kafka -> Flink deduplication + fraud/bot scoring -> OLAP ledger) for monetization"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Blocking video playback for fraud analysis improves viewer retention",
+      "Unfiltered client beacons are immune to click-farm fraud",
+      "UI social-proof counters prioritize low latency and tolerate ~1% approximation, whereas financial billing tolerates minutes/hours of delay in exchange for strict idempotency and bot filtering"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Does a viewer care if \"1.4M views\" is off by 0.5%, vs does an advertiser care if they are billed for bot views?",
+    "explanation": "Separating the fast approximate social-proof counter from the audited, deduplicated financial settlement pipeline lets each path optimize for its true SLO.",
+    "tags": [
+      "view-counting-at-scale",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -194,6 +300,59 @@ window.QUESTION_BANK["impression-counting-system-design"] = [
       "impression-counting-system-design",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "impression-counting-system-design-n1",
+    "topic": "impression-counting-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Short-Term Deduplication State Sizing in Stream Processing",
+    "scenario": "An ad impression pipeline ingests 200,000 impressions/sec and must deduplicate retried client beacons over a sliding 10-minute (`600-second`) window in Flink RocksDB state. Each `impression_id` state entry (16-byte UUID + timestamp overhead) takes 32 bytes.",
+    "prompt": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of RocksDB state are required to hold all `impression_id` keys across the 600-second window (`200,000 × 600 × 32 B`)?",
+    "question": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of RocksDB state are required to hold all `impression_id` keys across the 600-second window (`200,000 × 600 × 32 B`)?",
+    "unit": "GB",
+    "answer": 3.84,
+    "tolerance": 0.2,
+    "hint": "Total impressions in 600s = `200,000 × 600 = 120,000,000`. Multiply by 32 bytes and divide by 10^9.",
+    "explanation": "200,000 imp/s × 600 s = 120,000,000 active IDs in the window. At 32 bytes each, `120M × 32 B = 3.84 × 10^9 B = 3.84 GB`, which fits easily in partitioned Flink RocksDB state!",
+    "tags": [
+      "impression-counting-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "impression-counting-system-design-t1",
+    "topic": "impression-counting-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Client-Generated `impression_id` vs Server-Signed Impression Token",
+    "scenario": "When an ad server returns an ad to a mobile client, the client fires an `/impression` beacon when 50% of the ad pixels are visible for >= 1 second (MRC standard). Network retries can send the same beacon multiple times, and malicious bots can fabricate fake beacons.",
+    "prompt": "How should the impression identifier be constructed and deduplicated?",
+    "question": "How should the impression identifier be constructed and deduplicated?",
+    "options": [
+      "Let the client generate a new random UUID on every HTTP retry of the same ad view",
+      "Trust any `/impression?ad_id=123` call without cryptographic signature verification",
+      "Have the ad server mint a cryptographically signed (HMAC) `impression_id` at ad-serve time containing `(ad_id, user_id, auction_id, timestamp)` and deduplicate by `impression_id` in a stateful stream processor partitioned by `impression_id`"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Generating a new UUID on every retry prevents duplicate billing",
+      "Unsigned query parameters prevent replay and forgery attacks",
+      "A server-minted HMAC token proves the impression corresponded to a real ad auction within a valid TTL, and reusing that exact `impression_id` across client network retries guarantees idempotent deduplication"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How do you prove both (1) that the ad was genuinely served by your auction engine and (2) that network retries of that view only count once?",
+    "explanation": "Minting a signed `impression_id` at ad-serve time binds the view beacon to an authentic auction event and provides the deterministic idempotency key for stream deduplication.",
+    "tags": [
+      "impression-counting-system-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -380,6 +539,59 @@ window.QUESTION_BANK["mergeable-sketches-for-analytics"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "mergeable-sketches-for-analytics-n1",
+    "topic": "mergeable-sketches-for-analytics",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Pre-Aggregated HLL Rollup Storage Reduction",
+    "scenario": "An analytics warehouse tracks daily unique users across 10,000 dimensions (country × device × app_version). Storing raw user IDs per dimension cell takes `400 GB/day`, whereas storing one mergeable `16 KB` HyperLogLog sketch per dimension cell (`10,000 × 16 KB`) allows arbitrary `UNION` rollups across dimensions and days.",
+    "prompt": "How many megabytes per day (MB/day, where 1 MB = 1,000 KB) do the 10,000 mergeable `16 KB` HLL sketches occupy in total?",
+    "question": "How many megabytes per day (MB/day, where 1 MB = 1,000 KB) do the 10,000 mergeable `16 KB` HLL sketches occupy in total?",
+    "unit": "MB/day",
+    "answer": 160,
+    "tolerance": 0.2,
+    "hint": "Multiply 10,000 dimension cells by 16 KB and divide by 1,000 KB/MB.",
+    "explanation": "10,000 cells × 16 KB = 160,000 KB = 160 MB/day (a 2,500× reduction from 400 GB/day), and any 30-day multi-country rollup can be computed in milliseconds by taking the element-wise register `MAX` of the HLL sketches!",
+    "tags": [
+      "mergeable-sketches-for-analytics",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "mergeable-sketches-for-analytics-t1",
+    "topic": "mergeable-sketches-for-analytics",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Storing Pre-Computed Integer `COUNT(DISTINCT)` vs Storing Mergeable HLL Sketches",
+    "scenario": "A team pre-aggregates daily unique active users (`DAU`) as a plain integer per day (`Mon = 1.2M, Tue = 1.3M, ...`). Product managers then ask for Weekly Active Users (`WAU`) and Monthly Active Users (`MAU`) across arbitrary country combinations.",
+    "prompt": "Why can't you sum daily `COUNT(DISTINCT)` integers to get `WAU` or `MAU`, and how do mergeable sketches solve the OLAP cube problem?",
+    "question": "Why can't you sum daily `COUNT(DISTINCT)` integers to get `WAU` or `MAU`, and how do mergeable sketches solve the OLAP cube problem?",
+    "options": [
+      "Summing Monday's DAU + Tuesday's DAU gives exact WAU because no user ever visits on two different days",
+      "Re-scan 90 days of raw petabyte event logs from scratch on every dashboard click",
+      "Distinct counts are non-additive across time or dimensions; storing serialized HyperLogLog / Theta sketches as the column value in the daily rollup table allows exact register-level `HLL_UNION` merges across any combination of days and dimensions in milliseconds"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "`COUNT(DISTINCT)` is a linear additive aggregation like `SUM`",
+      "Full petabyte scans meet sub-second interactive dashboard SLAs",
+      "Because `HLL(A ∪ B)` is a commutative, associative, idempotent monoid operation (`max(reg_A[i], reg_B[i])`), daily HLL columns roll up into weekly/monthly/global distinct counts without touching raw events"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "If User 42 visits on Monday AND Tuesday, what happens if you add Monday's integer count to Tuesday's integer count?",
+    "explanation": "Integer `COUNT(DISTINCT)` loses set membership identity and cannot be summed across days or dimensions. Storing mergeable sketches (HLL or Theta Sketch for set intersections) preserves composable union capability in O(1) space.",
+    "tags": [
+      "mergeable-sketches-for-analytics",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -446,6 +658,59 @@ window.QUESTION_BANK["bucketed-time-window-aggregation"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "bucketed-time-window-aggregation-n1",
+    "topic": "bucketed-time-window-aggregation",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Sliding Window Ring-Buffer Sub-Bucket Granularity",
+    "scenario": "You need a sliding \"last 5 minutes\" (`300-second`) request and error counter per API key that advances every 5 seconds. Instead of storing every individual timestamp, you maintain a circular ring buffer of `5-second` sub-buckets per API key.",
+    "prompt": "How many `5-second` sub-buckets (`300 / 5`) are needed in the ring buffer to cover a 300-second sliding window?",
+    "question": "How many `5-second` sub-buckets (`300 / 5`) are needed in the ring buffer to cover a 300-second sliding window?",
+    "unit": "buckets",
+    "answer": 60,
+    "tolerance": 0.2,
+    "hint": "Divide the 300-second window by the 5-second bucket width.",
+    "explanation": "300 seconds / 5 seconds = 60 integer sub-buckets per key (~480 bytes total regardless of whether the key receives 10 or 10,000,000 requests in those 5 minutes).",
+    "tags": [
+      "bucketed-time-window-aggregation",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "bucketed-time-window-aggregation-t1",
+    "topic": "bucketed-time-window-aggregation",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Handling Late-Arriving Out-of-Order Events in Windowed Stream Aggregation",
+    "scenario": "Mobile clients buffer analytics events while offline in a subway tunnel and upload them 4 minutes later. Your stream processor aggregates 1-minute event-time windows.",
+    "prompt": "How should a production stream processor (Flink/Kafka Streams) handle event-time windows vs late events?",
+    "question": "How should a production stream processor (Flink/Kafka Streams) handle event-time windows vs late events?",
+    "options": [
+      "Use server processing time (`System.currentTimeMillis()`) so a subway burst at 12:05 spikes the 12:05 metric with 12:01 events",
+      "Hold every 1-minute window open in RAM forever waiting for late events",
+      "Aggregate by Event Time using Watermarks + a bounded Allowed Lateness window (e.g., 5–10 minutes) that emits incremental/retracted window updates, and route extremely late events (>10 min) to a side-output stream for batch reconciliation"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Processing time accurately reflects when the user action occurred offline",
+      "Never closing windows uses bounded memory",
+      "Watermarks track event-time progress; bounded allowed lateness handles 99% of delayed mobile flushes in real time while side outputs prevent unbounded state retention"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens to RocksDB/RAM state if you never expire old 1-minute window state?",
+    "explanation": "Combining Event-Time Watermarks, a bounded Allowed Lateness window (emitting updated pane results), and a late-event side output balances real-time accuracy with bounded state memory.",
+    "tags": [
+      "bucketed-time-window-aggregation",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -511,6 +776,59 @@ window.QUESTION_BANK["raw-events-vs-derived-analytics"] = [
       "raw-events-vs-derived-analytics",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "raw-events-vs-derived-analytics-n1",
+    "topic": "raw-events-vs-derived-analytics",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Derived Rollup Table Scan Compression",
+    "scenario": "A service logs 1,000,000,000 (`10^9`) raw checkout events per day across 5,000 merchants. A dashboard queries hourly revenue per merchant over 1 day (`5,000 merchants × 24 hours = 120,000` pre-aggregated rollup rows).",
+    "prompt": "Approximately how many times fewer rows (`1,000,000,000 / 120,000`, rounded to the nearest hundred) does the dashboard scan when querying the hourly rollup table instead of raw events?",
+    "question": "Approximately how many times fewer rows (`1,000,000,000 / 120,000`, rounded to the nearest hundred) does the dashboard scan when querying the hourly rollup table instead of raw events?",
+    "unit": "x",
+    "answer": 8300,
+    "tolerance": 0.2,
+    "hint": "Divide `1,000,000,000` by `120,000` (`≈ 8,333`).",
+    "explanation": "`1,000,000,000 / 120,000 = 8,333×` (~8,300×) fewer rows scanned, turning a multi-second billion-row scan into a 2-millisecond lookup.",
+    "tags": [
+      "raw-events-vs-derived-analytics",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "raw-events-vs-derived-analytics-t1",
+    "topic": "raw-events-vs-derived-analytics",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Discarding Raw Events After Rollup vs Immutable Raw Log + Recomputable Materialized Views",
+    "scenario": "To save storage costs, an engineering team deletes raw immutable events immediately after aggregating them into an hourly summary table. A month later, they discover a currency-conversion bug in the aggregation code that overstated EUR revenue by 10%.",
+    "prompt": "Why is discarding raw events catastrophic here, and what is the canonical Kappa/Lakehouse architecture?",
+    "question": "Why is discarding raw events catastrophic here, and what is the canonical Kappa/Lakehouse architecture?",
+    "options": [
+      "Mutate the corrupted hourly summary numbers by guessing which percentage of traffic came from Europe",
+      "Never compute derived rollups and force all user dashboards to scan cold S3 raw logs directly",
+      "Treat the raw append-only event log (tiered to cheap S3 Parquet/Iceberg) as the immutable source of truth, and treat all rollup tables as disposable, recomputable materialized views that can be backfilled whenever code or business logic changes"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Guessed adjustments pass financial audits",
+      "Scanning cold S3 logs on every page load is cheap and fast",
+      "Aggregation is a lossy one-way function; keeping raw immutable events in cheap object storage ($0.01–$0.02/GB-mo) preserves the ability to fix bugs, backfill new metrics, and audit discrepancies"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Can you invert a `SUM()` aggregation after a bug in your currency conversion logic is discovered?",
+    "explanation": "Code has bugs and product definitions evolve. Raw immutable events in cheap object storage serve as the system of record, while derived OLAP rollup tables provide low-latency serving and can be rebuilt on demand.",
+    "tags": [
+      "raw-events-vs-derived-analytics",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -697,6 +1015,59 @@ window.QUESTION_BANK["top-k-heavy-hitters"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "top-k-heavy-hitters-n1",
+    "topic": "top-k-heavy-hitters",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Count-Min Sketch Memory Footprint vs Exact Hash Map",
+    "scenario": "To track heavy-hitter IP addresses or search queries across 500,000,000 unique strings (requiring ~32 GB for an exact hash map), you configure a Count-Min Sketch with depth `d = 5` hash functions and width `w = 200,000` 4-byte (`32-bit`) counters.",
+    "prompt": "How many megabytes (MB, where 1 MB = 10^6 bytes) of memory does this `5 × 200,000` Count-Min Sketch require?",
+    "question": "How many megabytes (MB, where 1 MB = 10^6 bytes) of memory does this `5 × 200,000` Count-Min Sketch require?",
+    "unit": "MB",
+    "answer": 4,
+    "tolerance": 0.2,
+    "hint": "Multiply `5 rows × 200,000 counters × 4 bytes` and divide by 10^6.",
+    "explanation": "`5 × 200,000 × 4 bytes = 4,000,000 bytes = 4 MB` (an 8,000× reduction from 32 GB, fitting entirely inside CPU L3 cache!).",
+    "tags": [
+      "top-k-heavy-hitters",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "top-k-heavy-hitters-t1",
+    "topic": "top-k-heavy-hitters",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Why Count-Min Sketch Alone Cannot Enumerate Top-K Keys",
+    "scenario": "A developer initializes a Count-Min Sketch (CMS) to find the Top 100 trending hashtags out of 50 million incoming tweets. At the end of the minute, they try to ask the CMS: \"Give me the 100 hashtag strings with the highest counts.\"",
+    "prompt": "Why can't a standalone Count-Min Sketch answer `getTopK()`, and what companion structure completes the Heavy Hitters algorithm?",
+    "question": "Why can't a standalone Count-Min Sketch answer `getTopK()`, and what companion structure completes the Heavy Hitters algorithm?",
+    "options": [
+      "A Count-Min Sketch stores all 50 million hashtag strings in sorted order",
+      "A Count-Min Sketch underestimates counts due to hash collisions",
+      "A Count-Min Sketch only stores hashed integer counters (`O(1)` frequency estimation `estimate(key)`), not the keys themselves; pair the CMS with a bounded Min-Heap of size `K` (or use Space-Saving / Misra-Gries summary counters) updated whenever `cms.estimate(key)` exceeds the heap minimum"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Hash counters can be reversed to recover the original strings",
+      "CMS errors are negative rather than positive",
+      "CMS provides `estimate(item)` in fixed memory; maintaining a `K`-element Min-Heap alongside the CMS (or using Space-Saving's `O(1/ε)` monitored key table) retains the actual top-K strings and their counts"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Does a Count-Min Sketch store any key strings inside its `d × w` matrix of integers?",
+    "explanation": "A Count-Min Sketch is a frequency oracle (`estimate(x)`), not a key container. Pairing it with a bounded `K`-size min-heap (or using the Space-Saving algorithm) tracks the actual top-K key strings in tiny bounded memory.",
+    "tags": [
+      "top-k-heavy-hitters",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -762,6 +1133,59 @@ window.QUESTION_BANK["reservoir-sampling"] = [
       "reservoir-sampling",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "reservoir-sampling-n1",
+    "topic": "reservoir-sampling",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Algorithm R Inclusion Probability Verification",
+    "scenario": "You maintain a uniform Reservoir Sample of size `k = 1,000` items over an unbounded stream of distributed traces. Currently `n = 100,000` traces have passed through the stream.",
+    "prompt": "Under Vitter's Algorithm R, what is the exact probability (in %) that any specific trace among the 100,000 seen so far is currently held in the 1,000-item reservoir?",
+    "question": "Under Vitter's Algorithm R, what is the exact probability (in %) that any specific trace among the 100,000 seen so far is currently held in the 1,000-item reservoir?",
+    "unit": "%",
+    "answer": 1,
+    "tolerance": 0.2,
+    "hint": "Divide reservoir size `k = 1,000` by stream count `n = 100,000` and multiply by 100%.",
+    "explanation": "By induction, replacing an existing item with probability `k / i` at step `i` guarantees every one of the `n = 100,000` items sits in the `k = 1,000` reservoir with exact uniform probability `k / n = 1,000 / 100,000 = 1%` without knowing `n` in advance.",
+    "tags": [
+      "reservoir-sampling",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "reservoir-sampling-t1",
+    "topic": "reservoir-sampling",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Distributed Reservoir Sampling Across Heterogeneous-Volume Shards",
+    "scenario": "You have 10 ingestion servers. Server 1 handles 90,000 requests/min while Servers 2..10 handle 1,000 requests/min each. Each server maintains a local reservoir of `k = 100` items. If the aggregator simply picks 10 items from each server's reservoir with equal weight, Server 1's traffic is massively under-represented.",
+    "prompt": "How do you merge reservoir samples across shards with unequal stream volumes so the global sample remains strictly uniform?",
+    "question": "How do you merge reservoir samples across shards with unequal stream volumes so the global sample remains strictly uniform?",
+    "options": [
+      "Take an equal number of samples from each server regardless of how many events that server saw",
+      "Require all servers to ship 100% of raw events to a single central machine before sampling",
+      "Use Weighted / Priority Reservoir Sampling (assigning each item a random key `u^(1/w)` or `u = Uniform(0,1)` and taking the global top-K smallest keys, or resampling proportionally to each shard's total observed count `N_i`)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Unweighted averaging across skewed shards produces an unbiased global sample",
+      "Shipping 100% of raw events over the network defeats the purpose of edge sampling",
+      "Tracking each shard's observed stream count `N_i` (or assigning each event an independent `Uniform(0,1)` priority key and merging the global minimum-`K` heap) preserves exact uniform inclusion probability across arbitrary shard skew"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How does assigning each item `r ~ Uniform(0,1)` and keeping the `K` smallest `r` values behave when you merge two heaps?",
+    "explanation": "Assigning each stream item an independent `r ~ Uniform(0, 1)` (or `u^(1/w)` for weighted sampling) and keeping the `K` smallest values in a max-heap makes reservoir sampling trivially mergeable across distributed nodes!",
+    "tags": [
+      "reservoir-sampling",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -948,6 +1372,59 @@ window.QUESTION_BANK["streaming-percentile-analytics"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "streaming-percentile-analytics-n1",
+    "topic": "streaming-percentile-analytics",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: DDSketch / HDR Histogram Merge vs Raw Latency Array Memory",
+    "scenario": "An API gateway handles 1,000,000 requests/minute across 100 pods (60,000,000 requests/hour). Storing all 60,000,000 raw `8-byte` float64 latencies to compute an exact hourly p99 takes `480 MB` per endpoint, whereas a mergeable DDSketch / t-digest with 1% relative accuracy takes `4 KB` per pod-minute (or `4 KB` once merged).",
+    "prompt": "By what factor (`480,000 KB / 4 KB`) is a single merged `4 KB` hourly DDSketch smaller than the `480 MB` (`480,000 KB`) raw latency array?",
+    "question": "By what factor (`480,000 KB / 4 KB`) is a single merged `4 KB` hourly DDSketch smaller than the `480 MB` (`480,000 KB`) raw latency array?",
+    "unit": "x",
+    "answer": 120000,
+    "tolerance": 0.2,
+    "hint": "Divide 480,000 KB by 4 KB.",
+    "explanation": "A `4 KB` logarithmically bucketed DDSketch is `480,000 / 4 = 120,000×` smaller than storing 60M raw latencies while guaranteeing p99 relative error within ≤1%.",
+    "tags": [
+      "streaming-percentile-analytics",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "streaming-percentile-analytics-t1",
+    "topic": "streaming-percentile-analytics",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Why Averaging Per-Host `p99` Numbers Is Mathematically Invalid",
+    "scenario": "Each of 50 application pods computes its own local `p99` latency float every minute and sends that single float to the monitoring backend, which computes `AVG(pod_p99)` to display the \"cluster p99 latency\".",
+    "prompt": "Why is averaging (or taking max of) pre-computed percentile floats across hosts or time windows a severe observability anti-pattern, and what must be shipped instead?",
+    "question": "Why is averaging (or taking max of) pre-computed percentile floats across hosts or time windows a severe observability anti-pattern, and what must be shipped instead?",
+    "options": [
+      "Percentiles are linear and associative just like `SUM` and `COUNT`",
+      "Taking the `MIN(pod_p99)` gives the exact global p99 across skewed pods",
+      "Percentiles are non-mergeable order statistics (a pod with 10 requests and a pod with 100,000 requests cannot have their p99s averaged); pods must emit mergeable histogram buckets or quantile sketches (DDSketch, HDRHistogram, Prometheus native histograms) that sum bucket counts before extracting the global quantile"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "The average of 99th percentiles equals the 99th percentile of the union",
+      "Traffic volume and tail distribution are always identical across every pod and minute",
+      "Only by summing frequency counts across logarithmic histogram buckets (DDSketch / HDR Histogram) can you reconstruct the true cumulative distribution of the combined population across pods and time ranges"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "If Pod A serves 99,000 fast requests and Pod B serves 1,000 slow requests (all >500 ms), what is the true global p99 vs the average of Pod A's p99 and Pod B's p99?",
+    "explanation": "In that example, all 1,000 slow requests on Pod B represent the top 1% of the 100,000 total requests (`global p99 > 500 ms`), whereas averaging Pod A's p99 and Pod B's p99 hides the outage. Mergeable histograms/DDSketches solve this.",
+    "tags": [
+      "streaming-percentile-analytics",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -1013,6 +1490,59 @@ window.QUESTION_BANK["live-reactions-high-throughput-design"] = [
       "live-reactions-high-throughput-design",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "live-reactions-high-throughput-design-n1",
+    "topic": "live-reactions-high-throughput-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Edge Fan-Out Coalescing for a 2M-Viewer Livestream",
+    "scenario": "During a live sports broadcast with `2,000,000` concurrent viewers, viewers tap floating heart reactions at `100,000 reactions/sec`. If every individual reaction were broadcast to all 2,000,000 viewers, the server would send `2 × 10^11` messages/sec. Instead, edge aggregators coalesce reactions into a single summary frame (`{heart: +25000, fire: +8000}`) pushed at `4 Hz` (4 frames/sec) per viewer so the client animates a smooth particle burst.",
+    "prompt": "How manymillions of outbound WebSocket frames per second (`2,000,000 viewers × 4 frames/s`, in millions) are sent across the edge fleet after 4 Hz coalescing?",
+    "question": "How manymillions of outbound WebSocket frames per second (`2,000,000 viewers × 4 frames/s`, in millions) are sent across the edge fleet after 4 Hz coalescing?",
+    "unit": "million frames/s",
+    "answer": 8,
+    "tolerance": 0.2,
+    "hint": "Multiply 2 million viewers by 4 frames/sec.",
+    "explanation": "Coalescing inbound reactions into a 250 ms (`4 Hz`) summary frame bounds outbound delivery to `2,000,000 × 4 = 8,000,000` frames/sec (8 million/sec) regardless of whether 1,000 or 1,000,000 reactions/sec arrive—a 25,000× reduction!",
+    "tags": [
+      "live-reactions-high-throughput-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "live-reactions-high-throughput-design-t1",
+    "topic": "live-reactions-high-throughput-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Per-Event Fan-Out vs Hierarchical Edge Coalescing + Client Particle Rendering",
+    "scenario": "5,000,000 people are watching a global keynote stream and tapping emoji reactions. Human eyes cannot distinguish more than ~20–30 animated emoji sprites per second on screen.",
+    "prompt": "How should the live reaction ingestion and broadcast pipeline be architected?",
+    "question": "How should the live reaction ingestion and broadcast pipeline be architected?",
+    "options": [
+      "Insert every emoji tap into a global ACID SQL table and fan out each individual tap to all 5,000,000 sockets via TCP",
+      "Require every client to open a peer-to-peer WebRTC mesh connection to all 5,000,000 other viewers",
+      "Terminate WebSockets at regional edge PoPs that locally sum inbound emoji counts over 200–500 ms windows, merge regional totals via an in-memory pub/sub tree, and broadcast a compact rate/count vector per tick that clients render via local randomized particle animations"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Human eyes can track 500,000 individual emoji sprites per second with exact causal ordering",
+      "A 5-million-peer WebRTC mesh runs on mobile phones",
+      "Decoupling inbound write volume from outbound tick rate (`O(viewers × tick_hz)` instead of `O(viewers × reactions)`) makes outbound bandwidth completely invariant to reaction storms"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Does a viewer watching floating hearts need to know the exact `user_id` of each of the 100,000 people who tapped heart in the last second?",
+    "explanation": "Live reactions are an aggregate visual effect, not a causal chat log. Aggregating deltas at edge PoPs over 250 ms ticks and driving client-side particle emitters bounds both server CPU and client battery/network usage.",
+    "tags": [
+      "live-reactions-high-throughput-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

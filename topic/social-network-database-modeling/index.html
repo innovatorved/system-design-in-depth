@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -969,12 +969,18 @@
 <!-- enriched -->
 <h2>Worked example: read versus write volume</h2><p>Assume 500 million daily active users who each open their feed 10 times a day: 5 billion feed reads per day, about 58,000 per second on average and perhaps 175,000 per second at peak (3x). If they create 100 million posts per day, that is about 1,160 posts per second. Reads outnumber writes by roughly 50 to 1, which is why precomputing read-shaped data pays off.</p><h2>Query-driven tables (Cassandra CQL style)</h2><p><code>CREATE TABLE user_timeline (user_id bigint, bucket int, post_id timeuuid, author_id bigint, PRIMARY KEY ((user_id, bucket), post_id)) WITH CLUSTERING ORDER BY (post_id DESC);</code></p><p><code>CREATE TABLE posts_by_author (author_id bigint, post_id timeuuid, body text, PRIMARY KEY ((author_id), post_id)) WITH CLUSTERING ORDER BY (post_id DESC);</code></p><p>Reading the first page of a feed is one partition read of the newest 50 rows. The bucket (for example a month) prevents a hyperactive account from creating a multi-gigabyte partition. Deleting a post means deleting from posts_by_author and either fanning out tombstones or filtering deleted IDs at read time, which is why many systems store only post IDs in timelines and hydrate bodies from a cache.</p><h2>Which store for which access pattern</h2><table><thead><tr><th>Access pattern</th><th>Good fit</th><th>Why</th><th>Watch out for</th></tr></thead><tbody><tr><td>Profile, settings, post by id</td><td>Sharded relational (MySQL, Postgres)</td><td>Transactions, constraints, mature tooling</td><td>Cross-shard queries</td></tr><tr><td>Home timeline page</td><td>Wide-column (Cassandra, ScyllaDB) or Redis lists</td><td>Single-partition range read</td><td>Write amplification from fan-out, tombstones</td></tr><tr><td>Follow edges, one hop</td><td>Sharded adjacency lists, TAO-style store</td><td>Simple point and range lookups at huge QPS</td><td>Keeping forward and reverse edges consistent</td></tr><tr><td>Friends of friends, fraud rings</td><td>Graph database or offline graph processing</td><td>Multi-hop traversal is native</td><td>Hot path latency and sharding a graph</td></tr><tr><td>Counters (likes, followers)</td><td>Separate counter store or aggregated stream</td><td>Avoid hot-row contention</td><td>Drift from source; needs reconciliation</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Facebook</strong> serves the social graph through TAO, a read-optimized cache and data model of objects and associations backed by sharded MySQL.</li><li><strong>Instagram</strong> began on sharded PostgreSQL and moved high-volume feed and inbox style data to Cassandra.</li><li><strong>Twitter</strong> kept precomputed home timelines of roughly 800 tweet IDs per user in Redis, hydrating tweet bodies separately.</li><li><strong>Discord</strong> stores messages partitioned by channel plus a time bucket, first on Cassandra and since 2022 on ScyllaDB.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="social-network-database-modeling" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="social-network-database-modeling" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: The real bottleneck" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Read to write ratio" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: IDs, not bodies, in timelines" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: The real bottleneck" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Read to write ratio" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: IDs, not bodies, in timelines" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Bidirectional Edge Storage with Inverse Sharded Rows" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Joining Across Shards vs Dual Forward/Inverse Edge Partitioning (TAO / FlockDB Pattern)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-social-network-database-modeling-c1" data-type="mcq" data-slug="social-network-database-modeling" data-index="0">
@@ -1092,12 +1098,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="social-network-database-modeling-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-social-network-database-modeling-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">With bodies copied into every timeline, a delete or edit must be propagated to all those copies, which the lesson notes is why many systems store only IDs and filter or hydrate at read time. The first page is still a single-partition read either way; embedding bodies changes what each row holds, not how it is partitioned.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-social-network-database-modeling-n1" data-type="numeric" data-slug="social-network-database-modeling" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Bidirectional Edge Storage with Inverse Sharded Rows</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A social network has 200,000,000 users with an average of 150 follow edges per user (`30,000,000,000` directed edges). To support both single-shard &quot;Who do I follow?&quot; (`out_edges` partitioned by `follower_id`) and single-shard &quot;Who follows me?&quot; (`in_edges` partitioned by `followee_id`), each edge is stored in both tables (`64 bytes` per row including index overhead).</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many terabytes (TB, where 1 TB = 10^12 bytes) of logical storage are required across both the forward and inverse edge tables combined (`30B × 2 × 64 bytes`)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-social-network-database-modeling-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-social-network-database-modeling-n1"
+              aria-label="Numeric estimate in TB"
+              placeholder="Enter numeric estimate (TB)..."
+            />
+            <span class="quiz-unit-badge">TB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply `30 × 10^9` edges by 2 tables and by 64 bytes (`60 × 10^9 × 64`), then divide by `10^12`.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="social-network-database-modeling-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-social-network-database-modeling-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`30 × 10^9 edges × 2 copies × 64 bytes = 3.84 × 10^12 bytes = 3.84 TB`, allowing both forward and reverse follower queries to hit a single partition key without cross-shard joins.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-social-network-database-modeling-t1" data-type="tradeoff" data-slug="social-network-database-modeling" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Joining Across Shards vs Dual Forward/Inverse Edge Partitioning (TAO / FlockDB Pattern)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your social graph is sharded by `user_id`. When User A (`Shard 3`) follows User B (`Shard 14`), you need to answer both &quot;List accounts User A follows&quot; and &quot;List followers of User B&quot; in &lt;5 ms at 500,000 QPS.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should the follow edge `(A -&gt; B)` be stored across the sharded cluster?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-social-network-database-modeling-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-social-network-database-modeling-t1" value="0" />
+                  <span>Store `(A -&gt; B)` only on Shard 3 (`follower_id = A`) and scatter-gather across all shards whenever someone views User B&#039;s followers</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-social-network-database-modeling-t1" value="1" />
+                  <span>Move User A and User B onto the same shard whenever they follow each other</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-social-network-database-modeling-t1" value="2" />
+                  <span>Dual-write a forward edge `(A -&gt;FOLLOWS-&gt; B)` on Shard 3 (`partition_key = A`) and an inverse edge `(B &lt;-FOLLOWED_BY&lt;- A)` on Shard 14 (`partition_key = B`) via an idempotent async/coordinator workflow with materialized edge counts</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-social-network-database-modeling-t1" value="0" />
+                  <span>Scatter-gathering across 100 shards at 500,000 QPS is cheap</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-social-network-database-modeling-t1" value="1" />
+                  <span>A connected social graph can be partitioned with zero cross-shard edges</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-social-network-database-modeling-t1" value="2" />
+                  <span>Co-locating outgoing edges by `A` and incoming edges by `B` ensures both forward and reverse adjacency list queries resolve as single-partition contiguous range scans</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How did Facebook&#039;s TAO and Twitter&#039;s FlockDB serve both outgoing and incoming edges in 1 hop?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="social-network-database-modeling-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-social-network-database-modeling-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">In a sharded graph store (TAO/FlockDB), storing both the forward association on the source shard and the inverse association on the destination shard turns bidirectional traversals into single-key local lookups.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1210,22 +1346,22 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

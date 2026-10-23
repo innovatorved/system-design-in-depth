@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -955,12 +955,18 @@
 <!-- enriched -->
 <h2>Worked example: jittering a session TTL</h2><p>A login service writes 2 million sessions between 09:00 and 09:05 each morning with a fixed 12-hour TTL. At 21:00 they all expire within five minutes, which is about 6,700 expirations per second on top of normal traffic. Any user still active triggers a reload from the session store.</p><p>Add uniform jitter of plus or minus 30 minutes and the same 2 million expirations spread over about 65 minutes, which is roughly 510 per second. Better still, use a <strong>sliding TTL</strong> for active users, refreshing <code>EXPIRE</code> on access, so only idle sessions expire.</p><h2>How Redis actually expires keys</h2><ul><li><strong>Lazy:</strong> every read checks the key's expiry timestamp and deletes it if it has passed.</li><li><strong>Active:</strong> a periodic cycle, driven by <code>hz</code> (default 10 times per second), samples keys from the set of keys that have a TTL. If a large fraction of the sample has expired, it repeats, bounded by a CPU time budget. Redis 6 and later make the effort tunable through <code>active-expire-effort</code>.</li><li><strong>Replicas</strong> do not expire keys independently. The primary sends explicit DEL commands, although replicas hide logically expired keys from reads.</li></ul><h2>Soft TTL versus hard TTL</h2><table><thead><tr><th>Approach</th><th>Behaviour</th><th>Good for</th><th>Risk</th></tr></thead><tbody><tr><td>Hard TTL only</td><td>Key disappears and the next read misses</td><td>Simple data, low traffic</td><td>Stampede on hot keys</td></tr><tr><td>Soft plus hard TTL</td><td>After the soft TTL, serve the stale value and refresh asynchronously. After the hard TTL, the key is gone</td><td>Hot keys with tolerable staleness</td><td>Needs a refresh-owner mechanism</td></tr><tr><td>Sliding TTL</td><td>Each access extends the TTL</td><td>Sessions</td><td>Keys that are never idle never refresh their contents</td></tr><tr><td>No TTL plus explicit invalidation</td><td>Key lives until it is deleted on write</td><td>Data with reliable change events</td><td>A missed invalidation means stale data forever</td></tr></tbody></table><h2>Other systems</h2><ul><li><strong>Memcached</strong> expires lazily and also runs an LRU crawler that reclaims expired items in the background.</li><li><strong>Cassandra</strong> TTLs turn cells into tombstones that are only purged at compaction after <code>gc_grace_seconds</code>, so TTL-heavy tables can accumulate tombstones and slow reads.</li><li><strong>DynamoDB TTL</strong> deletes expired items in the background, typically within a few days, so queries must still filter on the expiry attribute.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="ttl-expiration-and-cache-reapers" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="ttl-expiration-and-cache-reapers" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Expired but resident" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Jittering expirations" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: DynamoDB TTL is lazy" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Expired but resident" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Jittering expirations" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: DynamoDB TTL is lazy" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Synchronized TTL Expiration Storm" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Passive Lazy Expiration vs Active Probabilistic Reaper" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-ttl-expiration-and-cache-reapers-c1" data-type="mcq" data-slug="ttl-expiration-and-cache-reapers" data-index="0">
@@ -1078,12 +1084,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ttl-expiration-and-cache-reapers-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ttl-expiration-and-cache-reapers-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">DynamoDB TTL deletes expired items in the background, typically within a few days, so queries must filter on the expiry attribute themselves. Strongly consistent reads still return the item until it is actually deleted, and shrinking the TTL only guesses at an unbounded delay.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-ttl-expiration-and-cache-reapers-n1" data-type="numeric" data-slug="ttl-expiration-and-cache-reapers" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Synchronized TTL Expiration Storm</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">At midnight, a warming job preloads 300,000 catalog keys into Redis with an exact `EXPIRE 3600` (1 hour). If you add uniform random jitter of ±5 minutes (a 600-second window around the 1-hour mark), expirations spread evenly across 600 seconds.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the average expiration rate (in keys/sec) across the 600-second jitter window instead of a 300,000-key instant spike?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-ttl-expiration-and-cache-reapers-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-ttl-expiration-and-cache-reapers-n1"
+              aria-label="Numeric estimate in keys/s"
+              placeholder="Enter numeric estimate (keys/s)..."
+            />
+            <span class="quiz-unit-badge">keys/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 300,000 keys by the 600-second jitter window.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ttl-expiration-and-cache-reapers-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ttl-expiration-and-cache-reapers-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Spreading 300,000 expirations uniformly across a 600-second (±5 min) jitter window smooths the reload load to 300,000 / 600 = 500 keys/sec instead of a 300,000-key vertical cliff.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-ttl-expiration-and-cache-reapers-t1" data-type="tradeoff" data-slug="ttl-expiration-and-cache-reapers" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Passive Lazy Expiration vs Active Probabilistic Reaper</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A cache stores 50M temporary session keys with a 15-minute TTL, and 80% of users never return after their first request.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why must a production cache combine lazy read-time expiration with an active background reaper, and how should the reaper work?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-ttl-expiration-and-cache-reapers-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ttl-expiration-and-cache-reapers-t1" value="0" />
+                  <span>Use only lazy expiration on `GET` so unvisited expired keys stay in RAM forever</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ttl-expiration-and-cache-reapers-t1" value="1" />
+                  <span>Scan all 50M keys on the main thread every 100 ms to find expired keys</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ttl-expiration-and-cache-reapers-t1" value="2" />
+                  <span>Combine lazy expiration on read (`GET`) with bounded active probabilistic sampling (e.g., Redis sampling 20 random volatile keys per 100 ms cycle and repeating if &gt;25% are expired)</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ttl-expiration-and-cache-reapers-t1" value="0" />
+                  <span>Never-read expired keys automatically free their memory without a background reaper</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ttl-expiration-and-cache-reapers-t1" value="1" />
+                  <span>Full 50M-key scans every 100 ms keep single-threaded tail latency low</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ttl-expiration-and-cache-reapers-t1" value="2" />
+                  <span>Lazy expiration ensures zero stale reads at O(1) cost, while bounded random sampling reclaims memory from write-once-never-read keys without blocking the event loop</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens to the 80% of session keys that are never `GET` again if you only expire on read?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ttl-expiration-and-cache-reapers-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ttl-expiration-and-cache-reapers-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Lazy expiration alone leaks memory for keys that are never read again, while full keyspace scans stall the cache. Probabilistic active sampling bounds CPU time while keeping expired waste below ~25%.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1261,7 +1397,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1269,15 +1405,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -986,12 +986,18 @@ INSERT INTO outbox (id, aggregate_type, aggregate_id, type, payload)
           '{"orderId":"o_981","userId":"u_42","totalCents":4599,"schemaVersion":3}');
 COMMIT;</code></pre><p>Debezium reads the committed outbox insert from the Postgres WAL and routes it to topic <code>order.events</code>, keyed by <code>o_981</code> so that all events for this order stay in one partition, in order. Search, fraud and email each consume in their own consumer group. If Debezium crashes after publishing but before recording its WAL position, it republishes <code>evt_7f3</code> on restart. Consumers deduplicate on the event ID.</p><h2>Event styles (Fowler's taxonomy)</h2><table><thead><tr><th>Style</th><th>Payload</th><th>Consumer coupling</th><th>Trade-off</th></tr></thead><tbody><tr><td>Event notification</td><td>ID plus type only</td><td>Consumers call back the producer's API</td><td>Small events, but a callback load spike on the producer</td></tr><tr><td>Event-carried state transfer</td><td>Full relevant state</td><td>Consumers keep local copies</td><td>No callbacks, but larger events and schema weight</td></tr><tr><td>Event sourcing</td><td>Every state change is the source of truth</td><td>Rebuild state by replay</td><td>Full audit trail, but hard schema evolution</td></tr></tbody></table><h2>Schema evolution rules (Avro or Protobuf with a registry)</h2><ul><li><strong>Backward compatible</strong> (new consumers read old events): you may delete fields, or add fields that have defaults.</li><li><strong>Forward compatible</strong> (old consumers read new events): you may add fields, or delete fields that have defaults.</li><li><strong>Never</strong> change a field's type or reuse a Protobuf field number.</li><li>Include an envelope: event ID, type, source, occurrence time, schema version, and optionally a trace ID. CloudEvents standardises these attributes.</li></ul><h2>Failure modes</h2><ul><li><strong>Outbox table growth:</strong> delete or partition rows once they are published, or the CDC-read table bloats.</li><li><strong>WAL retention:</strong> a stopped Debezium replication slot makes Postgres keep WAL indefinitely, which can fill the disk. Alert on slot lag.</li><li><strong>Event storms:</strong> a backfill publishes 50 million events and swamps consumers. Throttle backfills, or give them a separate topic.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="event-bus-for-product-events" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="event-bus-for-product-events" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Dual-write crash" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Backward-compatible change" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Stalled CDC connector" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Dual-write crash" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Backward-compatible change" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Stalled CDC connector" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Schema Registry Wire Payload Savings (Avro/Protobuf vs JSON)" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Producer-Side Schema Evolution &amp; Dead-Letter Routing" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-event-bus-for-product-events-c1" data-type="mcq" data-slug="event-bus-for-product-events" data-index="0">
@@ -1109,12 +1115,142 @@ COMMIT;</code></pre><p>Debezium reads the committed outbox insert from the Postg
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="event-bus-for-product-events-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-event-bus-for-product-events-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">A replication slot makes Postgres retain WAL until the slot&#039;s consumer confirms it, so an idle slot grows WAL without bound and can take down the primary. The outbox rows themselves are safe in the table, which is why the lesson says to alert on slot lag.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-event-bus-for-product-events-n1" data-type="numeric" data-slug="event-bus-for-product-events" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Schema Registry Wire Payload Savings (Avro/Protobuf vs JSON)</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A product event bus ingests 200,000 events/sec. Switching from verbose JSON (averaging 650 bytes/event) to Protobuf/Avro with a 5-byte Schema Registry ID header (averaging 150 bytes/event) saves 500 bytes per event.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many megabytes per second (MB/s, where 1 MB = 10^6 bytes) of network ingress bandwidth are saved across 200,000 events/sec?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-event-bus-for-product-events-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-event-bus-for-product-events-n1"
+              aria-label="Numeric estimate in MB/s"
+              placeholder="Enter numeric estimate (MB/s)..."
+            />
+            <span class="quiz-unit-badge">MB/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 200,000 events/sec by 500 bytes saved per event and divide by 10^6.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="event-bus-for-product-events-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-event-bus-for-product-events-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">200,000 × 500 bytes = 100,000,000 bytes/sec = 100 MB/s saved on producer ingress (and 300 MB/s saved across 3× broker replication + multiple consumer groups).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-event-bus-for-product-events-t1" data-type="tradeoff" data-slug="event-bus-for-product-events" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Producer-Side Schema Evolution &amp; Dead-Letter Routing</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A mobile team deploys a producer update that changes the `price` field in the `ItemPurchased` event from `int64` cents to a nested object `{&quot;amount&quot;: &quot;19.99&quot;, &quot;currency&quot;: &quot;USD&quot;}`, crashing 12 downstream analytics and billing consumers.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which governance mechanism prevents breaking changes from ever entering the production event bus?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-event-bus-for-product-events-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-event-bus-for-product-events-t1" value="0" />
+                  <span>Have every downstream consumer wrap `JSON.parse` in an empty `catch {}` block and silently drop unparseable billing events</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-event-bus-for-product-events-t1" value="1" />
+                  <span>Give all 12 consumer teams SSH access to redeploy the mobile app</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-event-bus-for-product-events-t1" value="2" />
+                  <span>Enforce a central Schema Registry with `BACKWARD` / `FULL` compatibility checks in CI and producer serializers (requiring additive optional fields or a new versioned topic) plus a Dead-Letter Queue (DLQ) for unexpected poison messages</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-event-bus-for-product-events-t1" value="0" />
+                  <span>Silently dropping billing events ensures accurate financial reporting</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-event-bus-for-product-events-t1" value="1" />
+                  <span>Ad-hoc unvalidated JSON strings prevent breaking schema mutations</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-event-bus-for-product-events-t1" value="2" />
+                  <span>Pre-commit and serializer-level Schema Registry validation blocks incompatible field-type mutations before they reach the broker, while DLQs isolate poison pills without halting partition consumption</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Where is the cheapest and safest place to catch an incompatible event schema change?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="event-bus-for-product-events-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-event-bus-for-product-events-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">A Schema Registry enforces backward/forward evolution rules (e.g., never changing a field&#039;s type or reusing a Protobuf tag number) at CI and publish time, preventing a single producer deploy from breaking dozens of downstream consumers.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1239,22 +1375,22 @@ COMMIT;</code></pre><p>Debezium reads the committed outbox insert from the Postg
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

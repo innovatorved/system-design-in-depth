@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -997,12 +997,18 @@ flowchart TD
 </tbody></table>
 <p><strong>Edge cases:</strong> normalise queries (case, whitespace) before using them as members; do not record searches made in incognito or private modes; and make deletion of one entry (<code>ZREM</code>) propagate to every store.</p><h2>Cross-device sync</h2><p>If a user searches on the phone and then opens the laptop, the laptop should show the new entry. Write to the durable store keyed by user ID, publish a small change event, and let the cache update or invalidate the user's key; last-write-wins on the timestamp score is sufficient because entries are independent and a slightly stale order is harmless.</p>
 </div></article>
-      <section class="check-slider" data-slug="recent-searches-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="recent-searches-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Sorted set over list" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Hot-set sizing" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Non-atomic write path" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Sorted set over list" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Hot-set sizing" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Non-atomic write path" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Bounded Ring-Buffer / Redis ZSET Per-User Storage" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Append-Only Unbounded Log vs Bounded Deduplicated LWW Set (`ZADD` + `ZREMRANGEBYRANK`)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-recent-searches-system-design-c1" data-type="mcq" data-slug="recent-searches-system-design" data-index="0">
@@ -1120,12 +1126,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="recent-searches-system-design-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-recent-searches-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Without the EXPIRE the new key never expires, which breaks retention and privacy obligations; running the steps in one Lua script or MULTI block prevents the partial state. A retried ZADD is harmless, because sorted-set members are unique and the timestamp is simply refreshed.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-recent-searches-system-design-n1" data-type="numeric" data-slug="recent-searches-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Bounded Ring-Buffer / Redis ZSET Per-User Storage</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A Recent Searches service stores only the latest `K = 20` deduplicated queries per active user for `50,000,000` users. Each entry (`query_string` + `8-byte timestamp` + ZSET overhead) averages `50 bytes` (`1,000 bytes` = `1 KB` per user).</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many gigabytes (GB, where 1 GB = 10^9 bytes) of primary storage are needed to hold the bounded 20-item history across all 50,000,000 users?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-recent-searches-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-recent-searches-system-design-n1"
+              aria-label="Numeric estimate in GB"
+              placeholder="Enter numeric estimate (GB)..."
+            />
+            <span class="quiz-unit-badge">GB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 50,000,000 users by 1,000 bytes (1 KB) per user and divide by 10^9.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="recent-searches-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-recent-searches-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">50,000,000 users × 1,000 bytes/user = 50 × 10^9 bytes = 50 GB total across the entire 50M-user base because history is strictly bounded to the top 20 items per user.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-recent-searches-system-design-t1" data-type="tradeoff" data-slug="recent-searches-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Append-Only Unbounded Log vs Bounded Deduplicated LWW Set (`ZADD` + `ZREMRANGEBYRANK`)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">When a user searches `&quot;system design&quot;`, then `&quot;raft&quot;`, and then `&quot;system design&quot;` again, the Recent Searches dropdown must show `[&quot;system design&quot;, &quot;raft&quot;]` (moving the duplicate to the top rather than showing `&quot;system design&quot;` twice) and cap storage at 20 items.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which data structure and write pattern achieves O(log K) deduplication, recency re-ordering, and bounded size?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-recent-searches-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-recent-searches-system-design-t1" value="0" />
+                  <span>Append every search to an unbounded SQL table and run `SELECT DISTINCT query ORDER BY ts DESC` over 10 years of rows on every keystroke</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-recent-searches-system-design-t1" value="1" />
+                  <span>Store recent searches only in a browser cookie so they disappear when switching devices</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-recent-searches-system-design-t1" value="2" />
+                  <span>Maintain a per-user Sorted Set (`ZSET` / bounded indexed map) keyed by `normalized_query` with score `timestamp_ms`: on search, execute `ZADD user_id now normalized_query` followed by `ZREMRANGEBYRANK user_id 0 -21`</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-recent-searches-system-design-t1" value="0" />
+                  <span>Scanning 50,000 historical rows per keystroke is faster than reading a 20-element set</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-recent-searches-system-design-t1" value="1" />
+                  <span>Cross-device sync works automatically with local-only cookies</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-recent-searches-system-design-t1" value="2" />
+                  <span>A Sorted Set keyed by the normalized query naturally deduplicates and updates the timestamp to the top in one atomic operation, while trimming ranks beyond 20 bounds memory strictly to `O(K)`</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens in a Sorted Set (`ZSET`) when you `ZADD` an existing member with a newer timestamp score?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="recent-searches-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-recent-searches-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">A Sorted Set (`ZSET` or compact per-user array blob in KV) keyed by the normalized query string automatically deduplicates repeat searches by updating their timestamp score to `now`, and `ZREMRANGEBYRANK` bounds size to 20.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1238,22 +1374,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

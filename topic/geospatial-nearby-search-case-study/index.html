@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -990,12 +990,18 @@ flowchart TD
   Q["Nearby query"] --> RC
   Q --> M</div><p>Yelp-style place search is read-heavy and changes slowly, so cache the results for each cell for minutes. Driver search is write-heavy and every result is stale within seconds. Expire positions that have not been refreshed recently (for example after 30 s), so a phone that goes offline does not keep appearing as an available driver.</p>
 </div></article>
-      <section class="check-slider" data-slug="geospatial-nearby-search-case-study" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="geospatial-nearby-search-case-study" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Covering the radius" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sparse-area search" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Ghost drivers" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Covering the radius" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sparse-area search" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Ghost drivers" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: H3 / Geohash 9-Cell Boundary Lookup Payload" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Naive `LAT BETWEEN AND LON BETWEEN` SQL Scan vs Geohash / H3 / S2 Spatial Cell Indexing" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-geospatial-nearby-search-case-study-c1" data-type="mcq" data-slug="geospatial-nearby-search-case-study" data-index="0">
@@ -1113,12 +1119,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="geospatial-nearby-search-case-study-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-geospatial-nearby-search-case-study-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">A crashed app simply stops pinging, so without a TTL its last position looks valid forever; expiring stale entries makes silence mean unavailable. Writing every ping to disk adds load but still leaves the last row looking current.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-geospatial-nearby-search-case-study-n1" data-type="numeric" data-slug="geospatial-nearby-search-case-study" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: H3 / Geohash 9-Cell Boundary Lookup Payload</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A user searches for restaurants within `1 km`. A single Geohash length-6 cell (`~1.2 km × 0.6 km`) or H3 resolution-8 hexagon might put the user right next to a cell border. To avoid missing a restaurant 50 meters across the boundary line, the query fetches the user&#039;s center cell plus its `8` surrounding neighbor cells (`9` cells total, or `7` for H3 `kRing(1)`), all in a single batched cache `MGET`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">If each Geohash length-6 cell averages `40` restaurants (`200 bytes` per restaurant summary = `8 KB` per cell), how many kilobytes (KB) of cached candidate data are fetched across all `9` cells (`9 × 8 KB`) before exact Haversine distance filtering?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-geospatial-nearby-search-case-study-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-geospatial-nearby-search-case-study-n1"
+              aria-label="Numeric estimate in KB"
+              placeholder="Enter numeric estimate (KB)..."
+            />
+            <span class="quiz-unit-badge">KB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 9 cells by 8 KB per cell.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="geospatial-nearby-search-case-study-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-geospatial-nearby-search-case-study-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Fetching all 9 Geohash cells (`1 center + 8 neighbors`) via a single batched cache `MGET` transfers just `9 × 8 KB = 72 KB` (360 candidates), which the app filters by exact Haversine distance and open-hours in &lt;0.5 ms!</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-geospatial-nearby-search-case-study-t1" data-type="tradeoff" data-slug="geospatial-nearby-search-case-study" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Naive `LAT BETWEEN AND LON BETWEEN` SQL Scan vs Geohash / H3 / S2 Spatial Cell Indexing</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A food-delivery app serves `80,000 req/s` for &quot;restaurants near `(lat, lon)` within 3 km&quot;. Using two separate B-Tree indexes on `latitude` and `longitude` forces the database to scan a huge horizontal band of the globe and intersect it with a vertical band.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why do separate 1D B-Tree indexes fail on 2D proximity queries, and how do spatial hierarchical indexes (Geohash / S2 / H3) solve this?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-geospatial-nearby-search-case-study-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-geospatial-nearby-search-case-study-t1" value="0" />
+                  <span>A standard 1D B-Tree on `latitude` narrows a query to a single city block without scanning other longitudes at the same latitude</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-geospatial-nearby-search-case-study-t1" value="1" />
+                  <span>Compute exact trigonometric `ACOS(SIN(lat1)*SIN(lat2)...)` over all 10,000,000 restaurants on every request</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-geospatial-nearby-search-case-study-t1" value="2" />
+                  <span>Space-filling curves (Geohash Z-order, S2 Hilbert curve, Uber H3 hexagons) map 2D `(lat, lon)` coordinates into 1D cell IDs with spatial locality, turning a 2D radius search into a fast 7-to-9 cell lookup followed by exact Haversine filtering on the candidate set</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-geospatial-nearby-search-case-study-t1" value="0" />
+                  <span>New York, Madrid, Beijing, and Tokyo all have completely different latitudes</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-geospatial-nearby-search-case-study-t1" value="1" />
+                  <span>Full-table trigonometric scans run in O(1) time</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-geospatial-nearby-search-case-study-t1" value="2" />
+                  <span>A 1D index can only order along one dimension; mapping 2D space into hierarchical 1D cell keys co-locates nearby points into the same cache/index buckets and resolves boundary edge cases by querying the `k=1` neighbor ring</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why can&#039;t a single standard B-Tree sort simultaneously by both `latitude` and `longitude` proximity?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="geospatial-nearby-search-case-study-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-geospatial-nearby-search-case-study-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">A composite B-Tree `(lat, lon)` sorts by `lon` only for identical `lat` values. Spatial cell encodings (Geohash, S2, H3) interleave 2D coordinates into discrete cell IDs so a 2D radius query becomes a bounded `MGET` of the center cell + its immediate neighbors.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1231,22 +1367,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

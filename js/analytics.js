@@ -1,16 +1,18 @@
 /* ═══════════════════════════════════════════════════════════════
-   GA4 Analytics Engine — Complete event & lifecycle tracking
+   GA4 Analytics & Browser Fingerprinting Engine
+   Complete event, user identity, device fingerprint & lifecycle tracking
    ═══════════════════════════════════════════════════════════════ */
 
 window.Analytics = (() => {
   // Config: Active GA4 Measurement ID
   const DEFAULT_ID = 'G-SZ26BQZCQ7';
-  
+
   // State
   let activeTopicSlug = null;
   let topicStartTime = null;
   const trackedScrollDepths = new Set();
   let searchDebounceTimer = null;
+  let cachedUserContext = null;
 
   /**
    * Helper to get active GA4 measurement ID
@@ -20,13 +22,323 @@ window.Analytics = (() => {
   }
 
   /**
-   * Safe event dispatching to GA4 (gtag.js / dataLayer)
+   * 64-bit Cybr53 / Dual-32-bit deterministic string hash (returns 16-char hex)
+   */
+  function cyrb64Hex(str, seed = 0) {
+    let h1 = 0xdeadbeef ^ seed;
+    let h2 = 0x41c6ce57 ^ seed;
+    for (let i = 0, ch; i < str.length; i++) {
+      ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    const hex1 = (h1 >>> 0).toString(16).padStart(8, '0');
+    const hex2 = (h2 >>> 0).toString(16).padStart(8, '0');
+    return hex1 + hex2;
+  }
+
+  /**
+   * Canvas 2D rendering entropy for deterministic browser fingerprinting
+   */
+  function getCanvasFingerprint() {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 240;
+      canvas.height = 60;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return 'no-canvas';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#f60';
+      ctx.fillRect(100, 1, 62, 20);
+      ctx.fillStyle = '#069';
+      ctx.font = '14px "Arial", sans-serif';
+      ctx.fillText('SystemDesign:fp_v2 🚀', 2, 15);
+      ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+      ctx.font = '18px "Times New Roman", serif';
+      ctx.fillText('SystemDesign:fp_v2 🚀', 4, 45);
+      ctx.beginPath();
+      ctx.arc(50, 30, 18, 0, Math.PI * 2, true);
+      ctx.closePath();
+      ctx.fill();
+      return cyrb64Hex(canvas.toDataURL());
+    } catch {
+      return 'canvas-err';
+    }
+  }
+
+  /**
+   * WebGL GPU Vendor & Renderer entropy
+   */
+  function getWebGLInfo() {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) return { vendor: 'none', renderer: 'none', hash: 'no-webgl' };
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      const vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+      const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+      const version = gl.getParameter(gl.VERSION) || '';
+      const shading = gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || '';
+      const maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE) || 0;
+      const raw = [vendor, renderer, version, shading, maxTex].join('|');
+      return {
+        vendor: String(vendor || 'unknown').slice(0, 64),
+        renderer: String(renderer || 'unknown').slice(0, 80),
+        hash: cyrb64Hex(raw)
+      };
+    } catch {
+      return { vendor: 'err', renderer: 'err', hash: 'webgl-err' };
+    }
+  }
+
+  /**
+   * Parse User-Agent into structured Browser, OS, and Device Type
+   */
+  function parseUserAgent() {
+    const ua = navigator.userAgent || '';
+    let browserName = 'Unknown';
+    let browserVersion = '';
+
+    if (/Edg\/([\d.]+)/.test(ua)) {
+      browserName = 'Edge';
+      browserVersion = RegExp.$1;
+    } else if (/OPR\/([\d.]+)/.test(ua)) {
+      browserName = 'Opera';
+      browserVersion = RegExp.$1;
+    } else if (/Chrome\/([\d.]+)/.test(ua) && !/Chromium/.test(ua)) {
+      browserName = 'Chrome';
+      browserVersion = RegExp.$1;
+    } else if (/Firefox\/([\d.]+)/.test(ua)) {
+      browserName = 'Firefox';
+      browserVersion = RegExp.$1;
+    } else if (/Version\/([\d.]+).*Safari/.test(ua)) {
+      browserName = 'Safari';
+      browserVersion = RegExp.$1;
+    }
+
+    let osName = 'Unknown';
+    if (/Windows NT 10\.0/.test(ua)) osName = 'Windows 10/11';
+    else if (/Windows NT/.test(ua)) osName = 'Windows';
+    else if (/Mac OS X ([\d_]+)/.test(ua)) osName = 'macOS ' + RegExp.$1.replace(/_/g, '.');
+    else if (/Android ([\d.]+)/.test(ua)) osName = 'Android ' + RegExp.$1;
+    else if (/iPhone|iPad|iPod/.test(ua)) osName = 'iOS';
+    else if (/Linux/.test(ua)) osName = 'Linux';
+
+    const isMobile = /Mobi|Android|iPhone|iPod/i.test(ua);
+    const isTablet = /iPad|Tablet|(Android(?!.*Mobi))/i.test(ua);
+    const deviceType = isTablet ? 'tablet' : (isMobile ? 'mobile' : 'desktop');
+
+    return {
+      browserName,
+      browserVersion: browserVersion.split('.')[0] || '',
+      osName,
+      deviceType
+    };
+  }
+
+  /**
+   * Build and cache deterministic user identity, fingerprint & device profile
+   */
+  function getUserContext() {
+    if (cachedUserContext) return cachedUserContext;
+
+    const uaInfo = parseUserAgent();
+    const webgl = getWebGLInfo();
+    const canvasHash = getCanvasFingerprint();
+    const tz = (() => {
+      try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch { return 'UTC'; }
+    })();
+    const tzOffset = new Date().getTimezoneOffset();
+    const screenSig = typeof screen !== 'undefined'
+      ? `${screen.width}x${screen.height}x${screen.colorDepth || 24}@${window.devicePixelRatio || 1}`
+      : '0x0';
+    const langs = (navigator.languages ? navigator.languages.join(',') : navigator.language) || 'en';
+    const cores = navigator.hardwareConcurrency || 0;
+    const mem = navigator.deviceMemory || 0;
+    const touchPoints = navigator.maxTouchPoints || 0;
+    const platform = navigator.platform || '';
+    const mathSig = `${Math.acos(0.123456789).toFixed(10)}|${Math.sinh(1).toFixed(10)}`;
+
+    // Deterministic hardware + browser fingerprint
+    const rawFingerprintMaterial = [
+      canvasHash,
+      webgl.hash,
+      webgl.vendor,
+      webgl.renderer,
+      screenSig,
+      tz,
+      tzOffset,
+      langs,
+      cores,
+      mem,
+      touchPoints,
+      platform,
+      uaInfo.osName,
+      uaInfo.browserName,
+      mathSig
+    ].join('||');
+
+    const fingerprintId = 'fp_' + cyrb64Hex(rawFingerprintMaterial, 0x1337beef);
+
+    // Persistent visitor ID in localStorage (maps back to fingerprintId if cleared)
+    let visitorId = fingerprintId;
+    let visitCount = 1;
+    let firstSeenAt = new Date().toISOString();
+    try {
+      const storedVisitor = localStorage.getItem('sd-visitor-id');
+      if (storedVisitor) {
+        visitorId = storedVisitor;
+      } else {
+        visitorId = `${fingerprintId}_${Date.now().toString(36)}`;
+        localStorage.setItem('sd-visitor-id', visitorId);
+      }
+
+      const storedFirstSeen = localStorage.getItem('sd-first-seen');
+      if (storedFirstSeen) {
+        firstSeenAt = storedFirstSeen;
+      } else {
+        localStorage.setItem('sd-first-seen', firstSeenAt);
+      }
+
+      const prevCount = parseInt(localStorage.getItem('sd-visit-count') || '0', 10) || 0;
+      if (!sessionStorage.getItem('sd-session-counted')) {
+        visitCount = prevCount + 1;
+        localStorage.setItem('sd-visit-count', String(visitCount));
+        sessionStorage.setItem('sd-session-counted', '1');
+      } else {
+        visitCount = Math.max(1, prevCount);
+      }
+    } catch {}
+
+    // Session ID in sessionStorage
+    let sessionId = 'ses_' + cyrb64Hex(fingerprintId + ':' + Date.now(), 42).slice(0, 12);
+    try {
+      const existingSes = sessionStorage.getItem('sd-session-id');
+      if (existingSes) {
+        sessionId = existingSes;
+      } else {
+        sessionStorage.setItem('sd-session-id', sessionId);
+      }
+    } catch {}
+
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const connectionType = conn ? (conn.effectiveType || conn.type || 'unknown') : 'unknown';
+
+    cachedUserContext = {
+      fingerprint_id: fingerprintId,
+      visitor_id: visitorId,
+      session_id: sessionId,
+      visit_count: visitCount,
+      first_seen_at: firstSeenAt,
+      browser_name: uaInfo.browserName,
+      browser_version: uaInfo.browserVersion,
+      os_name: uaInfo.osName,
+      device_type: uaInfo.deviceType,
+      gpu_vendor: webgl.vendor,
+      gpu_renderer: webgl.renderer,
+      canvas_fp: canvasHash,
+      webgl_fp: webgl.hash,
+      screen_res: screenSig,
+      cpu_cores: cores,
+      ram_gb: mem,
+      touch_points: touchPoints,
+      timezone: tz,
+      tz_offset_min: tzOffset,
+      locale: navigator.language || 'en',
+      connection_type: connectionType
+    };
+
+    return cachedUserContext;
+  }
+
+  /**
+   * Read dynamic learner progress state for event enrichment
+   */
+  function getLearnerSnapshot() {
+    let completedCount = 0;
+    let bookmarksCount = 0;
+    try {
+      const p = JSON.parse(localStorage.getItem('sd-progress-v2') || localStorage.getItem('sd-progress') || '{}') || {};
+      if (Array.isArray(p.completed)) completedCount = p.completed.length;
+      if (Array.isArray(p.bookmarks)) bookmarksCount = p.bookmarks.length;
+    } catch {}
+    const viewport = `${window.innerWidth || 0}x${window.innerHeight || 0}`;
+    const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+    return {
+      completed_topics_count: completedCount,
+      bookmarks_count: bookmarksCount,
+      viewport_res: viewport,
+      ui_theme: theme
+    };
+  }
+
+  /**
+   * Configure GA4 user_id and user_properties so all events map to the user's fingerprint
+   */
+  function syncUserIdentityToGA4() {
+    try {
+      const ctx = getUserContext();
+      const snap = getLearnerSnapshot();
+      const measurementId = getMeasurementId();
+
+      if (typeof window.gtag === 'function') {
+        window.gtag('config', measurementId, {
+          user_id: ctx.fingerprint_id,
+          send_page_view: false
+        });
+        window.gtag('set', 'user_properties', {
+          fingerprint_id: ctx.fingerprint_id,
+          visitor_id: ctx.visitor_id,
+          browser_name: `${ctx.browser_name} ${ctx.browser_version}`.trim(),
+          os_name: ctx.os_name,
+          device_type: ctx.device_type,
+          gpu_renderer: ctx.gpu_renderer,
+          screen_res: ctx.screen_res,
+          cpu_cores: String(ctx.cpu_cores),
+          ram_gb: String(ctx.ram_gb),
+          timezone: ctx.timezone,
+          locale: ctx.locale,
+          visit_count: ctx.visit_count,
+          completed_topics: snap.completed_topics_count
+        });
+      }
+    } catch (err) {
+      console.warn('Analytics identity sync error:', err);
+    }
+  }
+
+  /**
+   * Safe event dispatching to GA4 (gtag.js / dataLayer) enriched with fingerprint & user context
    */
   function trackEvent(eventName, params = {}) {
     try {
       window.dataLayer = window.dataLayer || [];
+      const ctx = getUserContext();
+      const snap = getLearnerSnapshot();
+
       const enhancedParams = {
         ...params,
+        user_id: ctx.fingerprint_id,
+        fingerprint_id: ctx.fingerprint_id,
+        visitor_id: ctx.visitor_id,
+        session_id: ctx.session_id,
+        visit_count: ctx.visit_count,
+        device_type: ctx.device_type,
+        os_name: ctx.os_name,
+        browser_name: ctx.browser_name,
+        browser_version: ctx.browser_version,
+        gpu_renderer: ctx.gpu_renderer,
+        screen_res: ctx.screen_res,
+        viewport_res: snap.viewport_res,
+        cpu_cores: ctx.cpu_cores,
+        ram_gb: ctx.ram_gb,
+        timezone: ctx.timezone,
+        locale: ctx.locale,
+        connection_type: ctx.connection_type,
+        ui_theme: snap.ui_theme,
+        completed_topics_count: snap.completed_topics_count,
         send_to: getMeasurementId(),
         timestamp: new Date().toISOString()
       };
@@ -68,7 +380,6 @@ window.Analytics = (() => {
    * 2. Content & Topic Tracking
    */
   function trackTopicView({ slug, title, moduleTitle, moduleNumber, partNumber, kind, wordCount, readingTimeMin }) {
-    // Flush previous topic time
     flushTopicEngagementTime();
 
     activeTopicSlug = slug;
@@ -143,7 +454,7 @@ window.Analytics = (() => {
   }
 
   /**
-   * 4. Builds & Code
+   * 4. Builds & CodeLab IDE (@innovatorved/code-lab)
    */
   function trackBuildView({ buildId, title }) {
     flushTopicEngagementTime();
@@ -163,6 +474,31 @@ window.Analytics = (() => {
       code_language: language,
       code_length: length,
       current_slug: activeTopicSlug
+    });
+  }
+
+  function trackCodeLabOpen({ mode, slug, title, language }) {
+    trackEvent('codelab_open', {
+      codelab_mode: mode || 'inline',
+      target_slug: slug || activeTopicSlug || 'unknown',
+      codelab_title: title || slug || '',
+      code_language: language || 'javascript'
+    });
+  }
+
+  function trackCodeLabStep({ buildId, stepIndex, stepTitle, action }) {
+    trackEvent('codelab_step', {
+      build_id: buildId || activeTopicSlug || 'unknown',
+      step_index: stepIndex,
+      step_title: stepTitle || '',
+      step_action: action || 'select'
+    });
+  }
+
+  function trackCodeLabLangSwitch({ buildId, language }) {
+    trackEvent('codelab_language_switch', {
+      build_id: buildId || activeTopicSlug || 'unknown',
+      code_language: language
     });
   }
 
@@ -267,7 +603,7 @@ window.Analytics = (() => {
   }
 
   /**
-   * 8. Simulators & Exercises
+   * 8. Simulators, Quizzes & Exercises (Concept Check + Napkin Math + Staff Trade-Off)
    */
   const simulatorCooldowns = new Map();
   const SIM_THROTTLE_MS = 1200;
@@ -298,6 +634,34 @@ window.Analytics = (() => {
     });
   }
 
+  function trackQuizCheck({ slug, questionId, questionType, isCorrect, slideIndex, userAnswer }) {
+    trackEvent('quiz_answer_check', {
+      topic_slug: slug || activeTopicSlug || 'unknown',
+      question_id: questionId || '',
+      question_type: questionType || 'mcq',
+      is_correct: Boolean(isCorrect),
+      slide_index: slideIndex ?? 0,
+      user_answer: String(userAnswer ?? '').slice(0, 64)
+    });
+  }
+
+  function trackQuizSlideNavigate({ slug, action, slideIndex, questionType }) {
+    trackEvent('quiz_slide_navigate', {
+      topic_slug: slug || activeTopicSlug || 'unknown',
+      nav_action: action || 'next',
+      slide_index: slideIndex ?? 0,
+      question_type: questionType || 'mcq'
+    });
+  }
+
+  function trackQuizHintToggle({ slug, questionId, questionType }) {
+    trackEvent('quiz_hint_open', {
+      topic_slug: slug || activeTopicSlug || 'unknown',
+      question_id: questionId || '',
+      question_type: questionType || 'mcq'
+    });
+  }
+
   function trackQuizComplete({ slug, score, totalQuestions, percentage }) {
     trackEvent('quiz_complete', {
       topic_slug: slug || activeTopicSlug || 'unknown',
@@ -307,6 +671,110 @@ window.Analytics = (() => {
     });
   }
 
+  /**
+   * 9. Production Incident Challenges (/challenges)
+   */
+  function trackChallengeSelect({ challengeId, title, severity }) {
+    trackEvent('challenge_select', {
+      challenge_id: challengeId,
+      challenge_title: title || challengeId,
+      severity: severity || 'SEV-1'
+    });
+  }
+
+  function trackChallengeMitigation({ challengeId, mitigationId, enabled }) {
+    trackEvent('challenge_mitigation_toggle', {
+      challenge_id: challengeId,
+      mitigation_id: mitigationId,
+      mitigation_enabled: Boolean(enabled)
+    });
+  }
+
+  function trackChallengeRootCause({ challengeId, rootCauseId }) {
+    trackEvent('challenge_root_cause_select', {
+      challenge_id: challengeId,
+      root_cause_id: rootCauseId
+    });
+  }
+
+  function trackChallengeVerify({ challengeId, passed, score, attempts, rootCauseCorrect, hotfixPassed }) {
+    trackEvent('challenge_verify', {
+      challenge_id: challengeId,
+      incident_resolved: Boolean(passed),
+      incident_score: score || 0,
+      attempt_number: attempts || 1,
+      root_cause_correct: Boolean(rootCauseCorrect),
+      hotfix_verified: Boolean(hotfixPassed)
+    });
+  }
+
+  function trackChallengeHotfix({ challengeId, action }) {
+    trackEvent('challenge_hotfix', {
+      challenge_id: challengeId,
+      hotfix_action: action || 'open'
+    });
+  }
+
+  /**
+   * 10. Architecture Sandbox (/sandbox)
+   */
+  function trackSandboxBlueprint({ blueprintId, title, targetQps }) {
+    trackEvent('sandbox_blueprint_load', {
+      blueprint_id: blueprintId,
+      blueprint_title: title || blueprintId,
+      target_qps: targetQps || 0
+    });
+  }
+
+  function trackSandboxAction({ action, details = {} }) {
+    trackEvent('sandbox_action', {
+      sandbox_action: action,
+      ...details
+    });
+  }
+
+  /**
+   * 11. Dashboard, SRS Flashcards, Reference Toolkit & Roadmap
+   */
+  function trackDashboardTab({ tabName }) {
+    trackEvent('dashboard_tab_switch', {
+      dashboard_tab: tabName
+    });
+  }
+
+  function trackSrsReview({ cardId, slug, rating, intervalDays }) {
+    trackEvent('srs_card_review', {
+      card_id: cardId || '',
+      topic_slug: slug || '',
+      srs_rating: rating,
+      next_interval_days: intervalDays || 0
+    });
+  }
+
+  function trackToolkitUse({ tool, action, details = {} }) {
+    trackEvent('toolkit_use', {
+      toolkit_tool: tool,
+      toolkit_action: action,
+      ...details
+    });
+  }
+
+  function trackRoadmapTrackSelect({ trackId }) {
+    trackEvent('roadmap_track_select', {
+      track_id: trackId
+    });
+  }
+
+  function trackRoadmapNodeClick({ slug, moduleId }) {
+    trackEvent('roadmap_node_click', {
+      topic_slug: slug,
+      module_id: moduleId || ''
+    });
+  }
+
+  /**
+   * 12. GitHub Repo, Projects & Outbound Links
+   */
   function trackFeedbackReportClick({ slug, issueUrl }) {
     trackEvent('click_report_issue', {
       topic_slug: slug || activeTopicSlug || 'unknown',
@@ -322,10 +790,6 @@ window.Analytics = (() => {
     });
   }
 
-  /**
-   * 9. GitHub Repo & Outbound Links
-   * Target: https://github.com/innovatorved/system-design-in-depth
-   */
   function trackRepoClick(placement) {
     trackEvent('click_github_repo', {
       repo_name: 'system-design-in-depth',
@@ -354,7 +818,7 @@ window.Analytics = (() => {
   }
 
   /**
-   * 10. UI Preferences & Tabs
+   * 13. UI Preferences & Tabs
    */
   function trackThemeChange(theme) {
     trackEvent('toggle_theme', {
@@ -375,11 +839,32 @@ window.Analytics = (() => {
     });
   }
 
+  function trackLessonFeedback({ slug, vote }) {
+    trackEvent('lesson_feedback', {
+      topic_slug: slug,
+      feedback_vote: vote,
+      event_category: 'engagement'
+    });
+  }
+
   /**
-   * Setup global automatic event delegation
+   * Setup global automatic event delegation & session initialization
    */
   function init() {
-    // Listen for Enter key submit on search input
+    // 1. Initialize deterministic fingerprint & sync user properties to GA4
+    syncUserIdentityToGA4();
+    const ctx = getUserContext();
+    trackEvent('session_context_init', {
+      fingerprint_id: ctx.fingerprint_id,
+      visitor_id: ctx.visitor_id,
+      session_id: ctx.session_id,
+      canvas_fp: ctx.canvas_fp,
+      webgl_fp: ctx.webgl_fp,
+      gpu_vendor: ctx.gpu_vendor,
+      gpu_renderer: ctx.gpu_renderer
+    });
+
+    // 2. Listen for Enter key submit on search input
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         const input = document.getElementById('search-input');
@@ -390,7 +875,7 @@ window.Analytics = (() => {
       }
     });
 
-    // Scroll depth tracking with throttling
+    // 3. Scroll depth tracking with throttling
     let scrollThrottle = null;
     window.addEventListener('scroll', () => {
       if (!scrollThrottle) {
@@ -401,7 +886,7 @@ window.Analytics = (() => {
       }
     }, { passive: true });
 
-    // Flush engagement time on beforeunload / visibilitychange
+    // 4. Flush engagement time on beforeunload / visibilitychange
     window.addEventListener('beforeunload', flushTopicEngagementTime);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
@@ -411,9 +896,9 @@ window.Analytics = (() => {
       }
     });
 
-    // Delegated click delegation for companion repo, feedback issues & outbound links
+    // 5. Delegated click tracking across simulators, hints, repo & outbound links
     document.addEventListener('click', (e) => {
-      // 1. Interactive simulator button click tracking (all simulators)
+      // Interactive simulator button click tracking
       const simBtn = e.target.closest('.sim-card button, .sim-card input[type="button"], .sim-card input[type="submit"], .sim-card .btn');
       if (simBtn && !simBtn.classList.contains('code-block__copy-btn')) {
         const simCard = simBtn.closest('.sim-card');
@@ -425,7 +910,18 @@ window.Analytics = (() => {
         });
       }
 
-      // 2. Link tracking
+      // Quiz hint <details> toggle tracking
+      const hintSummary = e.target.closest('.quiz-hint-details summary');
+      if (hintSummary) {
+        const slide = hintSummary.closest('.check-slider__slide');
+        trackQuizHintToggle({
+          slug: activeTopicSlug,
+          questionId: slide?.dataset?.qid || '',
+          questionType: slide?.dataset?.type || 'mcq'
+        });
+      }
+
+      // Link tracking
       const anchor = e.target.closest('a');
       if (!anchor) return;
 
@@ -457,16 +953,9 @@ window.Analytics = (() => {
     });
   }
 
-  function trackLessonFeedback({ slug, vote }) {
-    trackEvent('lesson_feedback', {
-      topic_slug: slug,
-      feedback_vote: vote,
-      event_category: 'engagement'
-    });
-  }
-
   return {
     init,
+    getUserContext,
     getActiveTopicSlug: () => activeTopicSlug,
     trackEvent,
     trackPageView,
@@ -478,6 +967,9 @@ window.Analytics = (() => {
     trackBuildView,
     trackProjectView,
     trackCodeCopy,
+    trackCodeLabOpen,
+    trackCodeLabStep,
+    trackCodeLabLangSwitch,
     trackAudioPlay,
     trackAudioPause,
     trackAudioSeek,
@@ -492,7 +984,22 @@ window.Analytics = (() => {
     trackDiagramClose,
     trackSimulatorInteraction,
     trackExerciseAttempt,
+    trackQuizCheck,
+    trackQuizSlideNavigate,
+    trackQuizHintToggle,
     trackQuizComplete,
+    trackChallengeSelect,
+    trackChallengeMitigation,
+    trackChallengeRootCause,
+    trackChallengeVerify,
+    trackChallengeHotfix,
+    trackSandboxBlueprint,
+    trackSandboxAction,
+    trackDashboardTab,
+    trackSrsReview,
+    trackToolkitUse,
+    trackRoadmapTrackSelect,
+    trackRoadmapNodeClick,
     trackRepoClick,
     trackOutboundClick,
     trackVideoPlay,
@@ -501,4 +1008,3 @@ window.Analytics = (() => {
     trackModuleToggle
   };
 })();
-

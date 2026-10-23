@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -985,12 +985,18 @@ flowchart TD
         <li><strong>SIMD Vectorization:</strong> Modern CPUs can execute mathematical operations on 512-bit registers (AVX-512) processing 16 32-bit integers per instruction (actual per-cycle throughput depends on the microarchitecture).</li>
       </ul>
     </div></article>
-      <section class="check-slider" data-slug="columnar-vs-wide-column-stores" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="columnar-vs-wide-column-stores" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Wide-column data model" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Analytics on Cassandra" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Bytes read for an average" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Wide-column data model" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Analytics on Cassandra" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Bytes read for an average" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Columnar Projection I/O Reduction" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: OLAP Columnar Store vs Wide-Column Store (Cassandra/Bigtable)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-columnar-vs-wide-column-stores-c1" data-type="mcq" data-slug="columnar-vs-wide-column-stores" data-index="0">
@@ -1108,12 +1114,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="columnar-vs-wide-column-stores-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-columnar-vs-wide-column-stores-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">The columnar engine reads only the latency column, 4 of 500 bytes per row, a 125x reduction before compression adds more on top. SIMD speeds up processing of the bytes that are read; it does not change how many bytes come off disk.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-columnar-vs-wide-column-stores-n1" data-type="numeric" data-slug="columnar-vs-wide-column-stores" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Columnar Projection I/O Reduction</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An analytics table has 100 columns averaging 10 bytes each (1,000 bytes/row) across 1,000,000,000 rows (1 TB total). A dashboard query aggregates only 3 columns (`region`, `status`, `amount` = 30 bytes/row), and columnar dictionary + RLE compression achieves a 5× compression ratio on those 3 columns.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many gigabytes (GB, where 1 GB = 10^9 bytes) of disk data must the columnar engine scan for this query?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-columnar-vs-wide-column-stores-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-columnar-vs-wide-column-stores-n1"
+              aria-label="Numeric estimate in GB"
+              placeholder="Enter numeric estimate (GB)..."
+            />
+            <span class="quiz-unit-badge">GB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Uncompressed size of the 3 columns = 10^9 × 30 bytes = 30 GB. Divide by the 5× compression ratio.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="columnar-vs-wide-column-stores-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-columnar-vs-wide-column-stores-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Reading only 3 of 100 columns reduces raw bytes from 1,000 GB to 30 GB; 5× columnar compression reduces disk I/O further to 30 / 5 = 6 GB (a 166× reduction vs a 1 TB row-store scan).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-columnar-vs-wide-column-stores-t1" data-type="tradeoff" data-slug="columnar-vs-wide-column-stores" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: OLAP Columnar Store vs Wide-Column Store (Cassandra/Bigtable)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An engineering team confuses &quot;wide-column store&quot; (Cassandra/HBase) with &quot;columnar OLAP database&quot; (ClickHouse/Parquet) and tries to run `SELECT AVG(latency) FROM logs WHERE status = 500` across 10B rows in Cassandra without a partition key.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why does this query fail or time out in Cassandra, and which architecture should serve which workload?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-columnar-vs-wide-column-stores-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-columnar-vs-wide-column-stores-t1" value="0" />
+                  <span>Cassandra stores each column in a separate global Parquet file optimized for full-cluster SIMD scans</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-columnar-vs-wide-column-stores-t1" value="1" />
+                  <span>ClickHouse should replace Cassandra for 100,000 single-row point mutations per second</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-columnar-vs-wide-column-stores-t1" value="2" />
+                  <span>Wide-column stores (Cassandra) group columns per row inside SSTables keyed by `(partition_key, clustering_key)` for fast point/range lookups, whereas OLAP columnar stores physically store each column contiguously for analytical scans</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-columnar-vs-wide-column-stores-t1" value="0" />
+                  <span>Wide-column and columnar are identical storage layouts on disk</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-columnar-vs-wide-column-stores-t1" value="1" />
+                  <span>OLAP columnar files are optimized for single-row random updates</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-columnar-vs-wide-column-stores-t1" value="2" />
+                  <span>Use wide-column stores for high-write operational lookups by partition key, and replicate events to a true columnar OLAP engine for multi-billion-row aggregations</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How are bytes laid out inside a Cassandra SSTable vs a Parquet/ClickHouse column file?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="columnar-vs-wide-column-stores-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-columnar-vs-wide-column-stores-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Despite the name, wide-column stores (Bigtable/Cassandra) store data organized by row key + clustering key inside SSTables, making full-cluster analytical scans without a partition key catastrophic.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1226,22 +1362,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -961,12 +961,18 @@
 <!-- enriched -->
 <h2>Worked example</h2><p>Polygon: square with vertices (0,0), (4,0), (4,4), (0,4).</p><ul><li><strong>Point (2,2):</strong> cast a ray to +x. Edge (4,0) to (4,4) straddles y = 2 (one endpoint below, one above) and crosses at x = 4, which is right of 2: 1 crossing. The left edge crosses at x = 0, left of the point, so it does not count. Odd, so inside.</li><li><strong>Point (5,2):</strong> both vertical edges cross at x = 0 and x = 4, left of 5: 0 crossings, outside.</li><li><strong>Point (2,4):</strong> lies on the top edge. A boundary pre-check reports "on boundary", then the product rule decides.</li><li><strong>Ray through a vertex:</strong> triangle (0,0), (4,2), (0,4) and point (1,2). The ray y = 2 passes through vertex (4,2). Edge (0,0) to (4,2): is 0 &gt; 2 different from 2 &gt; 2? Both false, so it does not count. Edge (4,2) to (0,4): is 2 &gt; 2 different from 4 &gt; 2? Yes, it counts once. Result 1 crossing: inside, which is correct. Without the half-open rule both edges would count and the answer would be wrong.</li></ul><h2>The standard loop</h2><p><code>inside = false; for each edge (a, b): if ((a.y &gt; p.y) != (b.y &gt; p.y)) and (p.x &lt; a.x + (p.y - a.y) * (b.x - a.x) / (b.y - a.y)) then inside = !inside</code></p><p>The first condition skips horizontal edges automatically (both endpoints on the same side) and implements the half-open vertex rule.</p><h2>Crossing number versus winding number</h2><table><thead><tr><th>Aspect</th><th>Crossing number (even-odd)</th><th>Winding number (non-zero)</th></tr></thead><tbody><tr><td>Idea</td><td>Parity of crossings</td><td>Net number of times the boundary wraps the point</td></tr><tr><td>Simple polygons</td><td>Same answer</td><td>Same answer</td></tr><tr><td>Self-intersecting shapes</td><td>Overlaps count as holes</td><td>Overlaps count as filled</td></tr><tr><td>Cost</td><td>O(V)</td><td>O(V), similar constant with the signed-crossing form</td></tr><tr><td>Used by</td><td>SVG and canvas even-odd fill rule</td><td>SVG and canvas nonzero fill rule (the default)</td></tr></tbody></table><h2>Production concerns</h2><ul><li><strong>Holes and multipolygons:</strong> inside the outer ring and not inside any hole; for multipolygons, inside any part.</li><li><strong>Repeated queries:</strong> index edges by y-interval (as GEOS prepared geometries do) so each test is roughly O(log V) instead of O(V).</li><li><strong>Floating point:</strong> points within about 1e-9 of an edge can flip; use robust orientation predicates or snap to a tolerance, and document the boundary policy.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="ray-casting-point-in-polygon" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="ray-casting-point-in-polygon" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why the half-open rule" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Ray through a vertex" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Star-shaped zone mismatch" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why the half-open rule" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Ray through a vertex" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Star-shaped zone mismatch" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Polygon Decomposition Speedup for High-Vertex Delivery Zones" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Raw O(V) Ray Casting vs Pre-Tiled Interior/Boundary Cell Indexing" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-ray-casting-point-in-polygon-c1" data-type="mcq" data-slug="ray-casting-point-in-polygon" data-index="0">
@@ -1084,12 +1090,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ray-casting-point-in-polygon-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ray-casting-point-in-polygon-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">For self-intersecting shapes the two rules disagree: crossing number counts an even number of crossings at the centre and calls it outside, while winding number sees the boundary wrap the point and fills it; SVG&#039;s default is nonzero. Floating-point issues only affect points within a tiny tolerance of an edge, not the middle of a region.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-ray-casting-point-in-polygon-n1" data-type="numeric" data-slug="ray-casting-point-in-polygon" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Polygon Decomposition Speedup for High-Vertex Delivery Zones</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A coastal city&#039;s delivery zone polygon has 4,000 vertices. A raw ray-casting check inspects all 4,000 edges per GPS ping. By pre-tiling the polygon into fine grid cells (interior cells, exterior cells, and boundary cells each clipped to an average of 16 edges), 90% of pings hit interior/exterior cells (0 edge checks) and 10% hit boundary cells (16 edge checks).</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the average number of edge checks per GPS ping (`0.9 × 0 + 0.1 × 16`) with pre-tiled boundary clipping?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-ray-casting-point-in-polygon-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-ray-casting-point-in-polygon-n1"
+              aria-label="Numeric estimate in edge checks"
+              placeholder="Enter numeric estimate (edge checks)..."
+            />
+            <span class="quiz-unit-badge">edge checks</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">90% of queries do 0 edge checks and 10% do 16 edge checks: 0.10 × 16.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ray-casting-point-in-polygon-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ray-casting-point-in-polygon-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Pre-classifying interior and exterior grid cells answers 90% of queries in O(1) hash lookup (0 edge checks), while the remaining 10% near the border test against a clipped 16-edge fragment—averaging `0.1 × 16 = 1.6` edge checks instead of 4,000 (a 2,500x speedup).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-ray-casting-point-in-polygon-t1" data-type="tradeoff" data-slug="ray-casting-point-in-polygon" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Raw O(V) Ray Casting vs Pre-Tiled Interior/Boundary Cell Indexing</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your compliance engine evaluates 250,000 GPS pings/sec against country and state borders represented by complex 50,000-vertex polygons that change only once a quarter.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which architectural approach should you choose, and what is the primary justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-ray-casting-point-in-polygon-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ray-casting-point-in-polygon-t1" value="0" />
+                  <span>Run full 50,000-edge ray casting from scratch on every GPS ping</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ray-casting-point-in-polygon-t1" value="1" />
+                  <span>Pre-compute a spatial grid (H3/S2/quadtree) classifying cells as `FULLY_INSIDE`, `FULLY_OUTSIDE`, or `BOUNDARY` (storing only the clipped polygon edges intersecting each boundary cell), trading a modest offline build step for O(1) runtime lookups on &gt;95% of pings</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ray-casting-point-in-polygon-t1" value="2" />
+                  <span>Approximate every country and state as a single circle centered on its capital city</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ray-casting-point-in-polygon-t1" value="0" />
+                  <span>Iterating 50,000 floating-point divisions 250,000 times per second uses negligible CPU</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ray-casting-point-in-polygon-t1" value="1" />
+                  <span>Static high-vertex polygons amortize offline grid rasterization and edge-clipping across billions of runtime lookups, turning most O(V) ray casts into a single O(1) cell lookup</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ray-casting-point-in-polygon-t1" value="2" />
+                  <span>Circular country borders satisfy legal tax and regulatory compliance boundaries</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">If 95% of points fall deep inside a polygon&#039;s interior, why test 50,000 border edges on every query?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ray-casting-point-in-polygon-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ray-casting-point-in-polygon-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">When polygons are static or rarely updated, pre-indexing cells into `FULLY_INSIDE`, `FULLY_OUTSIDE`, and clipped `BOUNDARY` edge lists eliminates ray casting entirely for interior/exterior points and reduces boundary ray casts to a handful of local edges.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1221,7 +1357,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1229,15 +1365,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

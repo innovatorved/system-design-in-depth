@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -991,12 +991,18 @@ W->>D: "Replay records after REDO point"
 D-->>C: "Database consistent, commit preserved"
 </div><h3>Trade-offs in WAL configuration</h3><table><thead><tr><th>Setting</th><th>Lower value</th><th>Higher value</th></tr></thead><tbody><tr><td>checkpoint_timeout / max_wal_size</td><td>Faster recovery, more I/O and full-page writes</td><td>Smoother I/O, longer recovery after a crash</td></tr><tr><td>synchronous_commit</td><td>off: faster, may lose recent commits</td><td>remote_apply: waits for a replica, slower but no data loss on failover</td></tr><tr><td>full_page_writes</td><td>off: less WAL but torn pages possible</td><td>on (default): protects against partial 8 KB writes</td></tr></tbody></table><h3>How real systems use the log</h3><ul><li><strong>PostgreSQL:</strong> redo-only WAL. There is no undo phase, because MVCC makes aborted tuples invisible and vacuum removes them later. The same WAL feeds streaming replication and logical decoding (CDC).</li><li><strong>MySQL InnoDB:</strong> redo log plus separate undo logs, which is closer to ARIES. The binlog is a second, logical log used for replication, coordinated with the redo log via two-phase commit.</li><li><strong>Aurora and Neon:</strong> "the log is the database". Compute ships only WAL to a distributed storage layer, which materializes pages itself.</li><li><strong>Kafka and Raft:</strong> the same append-only log idea generalized to distributed systems.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="database-wal-and-recovery" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="database-wal-and-recovery" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: When a commit is durable" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Group commit throughput" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: synchronous_commit vs fsync" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: When a commit is durable" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Group commit throughput" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: synchronous_commit vs fsync" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Group Commit IOPS Reduction" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Synchronous vs Asynchronous WAL Flush (`synchronous_commit`)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-database-wal-and-recovery-c1" data-type="mcq" data-slug="database-wal-and-recovery" data-index="0">
@@ -1114,12 +1120,142 @@ D-->>C: "Database consistent, commit preserved"
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-wal-and-recovery-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-wal-and-recovery-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">synchronous_commit = off only acknowledges before the WAL flush, which is a durability trade-off with a bounded loss window. fsync = off removes the ordering guarantee that recovery depends on, so a power cut can leave the files corrupted. Treating the two as equivalent is the tempting mistake.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-database-wal-and-recovery-n1" data-type="numeric" data-slug="database-wal-and-recovery" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Group Commit IOPS Reduction</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A database handles 12,000 commits/sec. With group commit enabled, the WAL writer flushes batched commit records every 2 ms.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many physical `fsync` operations per second does the WAL disk perform?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-wal-and-recovery-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-database-wal-and-recovery-n1"
+              aria-label="Numeric estimate in fsync/s"
+              placeholder="Enter numeric estimate (fsync/s)..."
+            />
+            <span class="quiz-unit-badge">fsync/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 1,000 ms/sec by the 2 ms group commit window (averaging 24 transactions per fsync).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-wal-and-recovery-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-wal-and-recovery-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Flushing once every 2 ms requires 1,000 / 2 = 500 fsyncs/sec, coalescing 12,000 / 500 = 24 concurrent transactions into each disk flush.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-database-wal-and-recovery-t1" data-type="tradeoff" data-slug="database-wal-and-recovery" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Synchronous vs Asynchronous WAL Flush (`synchronous_commit`)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A Postgres cluster writes both high-value billing ledger entries and high-volume non-critical user presence heartbeats on the same primary instance.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should you configure WAL durability to maximize throughput without risking financial data loss, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-wal-and-recovery-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-wal-and-recovery-t1" value="0" />
+                  <span>Turn `fsync = off` globally across the entire Postgres instance</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-wal-and-recovery-t1" value="1" />
+                  <span>Force synchronous cross-region 3-node quorum commit on every heartbeat update</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-wal-and-recovery-t1" value="2" />
+                  <span>Keep `fsync = on` globally, use `SET LOCAL synchronous_commit = on` for ledger transactions, and `SET LOCAL synchronous_commit = off` for presence heartbeats</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-wal-and-recovery-t1" value="0" />
+                  <span>`fsync = off` corrupts the entire database cluster on OS crash</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-wal-and-recovery-t1" value="1" />
+                  <span>Cross-region quorum commits make ephemeral heartbeats faster</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-wal-and-recovery-t1" value="2" />
+                  <span>Per-transaction `synchronous_commit = off` lets ephemeral writes return before WAL fsync without risking database page corruption on crash, while ledger transactions wait for durable WAL flush</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Distinguish `fsync = off` (corrupts DB on crash) from session-level `synchronous_commit = off` (safe crash recovery, only loses last few ms of async commits).</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-wal-and-recovery-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-wal-and-recovery-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">In PostgreSQL, `synchronous_commit` can be toggled per transaction: financial transactions wait for WAL flush, while high-rate telemetry/heartbeats skip the fsync wait while maintaining full crash consistency.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1295,7 +1431,7 @@ D-->>C: "Database consistent, commit preserved"
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1303,15 +1439,15 @@ D-->>C: "Database consistent, commit preserved"
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

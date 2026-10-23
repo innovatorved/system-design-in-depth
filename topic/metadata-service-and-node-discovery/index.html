@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -981,12 +981,18 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: service registration with an etcd lease</h2><ol><li>An instance of <code>payments</code> starts up and grants a lease with a 10-second TTL (lease ID 0x6b).</li><li>It writes <code>/services/payments/10.0.1.5:8080</code> attached to lease 0x6b.</li><li>It sends a KeepAlive every 3 seconds.</li><li>The gateway watches the prefix <code>/services/payments/</code> starting from revision 5,120, and receives a PUT event.</li><li>The instance is killed by the OOM killer. KeepAlives stop, and within about 10 seconds etcd revokes the lease and deletes the key.</li><li>The gateway receives the DELETE event at revision 5,187 and removes the instance from its pool.</li></ol><p>The worst-case detection time is the TTL. A shorter TTL detects failures faster but risks false expiry during GC pauses or network blips. Most deployments land between 5 and 30 seconds and also use active health checks at the load balancer.</p><h2>Discovery approaches</h2><table><thead><tr><th>Approach</th><th>Consistency</th><th>Failure detection</th><th>Examples</th></tr></thead><tbody><tr><td>Consensus KV with sessions or leases</td><td>Linearizable writes</td><td>Lease or session expiry</td><td>ZooKeeper, etcd, Consul catalogue</td></tr><tr><td>Gossip membership</td><td>Eventual</td><td>SWIM or phi-accrual</td><td>Cassandra, Serf, memberlist</td></tr><tr><td>DNS-based</td><td>Eventual, and cached by TTL</td><td>External health checks</td><td>Kubernetes Services, AWS Cloud Map</td></tr><tr><td>Self-preservation registry</td><td>AP by design</td><td>Heartbeats, but eviction pauses during mass loss</td><td>Netflix Eureka</td></tr><tr><td>Control plane pushes to proxies</td><td>Eventual (xDS)</td><td>Health checks plus outlier detection</td><td>Envoy with Istio, Consul Connect</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Kubernetes</strong> stores all cluster state in etcd. Controllers use list-then-watch from a resourceVersion, and the API server caches state so clients do not hammer etcd.</li><li><strong>Kafka</strong> kept broker registrations and controller election in ZooKeeper for a decade, then replaced it with KRaft (a Raft metadata quorum inside Kafka). ZooKeeper mode was removed in Kafka 4.0.</li><li><strong>HBase</strong> finds the meta table and the active master through ZooKeeper, and RegionServers register ephemeral znodes.</li></ul><h2>Failure modes</h2><ul><li><strong>Herd effect</strong> when thousands of clients watch one key. Use the sequential "watch your predecessor" recipe, or a caching layer.</li><li><strong>Session expiry storms</strong> after a coordinator pause: many ephemeral nodes vanish at once and trigger mass rebalancing.</li><li><strong>An etcd database that fills its quota</strong> (2 GB by default) raises a NOSPACE alarm and the cluster becomes read-only until you compact and defragment it.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="metadata-service-and-node-discovery" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="metadata-service-and-node-discovery" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: One-shot watches" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Lease-based detection time" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: NOSPACE alarm" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: One-shot watches" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Lease-based detection time" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: NOSPACE alarm" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Consensus Metadata Cache Read Offload" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Consensus Control Plane on the Data Path vs Epoch-Cached Routing Table" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-metadata-service-and-node-discovery-c1" data-type="mcq" data-slug="metadata-service-and-node-discovery" data-index="0">
@@ -1104,12 +1110,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="metadata-service-and-node-discovery-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-metadata-service-and-node-discovery-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">etcd enforces a backend quota, and exceeding it raises NOSPACE and blocks writes until you compact and defragment. A bigger disk does not raise the quota, and the real cause is using a coordination store as a general database.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-metadata-service-and-node-discovery-n1" data-type="numeric" data-slug="metadata-service-and-node-discovery" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Consensus Metadata Cache Read Offload</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">4,000 stateless storage routers need the current partition-to-node routing map on every incoming request (200,000 req/s aggregate). Instead of querying the 5-node etcd/Raft metadata service on every request, routers cache the map locally and subscribe to push watches (averaging 2 topology changes per minute).</p>
+          </div>
+        
+        <p class="check-slider__prompt">If each of the 4,000 routers only pulls/receives a watch event twice per minute (every 30 seconds), how many watch update messages per second does the metadata cluster send across all 4,000 routers (to the nearest integer)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-metadata-service-and-node-discovery-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-metadata-service-and-node-discovery-n1"
+              aria-label="Numeric estimate in msg/s"
+              placeholder="Enter numeric estimate (msg/s)..."
+            />
+            <span class="quiz-unit-badge">msg/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">4,000 routers × 2 updates per 60 seconds = 8,000 / 60.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="metadata-service-and-node-discovery-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-metadata-service-and-node-discovery-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">8,000 watch notifications per 60 seconds = 133.3 (~133) msg/s instead of 200,000 QPS—keeping the Raft consensus cluster completely off the data-plane hot path.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-metadata-service-and-node-discovery-t1" data-type="tradeoff" data-slug="metadata-service-and-node-discovery" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Consensus Control Plane on the Data Path vs Epoch-Cached Routing Table</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A junior architect designs a distributed storage system where every client `GET / PUT` request first queries ZooKeeper/etcd synchronously to find which storage node owns key `K`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why is this an anti-pattern, and how do production systems (Kafka, Spanner, Bigtable, TiKV) use their metadata service?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-metadata-service-and-node-discovery-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-metadata-service-and-node-discovery-t1" value="0" />
+                  <span>ZooKeeper/etcd should store both the metadata and all user payload blobs</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-metadata-service-and-node-discovery-t1" value="1" />
+                  <span>Clients should broadcast every `GET` to all storage nodes in the cluster</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-metadata-service-and-node-discovery-t1" value="2" />
+                  <span>Keep ZooKeeper/etcd strictly off the hot data path: clients cache the partition map with an `epoch` number and talk directly to storage nodes, refreshing the map only when a storage node rejects a stale `epoch`</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-metadata-service-and-node-discovery-t1" value="0" />
+                  <span>5-node Raft clusters scale linearly to 10M data-plane writes/sec</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-metadata-service-and-node-discovery-t1" value="1" />
+                  <span>Broadcasting every read reduces network utilization</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-metadata-service-and-node-discovery-t1" value="2" />
+                  <span>A consensus cluster (3–5 nodes) is designed for low-throughput strongly consistent coordination; epoch-validated client caching gives local speed with strong routing correctness</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How does a storage node detect that a client used a stale cached routing table?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="metadata-service-and-node-discovery-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-metadata-service-and-node-discovery-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Every partition assignment carries a monotonic `epoch` (configuration version). Clients route directly using their cached map; if a shard moved, the target node sees `client.epoch &lt; shard.epoch` and returns `StaleEpochException`, prompting a cache refresh.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1246,22 +1382,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

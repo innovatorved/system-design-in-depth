@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1006,12 +1006,18 @@
 <p>Include the other operating constraints too: tenant access rules, which data may be logged, a spending limit, and the signals an on-call engineer needs to diagnose failure. A design that meets latency while leaking another tenant's records has not met its requirements.</p>
 <p>Before accepting a target, ask how you will verify it. A recovery drill can test restoration; a realistic load test can test a throughput condition; neither proves a month of production availability. <a href="/topic/availability-durability-consistency-cost/">Availability, durability, consistency, and cost</a> examines how these promises interact.</p>
 </div></div></article>
-      <section class="check-slider" data-slug="non-functional-requirements" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="non-functional-requirements" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: RPO versus RTO" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Downtime budget for 99.9%" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Fast failures flatter p95" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: RPO versus RTO" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Downtime budget for 99.9%" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Fast failures flatter p95" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Monthly Error Budget in Requests" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Zero-RPO Synchronous Cross-Region Replication vs Write Latency" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-non-functional-requirements-c1" data-type="mcq" data-slug="non-functional-requirements" data-index="0">
@@ -1129,12 +1135,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="non-functional-requirements-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-non-functional-requirements-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">A flood of fast errors pulls the distribution down, so a broken service can look faster. The lesson counts only correct answers within the deadline as successes, so failed attempts are misses. Simply dropping errors from the measurement (the last option) is tempting, but it hides the failures instead of counting them against the target.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-non-functional-requirements-n1" data-type="numeric" data-slug="non-functional-requirements" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Monthly Error Budget in Requests</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your payment authorization API serves an average of 1,000 requests/second around the clock and commits to a 99.95% request-based availability SLO over a 30-day month (2.592 billion requests, or use 2,500,000,000 requests for napkin math).</p>
+          </div>
+        
+        <p class="check-slider__prompt">Using 2.592 billion requests per 30-day month, how many failed requests (in millions, rounded to 2 decimal places) are permitted before the monthly error budget is exhausted?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-non-functional-requirements-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-non-functional-requirements-n1"
+              aria-label="Numeric estimate in million requests"
+              placeholder="Enter numeric estimate (million requests)..."
+            />
+            <span class="quiz-unit-badge">million requests</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Error budget fraction = 1 - 0.9995 = 0.0005 (0.05%). Multiply 2,592M requests by 0.0005.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="non-functional-requirements-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-non-functional-requirements-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">At 1,000 req/s over 2,592,000 seconds (30 days), the service handles 2,592 million requests. A 99.95% SLO permits 0.05% (0.0005) failures: 2,592M × 0.0005 = 1.296 million failed requests (~1.3M).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-non-functional-requirements-t1" data-type="tradeoff" data-slug="non-functional-requirements" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Zero-RPO Synchronous Cross-Region Replication vs Write Latency</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A ledger service requires RPO = 0 even if an entire cloud region is lost, while product managers also ask for sub-15 ms p99 write latency from a single primary cluster.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which architectural stance should you take during NFR negotiation, and what is the primary justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-non-functional-requirements-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-non-functional-requirements-t1" value="0" />
+                  <span>Use asynchronous cross-region replication with a 5-second lag and claim RPO = 0 in the architecture doc</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-non-functional-requirements-t1" value="1" />
+                  <span>Enforce synchronous cross-region quorum commits across regions separated by 40+ ms RTT and explicitly raise the write latency SLO to accommodate speed-of-light physics</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-non-functional-requirements-t1" value="2" />
+                  <span>Commit writes only to local NVMe disk in a single availability zone to hit sub-15 ms latency while guaranteeing survival of a regional outage</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-non-functional-requirements-t1" value="0" />
+                  <span>Asynchronous replication guarantees zero data loss during sudden regional power failure</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-non-functional-requirements-t1" value="1" />
+                  <span>Surviving a full regional outage with RPO = 0 requires at least one cross-region network round-trip before acknowledging a write, making sub-15 ms cross-region commits physically impossible</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-non-functional-requirements-t1" value="2" />
+                  <span>Local NVMe drives automatically replicate data across tectonic plates without network overhead</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">RPO = 0 across regions requires acknowledging the write only after a remote region has persisted it.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="non-functional-requirements-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-non-functional-requirements-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Achieving RPO = 0 for a regional disaster requires synchronous replication to a second region before returning success to the client. Because inter-region round-trip times typically exceed 30–70 ms, the NFR contract must either relax the write latency target or scope RPO = 0 to single-AZ failures within a multi-AZ region.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1271,7 +1407,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1279,15 +1415,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

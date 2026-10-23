@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -957,12 +957,18 @@
   F -->|"Fail open"| L["Allow, fall back to a local approximate limit"]
   F -->|"Fail closed"| D</div><p>Most APIs <strong>fail open</strong>, because the limiter should not become a single point of failure, and they keep a coarse in-memory limit on each instance as a backstop. Security-sensitive endpoints such as login, OTP and payments often <strong>fail closed</strong>.</p>
 </div></article>
-      <section class="check-slider" data-slug="rate-limiter-placement-and-keys" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="rate-limiter-placement-and-keys" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: IPv6 keying" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Two limits on reset" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Fail open or closed" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: IPv6 keying" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Two limits on reset" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Fail open or closed" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Local Batch Token Reservation vs Per-Request Redis RPC" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Fail-Open vs Fail-Closed When the Rate-Limiter Redis Cluster Degrades" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-rate-limiter-placement-and-keys-c1" data-type="mcq" data-slug="rate-limiter-placement-and-keys" data-index="0">
@@ -1080,12 +1086,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="rate-limiter-placement-and-keys-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-rate-limiter-placement-and-keys-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Low-risk reads should keep serving with a coarse per-instance backstop, while OTP sends cost money and enable abuse, so they fail closed. Failing everything open sounds principled, but it leaves SMS pumping and brute force unprotected exactly when the limiter is down.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-rate-limiter-placement-and-keys-n1" data-type="numeric" data-slug="rate-limiter-placement-and-keys" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Local Batch Token Reservation vs Per-Request Redis RPC</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An API gateway fleet of 80 nodes handles `400,000 req/s`. Calling a central Redis rate limiter on every single request issues `400,000 RPCs/sec`. Instead, each gateway node syncs/leases token batches with Redis asynchronously every `100 ms` (`10 syncs/sec` per gateway node).</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many Redis RPCs per second (`80 nodes × 10 syncs/s`) are issued across the entire gateway fleet with 100 ms local batch syncing?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-rate-limiter-placement-and-keys-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-rate-limiter-placement-and-keys-n1"
+              aria-label="Numeric estimate in RPCs/s"
+              placeholder="Enter numeric estimate (RPCs/s)..."
+            />
+            <span class="quiz-unit-badge">RPCs/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 80 gateway nodes by 10 syncs per second.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="rate-limiter-placement-and-keys-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-rate-limiter-placement-and-keys-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">80 nodes × 10 syncs/sec = 800 Redis RPCs/sec instead of 400,000 RPCs/sec—a 500× reduction in Redis load and zero added network latency on the request path!</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-rate-limiter-placement-and-keys-t1" data-type="tradeoff" data-slug="rate-limiter-placement-and-keys" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Fail-Open vs Fail-Closed When the Rate-Limiter Redis Cluster Degrades</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your edge API gateway checks a Redis cluster for rate limiting. Suddenly a network blip causes Redis timeouts across the region.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Should the API gateway Fail-Open (allow traffic), Fail-Closed (reject 100% of traffic with HTTP 500/429), or use Local Fallback Enforcement, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-rate-limiter-placement-and-keys-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-rate-limiter-placement-and-keys-t1" value="0" />
+                  <span>Fail-Closed unconditionally so a Redis cache blip causes a 100% global outage of your entire company</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-rate-limiter-placement-and-keys-t1" value="1" />
+                  <span>Wait 30 seconds on every Redis timeout before forwarding the request</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-rate-limiter-placement-and-keys-t1" value="2" />
+                  <span>Enforce a ultra-tight timeout (&lt;5 ms) on Redis and fall back to an in-memory per-gateway token bucket (`global_limit / num_gateways`) so normal traffic continues (Fail-Open with local bounding) without turning a cache outage into a total site outage</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-rate-limiter-placement-and-keys-t1" value="0" />
+                  <span>Turning a minor Redis glitch into a 100% site-wide outage improves availability</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-rate-limiter-placement-and-keys-t1" value="1" />
+                  <span>30-second timeouts protect gateway worker pools</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-rate-limiter-placement-and-keys-t1" value="2" />
+                  <span>Rate limiting is a protective control, not a business invariant; falling back to local in-memory per-pod rate limits preserves both service availability and overload protection while Redis recovers</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">If Redis goes down for 30 seconds, should your entire API go down, or can each gateway pod divide the limit locally?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="rate-limiter-placement-and-keys-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-rate-limiter-placement-and-keys-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Failing closed on a Redis rate-limiter outage turns Redis into a single point of failure for the entire platform. Falling back to local in-memory token buckets (`limit / N_pods`) keeps the platform up while still capping total ingress.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1254,7 +1390,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1262,15 +1398,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

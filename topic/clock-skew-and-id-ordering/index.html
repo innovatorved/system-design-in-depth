@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1018,12 +1018,18 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: how big is skew, really?</h2><ul><li><strong>Quartz drift:</strong> typical server oscillators are specified at about 10-50 ppm. 20 ppm is 1.7 seconds per day of drift if left unsynchronized, so clocks <em>must</em> be disciplined continuously.</li><li><strong>NTP over the internet:</strong> tens of ms of error is typical. <strong>Within a datacenter</strong> with chrony: often under 1 ms. <strong>PTP with hardware timestamping</strong> (AWS Time Sync, Meta's PTP rollout): microseconds.</li><li><strong>Spanner TrueTime:</strong> the uncertainty epsilon sawtooths between about 1 and 7 ms (average about 4 ms in the 2012 paper). Commit-wait therefore adds a few ms per write.</li></ul><h3>Lamport timestamps step by step</h3><table><thead><tr><th>Event</th><th>Node A clock</th><th>Node B clock</th></tr></thead><tbody><tr><td>A local write</td><td>1</td><td>0</td></tr><tr><td>A sends message (carries 1)</td><td>2</td><td>0</td></tr><tr><td>B local write</td><td>2</td><td>1</td></tr><tr><td>B receives message: max(1, 2) + 1</td><td>2</td><td>3</td></tr><tr><td>B writes reply</td><td>2</td><td>4</td></tr></tbody></table><p>The reply (4) is guaranteed to sort after the original send (2), whatever the wall clocks say. Ties are broken by node ID to produce a total order.</p><h3>Choosing an ordering tool</h3><table><thead><tr><th>Tool</th><th>Size</th><th>Gives you</th><th>Used by</th></tr></thead><tbody><tr><td>Wall clock / Snowflake</td><td>64 bits</td><td>Rough order, human-readable time</td><td>Twitter, Discord IDs</td></tr><tr><td>Lamport clock</td><td>One integer</td><td>Total order consistent with causality</td><td>Consensus logs, simple replication</td></tr><tr><td>Vector clock</td><td>One counter per node</td><td>Detects concurrent (conflicting) writes</td><td>Dynamo, Riak (dotted version vectors)</td></tr><tr><td>Hybrid logical clock</td><td>64 bits (physical + logical)</td><td>Close to wall time and causally consistent</td><td>CockroachDB, YugabyteDB, MongoDB cluster time</td></tr><tr><td>TrueTime</td><td>Interval</td><td>External consistency (real-time order)</td><td>Google Spanner</td></tr></tbody></table><h3>Failure modes</h3><ul><li><strong>Leap seconds and NTP steps:</strong> historical outages (2012 Linux leap-second bug). Use leap smearing (Google, AWS).</li><li><strong>VM pause or live migration:</strong> a process can resume seconds later without noticing. Leases based on local time must account for this, which is the motivation for fencing tokens.</li><li><strong>Cassandra LWW:</strong> writes carry client or coordinator timestamps, so a skewed client can make a delete lose to an older write or vice versa.</li></ul>
 </div></div></article>
-      <section class="check-slider" data-slug="clock-skew-and-id-ordering" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="clock-skew-and-id-ordering" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: LWW with skewed clocks" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: When epsilon grows" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Comparing vector clocks" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: LWW with skewed clocks" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: When epsilon grows" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Comparing vector clocks" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: NTP Backward Step Wait Budget" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Handling Small vs Large Backward Clock Jumps in Snowflake" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-clock-skew-and-id-ordering-c1" data-type="mcq" data-slug="clock-skew-and-id-ordering" data-index="0">
@@ -1141,12 +1147,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="clock-skew-and-id-ordering-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-clock-skew-and-id-ordering-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">VA is ahead in the first component and VB in the second, so neither causally precedes the other and the updates conflict. Picking by any single component or by the sum would silently drop one user&#039;s change, which is what vector clocks exist to prevent.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-clock-skew-and-id-ordering-n1" data-type="numeric" data-slug="clock-skew-and-id-ordering" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: NTP Backward Step Wait Budget</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A Snowflake generator detects that the local system clock stepped backward by 15 ms during an NTP adjustment. Instead of throwing an error, it pauses (`sleep`) until `System.currentTimeMillis()` catches up to `lastTimestamp`. During those 15 ms, requests arrive at 2,000 req/s.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many in-flight ID requests are briefly held in memory waiting for the 15 ms clock catch-up?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-clock-skew-and-id-ordering-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-clock-skew-and-id-ordering-n1"
+              aria-label="Numeric estimate in requests"
+              placeholder="Enter numeric estimate (requests)..."
+            />
+            <span class="quiz-unit-badge">requests</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 2,000 req/s (which is 2 req/ms) by 15 ms.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="clock-skew-and-id-ordering-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-clock-skew-and-id-ordering-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">At 2,000 req/s (2 requests/ms), pausing generation for a small 15 ms NTP step holds only 2 × 15 = 30 requests for at most 15 ms, safely preserving strict monotonicity without failing requests.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-clock-skew-and-id-ordering-t1" data-type="tradeoff" data-slug="clock-skew-and-id-ordering" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Handling Small vs Large Backward Clock Jumps in Snowflake</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An NTP daemon or VM live migration can cause either a tiny backward clock adjustment (&lt; 20 ms) or a severe backward jump (e.g., 3 seconds).</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should a production Snowflake generator handle backward clock skew so it never issues duplicate IDs, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-clock-skew-and-id-ordering-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-clock-skew-and-id-ordering-t1" value="0" />
+                  <span>Ignore backward clock jumps and reset the sequence counter to 0 at the older timestamp</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-clock-skew-and-id-ordering-t1" value="1" />
+                  <span>Block threads inside a `while` spin-loop for up to 10 minutes on any clock jump</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-clock-skew-and-id-ordering-t1" value="2" />
+                  <span>Ride through small backward skews (&lt; 10–50 ms) by holding `lastTimestamp` and incrementing the sequence counter (or sleeping briefly), and fail fast / switch worker epoch on large jumps while using NTP slew mode (`chrony`)</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-clock-skew-and-id-ordering-t1" value="0" />
+                  <span>Reusing an older millisecond timestamp with `sequence = 0` is guaranteed to be collision-free</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-clock-skew-and-id-ordering-t1" value="1" />
+                  <span>Blocking HTTP worker threads for minutes prevents cascading timeouts</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-clock-skew-and-id-ordering-t1" value="2" />
+                  <span>Reusing a past millisecond risks duplicate IDs; riding on the logical high-water mark handles micro-skews cleanly, while failing closed (or rotating worker ID) protects uniqueness on major clock faults</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens if a node generates IDs at `t = 1000`, the clock jumps back to `t = 995`, and it generates IDs at `t = 1000` again?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="clock-skew-and-id-ordering-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-clock-skew-and-id-ordering-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">If a generator ever emits IDs for the same `(timestamp, worker_id, sequence)` twice, primary key collisions occur. Tracking `lastTimestamp` as a monotonic high-water mark prevents duplicates.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1310,7 +1446,7 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1318,15 +1454,15 @@ flowchart TD
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

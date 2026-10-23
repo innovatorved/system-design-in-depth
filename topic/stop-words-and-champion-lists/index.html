@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1027,12 +1027,18 @@ flowchart TD
 <h2>Champion list sizing</h2>
 <p>Choose r, the champion list length per term, larger than K. With r = 1,000 and K = 20, most two-term queries find enough candidates in the union of champion lists; queries that do not fall back to full postings. Larger r means more RAM and better recall; the right value comes from measuring recall at K on a query log against full evaluation.</p>
 </div></div></article>
-      <section class="check-slider" data-slug="stop-words-and-champion-lists" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="stop-words-and-champion-lists" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Keeping stop words" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: WAND upper bounds" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Sizing champion lists" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Keeping stop words" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: WAND upper bounds" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Sizing champion lists" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Block-Max WAND Early Termination Savings" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Dropping Stop Words at Index Time vs Keeping Positions with WAND Pruning" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-stop-words-and-champion-lists-c1" data-type="mcq" data-slug="stop-words-and-champion-lists" data-index="0">
@@ -1150,12 +1156,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="stop-words-and-champion-lists-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-stop-words-and-champion-lists-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Champion lists are an approximation whose recall depends on the query mix, so r must be chosen empirically, larger than K, trading RAM for recall. Eliminating fallback entirely is the wrong goal; fallback is the safety valve and a few percent of queries using it is expected.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-stop-words-and-champion-lists-n1" data-type="numeric" data-slug="stop-words-and-champion-lists" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Block-Max WAND Early Termination Savings</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A query matches 500,000 candidate postings across 3 terms. Using Block-Max WAND (Weak AND) with precomputed per-block upper-bound BM25 scores, the scorer skips 92% of candidate postings whose maximum possible score cannot beat the current top-100 heap threshold.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many thousands of documents are actually fully scored (`8% of 500,000`, in thousands)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-stop-words-and-champion-lists-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-stop-words-and-champion-lists-n1"
+              aria-label="Numeric estimate in thousand docs"
+              placeholder="Enter numeric estimate (thousand docs)..."
+            />
+            <span class="quiz-unit-badge">thousand docs</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Compute `500,000 × 0.08` and express in thousands.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="stop-words-and-champion-lists-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-stop-words-and-champion-lists-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Skipping 92% of candidates means only `500,000 × 0.08 = 40,000` documents (40 thousand) undergo full BM25 evaluation—giving a &gt;10× CPU speedup with exact top-K recall.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-stop-words-and-champion-lists-t1" data-type="tradeoff" data-slug="stop-words-and-champion-lists" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Dropping Stop Words at Index Time vs Keeping Positions with WAND Pruning</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A classic search textbook suggests deleting stop words (`&quot;to&quot;`, `&quot;be&quot;`, `&quot;or&quot;`, `&quot;not&quot;`, `&quot;the&quot;`, `&quot;in&quot;`) at index time to save space, but users start searching exact phrases like `&quot;to be or not to be&quot;`, `&quot;the who&quot;`, and `&quot;vitamin a&quot;`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How do modern Lucene/Elasticsearch engines handle stop words without breaking phrase search or blowing up query latency?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-stop-words-and-champion-lists-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-stop-words-and-champion-lists-t1" value="0" />
+                  <span>Strip all stop words permanently at index time and return 0 results for `&quot;to be or not to be&quot;`</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-stop-words-and-champion-lists-t1" value="1" />
+                  <span>Score every occurrence of `&quot;the&quot;` across 100M documents on every single query</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-stop-words-and-champion-lists-t1" value="2" />
+                  <span>Retain stop words and their positional postings for exact phrase/proximity queries, but dynamically prune low-IDF stop words during non-phrase bag-of-words retrieval via Block-Max WAND / MaxScore</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-stop-words-and-champion-lists-t1" value="0" />
+                  <span>Users never search for titles, bands, or phrases containing common words</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-stop-words-and-champion-lists-t1" value="1" />
+                  <span>Exhaustively scoring 100M postings for `&quot;the&quot;` takes 0 ms</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-stop-words-and-champion-lists-t1" value="2" />
+                  <span>Modern block compression makes storing common postings cheap, and Block-Max WAND skips blocks whose upper-bound IDF contribution cannot enter the top-K heap while preserving exact phrase matching when quoted</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How did Lucene 8+ eliminate the old need to delete stop words from the index?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="stop-words-and-champion-lists-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-stop-words-and-champion-lists-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Deleting stop words at index time irreversibly breaks phrase queries (`&quot;to be or not to be&quot;`). Keeping them compressed on disk and letting Block-Max WAND dynamically skip low-IDF blocks during bag-of-words queries gives both accuracy and speed.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1280,22 +1416,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

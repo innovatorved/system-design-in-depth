@@ -63,6 +63,59 @@ window.QUESTION_BANK["delegation-and-async-work"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "delegation-and-async-work-n1",
+    "topic": "delegation-and-async-work",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Synchronous vs Asynchronous Queue Latency & Worker Sizing",
+    "scenario": "An HTTP checkout endpoint previously generated a PDF invoice and sent an email synchronously (taking 450 ms out of a 500 ms total response time). Moving PDF + email generation to an async queue leaves only 50 ms of synchronous DB + enqueue work. If PDF/email generation takes 0.4 CPU-seconds per order and orders arrive at 100 orders/sec, you size the async worker pool.",
+    "prompt": "What is the minimum number of worker CPU cores (`100 orders/s × 0.4 s`) required to keep up with the async queue at 100% utilization?",
+    "question": "What is the minimum number of worker CPU cores (`100 orders/s × 0.4 s`) required to keep up with the async queue at 100% utilization?",
+    "unit": "cores",
+    "answer": 40,
+    "tolerance": 0.2,
+    "hint": "By Little's Law, `L = λ × W = 100 req/s × 0.4 s`.",
+    "explanation": "100 orders/sec × 0.4 CPU-seconds/order = 40 concurrent CPU cores minimum (typically provisioned at ~60 cores for 65% target utilization and burst headroom).",
+    "tags": [
+      "delegation-and-async-work",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "delegation-and-async-work-t1",
+    "topic": "delegation-and-async-work",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: What Belongs on the Synchronous Request Path vs Async Queue",
+    "scenario": "During user signup (`POST /signup`), the backend validates email uniqueness, hashes the password, inserts the user row, sends a welcome email, syncs the lead to Salesforce CRM, and computes ML onboarding recommendations.",
+    "prompt": "Which operations must remain synchronous before returning `201 Created`, and which should be delegated asynchronously?",
+    "question": "Which operations must remain synchronous before returning `201 Created`, and which should be delegated asynchronously?",
+    "options": [
+      "Make everything asynchronous so `POST /signup` returns `201 Created` before checking if the email is already taken",
+      "Keep Salesforce CRM and SMTP email delivery synchronous on the HTTP request thread",
+      "Keep invariant validation and durable user-row creation (plus transactional outbox enqueue) synchronous, and delegate welcome email, CRM sync, and ML recommendations to asynchronous consumers"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Returning `201 Created` for duplicate emails simplifies client error handling",
+      "External third-party SMTP and CRM outages should block user signups",
+      "Any precondition that determines whether the request succeeded (uniqueness + durable user record) must be synchronous, while side effects with independent failure/retry domains belong on an async queue"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Ask: \"If this step fails, should the user's signup fail?\"",
+    "explanation": "Preconditions and authoritative state mutations must complete before returning HTTP 2xx, whereas slow external side effects (SMTP, webhooks, CRM, analytics) belong in asynchronous background workers triggered via an outbox.",
+    "tags": [
+      "delegation-and-async-work",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -129,6 +182,59 @@ window.QUESTION_BANK["task-queue-vs-event-stream"] = [
       "recall",
       "inline"
     ]
+  },
+  {
+    "id": "task-queue-vs-event-stream-n1",
+    "topic": "task-queue-vs-event-stream",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Multi-Consumer Event Stream vs Point-to-Point Queue Storage",
+    "scenario": "An `OrderPlaced` stream produces 10,000 events/sec averaging 1 KB each (`10 MB/s`) and is consumed by 6 independent downstream services. In a traditional point-to-point task broker (RabbitMQ/SQS fanout), the message is duplicated into 6 separate queues (`60 MB/s` total write); in an append-only log stream (Kafka), the partition log is written once (`10 MB/s` before replication) and read by 6 consumer groups.",
+    "prompt": "How many megabytes per second (MB/s) of logical broker write throughput are saved by writing to 1 shared append-only log instead of duplicating into 6 separate queues?",
+    "question": "How many megabytes per second (MB/s) of logical broker write throughput are saved by writing to 1 shared append-only log instead of duplicating into 6 separate queues?",
+    "unit": "MB/s",
+    "answer": 50,
+    "tolerance": 0.2,
+    "hint": "Subtract 10 MB/s (1 shared log) from 60 MB/s (6 duplicated queues).",
+    "explanation": "6 queues × 10 MB/s = 60 MB/s vs 1 shared log × 10 MB/s = 50 MB/s saved (83% reduction in logical broker write volume, plus new consumers can replay historical events from offset 0).",
+    "tags": [
+      "task-queue-vs-event-stream",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "task-queue-vs-event-stream-t1",
+    "topic": "task-queue-vs-event-stream",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Per-Message Ack Task Queue (SQS/RabbitMQ) vs Partitioned Offset Log (Kafka)",
+    "scenario": "You have a video transcoding workload where 95% of jobs finish in 2 seconds, 5% of 4K videos take 25 minutes, and you have 200 worker pods that need fine-grained per-job completion acknowledgment and individual job retries.",
+    "prompt": "Should you use a Partitioned Offset Log (Kafka) or a Per-Message Visibility-Timeout Task Queue (SQS/RabbitMQ) to dispatch the transcoding jobs, and why?",
+    "question": "Should you use a Partitioned Offset Log (Kafka) or a Per-Message Visibility-Timeout Task Queue (SQS/RabbitMQ) to dispatch the transcoding jobs, and why?",
+    "options": [
+      "Use Kafka with 4 partitions so 196 of your 200 worker pods sit completely idle and 1 slow 25-minute video blocks its partition offset",
+      "Use Kafka and commit the partition offset before transcoding starts",
+      "Use a work queue with per-message visibility timeouts and individual ACKs (e.g., SQS / RabbitMQ) so any free worker can pull the next job without head-of-line partition blocking"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Kafka allows more active consumers in a group than partitions in the topic",
+      "Committing offsets before work finishes guarantees at-least-once processing on worker crash",
+      "Log streams tie parallelism to partition count and track a single contiguous offset watermark per partition, whereas work queues support arbitrary worker concurrency and independent per-message ACKs/retries for variable-duration tasks"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens in Kafka when message #100 takes 25 minutes and messages #101..#500 finish in 2 seconds?",
+    "explanation": "Kafka excels at high-throughput ordered event streaming and multi-consumer replay, but variable-duration heavy background jobs need per-message ACK/visibility-timeout task queues to avoid head-of-line offset blocking and partition-count concurrency limits.",
+    "tags": [
+      "task-queue-vs-event-stream",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -194,6 +300,59 @@ window.QUESTION_BANK["event-bus-for-product-events"] = [
       "event-bus-for-product-events",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "event-bus-for-product-events-n1",
+    "topic": "event-bus-for-product-events",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Schema Registry Wire Payload Savings (Avro/Protobuf vs JSON)",
+    "scenario": "A product event bus ingests 200,000 events/sec. Switching from verbose JSON (averaging 650 bytes/event) to Protobuf/Avro with a 5-byte Schema Registry ID header (averaging 150 bytes/event) saves 500 bytes per event.",
+    "prompt": "How many megabytes per second (MB/s, where 1 MB = 10^6 bytes) of network ingress bandwidth are saved across 200,000 events/sec?",
+    "question": "How many megabytes per second (MB/s, where 1 MB = 10^6 bytes) of network ingress bandwidth are saved across 200,000 events/sec?",
+    "unit": "MB/s",
+    "answer": 100,
+    "tolerance": 0.2,
+    "hint": "Multiply 200,000 events/sec by 500 bytes saved per event and divide by 10^6.",
+    "explanation": "200,000 × 500 bytes = 100,000,000 bytes/sec = 100 MB/s saved on producer ingress (and 300 MB/s saved across 3× broker replication + multiple consumer groups).",
+    "tags": [
+      "event-bus-for-product-events",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "event-bus-for-product-events-t1",
+    "topic": "event-bus-for-product-events",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Producer-Side Schema Evolution & Dead-Letter Routing",
+    "scenario": "A mobile team deploys a producer update that changes the `price` field in the `ItemPurchased` event from `int64` cents to a nested object `{\"amount\": \"19.99\", \"currency\": \"USD\"}`, crashing 12 downstream analytics and billing consumers.",
+    "prompt": "Which governance mechanism prevents breaking changes from ever entering the production event bus?",
+    "question": "Which governance mechanism prevents breaking changes from ever entering the production event bus?",
+    "options": [
+      "Have every downstream consumer wrap `JSON.parse` in an empty `catch {}` block and silently drop unparseable billing events",
+      "Give all 12 consumer teams SSH access to redeploy the mobile app",
+      "Enforce a central Schema Registry with `BACKWARD` / `FULL` compatibility checks in CI and producer serializers (requiring additive optional fields or a new versioned topic) plus a Dead-Letter Queue (DLQ) for unexpected poison messages"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Silently dropping billing events ensures accurate financial reporting",
+      "Ad-hoc unvalidated JSON strings prevent breaking schema mutations",
+      "Pre-commit and serializer-level Schema Registry validation blocks incompatible field-type mutations before they reach the broker, while DLQs isolate poison pills without halting partition consumption"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Where is the cheapest and safest place to catch an incompatible event schema change?",
+    "explanation": "A Schema Registry enforces backward/forward evolution rules (e.g., never changing a field's type or reusing a Protobuf tag number) at CI and publish time, preventing a single producer deploy from breaking dozens of downstream consumers.",
+    "tags": [
+      "event-bus-for-product-events",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -380,6 +539,59 @@ window.QUESTION_BANK["distributed-task-scheduler"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "distributed-task-scheduler-n1",
+    "topic": "distributed-task-scheduler",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Hashed Timing Wheel Bucket Resolution",
+    "scenario": "A distributed task scheduler uses an in-memory Hierarchical Timing Wheel with `512` slots and a tick resolution of `100 ms` per slot for the inner wheel.",
+    "prompt": "What is the total time span (in seconds) covered by one full revolution of the 512-slot inner wheel?",
+    "question": "What is the total time span (in seconds) covered by one full revolution of the 512-slot inner wheel?",
+    "unit": "seconds",
+    "answer": 51.2,
+    "tolerance": 0.2,
+    "hint": "Multiply 512 slots by 0.1 seconds (100 ms) per slot.",
+    "explanation": "512 slots × 100 ms = 51,200 ms = 51.2 seconds per revolution, with `O(1)` insertion and `O(1)` tick advancement (compared to `O(log N)` heap contention).",
+    "tags": [
+      "distributed-task-scheduler",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "distributed-task-scheduler-t1",
+    "topic": "distributed-task-scheduler",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Polling `WHERE run_at <= NOW()` on a Single Table vs Partitioned Timing Wheel + Lease Claim",
+    "scenario": "A delayed job scheduler stores 50,000,000 scheduled tasks in a database and has 64 scheduler workers polling `SELECT * FROM jobs WHERE status = 'PENDING' AND run_at <= NOW() ORDER BY run_at LIMIT 100` every 50 ms.",
+    "prompt": "Why does naive multi-worker polling collapse at scale, and what architecture scales delayed scheduling cleanly?",
+    "question": "Why does naive multi-worker polling collapse at scale, and what architecture scales delayed scheduling cleanly?",
+    "options": [
+      "All 64 workers read and contend on the exact same top 100 due rows at the B-Tree head; fix it by removing the index on `run_at`",
+      "Hold all 50,000,000 tasks in a single unpersisted Node.js `setTimeout` call",
+      "Shard schedules across partitions by `(time_bucket, shard_id)` (or use `FOR UPDATE SKIP LOCKED` per shard), pre-fetch upcoming 1-minute windows into an in-memory Timing Wheel, and push due tasks into a ready execution queue with idempotency tokens"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Removing the index makes 64 concurrent full-table scans faster",
+      "In-memory `setTimeout` survives process crashes and deployments",
+      "Partitioning by time bucket + shard eliminates thundering-herd lock contention on the earliest `run_at` index edge, and pushing fired tasks to a ready queue decouples timer firing from task execution"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens when 64 workers run the exact same `ORDER BY run_at LIMIT 100` query at the exact same millisecond?",
+    "explanation": "Without shard partitioning or `SKIP LOCKED`, all workers collide on the same top 100 rows at the head of the `run_at` index. Partitioned time-bucket leasing + in-memory timing wheels feed a ready queue cleanly.",
+    "tags": [
+      "distributed-task-scheduler",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -445,6 +657,59 @@ window.QUESTION_BANK["postgres-skip-locked-work-queue"] = [
       "postgres-skip-locked-work-queue",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "postgres-skip-locked-work-queue-n1",
+    "topic": "postgres-skip-locked-work-queue",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Batch Claim Round-Trip Reduction with `FOR UPDATE SKIP LOCKED`",
+    "scenario": "A pool of worker threads processes 10,000 background jobs/sec from a PostgreSQL queue table. Claiming 1 job per `SELECT ... FOR UPDATE SKIP LOCKED` query requires 10,000 queries/sec; claiming a batch of `LIMIT 50` jobs per transaction amortizes the claim.",
+    "prompt": "How many `SELECT ... FOR UPDATE SKIP LOCKED` claim queries per second are needed when each worker claims a batch of 50 jobs?",
+    "question": "How many `SELECT ... FOR UPDATE SKIP LOCKED` claim queries per second are needed when each worker claims a batch of 50 jobs?",
+    "unit": "queries/s",
+    "answer": 200,
+    "tolerance": 0.2,
+    "hint": "Divide 10,000 jobs/sec by 50 jobs per batch claim.",
+    "explanation": "Batching `LIMIT 50` jobs into a single `UPDATE ... WHERE id IN (SELECT id ... FOR UPDATE SKIP LOCKED LIMIT 50) RETURNING *` drops database claim queries from 10,000 QPS to 200 QPS.",
+    "tags": [
+      "postgres-skip-locked-work-queue",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "postgres-skip-locked-work-queue-t1",
+    "topic": "postgres-skip-locked-work-queue",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Holding the `SKIP LOCKED` Transaction Open During Job Execution vs Lease State Transition",
+    "scenario": "A developer writes a PostgreSQL `SKIP LOCKED` worker that opens `BEGIN`, runs `SELECT ... FOR UPDATE SKIP LOCKED`, calls an external LLM API that takes 45 seconds inside the open transaction, and then runs `DELETE` + `COMMIT`.",
+    "prompt": "Why is holding the `SKIP LOCKED` transaction open during external I/O dangerous, and what is the production pattern?",
+    "question": "Why is holding the `SKIP LOCKED` transaction open during external I/O dangerous, and what is the production pattern?",
+    "options": [
+      "Long-running open transactions in PostgreSQL help `autovacuum` reclaim dead tuples faster",
+      "PostgreSQL allows unlimited concurrent open transactions with zero connection or `xmin` overhead",
+      "Long open transactions pin the Postgres `xmin` horizon (blocking `VACUUM` across the entire database and causing severe table bloat) and exhaust connection pools; instead, atomically `UPDATE status = 'LEASED', leased_until = NOW() + '2 min'` and `COMMIT` immediately before executing the job"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Pinning `xmin` for minutes prevents MVCC dead-tuple bloat",
+      "Holding a DB connection per slow HTTP call scales to 50,000 concurrent jobs",
+      "Committing a short lease transition immediately releases the row lock, connection, and MVCC `xmin` horizon in <2 ms, while `leased_until` recovers crashed workers"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens to PostgreSQL `VACUUM` when a transaction remains open for minutes while a high-churn queue table is being updated thousands of times per second?",
+    "explanation": "In PostgreSQL, any open transaction with an active snapshot pins `xmin` and prevents `VACUUM` from cleaning dead tuples. A queue worker must atomically claim rows by updating `status = 'PROCESSING', visible_at = NOW() + timeout` and committing immediately.",
+    "tags": [
+      "postgres-skip-locked-work-queue",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -512,6 +777,59 @@ window.QUESTION_BANK["dag-workflow-orchestration"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "dag-workflow-orchestration-n1",
+    "topic": "dag-workflow-orchestration",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Event-History State Growth in Durable Execution (Temporal / Airflow)",
+    "scenario": "A workflow orchestrator executes 500,000 workflows per day. Each workflow has 20 DAG steps, and each step records 4 state-transition events (Scheduled, Started, Completed, ActivityOutput) averaging 1 KB per event.",
+    "prompt": "How many gigabytes per day (GB/day, where 1 GB = 10^9 bytes) of workflow execution history are generated across the 500,000 workflows?",
+    "question": "How many gigabytes per day (GB/day, where 1 GB = 10^9 bytes) of workflow execution history are generated across the 500,000 workflows?",
+    "unit": "GB/day",
+    "answer": 40,
+    "tolerance": 0.2,
+    "hint": "Each workflow writes `20 steps × 4 events × 1 KB = 80 KB`. Multiply by 500,000 workflows/day.",
+    "explanation": "20 × 4 × 1,000 bytes = 80,000 bytes per workflow. Across 500,000 workflows/day, 500,000 × 80,000 = 40 × 10^9 bytes = 40 GB/day (which is why large intermediate datasets must be passed by S3 URI reference, not inline in workflow state).",
+    "tags": [
+      "dag-workflow-orchestration",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "dag-workflow-orchestration-t1",
+    "topic": "dag-workflow-orchestration",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Passing Payloads Inline in DAG State vs Claim-Check Pattern (URI References)",
+    "scenario": "A data pipeline DAG in Airflow/Temporal extracts a 250 MB CSV in Step A and passes the raw 250 MB payload as the return value into Step B and Step C via the orchestrator's metadata database.",
+    "prompt": "What happens to the workflow orchestrator DB when steps pass 250 MB payloads inline, and what pattern should be used instead?",
+    "question": "What happens to the workflow orchestrator DB when steps pass 250 MB payloads inline, and what pattern should be used instead?",
+    "options": [
+      "Workflow metadata databases (PostgreSQL/Cassandra) are optimized for 250 MB row values in event history",
+      "Pass the 250 MB payload as command-line arguments to the worker container",
+      "Use the Claim-Check pattern: Step A writes the 250 MB dataset to immutable object storage (`s3://bucket/run_id/step_a.parquet` + checksum) and passes only the lightweight URI metadata (~200 bytes) through the DAG state machine"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Storing 250 MB blobs in Temporal/Airflow XCom tables keeps orchestration latency under 5 ms",
+      "Linux `execve` command lines support gigabyte arguments",
+      "Orchestrators persist and replay state history on every step transition; the Claim-Check pattern keeps control-plane state tiny while offloading bulk data transfer directly to object storage"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Separate the workflow control plane (state transitions) from the data plane (multi-megabyte artifacts).",
+    "explanation": "Workflow orchestrators serialize and replay history events on every task transition. Passing a lightweight S3 URI (Claim-Check pattern) keeps the orchestrator DB fast and prevents OOM crashes.",
+    "tags": [
+      "dag-workflow-orchestration",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -577,6 +895,59 @@ window.QUESTION_BANK["rule-engine-trigger-framework"] = [
       "rule-engine-trigger-framework",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "rule-engine-trigger-framework-n1",
+    "topic": "rule-engine-trigger-framework",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Rete / Inverted Rule Index Evaluation Reduction",
+    "scenario": "A multi-tenant automation platform hosts 200,000 user-defined trigger rules across 50 event types. When an `invoice.paid` event arrives for `tenant_id = 99`, an inverted index filters candidates down to the 8 rules registered for `(tenant_id = 99, event_type = \"invoice.paid\")` instead of evaluating all 200,000 rules.",
+    "prompt": "By what factor (`200,000 / 8`) does indexing by `(tenant_id, event_type)` reduce the number of rules evaluated per event?",
+    "question": "By what factor (`200,000 / 8`) does indexing by `(tenant_id, event_type)` reduce the number of rules evaluated per event?",
+    "unit": "x",
+    "answer": 25000,
+    "tolerance": 0.2,
+    "hint": "Divide 200,000 total rules by the 8 matching candidate rules.",
+    "explanation": "200,000 / 8 = 25,000× reduction in rule evaluations per event, turning an O(R) linear scan into a sub-millisecond indexed lookup.",
+    "tags": [
+      "rule-engine-trigger-framework",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "rule-engine-trigger-framework-t1",
+    "topic": "rule-engine-trigger-framework",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Preventing Infinite Trigger Loops & Noisy-Neighbor Rule Storms",
+    "scenario": "A customer creates Rule 1 (\"When Issue is updated -> update Issue label\") and Rule 2 (\"When Issue label changes -> update Issue description\"), creating a mutual recursion loop that fires 50,000 webhook actions per minute.",
+    "prompt": "Which set of safeguards must a production rule-engine trigger framework enforce to prevent runaway loops and tenant starvation?",
+    "question": "Which set of safeguards must a production rule-engine trigger framework enforce to prevent runaway loops and tenant starvation?",
+    "options": [
+      "Evaluate customer rules using `eval()` on the main HTTP thread with no recursion tracking",
+      "Allow unlimited recursive trigger depth and charge the customer later",
+      "Propagate a `correlation_id` + `trigger_depth` counter + `visited_rule_ids` set on every synthetic event (halting when `depth > max_depth` or a cycle is detected), combined with per-tenant token-bucket rate limits and isolated execution queues"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Running `eval()` on the main thread isolates noisy tenants",
+      "Infinite recursion loops naturally terminate on their own",
+      "Tracking causal lineage (`trigger_depth` and `visited_rule_ids`) deterministically halts self-triggering cycles, while per-tenant rate limits and fair-queuing prevent one tenant's rule storm from delaying other tenants"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How can the rule engine tell that Event B was caused by an action fired by Rule 1 on Event A?",
+    "explanation": "Every action-generated event must carry causal metadata (`origin_event_id`, `hop_count`, and `fired_rule_ids`) so the trigger engine immediately rejects cycle re-entry or hops exceeding a strict ceiling (e.g., max depth 5).",
+    "tags": [
+      "rule-engine-trigger-framework",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

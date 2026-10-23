@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1017,12 +1017,18 @@ flowchart LR
 </tbody></table>
 <p><strong>Failure modes:</strong> over-correction ("iphone" corrected to "phone"), brand collisions ("apple" the fruit), and feedback loops where a bad rewrite reduces clicks, which then looks like low demand. Always log the original and rewritten query so relevance engineers can debug.</p><h2>How real systems do it</h2><p>Large e-commerce engines typically keep a curated dictionary of brands, categories and attributes built from the catalogue itself, run fast taggers against it, and fall back to learned models for ambiguous tokens. Results for the most frequent few hundred thousand queries are precomputed and cached, so heavy models only run on the long tail. Every rewrite is logged next to the original query for offline analysis.</p>
 </div></article>
-      <section class="check-slider" data-slug="query-understanding-pipeline" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="query-understanding-pipeline" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Discounted synonyms" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Filters versus boosts" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: LLM rewriting cost" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Discounted synonyms" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Filters versus boosts" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: LLM rewriting cost" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Synonym Expansion Query Fan-Out Bound" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Index-Time vs Query-Time Synonym Expansion" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-query-understanding-pipeline-c1" data-type="mcq" data-slug="query-understanding-pipeline" data-index="0">
@@ -1140,12 +1146,142 @@ flowchart LR
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="query-understanding-pipeline-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-query-understanding-pipeline-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">LLM rewriting handles complex language but costs latency and money, so it belongs on the long tail with caching, while head traffic is served from precomputed results. Running it on every query in parallel still pays its full cost at 50,000 QPS for output that is often thrown away.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-query-understanding-pipeline-n1" data-type="numeric" data-slug="query-understanding-pipeline" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Synonym Expansion Query Fan-Out Bound</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A query has 4 tokens, and an unconstrained synonym table expands each token into 5 synonyms. If the query parser expands all combinatorial phrase permutations (`5^4`), it generates 625 sub-queries; if instead it expands per-token `OR` clauses (`4 × 5`), it evaluates 20 term posting lists.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many total term posting lists (`4 tokens × 5 synonyms`) are evaluated in the per-token `OR` expansion instead of `5^4 = 625` phrase permutations?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-query-understanding-pipeline-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-query-understanding-pipeline-n1"
+              aria-label="Numeric estimate in posting lists"
+              placeholder="Enter numeric estimate (posting lists)..."
+            />
+            <span class="quiz-unit-badge">posting lists</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 4 tokens by 5 synonyms per token.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="query-understanding-pipeline-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-query-understanding-pipeline-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Expanding synonyms at the token position level (`(t1a OR t1b...) AND (t2a OR t2b...)`) evaluates `4 × 5 = 20` posting lists instead of `5^4 = 625` combinatorial phrase rewrites.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-query-understanding-pipeline-t1" data-type="tradeoff" data-slug="query-understanding-pipeline" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Index-Time vs Query-Time Synonym Expansion</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your e-commerce catalog frequently adds new trending slang and brand synonyms (e.g., `&quot;sneakers&quot; &lt;-&gt; &quot;trainers&quot; &lt;-&gt; &quot;kicks&quot;`) that must take effect within 1 minute without re-indexing 200M product documents.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Should you apply synonym expansion at Index Time or Query Time, and what is the trade-off?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-query-understanding-pipeline-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-query-understanding-pipeline-t1" value="0" />
+                  <span>Expand all synonyms exclusively at Index Time so every synonym change requires a 12-hour full re-index of 200M products</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-query-understanding-pipeline-t1" value="1" />
+                  <span>Never use synonyms and require exact character matches</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-query-understanding-pipeline-t1" value="2" />
+                  <span>Apply synonym expansion primarily at Query Time (with down-weighted synonym boost vs exact original token match) so updates take effect instantly without re-indexing, reserving index-time canonicalization only for stable normalizations (lowercase/stemming)</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-query-understanding-pipeline-t1" value="0" />
+                  <span>Re-indexing 200M documents takes less than 1 second</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-query-understanding-pipeline-t1" value="1" />
+                  <span>Index-time synonyms preserve separate IDF statistics for the original word vs its synonym</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-query-understanding-pipeline-t1" value="2" />
+                  <span>Query-time expansion allows instant dictionary updates, keeps index size smaller, preserves accurate per-term IDF, and lets you boost exact token matches higher than expanded synonyms</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens to index size, update agility, and IDF statistics when you inject synonyms into the index vs the query?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="query-understanding-pipeline-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-query-understanding-pipeline-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Index-time synonyms bloat the index, skew IDF, and require full re-indexing whenever the synonym dictionary changes. Query-time expansion applies dictionary edits immediately and allows weighting exact matches above synonyms.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1258,22 +1394,22 @@ flowchart LR
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1029,12 +1029,18 @@ flowchart TD
 </tbody>
 </table>
 </div></article>
-      <section class="check-slider" data-slug="case-amazon-dynamo" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="case-amazon-dynamo" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Permanent failure repair" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Concurrent or descended" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Quorums under sloppy quorum" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Permanent failure repair" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Concurrent or descended" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Quorums under sloppy quorum" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Tunable Sloppy vs Strict Quorum Overlap (`N, R, W`)" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: &quot;Always-Writable&quot; Shopping Cart (`Sloppy Quorum + Hinted Handoff + Vector Clocks`) vs Last-Write-Wins (`LWW`)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-case-amazon-dynamo-c1" data-type="mcq" data-slug="case-amazon-dynamo" data-index="0">
@@ -1152,12 +1158,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="case-amazon-dynamo-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-case-amazon-dynamo-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Overlap only holds for a fixed replica set; with a sloppy quorum the write can be satisfied by fallback nodes and handed back later, so the read quorum may contain none of them. Vector clocks never discard concurrent versions; they return them for merging.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-case-amazon-dynamo-n1" data-type="numeric" data-slug="case-amazon-dynamo" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Tunable Sloppy vs Strict Quorum Overlap (`N, R, W`)</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An Amazon Dynamo ring configures replication factor `N = 3` across preference-list nodes. To guarantee strong read-your-writes overlap under strict quorum (`R + W &gt; N`, so `R + W &gt;= 4`) while optimizing for fast low-latency shopping-cart writes (`W = 2`), you choose the minimum strict read quorum `R`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the minimum read quorum `R` required when `N = 3` and `W = 2` so that `R + W &gt; N`?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-case-amazon-dynamo-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-case-amazon-dynamo-n1"
+              aria-label="Numeric estimate in replicas"
+              placeholder="Enter numeric estimate (replicas)..."
+            />
+            <span class="quiz-unit-badge">replicas</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">We need `R + 2 &gt; 3`, so `R &gt;= 2`.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="case-amazon-dynamo-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-case-amazon-dynamo-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">With `N = 3` and `W = 2`, setting `R = 2` gives `R + W = 4 &gt; 3`, guaranteeing by the Pigeonhole Principle that the `R = 2` read set and `W = 2` write set overlap in at least `2 + 2 - 3 = 1` replica.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-case-amazon-dynamo-t1" data-type="tradeoff" data-slug="case-amazon-dynamo" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: &quot;Always-Writable&quot; Shopping Cart (`Sloppy Quorum + Hinted Handoff + Vector Clocks`) vs Last-Write-Wins (`LWW`)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">In Amazon&#039;s original 2007 Dynamo paper, the primary business invariant was that a customer must *never* be blocked from adding an item to their shopping cart, and an item added to a cart must *never* be silently lost during network partitions or concurrent updates.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why did Dynamo reject Last-Write-Wins (`LWW`) for shopping carts, and how did it resolve concurrent cart writes?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-case-amazon-dynamo-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-case-amazon-dynamo-t1" value="0" />
+                  <span>Dynamo blocked `AddToCart` whenever 2 of 3 replicas were unreachable during a network partition</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-case-amazon-dynamo-t1" value="1" />
+                  <span>Dynamo used physical wall-clock LWW and silently deleted items added on the slower replica</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-case-amazon-dynamo-t1" value="2" />
+                  <span>Dynamo accepted writes on any reachable preference-list fallback node (`Sloppy Quorum + Hinted Handoff`), tracked causal branches with Vector Clocks, returned all concurrent sibling cart versions on read, and had the shopping-cart application perform a semantic set-union merge</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-case-amazon-dynamo-t1" value="0" />
+                  <span>Failing `AddToCart` during a network blip increases e-commerce conversion</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-case-amazon-dynamo-t1" value="1" />
+                  <span>Wall-clock LWW preserves both items when two replicas accept concurrent additions to the same cart</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-case-amazon-dynamo-t1" value="2" />
+                  <span>Under concurrent partitioned updates (`Cart + Item A` on Node 1 and `Cart + Item B` on Node 2), LWW overwrites one branch and loses an item; retaining sibling versions via Vector Clocks lets the client take their union (`A ∪ B`)</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens if Replica 1 has `[Book A]` and Replica 2 has `[Book B]` and you resolve the conflict with Last-Write-Wins vs Set Union?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="case-amazon-dynamo-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-case-amazon-dynamo-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">LWW drops entire concurrent updates. Dynamo used Sloppy Quorums + Hinted Handoff for &quot;always-writable&quot; availability, Vector Clocks to detect concurrent sibling branches, and application-level semantic union reconciliation (with the small trade-off that a deleted item could occasionally reappear).</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1330,7 +1466,7 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1338,15 +1474,15 @@ flowchart TD
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -950,12 +950,18 @@
 <!-- enriched -->
 <h2>Backup methods compared</h2><table><thead><tr><th>Method</th><th>Typical RPO</th><th>Restore speed</th><th>Protects against</th><th>Weakness</th></tr></thead><tbody><tr><td>Logical dump (<code>pg_dump</code>, <code>mysqldump</code>)</td><td>Hours to 24 h</td><td>Slow: rebuilds indexes, often hours per TB</td><td>Mistakes, version upgrades, restoring a single table</td><td>Large RPO, heavy load while it runs</td></tr><tr><td>Physical or volume snapshot (EBS snapshot, <code>pg_basebackup</code>)</td><td>Snapshot interval</td><td>Fast: copies blocks</td><td>Disk loss, mistakes (up to the last snapshot)</td><td>Must be crash-consistent, and is tied to the engine version</td></tr><tr><td>Snapshot + WAL/binlog archive (PITR)</td><td>Seconds to about a minute</td><td>Snapshot restore + log replay time</td><td>Mistakes at any point in the retention window</td><td>Replay time grows with the distance from the last snapshot</td></tr><tr><td>Streaming replica</td><td>Near zero</td><td>Seconds (promote the replica)</td><td>Node or zone failure</td><td>Copies deletes and corruption immediately, so it is not a backup</td></tr><tr><td>Delayed replica (for example 1 h behind)</td><td>Up to the delay</td><td>Minutes</td><td>Mistakes noticed within the delay</td><td>Extra cost, and only covers a short window</td></tr></tbody></table><h2>Worked example: RTO for a 2 TB PostgreSQL database</h2><ul><li>The base backup is taken nightly at 00:00. Someone runs an accidental <code>DELETE</code> without a WHERE clause at 14:02:15.</li><li>Restoring 2 TB from object storage at about 500 MB/s takes around <strong>70 minutes</strong>.</li><li>WAL generated since midnight is 14 hours at 15 GB/h, or 210 GB. Replaying it at about 100 MB/s takes around <strong>35 minutes</strong>.</li><li>Add time for detection, the decision to restore, validation and switching the application over. The realistic RTO is <strong>2 to 3 hours</strong>, and RPO is about the <code>archive_timeout</code> (for example 60 s) for changes outside the damaged table.</li><li>To reduce RTO, take snapshots more often (every 4 hours means at most 4 hours of replay), use incremental backups (pgBackRest, WAL-G, or PostgreSQL 17 incremental backup), or restore to a <em>side instance</em> and copy back only the damaged table.</li></ul><p>In PostgreSQL, the target is set with <code>recovery_target_time</code>, or more precisely with <code>recovery_target_xid</code> or <code>recovery_target_lsn</code>, which you can find by inspecting the WAL with <code>pg_waldump</code>. Set <code>recovery_target_inclusive = false</code> so that the bad transaction itself is not replayed.</p><h2>Operational rules</h2><ul><li><strong>3-2-1:</strong> three copies, on two kinds of media or services, one off-site. Modern practice adds immutability, for example S3 Object Lock in compliance mode, so that even an administrator cannot delete backups during the retention period.</li><li><strong>Encrypt backups</strong> and keep the keys somewhere that survives the loss of the primary account.</li><li><strong>Monitor backups</strong>: alert when the last successful backup is too old or much smaller than the previous one. In the 2017 GitLab incident, backups had been failing silently and the failure notifications were never received.</li><li><strong>Managed services:</strong> Amazon RDS and Aurora provide automated PITR with up to 35 days of retention. The latest restorable time is usually within about 5 minutes of the present. You still need to test restores and keep a cross-region or cross-account copy.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="database-backups-and-restore" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="database-backups-and-restore" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Precise PITR target" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Replicas are not backups" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Estimating restore RTO" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Precise PITR target" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Replicas are not backups" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Estimating restore RTO" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Point-In-Time Recovery (PITR) Restore Time (`RTO`)" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Why Asynchronous Read Replicas Are NOT a Substitute for PITR Backups" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-database-backups-and-restore-c1" data-type="mcq" data-slug="database-backups-and-restore" data-index="0">
@@ -1073,12 +1079,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-backups-and-restore-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-backups-and-restore-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">4 TB at 500 MB/s is about 8,000 s (2.2 hours), and 18 hours x 20 GB = 360 GB at 100 MB/s is 3,600 s (1 hour). Replay only covers WAL since the base backup, not a full day, and it cannot start until the base copy is in place.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-database-backups-and-restore-n1" data-type="numeric" data-slug="database-backups-and-restore" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Point-In-Time Recovery (PITR) Restore Time (`RTO`)</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">At `14:30`, an accidental `DROP TABLE` occurs. Your latest physical base backup (`4 TB`) was taken at `12:00`. Restoring the 4 TB physical snapshot from high-throughput object storage across striped NVMe drives runs at `4 GB/s` (`1,000 seconds`), and replaying `2.5 hours` (`90 GB`) of archived WAL segments runs at `150 MB/s` (`600 seconds`).</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the total Recovery Time Objective (`RTO`, in seconds) to restore the base backup (`1,000 s`) and replay the WAL (`600 s`) up to `14:29:59`?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-backups-and-restore-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-database-backups-and-restore-n1"
+              aria-label="Numeric estimate in seconds"
+              placeholder="Enter numeric estimate (seconds)..."
+            />
+            <span class="quiz-unit-badge">seconds</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Add the 1,000-second base snapshot restore and the 600-second WAL replay.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-backups-and-restore-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-backups-and-restore-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`1,000 s` (physical snapshot restore) + `600 s` (WAL archive replay) = `1,600 seconds` (~26.7 minutes) total RTO with near-zero data loss (`RPO ≈ 0`).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-database-backups-and-restore-t1" data-type="tradeoff" data-slug="database-backups-and-restore" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Why Asynchronous Read Replicas Are NOT a Substitute for PITR Backups</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A startup CTO says: &quot;We don&#039;t need automated snapshots or WAL archiving because we have 3 synchronous and asynchronous read replicas across 3 Availability Zones.&quot;</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why do read replicas fail to protect against logical data corruption, and what backup architecture is required?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-backups-and-restore-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-backups-and-restore-t1" value="0" />
+                  <span>Read replicas automatically block `DROP TABLE` and `DELETE FROM users` statements</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-backups-and-restore-t1" value="1" />
+                  <span>3 AZ replicas protect against accidental application bugs that overwrite rows</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-backups-and-restore-t1" value="2" />
+                  <span>Replication faithfully replicates `DROP TABLE`, `TRUNCATE`, and buggy `UPDATE` statements without a `WHERE` clause to all replicas within milliseconds; you must maintain immutable Point-In-Time Recovery (PITR = physical base snapshots + continuous WAL archiving) plus a delayed replica or cross-account WORM bucket</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-backups-and-restore-t1" value="0" />
+                  <span>Consensus replication distinguishes accidental human `DROP TABLE` from intentional DDL</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-backups-and-restore-t1" value="1" />
+                  <span>Ransomware or compromised admin credentials cannot touch replicas in the same account</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-backups-and-restore-t1" value="2" />
+                  <span>Replication provides High Availability against hardware failure, whereas PITR backups (stored in an isolated immutable/WORM bucket) provide Recovery against human error, bad deploys, and security compromise</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How fast does `DELETE FROM users;` replicate to your 3 AZ replicas?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-backups-and-restore-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-backups-and-restore-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Replication is for hardware high availability; PITR (base snapshots + continuous WAL archive in an isolated account, tested via automated restore drills) is for logical corruption and human error.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1203,22 +1339,22 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -955,12 +955,18 @@
 <!-- enriched -->
 <h2>Worked example: the profile-photo bug</h2><p>Alice changes her profile photo. The write goes to the leader in us-east, and replication to the eu-west replica lags by 800 ms. Alice refreshes 200 ms later and her request is routed to eu-west.</p><ul><li><strong>Eventual consistency:</strong> she sees her old photo and thinks the upload failed. Allowed, but a bad experience.</li><li><strong>Read-your-writes (a session guarantee):</strong> the client remembers the log position or timestamp of her write, and the replica waits until it has caught up to that point, or the request is sent to the leader. She sees the new photo, while other users may still see the old one for 800 ms, which nobody notices.</li><li><strong>Linearizability:</strong> every reader, including her friend Bob, is guaranteed the new photo once the write has been acknowledged. That requires every read to go through the leader or a quorum, adding a cross-region round trip of about 80 ms to every photo read.</li></ul><p>For profile photos, read-your-writes is the right choice. For "is this username taken?" you need linearizability, or a uniqueness constraint enforced in one place.</p><h2>The consistency ladder</h2><table><thead><tr><th>Model</th><th>Guarantee</th><th>Cost</th><th>Example systems</th></tr></thead><tbody><tr><td>Strict serializable</td><td>Transactions appear atomic in real-time order</td><td>Highest: consensus plus clock bounds</td><td>Spanner, FoundationDB, CockroachDB (with caveats)</td></tr><tr><td>Linearizable</td><td>Single-object reads see the latest completed write</td><td>A quorum or leader round trip per operation</td><td>etcd, ZooKeeper writes, DynamoDB strongly consistent reads</td></tr><tr><td>Sequential</td><td>One global order that respects each client's program order</td><td>High</td><td>ZooKeeper reads served locally without sync</td></tr><tr><td>Causal</td><td>Causally related operations are seen in order</td><td>Dependency metadata</td><td>MongoDB causal sessions, COPS research</td></tr><tr><td>Session guarantees</td><td>Read-your-writes, monotonic reads and writes</td><td>Sticky routing or tokens</td><td>Cosmos DB session level (the default)</td></tr><tr><td>Eventual</td><td>Replicas converge if writes stop</td><td>Lowest</td><td>DNS, Cassandra at consistency level ONE</td></tr></tbody></table><h2>Checking claims</h2><p>Jepsen analyses have repeatedly shown databases advertising a model and violating it under partitions or clock skew. When a design depends on a guarantee, test it with fault injection. Do not rely on the marketing page.</p>
 </div></article>
-      <section class="check-slider" data-slug="consistency-models" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="consistency-models" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Sequential vs linearizable" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Replies before comments" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Photo vs username" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Sequential vs linearizable" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Replies before comments" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Photo vs username" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Replication Lag Stale Read Window" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Full Linearizability vs Read-Your-Writes Session Monotonicity" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-consistency-models-c1" data-type="mcq" data-slug="consistency-models" data-index="0">
@@ -1078,12 +1084,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="consistency-models-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-consistency-models-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">The photo only needs to look right to its author, so a session guarantee avoids an 80 ms cross-region round trip on every read. A username check must see every user&#039;s completed writes, so a session guarantee is not enough there.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-consistency-models-n1" data-type="numeric" data-slug="consistency-models" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Replication Lag Stale Read Window</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">After a user updates their profile on the primary DB, they immediately refresh their profile page 120 ms later, which is routed to an async read replica whose replication lag averages 300 ms (uniformly distributed between 0 and 600 ms).</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the probability (in %) that the user&#039;s 120 ms refresh arrives before their write replicates (assuming uniform lag 0–600 ms)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-consistency-models-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-consistency-models-n1"
+              aria-label="Numeric estimate in %"
+              placeholder="Enter numeric estimate (%)..."
+            />
+            <span class="quiz-unit-badge">%</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">The read is stale if replication lag `L &gt; 120 ms`. On `[0, 600]`, `(600 - 120) / 600 = 480 / 600`.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="consistency-models-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-consistency-models-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">When replication lag is uniformly distributed between 0 and 600 ms, a read at 120 ms sees stale state whenever lag exceeds 120 ms: `(600 - 120) / 600 = 80%` of the time—violating Read-Your-Writes.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-consistency-models-t1" data-type="tradeoff" data-slug="consistency-models" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Full Linearizability vs Read-Your-Writes Session Monotonicity</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Users complain that after posting a comment, refreshing the page sometimes hides their own comment for 1 second because reads hit async replicas. However, routing 100% of all users&#039; reads to the primary DB would overload it.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which consistency model and routing technique solves the user-visible bug at minimal cost, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-consistency-models-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-consistency-models-t1" value="0" />
+                  <span>Enforce global multi-region Paxos linearizability on every anonymous read</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-consistency-models-t1" value="1" />
+                  <span>Disable all read replicas and scale down read traffic</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-consistency-models-t1" value="2" />
+                  <span>Provide Read-Your-Writes + Monotonic Reads per session by tracking the client&#039;s highest committed WAL LSN (or a short primary-pinning cookie) and routing only reads with `replica_lsn &lt; client_lsn` to the primary</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-consistency-models-t1" value="0" />
+                  <span>Anonymous readers need to see strangers&#039; comments within 1 nanosecond globally</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-consistency-models-t1" value="1" />
+                  <span>Dropping read replicas increases read capacity</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-consistency-models-t1" value="2" />
+                  <span>Session-scoped LSN tracking gives the author immediate Read-Your-Writes consistency while allowing 99% of passive reads to stay on cheap async replicas</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Do you need global linearizability for everyone, or just session-level Read-Your-Writes for the user who just wrote?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="consistency-models-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-consistency-models-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Passing a session LSN watermark (or pinning the writer to the primary for 2 seconds after a write) guarantees Read-Your-Writes and Monotonic Reads without paying the latency/capacity cost of global linearizability.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1264,7 +1400,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1272,15 +1408,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

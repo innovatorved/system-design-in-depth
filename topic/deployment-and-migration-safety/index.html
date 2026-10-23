@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -962,12 +962,18 @@ flowchart TD
   D -->|"metrics regress"| R["Automatic rollback"]
   E -->|"metrics regress"| R</div><p>AWS describes this approach as one-box, then single availability zone, then region-by-region waves with bake times between them, so a bad change never reaches every region at once. The same pipeline should apply to <strong>configuration and feature-flag changes</strong>, not only binaries.</p><h2>Keeping old and new versions compatible</h2><ul><li>During any rolling or canary deploy, version N and version N+1 run side by side. APIs, message formats and database schemas must be readable by both.</li><li>Add fields before you use them, and stop using fields before you remove them (see the expand-and-contract lesson).</li><li>Avoid deploying on Friday evening, when fewer people are around to watch the rollout.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="deployment-and-migration-safety" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="deployment-and-migration-safety" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Blue-green trade-off" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Canary signal versus noise" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Rollback that cannot roll back" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Blue-green trade-off" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Canary signal versus noise" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Rollback that cannot roll back" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Statistical Detection Sample Size on a 1% Canary" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Big-Bang Cutover vs Progressive Canary + Feature Flags" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-deployment-and-migration-safety-c1" data-type="mcq" data-slug="deployment-and-migration-safety" data-index="0">
@@ -1085,12 +1091,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="deployment-and-migration-safety-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-deployment-and-migration-safety-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Versions N and N+1 coexist during deploys and rollbacks, so formats must be added before they are used: first deploy code that can read the value, then start writing it. A faster rollback does not help, because the incompatible data is already in the queue.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-deployment-and-migration-safety-n1" data-type="numeric" data-slug="deployment-and-migration-safety" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Statistical Detection Sample Size on a 1% Canary</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your cluster serves `10,000 req/s` total. You route `1%` of traffic (`100 req/s`) to a Canary deployment that introduces a regression increasing error rate by `+2%` (`2` extra errors/sec on the canary). Your automated canary judge requires observing at least `60` excess errors to trigger an automatic rollback with high statistical confidence.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many seconds of canary observation (`60 excess errors / 2 errors/s`) are required to trigger the automated rollback?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-deployment-and-migration-safety-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-deployment-and-migration-safety-n1"
+              aria-label="Numeric estimate in seconds"
+              placeholder="Enter numeric estimate (seconds)..."
+            />
+            <span class="quiz-unit-badge">seconds</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 60 required excess errors by 2 excess errors per second.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="deployment-and-migration-safety-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-deployment-and-migration-safety-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">At 100 req/s on the 1% canary with a +2% error delta (2 errors/sec), collecting 60 errors takes 30 seconds, while shielding 99% of users from the bad build.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-deployment-and-migration-safety-t1" data-type="tradeoff" data-slug="deployment-and-migration-safety" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Big-Bang Cutover vs Progressive Canary + Feature Flags</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A team has spent 3 months rewriting the pricing calculation engine and wants to ship it to 100% of users on Friday afternoon by replacing the old deployment in one step.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should a high-risk core logic rewrite be rolled out safely in production?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-deployment-and-migration-safety-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-deployment-and-migration-safety-t1" value="0" />
+                  <span>Deploy to 100% of production pods simultaneously with no fallback path</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-deployment-and-migration-safety-t1" value="1" />
+                  <span>Test only on staging with 5 synthetic requests and assume production traffic is identical</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-deployment-and-migration-safety-t1" value="2" />
+                  <span>Decouple deployment from release: ship dark behind a feature flag, run asynchronous shadow/dark-read comparisons against the legacy engine first, then ramp user traffic progressively (1% -&gt; 5% -&gt; 25% -&gt; 100%) with automated SLO rollback gates</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-deployment-and-migration-safety-t1" value="0" />
+                  <span>100% instant cutovers minimize blast radius when a bug occurs</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-deployment-and-migration-safety-t1" value="1" />
+                  <span>5 synthetic staging requests cover all production edge cases</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-deployment-and-migration-safety-t1" value="2" />
+                  <span>Shadow comparisons validate output parity on real production inputs with zero user risk, and progressive feature-flag ramping enables instant (&lt;1s) kill-switch rollback without waiting for container redeploys</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What is the difference between *deploying* binaries and *releasing* behavior to traffic?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="deployment-and-migration-safety-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-deployment-and-migration-safety-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Decoupling container deployment from feature activation (via feature flags, dark shadowing, and progressive canary ramps) shrinks blast radius and reduces rollback time from minutes to milliseconds.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1203,22 +1339,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

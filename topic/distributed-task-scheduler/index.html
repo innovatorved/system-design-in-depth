@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -992,12 +992,18 @@ return {}
 <!-- enriched -->
 <h2>Worked example: sizing a delayed-job store</h2><p>A reminders product schedules 50 million jobs per day, spread unevenly, with 5 times the average during the evening peak.</p><ul><li>Average rate: 50,000,000 / 86,400 = about 580 jobs due per second. Peak is about 2,900 per second.</li><li>Pending jobs (scheduled up to 7 days ahead): up to about 350 million entries. In a Redis sorted set at about 100 bytes each that is about 35 GB, so shard by job ID hash into, say, 16 sorted sets (about 2.2 GB each), with one scheduler owning each shard.</li><li>Poll loop: each shard's owner runs the claim script every 100 ms with <code>LIMIT 500</code>, a capacity of about 5,000 per second per shard, far above the peak of about 180 per shard.</li><li>Durability: Redis with AOF <code>everysec</code> can lose about a second of new schedules on a crash. For payment retries, keep the source of truth in Postgres or DynamoDB and use Redis only as an index.</li></ul><h2>Implementation options</h2><table><thead><tr><th>Store</th><th>Due-time query</th><th>Claim mechanism</th><th>Durability</th><th>Scale notes</th></tr></thead><tbody><tr><td>Redis sorted set</td><td>ZRANGEBYSCORE</td><td>Lua move to a leased set</td><td>AOF or RDB. Can lose recent writes</td><td>Keep both keys in one slot with a hash tag</td></tr><tr><td>Postgres table plus index on run_at</td><td>WHERE run_at at or before now</td><td>FOR UPDATE SKIP LOCKED</td><td>Strong</td><td>Thousands per second per primary. Watch vacuum</td></tr><tr><td>DynamoDB or Cassandra time buckets</td><td>Partition per minute bucket</td><td>Conditional write on status</td><td>Strong</td><td>Hot bucket risk. Shard buckets</td></tr><tr><td>SQS delay or EventBridge Scheduler</td><td>Managed</td><td>Managed</td><td>Managed</td><td>SQS delays max out at 15 minutes</td></tr><tr><td>Temporal timers</td><td>Durable timers in history</td><td>Workflow task</td><td>Strong</td><td>Built for long-running workflows</td></tr></tbody></table><h2>Correctness checklist</h2><ul><li>Every job has a stable ID, and workers deduplicate on (job ID, scheduled time).</li><li>The reaper returns jobs whose lease has expired to the scheduled state.</li><li>The scheduler owner per shard is fenced (a lease epoch stored with each claim).</li><li>Clock skew: compute "now" on the store where possible (Redis <code>TIME</code>, or <code>now()</code> in the database), not on each client.</li><li>Missed-run policy for recurring jobs after downtime: run once, run all missed, or skip.</li></ul><h2>How real systems do it</h2><ul><li><strong>Airbnb's Dynein</strong> keeps delayed jobs durably in DynamoDB and hands due jobs to SQS for execution. <strong>Slack</strong> rebuilt its job queue by putting Kafka in front of Redis, so that job enqueues survive Redis failures.</li><li><strong>Kafka</strong> uses a hierarchical timing wheel in-process for request timeouts (purgatory). It is not used for durable scheduling.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="distributed-task-scheduler" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="distributed-task-scheduler" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Lease, do not delete" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Pending job store size" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Fencing a paused owner" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Lease, do not delete" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Pending job store size" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Fencing a paused owner" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Hashed Timing Wheel Bucket Resolution" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Polling `WHERE run_at &lt;= NOW()` on a Single Table vs Partitioned Timing Wheel + Lease Claim" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-distributed-task-scheduler-c1" data-type="mcq" data-slug="distributed-task-scheduler" data-index="0">
@@ -1115,12 +1121,142 @@ return {}
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-task-scheduler-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-task-scheduler-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Atomic scripts stop two claims from interleaving, but they do not stop a stale owner from running valid scripts; fencing with a stored epoch does. Local clocks make things worse, which is why the checklist says to take now() from the store.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-distributed-task-scheduler-n1" data-type="numeric" data-slug="distributed-task-scheduler" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Hashed Timing Wheel Bucket Resolution</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A distributed task scheduler uses an in-memory Hierarchical Timing Wheel with `512` slots and a tick resolution of `100 ms` per slot for the inner wheel.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the total time span (in seconds) covered by one full revolution of the 512-slot inner wheel?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-task-scheduler-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-distributed-task-scheduler-n1"
+              aria-label="Numeric estimate in seconds"
+              placeholder="Enter numeric estimate (seconds)..."
+            />
+            <span class="quiz-unit-badge">seconds</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 512 slots by 0.1 seconds (100 ms) per slot.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-task-scheduler-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-task-scheduler-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">512 slots × 100 ms = 51,200 ms = 51.2 seconds per revolution, with `O(1)` insertion and `O(1)` tick advancement (compared to `O(log N)` heap contention).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-distributed-task-scheduler-t1" data-type="tradeoff" data-slug="distributed-task-scheduler" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Polling `WHERE run_at &lt;= NOW()` on a Single Table vs Partitioned Timing Wheel + Lease Claim</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A delayed job scheduler stores 50,000,000 scheduled tasks in a database and has 64 scheduler workers polling `SELECT * FROM jobs WHERE status = &#039;PENDING&#039; AND run_at &lt;= NOW() ORDER BY run_at LIMIT 100` every 50 ms.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why does naive multi-worker polling collapse at scale, and what architecture scales delayed scheduling cleanly?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-task-scheduler-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-task-scheduler-t1" value="0" />
+                  <span>All 64 workers read and contend on the exact same top 100 due rows at the B-Tree head; fix it by removing the index on `run_at`</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-task-scheduler-t1" value="1" />
+                  <span>Hold all 50,000,000 tasks in a single unpersisted Node.js `setTimeout` call</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-task-scheduler-t1" value="2" />
+                  <span>Shard schedules across partitions by `(time_bucket, shard_id)` (or use `FOR UPDATE SKIP LOCKED` per shard), pre-fetch upcoming 1-minute windows into an in-memory Timing Wheel, and push due tasks into a ready execution queue with idempotency tokens</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-task-scheduler-t1" value="0" />
+                  <span>Removing the index makes 64 concurrent full-table scans faster</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-task-scheduler-t1" value="1" />
+                  <span>In-memory `setTimeout` survives process crashes and deployments</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-task-scheduler-t1" value="2" />
+                  <span>Partitioning by time bucket + shard eliminates thundering-herd lock contention on the earliest `run_at` index edge, and pushing fired tasks to a ready queue decouples timer firing from task execution</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens when 64 workers run the exact same `ORDER BY run_at LIMIT 100` query at the exact same millisecond?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-task-scheduler-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-task-scheduler-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Without shard partitioning or `SKIP LOCKED`, all workers collide on the same top 100 rows at the head of the `run_at` index. Partitioned time-bucket leasing + in-memory timing wheels feed a ready queue cleanly.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1233,22 +1369,22 @@ return {}
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

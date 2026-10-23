@@ -742,15 +742,21 @@ window.App = (() => {
                 backLabel: 'Back to Build Guide',
                 onClose: closeBuildLab,
                 onStepComplete: (step) => {
+                  const stepId = (step && typeof step === 'object') ? (step.id || step.index) : step;
                   if (window.Progress?.markBuildStepComplete) {
-                    const stepId = (step && typeof step === 'object') ? (step.id || step.index) : step;
                     window.Progress.markBuildStepComplete(currentSlug, stepId);
+                  }
+                  if (window.Analytics?.trackCodeLabStep) {
+                    window.Analytics.trackCodeLabStep(currentSlug, stepId, true);
                   }
                   syncOverviewProgress();
                 },
                 onLabComplete: () => {
                   if (window.Progress?.markBuildComplete) {
                     window.Progress.markBuildComplete(currentSlug);
+                  }
+                  if (window.Analytics?.trackCodeLabStep) {
+                    window.Analytics.trackCodeLabStep(currentSlug, 'all_steps_complete', true);
                   }
                   syncOverviewProgress();
                 }
@@ -760,6 +766,9 @@ window.App = (() => {
               }
               if (opts.lang === 'js' || opts.lang === 'ts') {
                 mountOpts.language = opts.lang;
+              }
+              if (window.Analytics?.trackCodeLabOpen) {
+                window.Analytics.trackCodeLabOpen(currentSlug, mountOpts.mode || 'guided', mountOpts.language || 'javascript');
               }
               activeCodeLab = window.CodeLab.mount(mountEl, mountOpts);
               if (typeof opts.stepIndex === 'number' && !Number.isNaN(opts.stepIndex) && activeCodeLab?.selectStep) {
@@ -1874,6 +1883,9 @@ window.App = (() => {
         backLabel: 'Close CodeLab',
         onClose: closeGlobalCodeLab
       }, mountOpts);
+      if (window.Analytics?.trackCodeLabOpen) {
+        window.Analytics.trackCodeLabOpen(opts.labId || 'global-lab', opts.mode || 'sandbox', opts.language || 'javascript');
+      }
       globalCodeLabInstance = CodeLab.mount(mountEl, opts);
       setTimeout(() => {
         const ed = globalCodeLabInstance?._editor || globalCodeLabInstance?.editor;

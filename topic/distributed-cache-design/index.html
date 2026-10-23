@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -987,12 +987,18 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: sizing a cache cluster</h2><p>Suppose you need to cache 400 million user-profile objects averaging 1 KB, which is about 400 GB of values. Redis adds per-key overhead, typically around 50 to 100 bytes for small keys, so budget roughly 450 GB. Keep nodes at no more than about 70 percent memory use to leave room for fragmentation and replication buffers. That means about 640 GB of usable RAM. With 64 GB nodes that is 10 primaries, plus one replica each for availability, so 20 nodes.</p><p>For throughput, assume 1.2 million reads per second at peak. A single Redis primary commonly serves on the order of 100,000 or more simple GETs per second per core, depending on payload and pipelining. Ten primaries at about 120,000 each fit, but with no headroom for a hot slot. Either add primaries or serve reads from replicas where slightly stale reads are acceptable.</p><h2>Memcached-style versus Redis Cluster</h2><table><thead><tr><th>Aspect</th><th>Client-side hashing (Memcached, mcrouter)</th><th>Server-side slots (Redis Cluster)</th></tr></thead><tbody><tr><td>Routing</td><td>Client or proxy computes the node with a Ketama ring</td><td>Client caches the slot map. Servers answer MOVED or ASK</td></tr><tr><td>Resharding</td><td>Change the ring, which remaps about 1/N of keys, all cold</td><td>Migrate slots online. Keys move with their data</td></tr><tr><td>Replication</td><td>None built in. Done by proxy or by the application</td><td>Built-in async replicas with automatic failover</td></tr><tr><td>Data types</td><td>Opaque blobs</td><td>Rich structures, Lua, transactions within one slot</td></tr><tr><td>Consistency on failover</td><td>Data lost, then refilled from the DB</td><td>Acknowledged writes can be lost, because replication is asynchronous</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Facebook</strong> puts mcrouter in front of memcache pools, splits pools by access pattern, and uses a small Gutter pool to absorb traffic for failed hosts instead of rehashing onto healthy ones.</li><li><strong>Netflix EVCache</strong> writes to a copy in every availability zone and reads locally, falling back to another zone on a miss.</li><li><strong>Twitter</strong> ran twemproxy and later Pelikan to multiplex connections, because thousands of app servers each holding connections to every cache node exhausted file descriptors.</li></ul><h2>Failure modes</h2><ul><li><strong>Connection storms:</strong> N clients times M nodes connections. Put a proxy or connection pooling in between.</li><li><strong>Rehash cascade:</strong> when a dead node's keys move to its neighbours, the neighbours can overload in turn. Gutter pools or replicas avoid this.</li><li><strong>Split-brain after a partition:</strong> Redis Cluster may accept writes on a minority primary until <code>cluster-node-timeout</code> expires, and those writes are lost when it rejoins.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="distributed-cache-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="distributed-cache-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: MOVED vs ASK" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sizing Redis Cluster" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Minority primary writes" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: MOVED vs ASK" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sizing Redis Cluster" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Minority primary writes" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Singleflight / Request Coalescing Origin Shielding" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Write-Through vs Look-Aside Cache Invalidation Race" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-distributed-cache-design-c1" data-type="mcq" data-slug="distributed-cache-design" data-index="0">
@@ -1110,12 +1116,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-cache-design-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-cache-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Redis Cluster replication is asynchronous and a minority primary keeps accepting writes until the node timeout; meanwhile the majority fails over, and the old primary rejoins as a replica, losing those writes. The loss is limited to the isolated side, not every write during failover.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-distributed-cache-design-n1" data-type="numeric" data-slug="distributed-cache-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Singleflight / Request Coalescing Origin Shielding</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A hot homepage cache key expires while 8,000 concurrent requests/sec are reading it. Rebuilding the key from PostgreSQL takes 50 ms. Without singleflight, all concurrent requests that arrive during the 50 ms rebuild miss the cache and hit PostgreSQL.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many redundant database queries hit PostgreSQL during that single 50 ms cache rebuild window without singleflight?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-cache-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-distributed-cache-design-n1"
+              aria-label="Numeric estimate in queries"
+              placeholder="Enter numeric estimate (queries)..."
+            />
+            <span class="quiz-unit-badge">queries</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 8,000 req/s (which is 8 req/ms) by the 50 ms rebuild window.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-cache-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-cache-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">At 8,000 req/s (8 requests per ms), 8 × 50 ms = 400 concurrent requests miss the cache during the rebuild window and stampede the database (whereas singleflight coalesces them into 1 DB query).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-distributed-cache-design-t1" data-type="tradeoff" data-slug="distributed-cache-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Write-Through vs Look-Aside Cache Invalidation Race</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Under a standard cache-aside pattern, Reader A misses the cache and reads an old value V1 from the DB, then Writer B updates the DB to V2 and deletes the cache key, and finally Reader A&#039;s delayed thread writes V1 into the cache with a 1-hour TTL.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which mechanism prevents stale cache-aside repopulation without serializing all reads through a distributed lock, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-cache-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-cache-design-t1" value="0" />
+                  <span>Increase the cache TTL from 1 hour to 24 hours</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-cache-design-t1" value="1" />
+                  <span>Have writers set the cache value before updating the database</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-cache-design-t1" value="2" />
+                  <span>Use leased tokens (`gets`/`cas` in Memcached or versioned conditional sets in Redis) where a delete invalidates any in-flight read lease token, combined with a bounded TTL safety net</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-cache-design-t1" value="0" />
+                  <span>Longer TTLs reduce the impact of permanently poisoned cache entries</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-cache-design-t1" value="1" />
+                  <span>Writing to cache before DB commits prevents dirty reads when DB transactions roll back</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-cache-design-t1" value="2" />
+                  <span>A lease token issued on cache miss is invalidated when a concurrent delete occurs, causing Reader A&#039;s stale compare-and-set to be rejected cleanly</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How did Facebook&#039;s McRouter/Memcached paper solve the stale-set race condition?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-cache-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-cache-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Facebook&#039;s Memcached lease mechanism issues a 64-bit lease token on a cache miss; if a delete arrives before the reader populates the cache, the lease is revoked and the stale `cas` write is silently ignored.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1268,22 +1404,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

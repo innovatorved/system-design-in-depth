@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -986,12 +986,18 @@ flowchart LR
     E --> B
 </div><h2>How real systems do it</h2><ul><li>Cloudflare Image Resizing, imgix and Cloudinary expose URL-parameter transforms at the edge.</li><li>Thumbor is a widely used open-source resize server, and AWS publishes a Serverless Image Handler reference architecture using CloudFront, Lambda and Sharp.</li><li>Use Cache-Control with a long max-age on variants and version originals by key, so a replaced image gets a new URL instead of needing a purge.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="image-cdn-and-resizing" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="image-cdn-and-resizing" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Allowlist transform parameters" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Pre-generate everything?" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Format negotiation and cache" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Allowlist transform parameters" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Pre-generate everything?" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Format negotiation and cache" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Origin Shield Collapse of Edge Cache Misses" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Eager Pre-Generation vs On-Demand Signed Resize Behind an Origin Shield" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-image-cdn-and-resizing-c1" data-type="mcq" data-slug="image-cdn-and-resizing" data-index="0">
@@ -1109,12 +1115,142 @@ flowchart LR
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="image-cdn-and-resizing-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-image-cdn-and-resizing-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">If the negotiated format is not part of the key, whichever format was cached first is served to everyone, so a client lacking AVIF support can receive an image it cannot decode. An origin shield reduces duplicate resizes across edges but does nothing about serving the wrong format.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-image-cdn-and-resizing-n1" data-type="numeric" data-slug="image-cdn-and-resizing" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Origin Shield Collapse of Edge Cache Misses</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A viral news article embeds a hero image in 4 responsive widths and 2 modern formats (8 variants total). Across 30 global CDN edge POPs, all 8 variants experience simultaneous cold cache misses (`30 POPs × 8 variants = 240 edge misses`). By routing all edge misses through a single regional Origin Shield with request coalescing, each of the 8 variants is resized only once at the origin.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many resize requests reach the origin image transformer when protected by the Origin Shield?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-image-cdn-and-resizing-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-image-cdn-and-resizing-n1"
+              aria-label="Numeric estimate in requests"
+              placeholder="Enter numeric estimate (requests)..."
+            />
+            <span class="quiz-unit-badge">requests</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Each of the 30 POPs collapses onto the single Origin Shield, which coalesces concurrent requests per unique variant (4 widths × 2 formats).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="image-cdn-and-resizing-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-image-cdn-and-resizing-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Without an Origin Shield, 30 edge POPs each forward 8 misses = 240 simultaneous CPU-heavy resize jobs. With a single coalescing Origin Shield, all 30 POPs share 1 fetch per variant, reducing origin work to just 4 × 2 = 8 resizes (a 30x reduction).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-image-cdn-and-resizing-t1" data-type="tradeoff" data-slug="image-cdn-and-resizing" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Eager Pre-Generation vs On-Demand Signed Resize Behind an Origin Shield</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An e-commerce marketplace hosts 200 million seller product photos across 36 possible responsive width/DPR/format combinations, where 85% of listings receive fewer than 5 views per month.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which architectural approach should you choose, and what is the primary justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-image-cdn-and-resizing-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-image-cdn-and-resizing-t1" value="0" />
+                  <span>Eagerly pre-generate and store all 36 variants for every uploaded photo before returning success to the seller</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-image-cdn-and-resizing-t1" value="1" />
+                  <span>Accept arbitrary unsigned `width` and `height` query parameters on the public URL and resize on the origin without caching</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-image-cdn-and-resizing-t1" value="2" />
+                  <span>Store the validated master image in object storage and resize on-demand at an Origin Shield using an HMAC-signed URL or strict width allowlist, caching generated variants at the CDN edge and shield</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-image-cdn-and-resizing-t1" value="0" />
+                  <span>Pre-generating 7.2 billion image variants for mostly unviewed items minimizes compute and storage bills</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-image-cdn-and-resizing-t1" value="1" />
+                  <span>Allowing arbitrary unsigned dimensions prevents Denial-of-Wallet CPU exhaustion attacks</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-image-cdn-and-resizing-t1" value="2" />
+                  <span>On-demand resizing behind an Origin Shield only spends CPU and cache storage on variants actually requested by users, while HMAC signatures or parameter allowlists prevent cache-busting resize abuse</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How do you avoid paying to pre-generate 36 variants for the 85% of cold images while preventing attackers from requesting `w=101, 102, 103...`?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="image-cdn-and-resizing-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-image-cdn-and-resizing-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Lazy on-demand transformation behind a coalescing Origin Shield avoids 85%+ of wasted up-front transcoding and storage, while restricting transforms to a small discrete width allowlist or HMAC-signed URLs blocks attackers from busting the cache with arbitrary dimensions.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1227,22 +1363,22 @@ flowchart LR
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

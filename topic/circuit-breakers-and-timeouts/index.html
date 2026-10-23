@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -987,12 +987,18 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
 <!-- enriched -->
 <h2>Worked example: why slow is worse than dead</h2><p>An API tier has 200 worker threads per instance and handles 1,000 rps per instance. Each request calls a recommendations service, normally in 20 ms.</p><ul><li><strong>Recommendations dead</strong> (connection refused in 1 ms): threads are freed instantly. The API returns errors or fallbacks, but stays responsive.</li><li><strong>Recommendations slow</strong> (5 s responses, 10 s timeout): by Little's law, concurrent in-flight requests are 1,000 x 5 = 5,000, but only 200 threads exist. The pool is exhausted in 0.2 seconds, and <em>every</em> endpoint on the instance stalls, including ones that never call recommendations.</li><li><strong>With a 150 ms timeout and a breaker:</strong> at most 1,000 x 0.15 = 150 threads are tied up. Once the failure rate crosses 50 percent over a 10-second window, the breaker opens and calls return the fallback in microseconds. Thread use drops to near zero.</li></ul><h2>Choosing timeouts</h2><ul><li>Set the timeout from the dependency's measured p99.9 plus a margin, not a round number. Revisit it when latency changes.</li><li>Use separate connect and read timeouts. Connect should be short, around 100 to 500 ms in a datacentre.</li><li>Propagate a deadline, for example gRPC deadlines, so downstream services stop work when the caller has given up.</li></ul><h2>Resilience patterns compared</h2><table><thead><tr><th>Pattern</th><th>Protects</th><th>Failure it handles</th><th>Risk if misused</th></tr></thead><tbody><tr><td>Timeout</td><td>The caller's threads</td><td>Slow dependency</td><td>Too short a timeout causes false failures</td></tr><tr><td>Retry with backoff and jitter</td><td>Success rate</td><td>Transient errors</td><td>Retry storms, and duplicates if not idempotent</td></tr><tr><td>Retry budget (for example, at most 10 percent extra)</td><td>The dependency</td><td>Retry amplification</td><td>Slightly lower success during blips</td></tr><tr><td>Circuit breaker</td><td>Both sides</td><td>Sustained failure</td><td>Flapping if thresholds are noisy</td></tr><tr><td>Bulkhead (separate pools)</td><td>Other features</td><td>One dependency hogging threads</td><td>Under-used capacity</td></tr><tr><td>Load shedding</td><td>The server itself</td><td>Overload</td><td>Must shed low-priority work first</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Netflix Hystrix</strong> (now in maintenance) popularised breakers plus bulkheads. <strong>Resilience4j</strong> is the common JVM successor, with count- or time-based sliding windows and a configurable number of half-open trial calls.</li><li><strong>Envoy and Istio</strong> implement breaking as connection and pending-request limits plus outlier detection, which ejects failing hosts, rather than the classic three-state machine.</li><li><strong>AWS SDKs</strong> use exponential backoff with jitter and a client-side retry token bucket (retry quota).</li><li><strong>Google SRE</strong> recommends client-side adaptive throttling: reject locally with probability based on the recent ratio of accepted requests to total requests.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="circuit-breakers-and-timeouts" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="circuit-breakers-and-timeouts" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: After the sleep window" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Little&#039;s law and threads" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Deadline propagation" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: After the sleep window" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Little&#039;s law and threads" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Deadline propagation" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Thread Pool Exhaustion Without Tight Timeouts" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Unbounded Retries vs Circuit Breaker + Bulkhead + Jittered Backoff" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-circuit-breakers-and-timeouts-c1" data-type="mcq" data-slug="circuit-breakers-and-timeouts" data-index="0">
@@ -1110,12 +1116,142 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="circuit-breakers-and-timeouts-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-circuit-breakers-and-timeouts-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Without deadline propagation, abandoned requests keep holding connections and queries on an already struggling database, and client retries add more on top. The caller&#039;s error does not cancel the downstream work, which is the trap in &#039;nothing goes wrong&#039;.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-circuit-breakers-and-timeouts-n1" data-type="numeric" data-slug="circuit-breakers-and-timeouts" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Thread Pool Exhaustion Without Tight Timeouts</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An API gateway has 400 worker threads and calls a downstream recommendation service at 200 req/s. The downstream hangs without responding, and the HTTP client timeout is set to 30 seconds.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many seconds does it take for the hanging downstream to saturate all 400 threads on the API gateway?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-circuit-breakers-and-timeouts-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-circuit-breakers-and-timeouts-n1"
+              aria-label="Numeric estimate in seconds"
+              placeholder="Enter numeric estimate (seconds)..."
+            />
+            <span class="quiz-unit-badge">seconds</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 400 available threads by 200 blocked requests per second.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="circuit-breakers-and-timeouts-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-circuit-breakers-and-timeouts-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">At 200 req/s, 400 threads are completely occupied in 400 / 200 = 2 seconds (well before the 30-second timeout fires), taking down the entire API gateway for unrelated endpoints.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-circuit-breakers-and-timeouts-t1" data-type="tradeoff" data-slug="circuit-breakers-and-timeouts" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Unbounded Retries vs Circuit Breaker + Bulkhead + Jittered Backoff</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A non-critical personalization service starts failing 60% of requests due to CPU saturation. Callers are configured to retry up to 3 times immediately on failure.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What effect do immediate retries have on the failing service, and what resilience pattern stops the cascade?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-circuit-breakers-and-timeouts-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-circuit-breakers-and-timeouts-t1" value="0" />
+                  <span>Immediate retries help the overloaded server recover faster</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-circuit-breakers-and-timeouts-t1" value="1" />
+                  <span>Increase the retry count from 3 to 10 with zero delay</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-circuit-breakers-and-timeouts-t1" value="2" />
+                  <span>Immediate retries amplify load by up to 4× during an outage; isolate the dependency in a dedicated bulkhead pool, trip an open Circuit Breaker when error rate exceeds threshold, and return a degraded fallback</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-circuit-breakers-and-timeouts-t1" value="0" />
+                  <span>Sending 4× more traffic to a CPU-saturated server lowers its CPU utilization</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-circuit-breakers-and-timeouts-t1" value="1" />
+                  <span>10 retries guarantee success when a database is down</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-circuit-breakers-and-timeouts-t1" value="2" />
+                  <span>Tripping a circuit breaker fails fast in memory (0 ms), shedding load so the downstream can recover while bulkheads protect caller threads and retry budgets cap amplification (&lt;10%)</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Calculate the request volume when 60% of requests fail and each failure triggers 3 immediate retries.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="circuit-breakers-and-timeouts-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-circuit-breakers-and-timeouts-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Unbounded retries turn a partial slowdown into a retry storm. Combining tight timeouts, per-dependency bulkheads, a retry budget, and a circuit breaker with graceful fallback prevents cascading failure.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1297,7 +1433,7 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1305,15 +1441,15 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

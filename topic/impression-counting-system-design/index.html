@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -985,12 +985,18 @@ flowchart LR
 <p>The Media Rating Council viewability guideline counts a display ad as viewable when at least 50 percent of its pixels are in view for at least one continuous second, and a video ad at 50 percent for two continuous seconds. Systems usually store both "served" and "viewable" impressions as separate measures, because advertisers may buy on either.</p>
 <p><strong>Dedup at scale:</strong> keep impression IDs in keyed state with a TTL a little longer than the allowed lateness; at hundreds of thousands of events per second over 24 hours that is billions of keys, so state lives in RocksDB-backed Flink state, not heap memory.</p><h2>Interview framing</h2><p>Lead with correctness requirements: at-least-once ingest plus dedup equals effectively-once counting; event-time windows; and a batch reconciliation that is the source for invoices. Then discuss the query side: advertisers want per-campaign, per-hour breakdowns with sub-second latency, which is why pre-aggregated rollups live in an OLAP store rather than being computed from raw events on each dashboard load.</p>
 </div></article>
-      <section class="check-slider" data-slug="impression-counting-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="impression-counting-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Event-time bucketing" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Cost of double counting" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Dedup state TTL" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Event-time bucketing" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Cost of double counting" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Dedup state TTL" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Short-Term Deduplication State Sizing in Stream Processing" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Client-Generated `impression_id` vs Server-Signed Impression Token" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-impression-counting-system-design-c1" data-type="mcq" data-slug="impression-counting-system-design" data-index="0">
@@ -1108,12 +1114,142 @@ flowchart LR
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="impression-counting-system-design-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-impression-counting-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Dedup only works while the ID is still in state, so a TTL shorter than the lateness window lets accepted late retries double count; the lesson sizes the TTL just above allowed lateness, which is why state lives in RocksDB. Kafka&#039;s idempotent producer only removes broker-level duplicates from one producer session, not SDK re-sends hours later.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-impression-counting-system-design-n1" data-type="numeric" data-slug="impression-counting-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Short-Term Deduplication State Sizing in Stream Processing</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An ad impression pipeline ingests 200,000 impressions/sec and must deduplicate retried client beacons over a sliding 10-minute (`600-second`) window in Flink RocksDB state. Each `impression_id` state entry (16-byte UUID + timestamp overhead) takes 32 bytes.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many gigabytes (GB, where 1 GB = 10^9 bytes) of RocksDB state are required to hold all `impression_id` keys across the 600-second window (`200,000 × 600 × 32 B`)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-impression-counting-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-impression-counting-system-design-n1"
+              aria-label="Numeric estimate in GB"
+              placeholder="Enter numeric estimate (GB)..."
+            />
+            <span class="quiz-unit-badge">GB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Total impressions in 600s = `200,000 × 600 = 120,000,000`. Multiply by 32 bytes and divide by 10^9.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="impression-counting-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-impression-counting-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">200,000 imp/s × 600 s = 120,000,000 active IDs in the window. At 32 bytes each, `120M × 32 B = 3.84 × 10^9 B = 3.84 GB`, which fits easily in partitioned Flink RocksDB state!</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-impression-counting-system-design-t1" data-type="tradeoff" data-slug="impression-counting-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Client-Generated `impression_id` vs Server-Signed Impression Token</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">When an ad server returns an ad to a mobile client, the client fires an `/impression` beacon when 50% of the ad pixels are visible for &gt;= 1 second (MRC standard). Network retries can send the same beacon multiple times, and malicious bots can fabricate fake beacons.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should the impression identifier be constructed and deduplicated?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-impression-counting-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-impression-counting-system-design-t1" value="0" />
+                  <span>Let the client generate a new random UUID on every HTTP retry of the same ad view</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-impression-counting-system-design-t1" value="1" />
+                  <span>Trust any `/impression?ad_id=123` call without cryptographic signature verification</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-impression-counting-system-design-t1" value="2" />
+                  <span>Have the ad server mint a cryptographically signed (HMAC) `impression_id` at ad-serve time containing `(ad_id, user_id, auction_id, timestamp)` and deduplicate by `impression_id` in a stateful stream processor partitioned by `impression_id`</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-impression-counting-system-design-t1" value="0" />
+                  <span>Generating a new UUID on every retry prevents duplicate billing</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-impression-counting-system-design-t1" value="1" />
+                  <span>Unsigned query parameters prevent replay and forgery attacks</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-impression-counting-system-design-t1" value="2" />
+                  <span>A server-minted HMAC token proves the impression corresponded to a real ad auction within a valid TTL, and reusing that exact `impression_id` across client network retries guarantees idempotent deduplication</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How do you prove both (1) that the ad was genuinely served by your auction engine and (2) that network retries of that view only count once?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="impression-counting-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-impression-counting-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Minting a signed `impression_id` at ad-serve time binds the view beacon to an authentic auction event and provides the deterministic idempotency key for stream deduplication.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1238,22 +1374,22 @@ flowchart LR
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

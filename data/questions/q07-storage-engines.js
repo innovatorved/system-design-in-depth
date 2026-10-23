@@ -63,6 +63,59 @@ window.QUESTION_BANK["storage-engine-design-constraints"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "storage-engine-design-constraints-n1",
+    "topic": "storage-engine-design-constraints",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Write Amplification and SSD Wear Budget",
+    "scenario": "An application writes 50 MB/s of logical updates to a storage engine whose internal write amplification factor (WAF) is 12×.",
+    "prompt": "How many megabytes per second (MB/s) of physical flash writes hit the NVMe drive?",
+    "question": "How many megabytes per second (MB/s) of physical flash writes hit the NVMe drive?",
+    "unit": "MB/s",
+    "answer": 600,
+    "tolerance": 0.2,
+    "hint": "Multiply the 50 MB/s logical write rate by the 12× write amplification factor.",
+    "explanation": "At a 12× WAF, 50 MB/s of logical user writes generate 50 × 12 = 600 MB/s of physical flash writes (consuming SSD endurance and saturating I/O bandwidth).",
+    "tags": [
+      "storage-engine-design-constraints",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "storage-engine-design-constraints-t1",
+    "topic": "storage-engine-design-constraints",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: RUM Conjecture (Read, Update/Write, Memory Overhead)",
+    "scenario": "You are selecting a storage engine for an IoT telemetry ingestion tier that receives 500,000 append/update events per second per node and only runs batch compaction and occasional time-range reads.",
+    "prompt": "According to the RUM Conjecture, which storage engine architecture fits this workload best, and why?",
+    "question": "According to the RUM Conjecture, which storage engine architecture fits this workload best, and why?",
+    "options": [
+      "In-place B+Tree with 6 secondary indexes and small 4 KB pages",
+      "Uncompressed in-memory hash table with no disk persistence",
+      "Log-Structured Merge (LSM) tree with append-only WAL + MemTable and leveled/tiered SSTable compaction"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "B+Trees convert every random key write into sequential disk appends",
+      "Dropping disk persistence satisfies telemetry durability requirements",
+      "The RUM Conjecture states you can optimize at most two of Read, Update, and Memory overhead; LSM trees optimize Update (sequential writes) and space efficiency at the cost of bounded multi-SSTable Read amplification"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Which storage structure turns random key updates into sequential disk writes?",
+    "explanation": "B+Trees optimize read latency at the cost of random in-place page rewrites (high write amplification), whereas LSM trees convert random writes into sequential WAL + SSTable flushes.",
+    "tags": [
+      "storage-engine-design-constraints",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -248,6 +301,59 @@ window.QUESTION_BANK["file-backed-dictionary-storage-engine"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "file-backed-dictionary-storage-engine-n1",
+    "topic": "file-backed-dictionary-storage-engine",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Hash Index Memory Footprint for 100M Keys",
+    "scenario": "A file-backed dictionary engine keeps an in-memory hash directory mapping each of 100,000,000 keys to its on-disk `(file_id, byte_offset, byte_length)` metadata (32 bytes per entry including hash bucket overhead).",
+    "prompt": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of RAM are required to hold the in-memory directory for 100M keys?",
+    "question": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of RAM are required to hold the in-memory directory for 100M keys?",
+    "unit": "GB",
+    "answer": 3.2,
+    "tolerance": 0.2,
+    "hint": "Multiply 100,000,000 keys by 32 bytes per key and divide by 10^9.",
+    "explanation": "100,000,000 × 32 bytes = 3,200,000,000 bytes = 3.2 GB of RAM, allowing every point lookup to resolve in exactly 1 disk `pread` regardless of value size.",
+    "tags": [
+      "file-backed-dictionary-storage-engine",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "file-backed-dictionary-storage-engine-t1",
+    "topic": "file-backed-dictionary-storage-engine",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: In-Memory Offset Directory vs Sparse On-Disk Index",
+    "scenario": "Your file-backed dictionary engine grows from 100M keys (average 4 KB value) to 20 billion tiny keys (average 40-byte value). Suddenly the in-memory hash directory alone requires 640 GB of RAM per node.",
+    "prompt": "Why did the in-memory hash directory hit a wall, and what architectural shift solves it?",
+    "question": "Why did the in-memory hash directory hit a wall, and what architectural shift solves it?",
+    "options": [
+      "Store the values in RAM and the keys on disk",
+      "Scan the entire 800 GB log file from byte 0 on every read",
+      "Switch from a full in-memory per-key hash table to sorted SSTables with a sparse in-memory block index (1 entry per 4 KB–64 KB block) plus Bloom filters"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Putting values in RAM reduces total memory usage",
+      "Linear file scans run in microseconds on 800 GB files",
+      "A full in-memory key directory requires O(N) RAM proportional to key count; sorting keys on disk lets you keep only 1 pointer per disk block in RAM (reducing index RAM by ~100×)"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens when the metadata per key (32 B) is nearly as large as the value itself (40 B)?",
+    "explanation": "File-backed hash directories (like Bitcask) excel when values are large and key count fits in RAM, but when key count explodes into billions of tiny records, a sorted SSTable + sparse block index is needed so index RAM scales with block count rather than key count.",
+    "tags": [
+      "file-backed-dictionary-storage-engine",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -313,6 +419,59 @@ window.QUESTION_BANK["custom-binary-file-format"] = [
       "custom-binary-file-format",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "custom-binary-file-format-n1",
+    "topic": "custom-binary-file-format",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Binary Frame vs Verbose JSON Wire/Disk Overhead",
+    "scenario": "A storage engine writes 200,000,000 records. In verbose JSON (`{\"timestamp\":1710000000000,\"user_id\":91827364,\"flags\":3,\"score\":42}`), each record averages 75 bytes. In a packed binary format (8B timestamp + 8B user_id + 1B flags + 4B score + 4B CRC = 25 bytes), each record is 25 bytes.",
+    "prompt": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of disk space are saved across 200M records by using the 25-byte binary frame instead of 75-byte JSON?",
+    "question": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of disk space are saved across 200M records by using the 25-byte binary frame instead of 75-byte JSON?",
+    "unit": "GB",
+    "answer": 10,
+    "tolerance": 0.2,
+    "hint": "Multiply 200,000,000 records by the 50-byte savings per record (`75 - 25 = 50`).",
+    "explanation": "Saving 50 bytes per record across 200,000,000 records saves 200,000,000 × 50 B = 10 × 10^9 B = 10 GB of storage and avoids repeated ASCII field-name parsing.",
+    "tags": [
+      "custom-binary-file-format",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "custom-binary-file-format-t1",
+    "topic": "custom-binary-file-format",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Header Magic Bytes, Format Version, and Footer Index Placement",
+    "scenario": "You are designing an immutable custom binary file format (like Parquet or an SSTable) that is written in a single streaming pass as records arrive and later read via random access.",
+    "prompt": "Where should the block index and schema metadata directory be placed in a streaming single-pass binary file, and why?",
+    "question": "Where should the block index and schema metadata directory be placed in a streaming single-pass binary file, and why?",
+    "options": [
+      "Write the full block offset table at byte 0 before any data blocks have been compressed or written",
+      "Interleave random metadata pointers without length prefixes",
+      "Put a fixed magic number + version header at byte 0, stream data blocks sequentially, and write the block index + metadata directory in the file footer with a fixed-size footer length pointer at EOF"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "You know the exact compressed byte size of every future block before compressing it",
+      "Omitting length prefixes makes binary parsing deterministic",
+      "Block byte offsets are only known after all variable-length compressed data blocks are written; placing the directory in the footer with a trailing fixed-offset pointer enables single-pass streaming writes and two-read (`EOF` -> index -> block) random access"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why do Parquet, ORC, RocksDB SSTables, and ZIP files all put their central directory in the footer at the end of the file?",
+    "explanation": "When streaming compressed blocks sequentially, block sizes aren't known upfront. Writing the index in the footer (with a final 8-byte footer offset + magic bytes at EOF) allows single-pass sequential creation without seeking back to rewrite the beginning of the file.",
+    "tags": [
+      "custom-binary-file-format",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -380,6 +539,59 @@ window.QUESTION_BANK["byte-range-indexed-object-storage"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "byte-range-indexed-object-storage-n1",
+    "topic": "byte-range-indexed-object-storage",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: S3 Coalesced Byte-Range Read Savings",
+    "scenario": "A query needs 50 adjacent 8 KB pages (400 KB total) from a Parquet file on S3. Issuing 50 separate `Range: bytes=...` HTTP GET requests at 25 ms per request vs coalescing them into a single 400 KB byte-range GET (`25 ms` TTFB + `5 ms` transfer).",
+    "prompt": "How many milliseconds of total request wall-clock time are saved if those reads were otherwise issued as 10 sequential rounds of 5 requests (`10 × 25 ms = 250 ms`) vs 1 coalesced range request (`30 ms`)?",
+    "question": "How many milliseconds of total request wall-clock time are saved if those reads were otherwise issued as 10 sequential rounds of 5 requests (`10 × 25 ms = 250 ms`) vs 1 coalesced range request (`30 ms`)?",
+    "unit": "ms",
+    "answer": 220,
+    "tolerance": 0.2,
+    "hint": "Subtract the 30 ms single coalesced range read from the 250 ms multi-round latency.",
+    "explanation": "Object storage has high per-request TTFB (~15–30 ms) and charges per GET request, but high throughput per stream. Coalescing nearby byte ranges (\"hole filling\" up to ~1 MB gap) cuts 250 ms down to 30 ms (saving 220 ms and 98% of API request costs).",
+    "tags": [
+      "byte-range-indexed-object-storage",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "byte-range-indexed-object-storage-t1",
+    "topic": "byte-range-indexed-object-storage",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Fine-Grained 4 KB Object GETs vs Coalesced Range Reads + Cached Footer",
+    "scenario": "An analytics engine queries multi-gigabyte files on S3. Initially it translates every 4 KB page read directly into a separate S3 `GET` with `Range: bytes=offset..offset+4095`.",
+    "prompt": "Why does a 4 KB S3 range-read strategy perform poorly, and how should an object-store query engine optimize byte-range access?",
+    "question": "Why does a 4 KB S3 range-read strategy perform poorly, and how should an object-store query engine optimize byte-range access?",
+    "options": [
+      "Split the multi-gigabyte file into millions of separate 4 KB S3 objects",
+      "Download the entire 10 GB S3 object into local memory for every single-row lookup",
+      "Cache file footers/indexes in local NVMe/RAM, use larger block sizes (64 KB–1 MB), and coalesce nearby byte ranges (merging gaps smaller than ~256 KB–1 MB into a single HTTP Range GET)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Millions of tiny S3 `PUT`/`GET` calls minimize per-request billing and latency",
+      "Downloading 10 GB for a 100-byte lookup minimizes network egress",
+      "Amortizing S3's 15–30 ms TTFB overhead requires caching the footer index locally and fetching coarse/coalesced byte ranges rather than chatty 4 KB micro-reads"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Compare S3 time-to-first-byte (~20 ms) with the time to transfer an extra 256 KB (~2 ms at 1 Gbps).",
+    "explanation": "Because 20 ms of S3 request latency equals ~2.5 MB of transfer time on a 1 Gbps link, reading across a small 256 KB gap in one HTTP Range request is faster and cheaper than issuing two separate HTTP requests.",
+    "tags": [
+      "byte-range-indexed-object-storage",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -445,6 +657,59 @@ window.QUESTION_BANK["immutable-versioned-data-files"] = [
       "immutable-versioned-data-files",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "immutable-versioned-data-files-n1",
+    "topic": "immutable-versioned-data-files",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Snapshot Space Overhead Under Copy-on-Write / Immutable Files",
+    "scenario": "A table consists of 1,000 immutable 1 GB Parquet data files (1,000 GB total). An update batch modifies rows in 40 of those files, writing 40 new 1 GB files and publishing a new manifest version while keeping the previous snapshot retained for time-travel queries.",
+    "prompt": "What is the total storage footprint (in GB) across both snapshots combined?",
+    "question": "What is the total storage footprint (in GB) across both snapshots combined?",
+    "unit": "GB",
+    "answer": 1040,
+    "tolerance": 0.2,
+    "hint": "960 unchanged files are shared by reference (`960 GB`), plus 40 old files (`40 GB`) and 40 new files (`40 GB`).",
+    "explanation": "Because immutable files are shared by pointer across manifest versions, retaining the prior snapshot only retains the 40 replaced files: 1,000 + 40 = 1,040 GB (4% overhead instead of a 2,000 GB full copy).",
+    "tags": [
+      "immutable-versioned-data-files",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "immutable-versioned-data-files-t1",
+    "topic": "immutable-versioned-data-files",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Lock-Free Readers via Atomic Manifest Swap vs In-Place File Mutation",
+    "scenario": "In a data lakehouse (Iceberg / Delta Lake) or LSM engine, long-running analytical readers scan data files for 5 minutes while concurrent writers commit new batches every 10 seconds.",
+    "prompt": "How do immutable versioned data files enable completely lock-free concurrent readers and writers?",
+    "question": "How do immutable versioned data files enable completely lock-free concurrent readers and writers?",
+    "options": [
+      "Writers overwrite existing files in place while readers hold shared POSIX file locks",
+      "Readers pause every 10 seconds to reload partially written files",
+      "Writers write new immutable data files and atomically swap a versioned metadata manifest pointer; each reader pins the manifest snapshot from when its query started"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Overwriting compressed files in-place never corrupts concurrent readers",
+      "Reading half-written files provides snapshot isolation",
+      "Because published data files never mutate in place, a reader pinning Manifest v42 sees a consistent snapshot with zero read locks, while a background GC only deletes unreferenced files after the snapshot retention window expires"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "If a data file never changes after creation, does a reader ever need a lock to read it?",
+    "explanation": "Immutability decouples readers from writers: writers prepare new files invisibly and commit via a single atomic pointer/manifest CAS, while readers scan their pinned manifest snapshot completely lock-free.",
+    "tags": [
+      "immutable-versioned-data-files",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -512,6 +777,59 @@ window.QUESTION_BANK["log-structured-storage"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "log-structured-storage-n1",
+    "topic": "log-structured-storage",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Log Segment Cleaning Utilization Cost",
+    "scenario": "A log-structured storage system cleans old 64 MB segments when they are 75% live (25% obsolete/deleted bytes). To reclaim 16 MB of free space per segment, the cleaner must read the 64 MB segment and rewrite the 48 MB of live data into a new segment.",
+    "prompt": "What is the ratio of bytes rewritten (`48 MB`) to free space reclaimed (`16 MB`) during segment cleaning at 75% utilization?",
+    "question": "What is the ratio of bytes rewritten (`48 MB`) to free space reclaimed (`16 MB`) during segment cleaning at 75% utilization?",
+    "unit": "x",
+    "answer": 3,
+    "tolerance": 0.2,
+    "hint": "Divide 48 MB of copied live data by 16 MB of reclaimed dead space.",
+    "explanation": "To free 16 MB of dead space in a 75%-full segment, the cleaner must copy 48 MB of live records (`48 / 16 = 3×` copy overhead), which is why log-structured cleaners separate hot (rapidly dying) and cold (long-lived) segments.",
+    "tags": [
+      "log-structured-storage",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "log-structured-storage-t1",
+    "topic": "log-structured-storage",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Hot/Cold Segment Segregation in Log-Structured Compaction",
+    "scenario": "A log-structured storage engine mixes frequently updated session keys and rarely updated archive blobs in the same log segments, causing the garbage collector to repeatedly copy the unchanging archive blobs.",
+    "prompt": "Which segment cleaning optimization minimizes compaction write amplification, and why?",
+    "question": "Which segment cleaning optimization minimizes compaction write amplification, and why?",
+    "options": [
+      "Disable segment compaction altogether and buy infinite disks",
+      "Always compact the segments with 99% live data first",
+      "Segregate hot (short-lived) and cold (long-lived) data into separate segments and prioritize cleaning segments with the lowest live-data ratio weighted by data age (cost-benefit policy)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Never reclaiming dead tombstones works on bounded disks",
+      "Compacting 99%-live segments frees the most space per byte copied",
+      "Hot segments quickly drop to <20% live bytes (cheap to clean), while cold segments stay near 100% live and are rarely rewritten—dramatically reducing write amplification"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Recall Rosenblum & Ousterhout's Sprite LFS cost-benefit segment cleaning insight.",
+    "explanation": "Separating rapidly mutating records from long-lived cold records prevents cold bytes from being copied over and over alongside hot records during segment garbage collection.",
+    "tags": [
+      "log-structured-storage",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -577,6 +895,59 @@ window.QUESTION_BANK["bitcask-storage-engine"] = [
       "bitcask-storage-engine",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "bitcask-storage-engine-n1",
+    "topic": "bitcask-storage-engine",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Bitcask Crash Recovery Speed with Hint Files",
+    "scenario": "A Bitcask node has 500 GB of data files containing 50,000,000 keys (average 10 KB value), plus compact `.hint` files containing only `(timestamp, key_size, value_size, value_offset, key)` (~40 bytes per entry = 2 GB total). Disk sequential read throughput is 1 GB/s.",
+    "prompt": "How many seconds does it take to rebuild the in-memory `KeyDir` on startup by scanning the 2 GB `.hint` files instead of scanning all 500 GB of data files?",
+    "question": "How many seconds does it take to rebuild the in-memory `KeyDir` on startup by scanning the 2 GB `.hint` files instead of scanning all 500 GB of data files?",
+    "unit": "seconds",
+    "answer": 2,
+    "tolerance": 0.2,
+    "hint": "Divide 2 GB of hint files by 1 GB/s sequential read speed.",
+    "explanation": "Scanning the 2 GB `.hint` files at 1 GB/s rebuilds the in-memory `KeyDir` in 2 seconds instead of 500 seconds (8+ minutes) to scan the full 500 GB data logs.",
+    "tags": [
+      "bitcask-storage-engine",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "bitcask-storage-engine-t1",
+    "topic": "bitcask-storage-engine",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Bitcask (`KeyDir` in RAM) vs LSM Tree for Range Scans and High Key Counts",
+    "scenario": "You use a Bitcask storage engine (in-memory hash `KeyDir` pointing to append-only log files) for a workload that now requires `SCAN prefix_*` range queries and has grown to 5 billion small keys.",
+    "prompt": "Why is Bitcask a poor fit for this evolved workload, and what does it trade off?",
+    "question": "Why is Bitcask a poor fit for this evolved workload, and what does it trade off?",
+    "options": [
+      "Bitcask requires 4 disk seeks per point lookup",
+      "Bitcask cannot write sequentially to disk",
+      "Bitcask's `KeyDir` is an unordered hash table that must hold every key in RAM—making ordered range scans impossible without scanning all keys and bounding total key count by RAM capacity"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Bitcask serves point reads in a single disk seek using `KeyDir`",
+      "Bitcask appends all writes sequentially to the active data file",
+      "Bitcask gives unbeatable O(1) single-seek point reads and sequential writes when all keys fit in RAM, but lacks key ordering for range scans and cannot exceed RAM key capacity"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Can a hash table in RAM support ordered prefix range queries or store more keys than fit in memory?",
+    "explanation": "Bitcask guarantees at most 1 disk seek per read and sequential appends per write, at the strict requirement that 100% of keys fit in the in-memory `KeyDir` hash map and that range queries are not needed.",
+    "tags": [
+      "bitcask-storage-engine",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -763,6 +1134,59 @@ window.QUESTION_BANK["memtable-wal-and-sstable"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "memtable-wal-and-sstable-n1",
+    "topic": "memtable-wal-and-sstable",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: MemTable Flush Interval and L0 SSTable Generation",
+    "scenario": "A RocksDB instance configures a `64 MB` MemTable size and receives sustained writes at `16 MB/s`.",
+    "prompt": "Every how many seconds does the active MemTable fill up and flush a new L0 SSTable to disk?",
+    "question": "Every how many seconds does the active MemTable fill up and flush a new L0 SSTable to disk?",
+    "unit": "seconds",
+    "answer": 4,
+    "tolerance": 0.2,
+    "hint": "Divide the 64 MB MemTable capacity by the 16 MB/s write rate.",
+    "explanation": "64 MB / 16 MB/s = 4 seconds per MemTable flush (producing 15 L0 SSTables per minute before background compaction merges them).",
+    "tags": [
+      "memtable-wal-and-sstable",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "memtable-wal-and-sstable-t1",
+    "topic": "memtable-wal-and-sstable",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Why LSM Engines Need Both a WAL and a MemTable",
+    "scenario": "An engineer asks: \"Since SSTables are written sequentially on flush anyway, why does an LSM engine write every mutation to a Write-Ahead Log (WAL) AND insert it into an in-memory SkipList MemTable?\"",
+    "prompt": "What distinct role does each structure play on the write and crash-recovery path?",
+    "question": "What distinct role does each structure play on the write and crash-recovery path?",
+    "options": [
+      "The WAL is sorted by key for binary search, while the MemTable is an unsorted append array",
+      "The MemTable is stored on magnetic tape while the WAL is kept only in CPU L1 cache",
+      "The WAL is an unsorted append-only disk file ensuring crash durability for uncommitted MemTable state, while the in-memory SkipList MemTable sorts keys in RAM so they can be flushed as a sorted SSTable in one sequential pass"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Sorting an on-disk file on every 100-byte write is fast",
+      "If the process crashes before the 64 MB MemTable flushes, RAM is volatile",
+      "Maintaining sorted order on disk per write would require random I/O; sorting in RAM (SkipList) is fast and volatile, while appending unsorted records to the WAL on disk is sequential and durable"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How can you get both durability (disk) and sorted order (for SSTables) without doing random disk I/O?",
+    "explanation": "The WAL gives sequential disk durability for recent writes, while the MemTable (SkipList/B-Tree in RAM) absorbs and sorts writes in memory until a full 64 MB sorted run can be written sequentially as an SSTable.",
+    "tags": [
+      "memtable-wal-and-sstable",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -828,6 +1252,59 @@ window.QUESTION_BANK["lsm-read-path-bloom-and-sparse-index"] = [
       "lsm-read-path-bloom-and-sparse-index",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "lsm-read-path-bloom-and-sparse-index-n1",
+    "topic": "lsm-read-path-bloom-and-sparse-index",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Bloom Filter Disk-Seek Elimination on LSM Point Lookups",
+    "scenario": "A point lookup for a key that resides only in the deepest level (`L4`) must check 10 overlapping SSTables across `L0..L3` first. Each SSTable has a Bloom filter in RAM with a 1% false positive rate (`0.01`).",
+    "prompt": "Across 100 point lookups for keys located in `L4` (1,000 negative SSTable checks across `L0..L3`), how many unnecessary disk block reads occur in total across `L0..L3` due to the 1% Bloom filter false positive rate?",
+    "question": "Across 100 point lookups for keys located in `L4` (1,000 negative SSTable checks across `L0..L3`), how many unnecessary disk block reads occur in total across `L0..L3` due to the 1% Bloom filter false positive rate?",
+    "unit": "reads",
+    "answer": 10,
+    "tolerance": 0.2,
+    "hint": "Multiply 1,000 negative SSTable checks (`100 lookups × 10 SSTables`) by the 1% (`0.01`) false positive rate.",
+    "explanation": "Without Bloom filters, 100 lookups across 10 SSTables would issue 1,000 wasted SSTable reads. A 1% (~10 bits/key) Bloom filter eliminates 99% of them, leaving only 1,000 × 0.01 = 10 extra reads (0.1 per lookup).",
+    "tags": [
+      "lsm-read-path-bloom-and-sparse-index",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "lsm-read-path-bloom-and-sparse-index-t1",
+    "topic": "lsm-read-path-bloom-and-sparse-index",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Full Key Bloom Filters vs Prefix Bloom Filters for Range Scans",
+    "scenario": "Your RocksDB workload performs both point `Get(key)` lookups and short range scans `Seek(tenant_id + \":\")` iterating over all keys for a single tenant. You configured whole-key Bloom filters, but `Seek()` calls are still reading every L0 SSTable from disk.",
+    "prompt": "Why is a whole-key Bloom filter bypassed during `Seek(prefix)`, and how do you fix it?",
+    "question": "Why is a whole-key Bloom filter bypassed during `Seek(prefix)`, and how do you fix it?",
+    "options": [
+      "Bloom filters automatically match arbitrary substrings of hashed keys",
+      "Increase the whole-key Bloom filter from 10 bits/key to 100 bits/key",
+      "A hash of the full key `H(tenant_id + \":\" + item_id)` tells you nothing about whether prefix `tenant_id + \":\"` exists; configure a `prefix_extractor` and Prefix Bloom Filter so `Seek(prefix)` skips SSTables lacking that prefix"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Cryptographic and murmur hashes preserve prefix ordering",
+      "More bits per full key allow prefix matching",
+      "Hashing a fixed-length key prefix into a Prefix Bloom Filter allows `Iterator::Seek(prefix)` to test `H(prefix)` against each SSTable before touching disk"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Can you test whether any key starting with `\"user_42:\"` is in a Bloom filter if the filter only hashed `\"user_42:order_99\"`?",
+    "explanation": "A Bloom filter only tests exact membership of whatever byte slice was hashed. Configuring a `prefix_extractor` hashes the prefix into a prefix Bloom filter, enabling `Seek(prefix)` to skip irrelevant SSTables.",
+    "tags": [
+      "lsm-read-path-bloom-and-sparse-index",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -895,6 +1372,59 @@ window.QUESTION_BANK["compaction-and-amplification"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "compaction-and-amplification-n1",
+    "topic": "compaction-and-amplification",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Leveled Compaction Write Amplification vs Space Overhead",
+    "scenario": "A Leveled Compaction LSM tree has a level size multiplier of `10×`, where the last level `L_max` holds `900 GB` and all upper levels `L0..L_{max-1}` combined hold `100 GB` (`1,000 GB` total on disk). Almost all obsolete/overwritten keys in upper levels shadow keys in `L_max` (`100 GB` of dead space).",
+    "prompt": "What percentage of total disk storage (`100 GB / 1,000 GB`) is occupied by obsolete/duplicate versions in Leveled Compaction?",
+    "question": "What percentage of total disk storage (`100 GB / 1,000 GB`) is occupied by obsolete/duplicate versions in Leveled Compaction?",
+    "unit": "%",
+    "answer": 10,
+    "tolerance": 0.2,
+    "hint": "Divide 100 GB in upper levels by 1,000 GB total disk footprint.",
+    "explanation": "Because `L_max` holds ~90% of all bytes in a 10× leveled tree and has no duplicate keys within itself, space amplification is bounded to ~10% (`100 / 1,000`), compared to ~50% temporary space amplification in Size-Tiered Compaction.",
+    "tags": [
+      "compaction-and-amplification",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "compaction-and-amplification-t1",
+    "topic": "compaction-and-amplification",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Size-Tiered (STCS) vs Leveled (LCS) vs FIFO/Time-Window Compaction (TWCS)",
+    "scenario": "You store immutable time-series metrics with a strict 30-day TTL in Cassandra/RocksDB. Using Leveled Compaction causes massive CPU/IO churn rewriting old metrics across levels.",
+    "prompt": "Which compaction strategy is optimal for append-only time-series data with a fixed TTL, and why?",
+    "question": "Which compaction strategy is optimal for append-only time-series data with a fixed TTL, and why?",
+    "options": [
+      "Leveled Compaction (LCS) with a level multiplier of 2",
+      "Randomly merging 20-day-old SSTables with 1-minute-old SSTables",
+      "Time-Window Compaction Strategy (TWCS) / FIFO Compaction, which groups SSTables into non-overlapping time buckets (e.g., 1 day) and drops entire expired SSTable files when the bucket passes the 30-day TTL"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "LCS avoids rewriting immutable time-series data across levels",
+      "Merging old and new time windows allows whole-file TTL drops",
+      "TWCS compacts only within the active time window and never merges across windows, reducing write amplification near 1× and turning TTL expiration into an O(1) whole-file unlink"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens if an SSTable contains keys from Day 1 mixed with keys from Day 29 when the 30-day TTL expires?",
+    "explanation": "Mixing timestamps across SSTables prevents dropping expired files until every key in the file expires. Time-Window Compaction keeps time buckets strictly isolated so expired daily SSTables drop cleanly with zero rewrite.",
+    "tags": [
+      "compaction-and-amplification",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -960,6 +1490,59 @@ window.QUESTION_BANK["object-storage-vs-database"] = [
       "object-storage-vs-database",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "object-storage-vs-database-n1",
+    "topic": "object-storage-vs-database",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Storing Blobs in SQL DB vs Object Storage Cost & Backup Time",
+    "scenario": "An application stores 100,000,000 PDF receipts averaging 200 KB each (`20 TB` of blobs) plus 200 bytes of relational metadata per receipt (`20 GB` total metadata).",
+    "prompt": "By what factor (`20,000 GB / 20 GB`) does the relational database size shrink when you move the 200 KB PDF blobs to S3 and store only the 200-byte metadata + S3 URI in PostgreSQL?",
+    "question": "By what factor (`20,000 GB / 20 GB`) does the relational database size shrink when you move the 200 KB PDF blobs to S3 and store only the 200-byte metadata + S3 URI in PostgreSQL?",
+    "unit": "x",
+    "answer": 1000,
+    "tolerance": 0.2,
+    "hint": "Divide 200,000 bytes (200 KB) by 200 bytes of metadata.",
+    "explanation": "Moving the 200 KB blobs to object storage shrinks PostgreSQL from ~20 TB down to 20 GB (a 1,000× reduction), allowing the entire relational database and its indexes to fit entirely in RAM.",
+    "tags": [
+      "object-storage-vs-database",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "object-storage-vs-database-t1",
+    "topic": "object-storage-vs-database",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Dual-Write Consistency Between Database Metadata and Object Storage",
+    "scenario": "When a user uploads an invoice, the backend must save the PDF in S3 and insert an `invoices` row in PostgreSQL. If the app writes to S3 first and crashes before inserting into PostgreSQL (or vice versa), orphan blobs or broken links appear.",
+    "prompt": "Which workflow safely coordinates the PostgreSQL metadata row and the S3 blob upload without holding a DB transaction open during slow network uploads?",
+    "question": "Which workflow safely coordinates the PostgreSQL metadata row and the S3 blob upload without holding a DB transaction open during slow network uploads?",
+    "options": [
+      "Open a PostgreSQL `SERIALIZABLE` transaction, stream the 50 MB upload through the DB connection, and commit",
+      "Insert the DB row as `status = READY` first and hope the client upload never fails",
+      "Insert a `PENDING_UPLOAD` intent row in PostgreSQL, issue a pre-signed S3 PUT URL, transition the row to `ACTIVE` upon S3 completion notification/verification, and run a background sweeper to garbage-collect stale `PENDING_UPLOAD` intents"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Holding database connections open during slow client uploads maximizes connection pool capacity",
+      "Marking rows `READY` before the file exists prevents 404 errors",
+      "A two-state intent record (`PENDING_UPLOAD` -> `ACTIVE`) prevents dangling references on crash while keeping slow blob transfers off the database connection pool and enabling deterministic orphan cleanup"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Should a database transaction ever stay open while waiting for a multi-megabyte HTTP upload?",
+    "explanation": "Recording an intent state (`PENDING_UPLOAD`) before issuing a pre-signed upload URL ensures every S3 object is tracked for garbage collection if the upload fails, and readers never see an unuploaded file.",
+    "tags": [
+      "object-storage-vs-database",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -1146,6 +1729,59 @@ window.QUESTION_BANK["range-partitioning-vs-consistent-hashing-storage"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "range-partitioning-vs-consistent-hashing-storage-n1",
+    "topic": "range-partitioning-vs-consistent-hashing-storage",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Range Scan Scatter-Gather Reduction",
+    "scenario": "A cluster has 64 storage nodes. A query fetches all orders for `customer_id = 42` between Jan 1 and Jan 7 (covering 150 rows). Under pure random hash partitioning on `order_id`, the query must fan out to all 64 nodes; under range partitioning on `(customer_id, created_at)`, all 150 rows sit contiguously in 1 range tablet.",
+    "prompt": "By what factor (`64 / 1`) does range partitioning on `(customer_id, created_at)` reduce the number of nodes contacted for this customer time-range query?",
+    "question": "By what factor (`64 / 1`) does range partitioning on `(customer_id, created_at)` reduce the number of nodes contacted for this customer time-range query?",
+    "unit": "x",
+    "answer": 64,
+    "tolerance": 0.2,
+    "hint": "Compare 64 nodes contacted (scatter-gather) vs 1 range tablet node.",
+    "explanation": "Range partitioning on `(customer_id, created_at)` co-locates a customer's contiguous time window onto a single range tablet (1 node instead of 64), reducing RPC fan-out by 64×.",
+    "tags": [
+      "range-partitioning-vs-consistent-hashing-storage",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "range-partitioning-vs-consistent-hashing-storage-t1",
+    "topic": "range-partitioning-vs-consistent-hashing-storage",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Pure Monotonic Range Partitioning vs Hash-Prefixed Range Tablets",
+    "scenario": "In a range-partitioned database (e.g., Spanner, CockroachDB, HBase), a table is keyed solely by `created_at` timestamp. Under 100,000 inserts/sec, 100% of writes hit the single last range tablet while the other 99 nodes sit idle.",
+    "prompt": "How do you preserve efficient range scans per entity/bucket while eliminating the monotonic timestamp write hotspot?",
+    "question": "How do you preserve efficient range scans per entity/bucket while eliminating the monotonic timestamp write hotspot?",
+    "options": [
+      "Keep `created_at` as the sole prefix key and buy a bigger CPU for the last node",
+      "Hash every column separately so range scans are impossible",
+      "Prefix the key with a high-cardinality entity key `(tenant_id, created_at)` or a bounded hash bucket `(hash(id) % B, created_at)` so writes distribute across all nodes while range scans within a tenant or across `B` buckets stay ordered"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "A single range tablet can absorb unlimited cluster-wide write throughput",
+      "Full-cluster scatter-gather on every query is optimal",
+      "A compound key `(entity_id, timestamp)` or hash-bucket prefix spreads concurrent writes across tablets while keeping timestamp ordering contiguous within each prefix"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why does starting the primary key with `created_at` route every new insert to the exact same range tablet?",
+    "explanation": "Monotonic leading keys concentrate all writes on the highest key range. Prefixing with `tenant_id` (or a small shard bucket `0..15`) distributes active writes across the cluster while preserving local sort order.",
+    "tags": [
+      "range-partitioning-vs-consistent-hashing-storage",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -1211,6 +1847,59 @@ window.QUESTION_BANK["partition-manager-and-map-table"] = [
       "partition-manager-and-map-table",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "partition-manager-and-map-table-n1",
+    "topic": "partition-manager-and-map-table",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Dynamic Tablet Split Metadata Scale",
+    "scenario": "A distributed storage cluster holds 256 TB (262,144 GB) of data split into dynamic range tablets targeting 64 GB per tablet. Each tablet entry in the Partition Map Table takes 256 bytes.",
+    "prompt": "How many total tablets (`262,144 GB / 64 GB`) exist in the Partition Map Table?",
+    "question": "How many total tablets (`262,144 GB / 64 GB`) exist in the Partition Map Table?",
+    "unit": "tablets",
+    "answer": 4096,
+    "tolerance": 0.2,
+    "hint": "Divide 262,144 GB by 64 GB per tablet.",
+    "explanation": "262,144 GB / 64 GB = 4,096 tablets (occupying just 4,096 × 256 B = 1 MB of metadata), which easily fits in the memory of every client and router.",
+    "tags": [
+      "partition-manager-and-map-table",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "partition-manager-and-map-table-t1",
+    "topic": "partition-manager-and-map-table",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Zero-Downtime Tablet Split Execution",
+    "scenario": "A 64 GB range partition `[A, M)` grows past the split threshold and must split at midpoint `F` into `[A, F)` and `[F, M)` without copying 64 GB over the network before accepting writes.",
+    "prompt": "How do modern LSM-based range stores (Bigtable, Spanner, CockroachDB, TiKV) execute an instant tablet split, and why?",
+    "question": "How do modern LSM-based range stores (Bigtable, Spanner, CockroachDB, TiKV) execute an instant tablet split, and why?",
+    "options": [
+      "Block all writes for 20 minutes while copying 32 GB of files to another server",
+      "Delete the upper half of the keys and ask clients to re-upload them",
+      "Perform an instant metadata split in the Raft/Paxos group by recording two child range descriptors referencing the same immutable underlying SSTables (clipped by `[A, F)` and `[F, M)` bounds), then lazily separate files during background compaction"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Blocking writes for 20 minutes during auto-split meets 99.99% availability SLOs",
+      "Data loss is acceptable during partition splits",
+      "Because SSTables are immutable, two child tablets can initially share hardlinks/references to the parent SSTables with logical key-range bounds, completing the split in milliseconds and physically separating bytes during normal compaction"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Do you need to physically rewrite immutable SSTables before declaring the range split in metadata?",
+    "explanation": "An LSM tablet split is initially a fast metadata operation that creates two logical ranges backed by the parent's immutable SSTables; subsequent compactions physically materialize separate files and allow independent rebalancing.",
+    "tags": [
+      "partition-manager-and-map-table",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -1278,6 +1967,59 @@ window.QUESTION_BANK["metadata-db-for-object-storage"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "metadata-db-for-object-storage-n1",
+    "topic": "metadata-db-for-object-storage",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Object Metadata Footprint for 10 Billion Objects",
+    "scenario": "A planet-scale object store holds 10,000,000,000 (`10^10`) objects. Each object's metadata entry (`bucket, key, version, size, etag, chunk_locations`) averages 300 bytes before replication.",
+    "prompt": "With 3× Raft replication across the metadata database tier, how many terabytes (TB, where 1 TB = 10^12 bytes) of storage does the metadata database alone require?",
+    "question": "With 3× Raft replication across the metadata database tier, how many terabytes (TB, where 1 TB = 10^12 bytes) of storage does the metadata database alone require?",
+    "unit": "TB",
+    "answer": 9,
+    "tolerance": 0.2,
+    "hint": "Multiply `10^10` objects by 300 bytes (= 3 TB logical) and multiply by 3 replicas.",
+    "explanation": "10^10 × 300 bytes = 3 × 10^12 bytes (3 TB logical); with 3× replication, the metadata database alone spans 9 TB—far too large for a single SQL node, requiring a horizontally sharded metadata KV/range store.",
+    "tags": [
+      "metadata-db-for-object-storage",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "metadata-db-for-object-storage-t1",
+    "topic": "metadata-db-for-object-storage",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Partitioning the Object Metadata Namespace for `LIST prefix/`",
+    "scenario": "Users of an S3-compatible object store require both 500,000/sec random `GET /bucket/key` lookups and fast lexicographical `LIST /bucket/logs/2026-10-23/` prefix scans.",
+    "prompt": "How should the metadata database partition keys to support lexicographical `LIST` prefix scans while avoiding single-bucket hotspots?",
+    "question": "How should the metadata database partition keys to support lexicographical `LIST` prefix scans while avoiding single-bucket hotspots?",
+    "options": [
+      "Hash the full `(bucket, object_key)` with SHA-256 so `LIST prefix/` must scan every shard in the cluster",
+      "Pin each bucket to a single unsplitable SQLite file permanently",
+      "Use lexicographically ordered range tablets keyed by `(bucket_id, object_key)` with automatic range splitting and load-based tablet rebalancing across nodes"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Full-cluster scatter-gather across 1,000 metadata shards makes `LIST` calls cheap",
+      "A single SQLite file handles 500,000 requests/sec per bucket",
+      "Lexicographical range tablets preserve contiguous key order for `LIST prefix/` scans while dynamic range splitting spreads hot prefixes across multiple metadata Raft groups"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How can you keep keys sorted for `LIST prefix/` while spreading a huge bucket across hundreds of servers?",
+    "explanation": "Range-partitioning `(bucket_id, object_key)` with automatic tablet splitting keeps lexicographical neighbors contiguous for fast `LIST` scans while splitting hot key prefixes across independent storage nodes.",
+    "tags": [
+      "metadata-db-for-object-storage",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -1343,6 +2085,59 @@ window.QUESTION_BANK["append-only-object-storage-stream-layer"] = [
       "append-only-object-storage-stream-layer",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "append-only-object-storage-stream-layer-n1",
+    "topic": "append-only-object-storage-stream-layer",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Small-Object Inode Overhead Elimination (Haystack / SeaweedFS Volume Packing)",
+    "scenario": "Storing 100,000,000 small 4 KB thumbnails as individual POSIX files requires 100,000,000 filesystem inodes (plus directory dentry lookups), consuming ~2 disk seeks per read when inodes miss cache. Packing them into large 32 GB append-only volume superfiles keeps a compact 24-byte per-needle index in RAM.",
+    "prompt": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of RAM does the 24-byte-per-needle index require for 100,000,000 packed thumbnails?",
+    "question": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of RAM does the 24-byte-per-needle index require for 100,000,000 packed thumbnails?",
+    "unit": "GB",
+    "answer": 2.4,
+    "tolerance": 0.2,
+    "hint": "Multiply 100,000,000 needles by 24 bytes and divide by 10^9.",
+    "explanation": "100,000,000 × 24 bytes = 2.4 GB of RAM, eliminating POSIX inode disk seeks completely so every thumbnail read takes exactly 1 disk `pread` into the append-only volume file.",
+    "tags": [
+      "append-only-object-storage-stream-layer",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "append-only-object-storage-stream-layer-t1",
+    "topic": "append-only-object-storage-stream-layer",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: 1-File-Per-Object POSIX Storage vs Packed Append-Only Extent Volumes",
+    "scenario": "Your object storage data nodes store millions of 10 KB–100 KB objects. Using standard ext4/XFS with one POSIX file per object causes disk IOPS saturation even at low bandwidth because `open()` + `stat()` + `read()` requires multiple metadata disk reads.",
+    "prompt": "Why do production blob stores (Facebook Haystack, Tectonic, SeaweedFS, MinIO XL) pack small objects into large append-only volume extents?",
+    "question": "Why do production blob stores (Facebook Haystack, Tectonic, SeaweedFS, MinIO XL) pack small objects into large append-only volume extents?",
+    "options": [
+      "POSIX filesystems forbid creating more than 1,000 files per disk",
+      "Packing files into volumes disables checksum verification",
+      "Packing thousands of objects as sequential \"needles\" inside multi-gigabyte volume files bypasses POSIX directory/inode lookups, turns writes into sequential appends, and serves reads in a single `pread(fd, offset, size)` using analready-open file descriptor"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "ext4 has a hard limit of 1,000 inodes",
+      "Append-only needles cannot include CRC32 checksums",
+      "POSIX inode metadata for hundreds of millions of tiny files overflows page cache and causes extra disk seeks per read; extent packing collapses metadata to a tiny in-memory offset map"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Recall the core insight of Facebook's Haystack paper (\"Finding a needle in Haystack\").",
+    "explanation": "Filesystem inodes (128–256 bytes plus directory b-trees) are too heavy to cache in RAM for billions of small photos. Appending objects into large open volume files with a tiny in-memory needle index achieves 1-seek reads.",
+    "tags": [
+      "append-only-object-storage-stream-layer",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -1410,6 +2205,59 @@ window.QUESTION_BANK["object-storage-durability-and-replication"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "object-storage-durability-and-replication-n1",
+    "topic": "object-storage-durability-and-replication",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Reed-Solomon Erasure Coding vs 3× Replication Storage Overhead",
+    "scenario": "An object store holds `100 PB` of logical user data. Storing it with 3-way full replication requires `300 PB` of raw disk (`3.0×` overhead). Switching to Reed-Solomon `RS(10, 4)` erasure coding splits each object into 10 data stripes + 4 parity stripes (`14 / 10 = 1.4×` overhead) while tolerating any 4 concurrent failures.",
+    "prompt": "How many petabytes (PB) of raw disk capacity are saved on `100 PB` of logical data by using `RS(10, 4)` (`140 PB`) instead of 3-way replication (`300 PB`)?",
+    "question": "How many petabytes (PB) of raw disk capacity are saved on `100 PB` of logical data by using `RS(10, 4)` (`140 PB`) instead of 3-way replication (`300 PB`)?",
+    "unit": "PB",
+    "answer": 160,
+    "tolerance": 0.2,
+    "hint": "Subtract 140 PB (`100 × 1.4`) from 300 PB (`100 × 3.0`).",
+    "explanation": "`RS(10, 4)` requires 140 PB of raw disk compared to 300 PB for 3× replication—saving 160 PB of raw storage while actually tolerating 4 simultaneous disk/rack failures instead of 2.",
+    "tags": [
+      "object-storage-durability-and-replication",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "object-storage-durability-and-replication-t1",
+    "topic": "object-storage-durability-and-replication",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: 3-Way Replication vs Reed-Solomon Erasure Coding on the Hot Write Path",
+    "scenario": "Erasure coding `RS(10, 4)` cuts disk cost by more than half, yet many storage engines first land incoming small writes on 3-way replicated journals/extents before background-encoding them into `RS(10, 4)` stripes.",
+    "prompt": "Why do storage engines often combine 3-way replicated write staging with background Reed-Solomon erasure coding?",
+    "question": "Why do storage engines often combine 3-way replicated write staging with background Reed-Solomon erasure coding?",
+    "options": [
+      "Reed-Solomon parity calculation is impossible on modern CPUs",
+      "3-way replication uses less disk space than `RS(10, 4)`",
+      "Erasure coding requires fanning out across 14 nodes (hurting tail latency on small writes and degraded reads); staging hot/small writes on 3 replicas gives low write latency, and background sealing into large `RS(10, 4)` extents captures the 1.4× space efficiency"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "SIMD Reed-Solomon encoding is slower than 1 KB/s",
+      "300% overhead is smaller than 140% overhead",
+      "Contacting 14 fault domains synchronously amplifies p99 tail latency and small-write overhead, whereas background encoding full immutable extents amortizes stripe fan-out"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens to p99 tail latency when every tiny write must synchronously coordinate across 14 storage nodes instead of 3?",
+    "explanation": "Tiering from 3× replicated write journals/buffers into immutable `RS(k, m)` erasure-coded extents combines fast low-fanout write latency with low long-term storage overhead.",
+    "tags": [
+      "object-storage-durability-and-replication",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -1475,6 +2323,59 @@ window.QUESTION_BANK["end-to-end-checksums"] = [
       "end-to-end-checksums",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "end-to-end-checksums-n1",
+    "topic": "end-to-end-checksums",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Uncorrectable Bit Error Rate (UBER) Across a 100 PB Fleet",
+    "scenario": "Enterprise SSDs specify an Uncorrectable Bit Error Rate (UBER) of 1 error per `10^16` bits read (`1.25 PB`). Your storage fleet scans `25 PB` of data per day during queries and background compaction.",
+    "prompt": "How many silent/uncorrectable bit errors per day should you expect across a `25 PB/day` read workload (`25 / 1.25`)?",
+    "question": "How many silent/uncorrectable bit errors per day should you expect across a `25 PB/day` read workload (`25 / 1.25`)?",
+    "unit": "errors/day",
+    "answer": 20,
+    "tolerance": 0.2,
+    "hint": "Divide 25 PB read per day by 1.25 PB per error.",
+    "explanation": "At 1 error per 1.25 PB (`10^16` bits), reading 25 PB/day encounters an average of `25 / 1.25 = 20` silent bit-rot events every single day—proving why hardware ECC alone is never enough at scale.",
+    "tags": [
+      "end-to-end-checksums",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "end-to-end-checksums-t1",
+    "topic": "end-to-end-checksums",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Co-Located Checksums vs Parent-Pointer Separated Checksums (ZFS / Merkle Tree Pattern)",
+    "scenario": "A storage engine stores each 4 KB data block's CRC32C checksum inside the header of that exact same 4 KB disk block. During a firmware bug (\"lost write\" or \"misdirected write\"), the disk controller fails to write the new 4 KB block cleanly, leaving the old valid block (with its own matching old checksum) at that physical sector.",
+    "prompt": "Why does a self-contained block checksum fail to detect lost/misdirected writes, and how do ZFS and modern storage engines solve this?",
+    "question": "Why does a self-contained block checksum fail to detect lost/misdirected writes, and how do ZFS and modern storage engines solve this?",
+    "options": [
+      "Switch from CRC32C to MD5 inside the same 4 KB block header",
+      "Never verify checksums on read",
+      "Store each block's checksum (and logical block ID / generation) in its parent pointer (e.g., SSTable index block, manifest, or ZFS indirect block) so a stale or misdirected physical block fails verification against the parent's expected hash"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "An old block's MD5 still matches the old block's data on a lost write",
+      "Skipping verification prevents corruption errors",
+      "A block is always self-consistent with its own header if an entire write is dropped; storing the expected checksum in the parent pointer forms a Merkle tree that catches lost, torn, and misdirected writes"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "If a disk silently drops a write to Sector 500, does the old data at Sector 500 still match the old checksum stored at Sector 500?",
+    "explanation": "A checksum stored inside the block itself only catches random bit flips; it cannot detect when the drive returns an older version of the block or a block from the wrong sector. Storing checksums in the parent pointer plus periodic background scrubbing guarantees end-to-end integrity.",
+    "tags": [
+      "end-to-end-checksums",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

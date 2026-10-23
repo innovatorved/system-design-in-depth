@@ -182,6 +182,59 @@ window.QUESTION_BANK["rate-limiting-and-abuse-prevention-case-study"] = [
       "recall",
       "inline"
     ]
+  },
+  {
+    "id": "rate-limiting-and-abuse-prevention-case-study-n1",
+    "topic": "rate-limiting-and-abuse-prevention-case-study",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Sliding Window Counter Memory per 10M Active Keys",
+    "scenario": "In a distributed Sliding Window Counter rate limiter (`weighted_count = prev_window_count × overlap_ratio + curr_window_count`), each active key requires only two 4-byte counters (`prev` and `curr`), an 8-byte window timestamp, and a 32-byte key + hash-entry header (`48 bytes` total per active key).",
+    "prompt": "How many megabytes (MB, where 1 MB = 10^6 bytes) of Redis RAM are required to track `10,000,000` concurrently active rate-limit keys?",
+    "question": "How many megabytes (MB, where 1 MB = 10^6 bytes) of Redis RAM are required to track `10,000,000` concurrently active rate-limit keys?",
+    "unit": "MB",
+    "answer": 480,
+    "tolerance": 0.2,
+    "hint": "Multiply 10,000,000 keys by 48 bytes and divide by 10^6.",
+    "explanation": "10,000,000 × 48 bytes = 480,000,000 bytes = 480 MB of RAM (whereas a Sliding Window Log storing 500 timestamps per key would require `10M × 500 × 8B = 40 GB`).",
+    "tags": [
+      "rate-limiting-and-abuse-prevention-case-study",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "rate-limiting-and-abuse-prevention-case-study-t1",
+    "topic": "rate-limiting-and-abuse-prevention-case-study",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Redis Read-Then-Write Race vs Atomic Lua Script + Sliding Window Counter",
+    "scenario": "Under a burst of 50 concurrent requests from the same API key arriving in the same millisecond, a rate limiter that executes `GET count` in the app, checks `count < limit`, and then calls `INCR count` lets all 50 requests pass a limit of 10.",
+    "prompt": "How do you eliminate both the check-then-act race condition and the boundary-burst flaw of fixed windows?",
+    "question": "How do you eliminate both the check-then-act race condition and the boundary-burst flaw of fixed windows?",
+    "options": [
+      "Run `GET` and `INCR` as separate client calls with a 500 ms sleep in between",
+      "Use a Fixed Window counter so a user can send `2 × limit` requests across the `:59` and `:00` second boundary",
+      "Execute an atomic Redis Lua script (`EVALSHA`) implementing a Token Bucket or Sliding Window Counter (`prev_count × (1 - elapsed/window) + curr_count`) on a consistent-hash shard"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Separate `GET` and `INCR` calls across 20 app servers are naturally atomic",
+      "Boundary doubling at the edge of every minute satisfies strict downstream capacity limits",
+      "A Redis Lua script executes single-threaded and atomically inside the shard (zero check-then-act race in 1 RTT), and Sliding Window Counter smooths boundary bursts in O(1) memory"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why does Redis execute a Lua script without interleaving any other client command?",
+    "explanation": "Because Redis is single-threaded per shard, executing the read, sliding-window interpolation, check, and increment inside a single `EVALSHA` Lua script guarantees strict atomicity in one network round-trip.",
+    "tags": [
+      "rate-limiting-and-abuse-prevention-case-study",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -248,6 +301,59 @@ window.QUESTION_BANK["url-shortener-at-scale"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "url-shortener-at-scale-n1",
+    "topic": "url-shortener-at-scale",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Base62 7-Character Keyspace Capacity",
+    "scenario": "A URL shortener uses a 7-character Base62 (`a-z, A-Z, 0-9`) short code (`62^7 ≈ 3.52 × 10^12` total codes) and generates `100,000,000` (`10^8`) new short links per day (`3.65 × 10^10` links/year).",
+    "prompt": "Using `3.5 × 10^12` total codes and `3.5 × 10^10` links per year for clean napkin math, for how many years will the 7-character Base62 namespace last before exhaustion?",
+    "question": "Using `3.5 × 10^12` total codes and `3.5 × 10^10` links per year for clean napkin math, for how many years will the 7-character Base62 namespace last before exhaustion?",
+    "unit": "years",
+    "answer": 100,
+    "tolerance": 0.2,
+    "hint": "Divide `3.5 × 10^12` total codes by `3.5 × 10^10` codes per year.",
+    "explanation": "`3.52 × 10^12 / 3.65 × 10^10 ≈ 96.5` (~100 years) at 100 million new links every single day!",
+    "tags": [
+      "url-shortener-at-scale",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "url-shortener-at-scale-t1",
+    "topic": "url-shortener-at-scale",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: HTTP 301 (Permanent) vs HTTP 302 (Temporary) Redirects & Key Generation Collision Avoidance",
+    "scenario": "Your URL shortener must (a) provide real-time click analytics and allow link owners to disable or update destination URLs, and (b) generate 7-character short codes at 5,000 writes/sec with zero database collision retries.",
+    "prompt": "Which HTTP status code and key generation strategy should you combine?",
+    "question": "Which HTTP status code and key generation strategy should you combine?",
+    "options": [
+      "Return `301 Moved Permanently` with `Cache-Control: max-age=31536000` and generate keys by picking random 7-char strings and retrying `INSERT` on collision",
+      "Return `200 OK` with an HTML `<meta refresh>` page hosted on the primary SQL database",
+      "Return `302 Found` (or `307`, with short/controlled edge caching and async click telemetry) and generate short codes by Base62-encoding pre-allocated deterministic range blocks (or Feistel-permuted Snowflake/counter ranges) leased to app servers"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Browsers permanently cache `301` redirects locally, bypassing your servers on repeat clicks and blinding click analytics and link revocation",
+      "Random string collisions decrease as the table fills up",
+      "`302` ensures repeat clicks hit your edge PoPs for analytics and takedown enforcement, while bijective Base62 encoding of leased monotonic counter ranges guarantees 0% collisions without a read-before-write DB check"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What does a browser do on the second click if your shortener returned `301 Moved Permanently`?",
+    "explanation": "`301` causes browsers to cache the redirect indefinitely, breaking click tracking and link disabling. Range-leased counter -> Feistel permutation -> Base62 encoding yields non-guessable, 100% collision-free 7-char codes.",
+    "tags": [
+      "url-shortener-at-scale",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -313,6 +419,59 @@ window.QUESTION_BANK["ecommerce-product-listing-system-design"] = [
       "ecommerce-product-listing-system-design",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "ecommerce-product-listing-system-design-n1",
+    "topic": "ecommerce-product-listing-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Flash-Sale Inventory Oversell Prevention Throughput",
+    "scenario": "During a flash drop of `1,000` limited-edition sneakers, `250,000` users click \"Buy Now\" within 2 seconds (`125,000 req/s`). An atomic Redis Lua inventory gate (`DECR` if `stock > 0`) filters out the `249,000` excess requests in memory and forwards only the `1,000` winning reservation tokens to the PostgreSQL checkout database (`500 writes/sec` over 2 seconds).",
+    "prompt": "What percentage of the `250,000` flash-sale requests (`249,000 / 250,000 × 100%`) are absorbed and rejected at the Redis atomic gate without ever touching PostgreSQL?",
+    "question": "What percentage of the `250,000` flash-sale requests (`249,000 / 250,000 × 100%`) are absorbed and rejected at the Redis atomic gate without ever touching PostgreSQL?",
+    "unit": "%",
+    "answer": 99.6,
+    "tolerance": 0.2,
+    "hint": "Divide 249,000 rejected requests by 250,000 total requests (`0.996 = 99.6%`).",
+    "explanation": "`249,000 / 250,000 = 99.6%` of the traffic spike is shed in <0.2 ms at the Redis Lua gate, reducing PostgreSQL load from a crushing 125,000 tx/s down to just 500 tx/s.",
+    "tags": [
+      "ecommerce-product-listing-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "ecommerce-product-listing-system-design-t1",
+    "topic": "ecommerce-product-listing-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Deducting Stock at \"Add to Cart\" vs \"Checkout Initiation TTL Reservation\" vs \"After Payment\"",
+    "scenario": "In an e-commerce store, 70% of shoppers who click \"Add to Cart\" never complete checkout, and external credit-card payment authorization takes 2–5 seconds.",
+    "prompt": "When and how should inventory be reserved so you neither oversell nor lock up stock in abandoned carts?",
+    "question": "When and how should inventory be reserved so you neither oversell nor lock up stock in abandoned carts?",
+    "options": [
+      "Deduct inventory permanently on \"Add to Cart\" so bots can lock up 100% of store inventory without paying",
+      "Only check and deduct inventory after charging the customer's credit card, then issue refunds when stock is gone",
+      "Keep \"Add to Cart\" non-blocking, atomically reserve stock with a strict 10-minute TTL hold (`available -> reserved`) when the user enters Checkout/Payment, commit `reserved -> sold` on payment webhook/confirmation, and auto-release expired holds via a reaper"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Letting unauthenticated carts lock inventory prevents denial-of-inventory attacks",
+      "Charging credit cards for out-of-stock items saves payment gateway fees",
+      "A two-phase TTL reservation at checkout initiation guarantees no customer is charged for an out-of-stock item, avoids holding DB locks during 3-second Stripe calls, and reclaims abandoned checkout holds after 10 minutes"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens if you reserve too early (Add to Cart) vs too late (after charging the card)?",
+    "explanation": "Reserving at checkout initiation with a bounded TTL (`reserved_until = NOW() + 10m`) prevents both cart-hoarding DoS and post-payment oversells.",
+    "tags": [
+      "ecommerce-product-listing-system-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -498,6 +657,59 @@ window.QUESTION_BANK["object-store-system-design"] = [
       "object-store-system-design",
       "recall",
       "inline"
+    ]
+  },
+  {
+    "id": "object-store-system-design-n1",
+    "topic": "object-store-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Multipart Upload Parallel Throughput & Retry Granularity",
+    "scenario": "A client uploads a `5 GB` (`5,000 MB`) video over a high-bandwidth link where a single TCP stream is capped at `25 MB/s` (`200 seconds` for a monolithic upload, where a network drop at 99% requires re-uploading all 5 GB). Splitting into `100` parts of `50 MB` and uploading `10` parts in parallel achieves `250 MB/s` aggregate throughput.",
+    "prompt": "How many seconds (`5,000 MB / 250 MB/s`) does the 10-way parallel multipart upload take?",
+    "question": "How many seconds (`5,000 MB / 250 MB/s`) does the 10-way parallel multipart upload take?",
+    "unit": "seconds",
+    "answer": 20,
+    "tolerance": 0.2,
+    "hint": "Divide 5,000 MB by 250 MB/s (`10 streams × 25 MB/s`).",
+    "explanation": "5,000 MB / 250 MB/s = 20 seconds (10× faster than a single stream), and if a transient socket reset occurs, only a single 50 MB part is retried instead of 5 GB!",
+    "tags": [
+      "object-store-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "object-store-system-design-t1",
+    "topic": "object-store-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Routing Data Streams Through API Metadata Gateways vs Pre-Signed Direct-to-Storage Node /Multipart Assembly",
+    "scenario": "You are designing an S3-like object store handling `2 Tbps` (`250 GB/s`) of aggregate read/write payload bandwidth and `500,000 req/s` of metadata operations.",
+    "prompt": "How should the Control/Metadata Plane and the Data Stream Plane be separated during `CompleteMultipartUpload`?",
+    "question": "How should the Control/Metadata Plane and the Data Stream Plane be separated during `CompleteMultipartUpload`?",
+    "options": [
+      "Physically concatenate all 100 part files (`5 GB`) byte-by-byte into a new file during the synchronous `CompleteMultipartUpload` HTTP call",
+      "Buffer all 100 uploaded parts in the stateless API gateway's heap memory before writing to disk",
+      "Stream each `UploadPart` directly to erasure-coded extent storage nodes (returning each part's `ETag`/extent pointer), and make `CompleteMultipartUpload` a pure metadata operation that commits an ordered manifest list of those existing extent pointers"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Copying 5 GB of disk bytes synchronously makes `CompleteMultipartUpload` finish in 2 ms",
+      "Stateless API gateways have infinite RAM for multi-gigabyte uploads",
+      "Storing objects as a metadata manifest of ordered immutable extent pointers allows `CompleteMultipartUpload` to finish in milliseconds without copying a single payload byte"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "When you call `CompleteMultipartUpload` on a 50 GB object in S3, does S3 copy 50 GB on disk, or does it commit a pointer list?",
+    "explanation": "In an object store, large objects are represented in the metadata DB as an ordered list of immutable extent descriptors `(part_num, extent_id, offset, length, crc32c)`. Completing a multipart upload simply commits that manifest row atomically.",
+    "tags": [
+      "object-store-system-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

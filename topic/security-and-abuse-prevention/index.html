@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -988,12 +988,18 @@ flowchart TD
   App->>Store: Write ciphertext plus encrypted DEK
   Note over App,KMS: To read, send the encrypted DEK to KMS Decrypt, which checks access and logs the call</div><p>The root key never leaves the HSM, and every decrypt call is authorised and logged. Rotating the root key does not require re-encrypting the data, because only the data keys are wrapped with it.</p>
 </div></article>
-      <section class="check-slider" data-slug="security-and-abuse-prevention" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="security-and-abuse-prevention" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Containing lateral movement" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Why IP limits fail" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Rotating the root key" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Containing lateral movement" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Why IP limits fail" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Rotating the root key" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Credential Stuffing Block Rate via Edge IP + Account Velocity Limits" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Blocking Solely by IP Address vs Layered Defense-in-Depth (IP + Target Account + Device/TLS Fingerprint)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-security-and-abuse-prevention-c1" data-type="mcq" data-slug="security-and-abuse-prevention" data-index="0">
@@ -1111,12 +1117,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="security-and-abuse-prevention-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-security-and-abuse-prevention-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Payloads are encrypted with per-object data keys, and only those keys are wrapped by the root key in the HSM, so rotation touches keys, not data. Keeping plaintext data keys cached would defeat the design, since the plaintext DEK should exist only briefly in memory.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-security-and-abuse-prevention-n1" data-type="numeric" data-slug="security-and-abuse-prevention" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Credential Stuffing Block Rate via Edge IP + Account Velocity Limits</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A botnet launches a credential stuffing attack against `/api/login` at `50,000 req/s`, compared to `500 req/s` of legitimate user logins (`50,500 req/s` total). Password hashing with `Argon2id` costs `0.1 CPU-seconds` per attempt (`5,050 CPU cores` if unfiltered!). Edge WAF + IP/JA4/Account velocity rules drop `99%` of the botnet traffic (`49,500 req/s` blocked at the edge) before reaching the auth service.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many total login requests per second (`500 legitimate + 500 remaining bot = 1,000`) actually reach the `Argon2id` auth service after the 99% edge block?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-security-and-abuse-prevention-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-security-and-abuse-prevention-n1"
+              aria-label="Numeric estimate in req/s"
+              placeholder="Enter numeric estimate (req/s)..."
+            />
+            <span class="quiz-unit-badge">req/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Add the 500 legitimate req/s and the remaining 1% of 50,000 bot req/s (`500`).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="security-and-abuse-prevention-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-security-and-abuse-prevention-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Blocking 99% of the 50,000 req/s attack at the CDN/WAF edge leaves only `500 + 500 = 1,000 req/s` reaching the auth service (needing 100 CPU cores instead of 5,050 cores), preventing an authentication DoS outage.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-security-and-abuse-prevention-t1" data-type="tradeoff" data-slug="security-and-abuse-prevention" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Blocking Solely by IP Address vs Layered Defense-in-Depth (IP + Target Account + Device/TLS Fingerprint)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An attacker uses a residential proxy botnet of 200,000 distinct IP addresses where each IP sends only 1 request per minute, targeting a specific set of high-value user accounts. Meanwhile, 5,000 legitimate employees behind a corporate NAT (or university Wi-Fi) share a single public IP address.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why does naive per-IP rate limiting both miss the botnet AND lock out legitimate users, and what is the correct defense?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-security-and-abuse-prevention-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-security-and-abuse-prevention-t1" value="0" />
+                  <span>Lower the per-IP rate limit to 2 requests/minute globally so the corporate NAT is permanently blocked</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-security-and-abuse-prevention-t1" value="1" />
+                  <span>Remove all rate limiting on `/login` and `/checkout`</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-security-and-abuse-prevention-t1" value="2" />
+                  <span>Use composite multi-dimensional rate limiting and risk scoring across `(target_account_id)`, `(ip_subnet / ASN)`, and `(TLS JA4 / device fingerprint)`, escalating suspicious flows to step-up challenges (Turnstile/WebAuthn/MFA) rather than hard-blocking shared NAT IPs</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-security-and-abuse-prevention-t1" value="0" />
+                  <span>Blocking an entire university or hospital sharing one NAT IP is acceptable collateral damage</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-security-and-abuse-prevention-t1" value="1" />
+                  <span>Residential proxy botnets use only a single IP address</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-security-and-abuse-prevention-t1" value="2" />
+                  <span>Per-account limits catch distributed low-and-slow attacks against a single user regardless of how many proxy IPs are used, while device/TLS fingerprinting + step-up CAPTCHA/MFA protects shared corporate NAT IPs from false lockouts</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens when 200,000 proxy IPs each try 1 password against `victim@company.com`, vs 5,000 students logging in from 1 campus IP?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="security-and-abuse-prevention-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-security-and-abuse-prevention-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Attackers rotate IPs while legitimate enterprise/mobile users share carrier-grade NAT IPs. Keying limits separately on `target_username` (with progressive backoff/challenge), `device_fingerprint`, and `IP + Reputation` stops both distributed attacks and NAT false positives.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1241,22 +1377,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

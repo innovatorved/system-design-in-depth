@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1005,12 +1005,18 @@ flowchart LR
 <h2>Serving</h2>
 <p>A nightly or hourly job computes, for each of the top few million normalised queries, a ranked list of about 8 related queries and writes it to a key-value store. At request time the service normalises the query, does one lookup, and falls back to an embedding nearest-neighbour lookup for misses. Filtering is essential: remove suggestions with no results, adult or unsafe content, and anything that could reveal an individual's searches, which is why a minimum count across distinct users is enforced.</p><h2>Evaluation</h2><p>Measure suggestion click-through rate, and more importantly whether sessions that used a related search end in success, such as a purchase or a long dwell click. A suggestion that gets clicks but leads to abandonment is a distraction. Offline, sample query and suggestion pairs for human rating of relevance and diversity, and check that suggestions are not near duplicates of the original.</p>
 </div></article>
-      <section class="check-slider" data-slug="related-searches" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="related-searches" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Click graph finds synonyms" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: PMI versus raw counts" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Rare-pair privacy" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Click graph finds synonyms" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: PMI versus raw counts" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Rare-pair privacy" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Session Co-Occurrence Pruning with PMI / Support Threshold" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Raw Co-Occurrence Frequency vs Pointwise Mutual Information (PMI) + Embedding Diversity" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-related-searches-c1" data-type="mcq" data-slug="related-searches" data-index="0">
@@ -1128,12 +1134,142 @@ flowchart LR
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="related-searches-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-related-searches-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">PMI inflates rare pairs, and a suggestion built from one user&#039;s sessions can leak their searches, so production systems require minimum support counted over distinct users. Smoothing reduces noise but does not by itself guarantee that many different people contributed.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-related-searches-n1" data-type="numeric" data-slug="related-searches" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Session Co-Occurrence Pruning with PMI / Support Threshold</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">From 50,000,000 daily search sessions, raw query pairs `(q1, q2)` generate 200,000,000 distinct candidate edges. Applying a minimum session support threshold (`count &gt;= 10`) and Pointwise Mutual Information (PMI) filtering retains the top 8% of meaningful reformulation edges.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many millions of clean query-reformulation edges (`8% of 200M`) remain in the Related Searches serving graph?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-related-searches-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-related-searches-n1"
+              aria-label="Numeric estimate in million edges"
+              placeholder="Enter numeric estimate (million edges)..."
+            />
+            <span class="quiz-unit-badge">million edges</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 200 million by 0.08.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="related-searches-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-related-searches-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Retaining 8% of 200M raw pairs keeps 16 million high-signal edges (removing one-off typos, PII queries, and accidental co-occurrences with navigational queries like `&quot;weather&quot;`).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-related-searches-t1" data-type="tradeoff" data-slug="related-searches" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Raw Co-Occurrence Frequency vs Pointwise Mutual Information (PMI) + Embedding Diversity</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A user searches `&quot;distributed consensus&quot;` and later in the same browser session checks `&quot;gmail login&quot;`. Because `&quot;gmail login&quot;` is searched 10M times a day, raw co-occurrence count ranks `&quot;gmail login&quot;` as the #1 related search for almost every rare technical query.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How do you prevent globally popular navigational queries from polluting Related Searches, and ensure diverse suggestions?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-related-searches-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-related-searches-t1" value="0" />
+                  <span>Rank related searches purely by `count(q1, q2)` with no normalization</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-related-searches-t1" value="1" />
+                  <span>Show 8 nearly identical spelling variations of the exact same query</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-related-searches-t1" value="2" />
+                  <span>Normalize co-occurrence by marginal popularity using Pointwise Mutual Information (`PMI = log P(q1, q2) / (P(q1)P(q2))` or bipartite query-url click graphs), enforce PII/k-anonymity thresholds, and apply Maximal Marginal Relevance (MMR) for semantic diversity</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-related-searches-t1" value="0" />
+                  <span>Raw counts automatically penalize globally frequent queries like `&quot;gmail&quot;`</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-related-searches-t1" value="1" />
+                  <span>Showing 8 near-duplicate plurals maximizes user exploration</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-related-searches-t1" value="2" />
+                  <span>Dividing by marginal probability `P(q2)` cancels out globally popular noise queries, k-anonymity (`&gt;= K` distinct users) blocks PII leakage, and MMR clusters out redundant paraphrases</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why does `P(q1, q2)` look high whenever `P(q2)` is huge, even if `q1` and `q2` are completely independent (`P(q1, q2) ≈ P(q1)P(q2)`)?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="related-searches-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-related-searches-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Independent events co-occur with probability `P(q1)P(q2)`. Pointwise Mutual Information (PMI) measures how much more often `q1` and `q2` co-occur than random chance, eliminating popular unrelated queries.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1246,22 +1382,22 @@ flowchart LR
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

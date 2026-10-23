@@ -290,4 +290,62 @@ describe('Tier 5: All-in-One Ecosystem Hubs (Roadmap, Challenges, Dashboard, San
       await page.close();
     }
   });
+
+  test('T5.7: 100% Question Bank Coverage (200 Topics x 5 Questions = 1,000) & Production Analytics Fingerprinting', async () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const qDir = path.join(SYSTEM_DESIGN_ROOT, 'data', 'questions');
+    const qFiles = fs.readdirSync(qDir).filter(f => f.endsWith('.js')).sort();
+    const sandboxWin = { QUESTION_BANK: {} };
+    for (const f of qFiles) {
+      const code = fs.readFileSync(path.join(qDir, f), 'utf8');
+      new Function('window', code)(sandboxWin);
+    }
+    const slugs = Object.keys(sandboxWin.QUESTION_BANK);
+    let totalQuestions = 0;
+    let withNumeric = 0;
+    let withTradeoff = 0;
+    for (const s of slugs) {
+      const arr = sandboxWin.QUESTION_BANK[s] || [];
+      totalQuestions += arr.length;
+      if (arr.some(q => q.type === 'numeric')) withNumeric++;
+      if (arr.some(q => q.type === 'tradeoff')) withTradeoff++;
+    }
+    assert.equal(slugs.length, 200, 'QUESTION_BANK across all 18 files should contain all 200 topics');
+    assert.equal(totalQuestions, 1000, 'QUESTION_BANK should contain 1,000 total questions (5 per topic)');
+    assert.equal(withNumeric, 200, 'Every single one of the 200 topics must have a numeric Napkin Math question');
+    assert.equal(withTradeoff, 200, 'Every single one of the 200 topics must have a tradeoff Staff Matrix question');
+
+    const page = await browser.newPage();
+    try {
+      await page.goto(`${server.baseUrl}/topic/case-discord-message-storage/`, { waitUntil: 'networkidle2' });
+      await page.waitForSelector('.check-slider', { timeout: 5000 });
+
+      const audit = await page.evaluate(() => {
+        const ctx = window.Analytics && typeof window.Analytics.getUserContext === 'function'
+          ? window.Analytics.getUserContext()
+          : null;
+
+        return {
+          ctx,
+          slideCountOnCaseStudy: document.querySelectorAll('.check-slider__slide').length,
+          hasNumericSlide: !!document.querySelector('.check-slider__slide[data-type="numeric"]'),
+          hasTradeoffSlide: !!document.querySelector('.check-slider__slide[data-type="tradeoff"]')
+        };
+      });
+
+      assert.equal(audit.slideCountOnCaseStudy, 5, 'Case study topic should render 5 unified slides in Check Yourself drawer');
+      assert.equal(audit.hasNumericSlide, true, 'Case study topic should include numeric Napkin Math slide');
+      assert.equal(audit.hasTradeoffSlide, true, 'Case study topic should include tradeoff Staff Matrix slide');
+
+      assert.ok(audit.ctx, 'window.Analytics.getUserContext() should return rich user/device profile');
+      assert.match(audit.ctx.fingerprint_id, /^fp_[0-9a-f]{16}$/, 'fingerprint_id should be deterministic 64-bit hex hash');
+      assert.match(audit.ctx.visitor_id, /^(fp_|usr_)/, 'visitor_id should be persistent user identifier');
+      assert.match(audit.ctx.session_id, /^(s_|ses_)/, 'session_id should be session identifier');
+      assert.ok(audit.ctx.browser_name, 'browser_name should be detected');
+      assert.ok(audit.ctx.os_name, 'os_name should be detected');
+    } finally {
+      await page.close();
+    }
+  });
 });

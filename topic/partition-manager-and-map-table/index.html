@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1052,12 +1052,18 @@ flowchart TD
 <li>Clients sending to the old descriptor get a range-key-mismatch error, refresh their cache from meta2 and retry.</li>
 </ol>
 </div></div></article>
-      <section class="check-slider" data-slug="partition-manager-and-map-table" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="partition-manager-and-map-table" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why splits are cheap" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Hierarchy capacity" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Stale route after split" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why splits are cheap" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Hierarchy capacity" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Stale route after split" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Dynamic Tablet Split Metadata Scale" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Zero-Downtime Tablet Split Execution" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-partition-manager-and-map-table-c1" data-type="mcq" data-slug="partition-manager-and-map-table" data-index="0">
@@ -1175,12 +1181,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="partition-manager-and-map-table-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-partition-manager-and-map-table-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Routing caches are corrected lazily: a stale request is rejected with a mismatch error and the client re-resolves from meta2. Pushing updates to every client would put the coordinator back on the hot path, which lazy caching is designed to avoid.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-partition-manager-and-map-table-n1" data-type="numeric" data-slug="partition-manager-and-map-table" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Dynamic Tablet Split Metadata Scale</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A distributed storage cluster holds 256 TB (262,144 GB) of data split into dynamic range tablets targeting 64 GB per tablet. Each tablet entry in the Partition Map Table takes 256 bytes.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many total tablets (`262,144 GB / 64 GB`) exist in the Partition Map Table?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-partition-manager-and-map-table-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-partition-manager-and-map-table-n1"
+              aria-label="Numeric estimate in tablets"
+              placeholder="Enter numeric estimate (tablets)..."
+            />
+            <span class="quiz-unit-badge">tablets</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 262,144 GB by 64 GB per tablet.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="partition-manager-and-map-table-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-partition-manager-and-map-table-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">262,144 GB / 64 GB = 4,096 tablets (occupying just 4,096 × 256 B = 1 MB of metadata), which easily fits in the memory of every client and router.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-partition-manager-and-map-table-t1" data-type="tradeoff" data-slug="partition-manager-and-map-table" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Zero-Downtime Tablet Split Execution</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A 64 GB range partition `[A, M)` grows past the split threshold and must split at midpoint `F` into `[A, F)` and `[F, M)` without copying 64 GB over the network before accepting writes.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How do modern LSM-based range stores (Bigtable, Spanner, CockroachDB, TiKV) execute an instant tablet split, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-partition-manager-and-map-table-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-partition-manager-and-map-table-t1" value="0" />
+                  <span>Block all writes for 20 minutes while copying 32 GB of files to another server</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-partition-manager-and-map-table-t1" value="1" />
+                  <span>Delete the upper half of the keys and ask clients to re-upload them</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-partition-manager-and-map-table-t1" value="2" />
+                  <span>Perform an instant metadata split in the Raft/Paxos group by recording two child range descriptors referencing the same immutable underlying SSTables (clipped by `[A, F)` and `[F, M)` bounds), then lazily separate files during background compaction</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-partition-manager-and-map-table-t1" value="0" />
+                  <span>Blocking writes for 20 minutes during auto-split meets 99.99% availability SLOs</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-partition-manager-and-map-table-t1" value="1" />
+                  <span>Data loss is acceptable during partition splits</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-partition-manager-and-map-table-t1" value="2" />
+                  <span>Because SSTables are immutable, two child tablets can initially share hardlinks/references to the parent SSTables with logical key-range bounds, completing the split in milliseconds and physically separating bytes during normal compaction</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Do you need to physically rewrite immutable SSTables before declaring the range split in metadata?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="partition-manager-and-map-table-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-partition-manager-and-map-table-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">An LSM tablet split is initially a fast metadata operation that creates two logical ranges backed by the parent&#039;s immutable SSTables; subsequent compactions physically materialize separate files and allow independent rebalancing.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1293,22 +1429,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

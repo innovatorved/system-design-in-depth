@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -976,12 +976,18 @@
 <h2>Handling corrections</h2>
 <p>When the batch job decides 30,000 views were bots, the displayed count can drop. Products handle this by publishing the batch result as a new version of the count and letting the real-time path add only events newer than the batch watermark: displayed = batch count as of time T plus stream count since T. This is the classic Lambda architecture pattern; a Kappa-style alternative replays the full log through one improved streaming job.</p><h2>Failure modes</h2><ul><li><strong>Hot video:</strong> a premiere sends a large share of all heartbeats for one video ID to one partition. Pre-aggregate at the edge or salt the key, then merge.</li><li><strong>Replay double counting:</strong> if the stream job restarts from an old checkpoint and its sink is not idempotent, the displayed count jumps. Write per-window results keyed by video and window, overwriting rather than incrementing.</li><li><strong>Bot bursts:</strong> view farms produce many short, identical sessions. Rate-limit per device and IP in the fast path and let the batch path apply heavier models before counts become official or monetised.</li></ul><h2>Interview framing</h2><p>State the definition of a view first, then the two paths, then how the displayed number reconciles. Interviewers mainly probe dedup, hot keys and what happens when the paths disagree.</p>
 </div></article>
-      <section class="check-slider" data-slug="view-counting-at-scale" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="view-counting-at-scale" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Which path is truth" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Heartbeat log volume" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Replay double counting" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Which path is truth" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Heartbeat log volume" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Replay double counting" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: HyperLogLog vs Exact `SET` Memory for Unique Viewers" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Public Engagement View Counts vs Monetized Ad-Billing Counts" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-view-counting-at-scale-c1" data-type="mcq" data-slug="view-counting-at-scale" data-index="0">
@@ -1099,12 +1105,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="view-counting-at-scale-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-view-counting-at-scale-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">An idempotent sink that overwrites per-window results makes replays harmless, which is the fix the lesson names. More frequent checkpoints shrink the window but still double count, and restarting from the latest offset trades duplicates for lost events.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-view-counting-at-scale-n1" data-type="numeric" data-slug="view-counting-at-scale" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: HyperLogLog vs Exact `SET` Memory for Unique Viewers</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A popular video has 50,000,000 unique viewers (`user_id` = 8 bytes). Tracking unique viewers via an exact Redis `SET` of 8-byte IDs (plus hash table entry overhead, ~24 bytes/member) takes `1.2 GB` (`1,200,000 KB`) for that single video. A Redis HyperLogLog with `16,384` 6-bit registers (`0.81%` standard error) uses a fixed `12 KB`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">By what factor (`1,200,000 KB / 12 KB`) does HyperLogLog reduce memory usage for this video&#039;s unique viewer count?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-view-counting-at-scale-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-view-counting-at-scale-n1"
+              aria-label="Numeric estimate in x"
+              placeholder="Enter numeric estimate (x)..."
+            />
+            <span class="quiz-unit-badge">x</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 1,200,000 KB by 12 KB.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="view-counting-at-scale-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-view-counting-at-scale-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">1,200,000 KB / 12 KB = 100,000× less memory: a 12 KB HyperLogLog counts tens of millions of unique viewers with &lt;1% error in 100,000× less RAM than an exact set.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-view-counting-at-scale-t1" data-type="tradeoff" data-slug="view-counting-at-scale" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Public Engagement View Counts vs Monetized Ad-Billing Counts</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A video platform displays both a public &quot;1.4M Views&quot; counter under the video player (requiring &lt;100 ms update freshness) and a creator payout / advertiser billing ledger (requiring strict bot filtering and exact deduplication).</p>
+          </div>
+        
+        <p class="check-slider__prompt">Should both numbers be served by the same pipeline, or how should the architecture split them?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-view-counting-at-scale-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-view-counting-at-scale-t1" value="0" />
+                  <span>Block the video player from playing until a synchronous fraud model and ACID billing transaction finish</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-view-counting-at-scale-t1" value="1" />
+                  <span>Pay advertisers and creators directly from unvalidated client-side HyperLogLog counters</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-view-counting-at-scale-t1" value="2" />
+                  <span>Use a Lambda/Dual-Path design: a fast real-time approximate path (in-memory/HLL + sharded counters) for the public UI badge, and a separate asynchronous verified pipeline (Kafka -&gt; Flink deduplication + fraud/bot scoring -&gt; OLAP ledger) for monetization</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-view-counting-at-scale-t1" value="0" />
+                  <span>Blocking video playback for fraud analysis improves viewer retention</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-view-counting-at-scale-t1" value="1" />
+                  <span>Unfiltered client beacons are immune to click-farm fraud</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-view-counting-at-scale-t1" value="2" />
+                  <span>UI social-proof counters prioritize low latency and tolerate ~1% approximation, whereas financial billing tolerates minutes/hours of delay in exchange for strict idempotency and bot filtering</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Does a viewer care if &quot;1.4M views&quot; is off by 0.5%, vs does an advertiser care if they are billed for bot views?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="view-counting-at-scale-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-view-counting-at-scale-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Separating the fast approximate social-proof counter from the audited, deduplicated financial settlement pipeline lets each path optimize for its true SLO.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1257,7 +1393,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1265,15 +1401,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

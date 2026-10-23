@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -955,12 +955,18 @@
 <!-- enriched -->
 <h2>Worked example: one product, three stores</h2><p>Consider an IoT platform with 50k customers, orders and billing, and 2M devices each sending a reading every 10 s.</p><ul><li><strong>Orders and billing:</strong> about 50 writes/s that need multi-row transactions, foreign keys and ad-hoc finance queries. This belongs in PostgreSQL. One primary plus replicas is plenty.</li><li><strong>Device telemetry:</strong> 2M / 10 s is 200k writes/s, append-only, queried as "device X, last 24 h". At about 100 bytes per reading that is roughly 1.7 TB/day. This fits a wide-column or time-series store (Cassandra, ScyllaDB, Bigtable, TimescaleDB) partitioned by <code>(device_id, day)</code>.</li><li><strong>Fleet analytics:</strong> "p95 temperature by region last month" scans billions of rows, which belongs in a columnar store (ClickHouse, BigQuery) fed by a stream.</li></ul><p>The mistake would be to force all three into one system. The opposite mistake is to add all three on day one when telemetry is 2k writes/s, which a single Postgres (partitioned by time) handles easily.</p><h3>Decision table</h3><table><thead><tr><th>If you need...</th><th>Lean towards</th><th>Watch out for</th></tr></thead><tbody><tr><td>Multi-entity transactions, constraints, ad-hoc queries</td><td>Relational (Postgres, MySQL)</td><td>Single-writer limits before sharding</td></tr><tr><td>Relational semantics plus horizontal writes plus multi-region</td><td>Distributed SQL (Spanner, CockroachDB, YugabyteDB)</td><td>Higher per-write latency (consensus), cost</td></tr><tr><td>Predictable single-digit-ms access by key at any scale</td><td>Key-value / document (DynamoDB, MongoDB)</td><td>Query flexibility; design around access patterns up front</td></tr><tr><td>Massive append-heavy writes, queried by partition and time</td><td>Wide-column (Cassandra, ScyllaDB, Bigtable)</td><td>No joins, limited secondary indexes, tombstones</td></tr><tr><td>Aggregations over billions of rows</td><td>Columnar OLAP (ClickHouse, BigQuery, Snowflake)</td><td>Poor for point updates and high-QPS OLTP</td></tr><tr><td>Deep, variable-length relationship traversal</td><td>Graph (Neo4j, Neptune)</td><td>Sharding connected data; another query language</td></tr><tr><td>Sub-millisecond ephemeral state</td><td>In-memory (Redis, Memcached)</td><td>Durability and memory cost</td></tr></tbody></table><h3>Interview checklist</h3><ul><li>State the top 2-3 queries and their QPS before naming any product.</li><li>State the consistency requirement per entity (for example, balance must be strongly consistent, feed can be eventual).</li><li>Estimate data size and growth, and whether it fits on one node for 2-3 years.</li><li>Name what you give up with the chosen store and how you compensate (for example, no joins, so denormalize at write time).</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="nosql-decision-boundaries" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="nosql-decision-boundaries" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Labels vs engines" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Dual-write drift" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Placing device telemetry" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Labels vs engines" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Dual-write drift" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Placing device telemetry" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Cross-Shard Scatter-Gather Tail Latency" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Choosing SQL vs Partitioned NoSQL" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-nosql-decision-boundaries-c1" data-type="mcq" data-slug="nosql-decision-boundaries" data-index="0">
@@ -1078,12 +1084,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="nosql-decision-boundaries-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-nosql-decision-boundaries-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">2M / 10 s is 200k writes/s, roughly 1.7 TB/day, append-only and read by device and time window, which fits a wide-column or time-series store keyed by (device_id, day). Partitioning by day alone would send all of today&#039;s writes to one partition, and read replicas never add write capacity.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-nosql-decision-boundaries-n1" data-type="numeric" data-slug="nosql-decision-boundaries" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Cross-Shard Scatter-Gather Tail Latency</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Moving from a single SQL database to a 32-shard NoSQL store works well for primary-key lookups, but a secondary search query must scatter-gather across all 32 shards in parallel. Each shard has an independent 1% chance of experiencing a 200 ms GC pause.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Using the small-probability approximation (`1 - (0.99)^32 ≈ 27.6%`), roughly what percentage of scatter-gather queries will hit the 200 ms tail latency?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-nosql-decision-boundaries-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-nosql-decision-boundaries-n1"
+              aria-label="Numeric estimate in %"
+              placeholder="Enter numeric estimate (%)..."
+            />
+            <span class="quiz-unit-badge">%</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Compute `100 × (1 - 0.99^32)`.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="nosql-decision-boundaries-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-nosql-decision-boundaries-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Because a scatter-gather query waits for the slowest of all 32 shards, a 1% per-shard slow-tail event turns into a `1 - 0.99^32 = 27.6%` (~28%) slow response rate at the aggregator.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-nosql-decision-boundaries-t1" data-type="tradeoff" data-slug="nosql-decision-boundaries" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Choosing SQL vs Partitioned NoSQL</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A new B2B SaaS product has 400GB of relational data, complex multi-table reporting joins, strict ACID multi-row invariants, and 3,000 reads/sec + 400 writes/sec.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which storage architecture should you choose, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-nosql-decision-boundaries-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-nosql-decision-boundaries-t1" value="0" />
+                  <span>Deploy a 64-node Cassandra wide-column cluster and implement joins in application memory</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-nosql-decision-boundaries-t1" value="1" />
+                  <span>Shard across 16 MongoDB clusters on day one</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-nosql-decision-boundaries-t1" value="2" />
+                  <span>Use a single primary PostgreSQL instance with read replicas and connection pooling</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-nosql-decision-boundaries-t1" value="0" />
+                  <span>Cassandra excels at ad-hoc multi-table joins and cross-partition ACID transactions</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-nosql-decision-boundaries-t1" value="1" />
+                  <span>400 GB of data exceeds the capacity of modern NVMe drives</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-nosql-decision-boundaries-t1" value="2" />
+                  <span>400 GB and 400 writes/sec fit comfortably on a single vertical SQL node, preserving native ACID transactions and joins without distributed coordination tax</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Does 400 GB / 400 writes/s require horizontal write sharding?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="nosql-decision-boundaries-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-nosql-decision-boundaries-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Partitioned NoSQL trades away multi-row ACID transactions and ad-hoc joins in exchange for horizontal write scale beyond a single node. At 400 GB and 400 writes/s, a single relational primary is simpler, safer, and faster.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1196,22 +1332,22 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

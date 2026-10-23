@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1002,12 +1002,18 @@ flowchart LR
 <li><strong>Parquet:</strong> the magic <code>PAR1</code> at both ends, with the metadata footer at the end so a writer can stream data first and a reader can find the footer with one small read from the tail.</li>
 </ul>
 </div></article>
-      <section class="check-slider" data-slug="custom-binary-file-format" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="custom-binary-file-format" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why a version field" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Next record offset" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Parquet footer placement" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why a version field" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Next record offset" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Parquet footer placement" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Binary Frame vs Verbose JSON Wire/Disk Overhead" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Header Magic Bytes, Format Version, and Footer Index Placement" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-custom-binary-file-format-c1" data-type="mcq" data-slug="custom-binary-file-format" data-index="0">
@@ -1125,12 +1131,142 @@ flowchart LR
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="custom-binary-file-format-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-custom-binary-file-format-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Offsets are only known once the data has been written, so a footer lets the writer stream first and describe afterwards, and a reader can fetch it with one small tail read. The metadata is actually written last, not first, so the crash-safety option has it backwards.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-custom-binary-file-format-n1" data-type="numeric" data-slug="custom-binary-file-format" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Binary Frame vs Verbose JSON Wire/Disk Overhead</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A storage engine writes 200,000,000 records. In verbose JSON (`{&quot;timestamp&quot;:1710000000000,&quot;user_id&quot;:91827364,&quot;flags&quot;:3,&quot;score&quot;:42}`), each record averages 75 bytes. In a packed binary format (8B timestamp + 8B user_id + 1B flags + 4B score + 4B CRC = 25 bytes), each record is 25 bytes.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many gigabytes (GB, where 1 GB = 10^9 bytes) of disk space are saved across 200M records by using the 25-byte binary frame instead of 75-byte JSON?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-custom-binary-file-format-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-custom-binary-file-format-n1"
+              aria-label="Numeric estimate in GB"
+              placeholder="Enter numeric estimate (GB)..."
+            />
+            <span class="quiz-unit-badge">GB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 200,000,000 records by the 50-byte savings per record (`75 - 25 = 50`).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="custom-binary-file-format-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-custom-binary-file-format-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Saving 50 bytes per record across 200,000,000 records saves 200,000,000 × 50 B = 10 × 10^9 B = 10 GB of storage and avoids repeated ASCII field-name parsing.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-custom-binary-file-format-t1" data-type="tradeoff" data-slug="custom-binary-file-format" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Header Magic Bytes, Format Version, and Footer Index Placement</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You are designing an immutable custom binary file format (like Parquet or an SSTable) that is written in a single streaming pass as records arrive and later read via random access.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Where should the block index and schema metadata directory be placed in a streaming single-pass binary file, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-custom-binary-file-format-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-custom-binary-file-format-t1" value="0" />
+                  <span>Write the full block offset table at byte 0 before any data blocks have been compressed or written</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-custom-binary-file-format-t1" value="1" />
+                  <span>Interleave random metadata pointers without length prefixes</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-custom-binary-file-format-t1" value="2" />
+                  <span>Put a fixed magic number + version header at byte 0, stream data blocks sequentially, and write the block index + metadata directory in the file footer with a fixed-size footer length pointer at EOF</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-custom-binary-file-format-t1" value="0" />
+                  <span>You know the exact compressed byte size of every future block before compressing it</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-custom-binary-file-format-t1" value="1" />
+                  <span>Omitting length prefixes makes binary parsing deterministic</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-custom-binary-file-format-t1" value="2" />
+                  <span>Block byte offsets are only known after all variable-length compressed data blocks are written; placing the directory in the footer with a trailing fixed-offset pointer enables single-pass streaming writes and two-read (`EOF` -&gt; index -&gt; block) random access</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why do Parquet, ORC, RocksDB SSTables, and ZIP files all put their central directory in the footer at the end of the file?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="custom-binary-file-format-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-custom-binary-file-format-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">When streaming compressed blocks sequentially, block sizes aren&#039;t known upfront. Writing the index in the footer (with a final 8-byte footer offset + magic bytes at EOF) allows single-pass sequential creation without seeking back to rewrite the beginning of the file.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1263,22 +1399,22 @@ flowchart LR
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

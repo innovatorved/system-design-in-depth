@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1001,12 +1001,18 @@
 <p>Budget concurrency across application instances. If each of ten instances may hold eight database connections, that is up to 80 connections before counting background workers and administrative access. A per-process cap is not a system-wide cap.</p>
 <p>The model above holds database wait time fixed. Real dependencies often slow down as load rises, so its numbers illustrate scheduling rather than predict production throughput. Use measurements to choose limits, and use <a href="/topic/backpressure/">backpressure</a> or <a href="/topic/load-shedding/">load shedding</a> when incoming work exceeds them.</p>
 </div></div></article>
-      <section class="check-slider" data-slug="concurrency-vs-parallelism" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="concurrency-vs-parallelism" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Async does not offload CPU" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: The single-core CPU floor" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Connection caps add up" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Async does not offload CPU" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: The single-core CPU floor" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Connection caps add up" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Little&#039;s Law for Concurrent I/O Workers" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Event-Loop Concurrency vs Multi-Core Parallelism for Mixed Workloads" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-concurrency-vs-parallelism-c1" data-type="mcq" data-slug="concurrency-vs-parallelism" data-index="0">
@@ -1124,12 +1130,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="concurrency-vs-parallelism-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-concurrency-vs-parallelism-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">30 times 10 plus 20 times 2 is 340, well over the limit of 200. The lesson warns that a per-process cap is not a system-wide cap, so concurrency must be budgeted across every instance and background worker. The first option is the tempting mistake of checking each process on its own.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-concurrency-vs-parallelism-n1" data-type="numeric" data-slug="concurrency-vs-parallelism" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Little&#039;s Law for Concurrent I/O Workers</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A Node.js API server processes requests that spend 2 ms on CPU and 48 ms waiting on non-blocking downstream database I/O (50 ms total response time). You want a single process to sustain 1,000 requests/second.</p>
+          </div>
+        
+        <p class="check-slider__prompt">By Little&#039;s Law (L = λ × W), how many concurrent in-flight requests are active inside the process on average?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-concurrency-vs-parallelism-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-concurrency-vs-parallelism-n1"
+              aria-label="Numeric estimate in requests"
+              placeholder="Enter numeric estimate (requests)..."
+            />
+            <span class="quiz-unit-badge">requests</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply arrival rate λ (1,000 req/s) by average residence time W (0.05 seconds).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="concurrency-vs-parallelism-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-concurrency-vs-parallelism-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">By Little&#039;s Law, average concurrency L = λ × W = 1,000 req/s × 0.050 s = 50 in-flight requests. Note that while 50 requests overlap concurrently waiting on I/O, the single CPU core is panicked only if CPU time exceeds capacity (here 1,000 × 2 ms = 2,000 ms/s, which would actually require 2 CPU cores in parallel!).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-concurrency-vs-parallelism-t1" data-type="tradeoff" data-slug="concurrency-vs-parallelism" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Event-Loop Concurrency vs Multi-Core Parallelism for Mixed Workloads</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An API gateway written on a single-threaded async event loop handles 10,000 concurrent WebSocket connections smoothly, until a new feature adds synchronous 40 ms PDF signature verification on 5% of messages, causing p99 heartbeat timeouts across all clients.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which execution model change should you adopt, and what is the primary justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-concurrency-vs-parallelism-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-concurrency-vs-parallelism-t1" value="0" />
+                  <span>Increase the async event loop&#039;s max socket backlog and keep PDF verification inline on the event loop thread</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-concurrency-vs-parallelism-t1" value="1" />
+                  <span>Keep network I/O multiplexed on the non-blocking event loop, but offload CPU-bound PDF verification to a bounded multi-core worker thread pool</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-concurrency-vs-parallelism-t1" value="2" />
+                  <span>Replace the non-blocking event loop entirely with one OS kernel thread per WebSocket connection</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-concurrency-vs-parallelism-t1" value="0" />
+                  <span>A larger socket backlog prevents a 40 ms synchronous CPU computation from blocking the single event-loop thread</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-concurrency-vs-parallelism-t1" value="1" />
+                  <span>Separating high-concurrency I/O multiplexing from bounded multi-core CPU parallelism prevents head-of-line blocking on the event loop without paying the memory cost of 10,000 OS threads</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-concurrency-vs-parallelism-t1" value="2" />
+                  <span>Spawning 10,000 OS threads eliminates context-switching overhead for CPU-bound tasks</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">An event loop excels at concurrent I/O waits, but a single 40 ms CPU task freezes all I/O callbacks on that thread.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="concurrency-vs-parallelism-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-concurrency-vs-parallelism-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Concurrency via a single-threaded event loop handles thousands of waiting I/O sockets efficiently, but any CPU-bound task blocks the entire loop (head-of-line blocking). Offloading CPU work to a bounded worker pool sized to physical CPU cores achieves true hardware parallelism for compute while preserving lightweight concurrency for I/O.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1264,7 +1400,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1272,15 +1408,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -983,12 +983,18 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: a viral like counter</h2><p>A DynamoDB partition supports about 1,000 WCU/s (1,000 writes/s of items up to 1 KB) and 3,000 RCU/s. A viral post receives 20,000 likes/s.</p><ul><li><strong>Single key:</strong> 20k writes/s against a 1k/s partition limit means 95% of writes are throttled. Adaptive capacity and split-for-heat help, but cannot split a single item.</li><li><strong>Salted with K = 32:</strong> keys <code>post#123#0</code> to <code>post#123#31</code> receive about 625 writes/s each, which is under the limit.</li><li><strong>Read cost:</strong> the total is 32 GetItems (or one BatchGetItem) per read. Cache the summed total for 1-2 s so reads do not multiply the problem.</li><li><strong>Alternative:</strong> buffer likes in a stream (Kinesis or Kafka) and apply one aggregated increment per post per second. That is 1 write/s instead of 20k.</li></ul><h3>Mitigations compared</h3><table><thead><tr><th>Technique</th><th>Fixes</th><th>Cost</th><th>Example</th></tr></thead><tbody><tr><td>Key salting / write sharding</td><td>Write-hot keys</td><td>Reads fan out K ways</td><td>DynamoDB write sharding, counter shards</td></tr><tr><td>Local in-process cache (1-5 s TTL)</td><td>Read-hot keys</td><td>Staleness; memory per instance</td><td>Caffeine/Guava near-cache in front of Redis</td></tr><tr><td>Request coalescing (single-flight)</td><td>Thundering herd on a miss</td><td>Slight latency for waiters</td><td>Discord data services, Go singleflight</td></tr><tr><td>Write buffering / batching</td><td>High-frequency increments</td><td>Delay before visible</td><td>Stream aggregation, Redis INCR then periodic flush</td></tr><tr><td>Split or move partition</td><td>Hot ranges or tenants</td><td>Data movement</td><td>Bigtable/Spanner load-based splitting, Shopify pod moves</td></tr><tr><td>More replicas for reads</td><td>Read-hot keys</td><td>Replication cost; consistency level ONE</td><td>Cassandra RF, Redis read replicas</td></tr></tbody></table><h3>Detecting hot keys</h3><ul><li>DynamoDB CloudWatch Contributor Insights lists the most-accessed keys.</li><li>Redis: <code>redis-cli --hotkeys</code> (with an LFU eviction policy) or client-side sampling.</li><li>Cassandra: <code>nodetool toppartitions</code>.</li><li>Alert on per-partition p99 latency or throttles, not on cluster averages, which hide the hotspot.</li></ul><h3>Failure modes of the fixes themselves</h3><ul><li><strong>Salting a key that needs strong reads:</strong> summing K sub-keys is not atomic, so a reader may see a total that never existed at any instant. That is fine for likes, wrong for inventory that must never oversell. Use a reservation or queue for those.</li><li><strong>Static K:</strong> choosing K = 32 for every key wastes 32x reads on cold keys. Promote keys to salted mode dynamically once they cross a rate threshold, and record the K in a small metadata item.</li><li><strong>Near-cache stampede:</strong> if every API instance expires its local copy at the same moment, the backend gets N simultaneous misses. Add TTL jitter and single-flight.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="hot-partitions" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="hot-partitions" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why hashing cannot help" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Near-cache load maths" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Salting an inventory count" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why hashing cannot help" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Near-cache load maths" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Salting an inventory count" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Write Salting Buckets for a Celebrity Key" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Key Salting Write Relief vs Read Fan-Out Cost" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-hot-partitions-c1" data-type="mcq" data-slug="hot-partitions" data-index="0">
@@ -1106,12 +1112,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="hot-partitions-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-hot-partitions-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">The lesson notes that a scatter-gather sum is not a snapshot, which is fine for likes but wrong for inventory that must never oversell. Each write still touches only one sub-key, so write throughput is not the problem; correctness of the check is.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-hot-partitions-n1" data-type="numeric" data-slug="hot-partitions" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Write Salting Buckets for a Celebrity Key</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A single partition in your key-value store can safely sustain 2,000 writes/sec. During a global livestream, a single `stream_id` receives 24,000 status/counter writes/sec.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the minimum number of key-salting shards (`stream_id#0 .. stream_id#(N-1)`) required to keep each partition at or below 2,000 writes/sec?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-hot-partitions-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-hot-partitions-n1"
+              aria-label="Numeric estimate in shards"
+              placeholder="Enter numeric estimate (shards)..."
+            />
+            <span class="quiz-unit-badge">shards</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 24,000 writes/sec by 2,000 writes/sec per partition.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="hot-partitions-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-hot-partitions-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">24,000 / 2,000 = 12 salted sub-keys (`stream_id#0` through `stream_id#11`), spreading the hot key&#039;s write load across 12 physical partitions.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-hot-partitions-t1" data-type="tradeoff" data-slug="hot-partitions" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Key Salting Write Relief vs Read Fan-Out Cost</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You salt hot partition keys with a random suffix `0..15` (`N = 16`) to prevent write throttling during traffic spikes, and readers must reconstruct the total count.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should you apply key salting so normal keys do not pay a 16× read amplification tax, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-hot-partitions-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-hot-partitions-t1" value="0" />
+                  <span>Salt every single key in the database with 1,000 random suffixes unconditionally</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-hot-partitions-t1" value="1" />
+                  <span>Never salt keys and let the hot partition drop 95% of writes</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-hot-partitions-t1" value="2" />
+                  <span>Use adaptive/selective salting (only salt keys flagged as hot in metadata or above a rate threshold) combined with a short-TTL read cache in front of the scatter-gather read</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-hot-partitions-t1" value="0" />
+                  <span>Turning every point read into a 1,000-key scatter-gather improves p99 latency</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-hot-partitions-t1" value="1" />
+                  <span>Dropped writes are invisible to users</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-hot-partitions-t1" value="2" />
+                  <span>Selective salting isolates the `N`-way read fan-out to the tiny fraction of celebrity keys, and caching the aggregated read shields the storage layer from read amplification</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens to a cold key if you force it to read 16 partitions every time?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="hot-partitions-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-hot-partitions-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Key salting trades 1× write hotspot relief for N× read fan-out. Applying it adaptively only to detected hot keys (plus caching the summed read) avoids penalizing the 99.9% of cold keys.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1291,7 +1427,7 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1299,15 +1435,15 @@ flowchart TD
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

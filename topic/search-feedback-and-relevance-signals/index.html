@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1005,12 +1005,18 @@ flowchart LR
 </tbody></table>
 <p><strong>Production pattern:</strong> log every impression with its position, the ranker version and features at serving time; join with downstream events; build labels offline; train a LambdaMART or neural ranker; ship behind an interleaving or A/B test. Airbnb, Etsy and many e-commerce teams have described this loop publicly. Logging features at serving time avoids train and serve skew.</p><h2>Failure modes</h2><ul><li><strong>Rich-get-richer loops:</strong> without exploration, new items never collect clicks. Reserve a small share of impressions for exploration or boost fresh items explicitly.</li><li><strong>Bot and fraud clicks:</strong> filter automated traffic before labels are built, or competitors can manipulate rankings.</li><li><strong>Presentation bias:</strong> larger images, badges and prices shown in bold change CTR independently of relevance; include presentation features in the model or control for them.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="search-feedback-and-relevance-signals" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="search-feedback-and-relevance-signals" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Raw click feedback loop" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Propensity weighting" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Presentation bias" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Raw click feedback loop" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Propensity weighting" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Presentation bias" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Position-Bias De-Biased Click-Through Rate (Inverse Propensity Scoring)" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Raw Click Counts vs Position-Debiased Dwell-Time Signals" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-search-feedback-and-relevance-signals-c1" data-type="mcq" data-slug="search-feedback-and-relevance-signals" data-index="0">
@@ -1128,12 +1134,142 @@ flowchart LR
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="search-feedback-and-relevance-signals-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-search-feedback-and-relevance-signals-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Badges and bigger images change CTR independently of relevance; modelling or controlling for presentation separates that effect from true relevance. Discarding all badged impressions throws away data and leaves the bias unmodelled for future presentation changes.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-search-feedback-and-relevance-signals-n1" data-type="numeric" data-slug="search-feedback-and-relevance-signals" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Position-Bias De-Biased Click-Through Rate (Inverse Propensity Scoring)</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Document A at Rank 1 receives a raw CTR of `20%` where the rank-1 examination probability (propensity) is `0.80`. Document B at Rank 5 receives a raw CTR of `12%` where the rank-5 examination probability is `0.20`. Using Inverse Propensity Scoring (`debiased_relevance = CTR / propensity`), you compare their true relevance.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the de-biased relevance rate (in %, i.e. `12% / 0.20`) of Document B at Rank 5?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-search-feedback-and-relevance-signals-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-search-feedback-and-relevance-signals-n1"
+              aria-label="Numeric estimate in %"
+              placeholder="Enter numeric estimate (%)..."
+            />
+            <span class="quiz-unit-badge">%</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide Document B&#039;s 12% raw CTR by its 0.20 examination propensity.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="search-feedback-and-relevance-signals-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-search-feedback-and-relevance-signals-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Document B&#039;s de-biased relevance upon actually being seen is `12% / 0.20 = 60%`, whereas Document A at Rank 1 is only `20% / 0.80 = 25%`—proving that raw clicks without position-bias correction reward whatever happens to be ranked #1.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-search-feedback-and-relevance-signals-t1" data-type="tradeoff" data-slug="search-feedback-and-relevance-signals" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Raw Click Counts vs Position-Debiased Dwell-Time Signals</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A search team feeds raw click counts (`clicks / impressions`) directly back into their ranking model as the primary boost feature. Within two weeks, clickbait titles and historically #1-ranked results become impossible to displace even when better documents arrive.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What two biases caused this feedback loop, and how do production search engines construct clean learning-to-rank targets?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-search-feedback-and-relevance-signals-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-search-feedback-and-relevance-signals-t1" value="0" />
+                  <span>Rank 10 results get 10× more accidental views than Rank 1 results</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-search-feedback-and-relevance-signals-t1" value="1" />
+                  <span>Short bounce clicks (&lt;2 seconds before hitting Back) indicate high user satisfaction</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-search-feedback-and-relevance-signals-t1" value="2" />
+                  <span>Raw clicks suffer from strong Position Bias (users look at Rank 1 far more than Rank 8) and Clickbait Bias; combine Inverse Propensity Weighting (or pairwise click-skip models) with long-dwell-time / conversion satisfaction signals</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-search-feedback-and-relevance-signals-t1" value="0" />
+                  <span>Users examine every result from Rank 1 to Rank 50 with equal probability</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-search-feedback-and-relevance-signals-t1" value="1" />
+                  <span>A pogo-stick bounce back to the SERP means the user found their answer</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-search-feedback-and-relevance-signals-t1" value="2" />
+                  <span>Filtering out short-dwell bounces (&quot;pogo-sticking&quot;) and normalizing by rank examination propensity prevents self-reinforcing rich-get-richer ranking loops</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why does a user click result #1, return to the search page 2 seconds later, and spend 4 minutes reading result #3?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="search-feedback-and-relevance-signals-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-search-feedback-and-relevance-signals-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Raw clicks conflate rank visibility with relevance and reward clickbait. Using pairwise skip-above pairs (clicked #3 after skipping #1 and #2) plus long-dwell (&gt;30s) or purchase signals produces unbiased training labels.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1246,22 +1382,22 @@ flowchart LR
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

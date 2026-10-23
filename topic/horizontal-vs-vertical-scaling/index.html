@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1019,12 +1019,18 @@ flowchart TD
 <h2>How real systems do it</h2>
 <p>Stack Overflow famously served very high traffic for years from a small number of powerful SQL Server machines, a deliberate vertical choice for the database. Most large web companies run stateless application tiers behind load balancers and autoscaling groups, and keep sessions in a shared store such as Redis or in signed tokens so any node can serve any user.</p>
 </div></article>
-      <section class="check-slider" data-slug="horizontal-vs-vertical-scaling" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="horizontal-vs-vertical-scaling" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Prerequisite for scale-out" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sizing with N+1" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Autoscaler overwhelms the database" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Prerequisite for scale-out" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sizing with N+1" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Autoscaler overwhelms the database" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: N+1 Horizontal Fleet Sizing with Headroom" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Vertical Scale-Up vs Premature Database Sharding" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-horizontal-vs-vertical-scaling-c1" data-type="mcq" data-slug="horizontal-vs-vertical-scaling" data-index="0">
@@ -1142,12 +1148,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="horizontal-vs-vertical-scaling-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-horizontal-vs-vertical-scaling-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">This is the lesson&#039;s thundering scale-out failure: many new connection pools opening at once can overload the shared database. Idle new nodes is a real failure mode for long-lived WebSocket connections, but with short stateless requests the load balancer spreads new traffic onto them quickly.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-horizontal-vs-vertical-scaling-n1" data-type="numeric" data-slug="horizontal-vs-vertical-scaling" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: N+1 Horizontal Fleet Sizing with Headroom</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your stateless checkout tier needs to handle a peak load of 12,000 req/s. Each 8-vCPU instance can safely process 1,500 req/s at its target 70% CPU utilization ceiling.</p>
+          </div>
+        
+        <p class="check-slider__prompt">If your availability policy requires surviving the simultaneous loss of 2 instances (N+2 redundancy) without breaching the 70% CPU ceiling, how many instances must be running in the fleet?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-horizontal-vs-vertical-scaling-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-horizontal-vs-vertical-scaling-n1"
+              aria-label="Numeric estimate in instances"
+              placeholder="Enter numeric estimate (instances)..."
+            />
+            <span class="quiz-unit-badge">instances</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Minimum active instances N = 12,000 / 1,500 = 8. Add 2 instances for N+2 fault tolerance.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="horizontal-vs-vertical-scaling-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-horizontal-vs-vertical-scaling-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">At 1,500 req/s per instance, serving 12,000 req/s requires N = 8 healthy instances. To survive losing 2 instances simultaneously while keeping remaining nodes within the 1,500 req/s limit, you must provision 8 + 2 = 10 instances.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-horizontal-vs-vertical-scaling-t1" data-type="tradeoff" data-slug="horizontal-vs-vertical-scaling" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Vertical Scale-Up vs Premature Database Sharding</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your relational primary database sits on a 16-vCPU, 64 GB RAM VM and hits 85% CPU and buffer-pool thrashing during daily peak traffic. The dataset is 180 GB and grows by 5 GB/month.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which scaling path should you execute first, and what is the primary engineering justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-horizontal-vs-vertical-scaling-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-horizontal-vs-vertical-scaling-t1" value="0" />
+                  <span>Immediately freeze feature development for 6 months to shard the database across 16 horizontal nodes</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-horizontal-vs-vertical-scaling-t1" value="1" />
+                  <span>Vertically scale the instance to 64 vCPUs / 512 GB RAM (plus a read replica for failover/reads) so the entire 180 GB working set fits in memory without breaking ACID joins</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-horizontal-vs-vertical-scaling-t1" value="2" />
+                  <span>Keep the 16-vCPU database and add 20 more stateless application servers to speed up SQL execution</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-horizontal-vs-vertical-scaling-t1" value="0" />
+                  <span>A 180 GB dataset exceeds the physical limits of modern cloud instances</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-horizontal-vs-vertical-scaling-t1" value="1" />
+                  <span>Vertical scaling fits the entire 180 GB dataset in RAM with zero application re-architecture, whereas horizontal sharding sacrifices cross-shard ACID transactions and adds massive operational complexity long before hardware ceilings are reached</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-horizontal-vs-vertical-scaling-t1" value="2" />
+                  <span>Adding stateless application servers reduces CPU load on the underlying database</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Modern cloud instances scale to 128+ vCPUs and multiple terabytes of RAM; compare that against the cost of distributed joins and shard rebalancing.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="horizontal-vs-vertical-scaling-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-horizontal-vs-vertical-scaling-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">At 180 GB (+60 GB/year), the entire database easily fits into the RAM of a single vertically scaled instance for years to come. Sharding a relational database prematurely destroys single-node ACID guarantees, complicates every query and migration, and consumes months of engineering time to solve a problem a 10-minute failover to a larger instance fixes.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1272,22 +1408,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

@@ -182,6 +182,59 @@ window.QUESTION_BANK["image-cdn-and-resizing"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "image-cdn-and-resizing-n1",
+    "topic": "image-cdn-and-resizing",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Origin Shield Collapse of Edge Cache Misses",
+    "scenario": "A viral news article embeds a hero image in 4 responsive widths and 2 modern formats (8 variants total). Across 30 global CDN edge POPs, all 8 variants experience simultaneous cold cache misses (`30 POPs × 8 variants = 240 edge misses`). By routing all edge misses through a single regional Origin Shield with request coalescing, each of the 8 variants is resized only once at the origin.",
+    "prompt": "How many resize requests reach the origin image transformer when protected by the Origin Shield?",
+    "question": "How many resize requests reach the origin image transformer when protected by the Origin Shield?",
+    "unit": "requests",
+    "answer": 8,
+    "tolerance": 0.2,
+    "hint": "Each of the 30 POPs collapses onto the single Origin Shield, which coalesces concurrent requests per unique variant (4 widths × 2 formats).",
+    "explanation": "Without an Origin Shield, 30 edge POPs each forward 8 misses = 240 simultaneous CPU-heavy resize jobs. With a single coalescing Origin Shield, all 30 POPs share 1 fetch per variant, reducing origin work to just 4 × 2 = 8 resizes (a 30x reduction).",
+    "tags": [
+      "image-cdn-and-resizing",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "image-cdn-and-resizing-t1",
+    "topic": "image-cdn-and-resizing",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Eager Pre-Generation vs On-Demand Signed Resize Behind an Origin Shield",
+    "scenario": "An e-commerce marketplace hosts 200 million seller product photos across 36 possible responsive width/DPR/format combinations, where 85% of listings receive fewer than 5 views per month.",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Eagerly pre-generate and store all 36 variants for every uploaded photo before returning success to the seller",
+      "Accept arbitrary unsigned `width` and `height` query parameters on the public URL and resize on the origin without caching",
+      "Store the validated master image in object storage and resize on-demand at an Origin Shield using an HMAC-signed URL or strict width allowlist, caching generated variants at the CDN edge and shield"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Pre-generating 7.2 billion image variants for mostly unviewed items minimizes compute and storage bills",
+      "Allowing arbitrary unsigned dimensions prevents Denial-of-Wallet CPU exhaustion attacks",
+      "On-demand resizing behind an Origin Shield only spends CPU and cache storage on variants actually requested by users, while HMAC signatures or parameter allowlists prevent cache-busting resize abuse"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How do you avoid paying to pre-generate 36 variants for the 85% of cold images while preventing attackers from requesting `w=101, 102, 103...`?",
+    "explanation": "Lazy on-demand transformation behind a coalescing Origin Shield avoids 85%+ of wasted up-front transcoding and storage, while restricting transforms to a small discrete width allowlist or HMAC-signed URLs blocks attackers from busting the cache with arbitrary dimensions.",
+    "tags": [
+      "image-cdn-and-resizing",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -248,6 +301,59 @@ window.QUESTION_BANK["gravatar-style-avatar-service"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "gravatar-style-avatar-service-n1",
+    "topic": "gravatar-style-avatar-service",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Avatar CDN Egress Bandwidth at 50,000 req/s",
+    "scenario": "A global avatar service delivers 50,000 avatar images per second at the CDN edge. After WebP/AVIF compression, the average 128×128 avatar payload is 8 KB.",
+    "prompt": "How many megabytes per second (MB/s, using 1 MB = 1,000 KB) of egress bandwidth does the CDN serve?",
+    "question": "How many megabytes per second (MB/s, using 1 MB = 1,000 KB) of egress bandwidth does the CDN serve?",
+    "unit": "MB/s",
+    "answer": 400,
+    "tolerance": 0.2,
+    "hint": "Multiply 50,000 req/s by 8 KB/req and divide by 1,000 KB/MB.",
+    "explanation": "50,000 requests/sec × 8 KB = 400,000 KB/s = 400 MB/s (3.2 Gbps) of total edge bandwidth, easily absorbed across distributed CDN edge POPs.",
+    "tags": [
+      "gravatar-style-avatar-service",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "gravatar-style-avatar-service-t1",
+    "topic": "gravatar-style-avatar-service",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Unversioned Avatar URLs + CDN Purge vs Content-Versioned Immutable URLs",
+    "scenario": "In a workplace collaboration app, users frequently update their profile picture and expect coworkers to see the new avatar immediately, while the app renders hundreds of cached avatar thumbnails on every channel screen.",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Serve avatars from a static `/avatar/{user_id}.webp` URL with `Cache-Control: no-store` so every render hits the origin",
+      "Serve avatars from `/avatar/{user_id}/{version_hash}/{size}.webp` with `Cache-Control: public, max-age=31536000, immutable`, embedding the user's current `avatar_version` in API user payloads",
+      "Serve avatars from `/avatar/{md5(email)}` with a 30-day browser cache TTL and rely on CDN purge APIs to clear end-user browser caches"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Disabling caching on avatars reduces origin load for chat apps rendering 200 messages per view",
+      "Versioned URLs allow 1-year immutable caching in both CDN and client browser memory while guaranteeing instant cache busting the moment the user profile metadata increments its version token",
+      "Calling a CDN purge API remotely deletes files cached inside end-user browsers' local disk caches"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Can a server-side CDN purge invalidate an image already cached in a user's local browser with `max-age=2592000`?",
+    "explanation": "A CDN purge only clears CDN edge nodes—it cannot evict a file already cached in a user's browser under a long `max-age`. Putting a version number or content hash in the avatar URL path enables 1-year `immutable` browser/CDN caching with instant updates when the user changes their photo.",
+    "tags": [
+      "gravatar-style-avatar-service",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -313,6 +419,59 @@ window.QUESTION_BANK["video-upload-signed-url-multipart"] = [
       "video-upload-signed-url-multipart",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "video-upload-signed-url-multipart-n1",
+    "topic": "video-upload-signed-url-multipart",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Parallel Multipart Upload Wall-Clock Time",
+    "scenario": "A creator uploads a 600 MB video file over a cellular uplink capable of 120 Mbps (15 MB/s) aggregate throughput, where a single TCP stream is bottlenecked at 3 MB/s due to latency/BDP limits. The client splits the file into 60 parts of 10 MB each and uploads 5 parts concurrently (saturating the full 15 MB/s uplink).",
+    "prompt": "How many seconds does the 600 MB upload take at 15 MB/s aggregate throughput?",
+    "question": "How many seconds does the 600 MB upload take at 15 MB/s aggregate throughput?",
+    "unit": "seconds",
+    "answer": 40,
+    "tolerance": 0.2,
+    "hint": "Divide 600 MB by 15 MB/s (or 12 waves of 5 parts × 3.33s per wave).",
+    "explanation": "With 5 parallel streams saturating 5 × 3 MB/s = 15 MB/s, uploading 600 MB takes 600 ÷ 15 = 40 seconds (compared to 200 seconds over a single serial stream).",
+    "tags": [
+      "video-upload-signed-url-multipart",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "video-upload-signed-url-multipart-t1",
+    "topic": "video-upload-signed-url-multipart",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Single-PUT Presigned Upload vs Resumable Multipart Upload for Large Videos",
+    "scenario": "Mobile creators upload 2 GB 4K videos over unstable cellular networks where connections drop every few minutes.",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Use a single monolithic HTTP `PUT` presigned URL for the entire 2 GB file and retry from byte 0 on any network drop",
+      "Use S3 Multipart Upload with 8–16 MB chunks, issuing batches of presigned part URLs, persisting `(UploadId, partNumber, ETag)` state so dropped connections only retry the failed chunk, and configuring an S3 lifecycle rule to abort incomplete uploads after 7 days",
+      "Split the video into 1 KB parts (2,000,000 parts) so failed retries retransmit almost nothing"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Retrying a 2 GB single PUT from scratch at 99% completion saves mobile battery and cellular data",
+      "Multipart chunking bounds retry loss to a single 8–16 MB part, enables parallel stream throughput, and pairs with lifecycle rules to prevent orphaned-part storage leaks",
+      "S3 allows 2,000,000 parts of 1 KB each without enforcing a 5 MiB minimum part size or 10,000-part limit"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Balance retry granularity and parallelism against S3's 5 MiB minimum part size and 10,000 maximum part count.",
+    "explanation": "A single 2 GB PUT wastes gigabytes of mobile bandwidth whenever a connection drops near completion, whereas 1 KB parts violate S3's 5 MiB minimum and 10,000-part cap. Sizing chunks at 8–16 MiB gives fast per-part retries, parallel throughput, and clean resumption via `ListParts`.",
+    "tags": [
+      "video-upload-signed-url-multipart",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -618,6 +777,59 @@ window.QUESTION_BANK["signed-urls-drm-and-video-security"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "signed-urls-drm-and-video-security-n1",
+    "topic": "signed-urls-drm-and-video-security",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Path-Scoped Signed Cookie vs Per-Segment Token Signing QPS",
+    "scenario": "A live event has 1,200,000 concurrent viewers watching a stream with 4-second segments (300,000 segment requests/sec). If the client must call your origin token service before every 4-second segment, origin QPS is 300,000 req/s. Instead, you issue a path-scoped CDN signed cookie renewed once every 10 minutes (600 seconds).",
+    "prompt": "How many token-renewal requests per second (`1,200,000 ÷ 600`) hit your origin token service with 10-minute path-scoped signed cookies?",
+    "question": "How many token-renewal requests per second (`1,200,000 ÷ 600`) hit your origin token service with 10-minute path-scoped signed cookies?",
+    "unit": "req/s",
+    "answer": 2000,
+    "tolerance": 0.2,
+    "hint": "Divide 1,200,000 viewers by 600 seconds between cookie renewals.",
+    "explanation": "Renewing a path-scoped signed cookie every 600 seconds generates only 1,200,000 ÷ 600 = 2,000 req/s at the origin auth service (a 150x reduction compared to signing every 4-second segment individually), while CDN edges validate the HMAC cookie locally.",
+    "tags": [
+      "signed-urls-drm-and-video-security",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "signed-urls-drm-and-video-security-t1",
+    "topic": "signed-urls-drm-and-video-security",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Per-Request Query-String Signed URLs vs Path-Scoped Signed Cookies + Multi-DRM (CENC)",
+    "scenario": "A premium streaming service must prevent hotlinking of HLS/DASH segments AND stop subscribers from ripping decrypted 4K video frames, without destroying CDN cache hit ratio across millions of viewers.",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Append a unique per-user `?user_id=...&sig=...` query string to every `.m4s` segment URL without stripping it from the CDN cache key",
+      "Use short-lived path-scoped CDN Signed Cookies (or edge-stripped token prefixes) so all viewers share identical cached CMAF segments at the CDN edge, combined with Common Encryption (CENC) where hardware CDMs (Widevine L1 / FairPlay) obtain decryption keys from a multi-region DRM license server",
+      "Encrypt each viewer's video stream on the fly at the origin with a unique per-viewer AES key"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Including unique per-user signatures in the CDN cache key produces a 99.9% cache hit ratio",
+      "Separating edge access authorization (via path-scoped signed cookies validated at the CDN edge) from content encryption (shared CENC ciphertexts decrypted inside hardware CDMs) preserves 100% CDN segment cache sharing while protecting raw media",
+      "Re-encrypting 4K video uniquely per viewer scales effortlessly to 5 million concurrent streams"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "How do 5 million viewers download the exact same cached bytes from the CDN while still requiring individual authorization and hardware-protected decryption?",
+    "explanation": "If per-user tokens pollute the CDN cache key or if video is encrypted uniquely per user, CDN caching collapses. Encrypting segments once with CENC (shared ciphertext) and gating CDN access via path-scoped signed cookies validated at the edge lets millions of viewers share one cached copy while DRM license servers enforce per-device entitlement.",
+    "tags": [
+      "signed-urls-drm-and-video-security",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -683,6 +895,59 @@ window.QUESTION_BANK["live-streaming-webrtc-and-latency"] = [
       "live-streaming-webrtc-and-latency",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "live-streaming-webrtc-and-latency-n1",
+    "topic": "live-streaming-webrtc-and-latency",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: WebRTC SFU Downlink Streams with Simulcast",
+    "scenario": "A 10-person video call uses a Selective Forwarding Unit (SFU) with Simulcast. Each participant uploads 1 high-res stream (1.5 Mbps) and 1 low-res thumbnail stream (0.2 Mbps) to the SFU (`1.7 Mbps` uplink per client). Each receiver downloads 1 active speaker in high-res (1.5 Mbps) and the other 8 remote participants in low-res (0.2 Mbps each).",
+    "prompt": "What is the total downlink bitrate in Mbps (`1.5 + 8 × 0.2`) received by each participant from the SFU?",
+    "question": "What is the total downlink bitrate in Mbps (`1.5 + 8 × 0.2`) received by each participant from the SFU?",
+    "unit": "Mbps",
+    "answer": 3.1,
+    "tolerance": 0.2,
+    "hint": "Add 1.5 Mbps (active speaker) + 8 × 0.2 Mbps (8 thumbnail streams).",
+    "explanation": "With an SFU and Simulcast, each participant downloads 1 × 1.5 Mbps + 8 × 0.2 Mbps = 3.1 Mbps (instead of 9 × 1.5 = 13.5 Mbps without Simulcast), while the SFU performs zero video transcoding.",
+    "tags": [
+      "live-streaming-webrtc-and-latency",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "live-streaming-webrtc-and-latency-t1",
+    "topic": "live-streaming-webrtc-and-latency",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: WebRTC SFU vs Low-Latency HLS/DASH (LL-HLS) for Interactive vs Broadcast Live Video",
+    "scenario": "You are designing a live trivia and auction platform where a host interacts with 3 co-hosts on stage (requiring <300 ms two-way conversational latency) while 500,000 audience members watch and bid (requiring ~2–3 second latency at massive scale).",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Put all 500,004 participants into a single WebRTC peer-to-peer mesh room",
+      "Use a hybrid pipeline: connect the 4 stage hosts via a WebRTC SFU for sub-300ms real-time interaction, and composite/transcode the stage feed into Low-Latency HLS/DASH (CMAF chunked transfer) delivered via standard HTTP CDNs to the 500,000 viewers",
+      "Have the 4 stage hosts converse over standard 20-second-latency HLS"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "A 500,000-node WebRTC mesh requires only 1 Kbps of uplink per mobile client",
+      "WebRTC over UDP/SFU delivers sub-300ms conversational latency for small stage groups, whereas chunked LL-HLS/DASH leverages standard HTTP CDN request coalescing and edge caching to scale to 500,000 viewers cheaply at 2–3s latency",
+      "A 20-second delay between two co-hosts makes natural back-and-forth conversation effortless"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Match the protocol to the interaction pattern: stateful UDP SFU for two-way stage chat vs cacheable HTTP CMAF chunks for 500k one-way viewers.",
+    "explanation": "WebRTC SFUs maintain per-viewer UDP state and cannot leverage standard HTTP CDN caching, making them expensive at 500k viewers. Using WebRTC for the 4 interactive stage hosts and packaging the output into LL-HLS/CMAF chunks served over HTTP CDNs gives both sub-300ms conversation and massive CDN offload.",
+    "tags": [
+      "live-streaming-webrtc-and-latency",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -750,6 +1015,59 @@ window.QUESTION_BANK["remote-file-sync-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "remote-file-sync-design-n1",
+    "topic": "remote-file-sync-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Long-Polling vs Short-Polling Notification QPS",
+    "scenario": "A cloud drive service has 12,000,000 concurrently connected desktop clients waiting for file change notifications. With naive short-polling every 5 seconds, clients send `2,400,000 req/s`. Instead, you switch to HTTP long-polling with a 60-second timeout (where idle clients reconnect once every 60 seconds when no file changes occur).",
+    "prompt": "How many reconnect requests per second (in thousands, `k req/s`) do 12,000,000 idle clients generate with a 60-second long-poll timeout?",
+    "question": "How many reconnect requests per second (in thousands, `k req/s`) do 12,000,000 idle clients generate with a 60-second long-poll timeout?",
+    "unit": "k req/s",
+    "answer": 200,
+    "tolerance": 0.2,
+    "hint": "Divide 12,000,000 clients by 60 seconds and express in thousands (k req/s).",
+    "explanation": "12,000,000 clients ÷ 60 seconds = 200,000 req/s = 200 k req/s (a 12x reduction in baseline polling traffic compared to 5-second short polling, while delivering sub-second push notifications whenever a file actually changes).",
+    "tags": [
+      "remote-file-sync-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "remote-file-sync-design-t1",
+    "topic": "remote-file-sync-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Separation of Metadata Control Plane and Content-Addressed Block Data Plane",
+    "scenario": "You are designing a Dropbox-scale remote file sync service handling billions of files and petabytes of chunks across desktop and mobile clients.",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Store raw 4 MB file chunks as `BYTEA` blobs directly inside the transactional PostgreSQL metadata database alongside file paths and permissions",
+      "Decouple the system into a strongly consistent Metadata Service (tracking file namespaces, revision histories, and ordered lists of SHA-256 block hashes with optimistic concurrency control) and an immutable Block Storage Service backed by S3/object storage",
+      "Store both file metadata and raw chunks in an eventually consistent cache without base-version checks on commit"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Packing petabytes of 4 MB binary blobs into OLTP B-Tree pages keeps ACID transactions fast and compact",
+      "Separating small, transactional metadata (blocklists, ACLs, CAS version checks) from immutable, content-addressed binary blocks lets the metadata tier scale high-QPS ACID commits while object storage scales petabyte durability cheaply",
+      "Skipping base-version checks prevents conflicting offline edits from ever overwriting each other"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why should your ACID database only ever see 32-byte SHA-256 hashes and never the 4 MB binary chunks?",
+    "explanation": "File metadata requires strict ACID transactions (atomic directory moves, compare-and-swap base-revision commits, ACLs), whereas file content consists of large immutable blocks. Keeping only SHA-256 blocklists in the transactional DB and storing immutable chunks in object storage optimizes both planes independently.",
+    "tags": [
+      "remote-file-sync-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -816,6 +1134,59 @@ window.QUESTION_BANK["fixed-block-chunking-and-content-addressing"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "fixed-block-chunking-and-content-addressing-n1",
+    "topic": "fixed-block-chunking-and-content-addressing",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Content-Defined Chunking Boundary Probability via Bitmask",
+    "scenario": "A Content-Defined Chunking (CDC) algorithm slides a 48-byte window across a file, computing a rolling Rabin/Gear hash at every byte offset, and declares a chunk boundary whenever the lowest 13 bits of the hash are all zero (`(hash & 0x1FFF) == 0`), subject to a minimum chunk size of 2 KB.",
+    "prompt": "After the 2 KB minimum window, what is the expected average number of bytes (`2^13`, in kilobytes where 1 KB = 1,024 bytes) scanned before hitting a boundary match?",
+    "question": "After the 2 KB minimum window, what is the expected average number of bytes (`2^13`, in kilobytes where 1 KB = 1,024 bytes) scanned before hitting a boundary match?",
+    "unit": "KB",
+    "answer": 8,
+    "tolerance": 0.2,
+    "hint": "2^13 bytes = 8,192 bytes. Divide by 1,024 bytes/KB.",
+    "explanation": "A uniform rolling hash matches a 13-bit zero mask with probability `1 / 2^13 = 1 / 8,192` per byte, yielding an expected scan of 8,192 bytes = 8 KB (plus the 2 KB minimum chunk floor = 10 KB average chunk size).",
+    "tags": [
+      "fixed-block-chunking-and-content-addressing",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "fixed-block-chunking-and-content-addressing-t1",
+    "topic": "fixed-block-chunking-and-content-addressing",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Cross-User Global Deduplication vs Side-Channel Existence Oracles",
+    "scenario": "To maximize storage savings, your cloud backup service checks if a client's chunk SHA-256 hashes already exist in a global cross-tenant chunk store; if they do, the server skips uploading the bytes and immediately links the existing chunks into the user's file.",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Allow unauthenticated clients to query any SHA-256 hash and download the corresponding block if they know its hash",
+      "Scope deduplication per-user/per-tenant (or require cryptographic Proof-of-Ownership challenges such as convergent encryption / HMAC over randomized byte ranges before linking an existing global block), preventing hash-only existence oracle and data-harvesting attacks",
+      "Use CRC32 instead of SHA-256 as the content address so hashes are shorter"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Knowing a 32-byte SHA-256 hash from a public leak is sufficient proof that the caller legitimately owns the file",
+      "Blind hash-only deduplication lets attackers probe whether target files exist on the platform and exfiltrate files whose hashes are leaked; scoping dedup to a tenant or enforcing Proof-of-Ownership closes the side channel",
+      "CRC32 has zero collisions across billions of chunks and resists adversarial preimage attacks"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "If an attacker learns the SHA-256 chunk hashes of a confidential payroll spreadsheet, what stops them from claiming those hashes in their own account?",
+    "explanation": "Treating a bare SHA-256 hash as a bearer token allows two attacks: (1) an existence oracle (checking if someone uploaded a specific file because the upload finishes instantly), and (2) stealing file contents using leaked hashes. Scoping dedup per tenant or requiring Proof-of-Possession of the actual bytes eliminates both.",
+    "tags": [
+      "fixed-block-chunking-and-content-addressing",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -881,6 +1252,59 @@ window.QUESTION_BANK["blocklist-versioned-file-metadata"] = [
       "blocklist-versioned-file-metadata",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "blocklist-versioned-file-metadata-n1",
+    "topic": "blocklist-versioned-file-metadata",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Storage Saved Across 20 File Versions via Immutable Blocklists",
+    "scenario": "A 100 MB CAD file is split into 25 chunks of 4 MB each (`v1 = 25 chunks`). Over a week, an engineer saves 19 incremental revisions (`v2..v20`), where each revision modifies exactly 1 chunk (4 MB). Naive full-file versioning stores `20 × 100 MB = 2,000 MB`. Blocklist versioning stores the 25 original chunks plus 19 modified chunks (`44 × 4 MB = 176 MB`).",
+    "prompt": "How many megabytes (MB) of unique block storage are required across all 20 versions using immutable blocklists?",
+    "question": "How many megabytes (MB) of unique block storage are required across all 20 versions using immutable blocklists?",
+    "unit": "MB",
+    "answer": 176,
+    "tolerance": 0.2,
+    "hint": "25 initial chunks + 19 new chunks = 44 unique chunks × 4 MB/chunk.",
+    "explanation": "Version 1 stores 25 chunks (100 MB) and each of the 19 subsequent edits adds only 1 new 4 MB chunk (76 MB), totaling 44 × 4 MB = 176 MB instead of 2,000 MB (a 91.2% storage reduction while keeping full version history).",
+    "tags": [
+      "blocklist-versioned-file-metadata",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "blocklist-versioned-file-metadata-t1",
+    "topic": "blocklist-versioned-file-metadata",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Synchronous Reference-Count Decrement vs Grace-Window Mark-and-Sweep GC for Unreferenced Blocks",
+    "scenario": "When old file versions expire after 30 days, blocks that are no longer referenced by any live version's blocklist must be garbage-collected from object storage without deleting blocks currently being uploaded by in-flight clients.",
+    "prompt": "Which architectural approach should you choose, and what is the primary justification?",
+    "question": "Which architectural approach should you choose, and what is the primary justification?",
+    "options": [
+      "Immediately delete every block from S3 that is not referenced by a committed file version, with zero age threshold",
+      "Maintain a distributed synchronous two-phase lock across S3 and PostgreSQL to decrement reference counts on every upload and delete",
+      "Treat blocks as immutable during normal writes and run an asynchronous Mark-and-Sweep (or epoch reference) garbage collector that only deletes unreferenced blocks whose `created_at` / `unreferenced_at` timestamp is older than a multi-day grace window"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Clients always commit metadata before uploading block bytes to S3",
+      "Distributed locks across S3 PUTs and SQL commits eliminate write latency and never drift on crashes",
+      "Because clients upload blocks *before* committing the metadata blocklist, a newly uploaded block is temporarily unreferenced; enforcing a grace window (e.g., 24–72 hours) prevents GC from deleting in-flight uploads and provides a safety net for metadata recovery"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "In the upload flow (1. Upload chunks to S3 -> 2. Commit blocklist to DB), what is a chunk's reference count between step 1 and step 2?",
+    "explanation": "Between the moment a client uploads a chunk to S3 and commits the new file revision in the metadata DB, that chunk has zero metadata references. Sweeping only unreferenced chunks older than a safe grace period (e.g. 7 days, like `git gc`) avoids race conditions with in-flight uploads without distributed locking on the hot path.",
+    "tags": [
+      "blocklist-versioned-file-metadata",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

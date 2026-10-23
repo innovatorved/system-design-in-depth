@@ -63,6 +63,59 @@ window.QUESTION_BANK["notification-system-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "notification-system-design-n1",
+    "topic": "notification-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Breaking-News Push Notification Fan-Out Rate",
+    "scenario": "A breaking-news alert must be delivered to `30,000,000` subscribed mobile devices within `60 seconds` (`1 minute`). Each APNs / FCM batch HTTP/2 request delivers up to `500` device tokens.",
+    "prompt": "How many thousands of outgoing push-gateway requests per second (`30,000,000 / 60s` devices = `500,000 devices/s`) in terms of individual device pushes per second (in thousands, i.e., `500` thousand devices/s) must the dispatcher pipeline sustain?",
+    "question": "How many thousands of outgoing push-gateway requests per second (`30,000,000 / 60s` devices = `500,000 devices/s`) in terms of individual device pushes per second (in thousands, i.e., `500` thousand devices/s) must the dispatcher pipeline sustain?",
+    "unit": "thousand pushes/s",
+    "answer": 500,
+    "tolerance": 0.2,
+    "hint": "Divide 30,000,000 devices by 60 seconds and express in thousands.",
+    "explanation": "30,000,000 devices / 60 seconds = 500,000 pushes/sec (500 thousand pushes/sec, or 1,000 batched HTTP/2 calls/sec of 500 tokens each).",
+    "tags": [
+      "notification-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "notification-system-design-t1",
+    "topic": "notification-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Priority Lane Isolation (OTP / 2FA vs Marketing Bulk Campaigns)",
+    "scenario": "At 9:00 AM, the marketing team triggers a promotional campaign to 50,000,000 users on the same notification queue used for login 2FA SMS codes and fraud alerts. Login 2FA codes are delayed by 25 minutes.",
+    "prompt": "Which architectural controls prevent bulk campaigns from starving critical transactional notifications?",
+    "question": "Which architectural controls prevent bulk campaigns from starving critical transactional notifications?",
+    "options": [
+      "Process all notifications in a single FIFO queue ordered strictly by timestamp",
+      "Drop 2FA login codes whenever marketing campaigns are running",
+      "Physically isolate Kafka topics and worker pools by priority tier (`P0: Auth/OTP/Security`, `P1: Transactional`, `P2: Bulk Marketing`), enforce per-user frequency caps & quiet hours, and deduplicate by `(user_id, event_id, channel)`"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "A single FIFO queue guarantees sub-second delivery for 2FA behind 50M marketing items",
+      "Users enjoy waiting 25 minutes for a 2FA code that expires in 5 minutes",
+      "Dedicated `P0` topics and worker bulkheads guarantee that a 50M-item `P2` marketing backlog has zero impact on `P0` 2FA latency, while per-user rate limiters prevent notification fatigue"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Should a 2FA login SMS ever share a queue or worker pool with a 50M-user promotional blast?",
+    "explanation": "Strict bulkhead isolation across priority lanes (`P0` transactional vs `P2` marketing) plus token-bucket rate governance per external provider (Twilio/APNs/FCM) ensures critical alerts never wait behind bulk campaigns.",
+    "tags": [
+      "notification-system-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -367,6 +420,59 @@ window.QUESTION_BANK["search-engine-system-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "search-engine-system-design-n1",
+    "topic": "search-engine-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Two-Stage Retrieval + Neural Reranker Compute Budget",
+    "scenario": "A search cluster serves `5,000 queries/sec` over `100,000,000` documents. Running a heavy Cross-Encoder neural model (`0.5 ms` GPU time per doc) on all 100M docs is impossible. Instead, Stage 1 (Lexical BM25 + HNSW Vector ANN) retrieves the top `200` candidates in `8 ms` CPU time, and Stage 2 scores only those `200` candidates with the GPU Cross-Encoder (`200 × 0.05 ms` batched = `10 ms` per query).",
+    "prompt": "By what factor (`100,000,000 / 200`) does the two-stage funnel reduce the number of documents evaluated by the expensive neural reranker?",
+    "question": "By what factor (`100,000,000 / 200`) does the two-stage funnel reduce the number of documents evaluated by the expensive neural reranker?",
+    "unit": "x",
+    "answer": 500000,
+    "tolerance": 0.2,
+    "hint": "Divide 100,000,000 total documents by the 200 candidates passed to Stage 2.",
+    "explanation": "`100,000,000 / 200 = 500,000×` reduction in neural evaluations per query, keeping total end-to-end latency under 25 ms!",
+    "tags": [
+      "search-engine-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "search-engine-system-design-t1",
+    "topic": "search-engine-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Lexical-Only (BM25) vs Vector-Only (Dense ANN) vs Hybrid Retrieval + Reciprocal Rank Fusion",
+    "scenario": "Users search your technical catalog with both exact part numbers / error codes (`\"ERR_SSL_VERSION_OR_CIPHER_MISMATCH\"`, `\"SKU-9941-B\"`) and semantic natural-language questions (`\"how to stop retry storms when database is slow\"`).",
+    "prompt": "Why does neither pure BM25 nor pure Dense Vector Search succeed alone, and how should Stage 1 retrieval be built?",
+    "question": "Why does neither pure BM25 nor pure Dense Vector Search succeed alone, and how should Stage 1 retrieval be built?",
+    "options": [
+      "Use only Dense Embeddings because 768-dim vectors memorize every rare alphanumeric SKU and error code perfectly",
+      "Use only BM25 because keyword matching understands paraphrases with zero shared words",
+      "Run Hybrid Retrieval in parallel—Lexical BM25 (for exact SKU/identifier/keyword precision) + Dense/Sparse Vector ANN (for semantic recall)—and merge candidate sets via Reciprocal Rank Fusion (`RRF`) before Stage 2 neural reranking"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Dense bi-encoders never suffer from out-of-vocabulary dilution on rare hex/SKU strings",
+      "BM25 matches `\"circuit breaker\"` when the query only says `\"stop calling dead downstream\"`",
+      "Lexical inverted indexes excel at exact token/SKU matching while dense embeddings capture semantic intent; fusing top candidates from both into a cross-encoder reranker achieves superior recall and precision"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How well does a dense embedding handle an exact serial number like `\"XJ-9042-REV3\"` vs how well does BM25 handle semantic synonyms?",
+    "explanation": "Hybrid search (BM25 + Vector ANN combined via Reciprocal Rank Fusion `1 / (k + rank)` and reranked by a Cross-Encoder) is the production standard because it covers both exact identifier queries and semantic conceptual queries.",
+    "tags": [
+      "search-engine-system-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -432,6 +538,59 @@ window.QUESTION_BANK["recommendation-system-design"] = [
       "recommendation-system-design",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "recommendation-system-design-n1",
+    "topic": "recommendation-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Multi-Stage Recommendation Funnel Latency & Throughput",
+    "scenario": "A home feed recommendation request must finish in `<80 ms` across a catalog of `10,000,000` items: Candidate Generation (Two-Tower ANN + Graph co-visitation) narrows `10,000,000 -> 1,000` items in `15 ms`; Lightweight Scoring narrows `1,000 -> 100` in `15 ms`; Heavy Multi-Task Ranking + Diversity Reranking orders `100 -> 20` in `25 ms` (plus `15 ms` feature fetch & network overhead).",
+    "prompt": "What is the total end-to-end latency (`15 + 15 + 25 + 15`, in ms) of this 4-stage recommendation pipeline?",
+    "question": "What is the total end-to-end latency (`15 + 15 + 25 + 15`, in ms) of this 4-stage recommendation pipeline?",
+    "unit": "ms",
+    "answer": 70,
+    "tolerance": 0.2,
+    "hint": "Sum the four stage budgets: `15 + 15 + 25 + 15`.",
+    "explanation": "`15 + 15 + 25 + 15 = 70 ms` (well within the 80 ms SLO), evaluating 10 million catalog items by progressively trading candidate volume for model complexity at each stage.",
+    "tags": [
+      "recommendation-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "recommendation-system-design-t1",
+    "topic": "recommendation-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Two-Tower Dot-Product Retrieval vs Full Cross-Feature Deep Ranking Network",
+    "scenario": "An ML engineer asks why we can't run the full Deep & Cross Ranking neural network (which takes non-linear cross features between `user_history × item_metadata × time_of_day`) directly over all 10,000,000 items at request time.",
+    "prompt": "Why is the Two-Tower architecture required for Stage 1 Candidate Generation while Cross-Feature networks are reserved for Stage 2 Ranking?",
+    "question": "Why is the Two-Tower architecture required for Stage 1 Candidate Generation while Cross-Feature networks are reserved for Stage 2 Ranking?",
+    "options": [
+      "Two-Tower models are more accurate than cross-feature models on 100 items",
+      "Cross-feature models can be pre-indexed in a static HNSW vector index",
+      "A Two-Tower model decouples the User Encoder `u(x)` from the Item Encoder `v(y)`, allowing all 10M item vectors `v(y)` to be pre-computed offline and searched in `O(log N)` via HNSW/MIPS, whereas cross-feature models require `O(N)` live neural forward passes per request"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Running 10,000,000 deep neural forward passes per user request takes 1 millisecond",
+      "Arbitrary non-linear `f(user, item, context)` functions reduce to a static inner product",
+      "Only when user and item representations interact via a late inner product `<u(x), v(y)>` can the 10M item embeddings be indexed in an Approximate Nearest Neighbor (ANN) vector index for sub-15ms retrieval"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why can `<u(x), v(y)>` be indexed in HNSW/Faiss while `MLP(concat(x, y, x*y))` cannot?",
+    "explanation": "Two-Tower decoupling lets you compute `u(x)` once per request and find the top-1,000 items by inner product `<u(x), v(y)>` in ~10 ms using ANN; Stage 2 then runs expensive cross-feature interactions on just those 1,000 candidates.",
+    "tags": [
+      "recommendation-system-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -618,6 +777,59 @@ window.QUESTION_BANK["social-feed-system-design-case-study"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "social-feed-system-design-case-study-n1",
+    "topic": "social-feed-system-design-case-study",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Home Timeline Cache Hydration Bandwidth",
+    "scenario": "A user's home timeline Redis ZSET stores only compact `(post_id, author_id, score_ts)` tuples (`24 bytes` per entry × `500` cached items = `12 KB` per user), rather than duplicating the full `2 KB` hydrated post + author JSON (`1 MB` per user) inside every follower's inbox list.",
+    "prompt": "By what factor (`2,000 bytes / 24 bytes`, rounded to the nearest integer) does storing compact `24-byte` references in follower timelines reduce per-inbox RAM compared to duplicating `2,000-byte` full post payloads?",
+    "question": "By what factor (`2,000 bytes / 24 bytes`, rounded to the nearest integer) does storing compact `24-byte` references in follower timelines reduce per-inbox RAM compared to duplicating `2,000-byte` full post payloads?",
+    "unit": "x",
+    "answer": 83,
+    "tolerance": 0.2,
+    "hint": "Divide 2,000 bytes by 24 bytes (`≈ 83.3`).",
+    "explanation": "Storing 24-byte post IDs in follower timelines instead of 2,000-byte full post payloads saves `2,000 / 24 ≈ 83×` of timeline RAM AND ensures that when a post's like count or text is edited, it only updates in 1 central Post Cache entry rather than 10,000 follower inboxes!",
+    "tags": [
+      "social-feed-system-design-case-study",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "social-feed-system-design-case-study-t1",
+    "topic": "social-feed-system-design-case-study",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Storing Full Hydrated Post Objects vs Post IDs in Follower Inboxes",
+    "scenario": "When an author posts an item that is fanned out to 5,000 follower timeline caches, you must choose whether to push the full rendered Post + Author Profile + Reaction Count JSON into all 5,000 inbox lists, or push only `(post_id, author_id, timestamp)` and hydrate at read time from a shared Post/User cache.",
+    "prompt": "Why do production social feeds store only lightweight IDs/metadata in follower inboxes and hydrate at read time?",
+    "question": "Why do production social feeds store only lightweight IDs/metadata in follower inboxes and hydrate at read time?",
+    "options": [
+      "Duplicating 2 KB JSON across 5,000 inboxes makes updating the author's avatar or post like count O(1)",
+      "Hydrating 20 post IDs via a single batched `MGET` from an in-memory Post Cache takes several minutes",
+      "Storing only `post_id` references keeps inbox RAM tiny (~80× smaller) and avoids updating 5,000 cached copies whenever a post's reaction count changes, an author changes their avatar, or a post is deleted—while read-time `MGET` hydration only fetches the 20 posts actually scrolled into view"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Users always scroll through all 800 items in their inbox on every visit",
+      "Post like counters never change after creation",
+      "A user views only ~20 items per page; hydrating those 20 IDs via batched `MGET` from a shared Post/User cache takes ~2 ms while keeping mutable state (counts, edits, deletes, avatars) normalized in one place"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens when a post gets 10,000 likes if its like count is copied inside 5,000 separate follower inbox lists?",
+    "explanation": "Keeping follower inboxes as lightweight ID lists (`post_id`) and hydrating the page-size slice (`20` items) via batched `MGET` against a shared Post/User cache avoids massive RAM duplication and stale mutable fields.",
+    "tags": [
+      "social-feed-system-design-case-study",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -683,6 +895,59 @@ window.QUESTION_BANK["geospatial-nearby-search-case-study"] = [
       "geospatial-nearby-search-case-study",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "geospatial-nearby-search-case-study-n1",
+    "topic": "geospatial-nearby-search-case-study",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: H3 / Geohash 9-Cell Boundary Lookup Payload",
+    "scenario": "A user searches for restaurants within `1 km`. A single Geohash length-6 cell (`~1.2 km × 0.6 km`) or H3 resolution-8 hexagon might put the user right next to a cell border. To avoid missing a restaurant 50 meters across the boundary line, the query fetches the user's center cell plus its `8` surrounding neighbor cells (`9` cells total, or `7` for H3 `kRing(1)`), all in a single batched cache `MGET`.",
+    "prompt": "If each Geohash length-6 cell averages `40` restaurants (`200 bytes` per restaurant summary = `8 KB` per cell), how many kilobytes (KB) of cached candidate data are fetched across all `9` cells (`9 × 8 KB`) before exact Haversine distance filtering?",
+    "question": "If each Geohash length-6 cell averages `40` restaurants (`200 bytes` per restaurant summary = `8 KB` per cell), how many kilobytes (KB) of cached candidate data are fetched across all `9` cells (`9 × 8 KB`) before exact Haversine distance filtering?",
+    "unit": "KB",
+    "answer": 72,
+    "tolerance": 0.2,
+    "hint": "Multiply 9 cells by 8 KB per cell.",
+    "explanation": "Fetching all 9 Geohash cells (`1 center + 8 neighbors`) via a single batched cache `MGET` transfers just `9 × 8 KB = 72 KB` (360 candidates), which the app filters by exact Haversine distance and open-hours in <0.5 ms!",
+    "tags": [
+      "geospatial-nearby-search-case-study",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "geospatial-nearby-search-case-study-t1",
+    "topic": "geospatial-nearby-search-case-study",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Naive `LAT BETWEEN AND LON BETWEEN` SQL Scan vs Geohash / H3 / S2 Spatial Cell Indexing",
+    "scenario": "A food-delivery app serves `80,000 req/s` for \"restaurants near `(lat, lon)` within 3 km\". Using two separate B-Tree indexes on `latitude` and `longitude` forces the database to scan a huge horizontal band of the globe and intersect it with a vertical band.",
+    "prompt": "Why do separate 1D B-Tree indexes fail on 2D proximity queries, and how do spatial hierarchical indexes (Geohash / S2 / H3) solve this?",
+    "question": "Why do separate 1D B-Tree indexes fail on 2D proximity queries, and how do spatial hierarchical indexes (Geohash / S2 / H3) solve this?",
+    "options": [
+      "A standard 1D B-Tree on `latitude` narrows a query to a single city block without scanning other longitudes at the same latitude",
+      "Compute exact trigonometric `ACOS(SIN(lat1)*SIN(lat2)...)` over all 10,000,000 restaurants on every request",
+      "Space-filling curves (Geohash Z-order, S2 Hilbert curve, Uber H3 hexagons) map 2D `(lat, lon)` coordinates into 1D cell IDs with spatial locality, turning a 2D radius search into a fast 7-to-9 cell lookup followed by exact Haversine filtering on the candidate set"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "New York, Madrid, Beijing, and Tokyo all have completely different latitudes",
+      "Full-table trigonometric scans run in O(1) time",
+      "A 1D index can only order along one dimension; mapping 2D space into hierarchical 1D cell keys co-locates nearby points into the same cache/index buckets and resolves boundary edge cases by querying the `k=1` neighbor ring"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why can't a single standard B-Tree sort simultaneously by both `latitude` and `longitude` proximity?",
+    "explanation": "A composite B-Tree `(lat, lon)` sorts by `lon` only for identical `lat` values. Spatial cell encodings (Geohash, S2, H3) interleave 2D coordinates into discrete cell IDs so a 2D radius query becomes a bounded `MGET` of the center cell + its immediate neighbors.",
+    "tags": [
+      "geospatial-nearby-search-case-study",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

@@ -63,6 +63,59 @@ window.QUESTION_BANK["relational-database-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "relational-database-design-n1",
+    "topic": "relational-database-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Normalization Storage Savings",
+    "scenario": "An unnormalized orders table stores a 120-byte merchant company profile inline on every row across 500,000,000 order rows for 50,000 distinct merchants. Normalizing moves the profile to a merchants table referenced by an 8-byte merchant_id foreign key (already present).",
+    "prompt": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of raw table storage are saved by removing the inline 120-byte merchant profile from the 500M order rows?",
+    "question": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of raw table storage are saved by removing the inline 120-byte merchant profile from the 500M order rows?",
+    "unit": "GB",
+    "answer": 60,
+    "tolerance": 0.2,
+    "hint": "Multiply 500,000,000 rows by 120 bytes saved per row (the 50k merchant rows take only 6 MB, which is negligible).",
+    "explanation": "500,000,000 × 120 bytes = 60,000,000,000 bytes = 60 GB saved on the orders table, while the normalized merchants table adds only 50,000 × 120 B = 6 MB.",
+    "tags": [
+      "relational-database-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "relational-database-design-t1",
+    "topic": "relational-database-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Normalized Reference vs Snapshot Denormalization",
+    "scenario": "An e-commerce invoicing table needs to display the customer billing address on historical tax receipts even if the customer updates their profile address later.",
+    "prompt": "Which relational modeling pattern should you choose for the billing address on invoices, and why?",
+    "question": "Which relational modeling pattern should you choose for the billing address on invoices, and why?",
+    "options": [
+      "Store only a foreign key to the mutable customer_addresses row",
+      "Forbid customers from ever updating their address row in-place",
+      "Copy immutable point-in-time address attributes (or reference an immutable address version row) onto the invoice record at checkout"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Third Normal Form requires that historical invoices dynamically change when a user moves",
+      "Blocking profile updates simplifies SQL joins without schema changes",
+      "Historical financial records must preserve the exact legal state at transaction time rather than reflecting future profile edits"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Ask whether an invoice is a live view of current customer state or an immutable historical fact.",
+    "explanation": "Normalizing live mutable state across historical ledger/invoice records corrupts audit history when profiles change. Capturing an immutable snapshot (or versioned immutable FK) preserves point-in-time truth.",
+    "tags": [
+      "relational-database-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -128,6 +181,59 @@ window.QUESTION_BANK["sql-backed-key-value-store"] = [
       "sql-backed-key-value-store",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "sql-backed-key-value-store-n1",
+    "topic": "sql-backed-key-value-store",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Buffer Pool Hit Ratio & IOPS",
+    "scenario": "A SQL-backed KV table serves 40,000 point lookups/sec. Each lookup touches 1 leaf page after cached internal B-Tree pages, and the InnoDB buffer pool achieves a 95% leaf-page hit ratio.",
+    "prompt": "How many physical disk read IOPS are required to serve the remaining 5% buffer pool misses?",
+    "question": "How many physical disk read IOPS are required to serve the remaining 5% buffer pool misses?",
+    "unit": "IOPS",
+    "answer": 2000,
+    "tolerance": 0.2,
+    "hint": "Multiply 40,000 lookups/sec by the 5% (0.05) miss rate.",
+    "explanation": "At a 95% buffer pool hit rate, 5% of 40,000 req/s miss in memory and issue a random page read: 40,000 × 0.05 = 2,000 disk read IOPS.",
+    "tags": [
+      "sql-backed-key-value-store",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "sql-backed-key-value-store-t1",
+    "topic": "sql-backed-key-value-store",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Secondary Indexes on a SQL KV Table",
+    "scenario": "You run a high-write SQL-backed key-value store (primary key `k`, binary payload `v`, `updated_at`) handling 25,000 upserts/sec. A team asks to add 4 secondary indexes on JSON fields inside `v`.",
+    "prompt": "How should you handle this request to protect write throughput, and why?",
+    "question": "How should you handle this request to protect write throughput, and why?",
+    "options": [
+      "Add all 4 synchronous B-Tree expression indexes directly on the primary KV table",
+      "Switch the primary key from B-Tree to an unindexed heap table",
+      "Keep the primary KV table index-minimal and project secondary query views asynchronously via CDC or a dedicated search/index table"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Secondary B-Tree indexes are free on update when only payload bytes change",
+      "Heap scans are faster than primary key lookups at 25,000 QPS",
+      "Each synchronous secondary B-Tree index adds random leaf-page read-modify-write amplification and lock contention on every upsert"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Consider write amplification in B-Trees when secondary keys are randomly distributed.",
+    "explanation": "A SQL KV store stays fast only while writes hit the clustered primary key + WAL. Adding 4 random secondary B-Tree indexes multiplies dirty-page flushes and random I/O per upsert.",
+    "tags": [
+      "sql-backed-key-value-store",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -314,6 +420,59 @@ window.QUESTION_BANK["b-tree"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "b-tree-n1",
+    "topic": "b-tree",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: B+Tree Fanout and Page Capacity",
+    "scenario": "A B+Tree uses 16 KB (16,384-byte) internal pages. Each child entry consists of an 8-byte key and an 8-byte page pointer (16 bytes total), and page headers reserve 384 bytes.",
+    "prompt": "What is the maximum branching factor (fanout) of a single internal B+Tree page?",
+    "question": "What is the maximum branching factor (fanout) of a single internal B+Tree page?",
+    "unit": "children",
+    "answer": 1000,
+    "tolerance": 0.2,
+    "hint": "Subtract the 384-byte header from 16,384 bytes, then divide by 16 bytes per entry.",
+    "explanation": "Usable space per internal page is 16,384 - 384 = 16,000 bytes. At 16 bytes per (key, pointer) entry, each internal node holds 16,000 / 16 = 1,000 child pointers (so a 3-level tree indexes 1 billion leaf pages).",
+    "tags": [
+      "b-tree",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "b-tree-t1",
+    "topic": "b-tree",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Sequential vs Random Primary Keys in Clustered B+Trees",
+    "scenario": "A high-ingestion ledger table in InnoDB (clustered B+Tree on primary key) is experiencing 50% page fill factors, frequent page splits, and severe buffer pool churn.",
+    "prompt": "Which primary key strategy resolves the B+Tree page-split thrashing, and why?",
+    "question": "Which primary key strategy resolves the B+Tree page-split thrashing, and why?",
+    "options": [
+      "Use random UUIDv4 strings as the clustered primary key",
+      "Increase the primary key size from 16 bytes to 64 bytes of SHA-256 hash",
+      "Use a monotonically increasing or time-ordered key (e.g., UUIDv7 / Snowflake / AUTO_INCREMENT) for the clustered index"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Random UUIDv4 spreads inserts evenly across cold disk pages, maximizing buffer pool misses",
+      "Larger hash keys reduce the B+Tree fanout and trigger more splits",
+      "Time-ordered inserts append to the rightmost leaf page in memory, avoiding mid-tree page splits and random disk page reads"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Think about which leaf pages must be loaded into RAM when inserting random keys vs monotonic keys.",
+    "explanation": "Clustered B+Trees physically sort rows by primary key. Random UUIDv4 inserts dirty every leaf page across the entire table, causing 50% split fragmentation and disk thrashing; time-ordered keys append cleanly to the right edge.",
+    "tags": [
+      "b-tree",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -380,6 +539,59 @@ window.QUESTION_BANK["query-planning"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "query-planning-n1",
+    "topic": "query-planning",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Nested Loop vs Hash Join Cost",
+    "scenario": "A query joins an outer batch of 500 rows against an indexed inner table where each index probe costs 0.2 ms of I/O, versus a full-table Hash Join that scans the entire inner table in 800 ms.",
+    "prompt": "What is the total execution time (in ms) of the Indexed Nested Loop Join across all 500 outer rows?",
+    "question": "What is the total execution time (in ms) of the Indexed Nested Loop Join across all 500 outer rows?",
+    "unit": "ms",
+    "answer": 100,
+    "tolerance": 0.2,
+    "hint": "Multiply 500 outer rows by 0.2 ms per inner index lookup.",
+    "explanation": "500 outer rows × 0.2 ms/probe = 100 ms total, making Indexed Nested Loop 8× faster than the 800 ms Hash Join for small outer cardinality.",
+    "tags": [
+      "query-planning",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "query-planning-t1",
+    "topic": "query-planning",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Stale Cardinality Histograms & Plan Regression",
+    "scenario": "After a bulk tenant import increases a tenant_id's row count from 50 to 5,000,000 within 10 minutes, p99 latency spikes because the optimizer still chooses an Indexed Nested Loop Join instead of a Hash Join.",
+    "prompt": "What is the disciplined database engineering remediation, and why?",
+    "question": "What is the disciplined database engineering remediation, and why?",
+    "options": [
+      "Drop all indexes on tenant_id permanently so every tenant uses full table scans",
+      "Restart the database server after every bulk import to clear RAM",
+      "Trigger explicit `ANALYZE` statistics refresh after bulk loads and enable adaptive/plan-stability guardrails for skewed tenants"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Full table scans are optimal for the 99% of tenants who still only have 50 rows",
+      "Rebooting the DB server does not recompute persistent table histograms",
+      "Refreshing column histograms and most-common-value (MCV) stats informs the cost-based optimizer of the new skew so it switches to a Hash/Merge plan for the heavy tenant"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why did the cost-based optimizer think tenant_id still had 50 rows?",
+    "explanation": "Cost-based optimizers rely on sampled table statistics (histograms and MCV lists). When bulk writes skew data faster than autovacuum/auto-analyze runs, triggering `ANALYZE` updates the selectivity estimate.",
+    "tags": [
+      "query-planning",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -445,6 +657,59 @@ window.QUESTION_BANK["database-locking-and-isolation"] = [
       "database-locking-and-isolation",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "database-locking-and-isolation-n1",
+    "topic": "database-locking-and-isolation",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Hot-Row Lock Contention Throughput Cap",
+    "scenario": "Every checkout updates a single flash-sale inventory row inside a transaction that holds the row-level X-lock for 4 ms (including network round-trip to the app before `COMMIT`).",
+    "prompt": "What is the theoretical maximum sequential throughput (in transactions/sec) that this single hot row can sustain?",
+    "question": "What is the theoretical maximum sequential throughput (in transactions/sec) that this single hot row can sustain?",
+    "unit": "tx/s",
+    "answer": 250,
+    "tolerance": 0.2,
+    "hint": "Divide 1,000 ms/sec by the 4 ms lock hold duration.",
+    "explanation": "Because exclusive row locks serialize updates to the same row, holding the lock for 4 ms caps throughput at 1,000 ms / 4 ms = 250 tx/s regardless of how many CPU cores the database has.",
+    "tags": [
+      "database-locking-and-isolation",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "database-locking-and-isolation-t1",
+    "topic": "database-locking-and-isolation",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Preventing Lost Updates on Concurrent Balance Debits",
+    "scenario": "Two concurrent requests read a wallet balance of $100 under default `READ COMMITTED` isolation and both subtract $80 in application memory before writing `SET balance = $20`.",
+    "prompt": "Which concurrency control mechanism prevents the lost update with minimal lock hold time, and why?",
+    "question": "Which concurrency control mechanism prevents the lost update with minimal lock hold time, and why?",
+    "options": [
+      "Keep application-side math under READ COMMITTED with no WHERE guard",
+      "Acquire a table-level ACCESS EXCLUSIVE lock at the start of every HTTP request",
+      "Use an atomic single-statement conditional update (`UPDATE wallets SET balance = balance - 80 WHERE id = $1 AND balance >= 80`) or optimistic version check"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "READ COMMITTED automatically detects read-modify-write races in application memory",
+      "Table locks maximize multi-tenant concurrency",
+      "Pushing the predicate and decrement into a single atomic SQL statement acquires the row X-lock only for microseconds and re-evaluates the current row state"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Compare holding a lock across an app-to-DB round-trip (`SELECT FOR UPDATE`) vs a single atomic `UPDATE ... WHERE balance >= 80`.",
+    "explanation": "An atomic conditional `UPDATE ... SET balance = balance - 80 WHERE id = ? AND balance >= 80` avoids application read-modify-write lost updates and holds the row lock only during the statement execution.",
+    "tags": [
+      "database-locking-and-isolation",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -631,6 +896,59 @@ window.QUESTION_BANK["database-wal-and-recovery"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "database-wal-and-recovery-n1",
+    "topic": "database-wal-and-recovery",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Group Commit IOPS Reduction",
+    "scenario": "A database handles 12,000 commits/sec. With group commit enabled, the WAL writer flushes batched commit records every 2 ms.",
+    "prompt": "How many physical `fsync` operations per second does the WAL disk perform?",
+    "question": "How many physical `fsync` operations per second does the WAL disk perform?",
+    "unit": "fsync/s",
+    "answer": 500,
+    "tolerance": 0.2,
+    "hint": "Divide 1,000 ms/sec by the 2 ms group commit window (averaging 24 transactions per fsync).",
+    "explanation": "Flushing once every 2 ms requires 1,000 / 2 = 500 fsyncs/sec, coalescing 12,000 / 500 = 24 concurrent transactions into each disk flush.",
+    "tags": [
+      "database-wal-and-recovery",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "database-wal-and-recovery-t1",
+    "topic": "database-wal-and-recovery",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Synchronous vs Asynchronous WAL Flush (`synchronous_commit`)",
+    "scenario": "A Postgres cluster writes both high-value billing ledger entries and high-volume non-critical user presence heartbeats on the same primary instance.",
+    "prompt": "How should you configure WAL durability to maximize throughput without risking financial data loss, and why?",
+    "question": "How should you configure WAL durability to maximize throughput without risking financial data loss, and why?",
+    "options": [
+      "Turn `fsync = off` globally across the entire Postgres instance",
+      "Force synchronous cross-region 3-node quorum commit on every heartbeat update",
+      "Keep `fsync = on` globally, use `SET LOCAL synchronous_commit = on` for ledger transactions, and `SET LOCAL synchronous_commit = off` for presence heartbeats"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "`fsync = off` corrupts the entire database cluster on OS crash",
+      "Cross-region quorum commits make ephemeral heartbeats faster",
+      "Per-transaction `synchronous_commit = off` lets ephemeral writes return before WAL fsync without risking database page corruption on crash, while ledger transactions wait for durable WAL flush"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Distinguish `fsync = off` (corrupts DB on crash) from session-level `synchronous_commit = off` (safe crash recovery, only loses last few ms of async commits).",
+    "explanation": "In PostgreSQL, `synchronous_commit` can be toggled per transaction: financial transactions wait for WAL flush, while high-rate telemetry/heartbeats skip the fsync wait while maintaining full crash consistency.",
+    "tags": [
+      "database-wal-and-recovery",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -696,6 +1014,59 @@ window.QUESTION_BANK["database-ticket-servers"] = [
       "database-ticket-servers",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "database-ticket-servers-n1",
+    "topic": "database-ticket-servers",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Dual Ticket Server Failure Window & Step Sizing",
+    "scenario": "You run Flickr-style dual MySQL ticket servers (`auto_increment_increment = 2`, offsets 1 and 2). During a failover, a batched allocator leases blocks of 1,000 IDs at a time for a service generating 20,000 IDs/sec.",
+    "prompt": "How many database round-trips per second are required to allocate IDs when using a block lease size of 1,000?",
+    "question": "How many database round-trips per second are required to allocate IDs when using a block lease size of 1,000?",
+    "unit": "req/s",
+    "answer": 20,
+    "tolerance": 0.2,
+    "hint": "Divide 20,000 IDs/sec by 1,000 IDs per block lease.",
+    "explanation": "By leasing ranges of 1,000 IDs per atomic counter increment instead of 1 ID per `REPLACE INTO`, database allocation traffic drops from 20,000 QPS to 20,000 / 1,000 = 20 QPS.",
+    "tags": [
+      "database-ticket-servers",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "database-ticket-servers-t1",
+    "topic": "database-ticket-servers",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Single-Row `REPLACE INTO` Ticket Server vs Hi/Lo Block Allocation",
+    "scenario": "A central SQL ticket server using `REPLACE INTO Tickets64` on every insert becomes a CPU and network bottleneck at 80,000 IDs/sec.",
+    "prompt": "Which architectural evolution keeps 64-bit integer IDs compact while removing the per-ID database round-trip, and why?",
+    "question": "Which architectural evolution keeps 64-bit integer IDs compact while removing the per-ID database round-trip, and why?",
+    "options": [
+      "Add 50 read replicas to the MySQL ticket server to serve `REPLACE INTO` writes",
+      "Switch to 512-bit strings concatenated from client hostnames",
+      "Use Hi/Lo range leasing (or Snowflake time+worker+sequence) where app nodes atomically claim a block of N IDs in one DB update and hand them out in memory"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Read replicas can execute primary `AUTO_INCREMENT` writes without conflict",
+      "512-bit string primary keys shrink B+Tree indexes",
+      "Batching ID allocation into in-memory blocks (or local bit-partitioned generators) reduces coordination I/O by 1,000x while preserving 64-bit integer compactness"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Can you amortize the database persistence cost across 1,000 IDs at a time?",
+    "explanation": "Hi/Lo block leasing (or Snowflake bit-allocation) eliminates per-row central DB contention while keeping primary keys as compact, roughly time-ordered 64-bit integers.",
+    "tags": [
+      "database-ticket-servers",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -882,6 +1253,59 @@ window.QUESTION_BANK["online-indexing"] = [
       "apply",
       "inline"
     ]
+  },
+  {
+    "id": "online-indexing-n1",
+    "topic": "online-indexing",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Online Index Backfill Duration",
+    "scenario": "You run `CREATE INDEX CONCURRENTLY` on a 600 GB table. To avoid saturating disk I/O for live production queries, you throttle the background index build scan to 100 MB/s across its 2 passes (total 1,200 GB of scan work).",
+    "prompt": "How many minutes will the throttled 2-pass index build take to complete (using 1 GB = 1,000 MB)?",
+    "question": "How many minutes will the throttled 2-pass index build take to complete (using 1 GB = 1,000 MB)?",
+    "unit": "minutes",
+    "answer": 200,
+    "tolerance": 0.2,
+    "hint": "Total data scanned across 2 passes = 1,200,000 MB. Divide by 100 MB/s to get seconds, then divide by 60.",
+    "explanation": "1,200 GB = 1,200,000 MB. At 100 MB/s, the scan takes 12,000 seconds = 200 minutes (3 hours 20 minutes).",
+    "tags": [
+      "online-indexing",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "online-indexing-t1",
+    "topic": "online-indexing",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Standard `CREATE INDEX` vs `CREATE INDEX CONCURRENTLY`",
+    "scenario": "A developer puts `CREATE INDEX idx_orders_user ON orders(user_id);` inside a deployment migration script that runs against a 200M-row table handling 5,000 writes/sec.",
+    "prompt": "What happens if this runs without `CONCURRENTLY`, and what is the safe production procedure?",
+    "question": "What happens if this runs without `CONCURRENTLY`, and what is the safe production procedure?",
+    "options": [
+      "Standard `CREATE INDEX` finishes instantly with zero locks on 200M rows",
+      "Run `DROP TABLE` and recreate the table with the index during peak traffic",
+      "Standard `CREATE INDEX` acquires a table-level `SHARE` lock that blocks all `INSERT/UPDATE/DELETE` writes for the entire build; use `CREATE INDEX CONCURRENTLY` with a `lock_timeout` instead"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "B-Tree construction never blocks concurrent writers by default",
+      "Dropping the table prevents write lock queues",
+      "`CONCURRENTLY` builds the index across two table scans plus a change buffer without holding a write-blocking lock, requiring only brief metadata locks at start and end"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Check what lock mode standard `CREATE INDEX` holds in PostgreSQL vs `CREATE INDEX CONCURRENTLY`.",
+    "explanation": "Standard `CREATE INDEX` blocks all writes (`INSERT`, `UPDATE`, `DELETE`) for minutes or hours while scanning the table. `CREATE INDEX CONCURRENTLY` performs two background passes so live writes continue uninterrupted.",
+    "tags": [
+      "online-indexing",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -948,6 +1372,59 @@ window.QUESTION_BANK["schema-evolution"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "schema-evolution-n1",
+    "topic": "schema-evolution",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Lock Queue Cascade During Rolling Deploy",
+    "scenario": "An `ALTER TABLE` waits 3 seconds behind a long-running analytics query to acquire an `ACCESS EXCLUSIVE` lock. While it waits in the lock queue, incoming app reads and writes arrive at 4,000 queries/sec and queue behind the pending `ALTER TABLE`.",
+    "prompt": "How many application queries pile up blocked in the lock queue during those 3 seconds?",
+    "question": "How many application queries pile up blocked in the lock queue during those 3 seconds?",
+    "unit": "queries",
+    "answer": 12000,
+    "tolerance": 0.2,
+    "hint": "Multiply 4,000 queries/sec by the 3-second wait window.",
+    "explanation": "Because a queued `ACCESS EXCLUSIVE` lock blocks all subsequent `ACCESS SHARE` (SELECT) and `ROW EXCLUSIVE` (DML) requests behind it, 4,000 × 3 = 12,000 queries pile up in 3 seconds, exhausting connection pools.",
+    "tags": [
+      "schema-evolution",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "schema-evolution-t1",
+    "topic": "schema-evolution",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Renaming a Column Under Rolling Zero-Downtime Deployment",
+    "scenario": "You need to rename column `full_name` to `display_name` on the `users` table while 40 application pods roll out gradually over 15 minutes.",
+    "prompt": "Which migration strategy guarantees zero errors across old and new application pods during the rollout, and why?",
+    "question": "Which migration strategy guarantees zero errors across old and new application pods during the rollout, and why?",
+    "options": [
+      "Run `ALTER TABLE users RENAME COLUMN full_name TO display_name` right before deploying the new pods",
+      "Stop all 40 pods for 15 minutes while running the rename migration",
+      "Use Expand-and-Contract: add `display_name`, dual-write & backfill, switch reads to `display_name`, and drop `full_name` in a subsequent release"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Old pods running in parallel during the rolling deploy will magically recognize the renamed column",
+      "Taking a 15-minute outage is required for every column change",
+      "During a rolling deploy, old pods and new pods coexist against the same DB schema; Expand-and-Contract keeps both column names valid until all old pods are retired"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens to the 39 old pods still running v1 code the instant `RENAME COLUMN` commits?",
+    "explanation": "An in-place `RENAME COLUMN` immediately breaks either v1 pods (expecting `full_name`) or v2 pods (expecting `display_name`). Expand-and-Contract keeps the schema backward-compatible throughout the rollout.",
+    "tags": [
+      "schema-evolution",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -1013,6 +1490,59 @@ window.QUESTION_BANK["soft-delete"] = [
       "soft-delete",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "soft-delete-n1",
+    "topic": "soft-delete",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Partial Index Size Reduction with Soft Deletes",
+    "scenario": "A multi-tenant `tasks` table contains 200,000,000 total rows, of which 85% are historical soft-deleted rows (`deleted_at IS NOT NULL`) and only 15% are active (`deleted_at IS NULL`). Each B-Tree index entry is 40 bytes.",
+    "prompt": "What is the size (in GB, using 1 GB = 10^9 bytes) of a partial index `WHERE deleted_at IS NULL` compared to an 8 GB full-table index?",
+    "question": "What is the size (in GB, using 1 GB = 10^9 bytes) of a partial index `WHERE deleted_at IS NULL` compared to an 8 GB full-table index?",
+    "unit": "GB",
+    "answer": 1.2,
+    "tolerance": 0.2,
+    "hint": "15% of 200,000,000 rows = 30,000,000 active rows. Multiply by 40 bytes (or take 15% of 8 GB).",
+    "explanation": "Only the 30,000,000 active rows (15%) enter the partial index: 30,000,000 × 40 bytes = 1.2 × 10^9 bytes = 1.2 GB (saving 6.8 GB of RAM in the buffer pool).",
+    "tags": [
+      "soft-delete",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "soft-delete-t1",
+    "topic": "soft-delete",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Unique Constraints with Soft Deletes",
+    "scenario": "Users can delete their account (`deleted_at = NOW()`) and later sign up again with the same `email`. A standard `UNIQUE (email)` constraint fails because the soft-deleted row still occupies the email value.",
+    "prompt": "Which schema design preserves uniqueness for active accounts while permitting re-registration and historical retention, and why?",
+    "question": "Which schema design preserves uniqueness for active accounts while permitting re-registration and historical retention, and why?",
+    "options": [
+      "Remove all uniqueness constraints on `email` and check uniqueness only in frontend JavaScript",
+      "Hard-delete all user rows and their foreign-key billing history immediately",
+      "Enforce a partial unique index `CREATE UNIQUE INDEX ON users (email) WHERE deleted_at IS NULL` (or move tombstone records to an archive table)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Frontend checks prevent concurrent race conditions at the database layer",
+      "Hard-deleting billing records satisfies tax audit regulations",
+      "A partial unique index enforces database-level uniqueness strictly across active rows (`deleted_at IS NULL`) while ignoring historical tombstones"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How can the database enforce uniqueness only among rows where `deleted_at IS NULL`?",
+    "explanation": "A partial unique index (`WHERE deleted_at IS NULL`) guarantees that at most one active account can own an email address at any time while allowing unlimited historical soft-deleted tombstones.",
+    "tags": [
+      "soft-delete",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

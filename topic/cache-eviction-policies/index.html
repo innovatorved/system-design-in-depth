@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -955,12 +955,18 @@
 <!-- enriched -->
 <h2>Worked example: scan pollution</h2><p>A 1 GB cache holds 1 million product records of 1 KB each. About 200,000 of them are hot and receive 90 percent of reads, and the cache hit ratio is 92 percent. A nightly export job then reads 2 million distinct order rows through the same cache.</p><ul><li><strong>Pure LRU:</strong> each export row becomes the most recently used entry, so after 1 million rows the hot set is gone. For the next few minutes the hit ratio drops towards zero and product reads fall through to the database. At 20,000 reads per second that is about 18,000 extra DB queries per second.</li><li><strong>Window TinyLFU (Caffeine):</strong> each export row enters a small admission window, about 1 percent of capacity. To move into the main cache, it must beat the victim's estimated frequency in a Count-Min sketch. Export rows have frequency 1 and hot products have high counts, so the export churns only the window, and the hit ratio stays close to 92 percent.</li><li><strong>Redis allkeys-lfu:</strong> uses a logarithmic 8-bit counter with decay (<code>lfu-log-factor</code>, <code>lfu-decay-time</code>). One-time keys start with a low count and are evicted first.</li></ul><h2>Policy comparison</h2><table><thead><tr><th>Policy</th><th>Metadata cost</th><th>Scan resistant</th><th>Adapts to shifting popularity</th><th>Used by</th></tr></thead><tbody><tr><td>FIFO</td><td>Minimal</td><td>No</td><td>Yes</td><td>Simple caches. S3-FIFO research shows FIFO variants can match LRU</td></tr><tr><td>LRU (exact)</td><td>Linked list plus hash map, with a lock on every hit</td><td>No</td><td>Yes</td><td>Many application libraries</td></tr><tr><td>CLOCK / sampled LRU</td><td>A bit or timestamp per entry</td><td>No</td><td>Yes</td><td>OS page caches, Redis allkeys-lru</td></tr><tr><td>LFU</td><td>A counter per entry</td><td>Yes</td><td>Poorly without decay</td><td>Redis allkeys-lfu, which uses decay</td></tr><tr><td>Segmented LRU / 2Q</td><td>Two lists</td><td>Mostly</td><td>Yes</td><td>InnoDB midpoint insertion, memcached segmented LRU</td></tr><tr><td>W-TinyLFU</td><td>Count-Min sketch plus windows</td><td>Yes</td><td>Yes, through hill climbing</td><td>Caffeine, Ristretto</td></tr></tbody></table><h2>Practical guidance</h2><ul><li>Replay a real access trace through candidate policies before choosing one. Caffeine's simulator and libCacheSim exist for this.</li><li>Cap maximum entry size. One 50 MB value can evict thousands of useful small entries.</li><li>In Redis, set <code>maxmemory</code> and an explicit <code>maxmemory-policy</code>. The default, <code>noeviction</code>, makes writes fail when memory is full.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="cache-eviction-policies" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="cache-eviction-policies" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Who implements W-TinyLFU" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Surviving a nightly export" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Redis full, writes failing" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Who implements W-TinyLFU" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Surviving a nightly export" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Redis full, writes failing" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Scan Pollution in Pure LRU" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Pure LRU vs W-TinyLFU / Segmented LRU (SLRU)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-cache-eviction-policies-c1" data-type="mcq" data-slug="cache-eviction-policies" data-index="0">
@@ -1078,12 +1084,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cache-eviction-policies-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-cache-eviction-policies-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Redis&#039;s default policy, noeviction, returns errors on writes at maxmemory instead of freeing space, so you must set an explicit policy for a cache. Only the volatile-* policies are limited to keys with a TTL; allkeys-* policies can evict any key.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-cache-eviction-policies-n1" data-type="numeric" data-slug="cache-eviction-policies" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Scan Pollution in Pure LRU</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A Redis cache holds 1,000,000 entries using pure LRU eviction. A hourly batch reporting job sequentially reads 600,000 one-time cold keys that are never accessed again.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What percentage of the 1,000,000 cached working-set entries get evicted by this single sequential batch scan under pure LRU?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-cache-eviction-policies-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-cache-eviction-policies-n1"
+              aria-label="Numeric estimate in %"
+              placeholder="Enter numeric estimate (%)..."
+            />
+            <span class="quiz-unit-badge">%</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">600,000 newly inserted cold keys push out 600,000 entries from the 1,000,000-entry LRU list.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cache-eviction-policies-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-cache-eviction-policies-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Because pure LRU places every newly accessed key at the MRU head regardless of frequency, 600,000 cold scan keys evict 600,000 / 1,000,000 = 60% of the hot working set.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-cache-eviction-policies-t1" data-type="tradeoff" data-slug="cache-eviction-policies" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Pure LRU vs W-TinyLFU / Segmented LRU (SLRU)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your cache serves a mix of power-law hot keys and periodic large pagination/analytics scans that currently cause hit-rate cliffs every hour under standard LRU.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which eviction policy prevents scan pollution while adapting to shifting traffic popularity, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-cache-eviction-policies-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-cache-eviction-policies-t1" value="0" />
+                  <span>FIFO (First-In, First-Out) eviction</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-cache-eviction-policies-t1" value="1" />
+                  <span>Unbounded pure LFU without aging or decay</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-cache-eviction-policies-t1" value="2" />
+                  <span>W-TinyLFU (or Segmented LRU / 2Q) using a small window cache plus a Count-Min Sketch frequency admission filter and periodic counter halving</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-cache-eviction-policies-t1" value="0" />
+                  <span>FIFO protects frequently accessed items from one-time scans</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-cache-eviction-policies-t1" value="1" />
+                  <span>Unbounded LFU never retains old viral keys after their traffic drops to zero</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-cache-eviction-policies-t1" value="2" />
+                  <span>An admission filter (TinyLFU) rejects one-hit scan wonders before they evict hot main-cache items, while periodic counter decay ages out formerly popular keys</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why do both pure LRU (scan pollution) and pure LFU (stale frequency accumulation) fail in production?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cache-eviction-policies-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-cache-eviction-policies-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">W-TinyLFU combines recency (a small 1% window LRU for bursts) with decayed frequency admission (Count-Min Sketch), preventing one-hit sequential scans from evicting high-frequency working-set keys.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1246,7 +1382,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1254,15 +1390,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

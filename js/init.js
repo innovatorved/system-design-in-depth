@@ -41,9 +41,10 @@
   function gtag() { window.dataLayer.push(arguments); }
   window.gtag = gtag;
 
-  let consentGranted = false;
+  let consentGranted = true;
   try {
-    consentGranted = localStorage.getItem('sd-consent') === 'granted';
+    const storedConsent = localStorage.getItem('sd-consent');
+    if (storedConsent === 'denied') consentGranted = false;
   } catch {}
 
   gtag('consent', 'default', {

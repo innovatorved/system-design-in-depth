@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -981,12 +981,18 @@
 <!-- enriched -->
 <h2>Worked example: the lost update and three fixes</h2><p>Two requests each add 10 to an account balance of 100.</p><table><thead><tr><th>Time</th><th>Transaction A</th><th>Transaction B</th></tr></thead><tbody><tr><td>t1</td><td><code>SELECT balance</code> returns 100</td><td></td></tr><tr><td>t2</td><td></td><td><code>SELECT balance</code> returns 100</td></tr><tr><td>t3</td><td><code>UPDATE SET balance = 110</code>, COMMIT</td><td></td></tr><tr><td>t4</td><td></td><td><code>UPDATE SET balance = 110</code>, COMMIT</td></tr></tbody></table><p>The final balance is 110 instead of 120, and this happens at Read Committed with no error. Three fixes:</p><ul><li><strong>Atomic update:</strong> <code>UPDATE accounts SET balance = balance + 10 WHERE id = 1;</code> The row lock serializes the two writers. This is the simplest and best option when possible.</li><li><strong>Pessimistic lock:</strong> <code>SELECT balance FROM accounts WHERE id = 1 FOR UPDATE;</code> B blocks at t2 until A commits, then reads 110.</li><li><strong>Optimistic check:</strong> <code>UPDATE ... SET balance = 110, version = 8 WHERE id = 1 AND version = 7;</code> B updates 0 rows, then re-reads and retries.</li></ul><h3>Lock types you will meet</h3><table><thead><tr><th>Lock</th><th>Taken by</th><th>Blocks</th></tr></thead><tbody><tr><td>Row exclusive (FOR UPDATE)</td><td>UPDATE, DELETE, SELECT FOR UPDATE</td><td>Other writers and FOR UPDATE on the same row, but not plain MVCC reads</td></tr><tr><td>Row shared (FOR SHARE)</td><td>SELECT FOR SHARE, FK checks</td><td>Writers on that row</td></tr><tr><td>Gap / next-key (InnoDB)</td><td>Range reads at Repeatable Read</td><td>Inserts into the locked range, which prevents phantoms</td></tr><tr><td>Predicate SIRead (PostgreSQL SSI)</td><td>Reads at Serializable</td><td>Blocks nothing; tracked to detect dangerous read-write cycles</td></tr><tr><td>Table ACCESS EXCLUSIVE</td><td>ALTER TABLE, DROP, some DDL</td><td>Everything, including reads</td></tr></tbody></table><h3>Deadlocks</h3><p>A locks row 1 then wants row 2, while B locks row 2 then wants row 1. The database detects the cycle (PostgreSQL checks after <code>deadlock_timeout</code>, 1 s by default) and aborts one transaction. The prevention is to always lock rows in a consistent order, for example by ascending primary key.</p><h3>How real systems implement Serializable</h3><ul><li><strong>PostgreSQL:</strong> Serializable Snapshot Isolation, which runs optimistically and aborts on dangerous structures.</li><li><strong>MySQL InnoDB:</strong> Serializable turns plain SELECTs into locking reads (two-phase locking).</li><li><strong>CockroachDB:</strong> Serializable by default, using timestamps and transaction restarts.</li><li><strong>Spanner:</strong> strict serializability via two-phase locking plus TrueTime.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="database-locking-and-isolation" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="database-locking-and-isolation" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: What Repeatable Read allows" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Two doctors, zero on call" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: The lost update" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: What Repeatable Read allows" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Two doctors, zero on call" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: The lost update" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Hot-Row Lock Contention Throughput Cap" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Preventing Lost Updates on Concurrent Balance Debits" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-database-locking-and-isolation-c1" data-type="mcq" data-slug="database-locking-and-isolation" data-index="0">
@@ -1104,12 +1110,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-locking-and-isolation-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-locking-and-isolation-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Both transactions write the literal value 110 that they computed, so one increment is lost silently. An atomic balance = balance + 10 lets the row lock serialize the two writers. The first option is tempting: the second UPDATE does wait for the lock, but it still writes the stale 110 it calculated from its earlier read.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-database-locking-and-isolation-n1" data-type="numeric" data-slug="database-locking-and-isolation" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Hot-Row Lock Contention Throughput Cap</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Every checkout updates a single flash-sale inventory row inside a transaction that holds the row-level X-lock for 4 ms (including network round-trip to the app before `COMMIT`).</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the theoretical maximum sequential throughput (in transactions/sec) that this single hot row can sustain?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-locking-and-isolation-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-database-locking-and-isolation-n1"
+              aria-label="Numeric estimate in tx/s"
+              placeholder="Enter numeric estimate (tx/s)..."
+            />
+            <span class="quiz-unit-badge">tx/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 1,000 ms/sec by the 4 ms lock hold duration.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-locking-and-isolation-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-locking-and-isolation-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Because exclusive row locks serialize updates to the same row, holding the lock for 4 ms caps throughput at 1,000 ms / 4 ms = 250 tx/s regardless of how many CPU cores the database has.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-database-locking-and-isolation-t1" data-type="tradeoff" data-slug="database-locking-and-isolation" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Preventing Lost Updates on Concurrent Balance Debits</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Two concurrent requests read a wallet balance of $100 under default `READ COMMITTED` isolation and both subtract $80 in application memory before writing `SET balance = $20`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which concurrency control mechanism prevents the lost update with minimal lock hold time, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-locking-and-isolation-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-locking-and-isolation-t1" value="0" />
+                  <span>Keep application-side math under READ COMMITTED with no WHERE guard</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-locking-and-isolation-t1" value="1" />
+                  <span>Acquire a table-level ACCESS EXCLUSIVE lock at the start of every HTTP request</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-locking-and-isolation-t1" value="2" />
+                  <span>Use an atomic single-statement conditional update (`UPDATE wallets SET balance = balance - 80 WHERE id = $1 AND balance &gt;= 80`) or optimistic version check</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-locking-and-isolation-t1" value="0" />
+                  <span>READ COMMITTED automatically detects read-modify-write races in application memory</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-locking-and-isolation-t1" value="1" />
+                  <span>Table locks maximize multi-tenant concurrency</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-locking-and-isolation-t1" value="2" />
+                  <span>Pushing the predicate and decrement into a single atomic SQL statement acquires the row X-lock only for microseconds and re-evaluates the current row state</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Compare holding a lock across an app-to-DB round-trip (`SELECT FOR UPDATE`) vs a single atomic `UPDATE ... WHERE balance &gt;= 80`.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-locking-and-isolation-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-locking-and-isolation-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">An atomic conditional `UPDATE ... SET balance = balance - 80 WHERE id = ? AND balance &gt;= 80` avoids application read-modify-write lost updates and holds the row lock only during the statement execution.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1258,7 +1394,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1266,15 +1402,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

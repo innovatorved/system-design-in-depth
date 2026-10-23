@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -992,12 +992,18 @@ flowchart LR
 <li>The partition layer above (Azure's tables, blobs and queues) keeps its own logs and checkpoints in streams, so every higher layer inherits the same durability model.</li>
 </ul>
 </div></article>
-      <section class="check-slider" data-slug="append-only-object-storage-stream-layer" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="append-only-object-storage-stream-layer" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Purpose of fencing" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Seal length" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Ack policy and sealing" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Purpose of fencing" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Seal length" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Ack policy and sealing" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Small-Object Inode Overhead Elimination (Haystack / SeaweedFS Volume Packing)" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: 1-File-Per-Object POSIX Storage vs Packed Append-Only Extent Volumes" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-append-only-object-storage-stream-layer-c1" data-type="mcq" data-slug="append-only-object-storage-stream-layer" data-index="0">
@@ -1115,12 +1121,142 @@ flowchart LR
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="append-only-object-storage-stream-layer-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-append-only-object-storage-stream-layer-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Sealing at the minimum is safe only if every acknowledged byte is on every replica; with a 2-of-3 ack the lagging replica can miss acknowledged data. Clients do not retry writes they were told succeeded, which is why the nothing-goes-wrong option is the dangerous one.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-append-only-object-storage-stream-layer-n1" data-type="numeric" data-slug="append-only-object-storage-stream-layer" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Small-Object Inode Overhead Elimination (Haystack / SeaweedFS Volume Packing)</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Storing 100,000,000 small 4 KB thumbnails as individual POSIX files requires 100,000,000 filesystem inodes (plus directory dentry lookups), consuming ~2 disk seeks per read when inodes miss cache. Packing them into large 32 GB append-only volume superfiles keeps a compact 24-byte per-needle index in RAM.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many gigabytes (GB, where 1 GB = 10^9 bytes) of RAM does the 24-byte-per-needle index require for 100,000,000 packed thumbnails?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-append-only-object-storage-stream-layer-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-append-only-object-storage-stream-layer-n1"
+              aria-label="Numeric estimate in GB"
+              placeholder="Enter numeric estimate (GB)..."
+            />
+            <span class="quiz-unit-badge">GB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 100,000,000 needles by 24 bytes and divide by 10^9.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="append-only-object-storage-stream-layer-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-append-only-object-storage-stream-layer-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">100,000,000 × 24 bytes = 2.4 GB of RAM, eliminating POSIX inode disk seeks completely so every thumbnail read takes exactly 1 disk `pread` into the append-only volume file.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-append-only-object-storage-stream-layer-t1" data-type="tradeoff" data-slug="append-only-object-storage-stream-layer" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: 1-File-Per-Object POSIX Storage vs Packed Append-Only Extent Volumes</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your object storage data nodes store millions of 10 KB–100 KB objects. Using standard ext4/XFS with one POSIX file per object causes disk IOPS saturation even at low bandwidth because `open()` + `stat()` + `read()` requires multiple metadata disk reads.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why do production blob stores (Facebook Haystack, Tectonic, SeaweedFS, MinIO XL) pack small objects into large append-only volume extents?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-append-only-object-storage-stream-layer-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-append-only-object-storage-stream-layer-t1" value="0" />
+                  <span>POSIX filesystems forbid creating more than 1,000 files per disk</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-append-only-object-storage-stream-layer-t1" value="1" />
+                  <span>Packing files into volumes disables checksum verification</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-append-only-object-storage-stream-layer-t1" value="2" />
+                  <span>Packing thousands of objects as sequential &quot;needles&quot; inside multi-gigabyte volume files bypasses POSIX directory/inode lookups, turns writes into sequential appends, and serves reads in a single `pread(fd, offset, size)` using analready-open file descriptor</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-append-only-object-storage-stream-layer-t1" value="0" />
+                  <span>ext4 has a hard limit of 1,000 inodes</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-append-only-object-storage-stream-layer-t1" value="1" />
+                  <span>Append-only needles cannot include CRC32 checksums</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-append-only-object-storage-stream-layer-t1" value="2" />
+                  <span>POSIX inode metadata for hundreds of millions of tiny files overflows page cache and causes extra disk seeks per read; extent packing collapses metadata to a tiny in-memory offset map</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Recall the core insight of Facebook&#039;s Haystack paper (&quot;Finding a needle in Haystack&quot;).</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="append-only-object-storage-stream-layer-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-append-only-object-storage-stream-layer-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Filesystem inodes (128–256 bytes plus directory b-trees) are too heavy to cache in RAM for billions of small photos. Appending objects into large open volume files with a tiny in-memory needle index achieves 1-seek reads.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1233,22 +1369,22 @@ flowchart LR
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

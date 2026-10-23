@@ -63,6 +63,59 @@ window.QUESTION_BANK["api-design-contracts"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "api-design-contracts-n1",
+    "topic": "api-design-contracts",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Idempotency Key Cache Memory Sizing",
+    "scenario": "Your payments API enforces a 24-hour idempotency key retention window. The cluster processes 2,000 write requests/second (172.8 million writes/day, use 175 million for napkin math), and each Redis entry storing the idempotency key, hash, and cached response payload consumes 400 bytes including allocator overhead.",
+    "prompt": "Using 175 million stored keys over the rolling 24-hour window, how many gigabytes (GB, where 1 GB = 10^9 bytes) of Redis memory are required?",
+    "question": "Using 175 million stored keys over the rolling 24-hour window, how many gigabytes (GB, where 1 GB = 10^9 bytes) of Redis memory are required?",
+    "unit": "GB",
+    "answer": 70,
+    "tolerance": 0.2,
+    "hint": "Multiply 175,000,000 keys by 400 bytes/key and divide by 10^9 bytes/GB.",
+    "explanation": "175,000,000 keys × 400 bytes/key = 70,000,000,000 bytes = 70 GB of RAM. Sizing idempotency storage explicitly prevents premature eviction of keys within the promised 24-hour retry window.",
+    "tags": [
+      "api-design-contracts",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "api-design-contracts-t1",
+    "topic": "api-design-contracts",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Additive Schema Evolution vs Hard URL Version Bumps",
+    "scenario": "Your public B2B webhook and REST API serves 4,000 enterprise integrations. Product wants to add two optional tax breakdown fields and deprecate a legacy single-string address field.",
+    "prompt": "Which API evolution strategy should you execute, and what is the primary justification?",
+    "question": "Which API evolution strategy should you execute, and what is the primary justification?",
+    "options": [
+      "Fork the entire controller and routing tier into `/v2/` and shut down `/v1/` after 14 days",
+      "Mutate the existing `/v1/` response in-place by deleting the legacy address field immediately",
+      "Add the new fields additively alongside the legacy field, dual-populate both during a sunset window tracked via per-client telemetry, and gate breaking changes behind explicit version headers or a major version only when invariants change"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Enterprise customers love rewriting and redeploying integrations every two weeks",
+      "Deleting fields in-place never breaks strict JSON deserializers in statically typed clients",
+      "Additive evolution with dual-writing and usage telemetry avoids fragmenting backend codebases across N URL versions while guaranteeing zero unannounced breakage for existing integrators"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Forking `/v2/` for every minor field addition multiplies maintenance burden, while deleting fields in place breaks contracts.",
+    "explanation": "Additive changes (new optional fields, tolerant readers) allow APIs to evolve continuously without splitting the ecosystem across `/v1`, `/v2`, `/v3` forks. Telemetry on deprecated field usage lets you assist the remaining stragglers before retiring old fields.",
+    "tags": [
+      "api-design-contracts",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -128,6 +181,59 @@ window.QUESTION_BANK["service-to-service-communication"] = [
       "service-to-service-communication",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "service-to-service-communication-n1",
+    "topic": "service-to-service-communication",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Queue Buffer Sizing During Downstream Maintenance",
+    "scenario": "Your checkout service emits order-fulfillment messages at a peak rate of 4,000 messages/second, with an average serialized message size of 2.5 KB. The downstream warehouse service undergoes a planned 15-minute (900-second) database migration where it pauses consumption.",
+    "prompt": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of durable broker disk backlog accumulate during the 15-minute pause (before replication factor)?",
+    "question": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of durable broker disk backlog accumulate during the 15-minute pause (before replication factor)?",
+    "unit": "GB",
+    "answer": 9,
+    "tolerance": 0.2,
+    "hint": "Throughput = 4,000 msg/s × 2.5 KB = 10,000 KB/s = 10 MB/s. Multiply by 900 seconds.",
+    "explanation": "At 4,000 messages/s × 2.5 KB/message, the producer generates 10 MB/s. Over a 900-second downtime window, the queue buffers 10 MB/s × 900 s = 9,000 MB = 9 GB of primary payload data (or 27 GB with 3x broker replication).",
+    "tags": [
+      "service-to-service-communication",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "service-to-service-communication-t1",
+    "topic": "service-to-service-communication",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Synchronous RPC vs Asynchronous Outbox Queue for Post-Commit Side Effects",
+    "scenario": "During user signup, the identity service must create the user row and trigger welcome emails, CRM provisioning, and fraud scoring. Currently, synchronous RPCs to those 3 services cause signup p99 to hit 2.4 seconds and fail whenever the external CRM API is flaky.",
+    "prompt": "Which communication architecture should you adopt, and what is the primary justification?",
+    "question": "Which communication architecture should you adopt, and what is the primary justification?",
+    "options": [
+      "Keep synchronous blocking RPCs to all 3 downstream systems but increase the client timeout to 30 seconds",
+      "Fire-and-forget async HTTP calls in a background goroutine before the database transaction commits",
+      "Commit the user row and an outbox event atomically in one local DB transaction, return success immediately, and fan out the event via a durable message broker to downstream consumers"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Longer synchronous timeouts improve availability when a downstream dependency is down",
+      "Firing unpersisted goroutines before commit guarantees delivery if the process crashes or the transaction rolls back",
+      "Transactional outbox + async broker decouples user-facing signup availability and latency from non-critical downstream slowdowns while guaranteeing at-least-once event delivery"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How do you avoid both synchronous temporal coupling AND lost events on process crash?",
+    "explanation": "Synchronous RPCs couple the availability and tail latency of user signup to the weakest downstream dependency. In-memory fire-and-forget loses events on crash. Writing a transactional outbox record in the same local transaction and publishing asynchronously achieves fast, reliable decoupling.",
+    "tags": [
+      "service-to-service-communication",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -195,6 +301,59 @@ window.QUESTION_BANK["http-rest-grpc"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "http-rest-grpc-n1",
+    "topic": "http-rest-grpc",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: JSON vs Protobuf East-West Bandwidth Savings",
+    "scenario": "An internal recommendation fan-out service handles 50,000 RPCs/second. Each response carries 100 scored item structs totaling 12 KB as uncompressed JSON over HTTP/1.1, or 3 KB when encoded in binary Protobuf over gRPC.",
+    "prompt": "How many megabytes per second (MB/s) of internal network bandwidth are saved by switching this service from uncompressed JSON to Protobuf?",
+    "question": "How many megabytes per second (MB/s) of internal network bandwidth are saved by switching this service from uncompressed JSON to Protobuf?",
+    "unit": "MB/s",
+    "answer": 450,
+    "tolerance": 0.2,
+    "hint": "Per-response savings = 12 KB - 3 KB = 9 KB. Multiply by 50,000 req/s and divide by 1,000 KB/MB.",
+    "explanation": "Each RPC saves 9 KB of wire payload. Across 50,000 req/s, total bandwidth drops from 600 MB/s to 150 MB/s—saving 450 MB/s (3.6 Gbps) of east-west network throughput and dramatically cutting CPU serialization overhead.",
+    "tags": [
+      "http-rest-grpc",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "http-rest-grpc-t1",
+    "topic": "http-rest-grpc",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Public REST/JSON Edge + Internal gRPC Mesh",
+    "scenario": "You are designing a platform that exposes APIs to third-party browser/partner developers while internally executing high-fanout calls across 30 polyglot microservices (Go, Rust, Java, Python).",
+    "prompt": "Which protocol boundary architecture should you select, and what is the primary justification?",
+    "question": "Which protocol boundary architecture should you select, and what is the primary justification?",
+    "options": [
+      "Force all external browser clients and third-party curl scripts to speak raw binary gRPC over HTTP/2 without transcoding",
+      "Use verbose human-readable JSON/HTTP/1.1 for every internal microservice hop to avoid compiling `.proto` files",
+      "Expose REST/JSON (or GraphQL) at the public API gateway for universal client compatibility, and transcode/route internally via strongly typed gRPC over HTTP/2"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "All web browsers natively support raw HTTP/2 trailers and binary gRPC framing without proxies",
+      "Text-based JSON parsing and repeated field names are zero-cost at 100,000 internal RPCs/sec",
+      "Combining an ergonomic REST/JSON public edge with binary, code-generated gRPC for east-west traffic maximizes external developer adoption while minimizing internal CPU, bandwidth, and contract drift"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "External partners value inspectability and browser compatibility; internal high-QPS meshes value strict `.proto` codegen, multiplexing, and compact binary wire formats.",
+    "explanation": "Browsers and third-party developers expect standard HTTP/JSON tooling, whereas high-throughput internal service meshes benefit from Protobuf's strict schema codegen, compact binary encoding, and HTTP/2 multiplexing. Translating at the API gateway captures the strengths of both.",
+    "tags": [
+      "http-rest-grpc",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -261,6 +420,59 @@ window.QUESTION_BANK["tcp-vs-udp"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "tcp-vs-udp-n1",
+    "topic": "tcp-vs-udp",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Cold TLS 1.3 over TCP vs QUIC (UDP) Connection Setup Latency",
+    "scenario": "A mobile client is 60 ms Round-Trip Time (RTT) away from your edge server. A cold connection using TCP + TLS 1.3 requires 1 RTT for the TCP 3-way handshake plus 1 RTT for the TLS 1.3 handshake before sending the HTTP request (1 more RTT for the response). QUIC over UDP combines transport and cryptographic handshakes into 1 RTT before the request/response RTT.",
+    "prompt": "How many milliseconds faster does the first HTTP response arrive over a cold 1-RTT QUIC connection compared to cold TCP + TLS 1.3?",
+    "question": "How many milliseconds faster does the first HTTP response arrive over a cold 1-RTT QUIC connection compared to cold TCP + TLS 1.3?",
+    "unit": "ms",
+    "answer": 60,
+    "tolerance": 0.2,
+    "hint": "Cold TCP + TLS 1.3 + HTTP takes 3 RTTs (180 ms); cold QUIC + HTTP/3 takes 2 RTTs (120 ms). Difference = 1 RTT.",
+    "explanation": "Cold TCP + TLS 1.3 requires 2 handshake RTTs + 1 request/response RTT = 3 × 60 ms = 180 ms. Cold QUIC (over UDP) completes the combined transport+TLS handshake in 1 RTT + 1 request/response RTT = 2 × 60 ms = 120 ms, saving 1 full RTT = 60 ms (or 120 ms with 0-RTT resumption).",
+    "tags": [
+      "tcp-vs-udp",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "tcp-vs-udp-t1",
+    "topic": "tcp-vs-udp",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: UDP/RTP vs Single-Connection TCP for Real-Time Interactive Media",
+    "scenario": "You are architecting a live 60-fps cloud gaming / WebRTC video stream over cellular networks with 2% packet loss and 50 ms RTT. Frames older than 80 ms are useless to the player.",
+    "prompt": "Which transport protocol architecture should carry the media frames, and what is the primary justification?",
+    "question": "Which transport protocol architecture should carry the media frames, and what is the primary justification?",
+    "options": [
+      "Stream all video and audio frames over a single standard TCP connection so every lost packet is guaranteed to arrive in order",
+      "Use UDP (with WebRTC/SRTP, selective retransmission/FEC, and application-level congestion control) for media frames while keeping control signaling on a reliable channel",
+      "Send raw UDP at a fixed 50 Mbps bitrate with no congestion control or feedback loop"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Waiting 100+ ms for TCP kernel retransmission of an already-expired video frame improves interactive responsiveness",
+      "TCP enforces strict byte-stream ordering that stalls delivery of newer, already-arrived frames behind a single lost packet (head-of-line blocking), whereas UDP lets the application skip stale frames and bound jitter",
+      "Uncontrolled raw UDP blasts never trigger router bufferbloat or ISP packet drops"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "In real-time media, a frame arriving 120 ms late after TCP retransmission stalls all subsequent frames sitting in the kernel receive buffer.",
+    "explanation": "TCP's kernel-level in-order byte stream delivery forces all subsequent packets to wait in the OS buffer until a single lost packet is retransmitted (head-of-line blocking). For real-time media, UDP with application-aware framing (RTP/SRTP or QUIC datagrams) allows rendering fresh frames immediately and using FEC or selective retransmission only when within the latency budget.",
+    "tags": [
+      "tcp-vs-udp",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -326,6 +538,59 @@ window.QUESTION_BANK["api-gateway-vs-load-balancer"] = [
       "api-gateway-vs-load-balancer",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "api-gateway-vs-load-balancer-n1",
+    "topic": "api-gateway-vs-load-balancer",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Gateway Auth Introspection Offload",
+    "scenario": "An API Gateway handles 25,000 requests/second. Previously, each request triggered an inline 1.5 ms RPC from the gateway to the central Auth service to validate session tokens. You switch to local asymmetric JWT signature verification at the gateway (0.1 ms CPU, 0 RPCs) with a 60-second revocation list sync.",
+    "prompt": "How many requests per second of network load are removed from the central Auth service by verifying JWTs locally at the API Gateway?",
+    "question": "How many requests per second of network load are removed from the central Auth service by verifying JWTs locally at the API Gateway?",
+    "unit": "req/s",
+    "answer": 25000,
+    "tolerance": 0.2,
+    "hint": "Every one of the 25,000 req/s previously made 1 synchronous RPC to the Auth service.",
+    "explanation": "Eliminating the per-request synchronous introspection RPC removes all 25,000 req/s of inline load from the central Auth service (replacing it with a tiny background revocation-list poll once per minute per gateway node) and shaves 1.4 ms off every request.",
+    "tags": [
+      "api-gateway-vs-load-balancer",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "api-gateway-vs-load-balancer-t1",
+    "topic": "api-gateway-vs-load-balancer",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Layered L4/L7 Load Balancer + API Gateway vs Monolithic Edge",
+    "scenario": "Your platform ingests 200,000 req/s across public REST APIs, static asset streams, and high-throughput internal service-to-service gRPC traffic. Currently, routing internal east-west gRPC calls through the external central API gateway adds 4 ms per hop and caused a cluster-wide outage when a rate-limit plugin Lua script had a bug.",
+    "prompt": "Which traffic management topology should you adopt, and what is the primary justification?",
+    "question": "Which traffic management topology should you adopt, and what is the primary justification?",
+    "options": [
+      "Route all north-south and east-west internal microservice calls through the single central API gateway cluster",
+      "Remove the API gateway completely and implement OAuth verification, billing quotas, and WAF rules inside every microservice",
+      "Use L4/L7 load balancers for fast transport distribution, keep the API Gateway dedicated to north-south edge concerns (auth, tenant rate-limiting, protocol translation), and use lightweight client-side/mesh L7 load balancing for east-west traffic"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Hairpinning every internal RPC through a central north-south gateway minimizes latency and blast radius",
+      "Duplicating WAF, OAuth, and billing quota logic across 40 microservices guarantees uniform security enforcement",
+      "Separating north-south edge policy enforcement (API Gateway) from high-speed packet/connection distribution (LB) and internal east-west routing avoids central bottlenecks and blast-radius coupling"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "North-south edge traffic needs cross-cutting policy (auth, quotas); internal east-west RPCs need low-latency, fault-isolated routing.",
+    "explanation": "An API Gateway excels at north-south edge concerns (authentication, tenant quotas, public schema translation), while L4/L7 load balancers and internal service meshes handle high-throughput packet/connection distribution without hairpinning east-west calls through a central policy choke point.",
+    "tags": [
+      "api-gateway-vs-load-balancer",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -512,6 +777,59 @@ window.QUESTION_BANK["consistent-hashing-load-balancing"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "consistent-hashing-load-balancing-n1",
+    "topic": "consistent-hashing-load-balancing",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Bounded-Load Consistent Hashing Capacity Cap",
+    "scenario": "A consistent-hashing load balancer routes 8,000 requests/second across 10 backend cache-affinity nodes using Mirrokni/Vimeo Bounded-Load Consistent Hashing with a load-factor parameter c = 1.25 (meaning no node may receive more than 1.25x the average load).",
+    "prompt": "What is the maximum request rate (in req/s) that the load balancer will permit any single hot node to receive before spilling excess requests to the next node on the ring?",
+    "question": "What is the maximum request rate (in req/s) that the load balancer will permit any single hot node to receive before spilling excess requests to the next node on the ring?",
+    "unit": "req/s",
+    "answer": 1000,
+    "tolerance": 0.2,
+    "hint": "Average load per node = 8,000 / 10 = 800 req/s. Multiply by c = 1.25.",
+    "explanation": "With 8,000 req/s across 10 nodes, the average load is 800 req/s per node. Bounded-load consistent hashing caps each node at c × average = 1.25 × 800 = 1,000 req/s, preventing a single viral key from melting its primary ring owner.",
+    "tags": [
+      "consistent-hashing-load-balancing",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "consistent-hashing-load-balancing-t1",
+    "topic": "consistent-hashing-load-balancing",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Bounded-Load Consistent Hashing vs Pure Ring Hashing or Least-Connections",
+    "scenario": "Your document preview service holds 2 GB of expensive in-memory parsed font/asset caches per tenant on each worker. Pure least-connections routing causes a 90% in-memory cache miss rate, while pure consistent hashing by `tenant_id` caused a single large enterprise tenant to overload one worker to 100% CPU.",
+    "prompt": "Which load-balancing algorithm should you deploy, and what is the primary justification?",
+    "question": "Which load-balancing algorithm should you deploy, and what is the primary justification?",
+    "options": [
+      "Switch to pure random round-robin and quadruple the RAM on every worker node",
+      "Use pure consistent hashing with 1 virtual node per server",
+      "Use consistent hashing with virtual nodes and a bounded-load overflow cap (or Power-of-Two-Choices over two deterministic ring hashes per tenant)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Random routing maximizes locality for tenant-specific in-memory caches",
+      "Using 1 virtual node per server eliminates hot-key overload on a viral tenant",
+      "Bounded-load consistent hashing (or deterministic 2-choice hashing) preserves locality for 99% of tenants while bounding worst-case hot-tenant overload via controlled spillover"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How do you keep locality for normal keys while capping the maximum load any single server can take during a hot-key spike?",
+    "explanation": "Pure least-connections destroys cache locality, while pure consistent hashing is vulnerable to hot keys (since all requests for a hot key hash to the same point on the ring). Bounded-load consistent hashing (or hashing a key to k=2 deterministic candidate nodes and picking the less loaded one) preserves high hit rates while preventing single-node overload.",
+    "tags": [
+      "consistent-hashing-load-balancing",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -577,6 +895,59 @@ window.QUESTION_BANK["event-contracts"] = [
       "event-contracts",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "event-contracts-n1",
+    "topic": "event-contracts",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Fat Event vs Claim-Check Broker Retention Storage",
+    "scenario": "An event stream processes 5,000 events/second with a 7-day (604,800-second; use 600,000 seconds for napkin math) retention period and a 3x broker replication factor. A proposed \"fat event\" embeds a 10 KB document snapshot, whereas a lean schema with a Schema Registry ID stores a 500-byte (0.5 KB) event.",
+    "prompt": "Using 600,000 seconds for 7 days, how many terabytes (TB, where 1 TB = 10^12 bytes) of replicated broker disk space does the 0.5 KB lean event require (compared to 90 TB for the 10 KB fat event)?",
+    "question": "Using 600,000 seconds for 7 days, how many terabytes (TB, where 1 TB = 10^12 bytes) of replicated broker disk space does the 0.5 KB lean event require (compared to 90 TB for the 10 KB fat event)?",
+    "unit": "TB",
+    "answer": 4.5,
+    "tolerance": 0.2,
+    "hint": "Total events in 7 days = 5,000 × 600,000 = 3 × 10^9 events. Multiply by 500 bytes and by 3 replicas, then divide by 10^12.",
+    "explanation": "Over 600,000 seconds, 5,000 events/s produces 3 × 10^9 events. At 500 bytes/event, primary volume is 1.5 × 10^12 bytes (1.5 TB). With 3x replication, broker storage is 4.5 TB—saving 85.5 TB of fast NVMe broker storage compared to the 90 TB fat event.",
+    "tags": [
+      "event-contracts",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "event-contracts-t1",
+    "topic": "event-contracts",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Schema Registry with Forward/Backward Compatibility vs Unvalidated JSON Topics",
+    "scenario": "Thirty analytics and microservice consumers read from the `OrderCompleted` Kafka topic. Last week, the checkout team renamed `total_cents` to `amount_cents` in a JSON payload without coordination, crashing the billing and fraud consumers in production.",
+    "prompt": "Which event contract governance mechanism should you enforce, and what is the primary justification?",
+    "question": "Which event contract governance mechanism should you enforce, and what is the primary justification?",
+    "options": [
+      "Keep schemaless JSON and require all 30 consumer teams to attend a weekly change-review meeting",
+      "Enforce a central Schema Registry (Protobuf/Avro) with CI/CD FULL_TRANSITIVE compatibility checks so breaking field renames or removals fail the producer build before deployment",
+      "Have consumers query the producer's internal PostgreSQL database directly instead of reading event payloads"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Manual meetings catch 100% of accidental JSON serialization changes in code",
+      "Automated schema compatibility gates in CI/CD plus wire-format schema IDs guarantee that producers and consumers can deploy independently in any order without runtime deserialization outages",
+      "Sharing internal service databases across 30 teams reduces coupling"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "In an asynchronous pub/sub topology, producers cannot upgrade all consumers atomically and old events remain in the log for days.",
+    "explanation": "Because Kafka/event logs retain historical messages and decouple producer/consumer deployment schedules, breaking changes cannot be coordinated purely by deploy order. Enforcing backward and forward (FULL_TRANSITIVE) compatibility in a Schema Registry at CI/CD time prevents breaking changes from ever reaching production.",
+    "tags": [
+      "event-contracts",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -763,6 +1134,59 @@ window.QUESTION_BANK["batching"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "batching-n1",
+    "topic": "batching",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Micro-Batch Throughput Gain via Amortized Per-RPC Overhead",
+    "scenario": "Writing a single telemetry record to a remote storage engine incurs 1.8 ms of fixed network/fsync overhead plus 0.02 ms of per-record CPU processing. You switch from batch size B = 1 to micro-batching B = 90 records per RPC.",
+    "prompt": "How many records per second can a single synchronous worker thread write when micro-batching B = 90 records per call?",
+    "question": "How many records per second can a single synchronous worker thread write when micro-batching B = 90 records per call?",
+    "unit": "records/s",
+    "answer": 25000,
+    "tolerance": 0.2,
+    "hint": "Batch latency = 1.8 ms + (90 × 0.02 ms) = 1.8 + 1.8 = 3.6 ms. Throughput = 90 records / 0.0036 s.",
+    "explanation": "With B = 1, each write takes 1.82 ms (~549 records/s). With B = 90, total RPC time is 1.8 ms + (90 × 0.02 ms) = 3.6 ms. Processing 90 records every 3.6 ms yields 90 / 0.0036 = 25,000 records/second—a 45x throughput boost from a single thread.",
+    "tags": [
+      "batching",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "batching-t1",
+    "topic": "batching",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Dual-Trigger (Size OR Linger Timeout) Batching vs Count-Only Batching",
+    "scenario": "Your audit-log ingestion client batches 500 records before flushing to disk to maximize IOPS efficiency. During off-peak night hours, traffic drops to 2 records/second, causing audit entries to sit invisibly in client memory for over 4 minutes and violating your 5-second visibility SLO.",
+    "prompt": "Which batching discipline should you implement, and what is the primary justification?",
+    "question": "Which batching discipline should you implement, and what is the primary justification?",
+    "options": [
+      "Disable batching completely so every peak-hour write triggers an individual fsync",
+      "Keep count-only batching at 500 records and inject 498 dummy heartbeat records every second during off-peak hours",
+      "Flush the buffer whenever EITHER the batch reaches 500 records/byte-cap OR a linger timer (e.g., 50 ms) expires since the first buffered item, paired with explicit per-item partial failure responses"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Individual fsyncs per message at peak load maximize disk throughput",
+      "Writing 99% dummy records to disk saves storage and IOPS",
+      "A dual-threshold trigger (max batch size/bytes OR max linger time) achieves full batch amortization under high load while strictly bounding tail latency under low load"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How do Kafka producers (`batch.size` + `linger.ms`) bound latency when traffic is sparse while still batching heavily at peak?",
+    "explanation": "Count-only batching starves low-volume traffic and blows up tail latency. Combining a size/byte threshold (`batch.size`) with a strict linger deadline (`linger.ms`) ensures batches flush immediately when full at peak QPS and never wait longer than the linger window during quiet periods.",
+    "tags": [
+      "batching",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -828,6 +1252,59 @@ window.QUESTION_BANK["backpressure"] = [
       "backpressure",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "backpressure-n1",
+    "topic": "backpressure",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Time to OOM Without Backpressure",
+    "scenario": "An ingestion proxy receives 15,000 requests/second while its downstream database degrades and can only drain 5,000 requests/second. The proxy buffers pending requests in an unbounded in-memory queue where each request holds a 40 KB payload buffer, and the process has 4 GB (4,000 MB) of free heap.",
+    "prompt": "How many seconds until the proxy exhausts its 4,000 MB heap and crashes with an Out-Of-Memory (OOM) error?",
+    "question": "How many seconds until the proxy exhausts its 4,000 MB heap and crashes with an Out-Of-Memory (OOM) error?",
+    "unit": "seconds",
+    "answer": 10,
+    "tolerance": 0.2,
+    "hint": "Net queue growth = (15,000 - 5,000) = 10,000 req/s. Memory growth = 10,000 × 40 KB = 400 MB/s. Divide 4,000 MB by 400 MB/s.",
+    "explanation": "The queue accumulates 15,000 - 5,000 = 10,000 requests/second. At 40 KB per request, memory grows by 400,000 KB/s = 400 MB/s. A 4,000 MB heap is completely exhausted in 4,000 / 400 = 10 seconds, crashing the proxy fleet.",
+    "tags": [
+      "backpressure",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "backpressure-t1",
+    "topic": "backpressure",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Bounded Queues with End-to-End Flow Control vs Unbounded In-Memory Buffering",
+    "scenario": "A streaming analytics pipeline reads from TCP sockets, transforms events in worker pools, and writes to ClickHouse. When ClickHouse merges slow down writes for 60 seconds, intermediate worker nodes suffer GC death spirals and OOM crashes because internal channel queues are unbounded.",
+    "prompt": "Which backpressure design should you implement, and what is the primary justification?",
+    "question": "Which backpressure design should you implement, and what is the primary justification?",
+    "options": [
+      "Attach swap files on disk to back the unbounded in-memory queues so the JVM/Go runtime never hits OOM",
+      "Replace all unbounded queues with strictly bounded queues/semaphores that propagate blocking or explicit pull-credits upstream to the TCP socket reader (or broker consumer pause)",
+      "Silently drop random records from the middle of the internal worker queues whenever memory exceeds 80%"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Swapping heap memory to disk during a latency spike improves GC pause times and throughput",
+      "Bounded queues with upstream flow-control propagation cap memory usage to a deterministic ceiling and slow the producer/reader at the source instead of crashing intermediate nodes",
+      "Silent mid-pipeline drops preserve data integrity for financial and analytics streams"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "If the sink slows down, how does the source learn to stop reading from the socket or broker?",
+    "explanation": "Unbounded queues merely convert a temporary downstream slowdown into a catastrophic memory exhaustion crash. Bounded queues paired with end-to-end backpressure (blocking upstream stages, pausing Kafka partition fetches, or letting TCP receive windows fill) keep memory flat and push the rate limit all the way back to the producer.",
+    "tags": [
+      "backpressure",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -1013,6 +1490,59 @@ window.QUESTION_BANK["load-shedding"] = [
       "load-shedding",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "load-shedding-n1",
+    "topic": "load-shedding",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Priority Load Shedding Threshold",
+    "scenario": "Your e-commerce cluster has a maximum safe capacity of 10,000 req/s before queueing collapses goodput. During a flash sale, incoming traffic surges to 16,000 req/s, composed of 3,000 req/s of Priority-0 (Checkout/Payment), 5,000 req/s of Priority-1 (Product Details), and 8,000 req/s of Priority-2 (Recommendations/Scrapers).",
+    "prompt": "If the load shedder admits 100% of Priority-0 and Priority-1 traffic first, what percentage (0 to 100) of Priority-2 traffic must be shed (rejected with HTTP 503/fallback) to hold total admitted load at exactly 10,000 req/s?",
+    "question": "If the load shedder admits 100% of Priority-0 and Priority-1 traffic first, what percentage (0 to 100) of Priority-2 traffic must be shed (rejected with HTTP 503/fallback) to hold total admitted load at exactly 10,000 req/s?",
+    "unit": "%",
+    "answer": 75,
+    "tolerance": 0.2,
+    "hint": "P0 + P1 = 3,000 + 5,000 = 8,000 req/s. Remaining capacity for P2 = 10,000 - 8,000 = 2,000 req/s out of 8,000 req/s (so 6,000 of 8,000 must be shed).",
+    "explanation": "Admitting all P0 (3,000 req/s) and P1 (5,000 req/s) consumes 8,000 req/s of the 10,000 req/s budget, leaving 2,000 req/s for P2. Out of 8,000 req/s of P2 traffic, 6,000 req/s must be shed: 6,000 / 8,000 = 75% shed rate, preserving 100% of revenue-critical checkouts and product views.",
+    "tags": [
+      "load-shedding",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "load-shedding-t1",
+    "topic": "load-shedding",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Priority-Aware CoDel/Concurrency Load Shedding vs FIFO Queueing Until Timeout",
+    "scenario": "When a downstream database slows down by 3x, your API servers queue incoming requests in FIFO order. Within seconds, every request sits in the queue for 2.1 seconds before being processed, but the upstream caller has a 2.0-second timeout—so your servers run at 100% CPU doing work whose responses are discarded by every caller (0% goodput).",
+    "prompt": "Which admission control and shedding strategy should you implement, and what is the primary justification?",
+    "question": "Which admission control and shedding strategy should you implement, and what is the primary justification?",
+    "options": [
+      "Increase the FIFO queue length to 100,000 requests so no packet is ever dropped at ingress",
+      "Enforce adaptive concurrency limits (e.g., Little's Law / Vegas / CoDel queue sojourn time) combined with request deadline propagation and priority tiers, shedding low-priority or already-expired requests in <1 ms",
+      "Crash and restart the API server process whenever CPU utilization crosses 90%"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Deep FIFO queues reduce queueing delay during sustained overload",
+      "Rejecting excess low-priority requests early and dropping requests whose remaining deadline is insufficient prevents wasted CPU on timed-out work and preserves near-100% goodput for high-priority traffic",
+      "Crashing servers during a traffic spike increases cluster capacity"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Why spend 50 ms of database and CPU work on a request that already waited 2,000 ms in your queue when the client hung up at 1,900 ms?",
+    "explanation": "Unbounded FIFO queueing under overload drives goodput to zero because every request ages past the caller's timeout before execution starts. Priority-aware admission control with adaptive concurrency limits (and LIFO/CoDel queue discipline plus propagated deadlines) sheds excess load cheaply at the door so admitted requests finish well within their SLA.",
+    "tags": [
+      "load-shedding",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

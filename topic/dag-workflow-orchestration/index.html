@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -993,12 +993,18 @@ flowchart TD
   F --> H["Mark order failed"]
 </div><p>The Temporal history for a failure path might read: WorkflowStarted, ActivityScheduled ChargeCard, ActivityCompleted ChargeCard (txn t_55), ActivityScheduled ReserveInventory, ActivityFailed ReserveInventory (OutOfStock), ActivityScheduled RefundCard, ActivityCompleted RefundCard, WorkflowCompleted (failed). If the worker crashes after ChargeCard completes, a new worker replays the history: the ChargeCard call returns t_55 from history without charging again, and execution continues at ReserveInventory.</p><h2>Engine comparison</h2><table><thead><tr><th>Engine</th><th>Model</th><th>Best for</th><th>State storage</th><th>Watch out for</th></tr></thead><tbody><tr><td>Airflow</td><td>Python-defined static DAGs, scheduled runs</td><td>Batch ETL, ML pipelines</td><td>Metadata DB of task states</td><td>Scheduler latency of seconds. Not for per-request flows</td></tr><tr><td>Temporal / Cadence</td><td>Workflows as code, event-sourced replay</td><td>Long-running business processes, sagas</td><td>History per workflow (Cassandra, Postgres, MySQL)</td><td>Determinism rules, history size limits (about 50,000 events), versioning</td></tr><tr><td>AWS Step Functions</td><td>JSON state machine (Amazon States Language)</td><td>Serverless glue on AWS</td><td>Managed</td><td>Per-transition cost. Standard workflows run up to 1 year</td></tr><tr><td>Argo Workflows</td><td>DAG of Kubernetes pods</td><td>CI/CD, ML training on Kubernetes</td><td>Kubernetes CRDs</td><td>Pod startup overhead per step</td></tr><tr><td>Choreography (events only)</td><td>No central orchestrator</td><td>Loosely coupled, simple flows</td><td>Spread across services</td><td>Hard to see or change end-to-end flow</td></tr></tbody></table><h2>Operational concerns</h2><ul><li><strong>Versioning:</strong> changing workflow code while old executions are in flight breaks replay. Use Temporal's patching or versioning APIs, or run old and new side by side.</li><li><strong>Continue-as-new</strong> for long-lived workflows (subscriptions, polling), so history does not grow without bound.</li><li><strong>Compensation is not rollback:</strong> a refund is a new transaction that may itself fail, so compensations need retries and alerting too.</li></ul><h2>Who uses it</h2><ul><li><strong>Uber</strong> built Cadence, and Temporal is its fork by the original authors. Stripe, Netflix, Snap and Coinbase use Temporal for payments, infrastructure and CI workflows.</li><li><strong>Airbnb</strong> created Airflow for data pipelines. It is now an Apache project.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="dag-workflow-orchestration" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="dag-workflow-orchestration" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: No clock in workflows" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Crash after a charge" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Changing live workflows" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: No clock in workflows" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Crash after a charge" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Changing live workflows" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Event-History State Growth in Durable Execution (Temporal / Airflow)" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Passing Payloads Inline in DAG State vs Claim-Check Pattern (URI References)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-dag-workflow-orchestration-c1" data-type="mcq" data-slug="dag-workflow-orchestration" data-index="0">
@@ -1116,12 +1122,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="dag-workflow-orchestration-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-dag-workflow-orchestration-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Replay expects the same sequence of commands the history recorded, so an inserted step makes old executions diverge. Temporal does not version code for you; you guard changes with its patching or versioning APIs or run old and new workers side by side.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-dag-workflow-orchestration-n1" data-type="numeric" data-slug="dag-workflow-orchestration" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Event-History State Growth in Durable Execution (Temporal / Airflow)</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A workflow orchestrator executes 500,000 workflows per day. Each workflow has 20 DAG steps, and each step records 4 state-transition events (Scheduled, Started, Completed, ActivityOutput) averaging 1 KB per event.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many gigabytes per day (GB/day, where 1 GB = 10^9 bytes) of workflow execution history are generated across the 500,000 workflows?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-dag-workflow-orchestration-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-dag-workflow-orchestration-n1"
+              aria-label="Numeric estimate in GB/day"
+              placeholder="Enter numeric estimate (GB/day)..."
+            />
+            <span class="quiz-unit-badge">GB/day</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Each workflow writes `20 steps × 4 events × 1 KB = 80 KB`. Multiply by 500,000 workflows/day.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="dag-workflow-orchestration-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-dag-workflow-orchestration-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">20 × 4 × 1,000 bytes = 80,000 bytes per workflow. Across 500,000 workflows/day, 500,000 × 80,000 = 40 × 10^9 bytes = 40 GB/day (which is why large intermediate datasets must be passed by S3 URI reference, not inline in workflow state).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-dag-workflow-orchestration-t1" data-type="tradeoff" data-slug="dag-workflow-orchestration" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Passing Payloads Inline in DAG State vs Claim-Check Pattern (URI References)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A data pipeline DAG in Airflow/Temporal extracts a 250 MB CSV in Step A and passes the raw 250 MB payload as the return value into Step B and Step C via the orchestrator&#039;s metadata database.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What happens to the workflow orchestrator DB when steps pass 250 MB payloads inline, and what pattern should be used instead?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-dag-workflow-orchestration-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-dag-workflow-orchestration-t1" value="0" />
+                  <span>Workflow metadata databases (PostgreSQL/Cassandra) are optimized for 250 MB row values in event history</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-dag-workflow-orchestration-t1" value="1" />
+                  <span>Pass the 250 MB payload as command-line arguments to the worker container</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-dag-workflow-orchestration-t1" value="2" />
+                  <span>Use the Claim-Check pattern: Step A writes the 250 MB dataset to immutable object storage (`s3://bucket/run_id/step_a.parquet` + checksum) and passes only the lightweight URI metadata (~200 bytes) through the DAG state machine</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-dag-workflow-orchestration-t1" value="0" />
+                  <span>Storing 250 MB blobs in Temporal/Airflow XCom tables keeps orchestration latency under 5 ms</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-dag-workflow-orchestration-t1" value="1" />
+                  <span>Linux `execve` command lines support gigabyte arguments</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-dag-workflow-orchestration-t1" value="2" />
+                  <span>Orchestrators persist and replay state history on every step transition; the Claim-Check pattern keeps control-plane state tiny while offloading bulk data transfer directly to object storage</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Separate the workflow control plane (state transitions) from the data plane (multi-megabyte artifacts).</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="dag-workflow-orchestration-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-dag-workflow-orchestration-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Workflow orchestrators serialize and replay history events on every task transition. Passing a lightweight S3 URI (Claim-Check pattern) keeps the orchestrator DB fast and prevents OOM crashes.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1246,22 +1382,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

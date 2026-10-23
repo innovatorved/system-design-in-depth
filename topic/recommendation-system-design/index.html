@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -991,12 +991,18 @@ flowchart TD
   RK --> RR["Re-rank and log impressions"]
   RR --> EV</div><p>Log <strong>impressions</strong> (what was shown and in which position), not just clicks. Without them you cannot train on negatives, and you cannot correct for <em>position bias</em>: items at the top get clicked more simply because they are at the top. YouTube's 2016 paper "Deep Neural Networks for YouTube Recommendations" describes this two-stage design. TikTok's Monolith paper (2022) describes real-time training with collisionless embedding tables.</p>
 </div></article>
-      <section class="check-slider" data-slug="recommendation-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="recommendation-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: What retrieval optimises" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sizing an ANN index" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Logging impressions" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: What retrieval optimises" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sizing an ANN index" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Logging impressions" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Multi-Stage Recommendation Funnel Latency &amp; Throughput" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Two-Tower Dot-Product Retrieval vs Full Cross-Feature Deep Ranking Network" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-recommendation-system-design-c1" data-type="mcq" data-slug="recommendation-system-design" data-index="0">
@@ -1114,12 +1120,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="recommendation-system-design-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-recommendation-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Without logging what was shown and where, the model sees no negatives and cannot separate an item&#039;s appeal from the boost of being at the top, so it learns position bias. Bigger retrieval or more compute does not fix a training signal that is biased at the source.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-recommendation-system-design-n1" data-type="numeric" data-slug="recommendation-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Multi-Stage Recommendation Funnel Latency &amp; Throughput</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A home feed recommendation request must finish in `&lt;80 ms` across a catalog of `10,000,000` items: Candidate Generation (Two-Tower ANN + Graph co-visitation) narrows `10,000,000 -&gt; 1,000` items in `15 ms`; Lightweight Scoring narrows `1,000 -&gt; 100` in `15 ms`; Heavy Multi-Task Ranking + Diversity Reranking orders `100 -&gt; 20` in `25 ms` (plus `15 ms` feature fetch &amp; network overhead).</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the total end-to-end latency (`15 + 15 + 25 + 15`, in ms) of this 4-stage recommendation pipeline?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-recommendation-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-recommendation-system-design-n1"
+              aria-label="Numeric estimate in ms"
+              placeholder="Enter numeric estimate (ms)..."
+            />
+            <span class="quiz-unit-badge">ms</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Sum the four stage budgets: `15 + 15 + 25 + 15`.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="recommendation-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-recommendation-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`15 + 15 + 25 + 15 = 70 ms` (well within the 80 ms SLO), evaluating 10 million catalog items by progressively trading candidate volume for model complexity at each stage.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-recommendation-system-design-t1" data-type="tradeoff" data-slug="recommendation-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Two-Tower Dot-Product Retrieval vs Full Cross-Feature Deep Ranking Network</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An ML engineer asks why we can&#039;t run the full Deep &amp; Cross Ranking neural network (which takes non-linear cross features between `user_history × item_metadata × time_of_day`) directly over all 10,000,000 items at request time.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why is the Two-Tower architecture required for Stage 1 Candidate Generation while Cross-Feature networks are reserved for Stage 2 Ranking?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-recommendation-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-recommendation-system-design-t1" value="0" />
+                  <span>Two-Tower models are more accurate than cross-feature models on 100 items</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-recommendation-system-design-t1" value="1" />
+                  <span>Cross-feature models can be pre-indexed in a static HNSW vector index</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-recommendation-system-design-t1" value="2" />
+                  <span>A Two-Tower model decouples the User Encoder `u(x)` from the Item Encoder `v(y)`, allowing all 10M item vectors `v(y)` to be pre-computed offline and searched in `O(log N)` via HNSW/MIPS, whereas cross-feature models require `O(N)` live neural forward passes per request</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-recommendation-system-design-t1" value="0" />
+                  <span>Running 10,000,000 deep neural forward passes per user request takes 1 millisecond</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-recommendation-system-design-t1" value="1" />
+                  <span>Arbitrary non-linear `f(user, item, context)` functions reduce to a static inner product</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-recommendation-system-design-t1" value="2" />
+                  <span>Only when user and item representations interact via a late inner product `&lt;u(x), v(y)&gt;` can the 10M item embeddings be indexed in an Approximate Nearest Neighbor (ANN) vector index for sub-15ms retrieval</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why can `&lt;u(x), v(y)&gt;` be indexed in HNSW/Faiss while `MLP(concat(x, y, x*y))` cannot?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="recommendation-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-recommendation-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Two-Tower decoupling lets you compute `u(x)` once per request and find the top-1,000 items by inner product `&lt;u(x), v(y)&gt;` in ~10 ms using ANN; Stage 2 then runs expensive cross-feature interactions on just those 1,000 candidates.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1232,22 +1368,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

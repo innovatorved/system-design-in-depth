@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1023,12 +1023,18 @@ flowchart TD
 <li><strong>Health checks that lie:</strong> a TCP health check passes even when the HTTP application returns 500 for every request; use an HTTP health endpoint that checks the app's real readiness.</li>
 </ul>
 </div></article>
-      <section class="check-slider" data-slug="api-gateway-vs-load-balancer" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="api-gateway-vs-load-balancer" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Local rate limits and skew" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: What L4 cannot see" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Health checks that lie" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Local rate limits and skew" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: What L4 cannot see" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Health checks that lie" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Gateway Auth Introspection Offload" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Layered L4/L7 Load Balancer + API Gateway vs Monolithic Edge" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-api-gateway-vs-load-balancer-c1" data-type="mcq" data-slug="api-gateway-vs-load-balancer" data-index="0">
@@ -1146,12 +1152,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="api-gateway-vs-load-balancer-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-api-gateway-vs-load-balancer-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">The process is still listening, so a TCP check keeps passing while every request fails. The lesson recommends an HTTP health endpoint that checks the app&#039;s real readiness. Ejection after 2 to 3 failures is the tempting answer, but it only happens if the check itself fails, and a TCP check will not.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-api-gateway-vs-load-balancer-n1" data-type="numeric" data-slug="api-gateway-vs-load-balancer" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Gateway Auth Introspection Offload</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An API Gateway handles 25,000 requests/second. Previously, each request triggered an inline 1.5 ms RPC from the gateway to the central Auth service to validate session tokens. You switch to local asymmetric JWT signature verification at the gateway (0.1 ms CPU, 0 RPCs) with a 60-second revocation list sync.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many requests per second of network load are removed from the central Auth service by verifying JWTs locally at the API Gateway?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-api-gateway-vs-load-balancer-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-api-gateway-vs-load-balancer-n1"
+              aria-label="Numeric estimate in req/s"
+              placeholder="Enter numeric estimate (req/s)..."
+            />
+            <span class="quiz-unit-badge">req/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Every one of the 25,000 req/s previously made 1 synchronous RPC to the Auth service.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="api-gateway-vs-load-balancer-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-api-gateway-vs-load-balancer-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Eliminating the per-request synchronous introspection RPC removes all 25,000 req/s of inline load from the central Auth service (replacing it with a tiny background revocation-list poll once per minute per gateway node) and shaves 1.4 ms off every request.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-api-gateway-vs-load-balancer-t1" data-type="tradeoff" data-slug="api-gateway-vs-load-balancer" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Layered L4/L7 Load Balancer + API Gateway vs Monolithic Edge</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your platform ingests 200,000 req/s across public REST APIs, static asset streams, and high-throughput internal service-to-service gRPC traffic. Currently, routing internal east-west gRPC calls through the external central API gateway adds 4 ms per hop and caused a cluster-wide outage when a rate-limit plugin Lua script had a bug.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which traffic management topology should you adopt, and what is the primary justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-api-gateway-vs-load-balancer-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-api-gateway-vs-load-balancer-t1" value="0" />
+                  <span>Route all north-south and east-west internal microservice calls through the single central API gateway cluster</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-api-gateway-vs-load-balancer-t1" value="1" />
+                  <span>Remove the API gateway completely and implement OAuth verification, billing quotas, and WAF rules inside every microservice</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-api-gateway-vs-load-balancer-t1" value="2" />
+                  <span>Use L4/L7 load balancers for fast transport distribution, keep the API Gateway dedicated to north-south edge concerns (auth, tenant rate-limiting, protocol translation), and use lightweight client-side/mesh L7 load balancing for east-west traffic</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-api-gateway-vs-load-balancer-t1" value="0" />
+                  <span>Hairpinning every internal RPC through a central north-south gateway minimizes latency and blast radius</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-api-gateway-vs-load-balancer-t1" value="1" />
+                  <span>Duplicating WAF, OAuth, and billing quota logic across 40 microservices guarantees uniform security enforcement</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-api-gateway-vs-load-balancer-t1" value="2" />
+                  <span>Separating north-south edge policy enforcement (API Gateway) from high-speed packet/connection distribution (LB) and internal east-west routing avoids central bottlenecks and blast-radius coupling</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">North-south edge traffic needs cross-cutting policy (auth, quotas); internal east-west RPCs need low-latency, fault-isolated routing.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="api-gateway-vs-load-balancer-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-api-gateway-vs-load-balancer-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">An API Gateway excels at north-south edge concerns (authentication, tenant quotas, public schema translation), while L4/L7 load balancers and internal service meshes handle high-throughput packet/connection distribution without hairpinning east-west calls through a central policy choke point.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1298,7 +1434,7 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1306,15 +1442,15 @@ flowchart TD
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

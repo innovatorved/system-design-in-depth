@@ -432,6 +432,27 @@ window.Quiz = (() => {
       if (window.Progress && window.Progress.recordQuizAttempt) {
         window.Progress.recordQuizAttempt(qid, correct);
       }
+      if (window.Analytics?.trackQuizCheck) {
+        const slideIdx = card.dataset.index ? parseInt(card.dataset.index, 10) : 0;
+        let userAns = '';
+        if (type === 'numeric' && !Number.isNaN(userNumericVal)) userAns = String(userNumericVal);
+        else if (type === 'mcq') {
+          const checked = card.querySelector(`input[name="quiz-${qid}"]:checked`);
+          userAns = checked ? checked.value : '';
+        } else if (type === 'tradeoff') {
+          const opt = card.querySelector(`input[name="quiz-tradeoff-opt-${qid}"]:checked`);
+          const rsn = card.querySelector(`input[name="quiz-tradeoff-rsn-${qid}"]:checked`);
+          userAns = `${opt ? opt.value : '-'}:${rsn ? rsn.value : '-'}`;
+        }
+        window.Analytics.trackQuizCheck({
+          slug,
+          questionId: qid,
+          questionType: type,
+          isCorrect: correct,
+          slideIndex: slideIdx,
+          userAnswer: userAns
+        });
+      }
       card.dispatchEvent(new CustomEvent('quiz:graded', { bubbles: true, detail: { qid, correct } }));
     } else if (e.target.closest('.quiz-next-btn')) {
       const btn = e.target.closest('.quiz-next-btn');
@@ -479,36 +500,63 @@ window.Quiz = (() => {
     const slides = [...slider.querySelectorAll('.check-slider__slide')];
     const dots = [...slider.querySelectorAll('.check-slider__dot')];
 
+    const slug = slider.dataset.slug || '';
+
     if (retry) {
+      if (window.Analytics?.trackQuizSlideNavigate) {
+        window.Analytics.trackQuizSlideNavigate({ slug, action: 'retry', slideIndex: 0, questionType: 'mcq' });
+      }
       const temp = document.createElement('div');
-      temp.innerHTML = renderCheckSlider(slider.dataset.slug);
+      temp.innerHTML = renderCheckSlider(slug);
       slider.replaceWith(temp.firstElementChild);
       return;
     }
 
     if (dot) {
-      setActiveSlide(slider, parseInt(dot.dataset.slideIndex, 10));
+      const idx = parseInt(dot.dataset.slideIndex, 10);
+      setActiveSlide(slider, idx);
+      if (window.Analytics?.trackQuizSlideNavigate) {
+        window.Analytics.trackQuizSlideNavigate({ slug, action: 'dot', slideIndex: idx, questionType: slides[idx]?.dataset.type || 'mcq' });
+      }
       return;
     }
 
     if (tab) {
-      setActiveSlide(slider, parseInt(tab.dataset.jumpIndex, 10));
+      const idx = parseInt(tab.dataset.jumpIndex, 10);
+      setActiveSlide(slider, idx);
+      if (window.Analytics?.trackQuizSlideNavigate) {
+        window.Analytics.trackQuizSlideNavigate({ slug, action: 'tab_' + (tab.dataset.tabType || 'mcq'), slideIndex: idx, questionType: slides[idx]?.dataset.type || 'mcq' });
+      }
       return;
     }
 
     if (prev || skip) {
       const targetIdx = parseInt((prev || skip).dataset.targetIndex, 10);
       setActiveSlide(slider, targetIdx);
+      if (window.Analytics?.trackQuizSlideNavigate) {
+        window.Analytics.trackQuizSlideNavigate({ slug, action: prev ? 'prev' : 'skip', slideIndex: targetIdx, questionType: slides[targetIdx]?.dataset.type || 'mcq' });
+      }
       return;
     }
 
     const i = +next.closest('.check-slider__slide').dataset.index;
     if (i + 1 < slides.length) {
       setActiveSlide(slider, i + 1);
+      if (window.Analytics?.trackQuizSlideNavigate) {
+        window.Analytics.trackQuizSlideNavigate({ slug, action: 'next', slideIndex: i + 1, questionType: slides[i + 1]?.dataset.type || 'mcq' });
+      }
       return;
     }
 
     const right = slides.filter(s => s.dataset.correct === '1').length;
+    if (window.Analytics?.trackQuizComplete) {
+      window.Analytics.trackQuizComplete({
+        slug,
+        score: right,
+        totalQuestions: slides.length,
+        percentage: slides.length ? Math.round((right / slides.length) * 100) : 0
+      });
+    }
     slides.forEach(s => { s.hidden = true; });
     dots.forEach(d => d.classList.remove('is-current'));
     const done = slider.querySelector('.check-slider__done');

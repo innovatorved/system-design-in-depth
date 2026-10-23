@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1020,12 +1020,18 @@ HTTP outcomes: {&quot;200&quot;:8,&quot;201&quot;:1,&quot;403&quot;:1,&quot;404&
   S3 --> S4["New service serves 100 percent"]
   S4 --> S5["Monolith endpoint drained and deleted"]</div><p>Each arrow is a gate with a numeric exit criterion, such as a mismatch rate, p99 latency and error rate, held for a soak period. Every stage can be reversed with a routing change alone.</p><h2>Worked example: reading the mismatch report</h2><p>The <code>GET /orders/{id}</code> endpoint receives 3,000 requests per second. After shadowing 100% of traffic for 24 hours, about 259 million pairs have been compared and 41,000 of them differ, a 0.016% mismatch rate. Grouping the mismatches by field shows:</p><ul><li><strong>28,000</strong> differ in <code>updated_at</code> precision (milliseconds against microseconds). This is harmless, so normalise the field and ignore it.</li><li><strong>12,500</strong> differ in currency rounding on orders with discounts. This is a real bug that must be fixed before cutover.</li><li><strong>500</strong> are read-after-write races, where the new service reads from a replica that is a few milliseconds behind. To handle these, compare again after a delay, or only compare records that have not changed recently.</li></ul><p>Twitter's Diffy reduces noise by running <em>two</em> copies of the old version as well as the candidate. Differences between the two old copies are treated as noise, and only differences that appear between old and new are reported. GitHub's Scientist library applies the same idea inside application code: it runs the old and new code paths, returns the old result, and records any mismatch.</p><h2>Comparison of approaches</h2><table><thead><tr><th>Approach</th><th>Where comparison happens</th><th>Good for</th><th>Limitation</th></tr></thead><tbody><tr><td>Gateway shadowing (Envoy request mirroring, Istio mirror)</td><td>Offline, in a comparison worker</td><td>Read-only HTTP endpoints</td><td>Mirrored responses are discarded, so you must capture both responses yourself</td></tr><tr><td>In-code experiment (GitHub Scientist)</td><td>Inside the monolith process</td><td>Refactoring one code path</td><td>Adds latency unless the new path runs asynchronously</td></tr><tr><td>Traffic capture and replay (Netflix)</td><td>Offline replay of recorded traffic</td><td>High-risk migrations, load testing</td><td>Recorded data goes stale, and you need to scrub personal data from it</td></tr><tr><td>Dual write plus reconciliation</td><td>Batch comparison of the two datastores</td><td>Write paths</td><td>Needs idempotency and a single source of truth during the migration</td></tr></tbody></table><h2>Draining the monolith</h2><p>After the new service serves 100% of traffic, keep the monolith code path deployed but unused for one or two release cycles. Watch its request counter until it stays at zero, including traffic from forgotten internal callers, cron jobs and old mobile app versions. Then delete the code. The endpoint is finished only when the code is gone, so plan the deletion step as part of the migration.</p>
 </div></div></article>
-      <section class="check-slider" data-slug="parallel-monolith-read-drain" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="parallel-monolith-read-drain" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: What not to shadow" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Triage the mismatch report" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Finishing the drain" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: What not to shadow" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Triage the mismatch report" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Finishing the drain" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Shadow Read Parity Mismatch Rate" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Synchronous Dual-Read Blocking vs Asynchronous Shadow Read + Diff Demon" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-parallel-monolith-read-drain-c1" data-type="mcq" data-slug="parallel-monolith-read-drain" data-index="0">
@@ -1143,12 +1149,142 @@ HTTP outcomes: {&quot;200&quot;:8,&quot;201&quot;:1,&quot;403&quot;:1,&quot;404&
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="parallel-monolith-read-drain-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-parallel-monolith-read-drain-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">The drain is only done when the request counter stays at zero, and residual traffic usually comes from forgotten internal callers, scheduled jobs or old mobile clients. Deleting now breaks them silently; keeping it forever means the migration never finishes and the old code keeps costing maintenance.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-parallel-monolith-read-drain-n1" data-type="numeric" data-slug="parallel-monolith-read-drain" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Shadow Read Parity Mismatch Rate</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">During a Strangler Fig migration from a monolith to a new Catalog service, you shadow-read `1,000,000` production requests per hour to both services and asynchronously compare their normalized JSON responses. Out of 1,000,000 requests, `999,850` match identically and `150` show field discrepancies.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the mismatch rate in parts per million (ppm, i.e., mismatches per `1,000,000` requests)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-parallel-monolith-read-drain-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-parallel-monolith-read-drain-n1"
+              aria-label="Numeric estimate in ppm"
+              placeholder="Enter numeric estimate (ppm)..."
+            />
+            <span class="quiz-unit-badge">ppm</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">150 mismatches out of 1,000,000 requests is 150 parts per million.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="parallel-monolith-read-drain-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-parallel-monolith-read-drain-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">150 mismatches per 1,000,000 requests = 150 ppm (0.015%), giving engineers a concrete queue of 150 diff payloads to inspect and fix before shifting live user reads.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-parallel-monolith-read-drain-t1" data-type="tradeoff" data-slug="parallel-monolith-read-drain" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Synchronous Dual-Read Blocking vs Asynchronous Shadow Read + Diff Demon</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You are verifying that a newly extracted microservice returns identical responses to the legacy monolith before draining monolith read traffic.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should the parallel shadow-read comparator be wired so bugs or latency spikes in the new service never affect live users during the verification phase?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-parallel-monolith-read-drain-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-parallel-monolith-read-drain-t1" value="0" />
+                  <span>Call the monolith and the new service sequentially on the main thread and return HTTP 500 to the user if they differ</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-parallel-monolith-read-drain-t1" value="1" />
+                  <span>Switch 100% of users to the new service immediately and wait for customer support tickets</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-parallel-monolith-read-drain-t1" value="2" />
+                  <span>Serve the user directly from the legacy monolith while firing a non-blocking async shadow copy (with a tight timeout and separate bulkhead pool) to the new service, logging normalized response diffs (ignoring volatile fields like `request_id`/`server_time`) to a diff queue</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-parallel-monolith-read-drain-t1" value="0" />
+                  <span>Returning HTTP 500 on shadow diffs improves user experience</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-parallel-monolith-read-drain-t1" value="1" />
+                  <span>Customer support tickets catch subtle rounding errors faster than automated diffing</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-parallel-monolith-read-drain-t1" value="2" />
+                  <span>Fire-and-forget shadow reads with a dedicated bulkhead ensure zero added latency or failure risk to the live monolith path while testing the new service against 100% real production query shapes and concurrency</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens if the new candidate service crashes or hangs for 5 seconds while you are shadow-testing it?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="parallel-monolith-read-drain-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-parallel-monolith-read-drain-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Shadow reads must be completely decoupled from the user response path via an isolated thread/connection pool and short timeout so a candidate crash or tail-latency spike cannot degrade the legacy serving path.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1261,22 +1397,22 @@ HTTP outcomes: {&quot;200&quot;:8,&quot;201&quot;:1,&quot;403&quot;:1,&quot;404&
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

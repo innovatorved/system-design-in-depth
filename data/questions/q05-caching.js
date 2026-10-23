@@ -182,6 +182,59 @@ window.QUESTION_BANK["distributed-cache-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "distributed-cache-design-n1",
+    "topic": "distributed-cache-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Singleflight / Request Coalescing Origin Shielding",
+    "scenario": "A hot homepage cache key expires while 8,000 concurrent requests/sec are reading it. Rebuilding the key from PostgreSQL takes 50 ms. Without singleflight, all concurrent requests that arrive during the 50 ms rebuild miss the cache and hit PostgreSQL.",
+    "prompt": "How many redundant database queries hit PostgreSQL during that single 50 ms cache rebuild window without singleflight?",
+    "question": "How many redundant database queries hit PostgreSQL during that single 50 ms cache rebuild window without singleflight?",
+    "unit": "queries",
+    "answer": 400,
+    "tolerance": 0.2,
+    "hint": "Multiply 8,000 req/s (which is 8 req/ms) by the 50 ms rebuild window.",
+    "explanation": "At 8,000 req/s (8 requests per ms), 8 × 50 ms = 400 concurrent requests miss the cache during the rebuild window and stampede the database (whereas singleflight coalesces them into 1 DB query).",
+    "tags": [
+      "distributed-cache-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "distributed-cache-design-t1",
+    "topic": "distributed-cache-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Write-Through vs Look-Aside Cache Invalidation Race",
+    "scenario": "Under a standard cache-aside pattern, Reader A misses the cache and reads an old value V1 from the DB, then Writer B updates the DB to V2 and deletes the cache key, and finally Reader A's delayed thread writes V1 into the cache with a 1-hour TTL.",
+    "prompt": "Which mechanism prevents stale cache-aside repopulation without serializing all reads through a distributed lock, and why?",
+    "question": "Which mechanism prevents stale cache-aside repopulation without serializing all reads through a distributed lock, and why?",
+    "options": [
+      "Increase the cache TTL from 1 hour to 24 hours",
+      "Have writers set the cache value before updating the database",
+      "Use leased tokens (`gets`/`cas` in Memcached or versioned conditional sets in Redis) where a delete invalidates any in-flight read lease token, combined with a bounded TTL safety net"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Longer TTLs reduce the impact of permanently poisoned cache entries",
+      "Writing to cache before DB commits prevents dirty reads when DB transactions roll back",
+      "A lease token issued on cache miss is invalidated when a concurrent delete occurs, causing Reader A's stale compare-and-set to be rejected cleanly"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How did Facebook's McRouter/Memcached paper solve the stale-set race condition?",
+    "explanation": "Facebook's Memcached lease mechanism issues a 64-bit lease token on a cache miss; if a delete arrives before the reader populates the cache, the lease is revoked and the stale `cas` write is silently ignored.",
+    "tags": [
+      "distributed-cache-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -248,6 +301,59 @@ window.QUESTION_BANK["cache-eviction-policies"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "cache-eviction-policies-n1",
+    "topic": "cache-eviction-policies",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Scan Pollution in Pure LRU",
+    "scenario": "A Redis cache holds 1,000,000 entries using pure LRU eviction. A hourly batch reporting job sequentially reads 600,000 one-time cold keys that are never accessed again.",
+    "prompt": "What percentage of the 1,000,000 cached working-set entries get evicted by this single sequential batch scan under pure LRU?",
+    "question": "What percentage of the 1,000,000 cached working-set entries get evicted by this single sequential batch scan under pure LRU?",
+    "unit": "%",
+    "answer": 60,
+    "tolerance": 0.2,
+    "hint": "600,000 newly inserted cold keys push out 600,000 entries from the 1,000,000-entry LRU list.",
+    "explanation": "Because pure LRU places every newly accessed key at the MRU head regardless of frequency, 600,000 cold scan keys evict 600,000 / 1,000,000 = 60% of the hot working set.",
+    "tags": [
+      "cache-eviction-policies",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "cache-eviction-policies-t1",
+    "topic": "cache-eviction-policies",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Pure LRU vs W-TinyLFU / Segmented LRU (SLRU)",
+    "scenario": "Your cache serves a mix of power-law hot keys and periodic large pagination/analytics scans that currently cause hit-rate cliffs every hour under standard LRU.",
+    "prompt": "Which eviction policy prevents scan pollution while adapting to shifting traffic popularity, and why?",
+    "question": "Which eviction policy prevents scan pollution while adapting to shifting traffic popularity, and why?",
+    "options": [
+      "FIFO (First-In, First-Out) eviction",
+      "Unbounded pure LFU without aging or decay",
+      "W-TinyLFU (or Segmented LRU / 2Q) using a small window cache plus a Count-Min Sketch frequency admission filter and periodic counter halving"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "FIFO protects frequently accessed items from one-time scans",
+      "Unbounded LFU never retains old viral keys after their traffic drops to zero",
+      "An admission filter (TinyLFU) rejects one-hit scan wonders before they evict hot main-cache items, while periodic counter decay ages out formerly popular keys"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why do both pure LRU (scan pollution) and pure LFU (stale frequency accumulation) fail in production?",
+    "explanation": "W-TinyLFU combines recency (a small 1% window LRU for bursts) with decayed frequency admission (Count-Min Sketch), preventing one-hit sequential scans from evicting high-frequency working-set keys.",
+    "tags": [
+      "cache-eviction-policies",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -313,6 +419,59 @@ window.QUESTION_BANK["ttl-expiration-and-cache-reapers"] = [
       "ttl-expiration-and-cache-reapers",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "ttl-expiration-and-cache-reapers-n1",
+    "topic": "ttl-expiration-and-cache-reapers",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Synchronized TTL Expiration Storm",
+    "scenario": "At midnight, a warming job preloads 300,000 catalog keys into Redis with an exact `EXPIRE 3600` (1 hour). If you add uniform random jitter of ±5 minutes (a 600-second window around the 1-hour mark), expirations spread evenly across 600 seconds.",
+    "prompt": "What is the average expiration rate (in keys/sec) across the 600-second jitter window instead of a 300,000-key instant spike?",
+    "question": "What is the average expiration rate (in keys/sec) across the 600-second jitter window instead of a 300,000-key instant spike?",
+    "unit": "keys/s",
+    "answer": 500,
+    "tolerance": 0.2,
+    "hint": "Divide 300,000 keys by the 600-second jitter window.",
+    "explanation": "Spreading 300,000 expirations uniformly across a 600-second (±5 min) jitter window smooths the reload load to 300,000 / 600 = 500 keys/sec instead of a 300,000-key vertical cliff.",
+    "tags": [
+      "ttl-expiration-and-cache-reapers",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "ttl-expiration-and-cache-reapers-t1",
+    "topic": "ttl-expiration-and-cache-reapers",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Passive Lazy Expiration vs Active Probabilistic Reaper",
+    "scenario": "A cache stores 50M temporary session keys with a 15-minute TTL, and 80% of users never return after their first request.",
+    "prompt": "Why must a production cache combine lazy read-time expiration with an active background reaper, and how should the reaper work?",
+    "question": "Why must a production cache combine lazy read-time expiration with an active background reaper, and how should the reaper work?",
+    "options": [
+      "Use only lazy expiration on `GET` so unvisited expired keys stay in RAM forever",
+      "Scan all 50M keys on the main thread every 100 ms to find expired keys",
+      "Combine lazy expiration on read (`GET`) with bounded active probabilistic sampling (e.g., Redis sampling 20 random volatile keys per 100 ms cycle and repeating if >25% are expired)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Never-read expired keys automatically free their memory without a background reaper",
+      "Full 50M-key scans every 100 ms keep single-threaded tail latency low",
+      "Lazy expiration ensures zero stale reads at O(1) cost, while bounded random sampling reclaims memory from write-once-never-read keys without blocking the event loop"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens to the 80% of session keys that are never `GET` again if you only expire on read?",
+    "explanation": "Lazy expiration alone leaks memory for keys that are never read again, while full keyspace scans stall the cache. Probabilistic active sampling bounds CPU time while keeping expired waste below ~25%.",
+    "tags": [
+      "ttl-expiration-and-cache-reapers",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

@@ -1433,14 +1433,27 @@
         // Load blueprint into active board
         var bpBtn = e.target.closest('[data-load-blueprint]');
         if (bpBtn) {
-          self.loadBlueprint(bpBtn.getAttribute('data-load-blueprint'), true);
+          var bpId = bpBtn.getAttribute('data-load-blueprint');
+          var bpObj = self._findBlueprint(bpId);
+          if (root.Analytics && root.Analytics.trackSandboxBlueprint) {
+            root.Analytics.trackSandboxBlueprint({
+              blueprintId: bpId,
+              title: bpObj ? bpObj.title : bpId,
+              targetQps: bpObj && bpObj.defaultInputs ? bpObj.defaultInputs.qps : 0
+            });
+          }
+          self.loadBlueprint(bpId, true);
           return;
         }
 
         // Add building block from left palette
         var addBlockBtn = e.target.closest('[data-add-block]');
         if (addBlockBtn) {
-          self.addBlock(addBlockBtn.getAttribute('data-add-block'));
+          var bType = addBlockBtn.getAttribute('data-add-block');
+          if (root.Analytics && root.Analytics.trackSandboxAction) {
+            root.Analytics.trackSandboxAction({ action: 'add_block', details: { block_type: bType } });
+          }
+          self.addBlock(bType);
           return;
         }
 
@@ -1494,6 +1507,9 @@
         var codelabBtn = e.target.closest('[data-codelab-slug]');
         if (codelabBtn) {
           var buildSlug = codelabBtn.getAttribute('data-codelab-slug');
+          if (root.Analytics && root.Analytics.trackSandboxAction) {
+            root.Analytics.trackSandboxAction({ action: 'inspect_codelab', details: { build_slug: buildSlug } });
+          }
           if (buildSlug && root.App && typeof root.App.navigate === 'function') {
             e.preventDefault();
             root.App.navigate('/build/' + buildSlug + '?lab=open&mode=guided');
@@ -1505,6 +1521,9 @@
         var actBtn = e.target.closest('[data-sandbox-action]');
         if (actBtn) {
           var act = actBtn.getAttribute('data-sandbox-action');
+          if (root.Analytics && root.Analytics.trackSandboxAction) {
+            root.Analytics.trackSandboxAction({ action: act, details: { node_count: self._nodes.length } });
+          }
           if (act === 'clear-canvas') {
             self._pushHistory();
             self._nodes = [];

@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1017,12 +1017,18 @@ flowchart TD
 <li>JSON attributes that become business-critical should be promoted to real columns with the same expand/contract steps.</li>
 </ul>
 </div></article>
-      <section class="check-slider" data-slug="extensible-data-modeling" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="extensible-data-modeling" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: The cost of EAV" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Backfill duration" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: When to drop the old column" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: The cost of EAV" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Backfill duration" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: When to drop the old column" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: EAV Join Row Fan-Out" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Hybrid Relational Columns + Validated JSONB vs Pure EAV" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-extensible-data-modeling-c1" data-type="mcq" data-slug="extensible-data-modeling" data-index="0">
@@ -1140,12 +1146,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="extensible-data-modeling-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-extensible-data-modeling-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Contract is the one step you cannot undo, so first stop writing url, then confirm from query logs that no deploy or batch job still reads it. Checking only the web nodes is tempting, but an old batch job reading url is exactly the failure the lesson warns about. How fast the drop runs does not make it safe.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-extensible-data-modeling-n1" data-type="numeric" data-slug="extensible-data-modeling" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: EAV Join Row Fan-Out</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A multi-tenant CRM stores custom fields in an Entity-Attribute-Value (EAV) table. You have 2,000,000 contact entities, and each contact has 25 custom attributes stored as separate rows in `contact_attributes`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many total rows (in millions) exist in the `contact_attributes` EAV table that the database must index and maintain?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-extensible-data-modeling-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-extensible-data-modeling-n1"
+              aria-label="Numeric estimate in million rows"
+              placeholder="Enter numeric estimate (million rows)..."
+            />
+            <span class="quiz-unit-badge">million rows</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 2,000,000 contacts by 25 attribute rows per contact.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="extensible-data-modeling-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-extensible-data-modeling-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">In an EAV schema, each attribute of an entity becomes its own row: 2,000,000 entities × 25 attributes = 50,000,000 (50 million) rows, turning a single-row lookup or multi-attribute filter into multi-way self-joins across a 50M-row table.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-extensible-data-modeling-t1" data-type="tradeoff" data-slug="extensible-data-modeling" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Hybrid Relational Columns + Validated JSONB vs Pure EAV</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You are designing a multi-tenant B2B SaaS product catalog where 90% of queries filter by `tenant_id`, `sku`, `status`, and `price_cents`, while each enterprise tenant also defines 5–20 custom metadata fields (two of which occasionally need filtered search).</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which schema architecture should you adopt, and what is the primary justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-extensible-data-modeling-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-extensible-data-modeling-t1" value="0" />
+                  <span>Store all fields (including sku and price) in a string-typed Entity-Attribute-Value (EAV) table</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-extensible-data-modeling-t1" value="1" />
+                  <span>Run `ALTER TABLE ADD COLUMN` on the shared table every time any tenant creates a custom attribute</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-extensible-data-modeling-t1" value="2" />
+                  <span>Keep core invariants (`tenant_id`, `sku`, `status`, `price_cents`) in typed relational columns and store tenant-specific attributes in a schema-validated JSONB column with targeted expression/GIN indexes</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-extensible-data-modeling-t1" value="0" />
+                  <span>EAV tables provide native foreign keys, numeric range checks, and zero-join point reads</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-extensible-data-modeling-t1" value="1" />
+                  <span>Running DDL migrations per tenant scales cleanly to thousands of tenants and tens of thousands of sparse columns</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-extensible-data-modeling-t1" value="2" />
+                  <span>A hybrid relational + validated JSONB model preserves strict SQL types and fast B-tree indexes on universal core fields while supporting zero-DDL tenant extensibility without EAV self-join amplification</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Compare 5-way EAV self-joins and lost data types against keeping core columns relational and isolating variable attributes in indexed JSONB.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="extensible-data-modeling-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-extensible-data-modeling-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Pure EAV destroys type safety, bloats row counts by 10–30x, and requires expensive self-joins to reconstruct a single record. Per-tenant DDL quickly hits column limits and lock contention. Keeping shared core invariants in first-class SQL columns and placing tenant-defined extensions in application-validated JSONB (with GIN or functional B-tree indexes) gives both relational integrity and safe extensibility.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1258,22 +1394,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

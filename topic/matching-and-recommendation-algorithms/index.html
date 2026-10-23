@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -978,12 +978,18 @@
 <!-- enriched -->
 <h2>Worked example: a 150 ms budget</h2><p>Corpus: 100 million items. Target: return 20 items in 150 ms at the 99th percentile.</p><ol><li><strong>Candidate generation (about 20 ms):</strong> compute the user embedding from a two-tower model, run approximate nearest neighbour search (for example HNSW) for the top 500, plus 300 from "followed creators" and 200 from "trending in your region". HNSW indexes routinely reach about 95 percent recall at a few milliseconds per query.</li><li><strong>Filtering (about 5 ms):</strong> remove seen items (Bloom filter plus recent exact set), blocked creators and ineligible content: about 800 remain.</li><li><strong>Ranking (about 60 ms):</strong> a deep model scores 800 candidates in one batched call with hundreds of features each, predicting click, watch time and hide probability, combined into a single score.</li><li><strong>Re-ranking (about 5 ms):</strong> enforce diversity (at most 2 items per creator in the top 10), insert 1 to 2 exploration slots, return 20.</li></ol><p>The remaining budget covers network hops and feature store reads. If the feature store times out, serve the cached popular-and-eligible list for the user's region rather than scoring with missing inputs.</p><h2>Retrieval techniques</h2><table><thead><tr><th>Technique</th><th>Strength</th><th>Weakness</th><th>Typical use</th></tr></thead><tbody><tr><td>Item-to-item co-occurrence</td><td>Simple, explainable, strong baseline</td><td>Cold start for new items</td><td>"People who watched X also watched"</td></tr><tr><td>Matrix factorization</td><td>Captures latent taste</td><td>Retraining lag; weak with side features</td><td>Classic collaborative filtering</td></tr><tr><td>Two-tower embeddings plus ANN</td><td>Uses rich features, scales to billions</td><td>Needs careful negative sampling</td><td>Modern retrieval at YouTube, Pinterest and others</td></tr><tr><td>Geo plus filters (cells, age, preferences)</td><td>Hard constraints satisfied up front</td><td>Sparse areas return few candidates</td><td>Dating apps, ride and delivery matching</td></tr><tr><td>Graph-based (friends of friends, random walks)</td><td>Strong social signal</td><td>Expensive to compute online</td><td>People you may know</td></tr></tbody></table><h2>Two-sided matching notes</h2><ul><li>Dating and marketplace matching must balance attention: very popular profiles should not receive all impressions, so systems cap exposure and boost mutual-interest likelihood rather than one-sided attractiveness.</li><li>Tinder stated in 2019 that it no longer relies on its old Elo-style desirability score, moving to models that weigh mutual activity and preferences.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="matching-and-recommendation-algorithms" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="matching-and-recommendation-algorithms" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Leakage in training" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Fitting a slower ranker" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Two-sided attention" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Leakage in training" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Fitting a slower ranker" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Two-sided attention" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Multi-Stage Funnel Inference Compute Savings" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Two-Tower Dot-Product Retrieval vs Cross-Attention Heavy Ranking" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-matching-and-recommendation-algorithms-c1" data-type="mcq" data-slug="matching-and-recommendation-algorithms" data-index="0">
@@ -1101,12 +1107,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="matching-and-recommendation-algorithms-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-matching-and-recommendation-algorithms-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Two-sided markets must balance attention, so systems cap exposure and optimise for mutual interest instead of one-sided appeal. The Elo option is tempting because it sounds like balancing, but the lesson notes Tinder moved away from Elo-style desirability toward models of mutual activity and preferences.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-matching-and-recommendation-algorithms-n1" data-type="numeric" data-slug="matching-and-recommendation-algorithms" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Multi-Stage Funnel Inference Compute Savings</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A recommendation catalog holds 10,000,000 items. A heavy deep-learning cross-network ranker costs 0.1 ms of GPU compute per item scored. Instead of scoring all 10,000,000 items (`1,000,000 ms` of GPU time), a two-tower ANN retrieval stage narrows the pool to 500 candidates before running the heavy ranker.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many milliseconds (ms) of GPU compute does the heavy ranker spend scoring the 500 retrieved candidates?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-matching-and-recommendation-algorithms-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-matching-and-recommendation-algorithms-n1"
+              aria-label="Numeric estimate in ms"
+              placeholder="Enter numeric estimate (ms)..."
+            />
+            <span class="quiz-unit-badge">ms</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 500 candidates by 0.1 ms per candidate.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="matching-and-recommendation-algorithms-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-matching-and-recommendation-algorithms-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">500 candidates × 0.1 ms/candidate = 50 ms of GPU compute (a 20,000x reduction compared to scoring all 10 million catalog items with the cross-feature ranker).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-matching-and-recommendation-algorithms-t1" data-type="tradeoff" data-slug="matching-and-recommendation-algorithms" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Two-Tower Dot-Product Retrieval vs Cross-Attention Heavy Ranking</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your ML team wants to use a single Transformer cross-attention model (which takes user-item interaction features jointly as input) to score all 20 million items in the catalog on every feed request within a 100 ms SLA.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which architectural approach should you choose, and what is the primary justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-matching-and-recommendation-algorithms-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-matching-and-recommendation-algorithms-t1" value="0" />
+                  <span>Run the cross-attention model over all 20 million items in real time on every user request</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-matching-and-recommendation-algorithms-t1" value="1" />
+                  <span>Use a decoupled Two-Tower architecture (where item embeddings are pre-computed offline and indexed in HNSW/IVF-PQ for sub-15ms ANN candidate retrieval of ~1,000 items), followed by the joint cross-feature ranker on only those ~1,000 candidates</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-matching-and-recommendation-algorithms-t1" value="2" />
+                  <span>Pre-compute and store all `100M users × 20M items` pairwise cross-attention scores every minute</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-matching-and-recommendation-algorithms-t1" value="0" />
+                  <span>Evaluating 20 million Transformer forward passes per request easily finishes in 10 ms on one GPU</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-matching-and-recommendation-algorithms-t1" value="1" />
+                  <span>Decoupling user and item towers allows item embeddings to be indexed for sub-linear ANN lookup (sacrificing early cross-features for speed), while the second-stage ranker restores rich cross-feature precision on a bounded candidate set</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-matching-and-recommendation-algorithms-t1" value="2" />
+                  <span>Computing 2 quadrillion pairwise scores every minute is cheap and handles real-time session context</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why can a Two-Tower model use an HNSW vector index while a joint Cross-Encoder cannot?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="matching-and-recommendation-algorithms-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-matching-and-recommendation-algorithms-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">A joint cross-encoder cannot pre-index item vectors because its internal representations depend on the specific user query. A Two-Tower model restricts user-item interaction to a final dot product/cosine similarity, enabling O(log N) ANN retrieval over millions of items before heavy ranking.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1219,22 +1355,22 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

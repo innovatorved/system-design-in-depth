@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -993,12 +993,18 @@
 <p>Suppose 99 percent of mobile events arrive within 2 minutes and 99.9 percent within 20 minutes. A 2-minute watermark publishes results fast but leaves about 1 percent to arrive as late corrections; a 20-minute watermark leaves about 0.1 percent late, but every dashboard is 20 minutes behind and the stream processor holds 10 times more open window state. Many teams publish early with a short watermark, emit updates as late data arrives, and mark a bucket "final" after the longer bound.</p>
 <p><strong>Real systems:</strong> Flink and Beam support allowed lateness and triggers that re-emit updated results; Kafka Streams uses a grace period per window; Prometheus-style systems avoid the problem by scraping at a fixed interval and defining the sample time as the scrape time.</p>
 </div></article>
-      <section class="check-slider" data-slug="bucketed-time-window-aggregation" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="bucketed-time-window-aggregation" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Late event policy" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sliding from buckets" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Watermark trade-off" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Late event policy" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sliding from buckets" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Watermark trade-off" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Sliding Window Ring-Buffer Sub-Bucket Granularity" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Handling Late-Arriving Out-of-Order Events in Windowed Stream Aggregation" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-bucketed-time-window-aggregation-c1" data-type="mcq" data-slug="bucketed-time-window-aggregation" data-index="0">
@@ -1116,12 +1122,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="bucketed-time-window-aggregation-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-bucketed-time-window-aggregation-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Early results with late updates and a later final mark give dashboards speed and billing completeness. A 20-minute watermark everywhere makes every dashboard 20 minutes stale and holds about 10 times more open window state, while processing time simply puts late events in the wrong bucket.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-bucketed-time-window-aggregation-n1" data-type="numeric" data-slug="bucketed-time-window-aggregation" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Sliding Window Ring-Buffer Sub-Bucket Granularity</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You need a sliding &quot;last 5 minutes&quot; (`300-second`) request and error counter per API key that advances every 5 seconds. Instead of storing every individual timestamp, you maintain a circular ring buffer of `5-second` sub-buckets per API key.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many `5-second` sub-buckets (`300 / 5`) are needed in the ring buffer to cover a 300-second sliding window?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-bucketed-time-window-aggregation-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-bucketed-time-window-aggregation-n1"
+              aria-label="Numeric estimate in buckets"
+              placeholder="Enter numeric estimate (buckets)..."
+            />
+            <span class="quiz-unit-badge">buckets</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide the 300-second window by the 5-second bucket width.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="bucketed-time-window-aggregation-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-bucketed-time-window-aggregation-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">300 seconds / 5 seconds = 60 integer sub-buckets per key (~480 bytes total regardless of whether the key receives 10 or 10,000,000 requests in those 5 minutes).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-bucketed-time-window-aggregation-t1" data-type="tradeoff" data-slug="bucketed-time-window-aggregation" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Handling Late-Arriving Out-of-Order Events in Windowed Stream Aggregation</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Mobile clients buffer analytics events while offline in a subway tunnel and upload them 4 minutes later. Your stream processor aggregates 1-minute event-time windows.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should a production stream processor (Flink/Kafka Streams) handle event-time windows vs late events?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-bucketed-time-window-aggregation-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-bucketed-time-window-aggregation-t1" value="0" />
+                  <span>Use server processing time (`System.currentTimeMillis()`) so a subway burst at 12:05 spikes the 12:05 metric with 12:01 events</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-bucketed-time-window-aggregation-t1" value="1" />
+                  <span>Hold every 1-minute window open in RAM forever waiting for late events</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-bucketed-time-window-aggregation-t1" value="2" />
+                  <span>Aggregate by Event Time using Watermarks + a bounded Allowed Lateness window (e.g., 5–10 minutes) that emits incremental/retracted window updates, and route extremely late events (&gt;10 min) to a side-output stream for batch reconciliation</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-bucketed-time-window-aggregation-t1" value="0" />
+                  <span>Processing time accurately reflects when the user action occurred offline</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-bucketed-time-window-aggregation-t1" value="1" />
+                  <span>Never closing windows uses bounded memory</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-bucketed-time-window-aggregation-t1" value="2" />
+                  <span>Watermarks track event-time progress; bounded allowed lateness handles 99% of delayed mobile flushes in real time while side outputs prevent unbounded state retention</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens to RocksDB/RAM state if you never expire old 1-minute window state?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="bucketed-time-window-aggregation-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-bucketed-time-window-aggregation-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Combining Event-Time Watermarks, a bounded Allowed Lateness window (emitting updated pane results), and a late-event side output balances real-time accuracy with bounded state memory.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1246,22 +1382,22 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1010,12 +1010,18 @@ flowchart LR
 <h2>How real systems use it</h2>
 <p>The pattern comes from Martin Fowler's Patterns of Enterprise Application Architecture and Eric Evans's Domain-Driven Design. Frameworks such as Spring Data and Entity Framework provide repository-like abstractions built in, which is why many teams define thin, use-case-specific repository interfaces on top rather than generic wrappers.</p>
 </div></article>
-      <section class="check-slider" data-slug="repository-pattern" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="repository-pattern" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Leaky generic repository" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Atomic insert-if-absent" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Two repositories, one crash" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Leaky generic repository" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Atomic insert-if-absent" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Two repositories, one crash" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: N+1 Leaky Repository Query Penalty" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Domain-Specific Aggregate Repository vs Generic IQueryable Leak" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-repository-pattern-c1" data-type="mcq" data-slug="repository-pattern" data-index="0">
@@ -1133,12 +1139,142 @@ flowchart LR
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="repository-pattern-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-repository-pattern-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Two separate commits can leave one done and the other not. The lesson says writes across repositories need a shared transaction, the Unit of Work pattern. Sharing a connection pool is the tempting answer, but a pool shares connections, not transactions, so it provides no atomicity.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-repository-pattern-n1" data-type="numeric" data-slug="repository-pattern" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: N+1 Leaky Repository Query Penalty</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A generic repository method `findOrdersByUser(userId)` returns 40 Order entities, and a service loop then calls `itemRepo.findByOrderId(order.id)` for each order. Each database round-trip takes 2.5 ms over the local network.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many milliseconds of total database round-trip time are spent executing this 1 + 40 query pattern (compared to 2.5 ms for a single batched query)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-repository-pattern-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-repository-pattern-n1"
+              aria-label="Numeric estimate in ms"
+              placeholder="Enter numeric estimate (ms)..."
+            />
+            <span class="quiz-unit-badge">ms</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Total queries = 1 (orders) + 40 (items per order) = 41 sequential round-trips × 2.5 ms.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="repository-pattern-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-repository-pattern-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Executing 1 query for the orders plus 40 sequential queries for each order&#039;s line items results in 41 round-trips × 2.5 ms = 102.5 ms of pure network/query latency—41x slower than a repository method designed around the aggregate root or a batched `WHERE order_id IN (...)` fetch.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-repository-pattern-t1" data-type="tradeoff" data-slug="repository-pattern" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Domain-Specific Aggregate Repository vs Generic IQueryable Leak</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Engineers propose having repositories return a lazy ORM query builder (`IQueryable` / `QuerySet`) to application controllers so callers can chain arbitrary `.where()`, `.join()`, and `.include()` clauses.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which repository interface design should you enforce, and what is the primary justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-repository-pattern-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-repository-pattern-t1" value="0" />
+                  <span>Expose raw query builders from the repository so every controller can invent custom ad-hoc SQL joins</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-repository-pattern-t1" value="1" />
+                  <span>Expose explicit, domain-named query and mutation methods on aggregate boundaries that return materialized domain objects or projections</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-repository-pattern-t1" value="2" />
+                  <span>Provide only `getById(id)` and `findAll()` on every repository and perform all filtering and joining in application memory</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-repository-pattern-t1" value="0" />
+                  <span>Exposing ORM query builders to controllers makes index tuning and storage migration trivial</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-repository-pattern-t1" value="1" />
+                  <span>Explicit domain methods keep query plans, index coverage, and persistence semantics encapsulated inside the repository rather than scattering unindexed queries and N+1 lazy loads across callers</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-repository-pattern-t1" value="2" />
+                  <span>Loading entire tables into application memory for filtering scales effortlessly past millions of rows</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">If any controller can attach arbitrary `.where()` predicates, how can you audit whether every production query is backed by an index?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="repository-pattern-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-repository-pattern-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Returning a lazy query builder from a repository defeats the purpose of the abstraction: persistence concerns (unindexed predicates, accidental lazy-loading N+1s, vendor-specific join behavior) leak into the callers, and you can no longer use an in-memory fake with confidence that production queries match tested paths.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1251,22 +1387,22 @@ flowchart LR
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

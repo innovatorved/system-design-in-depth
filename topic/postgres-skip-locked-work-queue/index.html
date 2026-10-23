@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1018,12 +1018,18 @@ SET status = 'running', attempts = attempts + 1,
 FROM next WHERE j.id = next.id
 RETURNING j.id, j.payload;</code></pre><p>A reaper periodically runs <code>UPDATE jobs SET status='pending' WHERE status='running' AND locked_until &lt; now()</code>, so crashed workers' jobs are retried. On success, delete the row or mark it done. On failure, set <code>run_at = now() + backoff</code>.</p><h2>Worked example: throughput budget</h2><p>Each claim-and-complete cycle costs about 3 statements (claim, process, delete), roughly 1 to 2 ms of database time with batching of 10. A modest primary sustaining 5,000 simple writes per second supports on the order of 1,500 to 2,500 jobs per second before queue traffic competes with application traffic. Each processed job leaves at least one dead tuple, so at 2,000 jobs per second that is 170 million dead tuples per day for autovacuum to clean.</p><h2>Database queue versus broker</h2><table><thead><tr><th>Factor</th><th>Postgres SKIP LOCKED</th><th>Dedicated broker (SQS, RabbitMQ)</th></tr></thead><tbody><tr><td>Transactional enqueue with business data</td><td>Yes: same commit</td><td>Needs an outbox</td></tr><tr><td>Throughput</td><td>Hundreds to a few thousand per second</td><td>Tens of thousands per second or more</td></tr><tr><td>Operational cost</td><td>None extra</td><td>Another system to run</td></tr><tr><td>Visibility and queries</td><td>Full SQL over jobs</td><td>Limited</td></tr><tr><td>Load on the primary</td><td>Competes with app queries. Adds vacuum pressure</td><td>Isolated</td></tr><tr><td>Delayed jobs, priorities</td><td>Just columns and ORDER BY</td><td>Varies by broker</td></tr></tbody></table><h2>Who uses it</h2><ul><li><strong>Oban</strong> (Elixir), <strong>Solid Queue</strong> (Rails), <strong>River</strong> (Go), <strong>Graphile Worker</strong> (Node) and <strong>pg-boss</strong> are all built on SKIP LOCKED.</li><li>Solid Queue became the Rails 8 default, which shows how far "just use Postgres" goes for most apps.</li></ul><h2>Failure modes</h2><ul><li><strong>Long-running transactions elsewhere</strong> (analytics queries, idle-in-transaction sessions) stop vacuum from removing dead job tuples, and the queue table bloats. Set <code>idle_in_transaction_session_timeout</code>.</li><li><strong>ORDER BY with SKIP LOCKED is not strict FIFO:</strong> locked rows are skipped, so ordering is best effort.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="postgres-skip-locked-work-queue" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="postgres-skip-locked-work-queue" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Naive FOR UPDATE" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Dead tuple volume" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Idle transaction bloat" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Naive FOR UPDATE" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Dead tuple volume" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Idle transaction bloat" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Batch Claim Round-Trip Reduction with `FOR UPDATE SKIP LOCKED`" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Holding the `SKIP LOCKED` Transaction Open During Job Execution vs Lease State Transition" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-postgres-skip-locked-work-queue-c1" data-type="mcq" data-slug="postgres-skip-locked-work-queue" data-index="0">
@@ -1141,12 +1147,142 @@ RETURNING j.id, j.payload;</code></pre><p>A reaper periodically runs <code>UPDAT
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="postgres-skip-locked-work-queue-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-postgres-skip-locked-work-queue-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Vacuum cannot remove tuples that an open transaction might still see, so dead job rows pile up and every claim scans more of them. SKIP LOCKED is still non-blocking; the damage is bloat, which is why the lesson recommends idle_in_transaction_session_timeout.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-postgres-skip-locked-work-queue-n1" data-type="numeric" data-slug="postgres-skip-locked-work-queue" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Batch Claim Round-Trip Reduction with `FOR UPDATE SKIP LOCKED`</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A pool of worker threads processes 10,000 background jobs/sec from a PostgreSQL queue table. Claiming 1 job per `SELECT ... FOR UPDATE SKIP LOCKED` query requires 10,000 queries/sec; claiming a batch of `LIMIT 50` jobs per transaction amortizes the claim.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many `SELECT ... FOR UPDATE SKIP LOCKED` claim queries per second are needed when each worker claims a batch of 50 jobs?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-postgres-skip-locked-work-queue-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-postgres-skip-locked-work-queue-n1"
+              aria-label="Numeric estimate in queries/s"
+              placeholder="Enter numeric estimate (queries/s)..."
+            />
+            <span class="quiz-unit-badge">queries/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 10,000 jobs/sec by 50 jobs per batch claim.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="postgres-skip-locked-work-queue-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-postgres-skip-locked-work-queue-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Batching `LIMIT 50` jobs into a single `UPDATE ... WHERE id IN (SELECT id ... FOR UPDATE SKIP LOCKED LIMIT 50) RETURNING *` drops database claim queries from 10,000 QPS to 200 QPS.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-postgres-skip-locked-work-queue-t1" data-type="tradeoff" data-slug="postgres-skip-locked-work-queue" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Holding the `SKIP LOCKED` Transaction Open During Job Execution vs Lease State Transition</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A developer writes a PostgreSQL `SKIP LOCKED` worker that opens `BEGIN`, runs `SELECT ... FOR UPDATE SKIP LOCKED`, calls an external LLM API that takes 45 seconds inside the open transaction, and then runs `DELETE` + `COMMIT`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why is holding the `SKIP LOCKED` transaction open during external I/O dangerous, and what is the production pattern?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-postgres-skip-locked-work-queue-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-postgres-skip-locked-work-queue-t1" value="0" />
+                  <span>Long-running open transactions in PostgreSQL help `autovacuum` reclaim dead tuples faster</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-postgres-skip-locked-work-queue-t1" value="1" />
+                  <span>PostgreSQL allows unlimited concurrent open transactions with zero connection or `xmin` overhead</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-postgres-skip-locked-work-queue-t1" value="2" />
+                  <span>Long open transactions pin the Postgres `xmin` horizon (blocking `VACUUM` across the entire database and causing severe table bloat) and exhaust connection pools; instead, atomically `UPDATE status = &#039;LEASED&#039;, leased_until = NOW() + &#039;2 min&#039;` and `COMMIT` immediately before executing the job</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-postgres-skip-locked-work-queue-t1" value="0" />
+                  <span>Pinning `xmin` for minutes prevents MVCC dead-tuple bloat</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-postgres-skip-locked-work-queue-t1" value="1" />
+                  <span>Holding a DB connection per slow HTTP call scales to 50,000 concurrent jobs</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-postgres-skip-locked-work-queue-t1" value="2" />
+                  <span>Committing a short lease transition immediately releases the row lock, connection, and MVCC `xmin` horizon in &lt;2 ms, while `leased_until` recovers crashed workers</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens to PostgreSQL `VACUUM` when a transaction remains open for minutes while a high-churn queue table is being updated thousands of times per second?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="postgres-skip-locked-work-queue-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-postgres-skip-locked-work-queue-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">In PostgreSQL, any open transaction with an active snapshot pins `xmin` and prevents `VACUUM` from cleaning dead tuples. A queue worker must atomically claim rows by updating `status = &#039;PROCESSING&#039;, visible_at = NOW() + timeout` and committing immediately.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1271,22 +1407,22 @@ RETURNING j.id, j.payload;</code></pre><p>A reaper periodically runs <code>UPDAT
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

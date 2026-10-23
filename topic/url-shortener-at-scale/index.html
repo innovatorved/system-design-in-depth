@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -975,12 +975,18 @@ flowchart TD
   K --> F["Stream aggregator"]
   F --> W[("ClickHouse counts by link, hour and country")]</div><p>Caching redirects at the CDN makes clicks cheap but hides them from the origin, so the CDN's logs become part of the analytics pipeline. Bitly-style products usually keep the TTL short, or count clicks at the edge. Deleting or disabling a link must purge it from the CDN and from Redis. Otherwise a link taken down for malware keeps redirecting until the cached entries expire.</p>
 </div></article>
-      <section class="check-slider" data-slug="url-shortener-at-scale" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="url-shortener-at-scale" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Snowflake code length" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Database reads after cache" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Takedown still redirects" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Snowflake code length" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Database reads after cache" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Takedown still redirects" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Base62 7-Character Keyspace Capacity" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: HTTP 301 (Permanent) vs HTTP 302 (Temporary) Redirects &amp; Key Generation Collision Avoidance" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-url-shortener-at-scale-c1" data-type="mcq" data-slug="url-shortener-at-scale" data-index="0">
@@ -1098,12 +1104,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="url-shortener-at-scale-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-url-shortener-at-scale-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Redirects are served from the CDN and Redis without touching the database, so a DB flag is invisible until those entries expire; disabling must actively purge both. Replica lag lasts seconds, not an hour, and the database is not even on the cached path.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-url-shortener-at-scale-n1" data-type="numeric" data-slug="url-shortener-at-scale" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Base62 7-Character Keyspace Capacity</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A URL shortener uses a 7-character Base62 (`a-z, A-Z, 0-9`) short code (`62^7 ≈ 3.52 × 10^12` total codes) and generates `100,000,000` (`10^8`) new short links per day (`3.65 × 10^10` links/year).</p>
+          </div>
+        
+        <p class="check-slider__prompt">Using `3.5 × 10^12` total codes and `3.5 × 10^10` links per year for clean napkin math, for how many years will the 7-character Base62 namespace last before exhaustion?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-url-shortener-at-scale-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-url-shortener-at-scale-n1"
+              aria-label="Numeric estimate in years"
+              placeholder="Enter numeric estimate (years)..."
+            />
+            <span class="quiz-unit-badge">years</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide `3.5 × 10^12` total codes by `3.5 × 10^10` codes per year.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="url-shortener-at-scale-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-url-shortener-at-scale-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`3.52 × 10^12 / 3.65 × 10^10 ≈ 96.5` (~100 years) at 100 million new links every single day!</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-url-shortener-at-scale-t1" data-type="tradeoff" data-slug="url-shortener-at-scale" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: HTTP 301 (Permanent) vs HTTP 302 (Temporary) Redirects &amp; Key Generation Collision Avoidance</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your URL shortener must (a) provide real-time click analytics and allow link owners to disable or update destination URLs, and (b) generate 7-character short codes at 5,000 writes/sec with zero database collision retries.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which HTTP status code and key generation strategy should you combine?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-url-shortener-at-scale-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-url-shortener-at-scale-t1" value="0" />
+                  <span>Return `301 Moved Permanently` with `Cache-Control: max-age=31536000` and generate keys by picking random 7-char strings and retrying `INSERT` on collision</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-url-shortener-at-scale-t1" value="1" />
+                  <span>Return `200 OK` with an HTML `&lt;meta refresh&gt;` page hosted on the primary SQL database</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-url-shortener-at-scale-t1" value="2" />
+                  <span>Return `302 Found` (or `307`, with short/controlled edge caching and async click telemetry) and generate short codes by Base62-encoding pre-allocated deterministic range blocks (or Feistel-permuted Snowflake/counter ranges) leased to app servers</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-url-shortener-at-scale-t1" value="0" />
+                  <span>Browsers permanently cache `301` redirects locally, bypassing your servers on repeat clicks and blinding click analytics and link revocation</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-url-shortener-at-scale-t1" value="1" />
+                  <span>Random string collisions decrease as the table fills up</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-url-shortener-at-scale-t1" value="2" />
+                  <span>`302` ensures repeat clicks hit your edge PoPs for analytics and takedown enforcement, while bijective Base62 encoding of leased monotonic counter ranges guarantees 0% collisions without a read-before-write DB check</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What does a browser do on the second click if your shortener returned `301 Moved Permanently`?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="url-shortener-at-scale-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-url-shortener-at-scale-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`301` causes browsers to cache the redirect indefinitely, breaking click tracking and link disabling. Range-leased counter -&gt; Feistel permutation -&gt; Base62 encoding yields non-guessable, 100% collision-free 7-char codes.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1216,22 +1352,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

@@ -182,6 +182,59 @@ window.QUESTION_BANK["logical-system-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "logical-system-design-n1",
+    "topic": "logical-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Synchronous Event Write Latency Budget",
+    "scenario": "Your logical link operation must first read the destination from the link storage adapter (p99 = 4 ms) and then synchronously write a click event to the event storage adapter (p99 = 9 ms) before the HTTP adapter formats the response (1 ms).",
+    "prompt": "If the overall redirect endpoint has a strict 20 ms p99 latency budget, how many milliseconds of headroom remain for network serialization and queuing inside the server?",
+    "question": "If the overall redirect endpoint has a strict 20 ms p99 latency budget, how many milliseconds of headroom remain for network serialization and queuing inside the server?",
+    "unit": "ms",
+    "answer": 6,
+    "tolerance": 0.2,
+    "hint": "Subtract the sequential step latencies (4 + 9 + 1 ms) from the 20 ms total budget.",
+    "explanation": "Because the logical operation sequences the link lookup (4 ms), synchronous event persistence (9 ms), and HTTP translation (1 ms) serially, those three steps consume 14 ms. Subtracting 14 ms from the 20 ms budget leaves 6 ms of headroom.",
+    "tags": [
+      "logical-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "logical-system-design-t1",
+    "topic": "logical-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Domain Error Translation vs Raw Driver Exceptions",
+    "scenario": "Your link service needs to support migrating from PostgreSQL to DynamoDB without rewriting HTTP handlers, background reconciliation jobs, or domain unit tests.",
+    "prompt": "Which boundary contract should the storage adapter enforce, and what is the primary architectural justification?",
+    "question": "Which boundary contract should the storage adapter enforce, and what is the primary architectural justification?",
+    "options": [
+      "Let database driver exceptions bubble directly into HTTP middleware so status codes map from SQLSTATE codes",
+      "Translate all storage outcomes into explicit domain result types (Found, Missing, Disabled, Conflict, Unavailable) inside the storage adapter",
+      "Pass raw ORM entities and database transaction handles into the HTTP controller so handlers can retry queries directly"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "SQLSTATE codes are identical across relational and NoSQL engines",
+      "Isolating vendor error codes behind explicit domain result types prevents persistence details from leaking into business sequencing or HTTP adapters",
+      "Exposing transaction handles to HTTP controllers reduces memory allocations during high QPS"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Think about what changes when you swap PostgreSQL for DynamoDB if HTTP handlers inspect SQLSTATE error codes.",
+    "explanation": "When the storage adapter maps vendor-specific exceptions (like PostgreSQL unique_violation 23505 or DynamoDB ConditionalCheckFailedException) into domain result types (Conflict, Unavailable), the link operation and HTTP layers remain completely agnostic to the underlying database engine.",
+    "tags": [
+      "logical-system-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -247,6 +300,59 @@ window.QUESTION_BANK["non-functional-requirements"] = [
       "non-functional-requirements",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "non-functional-requirements-n1",
+    "topic": "non-functional-requirements",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Monthly Error Budget in Requests",
+    "scenario": "Your payment authorization API serves an average of 1,000 requests/second around the clock and commits to a 99.95% request-based availability SLO over a 30-day month (2.592 billion requests, or use 2,500,000,000 requests for napkin math).",
+    "prompt": "Using 2.592 billion requests per 30-day month, how many failed requests (in millions, rounded to 2 decimal places) are permitted before the monthly error budget is exhausted?",
+    "question": "Using 2.592 billion requests per 30-day month, how many failed requests (in millions, rounded to 2 decimal places) are permitted before the monthly error budget is exhausted?",
+    "unit": "million requests",
+    "answer": 1.3,
+    "tolerance": 0.2,
+    "hint": "Error budget fraction = 1 - 0.9995 = 0.0005 (0.05%). Multiply 2,592M requests by 0.0005.",
+    "explanation": "At 1,000 req/s over 2,592,000 seconds (30 days), the service handles 2,592 million requests. A 99.95% SLO permits 0.05% (0.0005) failures: 2,592M × 0.0005 = 1.296 million failed requests (~1.3M).",
+    "tags": [
+      "non-functional-requirements",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "non-functional-requirements-t1",
+    "topic": "non-functional-requirements",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Zero-RPO Synchronous Cross-Region Replication vs Write Latency",
+    "scenario": "A ledger service requires RPO = 0 even if an entire cloud region is lost, while product managers also ask for sub-15 ms p99 write latency from a single primary cluster.",
+    "prompt": "Which architectural stance should you take during NFR negotiation, and what is the primary justification?",
+    "question": "Which architectural stance should you take during NFR negotiation, and what is the primary justification?",
+    "options": [
+      "Use asynchronous cross-region replication with a 5-second lag and claim RPO = 0 in the architecture doc",
+      "Enforce synchronous cross-region quorum commits across regions separated by 40+ ms RTT and explicitly raise the write latency SLO to accommodate speed-of-light physics",
+      "Commit writes only to local NVMe disk in a single availability zone to hit sub-15 ms latency while guaranteeing survival of a regional outage"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Asynchronous replication guarantees zero data loss during sudden regional power failure",
+      "Surviving a full regional outage with RPO = 0 requires at least one cross-region network round-trip before acknowledging a write, making sub-15 ms cross-region commits physically impossible",
+      "Local NVMe drives automatically replicate data across tectonic plates without network overhead"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "RPO = 0 across regions requires acknowledging the write only after a remote region has persisted it.",
+    "explanation": "Achieving RPO = 0 for a regional disaster requires synchronous replication to a second region before returning success to the client. Because inter-region round-trip times typically exceed 30–70 ms, the NFR contract must either relax the write latency target or scope RPO = 0 to single-AZ failures within a multi-AZ region.",
+    "tags": [
+      "non-functional-requirements",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -433,6 +539,59 @@ window.QUESTION_BANK["availability-durability-consistency-cost"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "availability-durability-consistency-cost-n1",
+    "topic": "availability-durability-consistency-cost",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Cross-AZ Replication Egress Cost",
+    "scenario": "To achieve high durability and availability, your write-heavy logging cluster synchronously replicates every write across 3 Availability Zones. The cluster ingests 50 MB/s of primary writes continuously (assume 2.6 million seconds/month) and cloud cross-AZ data transfer costs $0.01 per GB in each direction.",
+    "prompt": "How much monthly cross-AZ network transfer cost (in USD) is incurred just by replicating each primary write to the 2 peer AZs?",
+    "question": "How much monthly cross-AZ network transfer cost (in USD) is incurred just by replicating each primary write to the 2 peer AZs?",
+    "unit": "USD/month",
+    "answer": 2600,
+    "tolerance": 0.2,
+    "hint": "Primary write volume = 50 MB/s × 2.6M s = 130,000 GB/month. Sending to 2 remote AZs transfers 2 × 130,000 = 260,000 GB/month at $0.01/GB.",
+    "explanation": "50 MB/s over 2.6M seconds equals 130,000,000 MB = 130,000 GB of primary writes per month. Replicating every write to 2 additional AZs sends 260,000 GB across AZ boundaries each month. At $0.01/GB, cross-AZ replication alone costs $2,600/month.",
+    "tags": [
+      "availability-durability-consistency-cost",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "availability-durability-consistency-cost-t1",
+    "topic": "availability-durability-consistency-cost",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Tiered Durability and Consistency by Data Criticality",
+    "scenario": "Your e-commerce platform handles both customer order payments and real-time product page-view counters. Running both workloads on a synchronous multi-region Paxos database is projected to exceed the infrastructure budget by 4x.",
+    "prompt": "Which architectural split should you implement, and what is the primary justification?",
+    "question": "Which architectural split should you implement, and what is the primary justification?",
+    "options": [
+      "Move both payments and page-view counters to an eventually consistent single-AZ Redis cluster to cut costs by 80%",
+      "Keep payments on the synchronous quorum database (RPO=0, strong consistency) while moving page-view counters to buffered local aggregation with asynchronous flush (bounded RPO, eventual consistency)",
+      "Keep both on the synchronous Paxos database but disable fsync on transaction logs to double throughput"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Financial ledgers and page-view counters have identical regulatory and correctness requirements",
+      "Aligning durability (RPO) and consistency guarantees per workload avoids paying synchronous quorum and cross-AZ egress costs for high-volume telemetry that can tolerate seconds of loss",
+      "Disabling fsync preserves zero-data-loss durability while lowering compute bills"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Match the cost of RPO=0 and linearizability only to state transitions that cannot be reconstructed or approximated.",
+    "explanation": "Strong consistency and zero-RPO durability carry steep latency and network replication costs. Partitioning state by business criticality—synchronous quorum persistence for financial transactions, batched asynchronous writes for high-frequency telemetry—reduces infrastructure spend dramatically without compromising ledger invariants.",
+    "tags": [
+      "availability-durability-consistency-cost",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -618,6 +777,59 @@ window.QUESTION_BANK["concurrency-vs-parallelism"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "concurrency-vs-parallelism-n1",
+    "topic": "concurrency-vs-parallelism",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Little's Law for Concurrent I/O Workers",
+    "scenario": "A Node.js API server processes requests that spend 2 ms on CPU and 48 ms waiting on non-blocking downstream database I/O (50 ms total response time). You want a single process to sustain 1,000 requests/second.",
+    "prompt": "By Little's Law (L = λ × W), how many concurrent in-flight requests are active inside the process on average?",
+    "question": "By Little's Law (L = λ × W), how many concurrent in-flight requests are active inside the process on average?",
+    "unit": "requests",
+    "answer": 50,
+    "tolerance": 0.2,
+    "hint": "Multiply arrival rate λ (1,000 req/s) by average residence time W (0.05 seconds).",
+    "explanation": "By Little's Law, average concurrency L = λ × W = 1,000 req/s × 0.050 s = 50 in-flight requests. Note that while 50 requests overlap concurrently waiting on I/O, the single CPU core is panicked only if CPU time exceeds capacity (here 1,000 × 2 ms = 2,000 ms/s, which would actually require 2 CPU cores in parallel!).",
+    "tags": [
+      "concurrency-vs-parallelism",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "concurrency-vs-parallelism-t1",
+    "topic": "concurrency-vs-parallelism",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Event-Loop Concurrency vs Multi-Core Parallelism for Mixed Workloads",
+    "scenario": "An API gateway written on a single-threaded async event loop handles 10,000 concurrent WebSocket connections smoothly, until a new feature adds synchronous 40 ms PDF signature verification on 5% of messages, causing p99 heartbeat timeouts across all clients.",
+    "prompt": "Which execution model change should you adopt, and what is the primary justification?",
+    "question": "Which execution model change should you adopt, and what is the primary justification?",
+    "options": [
+      "Increase the async event loop's max socket backlog and keep PDF verification inline on the event loop thread",
+      "Keep network I/O multiplexed on the non-blocking event loop, but offload CPU-bound PDF verification to a bounded multi-core worker thread pool",
+      "Replace the non-blocking event loop entirely with one OS kernel thread per WebSocket connection"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "A larger socket backlog prevents a 40 ms synchronous CPU computation from blocking the single event-loop thread",
+      "Separating high-concurrency I/O multiplexing from bounded multi-core CPU parallelism prevents head-of-line blocking on the event loop without paying the memory cost of 10,000 OS threads",
+      "Spawning 10,000 OS threads eliminates context-switching overhead for CPU-bound tasks"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "An event loop excels at concurrent I/O waits, but a single 40 ms CPU task freezes all I/O callbacks on that thread.",
+    "explanation": "Concurrency via a single-threaded event loop handles thousands of waiting I/O sockets efficiently, but any CPU-bound task blocks the entire loop (head-of-line blocking). Offloading CPU work to a bounded worker pool sized to physical CPU cores achieves true hardware parallelism for compute while preserving lightweight concurrency for I/O.",
+    "tags": [
+      "concurrency-vs-parallelism",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -683,6 +895,59 @@ window.QUESTION_BANK["horizontal-vs-vertical-scaling"] = [
       "horizontal-vs-vertical-scaling",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "horizontal-vs-vertical-scaling-n1",
+    "topic": "horizontal-vs-vertical-scaling",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: N+1 Horizontal Fleet Sizing with Headroom",
+    "scenario": "Your stateless checkout tier needs to handle a peak load of 12,000 req/s. Each 8-vCPU instance can safely process 1,500 req/s at its target 70% CPU utilization ceiling.",
+    "prompt": "If your availability policy requires surviving the simultaneous loss of 2 instances (N+2 redundancy) without breaching the 70% CPU ceiling, how many instances must be running in the fleet?",
+    "question": "If your availability policy requires surviving the simultaneous loss of 2 instances (N+2 redundancy) without breaching the 70% CPU ceiling, how many instances must be running in the fleet?",
+    "unit": "instances",
+    "answer": 10,
+    "tolerance": 0.2,
+    "hint": "Minimum active instances N = 12,000 / 1,500 = 8. Add 2 instances for N+2 fault tolerance.",
+    "explanation": "At 1,500 req/s per instance, serving 12,000 req/s requires N = 8 healthy instances. To survive losing 2 instances simultaneously while keeping remaining nodes within the 1,500 req/s limit, you must provision 8 + 2 = 10 instances.",
+    "tags": [
+      "horizontal-vs-vertical-scaling",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "horizontal-vs-vertical-scaling-t1",
+    "topic": "horizontal-vs-vertical-scaling",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Vertical Scale-Up vs Premature Database Sharding",
+    "scenario": "Your relational primary database sits on a 16-vCPU, 64 GB RAM VM and hits 85% CPU and buffer-pool thrashing during daily peak traffic. The dataset is 180 GB and grows by 5 GB/month.",
+    "prompt": "Which scaling path should you execute first, and what is the primary engineering justification?",
+    "question": "Which scaling path should you execute first, and what is the primary engineering justification?",
+    "options": [
+      "Immediately freeze feature development for 6 months to shard the database across 16 horizontal nodes",
+      "Vertically scale the instance to 64 vCPUs / 512 GB RAM (plus a read replica for failover/reads) so the entire 180 GB working set fits in memory without breaking ACID joins",
+      "Keep the 16-vCPU database and add 20 more stateless application servers to speed up SQL execution"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "A 180 GB dataset exceeds the physical limits of modern cloud instances",
+      "Vertical scaling fits the entire 180 GB dataset in RAM with zero application re-architecture, whereas horizontal sharding sacrifices cross-shard ACID transactions and adds massive operational complexity long before hardware ceilings are reached",
+      "Adding stateless application servers reduces CPU load on the underlying database"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Modern cloud instances scale to 128+ vCPUs and multiple terabytes of RAM; compare that against the cost of distributed joins and shard rebalancing.",
+    "explanation": "At 180 GB (+60 GB/year), the entire database easily fits into the RAM of a single vertically scaled instance for years to come. Sharding a relational database prematurely destroys single-node ACID guarantees, complicates every query and migration, and consumes months of engineering time to solve a problem a 10-minute failover to a larger instance fixes.",
+    "tags": [
+      "horizontal-vs-vertical-scaling",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -750,6 +1015,59 @@ window.QUESTION_BANK["monolith-vs-microservices"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "monolith-vs-microservices-n1",
+    "topic": "monolith-vs-microservices",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Serial Microservice Call Chain Availability",
+    "scenario": "A checkout request fans through a synchronous chain of 5 independent microservices (Cart -> Pricing -> Tax -> Fraud -> Ledger). Each service independently maintains a 99.9% (0.999) availability SLO.",
+    "prompt": "Assuming failures are independent and any single service failure fails the checkout, what is the maximum composite availability (as a percentage, e.g., 99.5) of the end-to-end checkout call?",
+    "question": "Assuming failures are independent and any single service failure fails the checkout, what is the maximum composite availability (as a percentage, e.g., 99.5) of the end-to-end checkout call?",
+    "unit": "%",
+    "answer": 99.5,
+    "tolerance": 0.2,
+    "hint": "For small unavailability ε = 0.1%, 5 serial dependencies yield approximately 100% - (5 × 0.1%) = 99.5%.",
+    "explanation": "When N services are called synchronously in series, composite availability is 0.999^5 ≈ 0.99501, or 99.5%. Five three-nines services in a serial chain multiply your allowable downtime budget by 5x.",
+    "tags": [
+      "monolith-vs-microservices",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "monolith-vs-microservices-t1",
+    "topic": "monolith-vs-microservices",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Modular Monolith vs Fine-Grained Microservices for an Evolving Domain",
+    "scenario": "A 12-engineer startup is building a B2B billing platform where domain boundaries between invoicing, usage metering, and dunning change every sprint, and operations require strict atomic consistency across those modules.",
+    "prompt": "Which service topology should you choose, and what is the primary justification?",
+    "question": "Which service topology should you choose, and what is the primary justification?",
+    "options": [
+      "Split the system into 15 microservices with separate databases from day one so each engineer owns a service",
+      "Build a modular monolith with strict compile-time package boundaries and a shared database, extracting services only when independent scaling or team autonomy demands it",
+      "Build an unstructured monolith where every controller writes directly to any table without module interfaces"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Distributed sagas and two-phase commits are faster to refactor than in-process function calls",
+      "A modular monolith preserves single-database ACID transactions and cheap boundary refactoring while domain seams are still fluid, avoiding distributed monolith failure modes",
+      "Removing all module boundaries guarantees zero coupling as the codebase grows"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "What happens when you get a domain boundary wrong across network RPCs versus across in-process packages?",
+    "explanation": "When domain boundaries are still being discovered and cross-module updates require atomicity, premature microservices create a distributed monolith: every feature requires coordinated multi-repo deploys and complex distributed sagas. Enforcing module boundaries in-process gives you clean encapsulation with local ACID transactions and easy refactoring.",
+    "tags": [
+      "monolith-vs-microservices",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -815,6 +1133,59 @@ window.QUESTION_BANK["repository-pattern"] = [
       "repository-pattern",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "repository-pattern-n1",
+    "topic": "repository-pattern",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: N+1 Leaky Repository Query Penalty",
+    "scenario": "A generic repository method `findOrdersByUser(userId)` returns 40 Order entities, and a service loop then calls `itemRepo.findByOrderId(order.id)` for each order. Each database round-trip takes 2.5 ms over the local network.",
+    "prompt": "How many milliseconds of total database round-trip time are spent executing this 1 + 40 query pattern (compared to 2.5 ms for a single batched query)?",
+    "question": "How many milliseconds of total database round-trip time are spent executing this 1 + 40 query pattern (compared to 2.5 ms for a single batched query)?",
+    "unit": "ms",
+    "answer": 102.5,
+    "tolerance": 0.2,
+    "hint": "Total queries = 1 (orders) + 40 (items per order) = 41 sequential round-trips × 2.5 ms.",
+    "explanation": "Executing 1 query for the orders plus 40 sequential queries for each order's line items results in 41 round-trips × 2.5 ms = 102.5 ms of pure network/query latency—41x slower than a repository method designed around the aggregate root or a batched `WHERE order_id IN (...)` fetch.",
+    "tags": [
+      "repository-pattern",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "repository-pattern-t1",
+    "topic": "repository-pattern",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Domain-Specific Aggregate Repository vs Generic IQueryable Leak",
+    "scenario": "Engineers propose having repositories return a lazy ORM query builder (`IQueryable` / `QuerySet`) to application controllers so callers can chain arbitrary `.where()`, `.join()`, and `.include()` clauses.",
+    "prompt": "Which repository interface design should you enforce, and what is the primary justification?",
+    "question": "Which repository interface design should you enforce, and what is the primary justification?",
+    "options": [
+      "Expose raw query builders from the repository so every controller can invent custom ad-hoc SQL joins",
+      "Expose explicit, domain-named query and mutation methods on aggregate boundaries that return materialized domain objects or projections",
+      "Provide only `getById(id)` and `findAll()` on every repository and perform all filtering and joining in application memory"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Exposing ORM query builders to controllers makes index tuning and storage migration trivial",
+      "Explicit domain methods keep query plans, index coverage, and persistence semantics encapsulated inside the repository rather than scattering unindexed queries and N+1 lazy loads across callers",
+      "Loading entire tables into application memory for filtering scales effortlessly past millions of rows"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "If any controller can attach arbitrary `.where()` predicates, how can you audit whether every production query is backed by an index?",
+    "explanation": "Returning a lazy query builder from a repository defeats the purpose of the abstraction: persistence concerns (unindexed predicates, accidental lazy-loading N+1s, vendor-specific join behavior) leak into the callers, and you can no longer use an in-memory fake with confidence that production queries match tested paths.",
+    "tags": [
+      "repository-pattern",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -882,6 +1253,59 @@ window.QUESTION_BANK["extensible-data-modeling"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "extensible-data-modeling-n1",
+    "topic": "extensible-data-modeling",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: EAV Join Row Fan-Out",
+    "scenario": "A multi-tenant CRM stores custom fields in an Entity-Attribute-Value (EAV) table. You have 2,000,000 contact entities, and each contact has 25 custom attributes stored as separate rows in `contact_attributes`.",
+    "prompt": "How many total rows (in millions) exist in the `contact_attributes` EAV table that the database must index and maintain?",
+    "question": "How many total rows (in millions) exist in the `contact_attributes` EAV table that the database must index and maintain?",
+    "unit": "million rows",
+    "answer": 50,
+    "tolerance": 0.2,
+    "hint": "Multiply 2,000,000 contacts by 25 attribute rows per contact.",
+    "explanation": "In an EAV schema, each attribute of an entity becomes its own row: 2,000,000 entities × 25 attributes = 50,000,000 (50 million) rows, turning a single-row lookup or multi-attribute filter into multi-way self-joins across a 50M-row table.",
+    "tags": [
+      "extensible-data-modeling",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "extensible-data-modeling-t1",
+    "topic": "extensible-data-modeling",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Hybrid Relational Columns + Validated JSONB vs Pure EAV",
+    "scenario": "You are designing a multi-tenant B2B SaaS product catalog where 90% of queries filter by `tenant_id`, `sku`, `status`, and `price_cents`, while each enterprise tenant also defines 5–20 custom metadata fields (two of which occasionally need filtered search).",
+    "prompt": "Which schema architecture should you adopt, and what is the primary justification?",
+    "question": "Which schema architecture should you adopt, and what is the primary justification?",
+    "options": [
+      "Store all fields (including sku and price) in a string-typed Entity-Attribute-Value (EAV) table",
+      "Run `ALTER TABLE ADD COLUMN` on the shared table every time any tenant creates a custom attribute",
+      "Keep core invariants (`tenant_id`, `sku`, `status`, `price_cents`) in typed relational columns and store tenant-specific attributes in a schema-validated JSONB column with targeted expression/GIN indexes"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "EAV tables provide native foreign keys, numeric range checks, and zero-join point reads",
+      "Running DDL migrations per tenant scales cleanly to thousands of tenants and tens of thousands of sparse columns",
+      "A hybrid relational + validated JSONB model preserves strict SQL types and fast B-tree indexes on universal core fields while supporting zero-DDL tenant extensibility without EAV self-join amplification"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Compare 5-way EAV self-joins and lost data types against keeping core columns relational and isolating variable attributes in indexed JSONB.",
+    "explanation": "Pure EAV destroys type safety, bloats row counts by 10–30x, and requires expensive self-joins to reconstruct a single record. Per-tenant DDL quickly hits column limits and lock contention. Keeping shared core invariants in first-class SQL columns and placing tenant-defined extensions in application-validated JSONB (with GIN or functional B-tree indexes) gives both relational integrity and safe extensibility.",
+    "tags": [
+      "extensible-data-modeling",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -948,6 +1372,59 @@ window.QUESTION_BANK["cost-aware-architecture"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "cost-aware-architecture-n1",
+    "topic": "cost-aware-architecture",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: CDN Offload Egress Savings",
+    "scenario": "Your origin servers directly serve 500 TB (500,000 GB) per month of static media at a cloud internet egress rate of $0.08/GB. Placing a CDN in front achieves a 90% cache hit ratio; CDN egress costs $0.02/GB and origin-to-CDN cache-fill traffic (the 10% misses) costs $0.02/GB.",
+    "prompt": "How many thousands of dollars per month do you save on bandwidth by adding the CDN?",
+    "question": "How many thousands of dollars per month do you save on bandwidth by adding the CDN?",
+    "unit": "thousand USD/month",
+    "answer": 29,
+    "tolerance": 0.2,
+    "hint": "Without CDN: 500,000 × $0.08 = $40k. With CDN: 500,000 × $0.02 (edge egress) + 50,000 × $0.02 (origin fill) = $11k. Savings = $40k - $11k.",
+    "explanation": "Direct origin egress costs 500,000 GB × $0.08 = $40,000/month. With the CDN, edge delivery costs 500,000 GB × $0.02 = $10,000/month, and the 10% origin cache fill (50,000 GB × $0.02) costs $1,000/month ($11,000 total). Monthly savings = $40,000 - $11,000 = $29,000 (29 thousand USD).",
+    "tags": [
+      "cost-aware-architecture",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "cost-aware-architecture-t1",
+    "topic": "cost-aware-architecture",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Baseline Reserved Capacity + Spot Bursting vs Pure On-Demand",
+    "scenario": "A media transcoding and API platform has a predictable 24/7 baseline load requiring 100 vCPUs, plus a daily 4-hour evening peak requiring an additional 150 vCPUs of fault-tolerant asynchronous video encoding.",
+    "prompt": "Which compute purchasing and scheduling strategy optimizes unit economics without risking API availability, and why?",
+    "question": "Which compute purchasing and scheduling strategy optimizes unit economics without risking API availability, and why?",
+    "options": [
+      "Run all 250 vCPUs on 24/7 On-Demand instances year-round to avoid autoscaling delays",
+      "Run the synchronous API on Spot instances and the batch transcoding workers on 3-year Reserved Instances",
+      "Cover the 100-vCPU 24/7 synchronous baseline with Reserved/Committed-Use instances and autoscale the checkpointed batch transcoding fleet on preemptible Spot instances with On-Demand fallback"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Paying On-Demand rates for 150 idle vCPUs 20 hours a day maximizes cloud gross margin",
+      "Stateless synchronous APIs never suffer availability drops when an entire Spot pool is reclaimed simultaneously",
+      "Matching committed discounts to steady baseline load and cheap preemptible capacity to idempotent, checkpointed batch work cuts compute spend by 50-70% while protecting synchronous SLOs"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Match steady 24/7 load to committed capacity and fault-tolerant spiky batch work to preemptible Spot capacity.",
+    "explanation": "Cost-aware architecture aligns workload characteristics with pricing models: steady 24/7 synchronous capacity earns 40–60% discounts via Reserved/Committed plans, while spiky, checkpointed asynchronous workers can safely exploit 60–80% cheaper Spot instances with automated fallback.",
+    "tags": [
+      "cost-aware-architecture",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -1013,6 +1490,59 @@ window.QUESTION_BANK["when-not-to-add-infrastructure"] = [
       "when-not-to-add-infrastructure",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "when-not-to-add-infrastructure-n1",
+    "topic": "when-not-to-add-infrastructure",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Cold-Cache Database Overload Factor",
+    "scenario": "Your link service handles 20,000 reads/s by placing a Redis cluster (95% hit rate) in front of a single PostgreSQL database that was downsized so its maximum safe capacity is 2,500 reads/s.",
+    "prompt": "If the Redis cluster suffers a full restart or network partition and 100% of the 20,000 reads/s fall back to PostgreSQL, by what multiple (factor) does incoming traffic exceed the database's safe capacity?",
+    "question": "If the Redis cluster suffers a full restart or network partition and 100% of the 20,000 reads/s fall back to PostgreSQL, by what multiple (factor) does incoming traffic exceed the database's safe capacity?",
+    "unit": "x",
+    "answer": 8,
+    "tolerance": 0.2,
+    "hint": "Divide full fallback load (20,000 reads/s) by the database's maximum safe capacity (2,500 reads/s).",
+    "explanation": "During normal operation, the 95% cache hit rate sends only 5% of 20,000 = 1,000 reads/s to PostgreSQL. When the cache goes cold or fails, load jumps to 20,000 reads/s—which is 20,000 / 2,500 = 8x the database's safe capacity, triggering an immediate cascading meltdown unless load shedding or singleflight coalescing is in place.",
+    "tags": [
+      "when-not-to-add-infrastructure",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "when-not-to-add-infrastructure-t1",
+    "topic": "when-not-to-add-infrastructure",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Missing Composite Index vs Introducing a Distributed Cache",
+    "scenario": "A dashboard endpoint querying `SELECT * FROM events WHERE org_id = $1 ORDER BY created_at DESC LIMIT 50` takes 450 ms at p95 on a 10M-row PostgreSQL table (currently indexed only on `id`). A teammate proposes deploying a Redis cluster and a Kafka CDC invalidation pipeline to cache the query.",
+    "prompt": "Which intervention should you take first, and what is the primary justification?",
+    "question": "Which intervention should you take first, and what is the primary justification?",
+    "options": [
+      "Deploy the Redis cluster and Kafka CDC pipeline immediately so reads bypass PostgreSQL",
+      "Add a composite B-tree index on `(org_id, created_at DESC)` concurrently and verify whether the sub-5 ms indexed read already satisfies the SLO",
+      "Migrate the events table to a distributed graph database"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Adding two new distributed systems is simpler than running `CREATE INDEX CONCURRENTLY`",
+      "Fixing a sequential scan with the right composite index eliminates the bottleneck in the existing database without introducing cache invalidation bugs, cold-start thundering herds, or new operational failure modes",
+      "B-tree indexes cannot accelerate `WHERE` + `ORDER BY ... LIMIT` queries"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Every new piece of infrastructure introduces new failure modes (stale reads, cold-cache stampedes, sync lag). Exhaust local query/index fixes first.",
+    "explanation": "A 450 ms query on 10M rows without a matching index is doing a sequential scan + sort. Adding `CREATE INDEX CONCURRENTLY ON events (org_id, created_at DESC)` turns it into a <2 ms index scan with zero new moving parts, whereas adding Redis + Kafka introduces staleness windows, CDC lag, and cold-cache outage risks.",
+    "tags": [
+      "when-not-to-add-infrastructure",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

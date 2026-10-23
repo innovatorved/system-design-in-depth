@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -969,12 +969,18 @@
 <!-- enriched -->
 <h2>Worked example: volume and hot tags</h2><p>Assume 500 million posts per day, 20 percent carrying hashtags with an average of 2 tags each: 200 million postings per day, about 2,300 per second on average and perhaps 10 times that during a global event. At 16 bytes per posting (post ID plus timestamp) that is about 3.2 GB of raw index per day before replication and overhead.</p><p>During a final, one tag might see 50,000 posts per minute, about 830 writes per second into one partition, and millions of reads of its first page. Use a partition key like <code>(tag, day, shard)</code> with shard = hash(post_id) mod 16, so writes spread across 16 partitions; readers fetch the newest page from each shard and merge (or read a cached merged first page refreshed every few seconds).</p><h2>Trending with bounded memory</h2><p>A count-min sketch with width w = ceil(e / epsilon) and depth d = ceil(ln(1 / delta)) overestimates any count by at most epsilon x N with probability 1 - delta, where N is the number of events in the window. With epsilon = 0.00001 and delta = 0.01 that is w = 271,829 and d = 5, about 1.36 million 4-byte counters or 5.4 MB per window. If a 5 minute window holds 10 million tag events, the error bound is at most 100 counts. Keep a small heap of the top candidates, then score each by something like (count_now + a) / (baseline_rate + b), where the smoothing constants stop tiny tags going from 1 to 5 from looking like a 500 percent spike.</p><h2>Storage options</h2><table><thead><tr><th>Store</th><th>Serves</th><th>Strength</th><th>Weakness</th></tr></thead><tbody><tr><td>Wide-column table by (tag, bucket)</td><td>Newest posts for a tag</td><td>Cheap appends, simple range reads</td><td>No relevance ranking or multi-term queries</td></tr><tr><td>Search engine (Elasticsearch, OpenSearch, Lucene based)</td><td>Tag plus keyword plus filters</td><td>Rich queries and ranking</td><td>Refresh lag, heavier operations</td></tr><tr><td>Redis sorted set per hot tag</td><td>First page of hot tags</td><td>Very low latency</td><td>Memory bound; needs trimming</td></tr><tr><td>Stream processor state (Flink)</td><td>Windowed trending counts</td><td>Exactly-once windows, event time</td><td>Not a query store; publish results elsewhere</td></tr></tbody></table><h2>How real systems do it</h2><ul><li>Twitter open-sourced the twitter-text libraries so every client and server extracted hashtags identically, and its search tier (Earlybird) is an in-memory, time-partitioned inverted index built on Lucene ideas.</li><li>Twitter's trends explicitly favour topics that are spiking now over topics that are merely always popular.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="hashtag-extraction-and-tag-store" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="hashtag-extraction-and-tag-store" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Tag partition key" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Hot tag write spread" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Count-min sketch sizing" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Tag partition key" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Hot tag write spread" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Count-min sketch sizing" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Hot Hashtag Partition Write Load" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Extracting Hashtags via Regex at Read Time vs Tokenizing at Ingest + Time-Bucketed Inverted Store" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-hashtag-extraction-and-tag-store-c1" data-type="mcq" data-slug="hashtag-extraction-and-tag-store" data-index="0">
@@ -1092,12 +1098,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="hashtag-extraction-and-tag-store-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-hashtag-extraction-and-tag-store-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Width is ceil(e / epsilon) = ceil(2.71828 / 0.0001) = 27,183, and the error bound is epsilon x N = 0.0001 x 20M = 2,000 counts. The option with 200 applies the right width but slips a factor of ten on epsilon x N, which matters when you decide whether small tags can be ranked reliably.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-hashtag-extraction-and-tag-store-n1" data-type="numeric" data-slug="hashtag-extraction-and-tag-store" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Hot Hashtag Partition Write Load</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">During a global event (e.g., `#WorldCup`), `400,000` posts per minute (`~6,667 posts/sec`) contain at least 3 hashtags on average (`20,000` hashtag-post index insertions per second), and `30%` of all hashtag insertions are for the single `#worldcup` tag.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many index writes per second (`30% of 20,000`) hit the single `#worldcup` hashtag key?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-hashtag-extraction-and-tag-store-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-hashtag-extraction-and-tag-store-n1"
+              aria-label="Numeric estimate in writes/s"
+              placeholder="Enter numeric estimate (writes/s)..."
+            />
+            <span class="quiz-unit-badge">writes/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 20,000 total tag writes/sec by 0.30.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="hashtag-extraction-and-tag-store-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-hashtag-extraction-and-tag-store-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">30% of 20,000 tag writes/sec = 6,000 writes/sec concentrated on the single `#worldcup` partition key—plus millions of concurrent readers opening the `#worldcup` feed.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-hashtag-extraction-and-tag-store-t1" data-type="tradeoff" data-slug="hashtag-extraction-and-tag-store" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Extracting Hashtags via Regex at Read Time vs Tokenizing at Ingest + Time-Bucketed Inverted Store</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Users click `#systemdesign` to view either &quot;Latest&quot; (chronological) or &quot;Top&quot; (high-engagement) posts containing that hashtag.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should hashtags be extracted, indexed, and served at scale?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-hashtag-extraction-and-tag-store-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-hashtag-extraction-and-tag-store-t1" value="0" />
+                  <span>Run `SELECT * FROM posts WHERE text LIKE &#039;%#systemdesign%&#039;` on the primary posts table on every click</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-hashtag-extraction-and-tag-store-t1" value="1" />
+                  <span>Allow clients to pass arbitrary unvalidated hashtag lists that do not appear in the post text</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-hashtag-extraction-and-tag-store-t1" value="2" />
+                  <span>Parse and canonicalize hashtags deterministically at ingest time into the post entity metadata, and write `(normalized_tag, time_bucket) -&gt; post_id` into an asynchronous inverted tag index with a short-TTL edge cache for hot tags</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-hashtag-extraction-and-tag-store-t1" value="0" />
+                  <span>Leading-wildcard `LIKE &#039;%#tag%&#039;` queries use B-Tree indexes in O(1) time</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-hashtag-extraction-and-tag-store-t1" value="1" />
+                  <span>Trusting client-supplied invisible tags prevents spam abuse</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-hashtag-extraction-and-tag-store-t1" value="2" />
+                  <span>Deterministic server-side extraction prevents tag spoofing, while partitioning the inverted tag store by `(normalized_tag, time_bucket)` bounds partition size and serves &quot;Latest&quot; straight from the newest bucket</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why should the partition key for a hashtag posting list include a `time_bucket` (e.g., day or hour)?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="hashtag-extraction-and-tag-store-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-hashtag-extraction-and-tag-store-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">A popular hashtag like `#news` accumulates billions of posts over years. Partitioning the tag index by `(tag, time_bucket)` bounds partition size, keeps recent postings hot in RAM, and allows archiving old buckets cleanly.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1210,22 +1346,22 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

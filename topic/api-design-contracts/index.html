@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1016,12 +1016,18 @@ flowchart TD
 <li>Deprecation announced but never measured: log which clients still call old fields before removing them.</li>
 </ul>
 </div></article>
-      <section class="check-slider" data-slug="api-design-contracts" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="api-design-contracts" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Reused idempotency key" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Which change is additive" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Key stored outside the transaction" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Reused idempotency key" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Which change is additive" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Key stored outside the transaction" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Idempotency Key Cache Memory Sizing" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Additive Schema Evolution vs Hard URL Version Bumps" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-api-design-contracts-c1" data-type="mcq" data-slug="api-design-contracts" data-index="0">
@@ -1139,12 +1145,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="api-design-contracts-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-api-design-contracts-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">If the process dies after the link commits but before the key is saved, a retry finds no record and runs the insert again. That is why the key, hash and response must be written in the same transaction as the side effect. The concurrent-retry problem is real too, but its fix is locking the key or inserting it first with an in-progress status.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-api-design-contracts-n1" data-type="numeric" data-slug="api-design-contracts" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Idempotency Key Cache Memory Sizing</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your payments API enforces a 24-hour idempotency key retention window. The cluster processes 2,000 write requests/second (172.8 million writes/day, use 175 million for napkin math), and each Redis entry storing the idempotency key, hash, and cached response payload consumes 400 bytes including allocator overhead.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Using 175 million stored keys over the rolling 24-hour window, how many gigabytes (GB, where 1 GB = 10^9 bytes) of Redis memory are required?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-api-design-contracts-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-api-design-contracts-n1"
+              aria-label="Numeric estimate in GB"
+              placeholder="Enter numeric estimate (GB)..."
+            />
+            <span class="quiz-unit-badge">GB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 175,000,000 keys by 400 bytes/key and divide by 10^9 bytes/GB.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="api-design-contracts-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-api-design-contracts-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">175,000,000 keys × 400 bytes/key = 70,000,000,000 bytes = 70 GB of RAM. Sizing idempotency storage explicitly prevents premature eviction of keys within the promised 24-hour retry window.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-api-design-contracts-t1" data-type="tradeoff" data-slug="api-design-contracts" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Additive Schema Evolution vs Hard URL Version Bumps</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your public B2B webhook and REST API serves 4,000 enterprise integrations. Product wants to add two optional tax breakdown fields and deprecate a legacy single-string address field.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which API evolution strategy should you execute, and what is the primary justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-api-design-contracts-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-api-design-contracts-t1" value="0" />
+                  <span>Fork the entire controller and routing tier into `/v2/` and shut down `/v1/` after 14 days</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-api-design-contracts-t1" value="1" />
+                  <span>Mutate the existing `/v1/` response in-place by deleting the legacy address field immediately</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-api-design-contracts-t1" value="2" />
+                  <span>Add the new fields additively alongside the legacy field, dual-populate both during a sunset window tracked via per-client telemetry, and gate breaking changes behind explicit version headers or a major version only when invariants change</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-api-design-contracts-t1" value="0" />
+                  <span>Enterprise customers love rewriting and redeploying integrations every two weeks</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-api-design-contracts-t1" value="1" />
+                  <span>Deleting fields in-place never breaks strict JSON deserializers in statically typed clients</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-api-design-contracts-t1" value="2" />
+                  <span>Additive evolution with dual-writing and usage telemetry avoids fragmenting backend codebases across N URL versions while guaranteeing zero unannounced breakage for existing integrators</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Forking `/v2/` for every minor field addition multiplies maintenance burden, while deleting fields in place breaks contracts.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="api-design-contracts-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-api-design-contracts-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Additive changes (new optional fields, tolerant readers) allow APIs to evolve continuously without splitting the ecosystem across `/v1`, `/v2`, `/v3` forks. Telemetry on deprecated field usage lets you assist the remaining stragglers before retiring old fields.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1257,22 +1393,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

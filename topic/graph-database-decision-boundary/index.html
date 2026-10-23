@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -955,12 +955,18 @@
 <!-- enriched -->
 <h2>Worked example: fraud ring detection</h2><p>Question: "Find accounts within 4 hops of a flagged account through shared devices, cards, phone numbers or addresses."</p><ul><li>Graph: 100M accounts, 300M devices, cards and phones, and 1B edges. Average degree per account is about 5.</li><li>A naive 4-hop expansion touches roughly 5^4 = 625 nodes, but real graphs have skew. One shared public-WiFi "device" might connect 200k accounts.</li></ul><p><strong>In SQL (Postgres recursive CTE):</strong></p><p><code>WITH RECURSIVE reach(id, depth) AS (SELECT 'acct_1', 0 UNION SELECT e.dst, r.depth + 1 FROM reach r JOIN edges e ON e.src = r.id WHERE r.depth &lt; 4) SELECT DISTINCT id FROM reach;</code></p><p>Each hop is an index lookup on <code>edges(src)</code>: about 3-4 B-tree page touches per expanded node. For 625 nodes that is about 2,500 page touches, a few milliseconds when cached, which is perfectly fine. Trouble starts with deeper or variable-length paths, cycle detection, shortest-path and pattern matching, where the SQL becomes hard to write and optimize.</p><p><strong>In a native graph (Neo4j):</strong></p><p><code>MATCH (a:Account {id:'acct_1'})-[:USES*1..4]-(b:Account) RETURN DISTINCT b</code></p><p>Each hop follows stored relationship pointers. The query is also far easier to express and change.</p><h3>Decision table</h3><table><thead><tr><th>Workload</th><th>Relational</th><th>Graph database</th></tr></thead><tbody><tr><td>Fixed 1-2 hop joins (friends list, order to items)</td><td>Best: simple, indexed</td><td>Overkill</td></tr><tr><td>Hierarchies (org chart, categories)</td><td>Good: recursive CTE, ltree, closure table</td><td>Good</td></tr><tr><td>Variable-depth paths, shortest path, cycles</td><td>Painful SQL, unpredictable plans</td><td>Natural fit</td></tr><tr><td>Pattern matching (fraud rings, knowledge graphs)</td><td>Hard</td><td>Natural fit</td></tr><tr><td>Heavy aggregation over all nodes (PageRank on billions)</td><td>Poor</td><td>Better done in batch graph engines (Spark GraphX, Pregel-style)</td></tr><tr><td>Planet-scale social graph lookups</td><td>Sharded SQL behind a graph-aware cache</td><td>Rarely a general graph database</td></tr></tbody></table><h3>How real systems do it</h3><ul><li><strong>Meta TAO:</strong> a graph API ("objects and associations") backed by sharded MySQL and a massive cache. Mostly 1-hop queries at huge scale.</li><li><strong>LinkedIn:</strong> custom in-memory graph services (LIquid) for degree-of-connection queries.</li><li><strong>Banks and fraud teams:</strong> commonly Neo4j, TigerGraph or Amazon Neptune for investigative multi-hop queries.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="graph-database-decision-boundary" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="graph-database-decision-boundary" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: What graph stores avoid" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: The public WiFi supernode" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Is SQL enough here" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: What graph stores avoid" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: The public WiFi supernode" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Is SQL enough here" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: K-Hop Frontier Explosion" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Dedicated Graph DB vs Relational / Adjacency Table" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-graph-database-decision-boundary-c1" data-type="mcq" data-slug="graph-database-decision-boundary" data-index="0">
@@ -1078,12 +1084,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="graph-database-decision-boundary-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-graph-database-decision-boundary-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">5^4 is about 625 nodes at about 4 page touches each, roughly 2,500 touches and a few milliseconds when cached. Graph databases start to pay off for deeper, variable-length paths, cycles and pattern matching, not for a bounded, indexed 4-hop expansion like this one.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-graph-database-decision-boundary-n1" data-type="numeric" data-slug="graph-database-decision-boundary" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: K-Hop Frontier Explosion</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">In a social/payment graph where every node has an average out-degree of 50 neighbors, a fraud detection query traverses 3 hops (`k = 3`) out from a suspect account.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Assuming minimal overlap at distance 3, how many edge traversals occur at the 3rd hop (`50^3`)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-graph-database-decision-boundary-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-graph-database-decision-boundary-n1"
+              aria-label="Numeric estimate in edges"
+              placeholder="Enter numeric estimate (edges)..."
+            />
+            <span class="quiz-unit-badge">edges</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Compute 50 × 50 × 50.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="graph-database-decision-boundary-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-graph-database-decision-boundary-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">At branching factor 50, hop 1 visits 50 nodes, hop 2 visits 2,500, and hop 3 visits 50^3 = 125,000 edges (and hop 4 reaches 6.25M), illustrating why unbounded multi-hop graph queries explode in latency.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-graph-database-decision-boundary-t1" data-type="tradeoff" data-slug="graph-database-decision-boundary" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Dedicated Graph DB vs Relational / Adjacency Table</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A product needs to look up a user&#039;s direct 1-hop followers and check whether User A follows User B at 50,000 QPS.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Should you introduce a specialized graph database (e.g., Neo4j) for 1-hop follow lookups, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-graph-database-decision-boundary-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-graph-database-decision-boundary-t1" value="0" />
+                  <span>Yes, any schema with edges requires a specialized native graph database</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-graph-database-decision-boundary-t1" value="1" />
+                  <span>Store the entire social graph in a single unindexed JSON blob</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-graph-database-decision-boundary-t1" value="2" />
+                  <span>No; 1-hop and 2-hop lookups with known keys are simple indexed adjacency-table queries in SQL/NoSQL—reserve dedicated graph engines for deep variable-length path traversals (`k &gt;= 3`) and subgraph pattern matching</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-graph-database-decision-boundary-t1" value="0" />
+                  <span>Relational and KV stores cannot index `(follower_id, followee_id)` pairs</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-graph-database-decision-boundary-t1" value="1" />
+                  <span>JSON blobs scale linearly to 100M edges</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-graph-database-decision-boundary-t1" value="2" />
+                  <span>An indexed adjacency table (`pk = user_id, sk = target_id`) serves 1-hop listings and existence checks in O(1)/O(log N) without adding operational complexity</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">At what hop depth do recursive SQL joins degrade compared to index-free adjacency?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="graph-database-decision-boundary-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-graph-database-decision-boundary-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Fixed 1-hop or 2-hop edge lookups are trivial in SQL or partitioned KV/wide-column stores (like Twitter&#039;s FlockDB). Native graph databases earn their operational cost only on variable-depth traversals and complex path analytics.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1196,22 +1332,22 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

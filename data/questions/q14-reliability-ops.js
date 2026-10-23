@@ -63,6 +63,59 @@ window.QUESTION_BANK["observability-for-distributed-systems"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "observability-for-distributed-systems-n1",
+    "topic": "observability-for-distributed-systems",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: High-Cardinality Metric Time-Series Explosion",
+    "scenario": "A team adds a `user_id` label (`5,000,000` active users) to an HTTP latency histogram that already has `5` endpoints × `4` status codes × `10` histogram buckets (`200` base time series without `user_id`).",
+    "prompt": "How many billions of active time series (`200 × 5,000,000` in billions) would be created in Prometheus/TSDB by adding `user_id` as a metric label?",
+    "question": "How many billions of active time series (`200 × 5,000,000` in billions) would be created in Prometheus/TSDB by adding `user_id` as a metric label?",
+    "unit": "billion series",
+    "answer": 1,
+    "tolerance": 0.2,
+    "hint": "Multiply 200 base series by 5,000,000 distinct `user_id` values (`1,000,000,000`).",
+    "explanation": "200 × 5,000,000 = 1,000,000,000 (1 billion) active time series, which will immediately OOM-crash any time-series database—high-cardinality identifiers (`user_id`, `request_id`, `ip`) belong in structured logs/traces or exemplars, never metric labels.",
+    "tags": [
+      "observability-for-distributed-systems",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "observability-for-distributed-systems-t1",
+    "topic": "observability-for-distributed-systems",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Head-Based vs Tail-Based Distributed Trace Sampling",
+    "scenario": "Your microservices handle 200,000 req/s and you can afford to store 1% of distributed traces (`2,000 traces/sec`), but only 0.05% of requests throw HTTP 500 or exceed 2 seconds latency, and engineers need 100% of those anomalous traces.",
+    "prompt": "Should you use Head-Based Sampling at the ingress gateway or Tail-Based Sampling at a trace collector tier, and why?",
+    "question": "Should you use Head-Based Sampling at the ingress gateway or Tail-Based Sampling at a trace collector tier, and why?",
+    "options": [
+      "Use 1% random Head-Based Sampling at ingress so 99% of rare production 500 errors are discarded",
+      "Store 100% of all 200,000 traces/sec uncompressed forever",
+      "Combine a baseline Head-Based sample (e.g., 0.5% for normal baselines) with Tail-Based Sampling at stateful trace collector buffers (routing spans by `trace_id` hash) that retain 100% of traces containing an error status or high tail latency"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Ingress gateways know in advance whether a downstream DB call will fail 300 ms later",
+      "Storing 100% of spans costs nothing at 200k RPS",
+      "Whether a request fails or breaches latency SLO is only known after the request finishes; routing spans by `trace_id` to collector ring buffers lets Tail-Based Sampling keep 100% of slow/error traces while dropping boring healthy traces"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "At the moment a request enters the API gateway (the \"head\"), do you know if the 4th microservice hop will throw an exception?",
+    "explanation": "Head-based sampling decides before execution and misses 99% of rare errors. Tail-based sampling buffers spans by `trace_id` for a few seconds and retains 100% of error and high-latency traces.",
+    "tags": [
+      "observability-for-distributed-systems",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -248,6 +301,59 @@ window.QUESTION_BANK["incident-response"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "incident-response-n1",
+    "topic": "incident-response",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Monthly Error Budget Burn Rate (`99.9%` SLO)",
+    "scenario": "A service has a 30-day (`43,200-minute`) availability SLO of `99.9%` (`0.1%` allowed unavailability = `43.2 minutes` of total error budget per 30 days). During a partial outage where `20%` of requests are failing, the service burns through its error budget much faster than `1×`.",
+    "prompt": "At a `20%` error rate (`0.20`) against a `0.1%` (`0.001`) error budget, what is the dimensionless burn rate (`0.20 / 0.001`)?",
+    "question": "At a `20%` error rate (`0.20`) against a `0.1%` (`0.001`) error budget, what is the dimensionless burn rate (`0.20 / 0.001`)?",
+    "unit": "x",
+    "answer": 200,
+    "tolerance": 0.2,
+    "hint": "Divide the current 20% (`0.20`) error rate by the allowed 0.1% (`0.001`) error budget.",
+    "explanation": "A 20% error rate against a 0.1% error budget is a `0.20 / 0.001 = 200×` burn rate, meaning the entire 30-day error budget will be exhausted in `43,200 / 200 = 216 minutes` (`3.6 hours`).",
+    "tags": [
+      "incident-response",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "incident-response-t1",
+    "topic": "incident-response",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Root-Cause Debugging First vs Mitigate/Restore Service First During a SEV-1",
+    "scenario": "Two minutes after a deployment, checkout error rates jump to 35% (SEV-1). One engineer wants to attach a profiler and spend 40 minutes reading stack traces on the live broken pods before rolling back, fearing a rollback will \"destroy the crime scene\".",
+    "prompt": "What is the disciplined Incident Command (ICS) priority during a live customer-impacting SEV-1?",
+    "question": "What is the disciplined Incident Command (ICS) priority during a live customer-impacting SEV-1?",
+    "options": [
+      "Leave checkout broken for 40 minutes while stepping through a live debugger in production",
+      "Have 15 engineers simultaneously SSH into production and edit config files without coordination",
+      "Prioritize immediate customer impact mitigation (rollback deploy, flip feature flag, shift traffic, or quarantine a single canary pod for forensics while rolling back the other 99% of pods) under a single Incident Commander"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Customers prefer a 40-minute outage over a fast rollback",
+      "Uncoordinated SSH edits during an outage prevent cascading mistakes",
+      "Stopping the bleeding (reducing MTTR) comes first; you can preserve forensic state by snapshotting heap/logs or isolating 1 pod out of the load balancer while immediately rolling back the serving fleet"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How can you both stop customer bleeding in 60 seconds AND preserve forensic evidence?",
+    "explanation": "In incident response, mitigating user impact (rollback, feature flag kill-switch, traffic drain) always takes precedence over root-cause investigation. Isolating one pod from the load balancer preserves any needed memory dump while restoring service.",
+    "tags": [
+      "incident-response",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -313,6 +419,59 @@ window.QUESTION_BANK["deployment-and-migration-safety"] = [
       "deployment-and-migration-safety",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "deployment-and-migration-safety-n1",
+    "topic": "deployment-and-migration-safety",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Statistical Detection Sample Size on a 1% Canary",
+    "scenario": "Your cluster serves `10,000 req/s` total. You route `1%` of traffic (`100 req/s`) to a Canary deployment that introduces a regression increasing error rate by `+2%` (`2` extra errors/sec on the canary). Your automated canary judge requires observing at least `60` excess errors to trigger an automatic rollback with high statistical confidence.",
+    "prompt": "How many seconds of canary observation (`60 excess errors / 2 errors/s`) are required to trigger the automated rollback?",
+    "question": "How many seconds of canary observation (`60 excess errors / 2 errors/s`) are required to trigger the automated rollback?",
+    "unit": "seconds",
+    "answer": 30,
+    "tolerance": 0.2,
+    "hint": "Divide 60 required excess errors by 2 excess errors per second.",
+    "explanation": "At 100 req/s on the 1% canary with a +2% error delta (2 errors/sec), collecting 60 errors takes 30 seconds, while shielding 99% of users from the bad build.",
+    "tags": [
+      "deployment-and-migration-safety",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "deployment-and-migration-safety-t1",
+    "topic": "deployment-and-migration-safety",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Big-Bang Cutover vs Progressive Canary + Feature Flags",
+    "scenario": "A team has spent 3 months rewriting the pricing calculation engine and wants to ship it to 100% of users on Friday afternoon by replacing the old deployment in one step.",
+    "prompt": "How should a high-risk core logic rewrite be rolled out safely in production?",
+    "question": "How should a high-risk core logic rewrite be rolled out safely in production?",
+    "options": [
+      "Deploy to 100% of production pods simultaneously with no fallback path",
+      "Test only on staging with 5 synthetic requests and assume production traffic is identical",
+      "Decouple deployment from release: ship dark behind a feature flag, run asynchronous shadow/dark-read comparisons against the legacy engine first, then ramp user traffic progressively (1% -> 5% -> 25% -> 100%) with automated SLO rollback gates"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "100% instant cutovers minimize blast radius when a bug occurs",
+      "5 synthetic staging requests cover all production edge cases",
+      "Shadow comparisons validate output parity on real production inputs with zero user risk, and progressive feature-flag ramping enables instant (<1s) kill-switch rollback without waiting for container redeploys"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What is the difference between *deploying* binaries and *releasing* behavior to traffic?",
+    "explanation": "Decoupling container deployment from feature activation (via feature flags, dark shadowing, and progressive canary ramps) shrinks blast radius and reduces rollback time from minutes to milliseconds.",
+    "tags": [
+      "deployment-and-migration-safety",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -380,6 +539,59 @@ window.QUESTION_BANK["database-migration-safety"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "database-migration-safety-n1",
+    "topic": "database-migration-safety",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Batched Backfill Throttle Rate and Duration",
+    "scenario": "You need to backfill a new column across `100,000,000` rows. Updating all 100M rows in one transaction would blow up undo/WAL logs and replication lag. Instead, a migration worker updates batches of `5,000` rows per transaction at a throttled rate of `20` batches/sec (`100,000 rows/sec`), pausing whenever replica lag exceeds 500 ms.",
+    "prompt": "How many seconds (`100,000,000 / 100,000`) will the throttled backfill take assuming no lag pauses?",
+    "question": "How many seconds (`100,000,000 / 100,000`) will the throttled backfill take assuming no lag pauses?",
+    "unit": "seconds",
+    "answer": 1000,
+    "tolerance": 0.2,
+    "hint": "Divide 100,000,000 rows by 100,000 rows/sec (`5,000 × 20`).",
+    "explanation": "At 20 batches/sec × 5,000 rows = 100,000 rows/sec, backfilling 100M rows completes in 1,000 seconds (~16.7 minutes) with tiny 5,000-row transactions and bounded replication lag.",
+    "tags": [
+      "database-migration-safety",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "database-migration-safety-t1",
+    "topic": "database-migration-safety",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Adding `NOT NULL` Constraints Safely on Large Tables",
+    "scenario": "You want to enforce `ALTER TABLE orders ALTER COLUMN currency SET NOT NULL` on a 500M-row PostgreSQL table. Directly running `SET NOT NULL` acquires an `ACCESS EXCLUSIVE` lock while scanning all 500M rows to verify no `NULL` values exist.",
+    "prompt": "Which two-step PostgreSQL migration idiom enforces `NOT NULL` without a long table-locking scan?",
+    "question": "Which two-step PostgreSQL migration idiom enforces `NOT NULL` without a long table-locking scan?",
+    "options": [
+      "Run `ALTER TABLE orders ALTER COLUMN currency SET NOT NULL` directly during peak hours",
+      "Skip database constraints and hope no bug ever inserts `NULL`",
+      "First add `ALTER TABLE orders ADD CONSTRAINT chk_currency_nn CHECK (currency IS NOT NULL) NOT VALID;`, then run `ALTER TABLE orders VALIDATE CONSTRAINT chk_currency_nn;` (which takes only a non-blocking `SHARE UPDATE EXCLUSIVE` lock), and then set `NOT NULL`"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Holding an `ACCESS EXCLUSIVE` lock during a 500M-row scan never blocks live traffic",
+      "Application bugs never insert `NULL` into unconstrained columns",
+      "`ADD CONSTRAINT ... NOT VALID` commits in milliseconds, enforcing the check on new writes immediately, while `VALIDATE CONSTRAINT` scans existing rows online without blocking concurrent reads or writes (and Postgres 12+ then makes `SET NOT NULL` instant!)"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How does PostgreSQL's `NOT VALID` + `VALIDATE CONSTRAINT` avoid holding `ACCESS EXCLUSIVE` during the full table scan?",
+    "explanation": "Adding a `CHECK (col IS NOT NULL) NOT VALID` constraint followed by `VALIDATE CONSTRAINT` validates all 500M rows under a weak lock that permits concurrent reads and writes; once validated, PostgreSQL proves no nulls exist and sets `NOT NULL` instantaneously.",
+    "tags": [
+      "database-migration-safety",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -445,6 +657,59 @@ window.QUESTION_BANK["parallel-monolith-read-drain"] = [
       "parallel-monolith-read-drain",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "parallel-monolith-read-drain-n1",
+    "topic": "parallel-monolith-read-drain",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Shadow Read Parity Mismatch Rate",
+    "scenario": "During a Strangler Fig migration from a monolith to a new Catalog service, you shadow-read `1,000,000` production requests per hour to both services and asynchronously compare their normalized JSON responses. Out of 1,000,000 requests, `999,850` match identically and `150` show field discrepancies.",
+    "prompt": "What is the mismatch rate in parts per million (ppm, i.e., mismatches per `1,000,000` requests)?",
+    "question": "What is the mismatch rate in parts per million (ppm, i.e., mismatches per `1,000,000` requests)?",
+    "unit": "ppm",
+    "answer": 150,
+    "tolerance": 0.2,
+    "hint": "150 mismatches out of 1,000,000 requests is 150 parts per million.",
+    "explanation": "150 mismatches per 1,000,000 requests = 150 ppm (0.015%), giving engineers a concrete queue of 150 diff payloads to inspect and fix before shifting live user reads.",
+    "tags": [
+      "parallel-monolith-read-drain",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "parallel-monolith-read-drain-t1",
+    "topic": "parallel-monolith-read-drain",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Synchronous Dual-Read Blocking vs Asynchronous Shadow Read + Diff Demon",
+    "scenario": "You are verifying that a newly extracted microservice returns identical responses to the legacy monolith before draining monolith read traffic.",
+    "prompt": "How should the parallel shadow-read comparator be wired so bugs or latency spikes in the new service never affect live users during the verification phase?",
+    "question": "How should the parallel shadow-read comparator be wired so bugs or latency spikes in the new service never affect live users during the verification phase?",
+    "options": [
+      "Call the monolith and the new service sequentially on the main thread and return HTTP 500 to the user if they differ",
+      "Switch 100% of users to the new service immediately and wait for customer support tickets",
+      "Serve the user directly from the legacy monolith while firing a non-blocking async shadow copy (with a tight timeout and separate bulkhead pool) to the new service, logging normalized response diffs (ignoring volatile fields like `request_id`/`server_time`) to a diff queue"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Returning HTTP 500 on shadow diffs improves user experience",
+      "Customer support tickets catch subtle rounding errors faster than automated diffing",
+      "Fire-and-forget shadow reads with a dedicated bulkhead ensure zero added latency or failure risk to the live monolith path while testing the new service against 100% real production query shapes and concurrency"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens if the new candidate service crashes or hangs for 5 seconds while you are shadow-testing it?",
+    "explanation": "Shadow reads must be completely decoupled from the user response path via an isolated thread/connection pool and short timeout so a candidate crash or tail-latency spike cannot degrade the legacy serving path.",
+    "tags": [
+      "parallel-monolith-read-drain",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -512,6 +777,59 @@ window.QUESTION_BANK["database-backups-and-restore"] = [
       "apply",
       "inline"
     ]
+  },
+  {
+    "id": "database-backups-and-restore-n1",
+    "topic": "database-backups-and-restore",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Point-In-Time Recovery (PITR) Restore Time (`RTO`)",
+    "scenario": "At `14:30`, an accidental `DROP TABLE` occurs. Your latest physical base backup (`4 TB`) was taken at `12:00`. Restoring the 4 TB physical snapshot from high-throughput object storage across striped NVMe drives runs at `4 GB/s` (`1,000 seconds`), and replaying `2.5 hours` (`90 GB`) of archived WAL segments runs at `150 MB/s` (`600 seconds`).",
+    "prompt": "What is the total Recovery Time Objective (`RTO`, in seconds) to restore the base backup (`1,000 s`) and replay the WAL (`600 s`) up to `14:29:59`?",
+    "question": "What is the total Recovery Time Objective (`RTO`, in seconds) to restore the base backup (`1,000 s`) and replay the WAL (`600 s`) up to `14:29:59`?",
+    "unit": "seconds",
+    "answer": 1600,
+    "tolerance": 0.2,
+    "hint": "Add the 1,000-second base snapshot restore and the 600-second WAL replay.",
+    "explanation": "`1,000 s` (physical snapshot restore) + `600 s` (WAL archive replay) = `1,600 seconds` (~26.7 minutes) total RTO with near-zero data loss (`RPO ≈ 0`).",
+    "tags": [
+      "database-backups-and-restore",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "database-backups-and-restore-t1",
+    "topic": "database-backups-and-restore",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Why Asynchronous Read Replicas Are NOT a Substitute for PITR Backups",
+    "scenario": "A startup CTO says: \"We don't need automated snapshots or WAL archiving because we have 3 synchronous and asynchronous read replicas across 3 Availability Zones.\"",
+    "prompt": "Why do read replicas fail to protect against logical data corruption, and what backup architecture is required?",
+    "question": "Why do read replicas fail to protect against logical data corruption, and what backup architecture is required?",
+    "options": [
+      "Read replicas automatically block `DROP TABLE` and `DELETE FROM users` statements",
+      "3 AZ replicas protect against accidental application bugs that overwrite rows",
+      "Replication faithfully replicates `DROP TABLE`, `TRUNCATE`, and buggy `UPDATE` statements without a `WHERE` clause to all replicas within milliseconds; you must maintain immutable Point-In-Time Recovery (PITR = physical base snapshots + continuous WAL archiving) plus a delayed replica or cross-account WORM bucket"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Consensus replication distinguishes accidental human `DROP TABLE` from intentional DDL",
+      "Ransomware or compromised admin credentials cannot touch replicas in the same account",
+      "Replication provides High Availability against hardware failure, whereas PITR backups (stored in an isolated immutable/WORM bucket) provide Recovery against human error, bad deploys, and security compromise"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How fast does `DELETE FROM users;` replicate to your 3 AZ replicas?",
+    "explanation": "Replication is for hardware high availability; PITR (base snapshots + continuous WAL archive in an isolated account, tested via automated restore drills) is for logical corruption and human error.",
+    "tags": [
+      "database-backups-and-restore",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -577,6 +895,59 @@ window.QUESTION_BANK["disaster-recovery"] = [
       "disaster-recovery",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "disaster-recovery-n1",
+    "topic": "disaster-recovery",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Asynchronous Cross-Region RPO Data Loss Volume",
+    "scenario": "A primary region ingests `4,000` committed orders/sec (`2 KB` per order = `8 MB/s`) and replicates asynchronously to a secondary disaster-recovery region with a replication lag of `5 seconds` when a sudden fiber cut + power failure destroys the primary region.",
+    "prompt": "How many thousands of committed orders (`4,000 orders/s × 5 s`, in thousands) were acknowledged to users in the primary region but had not yet reached the DR region?",
+    "question": "How many thousands of committed orders (`4,000 orders/s × 5 s`, in thousands) were acknowledged to users in the primary region but had not yet reached the DR region?",
+    "unit": "thousand orders",
+    "answer": 20,
+    "tolerance": 0.2,
+    "hint": "Multiply 4,000 orders/sec by the 5-second replication lag window, expressed in thousands.",
+    "explanation": "With a 5-second async replication lag (`RPO = 5s`), an ungraceful primary region loss leaves `4,000 × 5 = 20,000` acknowledged orders un-replicated—highlighting the exact business trade-off between `RPO = 0` (synchronous multi-region quorum) and low local write latency.",
+    "tags": [
+      "disaster-recovery",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "disaster-recovery-t1",
+    "topic": "disaster-recovery",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Cold Backup Restore vs Warm Pilot Light vs Active-Active Multi-Region",
+    "scenario": "You are designing Disaster Recovery for two systems: System A (a core payment ledger requiring `RPO = 0` and `RTO < 30 seconds`) and System B (an internal batch reporting warehouse tolerating `RPO = 4 hours` and `RTO = 6 hours`).",
+    "prompt": "How should you match DR tiers to System A and System B to optimize reliability vs cloud cost?",
+    "question": "How should you match DR tiers to System A and System B to optimize reliability vs cloud cost?",
+    "options": [
+      "Use cold S3 tape backups for the payment ledger and 5-region synchronous Paxos for the internal batch warehouse",
+      "Run every internal dev tool Active-Active across 4 continents",
+      "Use multi-region synchronous consensus (or Active-Active / Hot-Standby across 3 regions) for System A (Payment Ledger), and Cross-Region Snapshot + WAL Replication (Pilot Light / Warm Standby) for System B (Reporting Warehouse)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "A 6-hour outage on a payment ledger meets `RTO < 30s`",
+      "Active-Active multi-region doubles or triples infrastructure and cross-region network egress cost",
+      "Matching DR architecture to business criticality reserves expensive synchronous cross-region quorum and spare compute capacity for tier-0 revenue/ledger paths"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Compare the cost and latency of `RPO = 0, RTO < 30s` against `RPO = 4h, RTO = 6h`.",
+    "explanation": "DR tiers (Backup & Restore, Pilot Light, Warm Standby, Multi-Site Active-Active) form a cost-vs-RTO/RPO spectrum; tiering services by criticality avoids paying tier-0 multi-region tax on tier-3 workloads.",
+    "tags": [
+      "disaster-recovery",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -644,6 +1015,59 @@ window.QUESTION_BANK["data-retention-and-deletion"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "data-retention-and-deletion-n1",
+    "topic": "data-retention-and-deletion",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: GDPR Crypto-Shredding vs Petabyte Backup Rewrite",
+    "scenario": "A user exercises their GDPR \"Right to Erasure\" (Right to be Forgotten). Their records appear across `500 TB` of immutable Parquet data lake files and 30 days of cold database backups. Instead of rewriting `500 TB` of immutable files, each user's PII fields were encrypted with a per-user Data Encryption Key (`DEK`, `32 bytes`), stored in a central KMS/key table.",
+    "prompt": "How many bytes of key material (`1 × 32 bytes`) must be permanently deleted from the KMS key store to crypto-shred all historical copies of that user's PII across the 500 TB lake?",
+    "question": "How many bytes of key material (`1 × 32 bytes`) must be permanently deleted from the KMS key store to crypto-shred all historical copies of that user's PII across the 500 TB lake?",
+    "unit": "bytes",
+    "answer": 32,
+    "tolerance": 0.2,
+    "hint": "Deleting the user's single 32-byte `DEK` renders all ciphertext across backups permanently irrecoverable.",
+    "explanation": "Destroying the single 32-byte per-subject `DEK` (crypto-shredding) renders every historical encrypted PII field in immutable backups and cold Parquet files permanently indecipherable in O(1) time without rewriting 500 TB.",
+    "tags": [
+      "data-retention-and-deletion",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "data-retention-and-deletion-t1",
+    "topic": "data-retention-and-deletion",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Synchronous Cascading Hard-Delete Across 40 Microservices vs Async Erasure Workflow + Crypto-Shredding",
+    "scenario": "When a user deletes their account, data exists in 40 microservices, search indexes, caches, Kafka logs, and immutable S3 backups, with a legal compliance SLA of 30 days (and immediate login/profile invisibility).",
+    "prompt": "What is the production architecture for reliable, auditable user data deletion across a distributed ecosystem?",
+    "question": "What is the production architecture for reliable, auditable user data deletion across a distributed ecosystem?",
+    "options": [
+      "Run a single synchronous HTTP request that calls `DELETE` across 40 microservices and rewrites S3 backups before returning 200 OK",
+      "Only set `is_deleted = true` in the frontend UI and keep all plain-text PII forever",
+      "Immediately revoke auth tokens and tombstone the profile at the gateway, emit a durable `UserErasureRequested` workflow event tracked by a central compliance orchestrator (requiring signed completion ACKs from all 40 data owners + compaction/TTL purges), and crypto-shred the user's KMS encryption key for immutable logs/backups"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Synchronous 40-service cascading deletes never partially fail",
+      "UI-only hiding satisfies GDPR/CCPA legal audits",
+      "Immediate gateway/auth revocation gives instant user-facing deletion, a durable saga orchestrator tracks and retries physical erasure across every datastore with an audit trail, and crypto-shredding handles immutable append-only archives"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How do you combine immediate user-visible deactivation, audited multi-service physical purge, and immutable backup compliance?",
+    "explanation": "A three-part erasure pipeline—(1) instant auth/profile tombstoning, (2) orchestrated multi-service deletion saga with completion audit logs, and (3) per-user DEK crypto-shredding for immutable backups—solves deletion at scale.",
+    "tags": [
+      "data-retention-and-deletion",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -710,6 +1134,59 @@ window.QUESTION_BANK["security-and-abuse-prevention"] = [
       "recall",
       "inline"
     ]
+  },
+  {
+    "id": "security-and-abuse-prevention-n1",
+    "topic": "security-and-abuse-prevention",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Credential Stuffing Block Rate via Edge IP + Account Velocity Limits",
+    "scenario": "A botnet launches a credential stuffing attack against `/api/login` at `50,000 req/s`, compared to `500 req/s` of legitimate user logins (`50,500 req/s` total). Password hashing with `Argon2id` costs `0.1 CPU-seconds` per attempt (`5,050 CPU cores` if unfiltered!). Edge WAF + IP/JA4/Account velocity rules drop `99%` of the botnet traffic (`49,500 req/s` blocked at the edge) before reaching the auth service.",
+    "prompt": "How many total login requests per second (`500 legitimate + 500 remaining bot = 1,000`) actually reach the `Argon2id` auth service after the 99% edge block?",
+    "question": "How many total login requests per second (`500 legitimate + 500 remaining bot = 1,000`) actually reach the `Argon2id` auth service after the 99% edge block?",
+    "unit": "req/s",
+    "answer": 1000,
+    "tolerance": 0.2,
+    "hint": "Add the 500 legitimate req/s and the remaining 1% of 50,000 bot req/s (`500`).",
+    "explanation": "Blocking 99% of the 50,000 req/s attack at the CDN/WAF edge leaves only `500 + 500 = 1,000 req/s` reaching the auth service (needing 100 CPU cores instead of 5,050 cores), preventing an authentication DoS outage.",
+    "tags": [
+      "security-and-abuse-prevention",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "security-and-abuse-prevention-t1",
+    "topic": "security-and-abuse-prevention",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Blocking Solely by IP Address vs Layered Defense-in-Depth (IP + Target Account + Device/TLS Fingerprint)",
+    "scenario": "An attacker uses a residential proxy botnet of 200,000 distinct IP addresses where each IP sends only 1 request per minute, targeting a specific set of high-value user accounts. Meanwhile, 5,000 legitimate employees behind a corporate NAT (or university Wi-Fi) share a single public IP address.",
+    "prompt": "Why does naive per-IP rate limiting both miss the botnet AND lock out legitimate users, and what is the correct defense?",
+    "question": "Why does naive per-IP rate limiting both miss the botnet AND lock out legitimate users, and what is the correct defense?",
+    "options": [
+      "Lower the per-IP rate limit to 2 requests/minute globally so the corporate NAT is permanently blocked",
+      "Remove all rate limiting on `/login` and `/checkout`",
+      "Use composite multi-dimensional rate limiting and risk scoring across `(target_account_id)`, `(ip_subnet / ASN)`, and `(TLS JA4 / device fingerprint)`, escalating suspicious flows to step-up challenges (Turnstile/WebAuthn/MFA) rather than hard-blocking shared NAT IPs"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Blocking an entire university or hospital sharing one NAT IP is acceptable collateral damage",
+      "Residential proxy botnets use only a single IP address",
+      "Per-account limits catch distributed low-and-slow attacks against a single user regardless of how many proxy IPs are used, while device/TLS fingerprinting + step-up CAPTCHA/MFA protects shared corporate NAT IPs from false lockouts"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens when 200,000 proxy IPs each try 1 password against `victim@company.com`, vs 5,000 students logging in from 1 campus IP?",
+    "explanation": "Attackers rotate IPs while legitimate enterprise/mobile users share carrier-grade NAT IPs. Keying limits separately on `target_username` (with progressive backoff/challenge), `device_fingerprint`, and `IP + Reputation` stops both distributed attacks and NAT false positives.",
+    "tags": [
+      "security-and-abuse-prevention",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -775,6 +1252,59 @@ window.QUESTION_BANK["rate-limiter-placement-and-keys"] = [
       "rate-limiter-placement-and-keys",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "rate-limiter-placement-and-keys-n1",
+    "topic": "rate-limiter-placement-and-keys",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Local Batch Token Reservation vs Per-Request Redis RPC",
+    "scenario": "An API gateway fleet of 80 nodes handles `400,000 req/s`. Calling a central Redis rate limiter on every single request issues `400,000 RPCs/sec`. Instead, each gateway node syncs/leases token batches with Redis asynchronously every `100 ms` (`10 syncs/sec` per gateway node).",
+    "prompt": "How many Redis RPCs per second (`80 nodes × 10 syncs/s`) are issued across the entire gateway fleet with 100 ms local batch syncing?",
+    "question": "How many Redis RPCs per second (`80 nodes × 10 syncs/s`) are issued across the entire gateway fleet with 100 ms local batch syncing?",
+    "unit": "RPCs/s",
+    "answer": 800,
+    "tolerance": 0.2,
+    "hint": "Multiply 80 gateway nodes by 10 syncs per second.",
+    "explanation": "80 nodes × 10 syncs/sec = 800 Redis RPCs/sec instead of 400,000 RPCs/sec—a 500× reduction in Redis load and zero added network latency on the request path!",
+    "tags": [
+      "rate-limiter-placement-and-keys",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "rate-limiter-placement-and-keys-t1",
+    "topic": "rate-limiter-placement-and-keys",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Fail-Open vs Fail-Closed When the Rate-Limiter Redis Cluster Degrades",
+    "scenario": "Your edge API gateway checks a Redis cluster for rate limiting. Suddenly a network blip causes Redis timeouts across the region.",
+    "prompt": "Should the API gateway Fail-Open (allow traffic), Fail-Closed (reject 100% of traffic with HTTP 500/429), or use Local Fallback Enforcement, and why?",
+    "question": "Should the API gateway Fail-Open (allow traffic), Fail-Closed (reject 100% of traffic with HTTP 500/429), or use Local Fallback Enforcement, and why?",
+    "options": [
+      "Fail-Closed unconditionally so a Redis cache blip causes a 100% global outage of your entire company",
+      "Wait 30 seconds on every Redis timeout before forwarding the request",
+      "Enforce a ultra-tight timeout (<5 ms) on Redis and fall back to an in-memory per-gateway token bucket (`global_limit / num_gateways`) so normal traffic continues (Fail-Open with local bounding) without turning a cache outage into a total site outage"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Turning a minor Redis glitch into a 100% site-wide outage improves availability",
+      "30-second timeouts protect gateway worker pools",
+      "Rate limiting is a protective control, not a business invariant; falling back to local in-memory per-pod rate limits preserves both service availability and overload protection while Redis recovers"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "If Redis goes down for 30 seconds, should your entire API go down, or can each gateway pod divide the limit locally?",
+    "explanation": "Failing closed on a Redis rate-limiter outage turns Redis into a single point of failure for the entire platform. Falling back to local in-memory token buckets (`limit / N_pods`) keeps the platform up while still capping total ingress.",
+    "tags": [
+      "rate-limiter-placement-and-keys",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

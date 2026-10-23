@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -985,12 +985,18 @@ flowchart TD
 </tbody></table>
 <p><strong>Production pattern:</strong> run correction only when the original query returns few or low-quality results, or when a correction has much higher probability; mine correction pairs from query reformulations in logs (a user types "recieve", then immediately "receive" and clicks), which is how large engines learn domain-specific corrections.</p><h2>Failure modes</h2><p>Over-correction is worse than no correction: replacing a valid product code or surname destroys trust. Guard rails include never correcting tokens that match catalogue entities, requiring the corrected query to return clearly more or better results, and measuring the rate at which users click "search instead for" the original, which directly measures bad corrections.</p>
 </div></article>
-      <section class="check-slider" data-slug="did-you-mean-and-spell-correction" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="did-you-mean-and-spell-correction" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Symmetric delete" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Noisy channel choice" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Measuring bad corrections" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Symmetric delete" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Noisy channel choice" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Measuring bad corrections" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Naive Edit-Distance Candidate Explosion vs Levenshtein Automaton" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Isolated Dictionary Edit Distance vs Context-Sensitive Noisy Channel (`P(Q|C) × P(C)`)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-did-you-mean-and-spell-correction-c1" data-type="mcq" data-slug="did-you-mean-and-spell-correction" data-index="0">
@@ -1108,12 +1114,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="did-you-mean-and-spell-correction-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-did-you-mean-and-spell-correction-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">When a user overrides the correction to get back their original query, that is direct evidence the correction was wrong. The share of changed queries says nothing about whether each change was right, and a bad correction can still return plenty of results.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-did-you-mean-and-spell-correction-n1" data-type="numeric" data-slug="did-you-mean-and-spell-correction" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Naive Edit-Distance Candidate Explosion vs Levenshtein Automaton</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">For a 10-letter query word over a 26-letter alphabet, generating all possible edit-distance-1 strings produces ~547 strings, and edit-distance-2 produces ~150,000 strings to look up in a dictionary. Intersecting a compiled Levenshtein DFA directly against a Finite State Transducer (FST) vocabulary of 1,000,000 words visits only 300 FST states.</p>
+          </div>
+        
+        <p class="check-slider__prompt">By what factor (`150,000 / 300`) does an FST + Levenshtein Automaton intersection reduce state/lookup evaluations compared to enumerating 150,000 edit-2 candidate strings?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-did-you-mean-and-spell-correction-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-did-you-mean-and-spell-correction-n1"
+              aria-label="Numeric estimate in x"
+              placeholder="Enter numeric estimate (x)..."
+            />
+            <span class="quiz-unit-badge">x</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 150,000 enumerated strings by 300 FST states visited.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="did-you-mean-and-spell-correction-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-did-you-mean-and-spell-correction-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">150,000 / 300 = 500× fewer probes: intersecting the deterministic Levenshtein state machine with the prefix-shared FST prunes entire dead branches of the alphabet immediately.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-did-you-mean-and-spell-correction-t1" data-type="tradeoff" data-slug="did-you-mean-and-spell-correction" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Isolated Dictionary Edit Distance vs Context-Sensitive Noisy Channel (`P(Q|C) × P(C)`)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A user types `&quot;flights tountain view&quot;` (`&quot;tountain&quot;` is edit distance 1 from both `&quot;fountain&quot;` and `&quot;mountain&quot;`, and `&quot;tountain&quot;` is not a real word) or types a real-word typo like `&quot;form&quot;` instead of `&quot;from&quot;` in `&quot;flights form sfo&quot;`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why is isolated single-word dictionary edit distance insufficient, and how do production spell correctors rank candidates?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-did-you-mean-and-spell-correction-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-did-you-mean-and-spell-correction-t1" value="0" />
+                  <span>Always replace every word with the alphabetically first edit-distance-1 word in the Oxford dictionary</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-did-you-mean-and-spell-correction-t1" value="1" />
+                  <span>Never correct a query if every token exists in the dictionary (`&quot;flights form sfo&quot;`)</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-did-you-mean-and-spell-correction-t1" value="2" />
+                  <span>Use the Noisy Channel / Contextual Language Model (`argmax_C P(typo | C) × P(C_context)` trained on query logs and click reformulations) so bigram/trigram context (`&quot;flights from sfo&quot;`, `&quot;mountain view&quot;`) disambiguates both non-word and real-word typos</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-did-you-mean-and-spell-correction-t1" value="0" />
+                  <span>`&quot;fountain view&quot;` is just as likely after `&quot;flights to&quot;` as `&quot;mountain view&quot;`</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-did-you-mean-and-spell-correction-t1" value="1" />
+                  <span>Real-word typos like `&quot;form&quot;` instead of `&quot;from&quot;` never happen in search</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-did-you-mean-and-spell-correction-t1" value="2" />
+                  <span>Combining an error model `P(Q|C)` (weighted phonetic/keyboard-adjacency edit distance) with a query-log language prior `P(C)` resolves context and fixes real-word typos</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How do you know `&quot;mountain&quot;` beats `&quot;fountain&quot;` when the next word is `&quot;view&quot;`?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="did-you-mean-and-spell-correction-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-did-you-mean-and-spell-correction-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Isolated edit distance cannot distinguish `&quot;fountain&quot;` vs `&quot;mountain&quot;` (both edit distance 1) or catch real-word typos (`&quot;form&quot;` vs `&quot;from&quot;`). Scoring `P(Q|C) × P(C)` using query-log n-gram priors and user reformulation graphs selects the contextually probable query.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1226,22 +1362,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

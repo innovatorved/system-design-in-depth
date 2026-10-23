@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1010,12 +1010,18 @@ k = (m / n) * ln(2)</code></pre>
 <li><strong>Block cache:</strong> hot index, filter and data blocks stay in memory, so most reads never reach the device.</li>
 </ul>
 </div></article>
-      <section class="check-slider" data-slug="lsm-read-path-bloom-and-sparse-index" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="lsm-read-path-bloom-and-sparse-index" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Negative filter answer" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Filter size at 15 bits" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Filters and range scans" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Negative filter answer" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Filter size at 15 bits" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Filters and range scans" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Bloom Filter Disk-Seek Elimination on LSM Point Lookups" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Full Key Bloom Filters vs Prefix Bloom Filters for Range Scans" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-lsm-read-path-bloom-and-sparse-index-c1" data-type="mcq" data-slug="lsm-read-path-bloom-and-sparse-index" data-index="0">
@@ -1133,12 +1139,142 @@ k = (m / n) * ln(2)</code></pre>
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="lsm-read-path-bloom-and-sparse-index-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-lsm-read-path-bloom-and-sparse-index-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">A point filter hashes whole keys, so it cannot say whether any key in a range exists; a prefix filter hashes the prefix and can rule a file out for a bounded scan. More bits per key only makes exact-key answers more accurate and does nothing for ranges.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-lsm-read-path-bloom-and-sparse-index-n1" data-type="numeric" data-slug="lsm-read-path-bloom-and-sparse-index" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Bloom Filter Disk-Seek Elimination on LSM Point Lookups</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A point lookup for a key that resides only in the deepest level (`L4`) must check 10 overlapping SSTables across `L0..L3` first. Each SSTable has a Bloom filter in RAM with a 1% false positive rate (`0.01`).</p>
+          </div>
+        
+        <p class="check-slider__prompt">Across 100 point lookups for keys located in `L4` (1,000 negative SSTable checks across `L0..L3`), how many unnecessary disk block reads occur in total across `L0..L3` due to the 1% Bloom filter false positive rate?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-lsm-read-path-bloom-and-sparse-index-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-lsm-read-path-bloom-and-sparse-index-n1"
+              aria-label="Numeric estimate in reads"
+              placeholder="Enter numeric estimate (reads)..."
+            />
+            <span class="quiz-unit-badge">reads</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 1,000 negative SSTable checks (`100 lookups × 10 SSTables`) by the 1% (`0.01`) false positive rate.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="lsm-read-path-bloom-and-sparse-index-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-lsm-read-path-bloom-and-sparse-index-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Without Bloom filters, 100 lookups across 10 SSTables would issue 1,000 wasted SSTable reads. A 1% (~10 bits/key) Bloom filter eliminates 99% of them, leaving only 1,000 × 0.01 = 10 extra reads (0.1 per lookup).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-lsm-read-path-bloom-and-sparse-index-t1" data-type="tradeoff" data-slug="lsm-read-path-bloom-and-sparse-index" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Full Key Bloom Filters vs Prefix Bloom Filters for Range Scans</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your RocksDB workload performs both point `Get(key)` lookups and short range scans `Seek(tenant_id + &quot;:&quot;)` iterating over all keys for a single tenant. You configured whole-key Bloom filters, but `Seek()` calls are still reading every L0 SSTable from disk.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why is a whole-key Bloom filter bypassed during `Seek(prefix)`, and how do you fix it?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-lsm-read-path-bloom-and-sparse-index-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-lsm-read-path-bloom-and-sparse-index-t1" value="0" />
+                  <span>Bloom filters automatically match arbitrary substrings of hashed keys</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-lsm-read-path-bloom-and-sparse-index-t1" value="1" />
+                  <span>Increase the whole-key Bloom filter from 10 bits/key to 100 bits/key</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-lsm-read-path-bloom-and-sparse-index-t1" value="2" />
+                  <span>A hash of the full key `H(tenant_id + &quot;:&quot; + item_id)` tells you nothing about whether prefix `tenant_id + &quot;:&quot;` exists; configure a `prefix_extractor` and Prefix Bloom Filter so `Seek(prefix)` skips SSTables lacking that prefix</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-lsm-read-path-bloom-and-sparse-index-t1" value="0" />
+                  <span>Cryptographic and murmur hashes preserve prefix ordering</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-lsm-read-path-bloom-and-sparse-index-t1" value="1" />
+                  <span>More bits per full key allow prefix matching</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-lsm-read-path-bloom-and-sparse-index-t1" value="2" />
+                  <span>Hashing a fixed-length key prefix into a Prefix Bloom Filter allows `Iterator::Seek(prefix)` to test `H(prefix)` against each SSTable before touching disk</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Can you test whether any key starting with `&quot;user_42:&quot;` is in a Bloom filter if the filter only hashed `&quot;user_42:order_99&quot;`?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="lsm-read-path-bloom-and-sparse-index-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-lsm-read-path-bloom-and-sparse-index-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">A Bloom filter only tests exact membership of whatever byte slice was hashed. Configuring a `prefix_extractor` hashes the prefix into a prefix Bloom filter, enabling `Seek(prefix)` to skip irrelevant SSTables.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1290,7 +1426,7 @@ k = (m / n) * ln(2)</code></pre>
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1298,15 +1434,15 @@ k = (m / n) * ln(2)</code></pre>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

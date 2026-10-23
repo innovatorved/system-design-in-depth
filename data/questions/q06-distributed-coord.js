@@ -63,6 +63,59 @@ window.QUESTION_BANK["distributed-systems-foundations"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "distributed-systems-foundations-n1",
+    "topic": "distributed-systems-foundations",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Serial Call Chain Availability Degradation",
+    "scenario": "A user checkout request synchronously calls 5 independent microservices in series. Each service has an individual availability of 99.9% (0.999).",
+    "prompt": "Using the small-unavailability approximation (`5 × 0.1%`), what is the combined end-to-end availability percentage of the 5-service serial chain?",
+    "question": "Using the small-unavailability approximation (`5 × 0.1%`), what is the combined end-to-end availability percentage of the 5-service serial chain?",
+    "unit": "%",
+    "answer": 99.5,
+    "tolerance": 0.2,
+    "hint": "Compute `0.999^5 ≈ 1 - 5 × 0.001 = 0.995` (99.5%).",
+    "explanation": "In a synchronous serial dependency chain, availabilities multiply (`0.999^5 = 0.99501`), multiplying the failure rate by 5× (from 0.1% to 0.5% unavailability, or 99.5% uptime).",
+    "tags": [
+      "distributed-systems-foundations",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "distributed-systems-foundations-t1",
+    "topic": "distributed-systems-foundations",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Partial Failure & Ambiguous Network Timeouts",
+    "scenario": "An order service sends a `ChargeCard` RPC to a payment gateway and the socket times out after 2,000 ms with no response.",
+    "prompt": "What can the caller conclude about whether the card was charged, and how must the retry protocol be designed?",
+    "question": "What can the caller conclude about whether the card was charged, and how must the retry protocol be designed?",
+    "options": [
+      "A timeout proves the request never reached the payment server, so retry immediately with a new transaction ID",
+      "A timeout proves the charge succeeded, so mark the order paid without checking",
+      "A timeout is fundamentally ambiguous (the packet may have dropped on the request path, during remote execution, or on the ACK path); the caller must retry using the exact same deterministic `idempotency_key`"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "TCP timeouts distinguish network-drop-before-execution from network-drop-after-execution",
+      "Assuming success on timeout prevents unpaid orders",
+      "Because an asynchronous network cannot distinguish a slow/crashed server from a lost reply packet, safe retries require server-side deduplication keyed by a stable client idempotency token"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Can a client tell the difference between a packet lost before the server ran vs a response packet lost after the server committed?",
+    "explanation": "The defining property of distributed systems is partial failure with indistinguishable timeout states: only an idempotent retry with the same `idempotency_key` safely resolves the ambiguity.",
+    "tags": [
+      "distributed-systems-foundations",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -128,6 +181,59 @@ window.QUESTION_BANK["consistency-models"] = [
       "consistency-models",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "consistency-models-n1",
+    "topic": "consistency-models",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Replication Lag Stale Read Window",
+    "scenario": "After a user updates their profile on the primary DB, they immediately refresh their profile page 120 ms later, which is routed to an async read replica whose replication lag averages 300 ms (uniformly distributed between 0 and 600 ms).",
+    "prompt": "What is the probability (in %) that the user's 120 ms refresh arrives before their write replicates (assuming uniform lag 0–600 ms)?",
+    "question": "What is the probability (in %) that the user's 120 ms refresh arrives before their write replicates (assuming uniform lag 0–600 ms)?",
+    "unit": "%",
+    "answer": 80,
+    "tolerance": 0.2,
+    "hint": "The read is stale if replication lag `L > 120 ms`. On `[0, 600]`, `(600 - 120) / 600 = 480 / 600`.",
+    "explanation": "When replication lag is uniformly distributed between 0 and 600 ms, a read at 120 ms sees stale state whenever lag exceeds 120 ms: `(600 - 120) / 600 = 80%` of the time—violating Read-Your-Writes.",
+    "tags": [
+      "consistency-models",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "consistency-models-t1",
+    "topic": "consistency-models",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Full Linearizability vs Read-Your-Writes Session Monotonicity",
+    "scenario": "Users complain that after posting a comment, refreshing the page sometimes hides their own comment for 1 second because reads hit async replicas. However, routing 100% of all users' reads to the primary DB would overload it.",
+    "prompt": "Which consistency model and routing technique solves the user-visible bug at minimal cost, and why?",
+    "question": "Which consistency model and routing technique solves the user-visible bug at minimal cost, and why?",
+    "options": [
+      "Enforce global multi-region Paxos linearizability on every anonymous read",
+      "Disable all read replicas and scale down read traffic",
+      "Provide Read-Your-Writes + Monotonic Reads per session by tracking the client's highest committed WAL LSN (or a short primary-pinning cookie) and routing only reads with `replica_lsn < client_lsn` to the primary"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Anonymous readers need to see strangers' comments within 1 nanosecond globally",
+      "Dropping read replicas increases read capacity",
+      "Session-scoped LSN tracking gives the author immediate Read-Your-Writes consistency while allowing 99% of passive reads to stay on cheap async replicas"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Do you need global linearizability for everyone, or just session-level Read-Your-Writes for the user who just wrote?",
+    "explanation": "Passing a session LSN watermark (or pinning the writer to the primary for 2 seconds after a write) guarantees Read-Your-Writes and Monotonic Reads without paying the latency/capacity cost of global linearizability.",
+    "tags": [
+      "consistency-models",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -314,6 +420,59 @@ window.QUESTION_BANK["cap-and-pacelc"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "cap-and-pacelc-n1",
+    "topic": "cap-and-pacelc",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Cross-Region Quorum Latency Tax (PACELC E/L)",
+    "scenario": "A geo-distributed database places 3 replicas in US-East, US-West (70 ms RTT from US-East), and EU-West (85 ms RTT from US-East). A leaderless quorum write initiated in US-East requires `W = 2` acknowledgments.",
+    "prompt": "What is the minimum network round-trip latency (in ms) for a write coordinated from US-East to collect 2 replica ACKs (local + fastest remote)?",
+    "question": "What is the minimum network round-trip latency (in ms) for a write coordinated from US-East to collect 2 replica ACKs (local + fastest remote)?",
+    "unit": "ms",
+    "answer": 70,
+    "tolerance": 0.2,
+    "hint": "Replica 1 is local (~0-1 ms); Replica 2 is the closer of US-West (70 ms) and EU-West (85 ms).",
+    "explanation": "To reach a majority (`W = 2` of 3), the coordinator in US-East acknowledges locally (~0 ms) and must wait for the fastest remote region (US-West at 70 ms RTT)—the \"EL\" (Else Latency vs Consistency) side of PACELC.",
+    "tags": [
+      "cap-and-pacelc",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "cap-and-pacelc-t1",
+    "topic": "cap-and-pacelc",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: PACELC Classification for Normal Operation vs Partition",
+    "scenario": "During normal operation (no network partition), a system replicates asynchronously to remote regions for 5 ms local write latency, and during a partition it elects a single majority side and blocks writes on the isolated minority.",
+    "prompt": "Why is CAP alone insufficient to describe this system, and how does PACELC classify it?",
+    "question": "Why is CAP alone insufficient to describe this system, and how does PACELC classify it?",
+    "options": [
+      "CAP classifies normal-operation latency trade-offs even when no partition exists",
+      "The system is PA/EL because it allows split-brain writes during partitions",
+      "CAP only describes behavior during a partition (`P`); PACELC captures that this system is PC/EL (chooses Consistency during a Partition, but chooses Lower Latency over strict synchronous Consistency during normal Else operation)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Network partitions are active 100% of the time in every datacenter",
+      "Blocking minority writes during a partition is an AP choice",
+      "Most real latency/freshness bugs happen during the 99.99% of time when the network is healthy (`E`: Else), where async replication trades consistency for low latency"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What does the `E` (`Else`: when there is no partition) in PACELC stand for?",
+    "explanation": "Abadi's PACELC theorem notes that even when no partition exists (`Else`), distributed databases must choose between Latency (`L`, async replication) and Consistency (`C`, synchronous quorum/replication).",
+    "tags": [
+      "cap-and-pacelc",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -379,6 +538,59 @@ window.QUESTION_BANK["clocks-and-ordering"] = [
       "clocks-and-ordering",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "clocks-and-ordering-n1",
+    "topic": "clocks-and-ordering",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: TrueTime Commit-Wait Uncertainty Window",
+    "scenario": "In a Spanner-like system using GPS + atomic clocks, the local clock uncertainty bound is `ε = 3 ms` (meaning true time lies in `[t - 3 ms, t + 3 ms]`). To guarantee that external timestamp intervals of causally ordered transactions never overlap, the coordinator waits `2ε` before releasing locks.",
+    "prompt": "How many milliseconds must the commit-wait step pause when `ε = 3 ms`?",
+    "question": "How many milliseconds must the commit-wait step pause when `ε = 3 ms`?",
+    "unit": "ms",
+    "answer": 6,
+    "tolerance": 0.2,
+    "hint": "Commit wait duration is `2 × ε`.",
+    "explanation": "Waiting `2ε = 2 × 3 ms = 6 ms` guarantees that any subsequent transaction starting after commit sees a timestamp strictly greater than the committed transaction's timestamp, achieving external consistency without cross-node clock negotiation.",
+    "tags": [
+      "clocks-and-ordering",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "clocks-and-ordering-t1",
+    "topic": "clocks-and-ordering",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Wall-Clock LWW (Last-Write-Wins) vs Hybrid Logical Clocks / Vector Clocks",
+    "scenario": "A multi-master key-value store resolves concurrent writes using `wall_clock_timestamp` Last-Write-Wins (LWW). Node A's NTP clock is skewed +80 ms ahead of Node B. Node A writes `v1`, and 10 ms later a user reads `v1` and writes an updated `v2` via Node B.",
+    "prompt": "What happens to update `v2` under wall-clock LWW, and which clock mechanism fixes causal ordering?",
+    "question": "What happens to update `v2` under wall-clock LWW, and which clock mechanism fixes causal ordering?",
+    "options": [
+      "Update `v2` wins because it happened 10 ms later in real physical time",
+      "NTP guarantees zero microsecond skew across all cloud VMs",
+      "Update `v2` is silently dropped because Node B's physical timestamp is still 70 ms behind Node A's timestamp; using a Hybrid Logical Clock (HLC) or Dotted Version Vectors preserves the causal `v1 -> v2` ordering"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Servers automatically know real physical time without clocks",
+      "Wall-clock LWW never drops causally newer writes",
+      "An HLC advances its logical component whenever a node observes a message with a higher timestamp (`max(physical, msg.ts) + 1`), ensuring causally subsequent writes always receive a strictly higher timestamp"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Compare Node A's timestamp (`T + 80 ms`) with Node B's timestamp 10 ms later (`T + 10 ms`).",
+    "explanation": "Under physical wall-clock LWW, a node with a fast clock produces \"future\" timestamps that silently overwrite subsequent causal updates from nodes with accurate clocks. HLCs or version vectors track causality across messages.",
+    "tags": [
+      "clocks-and-ordering",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -565,6 +777,59 @@ window.QUESTION_BANK["leader-election"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "leader-election-n1",
+    "topic": "leader-election",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Split-Vote Prevention & Failover MTTR",
+    "scenario": "A 5-node Raft cluster configures a heartbeat interval of 150 ms and a randomized election timeout window of `[1,000 ms, 1,500 ms]`. After the leader crashes, the first follower's timer expires at 1,100 ms and a single round of `RequestVote` RPCs takes 20 ms.",
+    "prompt": "How many milliseconds after the leader crash is the new leader elected and ready to serve?",
+    "question": "How many milliseconds after the leader crash is the new leader elected and ready to serve?",
+    "unit": "ms",
+    "answer": 1120,
+    "tolerance": 0.2,
+    "hint": "Add the 1,100 ms election timeout expiration and the 20 ms `RequestVote` quorum round-trip.",
+    "explanation": "Detection takes 1,100 ms (when the earliest randomized follower timer fires) plus 20 ms for a majority `RequestVote` RTT = 1,120 ms total failover time.",
+    "tags": [
+      "leader-election",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "leader-election-t1",
+    "topic": "leader-election",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Ultra-Short Election Timeouts vs Flap Resilience",
+    "scenario": "An engineer lowers the Raft election timeout from 1,000 ms down to 15 ms (when cross-AZ p99 network latency + GC pauses regularly hit 25 ms) to get \"instant failover\".",
+    "prompt": "What failure mode does a 15 ms election timeout trigger, and how should timeouts be tuned?",
+    "question": "What failure mode does a 15 ms election timeout trigger, and how should timeouts be tuned?",
+    "options": [
+      "The cluster achieves zero-downtime failover with higher write throughput",
+      "Followers stop voting altogether and the first leader stays permanent",
+      "The cluster enters continuous split-vote livelock and term churn (followers trigger elections on every minor GC pause or network jitter, stepping down the healthy leader and dropping write availability)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Election timeouts smaller than network RTT prevent unnecessary elections",
+      "Raft ignores `RequestVote` messages with higher terms",
+      "Raft requires `broadcastTime << electionTimeout << MTBF` (typically election timeout >= 5–10× heartbeat RTT plus randomized jitter) so transient network/GC blips do not dethrone a healthy leader"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens in Raft whenever a follower receives a `RequestVote` with a higher term `T + 1`?",
+    "explanation": "In Raft, any higher-term `RequestVote` forces the current leader to step down. If the election timeout is near the network/GC tail latency, followers constantly start spurious elections and stall writes.",
+    "tags": [
+      "leader-election",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -630,6 +895,59 @@ window.QUESTION_BANK["distributed-locks-and-leases"] = [
       "distributed-locks-and-leases",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "distributed-locks-and-leases-n1",
+    "topic": "distributed-locks-and-leases",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Lease Expiry Under Stop-The-World GC Pause",
+    "scenario": "Worker 1 acquires a distributed lock with a 10-second lease TTL (`10,000 ms`). After 6,000 ms of processing, Worker 1 hits a 7,000 ms JVM stop-the-world GC pause before writing to storage.",
+    "prompt": "By how many milliseconds has Worker 1's lock lease already expired when Worker 1 wakes up and attempts its zombie write at `t = 13,000 ms`?",
+    "question": "By how many milliseconds has Worker 1's lock lease already expired when Worker 1 wakes up and attempts its zombie write at `t = 13,000 ms`?",
+    "unit": "ms",
+    "answer": 3000,
+    "tolerance": 0.2,
+    "hint": "Worker 1 wakes up at `6,000 + 7,000 = 13,000 ms`, while the lease expired at `10,000 ms`.",
+    "explanation": "The lease expired at 10,000 ms, so when Worker 1 resumes at 13,000 ms, its lease has been expired for 13,000 - 10,000 = 3,000 ms (3 seconds), during which Worker 2 has already acquired the lock.",
+    "tags": [
+      "distributed-locks-and-leases",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "distributed-locks-and-leases-t1",
+    "topic": "distributed-locks-and-leases",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: TTL Leases Alone vs Monotonic Fencing Tokens",
+    "scenario": "A worker holding a Redis/ZooKeeper lease pauses in GC until after its TTL expires; a second worker acquires the lease, and then the first worker wakes up and overwrites the file in storage.",
+    "prompt": "Why can no client-side lock check prevent this race, and what mechanism guarantees mutual exclusion at the storage resource?",
+    "question": "Why can no client-side lock check prevent this race, and what mechanism guarantees mutual exclusion at the storage resource?",
+    "options": [
+      "Have the worker check `if (lock.isHeld())` right before sending the write RPC",
+      "Use Redlock across 5 independent Redis nodes without changing the storage server",
+      "Issue a monotonically increasing `fencing_token` (epoch/zxid) with every lock grant and require the storage server to reject any write carrying `token < max_seen_token`"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "A GC pause can never happen between `if (lock.isHeld())` and the socket write",
+      "Redlock stops the client JVM from experiencing GC pauses",
+      "Because the network or JVM can pause arbitrarily after any client-side check, the storage resource itself must validate the monotonic fencing token to fenced off zombie writers"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Remember Martin Kleppmann's analysis of distributed locks and fencing tokens.",
+    "explanation": "Time-based leases alone cannot guarantee safety under asynchronous process/network pauses. Only a monotonically increasing fencing token validated by the target storage system blocks delayed zombie writes.",
+    "tags": [
+      "distributed-locks-and-leases",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -816,6 +1134,59 @@ window.QUESTION_BANK["circuit-breakers-and-timeouts"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "circuit-breakers-and-timeouts-n1",
+    "topic": "circuit-breakers-and-timeouts",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Thread Pool Exhaustion Without Tight Timeouts",
+    "scenario": "An API gateway has 400 worker threads and calls a downstream recommendation service at 200 req/s. The downstream hangs without responding, and the HTTP client timeout is set to 30 seconds.",
+    "prompt": "How many seconds does it take for the hanging downstream to saturate all 400 threads on the API gateway?",
+    "question": "How many seconds does it take for the hanging downstream to saturate all 400 threads on the API gateway?",
+    "unit": "seconds",
+    "answer": 2,
+    "tolerance": 0.2,
+    "hint": "Divide 400 available threads by 200 blocked requests per second.",
+    "explanation": "At 200 req/s, 400 threads are completely occupied in 400 / 200 = 2 seconds (well before the 30-second timeout fires), taking down the entire API gateway for unrelated endpoints.",
+    "tags": [
+      "circuit-breakers-and-timeouts",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "circuit-breakers-and-timeouts-t1",
+    "topic": "circuit-breakers-and-timeouts",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Unbounded Retries vs Circuit Breaker + Bulkhead + Jittered Backoff",
+    "scenario": "A non-critical personalization service starts failing 60% of requests due to CPU saturation. Callers are configured to retry up to 3 times immediately on failure.",
+    "prompt": "What effect do immediate retries have on the failing service, and what resilience pattern stops the cascade?",
+    "question": "What effect do immediate retries have on the failing service, and what resilience pattern stops the cascade?",
+    "options": [
+      "Immediate retries help the overloaded server recover faster",
+      "Increase the retry count from 3 to 10 with zero delay",
+      "Immediate retries amplify load by up to 4× during an outage; isolate the dependency in a dedicated bulkhead pool, trip an open Circuit Breaker when error rate exceeds threshold, and return a degraded fallback"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Sending 4× more traffic to a CPU-saturated server lowers its CPU utilization",
+      "10 retries guarantee success when a database is down",
+      "Tripping a circuit breaker fails fast in memory (0 ms), shedding load so the downstream can recover while bulkheads protect caller threads and retry budgets cap amplification (<10%)"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Calculate the request volume when 60% of requests fail and each failure triggers 3 immediate retries.",
+    "explanation": "Unbounded retries turn a partial slowdown into a retry storm. Combining tight timeouts, per-dependency bulkheads, a retry budget, and a circuit breaker with graceful fallback prevents cascading failure.",
+    "tags": [
+      "circuit-breakers-and-timeouts",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -881,6 +1252,59 @@ window.QUESTION_BANK["gossip-protocol"] = [
       "gossip-protocol",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "gossip-protocol-n1",
+    "topic": "gossip-protocol",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Epidemic Gossip Dissemination Rounds",
+    "scenario": "A cluster has `N = 1,024` nodes. Each gossip round (every 100 ms), every infected node pushes a membership update to `b = 3` peers, quadrupling the infected population (`4^k`) in the early exponential phase.",
+    "prompt": "In the idealized exponential phase (`4^k = 1,024`), how many gossip rounds `k` are needed to reach 1,024 nodes?",
+    "question": "In the idealized exponential phase (`4^k = 1,024`), how many gossip rounds `k` are needed to reach 1,024 nodes?",
+    "unit": "rounds",
+    "answer": 5,
+    "tolerance": 0.2,
+    "hint": "Compute `log_4(1,024)` since `4^5 = (2^2)^5 = 2^10 = 1,024`.",
+    "explanation": "Because `4^5 = 1,024`, epidemic gossip spreads an update across a 1,024-node cluster in O(log N) rounds (~5–7 rounds, or well under 1 second at 100 ms/round).",
+    "tags": [
+      "gossip-protocol",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "gossip-protocol-t1",
+    "topic": "gossip-protocol",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: All-to-All Heartbeats vs SWIM Piggybacked Gossip + Indirect Probes",
+    "scenario": "In a 2,000-node cluster, naive all-to-all heartbeating every second sends `2,000 × 1,999 ≈ 4,000,000` messages/sec and marks nodes dead whenever a single link between Node A and Node B experiences transient packet loss.",
+    "prompt": "How does the SWIM membership protocol solve both O(N^2) bandwidth growth and single-link false positives?",
+    "question": "How does the SWIM membership protocol solve both O(N^2) bandwidth growth and single-link false positives?",
+    "options": [
+      "Have all 2,000 nodes heartbeat every 10 ms instead of every 1 second",
+      "Elect a single node to ping all 2,000 nodes sequentially over a single TCP socket",
+      "Each node probes 1 random peer per period (`O(N)` total cluster messages/period), uses `k` indirect `ping-req` relay peers before declaring suspicion, and piggybacks membership diffs on probe packets"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Higher frequency all-to-all heartbeats reduce network load",
+      "Sequential single-socket probing scales to 100,000 nodes",
+      "Random probing bounds per-node network overhead to O(1), while `ping-req` through `k` intermediary peers distinguishes a congested A-B route from an actually dead Node B"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How does SWIM verify whether Node B is actually dead vs just unreachable from Node A?",
+    "explanation": "SWIM decouples failure detection (O(1) random probes per node + indirect `ping-req` relays + Suspicion grace window) from membership dissemination (piggybacked epidemic infection).",
+    "tags": [
+      "gossip-protocol",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -948,6 +1372,59 @@ window.QUESTION_BANK["metadata-service-and-node-discovery"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "metadata-service-and-node-discovery-n1",
+    "topic": "metadata-service-and-node-discovery",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Consensus Metadata Cache Read Offload",
+    "scenario": "4,000 stateless storage routers need the current partition-to-node routing map on every incoming request (200,000 req/s aggregate). Instead of querying the 5-node etcd/Raft metadata service on every request, routers cache the map locally and subscribe to push watches (averaging 2 topology changes per minute).",
+    "prompt": "If each of the 4,000 routers only pulls/receives a watch event twice per minute (every 30 seconds), how many watch update messages per second does the metadata cluster send across all 4,000 routers (to the nearest integer)?",
+    "question": "If each of the 4,000 routers only pulls/receives a watch event twice per minute (every 30 seconds), how many watch update messages per second does the metadata cluster send across all 4,000 routers (to the nearest integer)?",
+    "unit": "msg/s",
+    "answer": 133,
+    "tolerance": 0.2,
+    "hint": "4,000 routers × 2 updates per 60 seconds = 8,000 / 60.",
+    "explanation": "8,000 watch notifications per 60 seconds = 133.3 (~133) msg/s instead of 200,000 QPS—keeping the Raft consensus cluster completely off the data-plane hot path.",
+    "tags": [
+      "metadata-service-and-node-discovery",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "metadata-service-and-node-discovery-t1",
+    "topic": "metadata-service-and-node-discovery",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Consensus Control Plane on the Data Path vs Epoch-Cached Routing Table",
+    "scenario": "A junior architect designs a distributed storage system where every client `GET / PUT` request first queries ZooKeeper/etcd synchronously to find which storage node owns key `K`.",
+    "prompt": "Why is this an anti-pattern, and how do production systems (Kafka, Spanner, Bigtable, TiKV) use their metadata service?",
+    "question": "Why is this an anti-pattern, and how do production systems (Kafka, Spanner, Bigtable, TiKV) use their metadata service?",
+    "options": [
+      "ZooKeeper/etcd should store both the metadata and all user payload blobs",
+      "Clients should broadcast every `GET` to all storage nodes in the cluster",
+      "Keep ZooKeeper/etcd strictly off the hot data path: clients cache the partition map with an `epoch` number and talk directly to storage nodes, refreshing the map only when a storage node rejects a stale `epoch`"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "5-node Raft clusters scale linearly to 10M data-plane writes/sec",
+      "Broadcasting every read reduces network utilization",
+      "A consensus cluster (3–5 nodes) is designed for low-throughput strongly consistent coordination; epoch-validated client caching gives local speed with strong routing correctness"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How does a storage node detect that a client used a stale cached routing table?",
+    "explanation": "Every partition assignment carries a monotonic `epoch` (configuration version). Clients route directly using their cached map; if a shard moved, the target node sees `client.epoch < shard.epoch` and returns `StaleEpochException`, prompting a cache refresh.",
+    "tags": [
+      "metadata-service-and-node-discovery",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -1013,6 +1490,59 @@ window.QUESTION_BANK["distributed-hash-tables"] = [
       "distributed-hash-tables",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "distributed-hash-tables-n1",
+    "topic": "distributed-hash-tables",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Kademlia / Chord Logarithmic Routing Hops",
+    "scenario": "A peer-to-peer Distributed Hash Table (DHT) like Chord or Kademlia contains `N = 65,536` (`2^16`) nodes, and each node maintains a finger/routing table of size `log2(N)` pointing to exponentially spaced distances.",
+    "prompt": "What is the maximum number of routing hops (`log2(65,536)`) required to locate any key in a 65,536-node Chord ring?",
+    "question": "What is the maximum number of routing hops (`log2(65,536)`) required to locate any key in a 65,536-node Chord ring?",
+    "unit": "hops",
+    "answer": 16,
+    "tolerance": 0.2,
+    "hint": "Each hop halves the remaining distance around the `2^16`-node ring.",
+    "explanation": "Because each routing step jumps at least halfway to the target ID, finding any key among `65,536 = 2^16` nodes takes at most `log2(65,536) = 16` hops.",
+    "tags": [
+      "distributed-hash-tables",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "distributed-hash-tables-t1",
+    "topic": "distributed-hash-tables",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Multi-Hop P2P DHT (`O(log N)`) vs Datacenter One-Hop Consistent Hashing (`O(1)`)",
+    "scenario": "You are designing an internal in-memory key-value store running inside a single cloud VPC with 200 nodes and a strict p99 latency budget of 2 ms.",
+    "prompt": "Should you use a multi-hop Kademlia/Chord DHT (`O(log N)` hops) or a one-hop consistent hashing ring (`O(1)` hops), and why?",
+    "question": "Should you use a multi-hop Kademlia/Chord DHT (`O(log N)` hops) or a one-hop consistent hashing ring (`O(1)` hops), and why?",
+    "options": [
+      "Use a multi-hop Kademlia DHT so every read bounces across 8 servers sequentially",
+      "Use Gnutella flooding across all 200 servers",
+      "Use one-hop consistent hashing (Dynamo/Cassandra style) where every node maintains the full 200-node membership table via gossip and routes directly to the target node in 1 hop"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "8 sequential network hops reduce tail latency inside a datacenter",
+      "Flooding minimizes CPU usage",
+      "Multi-hop DHTs (`O(log N)` state, `O(log N)` hops) are built for untrusted P2P networks with millions of churning nodes; inside a 200-node datacenter, storing all 200 peers in RAM costs kilobytes and gives O(1) single-hop latency"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How much RAM does it take to store a 200-node membership table vs paying 8 sequential network hops on every read?",
+    "explanation": "In a datacenter cluster of 10–1,000 nodes, every node can easily hold the full ring membership in memory (a few KB), turning `O(log N)` DHT routing into a single direct `O(1)` network hop.",
+    "tags": [
+      "distributed-hash-tables",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

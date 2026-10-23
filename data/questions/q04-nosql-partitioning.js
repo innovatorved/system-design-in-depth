@@ -63,6 +63,59 @@ window.QUESTION_BANK["nosql-decision-boundaries"] = [
       "apply",
       "inline"
     ]
+  },
+  {
+    "id": "nosql-decision-boundaries-n1",
+    "topic": "nosql-decision-boundaries",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Cross-Shard Scatter-Gather Tail Latency",
+    "scenario": "Moving from a single SQL database to a 32-shard NoSQL store works well for primary-key lookups, but a secondary search query must scatter-gather across all 32 shards in parallel. Each shard has an independent 1% chance of experiencing a 200 ms GC pause.",
+    "prompt": "Using the small-probability approximation (`1 - (0.99)^32 ≈ 27.6%`), roughly what percentage of scatter-gather queries will hit the 200 ms tail latency?",
+    "question": "Using the small-probability approximation (`1 - (0.99)^32 ≈ 27.6%`), roughly what percentage of scatter-gather queries will hit the 200 ms tail latency?",
+    "unit": "%",
+    "answer": 28,
+    "tolerance": 0.2,
+    "hint": "Compute `100 × (1 - 0.99^32)`.",
+    "explanation": "Because a scatter-gather query waits for the slowest of all 32 shards, a 1% per-shard slow-tail event turns into a `1 - 0.99^32 = 27.6%` (~28%) slow response rate at the aggregator.",
+    "tags": [
+      "nosql-decision-boundaries",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "nosql-decision-boundaries-t1",
+    "topic": "nosql-decision-boundaries",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Choosing SQL vs Partitioned NoSQL",
+    "scenario": "A new B2B SaaS product has 400GB of relational data, complex multi-table reporting joins, strict ACID multi-row invariants, and 3,000 reads/sec + 400 writes/sec.",
+    "prompt": "Which storage architecture should you choose, and why?",
+    "question": "Which storage architecture should you choose, and why?",
+    "options": [
+      "Deploy a 64-node Cassandra wide-column cluster and implement joins in application memory",
+      "Shard across 16 MongoDB clusters on day one",
+      "Use a single primary PostgreSQL instance with read replicas and connection pooling"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Cassandra excels at ad-hoc multi-table joins and cross-partition ACID transactions",
+      "400 GB of data exceeds the capacity of modern NVMe drives",
+      "400 GB and 400 writes/sec fit comfortably on a single vertical SQL node, preserving native ACID transactions and joins without distributed coordination tax"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Does 400 GB / 400 writes/s require horizontal write sharding?",
+    "explanation": "Partitioned NoSQL trades away multi-row ACID transactions and ad-hoc joins in exchange for horizontal write scale beyond a single node. At 400 GB and 400 writes/s, a single relational primary is simpler, safer, and faster.",
+    "tags": [
+      "nosql-decision-boundaries",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -128,6 +181,59 @@ window.QUESTION_BANK["document-vs-key-value-stores"] = [
       "document-vs-key-value-stores",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "document-vs-key-value-stores-n1",
+    "topic": "document-vs-key-value-stores",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Document Rewrite Amplification on Partial Updates",
+    "scenario": "A user session document is 50 KB in size, and a Heartbeat API updates a 16-byte `last_seen_at` field inside the document 4,000 times/sec in a store that rewrites the full document on every update.",
+    "prompt": "How many megabytes per second (MB/s, where 1 MB = 1,000 KB) of write bandwidth are consumed by rewriting the full 50 KB document?",
+    "question": "How many megabytes per second (MB/s, where 1 MB = 1,000 KB) of write bandwidth are consumed by rewriting the full 50 KB document?",
+    "unit": "MB/s",
+    "answer": 200,
+    "tolerance": 0.2,
+    "hint": "Multiply 4,000 updates/sec by 50 KB/update and divide by 1,000 KB/MB.",
+    "explanation": "4,000 updates/sec × 50 KB = 200,000 KB/s = 200 MB/s of write throughput just to update 16 bytes (64 KB/s of actual delta), a 3,125× write amplification.",
+    "tags": [
+      "document-vs-key-value-stores",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "document-vs-key-value-stores-t1",
+    "topic": "document-vs-key-value-stores",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Embedded Sub-Document Arrays vs Separate Collection/KV",
+    "scenario": "In a document database, a `product` document embeds an array of `reviews`. Popular products accumulate 250,000 reviews, approaching the 16 MB BSON document size limit and slowing down product page reads.",
+    "prompt": "How should you refactor the data model, and why?",
+    "question": "How should you refactor the data model, and why?",
+    "options": [
+      "Keep appending all 250,000 reviews inside the single `product` document and compress strings",
+      "Store each review as a separate database instance",
+      "Bound the `product` document to summary stats + top 5 recent reviews, and store full review records as separate items keyed by `(product_id, review_id)`"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Unbounded array growth inside a single document improves write concurrency",
+      "One database per review scales horizontally",
+      "Splitting unbounded 1-to-many children into separate records prevents hitting document size ceilings and avoids rewriting megabytes on every new review"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Never embed an unbounded array inside a single document.",
+    "explanation": "Embedding works only for bounded relationships. Unbounded 1-to-N collections must be stored as separate documents/KV entries with only a bounded summary/preview embedded on the parent.",
+    "tags": [
+      "document-vs-key-value-stores",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -195,6 +301,59 @@ window.QUESTION_BANK["columnar-vs-wide-column-stores"] = [
       "apply",
       "inline"
     ]
+  },
+  {
+    "id": "columnar-vs-wide-column-stores-n1",
+    "topic": "columnar-vs-wide-column-stores",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Columnar Projection I/O Reduction",
+    "scenario": "An analytics table has 100 columns averaging 10 bytes each (1,000 bytes/row) across 1,000,000,000 rows (1 TB total). A dashboard query aggregates only 3 columns (`region`, `status`, `amount` = 30 bytes/row), and columnar dictionary + RLE compression achieves a 5× compression ratio on those 3 columns.",
+    "prompt": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of disk data must the columnar engine scan for this query?",
+    "question": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of disk data must the columnar engine scan for this query?",
+    "unit": "GB",
+    "answer": 6,
+    "tolerance": 0.2,
+    "hint": "Uncompressed size of the 3 columns = 10^9 × 30 bytes = 30 GB. Divide by the 5× compression ratio.",
+    "explanation": "Reading only 3 of 100 columns reduces raw bytes from 1,000 GB to 30 GB; 5× columnar compression reduces disk I/O further to 30 / 5 = 6 GB (a 166× reduction vs a 1 TB row-store scan).",
+    "tags": [
+      "columnar-vs-wide-column-stores",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "columnar-vs-wide-column-stores-t1",
+    "topic": "columnar-vs-wide-column-stores",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: OLAP Columnar Store vs Wide-Column Store (Cassandra/Bigtable)",
+    "scenario": "An engineering team confuses \"wide-column store\" (Cassandra/HBase) with \"columnar OLAP database\" (ClickHouse/Parquet) and tries to run `SELECT AVG(latency) FROM logs WHERE status = 500` across 10B rows in Cassandra without a partition key.",
+    "prompt": "Why does this query fail or time out in Cassandra, and which architecture should serve which workload?",
+    "question": "Why does this query fail or time out in Cassandra, and which architecture should serve which workload?",
+    "options": [
+      "Cassandra stores each column in a separate global Parquet file optimized for full-cluster SIMD scans",
+      "ClickHouse should replace Cassandra for 100,000 single-row point mutations per second",
+      "Wide-column stores (Cassandra) group columns per row inside SSTables keyed by `(partition_key, clustering_key)` for fast point/range lookups, whereas OLAP columnar stores physically store each column contiguously for analytical scans"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Wide-column and columnar are identical storage layouts on disk",
+      "OLAP columnar files are optimized for single-row random updates",
+      "Use wide-column stores for high-write operational lookups by partition key, and replicate events to a true columnar OLAP engine for multi-billion-row aggregations"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How are bytes laid out inside a Cassandra SSTable vs a Parquet/ClickHouse column file?",
+    "explanation": "Despite the name, wide-column stores (Bigtable/Cassandra) store data organized by row key + clustering key inside SSTables, making full-cluster analytical scans without a partition key catastrophic.",
+    "tags": [
+      "columnar-vs-wide-column-stores",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -260,6 +419,59 @@ window.QUESTION_BANK["graph-database-decision-boundary"] = [
       "graph-database-decision-boundary",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "graph-database-decision-boundary-n1",
+    "topic": "graph-database-decision-boundary",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: K-Hop Frontier Explosion",
+    "scenario": "In a social/payment graph where every node has an average out-degree of 50 neighbors, a fraud detection query traverses 3 hops (`k = 3`) out from a suspect account.",
+    "prompt": "Assuming minimal overlap at distance 3, how many edge traversals occur at the 3rd hop (`50^3`)?",
+    "question": "Assuming minimal overlap at distance 3, how many edge traversals occur at the 3rd hop (`50^3`)?",
+    "unit": "edges",
+    "answer": 125000,
+    "tolerance": 0.2,
+    "hint": "Compute 50 × 50 × 50.",
+    "explanation": "At branching factor 50, hop 1 visits 50 nodes, hop 2 visits 2,500, and hop 3 visits 50^3 = 125,000 edges (and hop 4 reaches 6.25M), illustrating why unbounded multi-hop graph queries explode in latency.",
+    "tags": [
+      "graph-database-decision-boundary",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "graph-database-decision-boundary-t1",
+    "topic": "graph-database-decision-boundary",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Dedicated Graph DB vs Relational / Adjacency Table",
+    "scenario": "A product needs to look up a user's direct 1-hop followers and check whether User A follows User B at 50,000 QPS.",
+    "prompt": "Should you introduce a specialized graph database (e.g., Neo4j) for 1-hop follow lookups, and why?",
+    "question": "Should you introduce a specialized graph database (e.g., Neo4j) for 1-hop follow lookups, and why?",
+    "options": [
+      "Yes, any schema with edges requires a specialized native graph database",
+      "Store the entire social graph in a single unindexed JSON blob",
+      "No; 1-hop and 2-hop lookups with known keys are simple indexed adjacency-table queries in SQL/NoSQL—reserve dedicated graph engines for deep variable-length path traversals (`k >= 3`) and subgraph pattern matching"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Relational and KV stores cannot index `(follower_id, followee_id)` pairs",
+      "JSON blobs scale linearly to 100M edges",
+      "An indexed adjacency table (`pk = user_id, sk = target_id`) serves 1-hop listings and existence checks in O(1)/O(log N) without adding operational complexity"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "At what hop depth do recursive SQL joins degrade compared to index-free adjacency?",
+    "explanation": "Fixed 1-hop or 2-hop edge lookups are trivial in SQL or partitioned KV/wide-column stores (like Twitter's FlockDB). Native graph databases earn their operational cost only on variable-depth traversals and complex path analytics.",
+    "tags": [
+      "graph-database-decision-boundary",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -446,6 +658,59 @@ window.QUESTION_BANK["hot-partitions"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "hot-partitions-n1",
+    "topic": "hot-partitions",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Write Salting Buckets for a Celebrity Key",
+    "scenario": "A single partition in your key-value store can safely sustain 2,000 writes/sec. During a global livestream, a single `stream_id` receives 24,000 status/counter writes/sec.",
+    "prompt": "What is the minimum number of key-salting shards (`stream_id#0 .. stream_id#(N-1)`) required to keep each partition at or below 2,000 writes/sec?",
+    "question": "What is the minimum number of key-salting shards (`stream_id#0 .. stream_id#(N-1)`) required to keep each partition at or below 2,000 writes/sec?",
+    "unit": "shards",
+    "answer": 12,
+    "tolerance": 0.2,
+    "hint": "Divide 24,000 writes/sec by 2,000 writes/sec per partition.",
+    "explanation": "24,000 / 2,000 = 12 salted sub-keys (`stream_id#0` through `stream_id#11`), spreading the hot key's write load across 12 physical partitions.",
+    "tags": [
+      "hot-partitions",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "hot-partitions-t1",
+    "topic": "hot-partitions",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Key Salting Write Relief vs Read Fan-Out Cost",
+    "scenario": "You salt hot partition keys with a random suffix `0..15` (`N = 16`) to prevent write throttling during traffic spikes, and readers must reconstruct the total count.",
+    "prompt": "How should you apply key salting so normal keys do not pay a 16× read amplification tax, and why?",
+    "question": "How should you apply key salting so normal keys do not pay a 16× read amplification tax, and why?",
+    "options": [
+      "Salt every single key in the database with 1,000 random suffixes unconditionally",
+      "Never salt keys and let the hot partition drop 95% of writes",
+      "Use adaptive/selective salting (only salt keys flagged as hot in metadata or above a rate threshold) combined with a short-TTL read cache in front of the scatter-gather read"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Turning every point read into a 1,000-key scatter-gather improves p99 latency",
+      "Dropped writes are invisible to users",
+      "Selective salting isolates the `N`-way read fan-out to the tiny fraction of celebrity keys, and caching the aggregated read shields the storage layer from read amplification"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens to a cold key if you force it to read 16 partitions every time?",
+    "explanation": "Key salting trades 1× write hotspot relief for N× read fan-out. Applying it adaptively only to detected hot keys (plus caching the summed read) avoids penalizing the 99.9% of cold keys.",
+    "tags": [
+      "hot-partitions",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -511,6 +776,59 @@ window.QUESTION_BANK["consistent-hashing"] = [
       "consistent-hashing",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "consistent-hashing-n1",
+    "topic": "consistent-hashing",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Expected Key Movement on Node Addition",
+    "scenario": "A consistent hashing ring holds 18,000,000 cached keys distributed evenly across 17 nodes (using 256 virtual nodes per physical node). You add an 18th physical node to the cluster.",
+    "prompt": "Approximately how many keys (in millions) must be remapped to the new 18th node?",
+    "question": "Approximately how many keys (in millions) must be remapped to the new 18th node?",
+    "unit": "million keys",
+    "answer": 1,
+    "tolerance": 0.2,
+    "hint": "In consistent hashing, adding the Nth node moves roughly `1/N` of total keys (`18M / 18`).",
+    "explanation": "With consistent hashing, adding the 18th node steals approximately `1/18` of the keyspace evenly from the existing 17 nodes: 18,000,000 / 18 = 1,000,000 keys (1 million), compared to ~94% movement with `hash(k) % N`.",
+    "tags": [
+      "consistent-hashing",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "consistent-hashing-t1",
+    "topic": "consistent-hashing",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Virtual Nodes (vnodes) vs Bounded-Load Consistent Hashing",
+    "scenario": "Even with 256 virtual nodes per physical server make key-count distribution uniform within ±5%, a single viral key receives 40% of all cluster traffic and overwhelms whichever node owns its token range.",
+    "prompt": "Why do virtual nodes alone fail here, and what mechanism solves traffic-skewed hot keys on a hash ring?",
+    "question": "Why do virtual nodes alone fail here, and what mechanism solves traffic-skewed hot keys on a hash ring?",
+    "options": [
+      "Increase virtual nodes from 256 to 1,000,000 per node so the single key splits across servers",
+      "Switch back to `hash(key) % N` modulo hashing",
+      "Use Consistent Hashing with Bounded Load (or hot-key replication/local L1 caching) so requests overflow to successor nodes when a node exceeds `(1 + ε)` of average load"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "More virtual nodes split a single deterministic `hash(key)` across multiple points on the ring",
+      "Modulo hashing splits a single key across all servers",
+      "Virtual nodes balance *key count* uniformity, not *request frequency* for a single identical key; bounded-load forwarding or L1 hot-key replication spreads a hot key across nodes"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Does `hash(\"viral_key\")` ever map to more than one point on the ring just because you added more vnodes?",
+    "explanation": "A single key hashes to one point on the ring regardless of how many vnodes exist. Handling a hot key requires bounded-load overflow to successor nodes or replicating/caching that hot key across frontends.",
+    "tags": [
+      "consistent-hashing",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -578,6 +896,59 @@ window.QUESTION_BANK["distributed-id-generation"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "distributed-id-generation-n1",
+    "topic": "distributed-id-generation",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Snowflake Per-Node Sequence Ceiling",
+    "scenario": "A 64-bit Snowflake ID allocates 1 bit sign, 41 bits millisecond timestamp, 10 bits worker ID, and 12 bits per-millisecond sequence counter (`2^12 = 4,096` IDs per millisecond per worker).",
+    "prompt": "Using `2^12 = 4,096` IDs/ms, how many millions of IDs per second can a single worker node generate at peak?",
+    "question": "Using `2^12 = 4,096` IDs/ms, how many millions of IDs per second can a single worker node generate at peak?",
+    "unit": "million IDs/s",
+    "answer": 4.096,
+    "tolerance": 0.2,
+    "hint": "Multiply 4,096 IDs/ms by 1,000 ms/sec and express in millions.",
+    "explanation": "A 12-bit sequence counter permits 4,096 IDs per millisecond per worker, which equals 4,096 × 1,000 = 4,096,000 IDs/sec (~4.1 million IDs/sec) on a single worker without network coordination.",
+    "tags": [
+      "distributed-id-generation",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "distributed-id-generation-t1",
+    "topic": "distributed-id-generation",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Publicly Exposing Sequential IDs vs K-Sortable Internal IDs",
+    "scenario": "Your database uses 64-bit Snowflake IDs as primary keys for fast B-Tree locality, but exposing `/api/orders/7182930192` lets competitors estimate your exact order volume and timestamp to the millisecond.",
+    "prompt": "How should you reconcile B-Tree index performance with external API privacy, and why?",
+    "question": "How should you reconcile B-Tree index performance with external API privacy, and why?",
+    "options": [
+      "Switch all internal SQL primary keys and foreign keys to random 36-byte UUIDv4 strings",
+      "Expose sequential `AUTO_INCREMENT` integers (`1, 2, 3`) in public URLs instead of Snowflake IDs",
+      "Use time-ordered 64-bit IDs (or UUIDv7) internally for clustered B-Tree locality, and Either encrypt the ID with format-preserving encryption (FPE/Feistel cipher) at the API boundary or pair with an opaque public token"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "36-byte random strings maximize B-Tree buffer pool density",
+      "Sequential integers hide company growth rates from competitors",
+      "A bijective Feistel cipher (or separate public NanoID/UUIDv4 token) masks timestamp and rate leakage externally while keeping internal joins and B-Tree pages compact and sequential"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Can you transform a 64-bit integer reversibly at the API edge without changing the database storage type?",
+    "explanation": "Keeping internal primary keys as 64-bit time-ordered integers preserves B-Tree write locality and small index size, while a lightweight 64-bit Feistel/FPE cipher (or opaque public ID) prevents external enumeration and timestamp leakage.",
+    "tags": [
+      "distributed-id-generation",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -643,6 +1014,59 @@ window.QUESTION_BANK["uuid-objectid-and-snowflake"] = [
       "uuid-objectid-and-snowflake",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "uuid-objectid-and-snowflake-n1",
+    "topic": "uuid-objectid-and-snowflake",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Index RAM Savings (Snowflake 8B vs String UUID 36B)",
+    "scenario": "A table with 500,000,000 rows has 1 primary key index and 3 secondary indexes (each secondary index stores the primary key as its row pointer, so the PK appears 4 times per row).",
+    "prompt": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of index storage are saved by using an 8-byte `BIGINT` Snowflake ID instead of a 36-byte ASCII `CHAR(36)` UUID?",
+    "question": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of index storage are saved by using an 8-byte `BIGINT` Snowflake ID instead of a 36-byte ASCII `CHAR(36)` UUID?",
+    "unit": "GB",
+    "answer": 56,
+    "tolerance": 0.2,
+    "hint": "Savings per PK copy = 36 - 8 = 28 bytes. Multiply by 4 indexes per row and 500,000,000 rows.",
+    "explanation": "Each row stores the PK 4 times across the clustered and secondary indexes, saving 4 × 28 = 112 bytes/row. Across 500M rows, 500,000,000 × 112 B = 56 × 10^9 B = 56 GB of RAM/disk saved.",
+    "tags": [
+      "uuid-objectid-and-snowflake",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "uuid-objectid-and-snowflake-t1",
+    "topic": "uuid-objectid-and-snowflake",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: UUIDv4 vs UUIDv7 in Relational Databases",
+    "scenario": "Your microservices must generate 128-bit UUIDs client-side without central worker-ID coordination, and store them in PostgreSQL/MySQL B-Tree indexes.",
+    "prompt": "Why should you choose UUIDv7 over UUIDv4, and what is the primary structural difference?",
+    "question": "Why should you choose UUIDv7 over UUIDv4, and what is the primary structural difference?",
+    "options": [
+      "UUIDv4 embeds a 48-bit timestamp prefix that keeps B-Tree inserts sequential",
+      "UUIDv7 is only 32 bits wide so it collides after 65,536 rows",
+      "UUIDv7 places a 48-bit Unix millisecond timestamp in the most significant bits followed by random bits, giving client-side zero-coordination generation AND sequential B-Tree page locality"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Random high bits in UUIDv4 prevent B-Tree page splits",
+      "Smaller bit widths eliminate birthday collisions",
+      "Putting the timestamp in the high bits sorts new IDs at the right edge of the B-Tree while the trailing 74 random bits prevent collisions without a worker registry"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Which bits of a key determine where it lands in a B-Tree index?",
+    "explanation": "UUIDv7 combines the zero-coordination simplicity of 128-bit UUIDs with the 48-bit big-endian millisecond prefix of Snowflake/ULID, eliminating UUIDv4's random B-Tree page thrashing.",
+    "tags": [
+      "uuid-objectid-and-snowflake",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -829,6 +1253,59 @@ window.QUESTION_BANK["clock-skew-and-id-ordering"] = [
       "apply",
       "inline"
     ]
+  },
+  {
+    "id": "clock-skew-and-id-ordering-n1",
+    "topic": "clock-skew-and-id-ordering",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: NTP Backward Step Wait Budget",
+    "scenario": "A Snowflake generator detects that the local system clock stepped backward by 15 ms during an NTP adjustment. Instead of throwing an error, it pauses (`sleep`) until `System.currentTimeMillis()` catches up to `lastTimestamp`. During those 15 ms, requests arrive at 2,000 req/s.",
+    "prompt": "How many in-flight ID requests are briefly held in memory waiting for the 15 ms clock catch-up?",
+    "question": "How many in-flight ID requests are briefly held in memory waiting for the 15 ms clock catch-up?",
+    "unit": "requests",
+    "answer": 30,
+    "tolerance": 0.2,
+    "hint": "Multiply 2,000 req/s (which is 2 req/ms) by 15 ms.",
+    "explanation": "At 2,000 req/s (2 requests/ms), pausing generation for a small 15 ms NTP step holds only 2 × 15 = 30 requests for at most 15 ms, safely preserving strict monotonicity without failing requests.",
+    "tags": [
+      "clock-skew-and-id-ordering",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "clock-skew-and-id-ordering-t1",
+    "topic": "clock-skew-and-id-ordering",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Handling Small vs Large Backward Clock Jumps in Snowflake",
+    "scenario": "An NTP daemon or VM live migration can cause either a tiny backward clock adjustment (< 20 ms) or a severe backward jump (e.g., 3 seconds).",
+    "prompt": "How should a production Snowflake generator handle backward clock skew so it never issues duplicate IDs, and why?",
+    "question": "How should a production Snowflake generator handle backward clock skew so it never issues duplicate IDs, and why?",
+    "options": [
+      "Ignore backward clock jumps and reset the sequence counter to 0 at the older timestamp",
+      "Block threads inside a `while` spin-loop for up to 10 minutes on any clock jump",
+      "Ride through small backward skews (< 10–50 ms) by holding `lastTimestamp` and incrementing the sequence counter (or sleeping briefly), and fail fast / switch worker epoch on large jumps while using NTP slew mode (`chrony`)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Reusing an older millisecond timestamp with `sequence = 0` is guaranteed to be collision-free",
+      "Blocking HTTP worker threads for minutes prevents cascading timeouts",
+      "Reusing a past millisecond risks duplicate IDs; riding on the logical high-water mark handles micro-skews cleanly, while failing closed (or rotating worker ID) protects uniqueness on major clock faults"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens if a node generates IDs at `t = 1000`, the clock jumps back to `t = 995`, and it generates IDs at `t = 1000` again?",
+    "explanation": "If a generator ever emits IDs for the same `(timestamp, worker_id, sequence)` twice, primary key collisions occur. Tracking `lastTimestamp` as a monotonic high-water mark prevents duplicates.",
+    "tags": [
+      "clock-skew-and-id-ordering",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -894,6 +1371,59 @@ window.QUESTION_BANK["keyset-pagination"] = [
       "keyset-pagination",
       "apply",
       "inline"
+    ]
+  },
+  {
+    "id": "keyset-pagination-n1",
+    "topic": "keyset-pagination",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Deep `OFFSET` Row Scan Amplification",
+    "scenario": "A scraper paginates through a table using `LIMIT 50 OFFSET 500000`. To serve this single page of 50 rows, the database must scan and discard 500,000 index entries before returning 50.",
+    "prompt": "What is the ratio of total rows scanned (`500,050`) to rows returned (`50`) for this single query?",
+    "question": "What is the ratio of total rows scanned (`500,050`) to rows returned (`50`) for this single query?",
+    "unit": "x",
+    "answer": 10001,
+    "tolerance": 0.2,
+    "hint": "Divide 500,050 total rows scanned by 50 rows returned.",
+    "explanation": "500,050 / 50 = 10,001× scan amplification: the database does over ten thousand times more work than a keyset cursor query (`WHERE id < last_id LIMIT 50`) which scans exactly 50 rows.",
+    "tags": [
+      "keyset-pagination",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "keyset-pagination-t1",
+    "topic": "keyset-pagination",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Composite Tie-Breaker Key in Keyset Pagination",
+    "scenario": "You replace `OFFSET` pagination on an orders feed with `WHERE created_at < :cursor_ts ORDER BY created_at DESC LIMIT 50`. During peak traffic, multiple orders share the exact same millisecond `created_at` timestamp, causing some orders to be silently skipped across page boundaries.",
+    "prompt": "How do you fix the missing-row bug in keyset pagination, and why?",
+    "question": "How do you fix the missing-row bug in keyset pagination, and why?",
+    "options": [
+      "Revert to `OFFSET 1000000` pagination",
+      "Add a random `SLEEP()` before inserting each order so timestamps never collide",
+      "Use a deterministic composite cursor `(created_at, id)` with tuple comparison `WHERE (created_at, id) < (:cursor_ts, :cursor_id) ORDER BY created_at DESC, id DESC`"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "`OFFSET` prevents duplicate/skipped rows when new items are inserted at the top of the feed",
+      "Sleeping on writes scales well under high concurrency",
+      "Appending a unique tie-breaker column (`id`) to both the index and the cursor predicate establishes a strict total ordering across rows with identical timestamps"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "A keyset cursor requires a strictly unique total order across rows.",
+    "explanation": "Because `created_at` is not unique, `WHERE created_at < :ts` skips any remaining rows that shared `:ts` on the boundary page. A composite cursor `(created_at, id)` backed by an index on `(created_at DESC, id DESC)` guarantees a total order.",
+    "tags": [
+      "keyset-pagination",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -1079,6 +1609,59 @@ window.QUESTION_BANK["hot-cold-storage-archival"] = [
       "hot-cold-storage-archival",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "hot-cold-storage-archival-n1",
+    "topic": "hot-cold-storage-archival",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Annual Cloud Storage Cost Reduction via Tiering",
+    "scenario": "Your compliance logs total 500 TB (500,000 GB). Only the last 30 days (50 TB) are queried frequently and need hot NVMe SSD storage ($0.10/GB-month), while the remaining 450 TB can move to cold object storage ($0.01/GB-month).",
+    "prompt": "How many thousands of dollars per month are saved by tiering the 450 TB of cold data to object storage instead of keeping all 500 TB on hot NVMe?",
+    "question": "How many thousands of dollars per month are saved by tiering the 450 TB of cold data to object storage instead of keeping all 500 TB on hot NVMe?",
+    "unit": "k$/month",
+    "answer": 40.5,
+    "tolerance": 0.2,
+    "hint": "450,000 GB × ($0.10 - $0.01)/GB-month = 450,000 × $0.09.",
+    "explanation": "Moving 450,000 GB from $0.10/GB-mo to $0.01/GB-mo saves $0.09/GB-mo × 450,000 GB = $40,500/month ($40.5k/month, or $486k/year).",
+    "tags": [
+      "hot-cold-storage-archival",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "hot-cold-storage-archival-t1",
+    "topic": "hot-cold-storage-archival",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: `DELETE WHERE` Archival vs Time-Range Partition Drop",
+    "scenario": "Every night, a cron job moves 50,000,000 rows older than 90 days to S3 Parquet and runs `DELETE FROM events WHERE created_at < NOW() - INTERVAL '90 days'` on the primary PostgreSQL table, causing massive WAL spikes, autovacuum lag, and table bloat.",
+    "prompt": "Which table design eliminates the `DELETE` I/O storm when aging out hot data, and why?",
+    "question": "Which table design eliminates the `DELETE` I/O storm when aging out hot data, and why?",
+    "options": [
+      "Run `VACUUM FULL events` every night during peak traffic to reclaim space",
+      "Delete rows one by one in 50,000,000 separate transactions",
+      "Use declarative time-range partitioning (e.g., daily or weekly partitions) so after exporting an old partition to S3 Parquet, you detach and `DROP TABLE` the expired partition in O(1) metadata time"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "`VACUUM FULL` acquires an `ACCESS EXCLUSIVE` table lock and rewrites the entire table",
+      "50M individual transactions eliminate WAL generation",
+      "Detaching and dropping a time-partition unlinks the underlying segment files at the OS level with near-zero WAL writes, zero dead tuples, and zero vacuum overhead"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Compare deleting 50M rows individually in a B-Tree vs unlinking a partition file.",
+    "explanation": "Bulk `DELETE` statements generate WAL for every row, dirty every index page, and leave dead tuples for `VACUUM`. Range-partitioning by time turns retention cleanup into an instantaneous `DETACH` + `DROP` operation.",
+    "tags": [
+      "hot-cold-storage-archival",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -955,12 +955,18 @@
 <!-- enriched -->
 <h2>Worked example: one product, two choices</h2><p>An e-commerce site runs in two regions with a replicated database. The transatlantic link drops for 3 minutes.</p><ul><li><strong>Shopping cart (choose A):</strong> both regions keep accepting "add item". When the link returns, merge the carts as a union, the way Amazon's Dynamo did for carts. A deleted item might reappear, which is an acceptable annoyance.</li><li><strong>Inventory decrement for the last unit (choose C):</strong> only the region that owns the item's primary can decrement. Users in the other region get "try again shortly" for 3 minutes. Overselling a limited edition is worse than a short error.</li><li><strong>Product descriptions (choose A, stale reads allowed):</strong> each region serves its local copy. Nobody cares about a 3-minute-old typo fix.</li></ul><p>On a normal day (the "else" branch of PACELC), linearizable inventory reads cost a cross-region round trip of about 70 to 90 ms. Local reads cost about 1 ms but may be up to about a second stale. Most systems pick latency for browsing and consistency only at checkout.</p><h2>PACELC classification (default configurations)</h2><table><thead><tr><th>System</th><th>During partition (P)</th><th>Else (E)</th><th>Notes</th></tr></thead><tbody><tr><td>DynamoDB, Cassandra, Riak</td><td>PA</td><td>EL</td><td>Tunable per request: QUORUM or strongly consistent reads shift towards C</td></tr><tr><td>Spanner, CockroachDB, etcd</td><td>PC</td><td>EC</td><td>Majority required. Latency paid on every write</td></tr><tr><td>MongoDB (majority write concern)</td><td>PC</td><td>EC or EL</td><td>Reads from secondaries are EL</td></tr><tr><td>PNUTS (Yahoo)</td><td>PC</td><td>EL</td><td>The per-record master example from Abadi's paper</td></tr></tbody></table><h2>Common interview traps</h2><ul><li>Claiming "we are CA because we run in a single datacentre". A rack switch failure is still a partition.</li><li>Forgetting that a CP system stays available on the majority side. Only the minority side rejects requests.</li><li>Mixing up CAP with ACID isolation levels. CAP says nothing about multi-key transactions.</li></ul><h2>What partitions look like in practice</h2><p>Real partitions are rarely a clean split. More often a single node loses connectivity to the leader but not to clients, a switch drops a fraction of packets, or one direction of a link fails. A CP system like etcd handles this by having the isolated node reject writes once it cannot reach a majority. An AP system like Cassandra keeps serving, stores hints for unreachable replicas, and relies on read repair and anti-entropy repair to converge afterwards.</p>
 </div></article>
-      <section class="check-slider" data-slug="cap-and-pacelc" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="cap-and-pacelc" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: CAP availability" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Cart vs last unit" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Majority side keeps going" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: CAP availability" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Cart vs last unit" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Majority side keeps going" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Cross-Region Quorum Latency Tax (PACELC E/L)" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: PACELC Classification for Normal Operation vs Partition" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-cap-and-pacelc-c1" data-type="mcq" data-slug="cap-and-pacelc" data-index="0">
@@ -1078,12 +1084,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cap-and-pacelc-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-cap-and-pacelc-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">A CP system stays available on the majority side; only the minority rejects requests. An old leader stranded on the 2-node side cannot reach a majority, so it cannot commit, and the 3-node side elects a new leader.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-cap-and-pacelc-n1" data-type="numeric" data-slug="cap-and-pacelc" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Cross-Region Quorum Latency Tax (PACELC E/L)</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A geo-distributed database places 3 replicas in US-East, US-West (70 ms RTT from US-East), and EU-West (85 ms RTT from US-East). A leaderless quorum write initiated in US-East requires `W = 2` acknowledgments.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the minimum network round-trip latency (in ms) for a write coordinated from US-East to collect 2 replica ACKs (local + fastest remote)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-cap-and-pacelc-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-cap-and-pacelc-n1"
+              aria-label="Numeric estimate in ms"
+              placeholder="Enter numeric estimate (ms)..."
+            />
+            <span class="quiz-unit-badge">ms</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Replica 1 is local (~0-1 ms); Replica 2 is the closer of US-West (70 ms) and EU-West (85 ms).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cap-and-pacelc-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-cap-and-pacelc-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">To reach a majority (`W = 2` of 3), the coordinator in US-East acknowledges locally (~0 ms) and must wait for the fastest remote region (US-West at 70 ms RTT)—the &quot;EL&quot; (Else Latency vs Consistency) side of PACELC.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-cap-and-pacelc-t1" data-type="tradeoff" data-slug="cap-and-pacelc" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: PACELC Classification for Normal Operation vs Partition</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">During normal operation (no network partition), a system replicates asynchronously to remote regions for 5 ms local write latency, and during a partition it elects a single majority side and blocks writes on the isolated minority.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why is CAP alone insufficient to describe this system, and how does PACELC classify it?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-cap-and-pacelc-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-cap-and-pacelc-t1" value="0" />
+                  <span>CAP classifies normal-operation latency trade-offs even when no partition exists</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-cap-and-pacelc-t1" value="1" />
+                  <span>The system is PA/EL because it allows split-brain writes during partitions</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-cap-and-pacelc-t1" value="2" />
+                  <span>CAP only describes behavior during a partition (`P`); PACELC captures that this system is PC/EL (chooses Consistency during a Partition, but chooses Lower Latency over strict synchronous Consistency during normal Else operation)</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-cap-and-pacelc-t1" value="0" />
+                  <span>Network partitions are active 100% of the time in every datacenter</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-cap-and-pacelc-t1" value="1" />
+                  <span>Blocking minority writes during a partition is an AP choice</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-cap-and-pacelc-t1" value="2" />
+                  <span>Most real latency/freshness bugs happen during the 99.99% of time when the network is healthy (`E`: Else), where async replication trades consistency for low latency</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What does the `E` (`Else`: when there is no partition) in PACELC stand for?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cap-and-pacelc-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-cap-and-pacelc-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Abadi&#039;s PACELC theorem notes that even when no partition exists (`Else`), distributed databases must choose between Latency (`L`, async replication) and Consistency (`C`, synchronous quorum/replication).</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1230,7 +1366,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1238,15 +1374,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

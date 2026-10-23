@@ -63,6 +63,59 @@ window.QUESTION_BANK["ride-matching-system-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "ride-matching-system-design-n1",
+    "topic": "ride-matching-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Driver Location Ingestion Memory & Write Rate",
+    "scenario": "A ride-sharing platform has `1,000,000` active online drivers sending GPS location pings every `4 seconds`. Each driver's current state in the in-memory Spatial Location Index (`driver_id`, `h3_cell`, `lat`, `lon`, `bearing`, `status`, `updated_at`) occupies `64 bytes`.",
+    "prompt": "How many location updates per second (`1,000,000 / 4`, in thousands) hit the ingestion tier, while the entire 1M-driver spatial state takes only `64 MB` of RAM?",
+    "question": "How many location updates per second (`1,000,000 / 4`, in thousands) hit the ingestion tier, while the entire 1M-driver spatial state takes only `64 MB` of RAM?",
+    "unit": "thousand updates/s",
+    "answer": 250,
+    "tolerance": 0.2,
+    "hint": "Divide 1,000,000 active drivers by 4 seconds per ping and express in thousands.",
+    "explanation": "`1,000,000 drivers / 4 seconds = 250,000 updates/sec` (`250` thousand updates/s), and because active driver state is only `1,000,000 × 64 B = 64 MB`, the entire global or regional live location index fits comfortably in RAM!",
+    "tags": [
+      "ride-matching-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "ride-matching-system-design-t1",
+    "topic": "ride-matching-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Greedy Nearest Straight-Line Match vs Batched Bipartite Road-Network ETA Matching + Dispatch Lock",
+    "scenario": "Two riders 100 meters apart request a ride at the same second. Driver A is 200m from Rider 1 in straight-line distance (but on the wrong side of a highway divider requiring a 9-minute U-turn), while Driver B is 600m away on the same street (2-minute road ETA). Meanwhile, two dispatch workers might assign Driver B to both riders simultaneously.",
+    "prompt": "Which dispatch architecture avoids both the highway-divider trap and double-dispatching the same driver?",
+    "question": "Which dispatch architecture avoids both the highway-divider trap and double-dispatching the same driver?",
+    "options": [
+      "Assign whichever driver has the smallest Euclidean straight-line distance with no locking",
+      "Broadcast the ride offer to 50 drivers at once and give the rider to whoever taps first without cancelling the other 49",
+      "Query H3 hex rings for candidate drivers, score candidates by road-graph ETA + heading, solve micro-batched bipartite matching (Hungarian / min-cost flow over 1–2s windows) to optimize fleet ETA, and acquire an atomic per-driver lease lock (`SET driver_lock NX EX 15`) when dispatching an offer"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Cars can drive straight across rivers and highway concrete dividers",
+      "Assigning two riders to the same solo car improves utilization",
+      "H3 filters spatial candidates fast, road-graph routing accounts for one-way streets/U-turns/heading, micro-window bipartite matching prevents locally greedy globally suboptimal pairings, and an atomic per-driver TTL lease prevents double assignment"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why can a driver 200m away take 9 minutes to arrive while a driver 600m away takes 2 minutes?",
+    "explanation": "Combining H3 spatial candidate filtering, road-network + heading ETA scoring, micro-batched bipartite optimization, and atomic per-driver offer leases delivers accurate, race-free dispatch.",
+    "tags": [
+      "ride-matching-system-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -128,6 +181,59 @@ window.QUESTION_BANK["video-platform-system-design"] = [
       "video-platform-system-design",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "video-platform-system-design-n1",
+    "topic": "video-platform-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Chunked Parallel GOP Transcoding Speedup",
+    "scenario": "A creator uploads a `60-minute` (`3,600-second`) 4K video. Encoding it sequentially on a single worker into 5 ABR renditions runs at `0.5×` real-time (`7,200 seconds` = `2 hours`). Instead, the ingest splitter cuts the video at keyframe (GOP) boundaries into `60` independent `1-minute` segments and dispatches them across `60` parallel transcoding workers.",
+    "prompt": "How many seconds (`60s segment / 0.5× speed`) does it take to transcode the entire 60-minute video when all 60 1-minute GOP segments run in parallel?",
+    "question": "How many seconds (`60s segment / 0.5× speed`) does it take to transcode the entire 60-minute video when all 60 1-minute GOP segments run in parallel?",
+    "unit": "seconds",
+    "answer": 120,
+    "tolerance": 0.2,
+    "hint": "Each 60-second segment encodes at 0.5× real-time (`60 / 0.5 = 120 seconds`), and all 60 segments run concurrently.",
+    "explanation": "Splitting at GOP keyframe boundaries allows all 60 1-minute segments to encode concurrently in `60 / 0.5 = 120 seconds` (2 minutes instead of 2 hours—a 60× latency reduction!).",
+    "tags": [
+      "video-platform-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "video-platform-system-design-t1",
+    "topic": "video-platform-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Progressive Monolithic MP4 Download vs HLS/DASH Adaptive Bitrate (ABR) + Tiered Edge CDN",
+    "scenario": "A video platform serves 10M concurrent viewers across mobile 4G networks (where bandwidth fluctuates between 1.5 Mbps and 25 Mbps) and home fiber connections.",
+    "prompt": "Why do all major streaming platforms use segmented HLS/DASH Adaptive Bitrate (ABR) over CDN origin shields rather than serving a single monolithic `.mp4` file?",
+    "question": "Why do all major streaming platforms use segmented HLS/DASH Adaptive Bitrate (ABR) over CDN origin shields rather than serving a single monolithic `.mp4` file?",
+    "options": [
+      "Serve a single 4 GB 4K `.mp4` file to all mobile users so the player stalls whenever cellular signal drops",
+      "Open a stateful WebSocket to the origin database to stream video frames",
+      "Encode each video into time-aligned GOP segments (2–6s `.ts`/`.m4s` chunks) across a bitrate/resolution ladder (240p..4K) described by an `.m3u8`/`.mpd` manifest, allowing the client player to switch quality per chunk seamlessly and CDN edge PoPs to cache popular 2-second chunks with high hit ratios"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Downloading 4 GB when a user quits watching after 15 seconds saves egress bandwidth",
+      "Video chunks are dynamic per-user data that cannot be cached at CDN edge PoPs",
+      "Keyframe-aligned 2–6s chunks let the client dynamically step bitrates up/down on every segment boundary without rebuffering, bound wasted bytes when users abandon early, and turn video delivery into standard cacheable immutable HTTP GETs at the CDN edge"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens when a user enters an elevator if the video is split into 4-second keyframe-aligned chunks at multiple bitrates?",
+    "explanation": "HLS/DASH ABR splits video into immutable 2–6s keyframe-aligned chunks across a bitrate ladder so the client player adapts to network bandwidth chunk-by-chunk while CDN edges cache the immutable segments.",
+    "tags": [
+      "video-platform-system-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -313,6 +419,59 @@ window.QUESTION_BANK["observability-slo-case-study"] = [
       "observability-slo-case-study",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "observability-slo-case-study-n1",
+    "topic": "observability-slo-case-study",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Multi-Window Multi-Burn-Rate Alert Precision (`14.4×` Burn)",
+    "scenario": "Following the Google SRE Workbook standard for a `99.9%` 30-day (`720-hour`) SLO, a critical page alert fires when the service consumes `2%` of its entire 30-day error budget within a `1-hour` window (verified by a short `5-minute` window also burning at that same rate so the alert resets within 5 minutes of recovery).",
+    "prompt": "Consuming `2%` (`0.02`) of a `720-hour` budget in `1 hour` corresponds to what burn rate multiplier (`0.02 × 720`)?",
+    "question": "Consuming `2%` (`0.02`) of a `720-hour` budget in `1 hour` corresponds to what burn rate multiplier (`0.02 × 720`)?",
+    "unit": "x",
+    "answer": 14.4,
+    "tolerance": 0.2,
+    "hint": "Multiply `0.02` (2% of budget) by `720` hours in 30 days.",
+    "explanation": "Burning 2% of a 720-hour budget in 1 hour is a `0.02 × 720 = 14.4×` burn rate (meaning 100% of the monthly budget would vanish in `720 / 14.4 = 50 hours`).",
+    "tags": [
+      "observability-slo-case-study",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "observability-slo-case-study-t1",
+    "topic": "observability-slo-case-study",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Symptom-Based Multi-Window Burn-Rate Alerts vs Cause-Based CPU/Memory Threshold Paging",
+    "scenario": "An on-call rotation receives 40 pages per week whenever any single pod's CPU hits 85% for 2 minutes or a single disk compaction spikes I/O, even though user-facing latency and error rates are completely healthy. Eventually engineers mute PagerDuty and miss a real customer outage.",
+    "prompt": "How should paging alerts be redesigned to eliminate alert fatigue while catching real outages fast?",
+    "question": "How should paging alerts be redesigned to eliminate alert fatigue while catching real outages fast?",
+    "options": [
+      "Page on-call engineers whenever any pod exceeds 60% CPU for 30 seconds",
+      "Disable all alerts and rely on Twitter complaints",
+      "Page humans exclusively on user-facing SLO symptom burn rates using Multi-Window Multi-Burn-Rate thresholds (e.g., 1h + 5m windows at 14.4× burn for page, 6h + 30m at 6× for page/ticket), and route resource/cause metrics (CPU, disk, cache hit rate) to diagnostic dashboards and non-paging capacity tickets"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "High CPU utilization with 0% errors and fast latency is an emergency requiring 3 AM human wake-ups",
+      "Single short-window alerts never flap or fail to reset cleanly",
+      "Paging on SLO error-budget burn ensures every human wake-up corresponds to genuine customer pain, while requiring both a long window (1h) and short confirmation window (5m) prevents false spikes and immediately clears the alert once mitigated"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why does Google SRE combine a 1-hour window AND a 5-minute window in the same alert condition?",
+    "explanation": "A 1-hour window alone stays red for up to 59 minutes after a 2-minute outage ends; intersecting a 1-hour window with a 5-minute window at `14.4×` burn guarantees both high precision (no transient blips) and fast reset (<5 min after fix).",
+    "tags": [
+      "observability-slo-case-study",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

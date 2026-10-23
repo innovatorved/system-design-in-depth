@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -968,12 +968,18 @@
   S-->>W1: rejected because 33 is less than 34
 </div><p>Without the token check at storage, both writes succeed and W1 overwrites W2's newer data. Note that W1 did nothing wrong by its own reckoning: it cannot observe its own pause.</p><h2>Lease maths</h2><p>With a lease TTL T, a maximum clock drift rate d, and a holder that renews every T/3:</p><ul><li>The holder should stop working at about T x (1 - d) minus a safety margin, measured with a monotonic clock from when it <em>sent</em> the acquire request, not when it received the reply.</li><li>For T = 10 s the holder might stop at 8 s. But a 15-second pause makes any client-side check meaningless, which is why the check belongs at the resource.</li></ul><h2>Ways to get mutual exclusion</h2><table><thead><tr><th>Mechanism</th><th>Safe against pauses?</th><th>Needs resource support</th><th>Notes</th></tr></thead><tbody><tr><td>Lock plus fencing token</td><td>Yes</td><td>Yes: stores the maximum token and rejects lower ones</td><td>ZooKeeper zxid or etcd revision make good tokens</td></tr><tr><td>Compare-and-set or version column</td><td>Yes</td><td>Yes, but most databases already have it</td><td>Often removes the need for a lock</td></tr><tr><td>Database row lock (SELECT FOR UPDATE)</td><td>Yes, within a transaction</td><td>Same database only</td><td>Holds a connection</td></tr><tr><td>Single partition owner (Kafka consumer group)</td><td>Mostly, but zombies need fencing</td><td>Producer epochs fence zombies</td><td>Ownership via rebalance</td></tr><tr><td>Redis SET NX PX without a token check</td><td>No</td><td>No</td><td>Fine for efficiency and deduplication of work</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Chubby</strong> issues sequencers that servers can check. It also delays releasing a crashed holder's lock (the lock-delay, up to a minute) to reduce stale writes from services that ignore sequencers.</li><li><strong>Kubernetes</strong> leader election uses Lease objects with a resourceVersion compare-and-swap, a 15-second lease duration, and a 10-second renew deadline by default.</li><li><strong>HDFS</strong> NameNode HA uses fencing (SSH kill or shared-storage fencing) plus QJM epoch numbers so that an old active node cannot write to the edit log.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="distributed-locks-and-leases" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="distributed-locks-and-leases" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why check at the resource" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: When to stop working" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Skip the lock" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why check at the resource" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: When to stop working" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Skip the lock" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Lease Expiry Under Stop-The-World GC Pause" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: TTL Leases Alone vs Monotonic Fencing Tokens" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-distributed-locks-and-leases-c1" data-type="mcq" data-slug="distributed-locks-and-leases" data-index="0">
@@ -1091,12 +1097,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-locks-and-leases-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-locks-and-leases-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">A compare-and-set on a version column is enforced by the resource itself, which makes it safe against pauses and often removes the need for a lock. Redlock, longer TTLs and watchdogs all leave the database accepting writes from a paused, expired holder.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-distributed-locks-and-leases-n1" data-type="numeric" data-slug="distributed-locks-and-leases" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Lease Expiry Under Stop-The-World GC Pause</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Worker 1 acquires a distributed lock with a 10-second lease TTL (`10,000 ms`). After 6,000 ms of processing, Worker 1 hits a 7,000 ms JVM stop-the-world GC pause before writing to storage.</p>
+          </div>
+        
+        <p class="check-slider__prompt">By how many milliseconds has Worker 1&#039;s lock lease already expired when Worker 1 wakes up and attempts its zombie write at `t = 13,000 ms`?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-locks-and-leases-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-distributed-locks-and-leases-n1"
+              aria-label="Numeric estimate in ms"
+              placeholder="Enter numeric estimate (ms)..."
+            />
+            <span class="quiz-unit-badge">ms</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Worker 1 wakes up at `6,000 + 7,000 = 13,000 ms`, while the lease expired at `10,000 ms`.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-locks-and-leases-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-locks-and-leases-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">The lease expired at 10,000 ms, so when Worker 1 resumes at 13,000 ms, its lease has been expired for 13,000 - 10,000 = 3,000 ms (3 seconds), during which Worker 2 has already acquired the lock.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-distributed-locks-and-leases-t1" data-type="tradeoff" data-slug="distributed-locks-and-leases" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: TTL Leases Alone vs Monotonic Fencing Tokens</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A worker holding a Redis/ZooKeeper lease pauses in GC until after its TTL expires; a second worker acquires the lease, and then the first worker wakes up and overwrites the file in storage.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why can no client-side lock check prevent this race, and what mechanism guarantees mutual exclusion at the storage resource?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-locks-and-leases-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-locks-and-leases-t1" value="0" />
+                  <span>Have the worker check `if (lock.isHeld())` right before sending the write RPC</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-locks-and-leases-t1" value="1" />
+                  <span>Use Redlock across 5 independent Redis nodes without changing the storage server</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-locks-and-leases-t1" value="2" />
+                  <span>Issue a monotonically increasing `fencing_token` (epoch/zxid) with every lock grant and require the storage server to reject any write carrying `token &lt; max_seen_token`</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-locks-and-leases-t1" value="0" />
+                  <span>A GC pause can never happen between `if (lock.isHeld())` and the socket write</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-locks-and-leases-t1" value="1" />
+                  <span>Redlock stops the client JVM from experiencing GC pauses</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-locks-and-leases-t1" value="2" />
+                  <span>Because the network or JVM can pause arbitrarily after any client-side check, the storage resource itself must validate the monotonic fencing token to fenced off zombie writers</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Remember Martin Kleppmann&#039;s analysis of distributed locks and fencing tokens.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-locks-and-leases-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-locks-and-leases-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Time-based leases alone cannot guarantee safety under asynchronous process/network pauses. Only a monotonically increasing fencing token validated by the target storage system blocks delayed zombie writes.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1233,22 +1369,22 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

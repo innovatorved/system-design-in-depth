@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -974,12 +974,18 @@
     CNT --> FEED["Feed rendering reads counts"]
 </div><h2>Reconciliation and real systems</h2><ul><li>Run a periodic job that recounts reactions rows for recently active posts and corrects counter drift.</li><li>YouTube famously froze public view counts near 300 while it validated views (until it retired the "301+" freeze in 2015), a real example of choosing correctness over live freshness.</li><li>LinkedIn's live video reactions travel through an in-memory publish/subscribe layer to viewers, while the durable counts are updated separately.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="reaction-modeling" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="reaction-modeling" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Source of truth for likes" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Deltas from transitions" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Redis counters after failover" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Source of truth for likes" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Deltas from transitions" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Redis counters after failover" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Separate Reaction Counters vs `GROUP BY` Count on Every Feed Render" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Preventing Double-Counting When a User Switches Reaction from `👍` to `❤️`" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-reaction-modeling-c1" data-type="mcq" data-slug="reaction-modeling" data-index="0">
@@ -1097,12 +1103,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="reaction-modeling-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-reaction-modeling-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Because the (post, user) rows are the source of truth, a reconciliation job can recount them and fix counter drift after any loss. Sharding counters reduces contention, but lost increments on those shards would still be lost, so it does not restore correctness on its own.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-reaction-modeling-n1" data-type="numeric" data-slug="reaction-modeling" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Separate Reaction Counters vs `GROUP BY` Count on Every Feed Render</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A feed response renders 20 posts, and each post has an average of 5,000 reactions across 6 emoji types (`👍 ❤️ 😂 😮 😢 🙏`). Counting reactions via `SELECT emoji, COUNT(*) ... GROUP BY emoji` scans `20 × 5,000 = 100,000` rows per feed load; reading a materialized 6-integer reaction summary map (`6 × 8 bytes = 48 bytes`) per post reads `20` summary records.</p>
+          </div>
+        
+        <p class="check-slider__prompt">By what factor (`100,000 / 20`) does reading materialized reaction summary maps reduce records scanned per feed request?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-reaction-modeling-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-reaction-modeling-n1"
+              aria-label="Numeric estimate in x"
+              placeholder="Enter numeric estimate (x)..."
+            />
+            <span class="quiz-unit-badge">x</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 100,000 individual reaction rows by 20 post summary records.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="reaction-modeling-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-reaction-modeling-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">100,000 / 20 = 5,000× fewer records touched per feed render, plus the viewer&#039;s own reaction (`viewer_reaction`) is fetched via a single batched lookup on `(post_id, viewer_user_id)`.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-reaction-modeling-t1" data-type="tradeoff" data-slug="reaction-modeling" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Preventing Double-Counting When a User Switches Reaction from `👍` to `❤️`</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">User U clicks `👍` on Post P, and 200 ms later changes their reaction to `❤️` (or double-clicks `👍`). If the service blindly emits `+1 ❤️` without knowing the previous state of `(post_id, user_id)`, the aggregate counters drift permanently.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How do you keep decoupled aggregate emoji counters accurate when users toggle or switch reactions?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-reaction-modeling-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-reaction-modeling-t1" value="0" />
+                  <span>Increment the aggregate counter directly from the client without storing a per-user `(post_id, user_id)` record</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-reaction-modeling-t1" value="1" />
+                  <span>Recompute `COUNT(*)` over all historical reactions synchronously on every read</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-reaction-modeling-t1" value="2" />
+                  <span>Enforce a unique primary key on `(post_id, user_id)` in the authoritative reaction store so an upsert returns the previous state (`old_emoji -&gt; new_emoji`), and emit the exact signed delta (`-1 old_emoji, +1 new_emoji`) via CDC/outbox to the sharded counter tier</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-reaction-modeling-t1" value="0" />
+                  <span>Stateless `+1` increments prevent a user from liking the same post 1,000 times</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-reaction-modeling-t1" value="1" />
+                  <span>Full `COUNT(*)` scans scale to millions of reactions per post at 100k QPS</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-reaction-modeling-t1" value="2" />
+                  <span>Only the authoritative `(post_id, user_id)` state transition knows whether an action was a net-new reaction (`+1 new`), an un-react (`-1 old`), or a switch (`-1 old, +1 new`)</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How can the counter pipeline know whether to decrement `👍` when a `❤️` request arrives?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="reaction-modeling-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-reaction-modeling-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">By keying the source-of-truth table on `(post_id, user_id)`, an atomic conditional upsert transitions `old_type -&gt; new_type` and emits the exact transition delta (`-1 old, +1 new`) only when the state actually changed.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1215,22 +1351,22 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

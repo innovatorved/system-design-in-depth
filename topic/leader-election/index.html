@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -955,12 +955,18 @@
 <!-- enriched -->
 <h2>Worked example: a Raft election timeline</h2><p>Five nodes, heartbeat 100 ms, election timeout randomised between 1000 and 2000 ms. The leader L (term 4) crashes at t = 0.</p><ul><li>t = 1,230 ms: follower B's timer fires first. B increments its term to 5, votes for itself, and sends RequestVote(term 5, lastLogIndex 812, lastLogTerm 4).</li><li>C, D and E have last index 812 or lower and have not voted in term 5, so they grant their votes. B has 4 of 5 votes, a majority, and becomes leader by about t = 1,235 ms.</li><li>B sends heartbeats immediately, which resets the others' timers before they fire. Total unavailability is about 1.2 seconds.</li></ul><p>Now suppose L was not dead but paused for 3 seconds. It wakes up still thinking it leads term 4 and sends AppendEntries. Every follower replies with "term 5", so L steps down. Any client write L accepted after waking cannot commit, because it can never reach a majority in term 4.</p><h2>Election approaches</h2><table><thead><tr><th>Approach</th><th>Safety basis</th><th>Failover time</th><th>Used by</th></tr></thead><tbody><tr><td>Raft or Zab internal election</td><td>Majority vote per term</td><td>About the election timeout</td><td>etcd, Consul, ZooKeeper</td></tr><tr><td>Lease in a consensus store</td><td>Store's linearizability plus lease TTL</td><td>Lease TTL, often 10 to 15 s</td><td>Kubernetes controllers (Lease objects), Patroni</td></tr><tr><td>ZooKeeper sequential ephemeral nodes</td><td>Lowest sequence number wins. Session expiry releases it</td><td>Session timeout</td><td>HBase, older Kafka controllers</td></tr><tr><td>Bully / ring algorithms</td><td>Highest ID wins. Assumes reliable failure detection</td><td>Varies</td><td>Textbooks. Unsafe under partitions</td></tr><tr><td>Database row lock or advisory lock</td><td>The database's locking</td><td>Connection timeout</td><td>Simple cron leaders</td></tr></tbody></table><h2>Failure modes</h2><ul><li><strong>Flapping leadership</strong> when timeouts sit near p99 network or disk latency. Raft's PreVote extension stops a partitioned node from disrupting the cluster with inflated terms when it rejoins.</li><li><strong>Leader in the wrong place:</strong> if the leader sits in a far region, every write pays the long round trip. Some systems support leader preferences or transfers.</li><li><strong>Clock-based leases on the leader</strong> (for fast local reads) are only safe with bounded clock drift. etcd and CockroachDB document this assumption.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="leader-election" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="leader-election" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Up-to-date log rule" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: The waking old leader" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Disruptive rejoin" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Up-to-date log rule" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: The waking old leader" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Disruptive rejoin" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Split-Vote Prevention &amp; Failover MTTR" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Ultra-Short Election Timeouts vs Flap Resilience" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-leader-election-c1" data-type="mcq" data-slug="leader-election" data-index="0">
@@ -1078,12 +1084,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="leader-election-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-leader-election-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">While isolated, the node inflated its term, and on rejoining that higher term deposes the healthy leader; PreVote stops it incrementing the term unless a majority would support it. Fencing tokens protect external resources from stale leaders but do nothing about term inflation.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-leader-election-n1" data-type="numeric" data-slug="leader-election" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Split-Vote Prevention &amp; Failover MTTR</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A 5-node Raft cluster configures a heartbeat interval of 150 ms and a randomized election timeout window of `[1,000 ms, 1,500 ms]`. After the leader crashes, the first follower&#039;s timer expires at 1,100 ms and a single round of `RequestVote` RPCs takes 20 ms.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many milliseconds after the leader crash is the new leader elected and ready to serve?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-leader-election-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-leader-election-n1"
+              aria-label="Numeric estimate in ms"
+              placeholder="Enter numeric estimate (ms)..."
+            />
+            <span class="quiz-unit-badge">ms</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Add the 1,100 ms election timeout expiration and the 20 ms `RequestVote` quorum round-trip.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="leader-election-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-leader-election-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Detection takes 1,100 ms (when the earliest randomized follower timer fires) plus 20 ms for a majority `RequestVote` RTT = 1,120 ms total failover time.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-leader-election-t1" data-type="tradeoff" data-slug="leader-election" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Ultra-Short Election Timeouts vs Flap Resilience</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An engineer lowers the Raft election timeout from 1,000 ms down to 15 ms (when cross-AZ p99 network latency + GC pauses regularly hit 25 ms) to get &quot;instant failover&quot;.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What failure mode does a 15 ms election timeout trigger, and how should timeouts be tuned?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-leader-election-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-leader-election-t1" value="0" />
+                  <span>The cluster achieves zero-downtime failover with higher write throughput</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-leader-election-t1" value="1" />
+                  <span>Followers stop voting altogether and the first leader stays permanent</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-leader-election-t1" value="2" />
+                  <span>The cluster enters continuous split-vote livelock and term churn (followers trigger elections on every minor GC pause or network jitter, stepping down the healthy leader and dropping write availability)</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-leader-election-t1" value="0" />
+                  <span>Election timeouts smaller than network RTT prevent unnecessary elections</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-leader-election-t1" value="1" />
+                  <span>Raft ignores `RequestVote` messages with higher terms</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-leader-election-t1" value="2" />
+                  <span>Raft requires `broadcastTime &lt;&lt; electionTimeout &lt;&lt; MTBF` (typically election timeout &gt;= 5–10× heartbeat RTT plus randomized jitter) so transient network/GC blips do not dethrone a healthy leader</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens in Raft whenever a follower receives a `RequestVote` with a higher term `T + 1`?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="leader-election-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-leader-election-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">In Raft, any higher-term `RequestVote` forces the current leader to step down. If the election timeout is near the network/GC tail latency, followers constantly start spurious elections and stall writes.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1242,7 +1378,7 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
@@ -1250,15 +1386,15 @@
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

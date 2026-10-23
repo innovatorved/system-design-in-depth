@@ -63,6 +63,59 @@ window.QUESTION_BANK["information-retrieval-system-design"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "information-retrieval-system-design-n1",
+    "topic": "information-retrieval-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Inverted Index Posting List Compression (Delta + Varint)",
+    "scenario": "A popular term appears in 25,000,000 documents. Storing raw 64-bit (`8-byte`) document IDs requires `200 MB` (`25M × 8B`). Sorting the docIDs and encoding gaps (`deltas`) with roaring bitmaps / SIMD-BP128 compresses each posting to an average of `1.6 bytes` per docID.",
+    "prompt": "How many megabytes (MB, where 1 MB = 10^6 bytes) does the compressed posting list occupy?",
+    "question": "How many megabytes (MB, where 1 MB = 10^6 bytes) does the compressed posting list occupy?",
+    "unit": "MB",
+    "answer": 40,
+    "tolerance": 0.2,
+    "hint": "Multiply 25,000,000 postings by 1.6 bytes per posting and divide by 10^6.",
+    "explanation": "25,000,000 × 1.6 bytes = 40,000,000 bytes = 40 MB (a 5× reduction from 200 MB), allowing 5× more posting lists to stay resident in OS page cache.",
+    "tags": [
+      "information-retrieval-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "information-retrieval-system-design-t1",
+    "topic": "information-retrieval-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Document-Partitioned (Local Index) vs Term-Partitioned (Global Index) Sharding",
+    "scenario": "You are sharding a 1-billion-document search index across 32 nodes. You must choose between partitioning by Document (`hash(doc_id) % 32`, where each shard holds a complete inverted index for 1/32 of docs) or partitioning by Term (`hash(term) % 32`, where each shard holds the full posting list for 1/32 of vocabulary words).",
+    "prompt": "Why do almost all production search engines (Elasticsearch, Solr, Lucene) use Document Partitioning rather than Term Partitioning?",
+    "question": "Why do almost all production search engines (Elasticsearch, Solr, Lucene) use Document Partitioning rather than Term Partitioning?",
+    "options": [
+      "Document partitioning requires sending megabytes of posting lists across the network to intersect a 4-word query",
+      "Term partitioning allows adding a single document by contacting only 1 shard",
+      "Document partitioning performs multi-term posting intersection locally in RAM on each shard and returns only the top-K docIDs/scores, while also surviving single-shard failures with graceful partial results and avoiding hot-term single-node bottlenecks"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Intersecting 50 MB posting lists over the network on every query is faster than local CPU intersection",
+      "A 500-word document only touches 1 shard in a term-partitioned index",
+      "In Term Partitioning, a 4-word query requires shipping giant posting lists across the network for intersection and hot query terms overload a single shard; Document Partitioning keeps intersections local and bounds network payload to `32 × K` tiny score tuples"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens in a term-partitioned index when you need to intersect the posting list for `\"system\"` (on Shard 3, 50M docs) with `\"design\"` (on Shard 19, 80M docs)?",
+    "explanation": "Document partitioning executes boolean/WAND intersections locally per shard and merges only the top K hits at the coordinator, avoiding cross-network posting-list transfers and hot-term skew.",
+    "tags": [
+      "information-retrieval-system-design",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -248,6 +301,59 @@ window.QUESTION_BANK["boolean-tiered-search"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "boolean-tiered-search-n1",
+    "topic": "boolean-tiered-search",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Skip-Pointer Intersection Speedup",
+    "scenario": "A boolean `AND` query intersects a rare term `\"quorum\"` (`1,000` postings) with a common term `\"system\"` (`10,000,000` postings). Using skip pointers / block-max headers on the 10M posting list (with blocks of 128 docIDs), advancing to each of the 1,000 target docIDs inspects on average 3 block headers + 16 entries (`19` comparisons per probe).",
+    "prompt": "How many thousands of comparisons does the skip-pointer intersection perform (`1,000 × 19` in thousands), compared to 10,001,000 in a naive linear merge?",
+    "question": "How many thousands of comparisons does the skip-pointer intersection perform (`1,000 × 19` in thousands), compared to 10,001,000 in a naive linear merge?",
+    "unit": "thousand comparisons",
+    "answer": 19,
+    "tolerance": 0.2,
+    "hint": "Multiply 1,000 probes from the short list by 19 comparisons per probe, expressed in thousands.",
+    "explanation": "Driving the intersection from the shortest posting list (`1,000` entries) and jumping across the 10M list via skip blocks performs only `1,000 × 19 = 19,000` comparisons (~526× fewer than scanning all 10M postings).",
+    "tags": [
+      "boolean-tiered-search",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "boolean-tiered-search-t1",
+    "topic": "boolean-tiered-search",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Tiered Index (Hot Tier 0 in RAM vs Cold Tier 1 on SSD)",
+    "scenario": "A web search engine indexes 5 billion pages, but 90% of queries are satisfied by the top 100 million high-PageRank/high-authority pages (`Tier 0`).",
+    "prompt": "How does a tiered inverted index optimize latency and hardware cost across the 5B corpus?",
+    "question": "How does a tiered inverted index optimize latency and hardware cost across the 5B corpus?",
+    "options": [
+      "Put all 5 billion documents in a single flat RAM tier across 10,000 servers",
+      "Search only the bottom 100M spam pages first",
+      "Query the compact in-memory `Tier 0` index first and only fall through to the larger SSD-backed `Tier 1 / Tier 2` indexes when `Tier 0` returns fewer than `K` high-confidence matches above the relevance threshold"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "RAM is cheaper than NVMe SSDs per terabyte",
+      "Low-quality pages have higher query hit rates",
+      "Early termination at `Tier 0` serves ~85–90% of queries entirely from fast RAM, reserving SSD I/O on deep tiers for rare tail queries"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "If Tier 0 already contains 100 high-scoring exact matches, do you need to query Tier 1?",
+    "explanation": "Tiered indexes partition documents by static quality/authority into decreasing tiers; most queries hit sufficient quality matches in Tier 0 and skip deeper tiers entirely.",
+    "tags": [
+      "boolean-tiered-search",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -313,6 +419,59 @@ window.QUESTION_BANK["tf-idf-relevance-scoring"] = [
       "tf-idf-relevance-scoring",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "tf-idf-relevance-scoring-n1",
+    "topic": "tf-idf-relevance-scoring",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Inverse Document Frequency (IDF) Weighting Ratio",
+    "scenario": "In a corpus of `N = 10,000,000` (`10^7`) documents, using base-10 `IDF(t) = log10(N / df(t))`, word A (`\"the\"`) appears in `1,000,000` (`10^6`) docs (`IDF = 1`), while rare technical term B (`\"pacelc\"`) appears in `100` (`10^2`) docs (`IDF = log10(10^7 / 10^2) = 5`).",
+    "prompt": "How many times higher is the IDF weight of `\"pacelc\"` (`5`) compared to `\"the\"` (`1`)?",
+    "question": "How many times higher is the IDF weight of `\"pacelc\"` (`5`) compared to `\"the\"` (`1`)?",
+    "unit": "x",
+    "answer": 5,
+    "tolerance": 0.2,
+    "hint": "Compute `log10(10^7 / 10^2) / log10(10^7 / 10^6) = 5 / 1`.",
+    "explanation": "`IDF(\"pacelc\") = log10(10^5) = 5`, while `IDF(\"the\") = log10(10^1) = 1`, giving the rare discriminative term 5× the per-unit weight of the common term.",
+    "tags": [
+      "tf-idf-relevance-scoring",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "tf-idf-relevance-scoring-t1",
+    "topic": "tf-idf-relevance-scoring",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Why Raw Linear Term Frequency (`TF`) Fails Without Sublinear Saturation",
+    "scenario": "In a naive `TF × IDF` scorer where `TF = raw_count(term, doc)`, an SEO spammer repeats a common query word 500 times at the bottom of a long document, outscoring a concise article that matches all 3 query terms once each.",
+    "prompt": "What mathematical defect in raw linear `TF × IDF` causes this, and how is it corrected?",
+    "question": "What mathematical defect in raw linear `TF × IDF` causes this, and how is it corrected?",
+    "options": [
+      "IDF assigns higher weights to stop words than rare words",
+      "Short documents are artificially favored by raw TF",
+      "Linear `TF` grows without bound as a single term repeats and ignores document length; applying sublinear TF saturation (e.g., `1 + log(tf)` or BM25 saturation `tf / (tf + k1)`) plus length normalization caps the boost of repeating a single word"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "A document mentioning one word 500 times is 500× more relevant than a document matching all query terms",
+      "Longer documents have lower raw term counts by default",
+      "Relevance exhibits diminishing returns after the first few occurrences of a term; saturating TF ensures matching additional distinct high-IDF query terms always beats spamming a single term"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Does the 50th occurrence of a word add as much relevance signal as the 1st occurrence?",
+    "explanation": "Raw linear TF allows one repeated term to dominate multi-term queries and favors long verbose documents. Sublinear TF saturation and length normalization lead directly to BM25.",
+    "tags": [
+      "tf-idf-relevance-scoring",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -380,6 +539,59 @@ window.QUESTION_BANK["bm25-production-ranking"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "bm25-production-ranking-n1",
+    "topic": "bm25-production-ranking",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: BM25 Term Frequency Saturation Ceiling",
+    "scenario": "In the BM25 term-frequency saturation formula `score_tf = (tf × (k1 + 1)) / (tf + k1)` (for a document of average length where `|D| = avgdl`), you set `k1 = 1.5`.",
+    "prompt": "As `tf` approaches infinity (`tf -> ∞`), what asymptotic maximum multiplier (`k1 + 1`) does the BM25 TF component approach?",
+    "question": "As `tf` approaches infinity (`tf -> ∞`), what asymptotic maximum multiplier (`k1 + 1`) does the BM25 TF component approach?",
+    "unit": "x",
+    "answer": 2.5,
+    "tolerance": 0.2,
+    "hint": "Take the limit of `(tf × (k1 + 1)) / (tf + k1)` as `tf -> ∞`, which equals `k1 + 1`.",
+    "explanation": "As `tf -> ∞`, `tf / (tf + k1) -> 1`, so the BM25 TF factor is strictly bounded above by `k1 + 1 = 1.5 + 1 = 2.5`—meaning even 10,000 repetitions of a term can never score more than 2.5× a single occurrence!",
+    "tags": [
+      "bm25-production-ranking",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "bm25-production-ranking-t1",
+    "topic": "bm25-production-ranking",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Multi-Field BM25 (`BM25F`) vs Concatenating All Fields into One Blob",
+    "scenario": "An e-commerce search index has a short `title` field (avg 8 words) and a long `description` field (avg 400 words). When both are concatenated into a single `body` field with one `b = 0.75` length normalizer, matches in the `title` are diluted by the 400-word description length.",
+    "prompt": "How should production BM25 ranking handle structured documents with `title`, `brand`, and `description` fields?",
+    "question": "How should production BM25 ranking handle structured documents with `title`, `brand`, and `description` fields?",
+    "options": [
+      "Set `b = 0` and `k1 = 0` so neither term frequency nor field length matters",
+      "Delete the `description` field from the index so only titles are searchable",
+      "Use per-field length normalization and field boosting (`BM25F` / `multi_match` with `title^3`, `brand^2`, `description^1`), computing length normalization against each field's own `avgdl`"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Ignoring field structure improves precision on title matches",
+      "Users never search for keywords that appear in product descriptions",
+      "Normalizing `title` against `avgdl_title` (8 words) and boosting title/brand weights preserves strong signal for concise title hits without letting long descriptions penalize them"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why does a match in an 8-word title carry much higher density than a match in a 400-word description?",
+    "explanation": "Concatenating fields conflates the length distributions of short high-signal fields (`title`) and long noisy fields (`description`). Per-field normalization (`BM25F`) scores each field against its own average length and applies explicit field weights.",
+    "tags": [
+      "bm25-production-ranking",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -445,6 +657,59 @@ window.QUESTION_BANK["stop-words-and-champion-lists"] = [
       "stop-words-and-champion-lists",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "stop-words-and-champion-lists-n1",
+    "topic": "stop-words-and-champion-lists",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Block-Max WAND Early Termination Savings",
+    "scenario": "A query matches 500,000 candidate postings across 3 terms. Using Block-Max WAND (Weak AND) with precomputed per-block upper-bound BM25 scores, the scorer skips 92% of candidate postings whose maximum possible score cannot beat the current top-100 heap threshold.",
+    "prompt": "How many thousands of documents are actually fully scored (`8% of 500,000`, in thousands)?",
+    "question": "How many thousands of documents are actually fully scored (`8% of 500,000`, in thousands)?",
+    "unit": "thousand docs",
+    "answer": 40,
+    "tolerance": 0.2,
+    "hint": "Compute `500,000 × 0.08` and express in thousands.",
+    "explanation": "Skipping 92% of candidates means only `500,000 × 0.08 = 40,000` documents (40 thousand) undergo full BM25 evaluation—giving a >10× CPU speedup with exact top-K recall.",
+    "tags": [
+      "stop-words-and-champion-lists",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "stop-words-and-champion-lists-t1",
+    "topic": "stop-words-and-champion-lists",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Dropping Stop Words at Index Time vs Keeping Positions with WAND Pruning",
+    "scenario": "A classic search textbook suggests deleting stop words (`\"to\"`, `\"be\"`, `\"or\"`, `\"not\"`, `\"the\"`, `\"in\"`) at index time to save space, but users start searching exact phrases like `\"to be or not to be\"`, `\"the who\"`, and `\"vitamin a\"`.",
+    "prompt": "How do modern Lucene/Elasticsearch engines handle stop words without breaking phrase search or blowing up query latency?",
+    "question": "How do modern Lucene/Elasticsearch engines handle stop words without breaking phrase search or blowing up query latency?",
+    "options": [
+      "Strip all stop words permanently at index time and return 0 results for `\"to be or not to be\"`",
+      "Score every occurrence of `\"the\"` across 100M documents on every single query",
+      "Retain stop words and their positional postings for exact phrase/proximity queries, but dynamically prune low-IDF stop words during non-phrase bag-of-words retrieval via Block-Max WAND / MaxScore"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Users never search for titles, bands, or phrases containing common words",
+      "Exhaustively scoring 100M postings for `\"the\"` takes 0 ms",
+      "Modern block compression makes storing common postings cheap, and Block-Max WAND skips blocks whose upper-bound IDF contribution cannot enter the top-K heap while preserving exact phrase matching when quoted"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How did Lucene 8+ eliminate the old need to delete stop words from the index?",
+    "explanation": "Deleting stop words at index time irreversibly breaks phrase queries (`\"to be or not to be\"`). Keeping them compressed on disk and letting Block-Max WAND dynamically skip low-IDF blocks during bag-of-words queries gives both accuracy and speed.",
+    "tags": [
+      "stop-words-and-champion-lists",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -512,6 +777,59 @@ window.QUESTION_BANK["query-understanding-pipeline"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "query-understanding-pipeline-n1",
+    "topic": "query-understanding-pipeline",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Synonym Expansion Query Fan-Out Bound",
+    "scenario": "A query has 4 tokens, and an unconstrained synonym table expands each token into 5 synonyms. If the query parser expands all combinatorial phrase permutations (`5^4`), it generates 625 sub-queries; if instead it expands per-token `OR` clauses (`4 × 5`), it evaluates 20 term posting lists.",
+    "prompt": "How many total term posting lists (`4 tokens × 5 synonyms`) are evaluated in the per-token `OR` expansion instead of `5^4 = 625` phrase permutations?",
+    "question": "How many total term posting lists (`4 tokens × 5 synonyms`) are evaluated in the per-token `OR` expansion instead of `5^4 = 625` phrase permutations?",
+    "unit": "posting lists",
+    "answer": 20,
+    "tolerance": 0.2,
+    "hint": "Multiply 4 tokens by 5 synonyms per token.",
+    "explanation": "Expanding synonyms at the token position level (`(t1a OR t1b...) AND (t2a OR t2b...)`) evaluates `4 × 5 = 20` posting lists instead of `5^4 = 625` combinatorial phrase rewrites.",
+    "tags": [
+      "query-understanding-pipeline",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "query-understanding-pipeline-t1",
+    "topic": "query-understanding-pipeline",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Index-Time vs Query-Time Synonym Expansion",
+    "scenario": "Your e-commerce catalog frequently adds new trending slang and brand synonyms (e.g., `\"sneakers\" <-> \"trainers\" <-> \"kicks\"`) that must take effect within 1 minute without re-indexing 200M product documents.",
+    "prompt": "Should you apply synonym expansion at Index Time or Query Time, and what is the trade-off?",
+    "question": "Should you apply synonym expansion at Index Time or Query Time, and what is the trade-off?",
+    "options": [
+      "Expand all synonyms exclusively at Index Time so every synonym change requires a 12-hour full re-index of 200M products",
+      "Never use synonyms and require exact character matches",
+      "Apply synonym expansion primarily at Query Time (with down-weighted synonym boost vs exact original token match) so updates take effect instantly without re-indexing, reserving index-time canonicalization only for stable normalizations (lowercase/stemming)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Re-indexing 200M documents takes less than 1 second",
+      "Index-time synonyms preserve separate IDF statistics for the original word vs its synonym",
+      "Query-time expansion allows instant dictionary updates, keeps index size smaller, preserves accurate per-term IDF, and lets you boost exact token matches higher than expanded synonyms"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens to index size, update agility, and IDF statistics when you inject synonyms into the index vs the query?",
+    "explanation": "Index-time synonyms bloat the index, skew IDF, and require full re-indexing whenever the synonym dictionary changes. Query-time expansion applies dictionary edits immediately and allows weighting exact matches above synonyms.",
+    "tags": [
+      "query-understanding-pipeline",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -577,6 +895,59 @@ window.QUESTION_BANK["search-feedback-and-relevance-signals"] = [
       "search-feedback-and-relevance-signals",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "search-feedback-and-relevance-signals-n1",
+    "topic": "search-feedback-and-relevance-signals",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Position-Bias De-Biased Click-Through Rate (Inverse Propensity Scoring)",
+    "scenario": "Document A at Rank 1 receives a raw CTR of `20%` where the rank-1 examination probability (propensity) is `0.80`. Document B at Rank 5 receives a raw CTR of `12%` where the rank-5 examination probability is `0.20`. Using Inverse Propensity Scoring (`debiased_relevance = CTR / propensity`), you compare their true relevance.",
+    "prompt": "What is the de-biased relevance rate (in %, i.e. `12% / 0.20`) of Document B at Rank 5?",
+    "question": "What is the de-biased relevance rate (in %, i.e. `12% / 0.20`) of Document B at Rank 5?",
+    "unit": "%",
+    "answer": 60,
+    "tolerance": 0.2,
+    "hint": "Divide Document B's 12% raw CTR by its 0.20 examination propensity.",
+    "explanation": "Document B's de-biased relevance upon actually being seen is `12% / 0.20 = 60%`, whereas Document A at Rank 1 is only `20% / 0.80 = 25%`—proving that raw clicks without position-bias correction reward whatever happens to be ranked #1.",
+    "tags": [
+      "search-feedback-and-relevance-signals",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "search-feedback-and-relevance-signals-t1",
+    "topic": "search-feedback-and-relevance-signals",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Raw Click Counts vs Position-Debiased Dwell-Time Signals",
+    "scenario": "A search team feeds raw click counts (`clicks / impressions`) directly back into their ranking model as the primary boost feature. Within two weeks, clickbait titles and historically #1-ranked results become impossible to displace even when better documents arrive.",
+    "prompt": "What two biases caused this feedback loop, and how do production search engines construct clean learning-to-rank targets?",
+    "question": "What two biases caused this feedback loop, and how do production search engines construct clean learning-to-rank targets?",
+    "options": [
+      "Rank 10 results get 10× more accidental views than Rank 1 results",
+      "Short bounce clicks (<2 seconds before hitting Back) indicate high user satisfaction",
+      "Raw clicks suffer from strong Position Bias (users look at Rank 1 far more than Rank 8) and Clickbait Bias; combine Inverse Propensity Weighting (or pairwise click-skip models) with long-dwell-time / conversion satisfaction signals"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Users examine every result from Rank 1 to Rank 50 with equal probability",
+      "A pogo-stick bounce back to the SERP means the user found their answer",
+      "Filtering out short-dwell bounces (\"pogo-sticking\") and normalizing by rank examination propensity prevents self-reinforcing rich-get-richer ranking loops"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why does a user click result #1, return to the search page 2 seconds later, and spend 4 minutes reading result #3?",
+    "explanation": "Raw clicks conflate rank visibility with relevance and reward clickbait. Using pairwise skip-above pairs (clicked #3 after skipping #1 and #2) plus long-dwell (>30s) or purchase signals produces unbiased training labels.",
+    "tags": [
+      "search-feedback-and-relevance-signals",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -644,6 +1015,59 @@ window.QUESTION_BANK["search-evaluation-metrics"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "search-evaluation-metrics-n1",
+    "topic": "search-evaluation-metrics",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Discounted Cumulative Gain (`DCG@3`) Calculation",
+    "scenario": "For a query, the top 3 returned documents have human relevance grades `rel_1 = 3`, `rel_2 = 2`, and `rel_3 = 0`. Using the formula `DCG@3 = rel_1 / log2(2) + rel_2 / log2(3) + rel_3 / log2(4)` and approximating `log2(3) ≈ 1.6` (with `log2(2) = 1`), you compute `DCG@3`.",
+    "prompt": "What is the value of `DCG@3` (`3 / 1 + 2 / 1.6 + 0`)?",
+    "question": "What is the value of `DCG@3` (`3 / 1 + 2 / 1.6 + 0`)?",
+    "unit": "score",
+    "answer": 4.25,
+    "tolerance": 0.2,
+    "hint": "Compute `3 + (2 / 1.6) = 3 + 1.25`.",
+    "explanation": "`rel_1 / log2(2) = 3 / 1 = 3.0`, `rel_2 / log2(3) ≈ 2 / 1.6 = 1.25`, and `rel_3 = 0`, giving `DCG@3 = 4.25`.",
+    "tags": [
+      "search-evaluation-metrics",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "search-evaluation-metrics-t1",
+    "topic": "search-evaluation-metrics",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Choosing `MRR` vs `NDCG@K` vs `Recall@K` Across Retrieval Stages",
+    "scenario": "Your search pipeline has two stages: Stage 1 (Candidate Generation retrieving top 500 docs from 100M) and Stage 2 (Cross-Encoder Reranker ordering the top 10 docs shown to the user for broad exploratory queries with graded relevance 0–3).",
+    "prompt": "Which offline evaluation metric should govern Stage 1 vs Stage 2, and why?",
+    "question": "Which offline evaluation metric should govern Stage 1 vs Stage 2, and why?",
+    "options": [
+      "Optimize Stage 1 for `Precision@1` and Stage 2 for `Recall@500`",
+      "Use only binary `MRR` for exploratory multi-document shopping queries",
+      "Optimize Stage 1 Candidate Generation for `Recall@500` (ensuring relevant docs enter the funnel) and Stage 2 Reranking for `NDCG@10` (rewarding graded relevance and logarithmic rank position at the top of the page)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Stage 1 ordering between rank 320 and rank 321 is directly visible to the user",
+      "Stage 2 can recover documents that Stage 1 failed to retrieve",
+      "A two-stage funnel cannot rank a document in Stage 2 if Stage 1 missed it (`Recall@500`), while the user-facing top 10 requires position-discounted graded precision (`NDCG@10`)"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Can a Stage 2 reranker ever rescue a relevant document that wasn't included in Stage 1's top 500 candidates?",
+    "explanation": "Stage 1 retrieval is a filter whose ceiling sets the entire pipeline's recall (`Recall@K`), whereas Stage 2 reranking determines the exact graded ordering the user sees (`NDCG@10` or `MRR` for navigational single-answer queries).",
+    "tags": [
+      "search-evaluation-metrics",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -709,6 +1133,59 @@ window.QUESTION_BANK["search-index-synchronization"] = [
       "search-index-synchronization",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "search-index-synchronization-n1",
+    "topic": "search-index-synchronization",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Near-Real-Time (NRT) Segment Refresh Overhead",
+    "scenario": "An Elasticsearch shard ingests 5,000 docs/sec. When `refresh_interval` is set to `1s`, it creates 60 immutable mini-segments per minute; increasing `refresh_interval` to `5s` creates 12 larger segments per minute.",
+    "prompt": "By what factor (`60 / 12`) does changing `refresh_interval` from `1s` to `5s` reduce the rate of new Lucene segment creation and merge pressure?",
+    "question": "By what factor (`60 / 12`) does changing `refresh_interval` from `1s` to `5s` reduce the rate of new Lucene segment creation and merge pressure?",
+    "unit": "x",
+    "answer": 5,
+    "tolerance": 0.2,
+    "hint": "Divide 60 refreshes/minute by 12 refreshes/minute.",
+    "explanation": "Relaxing the NRT refresh interval from 1s to 5s reduces new segment creation by 5× (from 60/min to 12/min), dramatically lowering background segment merge I/O while keeping search freshness within 5 seconds.",
+    "tags": [
+      "search-index-synchronization",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "search-index-synchronization-t1",
+    "topic": "search-index-synchronization",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: App-Level Dual Writes vs CDC Log Tailing for Search Index Sync",
+    "scenario": "Whenever an application service updates a product in PostgreSQL, it also makes a synchronous HTTP call to update Elasticsearch. Under concurrent updates (`Tx A` and `Tx B`) or partial network failures, PostgreSQL and Elasticsearch permanently drift out of sync.",
+    "prompt": "Why do application dual-writes cause permanent index drift, and how do you guarantee eventual convergence?",
+    "question": "Why do application dual-writes cause permanent index drift, and how do you guarantee eventual convergence?",
+    "options": [
+      "Wrap PostgreSQL and Elasticsearch in a distributedXA Two-Phase Commit transaction across HTTP",
+      "Write to Elasticsearch first and only update PostgreSQL if Elasticsearch succeeds",
+      "Stream committed mutations from PostgreSQL's WAL via Change Data Capture (Debezium / transactional outbox) into Kafka and apply updates to Elasticsearch conditionally using the source DB's monotonic `version` / `lsn` (`external_version`)"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Elasticsearch supports native SQL XA two-phase commit locks",
+      "Network packets from two concurrent app threads always arrive at Elasticsearch in the exact order PostgreSQL committed them",
+      "CDC guarantees every committed DB mutation is emitted in commit order, and using `version_type=external` (set to the DB `lsn` or `updated_version`) ensures out-of-order retries never overwrite newer documents"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens if Thread A commits `v1` in Postgres before Thread B commits `v2`, but Thread A's HTTP request to Elasticsearch arrives *after* Thread B's?",
+    "explanation": "Application dual-writes suffer from partial failure and out-of-order network delivery races. CDC + external monotonic version comparisons (`if seq_no > current_seq_no`) plus periodic reconciliation guarantee convergence.",
+    "tags": [
+      "search-index-synchronization",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -776,6 +1253,59 @@ window.QUESTION_BANK["search-index-sharding"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "search-index-sharding-n1",
+    "topic": "search-index-sharding",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Custom Tenant Routing Fan-Out Reduction",
+    "scenario": "A multi-tenant B2B search cluster has 40 shards. Every search query is scoped to a single `tenant_id`. Without custom routing, every query scatters across all 40 shards; with `_routing = tenant_id`, each tenant's documents live on 1 shard (or 2 shards for enterprise tenants).",
+    "prompt": "For standard tenants routed to 1 shard, by what factor (`40 / 1`) does `_routing = tenant_id` reduce per-query shard fan-out and coordinator merge load?",
+    "question": "For standard tenants routed to 1 shard, by what factor (`40 / 1`) does `_routing = tenant_id` reduce per-query shard fan-out and coordinator merge load?",
+    "unit": "x",
+    "answer": 40,
+    "tolerance": 0.2,
+    "hint": "Compare querying all 40 shards vs querying the 1 shard where `hash(tenant_id) % 40` resides.",
+    "explanation": "Routing by `tenant_id` directs both indexing and search to a single shard instead of scattering across all 40 shards—increasing cluster query throughput by nearly 40×.",
+    "tags": [
+      "search-index-sharding",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "search-index-sharding-t1",
+    "topic": "search-index-sharding",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Naive `tenant_id` Routing vs Partitioned Routing for Whale Tenants",
+    "scenario": "You route a 40-shard Elasticsearch cluster by `_routing = tenant_id`. One enterprise \"whale\" tenant accounts for 35% of all documents in the company, causing the single shard that owns `hash(whale_tenant) % 40` to run out of disk and CPU.",
+    "prompt": "How do you preserve targeted shard routing for the 99% of normal tenants while preventing whale tenants from overloading a single shard?",
+    "question": "How do you preserve targeted shard routing for the 99% of normal tenants while preventing whale tenants from overloading a single shard?",
+    "options": [
+      "Remove routing so every tiny 100-document tenant must query all 40 shards again",
+      "Tell the largest enterprise customer to delete 90% of their data",
+      "Use composite/partitioned routing (`routing_partition_size = P` for large tenants, or move whale tenants to dedicated indices) so a whale tenant hashes across a fixed subset of `P` shards (e.g., 4 or 8 shards) while small tenants hit 1 shard"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Forcing 40-way scatter-gather for tiny tenants is optimal",
+      "Capping enterprise customer growth is good business strategy",
+      "Bounded multi-shard routing (`(hash(tenant) + hash(doc_id) % P) % N`) spreads a giant tenant across `P` shards while still bounding its queries to `P << N` shards"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Can a whale tenant spread across `P = 4` shards while normal tenants use `P = 1` shard?",
+    "explanation": "Elasticsearch's `index.routing_partition_size` (or tiered tenant-to-index mapping) spreads a large tenant across `P` shards instead of 1, preventing single-shard hotspots without falling back to full-cluster scatter-gather.",
+    "tags": [
+      "search-index-sharding",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -841,6 +1371,59 @@ window.QUESTION_BANK["crawler-and-indexing-pipeline"] = [
       "crawler-and-indexing-pipeline",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "crawler-and-indexing-pipeline-n1",
+    "topic": "crawler-and-indexing-pipeline",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: SimHash Near-Duplicate Storage & Indexing Savings",
+    "scenario": "A web crawler fetches 100,000,000 pages per day (averaging 20 KB of extracted text = `2 TB/day`), but 40% of fetched URLs are near-duplicates (mirrors, tracking parameters, print views) detected within Hamming distance `<= 3` of an existing 64-bit SimHash fingerprint.",
+    "prompt": "How many terabytes per day (TB/day) of downstream NLP/indexing work and storage are saved by dropping the 40% near-duplicate pages before indexing?",
+    "question": "How many terabytes per day (TB/day) of downstream NLP/indexing work and storage are saved by dropping the 40% near-duplicate pages before indexing?",
+    "unit": "TB/day",
+    "answer": 0.8,
+    "tolerance": 0.2,
+    "hint": "Multiply 2 TB/day by the 40% (0.40) near-duplicate fraction.",
+    "explanation": "Filtering out the 40% near-duplicates via 64-bit SimHash saves `2 TB/day × 0.40 = 0.8 TB/day` (800 GB/day) of inverted index bloat and prevents duplicate pages from crowding the top 10 search results.",
+    "tags": [
+      "crawler-and-indexing-pipeline",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "crawler-and-indexing-pipeline-t1",
+    "topic": "crawler-and-indexing-pipeline",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Exact Cryptographic Hash (`SHA-256`) vs Locality-Sensitive `SimHash` / `MinHash`",
+    "scenario": "Web pages often differ only by a dynamic timestamp in the footer, an ad banner ID, or a session token in links. Your crawler uses `SHA-256(html)` to deduplicate content.",
+    "prompt": "Why does `SHA-256` fail to deduplicate web pages, and which algorithm solves near-duplicate detection at scale?",
+    "question": "Why does `SHA-256` fail to deduplicate web pages, and which algorithm solves near-duplicate detection at scale?",
+    "options": [
+      "`SHA-256` maps pages that differ by 1 character to adjacent hash values",
+      "Compare every new page against all 10 billion existing pages using `O(N)` Levenshtein edit distance",
+      "Cryptographic hashes exhibit the avalanche effect (a 1-byte timestamp change flips ~50% of bits); use shingle-based `SimHash` (64-bit fingerprint where Hamming distance <= 3 detects near-duplicates) or `MinHash` LSH on extracted main body text"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "`SHA-256` is a locality-sensitive hash",
+      "Running `10^10` string edit-distance comparisons per page takes microseconds",
+      "SimHash maps similar feature/shingle sets to 64-bit integers that differ in only 1–3 bits, enabling O(1) bit-table lookups for near-duplicate suppression"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens to a `SHA-256` digest when a single digit in `\"Rendered at 12:00:01\"` changes to `\"12:00:02\"`?",
+    "explanation": "Cryptographic hashes are designed to destroy locality on a 1-bit change. Charikar's 64-bit SimHash preserves cosine similarity so near-identical pages have a Hamming distance of <= 3 bits.",
+    "tags": [
+      "crawler-and-indexing-pipeline",
+      "tradeoff",
+      "staff"
     ]
   }
 ];
@@ -1146,6 +1729,59 @@ window.QUESTION_BANK["did-you-mean-and-spell-correction"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "did-you-mean-and-spell-correction-n1",
+    "topic": "did-you-mean-and-spell-correction",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Naive Edit-Distance Candidate Explosion vs Levenshtein Automaton",
+    "scenario": "For a 10-letter query word over a 26-letter alphabet, generating all possible edit-distance-1 strings produces ~547 strings, and edit-distance-2 produces ~150,000 strings to look up in a dictionary. Intersecting a compiled Levenshtein DFA directly against a Finite State Transducer (FST) vocabulary of 1,000,000 words visits only 300 FST states.",
+    "prompt": "By what factor (`150,000 / 300`) does an FST + Levenshtein Automaton intersection reduce state/lookup evaluations compared to enumerating 150,000 edit-2 candidate strings?",
+    "question": "By what factor (`150,000 / 300`) does an FST + Levenshtein Automaton intersection reduce state/lookup evaluations compared to enumerating 150,000 edit-2 candidate strings?",
+    "unit": "x",
+    "answer": 500,
+    "tolerance": 0.2,
+    "hint": "Divide 150,000 enumerated strings by 300 FST states visited.",
+    "explanation": "150,000 / 300 = 500× fewer probes: intersecting the deterministic Levenshtein state machine with the prefix-shared FST prunes entire dead branches of the alphabet immediately.",
+    "tags": [
+      "did-you-mean-and-spell-correction",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "did-you-mean-and-spell-correction-t1",
+    "topic": "did-you-mean-and-spell-correction",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Isolated Dictionary Edit Distance vs Context-Sensitive Noisy Channel (`P(Q|C) × P(C)`)",
+    "scenario": "A user types `\"flights tountain view\"` (`\"tountain\"` is edit distance 1 from both `\"fountain\"` and `\"mountain\"`, and `\"tountain\"` is not a real word) or types a real-word typo like `\"form\"` instead of `\"from\"` in `\"flights form sfo\"`.",
+    "prompt": "Why is isolated single-word dictionary edit distance insufficient, and how do production spell correctors rank candidates?",
+    "question": "Why is isolated single-word dictionary edit distance insufficient, and how do production spell correctors rank candidates?",
+    "options": [
+      "Always replace every word with the alphabetically first edit-distance-1 word in the Oxford dictionary",
+      "Never correct a query if every token exists in the dictionary (`\"flights form sfo\"`)",
+      "Use the Noisy Channel / Contextual Language Model (`argmax_C P(typo | C) × P(C_context)` trained on query logs and click reformulations) so bigram/trigram context (`\"flights from sfo\"`, `\"mountain view\"`) disambiguates both non-word and real-word typos"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "`\"fountain view\"` is just as likely after `\"flights to\"` as `\"mountain view\"`",
+      "Real-word typos like `\"form\"` instead of `\"from\"` never happen in search",
+      "Combining an error model `P(Q|C)` (weighted phonetic/keyboard-adjacency edit distance) with a query-log language prior `P(C)` resolves context and fixes real-word typos"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "How do you know `\"mountain\"` beats `\"fountain\"` when the next word is `\"view\"`?",
+    "explanation": "Isolated edit distance cannot distinguish `\"fountain\"` vs `\"mountain\"` (both edit distance 1) or catch real-word typos (`\"form\"` vs `\"from\"`). Scoring `P(Q|C) × P(C)` using query-log n-gram priors and user reformulation graphs selects the contextually probable query.",
+    "tags": [
+      "did-you-mean-and-spell-correction",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -1212,6 +1848,59 @@ window.QUESTION_BANK["related-searches"] = [
       "staff",
       "inline"
     ]
+  },
+  {
+    "id": "related-searches-n1",
+    "topic": "related-searches",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Session Co-Occurrence Pruning with PMI / Support Threshold",
+    "scenario": "From 50,000,000 daily search sessions, raw query pairs `(q1, q2)` generate 200,000,000 distinct candidate edges. Applying a minimum session support threshold (`count >= 10`) and Pointwise Mutual Information (PMI) filtering retains the top 8% of meaningful reformulation edges.",
+    "prompt": "How many millions of clean query-reformulation edges (`8% of 200M`) remain in the Related Searches serving graph?",
+    "question": "How many millions of clean query-reformulation edges (`8% of 200M`) remain in the Related Searches serving graph?",
+    "unit": "million edges",
+    "answer": 16,
+    "tolerance": 0.2,
+    "hint": "Multiply 200 million by 0.08.",
+    "explanation": "Retaining 8% of 200M raw pairs keeps 16 million high-signal edges (removing one-off typos, PII queries, and accidental co-occurrences with navigational queries like `\"weather\"`).",
+    "tags": [
+      "related-searches",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "related-searches-t1",
+    "topic": "related-searches",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Raw Co-Occurrence Frequency vs Pointwise Mutual Information (PMI) + Embedding Diversity",
+    "scenario": "A user searches `\"distributed consensus\"` and later in the same browser session checks `\"gmail login\"`. Because `\"gmail login\"` is searched 10M times a day, raw co-occurrence count ranks `\"gmail login\"` as the #1 related search for almost every rare technical query.",
+    "prompt": "How do you prevent globally popular navigational queries from polluting Related Searches, and ensure diverse suggestions?",
+    "question": "How do you prevent globally popular navigational queries from polluting Related Searches, and ensure diverse suggestions?",
+    "options": [
+      "Rank related searches purely by `count(q1, q2)` with no normalization",
+      "Show 8 nearly identical spelling variations of the exact same query",
+      "Normalize co-occurrence by marginal popularity using Pointwise Mutual Information (`PMI = log P(q1, q2) / (P(q1)P(q2))` or bipartite query-url click graphs), enforce PII/k-anonymity thresholds, and apply Maximal Marginal Relevance (MMR) for semantic diversity"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Raw counts automatically penalize globally frequent queries like `\"gmail\"`",
+      "Showing 8 near-duplicate plurals maximizes user exploration",
+      "Dividing by marginal probability `P(q2)` cancels out globally popular noise queries, k-anonymity (`>= K` distinct users) blocks PII leakage, and MMR clusters out redundant paraphrases"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "Why does `P(q1, q2)` look high whenever `P(q2)` is huge, even if `q1` and `q2` are completely independent (`P(q1, q2) ≈ P(q1)P(q2)`)?",
+    "explanation": "Independent events co-occur with probability `P(q1)P(q2)`. Pointwise Mutual Information (PMI) measures how much more often `q1` and `q2` co-occur than random chance, eliminating popular unrelated queries.",
+    "tags": [
+      "related-searches",
+      "tradeoff",
+      "staff"
+    ]
   }
 ];
 
@@ -1277,6 +1966,59 @@ window.QUESTION_BANK["recent-searches-system-design"] = [
       "recent-searches-system-design",
       "staff",
       "inline"
+    ]
+  },
+  {
+    "id": "recent-searches-system-design-n1",
+    "topic": "recent-searches-system-design",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Bounded Ring-Buffer / Redis ZSET Per-User Storage",
+    "scenario": "A Recent Searches service stores only the latest `K = 20` deduplicated queries per active user for `50,000,000` users. Each entry (`query_string` + `8-byte timestamp` + ZSET overhead) averages `50 bytes` (`1,000 bytes` = `1 KB` per user).",
+    "prompt": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of primary storage are needed to hold the bounded 20-item history across all 50,000,000 users?",
+    "question": "How many gigabytes (GB, where 1 GB = 10^9 bytes) of primary storage are needed to hold the bounded 20-item history across all 50,000,000 users?",
+    "unit": "GB",
+    "answer": 50,
+    "tolerance": 0.2,
+    "hint": "Multiply 50,000,000 users by 1,000 bytes (1 KB) per user and divide by 10^9.",
+    "explanation": "50,000,000 users × 1,000 bytes/user = 50 × 10^9 bytes = 50 GB total across the entire 50M-user base because history is strictly bounded to the top 20 items per user.",
+    "tags": [
+      "recent-searches-system-design",
+      "numeric",
+      "capacity-planning"
+    ]
+  },
+  {
+    "id": "recent-searches-system-design-t1",
+    "topic": "recent-searches-system-design",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Append-Only Unbounded Log vs Bounded Deduplicated LWW Set (`ZADD` + `ZREMRANGEBYRANK`)",
+    "scenario": "When a user searches `\"system design\"`, then `\"raft\"`, and then `\"system design\"` again, the Recent Searches dropdown must show `[\"system design\", \"raft\"]` (moving the duplicate to the top rather than showing `\"system design\"` twice) and cap storage at 20 items.",
+    "prompt": "Which data structure and write pattern achieves O(log K) deduplication, recency re-ordering, and bounded size?",
+    "question": "Which data structure and write pattern achieves O(log K) deduplication, recency re-ordering, and bounded size?",
+    "options": [
+      "Append every search to an unbounded SQL table and run `SELECT DISTINCT query ORDER BY ts DESC` over 10 years of rows on every keystroke",
+      "Store recent searches only in a browser cookie so they disappear when switching devices",
+      "Maintain a per-user Sorted Set (`ZSET` / bounded indexed map) keyed by `normalized_query` with score `timestamp_ms`: on search, execute `ZADD user_id now normalized_query` followed by `ZREMRANGEBYRANK user_id 0 -21`"
+    ],
+    "correctOption": 2,
+    "reasons": [
+      "Scanning 50,000 historical rows per keystroke is faster than reading a 20-element set",
+      "Cross-device sync works automatically with local-only cookies",
+      "A Sorted Set keyed by the normalized query naturally deduplicates and updates the timestamp to the top in one atomic operation, while trimming ranks beyond 20 bounds memory strictly to `O(K)`"
+    ],
+    "correctReason": 2,
+    "answer": {
+      "option": 2,
+      "reason": 2
+    },
+    "hint": "What happens in a Sorted Set (`ZSET`) when you `ZADD` an existing member with a newer timestamp score?",
+    "explanation": "A Sorted Set (`ZSET` or compact per-user array blob in KV) keyed by the normalized query string automatically deduplicates repeat searches by updating their timestamp score to `now`, and `ZREMRANGEBYRANK` bounds size to 20.",
+    "tags": [
+      "recent-searches-system-design",
+      "tradeoff",
+      "staff"
     ]
   }
 ];

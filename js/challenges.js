@@ -471,6 +471,16 @@
       if (res && res.success && root.Progress) {
         root.Progress.markComplete('challenge:' + ch.id);
       }
+      if (root.Analytics && root.Analytics.trackChallengeVerify) {
+        root.Analytics.trackChallengeVerify({
+          challengeId: ch.id,
+          passed: Boolean(res && res.success),
+          score: res ? (res.score || (res.success ? 100 : 0)) : 0,
+          attempts: 1,
+          rootCauseCorrect: Boolean(res && res.rootCauseOk),
+          hotfixPassed: Boolean(this._codeHotfixPassed)
+        });
+      }
       this.render();
       return res;
     },
@@ -478,10 +488,16 @@
     _openChallengeCodeLab: function(ch) {
       if (!ch || !ch.codeFix) return;
       var self = this;
+      if (root.Analytics && root.Analytics.trackChallengeHotfix) {
+        root.Analytics.trackChallengeHotfix({ challengeId: ch.id, action: 'open_codelab' });
+      }
       var markHotfixVerified = function() {
         self._codeHotfixPassed = true;
         if (!self._hotfixSolvedMap) self._hotfixSolvedMap = {};
         self._hotfixSolvedMap[ch.id] = true;
+        if (root.Analytics && root.Analytics.trackChallengeHotfix) {
+          root.Analytics.trackChallengeHotfix({ challengeId: ch.id, action: 'verified_codelab' });
+        }
         self.render();
       };
 
@@ -525,6 +541,14 @@
           var chId = enterBtn.getAttribute('data-enter-challenge');
           self._activeChallengeId = chId;
           self._initChallengeState(chId);
+          var enteredCh = self._findChallenge(chId);
+          if (root.Analytics && root.Analytics.trackChallengeSelect) {
+            root.Analytics.trackChallengeSelect({
+              challengeId: chId,
+              title: enteredCh ? enteredCh.title : chId,
+              severity: enteredCh ? enteredCh.severity : 'SEV-1'
+            });
+          }
           if (root.history && root.history.pushState) {
             root.history.pushState(null, '', '/challenges/' + chId);
           }
@@ -568,6 +592,12 @@
       container.addEventListener('change', function(e) {
         if (e.target && e.target.name === 'incident-root-cause') {
           self._selectedRootCauseId = e.target.value;
+          if (root.Analytics && root.Analytics.trackChallengeRootCause) {
+            root.Analytics.trackChallengeRootCause({
+              challengeId: self._activeChallengeId,
+              rootCauseId: e.target.value
+            });
+          }
           container.querySelectorAll('.root-cause-option').forEach(function(el) {
             var inp = el.querySelector('input');
             el.classList.toggle('selected', Boolean(inp && inp.checked));
@@ -582,6 +612,13 @@
           var kId = knobEl.getAttribute('data-knob-id');
           var val = knobEl.type === 'range' ? Number(knobEl.value) : knobEl.value;
           self._knobValues[kId] = val;
+          if (root.Analytics && root.Analytics.trackChallengeMitigation) {
+            root.Analytics.trackChallengeMitigation({
+              challengeId: self._activeChallengeId,
+              mitigationId: kId,
+              enabled: true
+            });
+          }
         }
       }, sig);
 

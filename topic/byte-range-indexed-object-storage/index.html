@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -1044,12 +1044,18 @@ flowchart TD
 <li><strong>Request-rate limits:</strong> thousands of small range reads can hit per-prefix request limits before bandwidth limits.</li>
 </ul>
 </div></div></article>
-      <section class="check-slider" data-slug="byte-range-indexed-object-storage" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="byte-range-indexed-object-storage" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why pread" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Chunks touched by a range" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Stale offsets" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why pread" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Chunks touched by a range" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Stale offsets" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: S3 Coalesced Byte-Range Read Savings" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Fine-Grained 4 KB Object GETs vs Coalesced Range Reads + Cached Footer" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-byte-range-indexed-object-storage-c1" data-type="mcq" data-slug="byte-range-indexed-object-storage" data-index="0">
@@ -1167,12 +1173,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="byte-range-indexed-object-storage-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-byte-range-indexed-object-storage-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">The footer&#039;s offsets describe one version of the object, so every data read must be tied to that version with a version ID or a conditional request. Re-checking the footer afterwards narrows the race but does not close it, and bigger or faster reads only make the race less likely.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-byte-range-indexed-object-storage-n1" data-type="numeric" data-slug="byte-range-indexed-object-storage" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: S3 Coalesced Byte-Range Read Savings</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A query needs 50 adjacent 8 KB pages (400 KB total) from a Parquet file on S3. Issuing 50 separate `Range: bytes=...` HTTP GET requests at 25 ms per request vs coalescing them into a single 400 KB byte-range GET (`25 ms` TTFB + `5 ms` transfer).</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many milliseconds of total request wall-clock time are saved if those reads were otherwise issued as 10 sequential rounds of 5 requests (`10 × 25 ms = 250 ms`) vs 1 coalesced range request (`30 ms`)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-byte-range-indexed-object-storage-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-byte-range-indexed-object-storage-n1"
+              aria-label="Numeric estimate in ms"
+              placeholder="Enter numeric estimate (ms)..."
+            />
+            <span class="quiz-unit-badge">ms</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Subtract the 30 ms single coalesced range read from the 250 ms multi-round latency.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="byte-range-indexed-object-storage-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-byte-range-indexed-object-storage-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Object storage has high per-request TTFB (~15–30 ms) and charges per GET request, but high throughput per stream. Coalescing nearby byte ranges (&quot;hole filling&quot; up to ~1 MB gap) cuts 250 ms down to 30 ms (saving 220 ms and 98% of API request costs).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-byte-range-indexed-object-storage-t1" data-type="tradeoff" data-slug="byte-range-indexed-object-storage" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Fine-Grained 4 KB Object GETs vs Coalesced Range Reads + Cached Footer</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An analytics engine queries multi-gigabyte files on S3. Initially it translates every 4 KB page read directly into a separate S3 `GET` with `Range: bytes=offset..offset+4095`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why does a 4 KB S3 range-read strategy perform poorly, and how should an object-store query engine optimize byte-range access?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-byte-range-indexed-object-storage-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-byte-range-indexed-object-storage-t1" value="0" />
+                  <span>Split the multi-gigabyte file into millions of separate 4 KB S3 objects</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-byte-range-indexed-object-storage-t1" value="1" />
+                  <span>Download the entire 10 GB S3 object into local memory for every single-row lookup</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-byte-range-indexed-object-storage-t1" value="2" />
+                  <span>Cache file footers/indexes in local NVMe/RAM, use larger block sizes (64 KB–1 MB), and coalesce nearby byte ranges (merging gaps smaller than ~256 KB–1 MB into a single HTTP Range GET)</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-byte-range-indexed-object-storage-t1" value="0" />
+                  <span>Millions of tiny S3 `PUT`/`GET` calls minimize per-request billing and latency</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-byte-range-indexed-object-storage-t1" value="1" />
+                  <span>Downloading 10 GB for a 100-byte lookup minimizes network egress</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-byte-range-indexed-object-storage-t1" value="2" />
+                  <span>Amortizing S3&#039;s 15–30 ms TTFB overhead requires caching the footer index locally and fetching coarse/coalesced byte ranges rather than chatty 4 KB micro-reads</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Compare S3 time-to-first-byte (~20 ms) with the time to transfer an extra 256 KB (~2 ms at 1 Gbps).</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="byte-range-indexed-object-storage-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-byte-range-indexed-object-storage-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Because 20 ms of S3 request latency equals ~2.5 MB of transfer time on a 1 Gbps link, reading across a small 256 KB gap in one HTTP Range request is faster and cheaper than issuing two separate HTTP requests.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1285,22 +1421,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

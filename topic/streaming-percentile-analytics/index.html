@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -994,12 +994,18 @@ flowchart LR
 </tbody></table>
 <p><strong>SLO alerting tip:</strong> for "99 percent of requests under 300 ms" it is often simpler and exact to count requests above and below 300 ms per bucket, two additive counters, rather than estimating the p99 and comparing it. Google's SRE guidance on SLOs uses exactly this good-events over total-events formulation.</p><h2>Coordinated omission in one example</h2><p>A load tester sends one request every 10 ms. The server stalls for 2 seconds. A naive tester that waits for each response records one 2-second sample and then continues, so the percentile report shows one slow request out of thousands. In reality about 200 requests (the ones that should have been sent during the stall) would have waited up to 2 seconds. HdrHistogram's recordValueWithExpectedInterval corrects for this; alternatively, use an open-loop load generator that sends on schedule regardless of responses.</p>
 </div></article>
-      <section class="check-slider" data-slug="streaming-percentile-analytics" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="streaming-percentile-analytics" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Store sketches, not p99s" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Rollup arithmetic" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Coordinated omission" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Store sketches, not p99s" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Rollup arithmetic" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Coordinated omission" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: DDSketch / HDR Histogram Merge vs Raw Latency Array Memory" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Why Averaging Per-Host `p99` Numbers Is Mathematically Invalid" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-streaming-percentile-analytics-c1" data-type="mcq" data-slug="streaming-percentile-analytics" data-index="0">
@@ -1117,12 +1123,142 @@ flowchart LR
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="streaming-percentile-analytics-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-streaming-percentile-analytics-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Waiting for responses means the tester silently skips the sends it would have made, so one slow sample stands in for about 200; correct with expected-interval recording or use an open-loop generator. One slow sample among thousands barely moves the tail, which is exactly the illusion.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-streaming-percentile-analytics-n1" data-type="numeric" data-slug="streaming-percentile-analytics" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: DDSketch / HDR Histogram Merge vs Raw Latency Array Memory</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An API gateway handles 1,000,000 requests/minute across 100 pods (60,000,000 requests/hour). Storing all 60,000,000 raw `8-byte` float64 latencies to compute an exact hourly p99 takes `480 MB` per endpoint, whereas a mergeable DDSketch / t-digest with 1% relative accuracy takes `4 KB` per pod-minute (or `4 KB` once merged).</p>
+          </div>
+        
+        <p class="check-slider__prompt">By what factor (`480,000 KB / 4 KB`) is a single merged `4 KB` hourly DDSketch smaller than the `480 MB` (`480,000 KB`) raw latency array?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-streaming-percentile-analytics-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-streaming-percentile-analytics-n1"
+              aria-label="Numeric estimate in x"
+              placeholder="Enter numeric estimate (x)..."
+            />
+            <span class="quiz-unit-badge">x</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 480,000 KB by 4 KB.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="streaming-percentile-analytics-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-streaming-percentile-analytics-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">A `4 KB` logarithmically bucketed DDSketch is `480,000 / 4 = 120,000×` smaller than storing 60M raw latencies while guaranteeing p99 relative error within ≤1%.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-streaming-percentile-analytics-t1" data-type="tradeoff" data-slug="streaming-percentile-analytics" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Why Averaging Per-Host `p99` Numbers Is Mathematically Invalid</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Each of 50 application pods computes its own local `p99` latency float every minute and sends that single float to the monitoring backend, which computes `AVG(pod_p99)` to display the &quot;cluster p99 latency&quot;.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why is averaging (or taking max of) pre-computed percentile floats across hosts or time windows a severe observability anti-pattern, and what must be shipped instead?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-streaming-percentile-analytics-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-streaming-percentile-analytics-t1" value="0" />
+                  <span>Percentiles are linear and associative just like `SUM` and `COUNT`</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-streaming-percentile-analytics-t1" value="1" />
+                  <span>Taking the `MIN(pod_p99)` gives the exact global p99 across skewed pods</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-streaming-percentile-analytics-t1" value="2" />
+                  <span>Percentiles are non-mergeable order statistics (a pod with 10 requests and a pod with 100,000 requests cannot have their p99s averaged); pods must emit mergeable histogram buckets or quantile sketches (DDSketch, HDRHistogram, Prometheus native histograms) that sum bucket counts before extracting the global quantile</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-streaming-percentile-analytics-t1" value="0" />
+                  <span>The average of 99th percentiles equals the 99th percentile of the union</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-streaming-percentile-analytics-t1" value="1" />
+                  <span>Traffic volume and tail distribution are always identical across every pod and minute</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-streaming-percentile-analytics-t1" value="2" />
+                  <span>Only by summing frequency counts across logarithmic histogram buckets (DDSketch / HDR Histogram) can you reconstruct the true cumulative distribution of the combined population across pods and time ranges</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">If Pod A serves 99,000 fast requests and Pod B serves 1,000 slow requests (all &gt;500 ms), what is the true global p99 vs the average of Pod A&#039;s p99 and Pod B&#039;s p99?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="streaming-percentile-analytics-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-streaming-percentile-analytics-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">In that example, all 1,000 slow requests on Pod B represent the top 1% of the 100,000 total requests (`global p99 &gt; 500 ms`), whereas averaging Pod A&#039;s p99 and Pod B&#039;s p99 hides the outage. Mergeable histograms/DDSketches solve this.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1235,22 +1371,22 @@ flowchart LR
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

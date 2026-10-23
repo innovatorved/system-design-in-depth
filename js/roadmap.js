@@ -468,6 +468,9 @@
         var tabBtn = e.target.closest('[data-roadmap-tab]');
         if (tabBtn) {
           self._activeTab = tabBtn.getAttribute('data-roadmap-tab');
+          if (root.Analytics && typeof root.Analytics.trackRoadmapTrackSelect === 'function') {
+            root.Analytics.trackRoadmapTrackSelect(self._activeTab);
+          }
           self.render();
           return;
         }
@@ -496,10 +499,13 @@
         var nodeEl = e.target.closest('.roadmap-node');
         if (nodeEl) {
           var nodeId = nodeEl.getAttribute('data-node-id');
+          var nodes = (root.ROADMAP_DATA && root.ROADMAP_DATA.nodes) || [];
+          var found = nodes.find(function(n) { return n.id === nodeId; });
+          if (root.Analytics && typeof root.Analytics.trackRoadmapNodeClick === 'function') {
+            root.Analytics.trackRoadmapNodeClick(nodeId, found ? self.getNodeStatus(found) : 'unknown');
+          }
           if (self._selectedNodeId === nodeId) {
             // Second click launches node
-            var nodes = (root.ROADMAP_DATA && root.ROADMAP_DATA.nodes) || [];
-            var found = nodes.find(function(n) { return n.id === nodeId; });
             self._launchNode(found);
           } else {
             self._selectedNodeId = nodeId;

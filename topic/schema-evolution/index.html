@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -976,12 +976,18 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: renaming name to full_name on a 200M-row table</h2><table><thead><tr><th>Step</th><th>DDL / code change</th><th>Why it is safe</th></tr></thead><tbody><tr><td>1. Expand</td><td><code>ALTER TABLE users ADD COLUMN full_name text;</code></td><td>A nullable column with no default is a metadata-only change in Postgres and MySQL 8 (instant ADD COLUMN)</td></tr><tr><td>2. Dual-write</td><td>Deploy v2: writes both columns, still reads <code>name</code></td><td>v1 and v2 can coexist; v1 ignores the new column</td></tr><tr><td>3. Backfill</td><td><code>UPDATE users SET full_name = name WHERE id BETWEEN ? AND ? AND full_name IS NULL;</code> in batches of 5-10k rows</td><td>Short transactions, bounded lock time and WAL, throttled on replica lag</td></tr><tr><td>4. Verify</td><td><code>SELECT count(*) WHERE full_name IS DISTINCT FROM name</code> returns 0</td><td>Proves the backfill and dual-writes are correct</td></tr><tr><td>5. Switch reads</td><td>Deploy v3: reads <code>full_name</code>, still dual-writes</td><td>Rollback to v2 remains possible</td></tr><tr><td>6. Stop old writes</td><td>Deploy v4: writes only <code>full_name</code></td><td>Nothing reads <code>name</code> anymore</td></tr><tr><td>7. Contract</td><td><code>ALTER TABLE users DROP COLUMN name;</code> with a lock_timeout</td><td>Metadata-only in Postgres; space is reclaimed on later rewrites</td></tr></tbody></table><p><strong>Backfill math:</strong> 200M rows in 10k-row batches is 20,000 batches. At about 50 ms each plus a 50 ms sleep, that is about 33 minutes, while replicas stay within a second of lag. An unbatched single UPDATE would rewrite 200M tuples in one transaction, doubling table size and blocking vacuum for its whole duration.</p><h3>Which operations are dangerous?</h3><table><thead><tr><th>Change</th><th>PostgreSQL</th><th>MySQL 8 InnoDB</th></tr></thead><tbody><tr><td>Add nullable column</td><td>Instant</td><td>Instant</td></tr><tr><td>Add column with constant default</td><td>Instant (PG 11+)</td><td>Instant (8.0.12+)</td></tr><tr><td>Change column type (int to bigint)</td><td>Full table rewrite under ACCESS EXCLUSIVE</td><td>Table copy; use gh-ost</td></tr><tr><td>Add NOT NULL</td><td>Full scan; use a CHECK constraint NOT VALID, then VALIDATE (PG 12+ can then set NOT NULL without a scan)</td><td>Table rebuild</td></tr><tr><td>Add foreign key</td><td>Use NOT VALID, then VALIDATE CONSTRAINT</td><td>Online, but checks the whole table</td></tr><tr><td>Add index</td><td>CREATE INDEX CONCURRENTLY</td><td>ALGORITHM=INPLACE, LOCK=NONE</td></tr></tbody></table><h3>Failure modes</h3><ul><li><strong>Lock queue pile-up:</strong> even an instant ALTER needs a brief ACCESS EXCLUSIVE lock. If it waits behind a 10-minute report query, all traffic queues behind it. Use <code>SET lock_timeout = '2s'</code> and retry.</li><li><strong>ORM caching:</strong> some ORMs cache column lists (for example Rails' <code>ignored_columns</code> exists for this reason), so dropping a column can break running processes.</li><li><strong>CDC and analytics consumers</strong> (Debezium, warehouses) often break on renames even when the app does not.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="schema-evolution" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="schema-evolution" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: gh-ost vs pt-osc" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Backfill schedule" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Instant DDL, long queue" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: gh-ost vs pt-osc" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Backfill schedule" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Instant DDL, long queue" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Lock Queue Cascade During Rolling Deploy" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Renaming a Column Under Rolling Zero-Downtime Deployment" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-schema-evolution-c1" data-type="mcq" data-slug="schema-evolution" data-index="0">
@@ -1099,12 +1105,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="schema-evolution-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-schema-evolution-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Even an instant ALTER needs a brief ACCESS EXCLUSIVE lock. While it waits behind the report, every new query on the table lines up behind the ALTER. A short lock_timeout, such as 2 s, makes it give up and retry instead of stalling traffic. Table rewriting is the tempting answer, but adding a nullable column is metadata-only.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-schema-evolution-n1" data-type="numeric" data-slug="schema-evolution" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Lock Queue Cascade During Rolling Deploy</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An `ALTER TABLE` waits 3 seconds behind a long-running analytics query to acquire an `ACCESS EXCLUSIVE` lock. While it waits in the lock queue, incoming app reads and writes arrive at 4,000 queries/sec and queue behind the pending `ALTER TABLE`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many application queries pile up blocked in the lock queue during those 3 seconds?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-schema-evolution-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-schema-evolution-n1"
+              aria-label="Numeric estimate in queries"
+              placeholder="Enter numeric estimate (queries)..."
+            />
+            <span class="quiz-unit-badge">queries</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 4,000 queries/sec by the 3-second wait window.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="schema-evolution-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-schema-evolution-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Because a queued `ACCESS EXCLUSIVE` lock blocks all subsequent `ACCESS SHARE` (SELECT) and `ROW EXCLUSIVE` (DML) requests behind it, 4,000 × 3 = 12,000 queries pile up in 3 seconds, exhausting connection pools.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-schema-evolution-t1" data-type="tradeoff" data-slug="schema-evolution" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Renaming a Column Under Rolling Zero-Downtime Deployment</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You need to rename column `full_name` to `display_name` on the `users` table while 40 application pods roll out gradually over 15 minutes.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which migration strategy guarantees zero errors across old and new application pods during the rollout, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-schema-evolution-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-schema-evolution-t1" value="0" />
+                  <span>Run `ALTER TABLE users RENAME COLUMN full_name TO display_name` right before deploying the new pods</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-schema-evolution-t1" value="1" />
+                  <span>Stop all 40 pods for 15 minutes while running the rename migration</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-schema-evolution-t1" value="2" />
+                  <span>Use Expand-and-Contract: add `display_name`, dual-write &amp; backfill, switch reads to `display_name`, and drop `full_name` in a subsequent release</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-schema-evolution-t1" value="0" />
+                  <span>Old pods running in parallel during the rolling deploy will magically recognize the renamed column</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-schema-evolution-t1" value="1" />
+                  <span>Taking a 15-minute outage is required for every column change</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-schema-evolution-t1" value="2" />
+                  <span>During a rolling deploy, old pods and new pods coexist against the same DB schema; Expand-and-Contract keeps both column names valid until all old pods are retired</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens to the 39 old pods still running v1 code the instant `RENAME COLUMN` commits?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="schema-evolution-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-schema-evolution-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">An in-place `RENAME COLUMN` immediately breaks either v1 pods (expecting `full_name`) or v2 pods (expecting `display_name`). Expand-and-Contract keeps the schema backward-compatible throughout the rollout.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1217,22 +1353,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

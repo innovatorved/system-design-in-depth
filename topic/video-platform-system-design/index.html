@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -999,12 +999,18 @@ flowchart LR
   DRM --> M["Write manifests and mark ready"]
   M --> CDN["Pre-warm CDN for expected hits"]</div><h2>Segment length trade-off</h2><table><thead><tr><th>Segment length</th><th>Pro</th><th>Con</th></tr></thead><tbody><tr><td>2 s</td><td>Faster start and faster bitrate switching; lower live latency</td><td>More requests and manifest entries; slightly worse compression</td></tr><tr><td>6 s (Apple's HLS recommendation)</td><td>Efficient, fewer requests</td><td>Slower adaptation; higher live latency</td></tr><tr><td>Low-latency HLS/DASH partial segments</td><td>2 to 5 s glass-to-glass latency for live streams</td><td>More complex players and CDN configuration</td></tr></tbody></table>
 </div></article>
-      <section class="check-slider" data-slug="video-platform-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="video-platform-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Adaptive bitrate" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Egress and CDN hit ratio" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Segments for live sports" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Adaptive bitrate" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Egress and CDN hit ratio" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Segments for live sports" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Chunked Parallel GOP Transcoding Speedup" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Progressive Monolithic MP4 Download vs HLS/DASH Adaptive Bitrate (ABR) + Tiered Edge CDN" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-video-platform-system-design-c1" data-type="mcq" data-slug="video-platform-system-design" data-index="0">
@@ -1122,12 +1128,142 @@ flowchart LR
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="video-platform-system-design-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-video-platform-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Shorter segments, or LL-HLS/DASH partial segments, cut glass-to-glass latency and let the player switch renditions sooner, but they add requests, manifest entries and CDN complexity. A better codec saves bandwidth but does nothing for latency, which is governed by segment duration.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-video-platform-system-design-n1" data-type="numeric" data-slug="video-platform-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Chunked Parallel GOP Transcoding Speedup</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A creator uploads a `60-minute` (`3,600-second`) 4K video. Encoding it sequentially on a single worker into 5 ABR renditions runs at `0.5×` real-time (`7,200 seconds` = `2 hours`). Instead, the ingest splitter cuts the video at keyframe (GOP) boundaries into `60` independent `1-minute` segments and dispatches them across `60` parallel transcoding workers.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many seconds (`60s segment / 0.5× speed`) does it take to transcode the entire 60-minute video when all 60 1-minute GOP segments run in parallel?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-video-platform-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-video-platform-system-design-n1"
+              aria-label="Numeric estimate in seconds"
+              placeholder="Enter numeric estimate (seconds)..."
+            />
+            <span class="quiz-unit-badge">seconds</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Each 60-second segment encodes at 0.5× real-time (`60 / 0.5 = 120 seconds`), and all 60 segments run concurrently.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="video-platform-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-video-platform-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Splitting at GOP keyframe boundaries allows all 60 1-minute segments to encode concurrently in `60 / 0.5 = 120 seconds` (2 minutes instead of 2 hours—a 60× latency reduction!).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-video-platform-system-design-t1" data-type="tradeoff" data-slug="video-platform-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Progressive Monolithic MP4 Download vs HLS/DASH Adaptive Bitrate (ABR) + Tiered Edge CDN</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A video platform serves 10M concurrent viewers across mobile 4G networks (where bandwidth fluctuates between 1.5 Mbps and 25 Mbps) and home fiber connections.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why do all major streaming platforms use segmented HLS/DASH Adaptive Bitrate (ABR) over CDN origin shields rather than serving a single monolithic `.mp4` file?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-video-platform-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-video-platform-system-design-t1" value="0" />
+                  <span>Serve a single 4 GB 4K `.mp4` file to all mobile users so the player stalls whenever cellular signal drops</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-video-platform-system-design-t1" value="1" />
+                  <span>Open a stateful WebSocket to the origin database to stream video frames</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-video-platform-system-design-t1" value="2" />
+                  <span>Encode each video into time-aligned GOP segments (2–6s `.ts`/`.m4s` chunks) across a bitrate/resolution ladder (240p..4K) described by an `.m3u8`/`.mpd` manifest, allowing the client player to switch quality per chunk seamlessly and CDN edge PoPs to cache popular 2-second chunks with high hit ratios</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-video-platform-system-design-t1" value="0" />
+                  <span>Downloading 4 GB when a user quits watching after 15 seconds saves egress bandwidth</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-video-platform-system-design-t1" value="1" />
+                  <span>Video chunks are dynamic per-user data that cannot be cached at CDN edge PoPs</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-video-platform-system-design-t1" value="2" />
+                  <span>Keyframe-aligned 2–6s chunks let the client dynamically step bitrates up/down on every segment boundary without rebuffering, bound wasted bytes when users abandon early, and turn video delivery into standard cacheable immutable HTTP GETs at the CDN edge</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens when a user enters an elevator if the video is split into 4-second keyframe-aligned chunks at multiple bitrates?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="video-platform-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-video-platform-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">HLS/DASH ABR splits video into immutable 2–6s keyframe-aligned chunks across a bitrate ladder so the client player adapts to network bandwidth chunk-by-chunk while CDN edges cache the immutable segments.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1240,22 +1376,22 @@ flowchart LR
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

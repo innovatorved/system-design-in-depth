@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -978,12 +978,18 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: a Kademlia lookup with 4-bit IDs</h2><p>Node 0010 wants key 1101. XOR distance = 0010 XOR 1101 = 1111 (15), the maximum distance, so the key lies in the far half of the space.</p><ul><li>0010's k-bucket for "first bit differs" contains node 1011. Distance 1011 XOR 1101 = 0110 (6).</li><li>0010 asks 1011 for its closest nodes to 1101. 1011 returns 1100 (distance 0001 = 1) and 1110 (distance 0011 = 3).</li><li>0010 asks 1100, which has nothing closer. The k closest nodes, 1100 and 1110, are the ones to STORE or FIND_VALUE the key.</li></ul><p>Every hop fixed at least one more leading bit. With 160-bit IDs and N nodes, the expected hop count is about log2 N. For 10 million peers that is about 23 hops, and in practice fewer, because each bucket holds k = 20 contacts and queries run α = 3 in parallel.</p><h2>DHT designs compared</h2><table><thead><tr><th>DHT</th><th>Distance</th><th>Routing state</th><th>Lookup hops</th><th>Used by</th></tr></thead><tbody><tr><td>Chord</td><td>Clockwise ring distance</td><td>O(log N) finger table</td><td>O(log N)</td><td>Research, and the basis of many variants</td></tr><tr><td>Pastry / Tapestry</td><td>Prefix matching</td><td>O(log N) with a leaf set</td><td>O(log N)</td><td>Research, and Microsoft PAST</td></tr><tr><td>Kademlia</td><td>XOR</td><td>k-buckets, about 160 x k contacts at most</td><td>O(log N) with parallel queries</td><td>BitTorrent Mainline DHT, IPFS/libp2p, Ethereum discv4/v5</td></tr><tr><td>One-hop (Dynamo-style)</td><td>Ring position</td><td>Full membership</td><td>1</td><td>Cassandra, Riak, DynamoDB internals</td></tr></tbody></table><h2>Why XOR works well</h2><ul><li>It is symmetric, so a node learns useful contacts from the queries it receives.</li><li>It is unidirectional: for a given point and distance there is exactly one other point, so lookups for the same key converge along the same paths, which makes caching along the path effective.</li><li>k-buckets prefer long-lived contacts. Measurements show nodes that have been up longer are more likely to stay up, so the routing table resists churn and flooding attacks.</li></ul><h2>Failure modes</h2><ul><li><strong>Churn:</strong> BitTorrent peers often stay minutes to hours. Values need replication to k nodes and periodic republishing.</li><li><strong>NAT and firewalls:</strong> many peers cannot accept inbound connections, which pollutes routing tables. libp2p uses AutoNAT and relays.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="distributed-hash-tables" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="distributed-hash-tables" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: XOR closest node" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Why Cassandra is one-hop" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Values fading under churn" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: XOR closest node" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Why Cassandra is one-hop" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Values fading under churn" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Kademlia / Chord Logarithmic Routing Hops" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Multi-Hop P2P DHT (`O(log N)`) vs Datacenter One-Hop Consistent Hashing (`O(1)`)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-distributed-hash-tables-c1" data-type="mcq" data-slug="distributed-hash-tables" data-index="0">
@@ -1101,12 +1107,142 @@ flowchart TD
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-hash-tables-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-hash-tables-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Peers often stay only minutes to hours, so the set of closest nodes drifts, and values must be replicated to k nodes and republished periodically. Key IDs and XOR distances are fixed, and k-buckets actually prefer long-lived contacts.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-distributed-hash-tables-n1" data-type="numeric" data-slug="distributed-hash-tables" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Kademlia / Chord Logarithmic Routing Hops</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A peer-to-peer Distributed Hash Table (DHT) like Chord or Kademlia contains `N = 65,536` (`2^16`) nodes, and each node maintains a finger/routing table of size `log2(N)` pointing to exponentially spaced distances.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the maximum number of routing hops (`log2(65,536)`) required to locate any key in a 65,536-node Chord ring?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-hash-tables-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-distributed-hash-tables-n1"
+              aria-label="Numeric estimate in hops"
+              placeholder="Enter numeric estimate (hops)..."
+            />
+            <span class="quiz-unit-badge">hops</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Each hop halves the remaining distance around the `2^16`-node ring.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-hash-tables-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-hash-tables-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Because each routing step jumps at least halfway to the target ID, finding any key among `65,536 = 2^16` nodes takes at most `log2(65,536) = 16` hops.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-distributed-hash-tables-t1" data-type="tradeoff" data-slug="distributed-hash-tables" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Multi-Hop P2P DHT (`O(log N)`) vs Datacenter One-Hop Consistent Hashing (`O(1)`)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You are designing an internal in-memory key-value store running inside a single cloud VPC with 200 nodes and a strict p99 latency budget of 2 ms.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Should you use a multi-hop Kademlia/Chord DHT (`O(log N)` hops) or a one-hop consistent hashing ring (`O(1)` hops), and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-hash-tables-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-hash-tables-t1" value="0" />
+                  <span>Use a multi-hop Kademlia DHT so every read bounces across 8 servers sequentially</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-hash-tables-t1" value="1" />
+                  <span>Use Gnutella flooding across all 200 servers</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-distributed-hash-tables-t1" value="2" />
+                  <span>Use one-hop consistent hashing (Dynamo/Cassandra style) where every node maintains the full 200-node membership table via gossip and routes directly to the target node in 1 hop</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-hash-tables-t1" value="0" />
+                  <span>8 sequential network hops reduce tail latency inside a datacenter</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-hash-tables-t1" value="1" />
+                  <span>Flooding minimizes CPU usage</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-distributed-hash-tables-t1" value="2" />
+                  <span>Multi-hop DHTs (`O(log N)` state, `O(log N)` hops) are built for untrusted P2P networks with millions of churning nodes; inside a 200-node datacenter, storing all 200 peers in RAM costs kilobytes and gives O(1) single-hop latency</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How much RAM does it take to store a 200-node membership table vs paying 8 sequential network hops on every read?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-hash-tables-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-hash-tables-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">In a datacenter cluster of 10–1,000 nodes, every node can easily hold the full ring membership in memory (a few KB), turning `O(log N)` DHT routing into a single direct `O(1)` network hop.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1239,22 +1375,22 @@ flowchart TD
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>

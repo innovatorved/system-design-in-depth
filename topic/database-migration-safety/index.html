@@ -37,8 +37,8 @@
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=6e3af86ba6"></script>
-  <script src="js/manifest.js?v=9719c99831"></script>
+  <script src="js/init.js?v=17af84f241"></script>
+  <script src="js/manifest.js?v=b58192447f"></script>
 
   <script type="application/ld+json">
 {
@@ -965,12 +965,18 @@
 <!-- enriched -->
 <h2>Worked example: renaming users.first_name to given_name</h2><table><thead><tr><th>Step</th><th>Change</th><th>Reads</th><th>Writes</th><th>Safe to roll back?</th></tr></thead><tbody><tr><td>1. Expand</td><td><code>ALTER TABLE users ADD COLUMN given_name text</code> (nullable, no default)</td><td>old</td><td>old</td><td>Yes</td></tr><tr><td>2. Dual write</td><td>Application release writes both columns</td><td>old</td><td>old + new</td><td>Yes</td></tr><tr><td>3. Backfill</td><td>Batched job copies old to new where new is null</td><td>old</td><td>old + new</td><td>Yes</td></tr><tr><td>4. Verify</td><td>Count mismatches, for example <code>WHERE given_name IS DISTINCT FROM first_name</code></td><td>old</td><td>old + new</td><td>Yes</td></tr><tr><td>5. Switch reads</td><td>Release reads the new column, still dual writes</td><td>new</td><td>old + new</td><td>Yes</td></tr><tr><td>6. Stop old writes</td><td>Release writes only the new column</td><td>new</td><td>new</td><td>Only back to step 5</td></tr><tr><td>7. Contract</td><td>Drop <code>first_name</code> after a soak period</td><td>new</td><td>new</td><td>No (restore from backup)</td></tr></tbody></table><h2>Backfill arithmetic</h2><p>A table with 400 million rows, updated in batches of 5,000 rows every 100 ms, processes about 50,000 rows per second and finishes in roughly 2.2 hours. Keep each batch in its own short transaction so replication lag and lock hold times stay low. Throttle when replica lag exceeds a threshold, which is what gh-ost and pt-online-schema-change do. Make the job idempotent (<code>WHERE given_name IS NULL AND id BETWEEN x AND y</code>) so it can be restarted safely.</p><h2>Engine-specific facts that matter</h2><ul><li><strong>PostgreSQL 11 and later:</strong> <code>ADD COLUMN ... DEFAULT</code> with a non-volatile default is a metadata-only change. Before version 11 it rewrote the whole table. Use <code>CREATE INDEX CONCURRENTLY</code> to build indexes without blocking writes.</li><li><strong>Adding NOT NULL safely in PostgreSQL:</strong> add <code>CHECK (col IS NOT NULL) NOT VALID</code>, then <code>VALIDATE CONSTRAINT</code>, which does not block writes. PostgreSQL 12 and later can then set <code>NOT NULL</code> without a full scan.</li><li><strong>MySQL 8.0:</strong> many <code>ADD COLUMN</code> operations support <code>ALGORITHM=INSTANT</code>. For operations that do not, gh-ost and pt-online-schema-change copy into a shadow table and swap it in.</li><li><strong>Always:</strong> set <code>lock_timeout</code> (PostgreSQL) or <code>lock_wait_timeout</code> (MySQL) to a few seconds so a blocked DDL fails fast instead of stalling all traffic behind it.</li></ul><h2>Failure modes</h2><ul><li><strong>Dual-write divergence:</strong> if the two writes are not in the same transaction, a crash between them leaves the columns inconsistent. Put both writes in one transaction, or rely on the backfill and verification steps to repair differences.</li><li><strong>ORM caches the schema:</strong> some ORMs select every column by name. Dropping a column breaks old pods even though they never used it. Remove the column from the model first, then drop it.</li><li><strong>Replica lag during a large backfill</strong> can make read replicas serve stale data, or trigger automatic failover. Throttle on lag.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="database-migration-safety" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="database-migration-safety" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
           
-          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why keep dual writing" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Backfill duration" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: DDL lock queue" aria-label="Go to question 3"></button></span>
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why keep dual writing" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Backfill duration" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: DDL lock queue" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Batched Backfill Throttle Rate and Duration" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Adding `NOT NULL` Constraints Safely on Large Tables" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-database-migration-safety-c1" data-type="mcq" data-slug="database-migration-safety" data-index="0">
@@ -1088,12 +1094,142 @@
         <div class="check-slider__actions">
           <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
           <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-migration-safety-c3">Check answer</button>
-          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
-          
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-migration-safety-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Even instant DDL needs a brief exclusive lock; if a long-running transaction holds a conflicting lock, the ALTER waits and every new query queues behind it. Setting lock_timeout makes it fail fast and retry. Adding a nullable column without a default does not rewrite the table, so the rewrite explanation is wrong.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-database-migration-safety-n1" data-type="numeric" data-slug="database-migration-safety" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Batched Backfill Throttle Rate and Duration</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You need to backfill a new column across `100,000,000` rows. Updating all 100M rows in one transaction would blow up undo/WAL logs and replication lag. Instead, a migration worker updates batches of `5,000` rows per transaction at a throttled rate of `20` batches/sec (`100,000 rows/sec`), pausing whenever replica lag exceeds 500 ms.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many seconds (`100,000,000 / 100,000`) will the throttled backfill take assuming no lag pauses?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-migration-safety-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-database-migration-safety-n1"
+              aria-label="Numeric estimate in seconds"
+              placeholder="Enter numeric estimate (seconds)..."
+            />
+            <span class="quiz-unit-badge">seconds</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±20% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 100,000,000 rows by 100,000 rows/sec (`5,000 × 20`).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-migration-safety-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-migration-safety-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">At 20 batches/sec × 5,000 rows = 100,000 rows/sec, backfilling 100M rows completes in 1,000 seconds (~16.7 minutes) with tiny 5,000-row transactions and bounded replication lag.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-database-migration-safety-t1" data-type="tradeoff" data-slug="database-migration-safety" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Adding `NOT NULL` Constraints Safely on Large Tables</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You want to enforce `ALTER TABLE orders ALTER COLUMN currency SET NOT NULL` on a 500M-row PostgreSQL table. Directly running `SET NOT NULL` acquires an `ACCESS EXCLUSIVE` lock while scanning all 500M rows to verify no `NULL` values exist.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which two-step PostgreSQL migration idiom enforces `NOT NULL` without a long table-locking scan?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-migration-safety-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-migration-safety-t1" value="0" />
+                  <span>Run `ALTER TABLE orders ALTER COLUMN currency SET NOT NULL` directly during peak hours</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-migration-safety-t1" value="1" />
+                  <span>Skip database constraints and hope no bug ever inserts `NULL`</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-migration-safety-t1" value="2" />
+                  <span>First add `ALTER TABLE orders ADD CONSTRAINT chk_currency_nn CHECK (currency IS NOT NULL) NOT VALID;`, then run `ALTER TABLE orders VALIDATE CONSTRAINT chk_currency_nn;` (which takes only a non-blocking `SHARE UPDATE EXCLUSIVE` lock), and then set `NOT NULL`</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-migration-safety-t1" value="0" />
+                  <span>Holding an `ACCESS EXCLUSIVE` lock during a 500M-row scan never blocks live traffic</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-migration-safety-t1" value="1" />
+                  <span>Application bugs never insert `NULL` into unconstrained columns</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-migration-safety-t1" value="2" />
+                  <span>`ADD CONSTRAINT ... NOT VALID` commits in milliseconds, enforcing the check on new writes immediately, while `VALIDATE CONSTRAINT` scans existing rows online without blocking concurrent reads or writes (and Postgres 12+ then makes `SET NOT NULL` instant!)</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How does PostgreSQL&#039;s `NOT VALID` + `VALIDATE CONSTRAINT` avoid holding `ACCESS EXCLUSIVE` during the full table scan?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-migration-safety-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-migration-safety-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Adding a `CHECK (col IS NOT NULL) NOT VALID` constraint followed by `VALIDATE CONSTRAINT` validates all 500M rows under a weak lock that permits concurrent reads and writes; once validated, PostgreSQL proves no nulls exist and sets `NOT NULL` instantaneously.</div>
         </div>
       </div></div>
         <div class="check-slider__done" hidden>
@@ -1206,22 +1342,22 @@
 
   <!-- App Scripts -->
   <script type="text/plain" data-defer src="js/lazy.js?v=7275ff46e4"></script>
-  <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
+  <script type="text/plain" data-defer src="js/analytics.js?v=280d488e9a"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
-  <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
-  <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
-  <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
+  <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
+  <script type="text/plain" data-defer src="js/challenges.js?v=1feea5dd13"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=60056adde4"></script>
+  <script type="text/plain" data-defer src="js/sandbox.js?v=019731220b"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=4e9a4e38a9"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=f258b3b8c0"></script>
+  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
 </body>
 </html>
