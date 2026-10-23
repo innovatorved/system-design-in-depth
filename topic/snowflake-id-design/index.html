@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -970,44 +970,55 @@ I --> J
 J --> L["last_ts = now, return id"]
 </div><h3>Failure modes and defences</h3><ul><li><strong>Clock rollback:</strong> keep <code>last_ts</code> in memory, wait out small regressions (a few ms), and refuse on large ones. Persisting a high-water mark periodically (for example, every second) defends against restarts with a bad clock. Configure NTP (chrony) to slew rather than step.</li><li><strong>Worker ID reuse:</strong> two processes with the same worker ID in the same ms will collide. Use leases with fencing: a process that loses its lease must stop issuing IDs before the lease can be reassigned.</li><li><strong>Multi-threading:</strong> the (last_ts, seq) pair must update atomically, using a mutex or a CAS on a packed 64-bit state.</li><li><strong>Ordering is only k-sorted:</strong> IDs from different workers interleave within clock skew, so do not use them for strict global ordering.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="snowflake-id-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="snowflake-id-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Thread-safe generator" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Recipe for duplicates" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Re-splitting the bits" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Per-Node Snowflake ID Throughput Ceiling" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Handling NTP Backward Clock Jumps in Snowflake Generators" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-snowflake-id-design-c1" data-type="mcq" data-slug="snowflake-id-design" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Thread-safe generator</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Mechanics</div>
+        <div class="check-slider__section">Section: Mechanics</div>
+        
         <p class="check-slider__prompt">A Snowflake generator runs in a multi-threaded service. What must be true of its (last_ts, sequence) state?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c1" value="0" />
-             <span>Each thread keeps its own copy, since the worker ID already guarantees uniqueness</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c1" value="1" />
-             <span>It must be persisted to disk on every ID so restarts cannot repeat values</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c1" value="2" />
-             <span>It must be updated atomically, for example with a mutex, a CAS on packed state, or a single owning thread</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c1" value="3" />
-             <span>It only needs to be read atomically; writes can be unsynchronised</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-snowflake-id-design-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c1" value="0" />
+            <span>Each thread keeps its own copy, since the worker ID already guarantees uniqueness</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c1" value="1" />
+            <span>It must be persisted to disk on every ID so restarts cannot repeat values</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c1" value="2" />
+            <span>It must be updated atomically, for example with a mutex, a CAS on packed state, or a single owning thread</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c1" value="3" />
+            <span>It only needs to be read atomically; writes can be unsynchronised</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="snowflake-id-design-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="snowflake-id-design-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-snowflake-id-design-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1016,35 +1027,39 @@ J --> L["last_ts = now, return id"]
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-snowflake-id-design-c2" data-type="mcq" data-slug="snowflake-id-design" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Recipe for duplicates</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Failure mode</div>
+        <div class="check-slider__section">Section: Failure mode</div>
+        
         <p class="check-slider__prompt">Which combination of events is most likely to produce duplicate Snowflake IDs in production?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c2" value="0" />
-             <span>Two workers with different IDs generating 4,096 IDs in the same millisecond</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c2" value="1" />
-             <span>A worker exhausting its sequence and spinning until the next millisecond</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c2" value="2" />
-             <span>IDs from different workers interleaving within the clock-skew window</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c2" value="3" />
-             <span>A VM resuming with an older clock while its worker ID has been reassigned to another live process</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-snowflake-id-design-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c2" value="0" />
+            <span>Two workers with different IDs generating 4,096 IDs in the same millisecond</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c2" value="1" />
+            <span>A worker exhausting its sequence and spinning until the next millisecond</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c2" value="2" />
+            <span>IDs from different workers interleaving within the clock-skew window</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c2" value="3" />
+            <span>A VM resuming with an older clock while its worker ID has been reassigned to another live process</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="snowflake-id-design-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="snowflake-id-design-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-snowflake-id-design-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1053,77 +1068,180 @@ J --> L["last_ts = now, return id"]
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-snowflake-id-design-c3" data-type="mcq" data-slug="snowflake-id-design" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Re-splitting the bits</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: the numbers behind the 64 bits</div>
+        <div class="check-slider__section">Section: Worked example: the numbers behind the 64 bits</div>
+        
         <p class="check-slider__prompt">Your system will never need more than 64 generators, but each must handle bursts of 50,000 IDs in one millisecond. Keeping 1 sign bit and 41 timestamp bits, which split of the remaining 22 bits fits?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c3" value="0" />
-             <span>6 worker bits and 16 sequence bits</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c3" value="1" />
-             <span>10 worker bits and 12 sequence bits</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c3" value="2" />
-             <span>8 worker bits and 14 sequence bits</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-snowflake-id-design-c3" value="3" />
-             <span>4 worker bits and 18 sequence bits</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-snowflake-id-design-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c3" value="0" />
+            <span>6 worker bits and 16 sequence bits</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c3" value="1" />
+            <span>10 worker bits and 12 sequence bits</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c3" value="2" />
+            <span>8 worker bits and 14 sequence bits</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-snowflake-id-design-c3" value="3" />
+            <span>4 worker bits and 18 sequence bits</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="snowflake-id-design-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="snowflake-id-design-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-snowflake-id-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">6 bits give exactly 64 workers and 16 bits give 65,536 IDs per ms, covering the 50k burst. 14 sequence bits allow only 16,384 per ms, the default 12 only 4,096, and 4 worker bits allow only 16 generators.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-snowflake-id-design-n1" data-type="numeric" data-slug="snowflake-id-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Per-Node Snowflake ID Throughput Ceiling</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A standard 64-bit Snowflake ID allocates 1 sign bit, 41 timestamp bits (in milliseconds), 10 worker/machine ID bits, and 12 sequence number bits per millisecond.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Given 2^12 = 4,096 sequence values per millisecond, how many unique IDs (in millions of IDs per second, rounded to the nearest integer) can a single worker node generate at theoretical peak?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-snowflake-id-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-snowflake-id-design-n1"
+              aria-label="Numeric estimate in million IDs/s"
+              placeholder="Enter numeric estimate (million IDs/s)..."
+            />
+            <span class="quiz-unit-badge">million IDs/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">4,096 IDs/ms × 1,000 ms/s = 4,096,000 IDs/s ≈ 4 million IDs/s.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="snowflake-id-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-snowflake-id-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">With 12 sequence bits, a single worker can allocate 2^12 = 4,096 IDs per millisecond, or 4,096 × 1,000 = 4,096,000 (~4.1 million) unique, k-sortable 64-bit IDs per second without any network coordination.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-snowflake-id-design-t1" data-type="tradeoff" data-slug="snowflake-id-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Handling NTP Backward Clock Jumps in Snowflake Generators</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An NTP step adjustment moves a Snowflake worker&#039;s wall clock backward by 12 milliseconds. If the generator immediately emits IDs using the regressed timestamp, it risks colliding with IDs generated 12 ms ago.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should the Snowflake generator handle small backward clock skews (&lt; 20 ms) vs large regressions, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-snowflake-id-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-snowflake-id-design-t1" value="0" />
+                  <span>Ignore the backward jump and reset the 12-bit sequence counter to 0 immediately</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-snowflake-id-design-t1" value="1" />
+                  <span>Pin `last_timestamp`, pause/spin-wait (or advance sequence bits on the logical high-water timestamp) for small skews up to a bounded threshold, and refuse ID generation (circuit-break + alert) if skew exceeds the safety bound</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-snowflake-id-design-t1" value="2" />
+                  <span>Switch to random UUIDv4 strings stored as 36-byte `VARCHAR` keys on clock skew</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-snowflake-id-design-t1" value="0" />
+                  <span>Resetting the sequence to 0 on a repeated millisecond guarantees uniqueness</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-snowflake-id-design-t1" value="1" />
+                  <span>Monotonic high-water clamping preserves uniqueness across brief NTP adjustments, while failing fast on large regressions prevents unbounded thread stalls or duplicate IDs</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-snowflake-id-design-t1" value="2" />
+                  <span>Mixing 36-byte string UUIDs into a 64-bit `BIGINT` column requires zero schema changes</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Track the highest millisecond seen so far (`last_timestamp`) and never emit a smaller timestamp.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="snowflake-id-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-snowflake-id-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">A Snowflake worker must enforce `timestamp &gt;= last_timestamp`. For tiny NTP adjustments (a few ms), holding `last_timestamp` (consuming remaining sequence numbers or waiting until wall clock catches up) prevents collisions safely; for large regressions, failing health checks protects data integrity.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-snowflake-id-design-n1" data-type="numeric" data-slug="snowflake-id-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Per-Node Snowflake ID Throughput Ceiling</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A standard 64-bit Snowflake ID allocates 1 sign bit, 41 timestamp bits (in milliseconds), 10 worker/machine ID bits, and 12 sequence number bits per millisecond.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Given 2^12 = 4,096 sequence values per millisecond, how many unique IDs (in millions of IDs per second, rounded to the nearest integer) can a single worker node generate at theoretical peak?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 4,096 IDs/ms × 1,000 ms/s = 4,096,000 IDs/s ≈ 4 million IDs/s.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-snowflake-id-design-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-snowflake-id-design-n1" placeholder="Enter numeric estimate (million IDs/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">million IDs/s</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="snowflake-id-design-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="snowflake-id-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-snowflake-id-design-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> With 12 sequence bits, a single worker can allocate 2^12 = 4,096 IDs per millisecond, or 4,096 × 1,000 = 4,096,000 (~4.1 million) unique, k-sortable 64-bit IDs per second without any network coordination.</div>
-        </div>
-      </div>
-    
         <div class="simulator-card" id="sim-snowflake">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Snowflake ID: 1 + 41 + 10 + 12 bits</div>
@@ -1154,71 +1272,6 @@ J --> L["last_ts = now, return id"]
           <div class="sim-verdict" id="sf-decoded">Paste an ID (or click one in the log) to decode it with the current epoch.</div>
           <div class="simulator-card__log" id="sf-log"><div class="simulator-card__log-header">Event log (click an ID to decode it)</div></div>
         </div>
-      <div class="exercise-box quiz-card" id="quiz-snowflake-id-design-t1" data-type="tradeoff" data-slug="snowflake-id-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Handling NTP Backward Clock Jumps in Snowflake Generators</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> An NTP step adjustment moves a Snowflake worker&#039;s wall clock backward by 12 milliseconds. If the generator immediately emits IDs using the regressed timestamp, it risks colliding with IDs generated 12 ms ago.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How should the Snowflake generator handle small backward clock skews (&lt; 20 ms) vs large regressions, and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Track the highest millisecond seen so far (`last_timestamp`) and never emit a smaller timestamp.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-snowflake-id-design-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-snowflake-id-design-t1" value="0" />
-               <span>Ignore the backward jump and reset the 12-bit sequence counter to 0 immediately</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-snowflake-id-design-t1" value="1" />
-               <span>Pin `last_timestamp`, pause/spin-wait (or advance sequence bits on the logical high-water timestamp) for small skews up to a bounded threshold, and refuse ID generation (circuit-break + alert) if skew exceeds the safety bound</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-snowflake-id-design-t1" value="2" />
-               <span>Switch to random UUIDv4 strings stored as 36-byte `VARCHAR` keys on clock skew</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-snowflake-id-design-t1" value="0" />
-               <span>Resetting the sequence to 0 on a repeated millisecond guarantees uniqueness</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-snowflake-id-design-t1" value="1" />
-               <span>Monotonic high-water clamping preserves uniqueness across brief NTP adjustments, while failing fast on large regressions prevents unbounded thread stalls or duplicate IDs</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-snowflake-id-design-t1" value="2" />
-               <span>Mixing 36-byte string UUIDs into a 64-bit `BIGINT` column requires zero schema changes</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="snowflake-id-design-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="snowflake-id-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-snowflake-id-design-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> A Snowflake worker must enforce `timestamp &gt;= last_timestamp`. For tiny NTP adjustments (a few ms), holding `last_timestamp` (consuming remaining sequence numbers or waiting until wall clock catches up) prevents collisions safely; for large regressions, failing health checks protects data integrity.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1347,15 +1400,15 @@ J --> L["last_ts = now, return id"]
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-ops.js?v=ff1d2ff9b7"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

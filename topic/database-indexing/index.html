@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -975,44 +975,55 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: what an index actually saves</h2><p>Take a <code>users</code> table with 50,000,000 rows of about 200 bytes each. At roughly 35 rows per 8 KB page, that is about 1.4M pages, or about 11 GB.</p><ul><li><strong>Seq scan for one email:</strong> read about 1.4M pages. From a cold NVMe drive at around 2 GB/s that is roughly 5-6 seconds. Even fully cached in RAM, it costs around 1 second of CPU to evaluate 50M rows.</li><li><strong>B-tree on email:</strong> index entries of about 40 bytes give roughly 200 per page. log base 200 of 50M is about 3.3, so the tree has 4 levels. The root and internal pages are cached, so a lookup is about 1-2 leaf and heap page reads, well under 1 ms.</li><li><strong>Write cost:</strong> every INSERT now also inserts into each index. Five secondary indexes means about six B-tree modifications per row plus their WAL. Write-heavy tables should carry only the indexes their queries prove they need.</li></ul><h3>Choosing an index type</h3><table><thead><tr><th>Index</th><th>Good for</th><th>Not good for</th></tr></thead><tbody><tr><td>B-tree (default)</td><td>Equality, ranges, ORDER BY, prefix LIKE 'abc%'</td><td>Suffix or contains search, very low selectivity</td></tr><tr><td>Hash</td><td>Pure equality with slightly smaller size</td><td>Ranges, sorting</td></tr><tr><td>GIN</td><td>JSONB containment, arrays, full-text</td><td>Write-heavy tables (slow updates)</td></tr><tr><td>BRIN</td><td>Huge append-only tables ordered by time</td><td>Randomly ordered data</td></tr><tr><td>Partial</td><td>Hot subsets such as <code>WHERE status = 'pending'</code></td><td>Queries that do not repeat the predicate</td></tr></tbody></table><h3>Composite index rule of thumb</h3><p>For <code>WHERE tenant_id = ? AND status = ? AND created_at &gt; ? ORDER BY created_at</code>, index <code>(tenant_id, status, created_at)</code>. Equality columns go first and the range and sort column last, so the database seeks to one contiguous slice and reads it in order with no sort step.</p><h3>Failure modes</h3><ul><li><strong>Index-only scan that is not:</strong> in PostgreSQL, heap fetches still happen for pages not marked all-visible in the visibility map. Vacuum is what keeps index-only scans cheap.</li><li><strong>Unused indexes:</strong> check <code>pg_stat_user_indexes.idx_scan = 0</code> and drop them. They slow every write and waste cache.</li><li><strong>Clustered vs heap:</strong> in MySQL InnoDB, secondary indexes store the primary key, not a physical pointer. A wide or random primary key (UUIDv4) bloats every secondary index.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="database-indexing" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="database-indexing" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Leftmost prefix rule" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Ordering a composite index" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Index-only scan that is not" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: B+Tree Index Memory Footprint" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Composite Index Column Ordering &amp; Write Amplification" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-database-indexing-c1" data-type="mcq" data-slug="database-indexing" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Leftmost prefix rule</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Index Mechanics &amp; Cardinality Rules</div>
+        <div class="check-slider__section">Section: Index Mechanics &amp; Cardinality Rules</div>
+        
         <p class="check-slider__prompt">Given an index on (tenant_id, status, created_at), which WHERE clause can use it for an efficient seek?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c1" value="0" />
-             <span>WHERE tenant_id = ? AND status = ?</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c1" value="1" />
-             <span>WHERE status = ? AND created_at after ?</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c1" value="2" />
-             <span>WHERE created_at between ? and ?</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c1" value="3" />
-             <span>WHERE status = ?</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-indexing-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c1" value="0" />
+            <span>WHERE tenant_id = ? AND status = ?</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c1" value="1" />
+            <span>WHERE status = ? AND created_at after ?</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c1" value="2" />
+            <span>WHERE created_at between ? and ?</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c1" value="3" />
+            <span>WHERE status = ?</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-indexing-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-indexing-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-indexing-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1021,35 +1032,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-database-indexing-c2" data-type="mcq" data-slug="database-indexing" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Ordering a composite index</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: what an index actually saves</div>
+        <div class="check-slider__section">Section: Worked example: what an index actually saves</div>
+        
         <p class="check-slider__prompt">A hot query is WHERE tenant_id = ? AND status = ? AND created_at after ? ORDER BY created_at. Which single index lets it seek to one slice and read rows in order with no sort step?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c2" value="0" />
-             <span>(created_at, tenant_id, status)</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c2" value="1" />
-             <span>(tenant_id, created_at, status)</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c2" value="2" />
-             <span>(status, created_at, tenant_id)</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c2" value="3" />
-             <span>(tenant_id, status, created_at)</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-indexing-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c2" value="0" />
+            <span>(created_at, tenant_id, status)</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c2" value="1" />
+            <span>(tenant_id, created_at, status)</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c2" value="2" />
+            <span>(status, created_at, tenant_id)</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c2" value="3" />
+            <span>(tenant_id, status, created_at)</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-indexing-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-indexing-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-indexing-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1058,139 +1073,217 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-database-indexing-c3" data-type="mcq" data-slug="database-indexing" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Index-only scan that is not</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Worked example: what an index actually saves</div>
+        <div class="check-slider__section">Section: Worked example: what an index actually saves</div>
+        
         <p class="check-slider__prompt">EXPLAIN ANALYZE shows an Index Only Scan on a covering index, but Heap Fetches is nearly equal to the number of rows returned. The table is updated heavily. What is the most likely cause?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c3" value="0" />
-             <span>The INCLUDE columns were stored out of order, so the planner must read the heap for them</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c3" value="1" />
-             <span>Many pages are not marked all-visible in the visibility map, so vacuum is falling behind</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c3" value="2" />
-             <span>Index-only scans always read the heap for rows changed within the last hour</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-database-indexing-c3" value="3" />
-             <span>The index is too large for shared buffers, so PostgreSQL falls back to heap reads</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-indexing-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c3" value="0" />
+            <span>The INCLUDE columns were stored out of order, so the planner must read the heap for them</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c3" value="1" />
+            <span>Many pages are not marked all-visible in the visibility map, so vacuum is falling behind</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c3" value="2" />
+            <span>Index-only scans always read the heap for rows changed within the last hour</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-database-indexing-c3" value="3" />
+            <span>The index is too large for shared buffers, so PostgreSQL falls back to heap reads</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-indexing-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-indexing-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-indexing-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">PostgreSQL can skip the heap only for pages the visibility map marks all-visible, and vacuum is what sets those bits, so heavy updates without enough vacuuming force heap fetches. The buffer-size option is tempting, but cache misses make reads slower; they do not turn index-only scans into heap fetches.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-database-indexing-n1" data-type="numeric" data-slug="database-indexing" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: B+Tree Index Memory Footprint</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A PostgreSQL table has 500 million rows. You add a secondary B+Tree index on an 8-byte `BIGINT` column. Including tuple pointer (`ctid`), page header, and fill-factor overhead, each index entry consumes 32 bytes.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How much RAM (in GB, using 1 GB = 10^9 bytes) is required to keep this entire secondary index resident in the buffer pool?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-indexing-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-database-indexing-n1"
+              aria-label="Numeric estimate in GB"
+              placeholder="Enter numeric estimate (GB)..."
+            />
+            <span class="quiz-unit-badge">GB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 500,000,000 rows × 32 bytes/entry and divide by 10^9 bytes/GB.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-indexing-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-indexing-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">500,000,000 entries × 32 bytes = 16,000,000,000 bytes = 16 GB. Every additional secondary index both consumes gigabytes of buffer pool RAM and adds a random page read/write on every non-HOT row update.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-database-indexing-t1" data-type="tradeoff" data-slug="database-indexing" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Composite Index Column Ordering &amp; Write Amplification</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An orders table receives 8,000 inserts/sec and serves a hot query: `SELECT id, total FROM orders WHERE tenant_id = $1 AND status = &#039;PENDING&#039; ORDER BY created_at DESC LIMIT 50`. Currently, 98% of rows have `status = &#039;COMPLETED&#039;`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which indexing strategy best balances read latency, sort elimination, and buffer pool footprint, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-database-indexing-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-indexing-t1" value="0" />
+                  <span>Create three separate single-column indexes on `(tenant_id)`, `(status)`, and `(created_at)`</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-indexing-t1" value="1" />
+                  <span>Create a partial covering index on `(tenant_id, created_at DESC) INCLUDE (total) WHERE status = &#039;PENDING&#039;`</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-database-indexing-t1" value="2" />
+                  <span>Create a full composite index on `(created_at DESC, status, tenant_id)` across all rows</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-indexing-t1" value="0" />
+                  <span>PostgreSQL merges three single-column indexes with zero CPU or heap fetches</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-indexing-t1" value="1" />
+                  <span>Filtering on `status = &#039;PENDING&#039;` shrinks the index by 98%, `(tenant_id, created_at DESC)` satisfies equality + sort order, and `INCLUDE (total)` enables an index-only scan</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-database-indexing-t1" value="2" />
+                  <span>Leading with `created_at` lets the engine jump directly to a specific `tenant_id` without scanning</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Consider both the 98% completed rows and the equality-then-range/sort rule for B+Trees.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="database-indexing-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-database-indexing-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">A partial index (`WHERE status = &#039;PENDING&#039;`) excludes 98% of historical rows, keeping the index tiny in RAM. Ordering keys as `(tenant_id, created_at DESC)` matches the equality predicate followed by the `ORDER BY`, and `INCLUDE (total)` avoids heap page fetches.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-database-indexing-n1" data-type="numeric" data-slug="database-indexing">
+      <div class="exercise-box" id="exercise-database-indexing" data-slug="database-indexing">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Napkin Math: B+Tree Index Memory Footprint</span>
+            <span>Architecture Challenge: B-Tree Composite Index Column Ordering</span>
           </div>
-          <span class="exercise-box__difficulty">apply</span>
+          <span class="exercise-box__difficulty">Intermediate</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A PostgreSQL table has 500 million rows. You add a secondary B+Tree index on an 8-byte `BIGINT` column. Including tuple pointer (`ctid`), page header, and fill-factor overhead, each index entry consumes 32 bytes.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How much RAM (in GB, using 1 GB = 10^9 bytes) is required to keep this entire secondary index resident in the buffer pool?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Multiply 500,000,000 rows × 32 bytes/entry and divide by 10^9 bytes/GB.</div>
+        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> Table with 50M records. Status has 4 distinct values; created_at is a timestamp.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> You have a query: WHERE status = &#039;ACTIVE&#039; AND created_at &gt; &#039;2026-01-01&#039; ORDER BY created_at. Which composite index definition gives optimal performance?</div>
         
-        <div class="quiz-options exercise-options" id="quiz-options-database-indexing-n1" style="margin-top: 15px;">
+        <div class="exercise-options">
           
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-database-indexing-n1" placeholder="Enter numeric estimate (GB)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">GB</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="database-indexing-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="database-indexing" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-database-indexing-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 500,000,000 entries × 32 bytes = 16,000,000,000 bytes = 16 GB. Every additional secondary index both consumes gigabytes of buffer pool RAM and adds a random page read/write on every non-HOT row update.</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-database-indexing-t1" data-type="tradeoff" data-slug="database-indexing">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Composite Index Column Ordering &amp; Write Amplification</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> An orders table receives 8,000 inserts/sec and serves a hot query: `SELECT id, total FROM orders WHERE tenant_id = $1 AND status = &#039;PENDING&#039; ORDER BY created_at DESC LIMIT 50`. Currently, 98% of rows have `status = &#039;COMPLETED&#039;`.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which indexing strategy best balances read latency, sort elimination, and buffer pool footprint, and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Consider both the 98% completed rows and the equality-then-range/sort rule for B+Trees.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-database-indexing-t1" style="margin-top: 15px;">
+            <div class="exercise-option" data-action="exercise-option" data-idx="0">
+              <span class="exercise-option__bullet">A</span>
+              <span class="exercise-option__text">No index needed; the query planner automatically parallelizes the table scan</span>
+            </div>
           
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-database-indexing-t1" value="0" />
-               <span>Create three separate single-column indexes on `(tenant_id)`, `(status)`, and `(created_at)`</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-database-indexing-t1" value="1" />
-               <span>Create a partial covering index on `(tenant_id, created_at DESC) INCLUDE (total) WHERE status = &#039;PENDING&#039;`</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-database-indexing-t1" value="2" />
-               <span>Create a full composite index on `(created_at DESC, status, tenant_id)` across all rows</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-database-indexing-t1" value="0" />
-               <span>PostgreSQL merges three single-column indexes with zero CPU or heap fetches</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-database-indexing-t1" value="1" />
-               <span>Filtering on `status = &#039;PENDING&#039;` shrinks the index by 98%, `(tenant_id, created_at DESC)` satisfies equality + sort order, and `INCLUDE (total)` enables an index-only scan</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-database-indexing-t1" value="2" />
-               <span>Leading with `created_at` lets the engine jump directly to a specific `tenant_id` without scanning</span>
-             </label>
-           
-         </div>
-       
+            <div class="exercise-option" data-action="exercise-option" data-idx="1">
+              <span class="exercise-option__bullet">B</span>
+              <span class="exercise-option__text">Two separate single-column indexes: INDEX (status) and INDEX (created_at)</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="2">
+              <span class="exercise-option__bullet">C</span>
+              <span class="exercise-option__text">INDEX (status, created_at)</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="3">
+              <span class="exercise-option__bullet">D</span>
+              <span class="exercise-option__text">INDEX (created_at, status)</span>
+            </div>
+          
         </div>
 
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="database-indexing-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="database-indexing" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-database-indexing-t1" style="display: none;">
+        <div class="exercise-feedback" id="feedback-database-indexing">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> A partial index (`WHERE status = &#039;PENDING&#039;`) excludes 98% of historical rows, keeping the index tiny in RAM. Ordering keys as `(tenant_id, created_at DESC)` matches the equality predicate followed by the `ORDER BY`, and `INCLUDE (total)` avoids heap page fetches.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> In composite B-Tree indexes, equality filter columns must precede range/order columns: (Equality, Range). An index on (status, created_at) allows the B-Tree to zoom directly to &#039;ACTIVE&#039; and scan the sorted timestamps without a filesort.</div>
         </div>
       </div>
     
@@ -1314,14 +1407,14 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

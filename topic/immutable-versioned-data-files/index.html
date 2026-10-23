@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -1004,40 +1004,45 @@ flowchart TD
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
           <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: CoW commit ordering" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Path copy cost" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Growing LMDB file" aria-label="Go to question 3"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-immutable-versioned-data-files-c1" data-type="mcq" data-slug="immutable-versioned-data-files" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">CoW commit ordering</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Why Immutability Eliminates Concurrency Locks</div>
+        <div class="check-slider__section">Section: Why Immutability Eliminates Concurrency Locks</div>
+        
         <p class="check-slider__prompt">A copy-on-write B+tree has built a new leaf, internal page and root for an update. In what order must it persist things for the commit to be crash safe?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c1" value="0" />
-             <span>Flush the new pages first, then write and flush the metadata page that names the new root</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c1" value="1" />
-             <span>Write the metadata page first so readers see the new root sooner, then flush the new pages</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c1" value="2" />
-             <span>Swap the in-memory root pointer atomically; that CPU-atomic store is itself the commit</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c1" value="3" />
-             <span>Issue the pages and metadata in one write call and let the device keep them in order</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-immutable-versioned-data-files-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c1" value="0" />
+            <span>Flush the new pages first, then write and flush the metadata page that names the new root</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c1" value="1" />
+            <span>Write the metadata page first so readers see the new root sooner, then flush the new pages</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c1" value="2" />
+            <span>Swap the in-memory root pointer atomically; that CPU-atomic store is itself the commit</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c1" value="3" />
+            <span>Issue the pages and metadata in one write call and let the device keep them in order</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="immutable-versioned-data-files-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="immutable-versioned-data-files-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-immutable-versioned-data-files-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1046,35 +1051,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-immutable-versioned-data-files-c2" data-type="mcq" data-slug="immutable-versioned-data-files" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Path copy cost</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: one update in a copy-on-write B+tree</div>
+        <div class="check-slider__section">Section: Worked example: one update in a copy-on-write B+tree</div>
+        
         <p class="check-slider__prompt">A copy-on-write B+tree has depth 4 (root, two internal levels, leaf) and 8 KB pages. How many bytes of tree pages are written to update one 100-byte value?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c2" value="0" />
-             <span>8 KB plus a meta page</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c2" value="1" />
-             <span>16 KB plus a meta page</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c2" value="2" />
-             <span>32 KB plus a meta page</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c2" value="3" />
-             <span>64 KB plus a meta page</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-immutable-versioned-data-files-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c2" value="0" />
+            <span>8 KB plus a meta page</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c2" value="1" />
+            <span>16 KB plus a meta page</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c2" value="2" />
+            <span>32 KB plus a meta page</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c2" value="3" />
+            <span>64 KB plus a meta page</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="immutable-versioned-data-files-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="immutable-versioned-data-files-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-immutable-versioned-data-files-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1083,35 +1092,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-immutable-versioned-data-files-c3" data-type="mcq" data-slug="immutable-versioned-data-files" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Growing LMDB file</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Failure modes</div>
+        <div class="check-slider__section">Section: Failure modes</div>
+        
         <p class="check-slider__prompt">An LMDB-backed service keeps a steady amount of live data, yet its data file grows every day. What is the most likely cause?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c3" value="0" />
-             <span>The single-writer lock serializes commits, so pages queue up waiting to be written</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c3" value="1" />
-             <span>The two alternating meta pages double the file size on every other transaction</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c3" value="2" />
-             <span>A forgotten long-running read transaction pins an old snapshot, so freed pages cannot be reused</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-immutable-versioned-data-files-c3" value="3" />
-             <span>Copy-on-write has no reclamation, so every replaced path copy stays on disk forever</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-immutable-versioned-data-files-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c3" value="0" />
+            <span>The single-writer lock serializes commits, so pages queue up waiting to be written</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c3" value="1" />
+            <span>The two alternating meta pages double the file size on every other transaction</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c3" value="2" />
+            <span>A forgotten long-running read transaction pins an old snapshot, so freed pages cannot be reused</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-immutable-versioned-data-files-c3" value="3" />
+            <span>Copy-on-write has no reclamation, so every replaced path copy stays on disk forever</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="immutable-versioned-data-files-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="immutable-versioned-data-files-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-immutable-versioned-data-files-c3" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1120,7 +1133,7 @@ flowchart TD
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
         <div class="takeaways">
@@ -1231,14 +1244,14 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

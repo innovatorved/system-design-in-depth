@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -983,44 +983,55 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
 <!-- enriched -->
 <h2>Worked example: a 50,000-seat stadium on-sale</h2><ul><li>2 million fans arrive in the first 5 minutes. Without a waiting room, seat-map requests peak at hundreds of thousands per second, on data that changes every second.</li><li>The waiting room admits 3,000 users per minute. If an average buyer takes 6 minutes, about 18,000 people are in checkout at once, a load the reservation database can easily handle.</li><li>Holds last 10 minutes. With 50,000 seats and roughly 1 in 4 holds abandoned, expired holds release seats continuously, so the seat map must refresh often (poll every few seconds, or push updates to open sessions).</li><li>Contention is highest on the best seats. The conditional <code>UPDATE ... WHERE status = 'AVAILABLE'</code> returns 0 rows for everyone except the winner, who gets the seat. Everyone else is told immediately to choose another seat.</li></ul><h2>Concurrency options</h2><table><thead><tr><th>Technique</th><th>How it works</th><th>Strength</th><th>Weakness</th></tr></thead><tbody><tr><td>Conditional update / optimistic version</td><td><code>UPDATE ... WHERE status = 'AVAILABLE' AND version = v</code></td><td>No lock held while the user thinks; scales well</td><td>Losers must retry or pick again</td></tr><tr><td>Pessimistic row lock</td><td><code>SELECT ... FOR UPDATE</code> inside a short transaction</td><td>Simple reasoning</td><td>Lock waits pile up on hot rows; never hold it across user think time</td></tr><tr><td>Distributed lock (Redis, ZooKeeper)</td><td>Lock per seat, then write to the DB</td><td>Offloads contention from the DB</td><td>Needs fencing tokens; the lock and the DB can disagree</td></tr><tr><td>Serialised per-event queue</td><td>One consumer per event partition processes seat requests in order</td><td>No races by construction</td><td>Throughput limited by one partition; adds latency</td></tr></tbody></table><h2>General admission is a counter, not seats</h2><p>For standing-room tickets, inventory is a number: <code>UPDATE inventory SET remaining = remaining - :n WHERE event_id = :e AND remaining &gt;= :n</code>. A single counter row becomes a hotspot at thousands of updates per second. Split it into, say, 20 sub-counters of 2,500 tickets each, pick one at random, and fall back to the others when it runs out. This is the same idea as sharded counters.</p><h2>Fairness and bots</h2><ul><li>Randomise positions for everyone who arrives before the on-sale time, so refreshing early gives no advantage. Ticketmaster and Cloudflare Waiting Room both do this.</li><li>Limit tickets per account and per payment card, and require verified accounts for high-demand events (Ticketmaster Verified Fan).</li><li>Issue signed, expiring entry tokens from the waiting room, so bots cannot skip the queue by calling the checkout API directly.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="ticket-booking-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="ticket-booking-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Where the hold lives" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Waiting-room throughput" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Payment after the hold" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Stadium Seat Map Memory Footprint" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Two-Phase Seat Hold With Bounded TTL vs Lock-Until-Payment" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-ticket-booking-system-design-c1" data-type="mcq" data-slug="ticket-booking-system-design" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Where the hold lives</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Architectural Strategy</div>
+        <div class="check-slider__section">Section: Architectural Strategy</div>
+        
         <p class="check-slider__prompt">Why should a seat hold&#039;s token, owner and expiry be stored in the database row that the booking UPDATE checks, rather than only as a Redis key with a TTL?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c1" value="0" />
-             <span>Redis cannot store a TTL precise enough for a 10-minute hold</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c1" value="1" />
-             <span>A database row is faster to read than Redis for the seat map</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c1" value="2" />
-             <span>Redis TTLs expire late, so seats would stay held for too long</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c1" value="3" />
-             <span>A Redis key can expire or be evicted independently, so the two can disagree</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-ticket-booking-system-design-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c1" value="0" />
+            <span>Redis cannot store a TTL precise enough for a 10-minute hold</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c1" value="1" />
+            <span>A database row is faster to read than Redis for the seat map</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c1" value="2" />
+            <span>Redis TTLs expire late, so seats would stay held for too long</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c1" value="3" />
+            <span>A Redis key can expire or be evicted independently, so the two can disagree</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ticket-booking-system-design-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ticket-booking-system-design-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ticket-booking-system-design-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1029,35 +1040,39 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-ticket-booking-system-design-c2" data-type="mcq" data-slug="ticket-booking-system-design" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Waiting-room throughput</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: a 50,000-seat stadium on-sale</div>
+        <div class="check-slider__section">Section: Worked example: a 50,000-seat stadium on-sale</div>
+        
         <p class="check-slider__prompt">The waiting room admits 4,000 users per minute, and an average buyer spends 5 minutes in checkout. In steady state, roughly how many people are in checkout at once?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c2" value="0" />
-             <span>About 800</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c2" value="1" />
-             <span>About 4,000</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c2" value="2" />
-             <span>About 20,000</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c2" value="3" />
-             <span>About 200,000</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-ticket-booking-system-design-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c2" value="0" />
+            <span>About 800</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c2" value="1" />
+            <span>About 4,000</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c2" value="2" />
+            <span>About 20,000</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c2" value="3" />
+            <span>About 200,000</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ticket-booking-system-design-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ticket-booking-system-design-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ticket-booking-system-design-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1066,142 +1081,180 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-ticket-booking-system-design-c3" data-type="mcq" data-slug="ticket-booking-system-design" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Payment after the hold</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Payment Reconciliation &amp; Webhook Callbacks</div>
+        <div class="check-slider__section">Section: Payment Reconciliation &amp; Webhook Callbacks</div>
+        
         <p class="check-slider__prompt">Buyer A&#039;s hold expires, buyer B then books the seat, and a minute later A&#039;s payment-success webhook arrives. What should the system do?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c3" value="0" />
-             <span>Reassign the seat to A, since A&#039;s payment was authorised first</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c3" value="1" />
-             <span>Issue A a ticket as well, then resolve the double booking manually</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c3" value="2" />
-             <span>Attempt A&#039;s token-bound transition, and when it fails record the payment as unmatched and void or refund it</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-ticket-booking-system-design-c3" value="3" />
-             <span>Extend A&#039;s expired hold by 10 minutes and retry the booking transition</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-ticket-booking-system-design-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c3" value="0" />
+            <span>Reassign the seat to A, since A&#039;s payment was authorised first</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c3" value="1" />
+            <span>Issue A a ticket as well, then resolve the double booking manually</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c3" value="2" />
+            <span>Attempt A&#039;s token-bound transition, and when it fails record the payment as unmatched and void or refund it</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-ticket-booking-system-design-c3" value="3" />
+            <span>Extend A&#039;s expired hold by 10 minutes and retry the booking transition</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ticket-booking-system-design-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ticket-booking-system-design-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ticket-booking-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">The callback retries the conditional booking with A&#039;s hold token; it matches zero rows because B owns the seat, so the payment goes to an explicit void or refund workflow with reconciliation. Reassigning to A breaks the invariant that a confirmed booking is never taken away.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-ticket-booking-system-design-n1" data-type="numeric" data-slug="ticket-booking-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Stadium Seat Map Memory Footprint</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A global ticketing platform hosts 5,000 concurrent high-demand concerts/games on sale simultaneously. Each venue has 20,000 seats, and each seat state (`seat_id`, `status`, `hold_user_id`, `hold_expires_at`, `version`) occupies 64 bytes in memory.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many gigabytes (GB, using 1 GB = 10^9 bytes) of RAM are required to hold all 5,000 active venue seat maps in memory simultaneously?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-ticket-booking-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-ticket-booking-system-design-n1"
+              aria-label="Numeric estimate in GB"
+              placeholder="Enter numeric estimate (GB)..."
+            />
+            <span class="quiz-unit-badge">GB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Total seats = 5,000 venues × 20,000 seats = 100,000,000 seats. Multiply by 64 bytes and divide by 10^9 bytes/GB.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ticket-booking-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ticket-booking-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`5,000 × 20,000 = 100,000,000` total active seats across all concurrent events. At 64 bytes/seat, the entire active seat inventory of 5,000 stadiums fits in just `6,400,000,000 bytes = 6.4 GB` of RAM!</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-ticket-booking-system-design-t1" data-type="tradeoff" data-slug="ticket-booking-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Two-Phase Seat Hold With Bounded TTL vs Lock-Until-Payment</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">500,000 fans attempt to book 20,000 Taylor Swift stadium seats at 10:00:00 AM. Completing credit card 3D-Secure verification and payment takes 45–120 seconds per fan.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should the seat reservation and checkout flow be architected to prevent double-booking, database collapse, and abandoned-cart deadlocks?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-ticket-booking-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ticket-booking-system-design-t1" value="0" />
+                  <span>Allow multiple users to pay for the same seat concurrently and refund the losers 24 hours later</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ticket-booking-system-design-t1" value="1" />
+                  <span>Gate ingress with a virtual waiting room queue per event, then use a two-phase booking state machine: (1) atomic `AVAILABLE -&gt; HELD` transition with a strict 5–10 minute lease TTL + fencing token, and (2) `HELD -&gt; BOOKED` upon payment webhook (provided lease token is still valid)</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-ticket-booking-system-design-t1" value="2" />
+                  <span>Hold a PostgreSQL `SERIALIZABLE` transaction open across the 2-minute user checkout form</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ticket-booking-system-design-t1" value="0" />
+                  <span>Charging 50 people for Seat A1 and issuing 49 refunds avoids payment gateway fees</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ticket-booking-system-design-t1" value="1" />
+                  <span>A virtual waiting room absorbs the 500k bot/fan spike at the edge, while a short-lived atomic `HELD` state gives the user time to pay without holding DB connection locks and automatically releases abandoned seats on TTL expiry</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-ticket-booking-system-design-t1" value="2" />
+                  <span>Holding open SQL connections for 120 seconds per user scales to 500,000 concurrent fans</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Decouple millisecond seat claiming (`AVAILABLE -&gt; HELD`) from multi-minute human payment (`HELD -&gt; BOOKED`).</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="ticket-booking-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-ticket-booking-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Two-phase reservation converts a 2-minute human interaction into two sub-millisecond atomic state transitions (`AVAILABLE -&gt; HELD` with TTL, and `HELD -&gt; BOOKED` verified by fencing token/hold ID), while an edge virtual waiting room smooths the 500k fan stampede.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-ticket-booking-system-design-n1" data-type="numeric" data-slug="ticket-booking-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Stadium Seat Map Memory Footprint</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A global ticketing platform hosts 5,000 concurrent high-demand concerts/games on sale simultaneously. Each venue has 20,000 seats, and each seat state (`seat_id`, `status`, `hold_user_id`, `hold_expires_at`, `version`) occupies 64 bytes in memory.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How many gigabytes (GB, using 1 GB = 10^9 bytes) of RAM are required to hold all 5,000 active venue seat maps in memory simultaneously?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Total seats = 5,000 venues × 20,000 seats = 100,000,000 seats. Multiply by 64 bytes and divide by 10^9 bytes/GB.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-ticket-booking-system-design-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-ticket-booking-system-design-n1" placeholder="Enter numeric estimate (GB)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">GB</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="ticket-booking-system-design-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="ticket-booking-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-ticket-booking-system-design-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> `5,000 × 20,000 = 100,000,000` total active seats across all concurrent events. At 64 bytes/seat, the entire active seat inventory of 5,000 stadiums fits in just `6,400,000,000 bytes = 6.4 GB` of RAM!</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-ticket-booking-system-design-t1" data-type="tradeoff" data-slug="ticket-booking-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Two-Phase Seat Hold With Bounded TTL vs Lock-Until-Payment</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> 500,000 fans attempt to book 20,000 Taylor Swift stadium seats at 10:00:00 AM. Completing credit card 3D-Secure verification and payment takes 45–120 seconds per fan.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How should the seat reservation and checkout flow be architected to prevent double-booking, database collapse, and abandoned-cart deadlocks?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Decouple millisecond seat claiming (`AVAILABLE -&gt; HELD`) from multi-minute human payment (`HELD -&gt; BOOKED`).</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-ticket-booking-system-design-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-ticket-booking-system-design-t1" value="0" />
-               <span>Allow multiple users to pay for the same seat concurrently and refund the losers 24 hours later</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-ticket-booking-system-design-t1" value="1" />
-               <span>Gate ingress with a virtual waiting room queue per event, then use a two-phase booking state machine: (1) atomic `AVAILABLE -&gt; HELD` transition with a strict 5–10 minute lease TTL + fencing token, and (2) `HELD -&gt; BOOKED` upon payment webhook (provided lease token is still valid)</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-ticket-booking-system-design-t1" value="2" />
-               <span>Hold a PostgreSQL `SERIALIZABLE` transaction open across the 2-minute user checkout form</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-ticket-booking-system-design-t1" value="0" />
-               <span>Charging 50 people for Seat A1 and issuing 49 refunds avoids payment gateway fees</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-ticket-booking-system-design-t1" value="1" />
-               <span>A virtual waiting room absorbs the 500k bot/fan spike at the edge, while a short-lived atomic `HELD` state gives the user time to pay without holding DB connection locks and automatically releases abandoned seats on TTL expiry</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-ticket-booking-system-design-t1" value="2" />
-               <span>Holding open SQL connections for 120 seconds per user scales to 500,000 concurrent fans</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="ticket-booking-system-design-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="ticket-booking-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-ticket-booking-system-design-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Two-phase reservation converts a 2-minute human interaction into two sub-millisecond atomic state transitions (`AVAILABLE -&gt; HELD` with TTL, and `HELD -&gt; BOOKED` verified by fencing token/hold ID), while an edge virtual waiting room smooths the 500k fan stampede.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1310,14 +1363,14 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

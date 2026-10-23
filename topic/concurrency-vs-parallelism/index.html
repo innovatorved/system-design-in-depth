@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -1005,40 +1005,45 @@
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
           <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Async does not offload CPU" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: The single-core CPU floor" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Connection caps add up" aria-label="Go to question 3"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-concurrency-vs-parallelism-c1" data-type="mcq" data-slug="concurrency-vs-parallelism" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Async does not offload CPU</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: How a server handles many requests</div>
+        <div class="check-slider__section">Section: How a server handles many requests</div>
+        
         <p class="check-slider__prompt">A Node.js handler declared async spends 200 ms hashing a password in plain JavaScript on the event-loop thread. What happens to other requests during that time?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c1" value="0" />
-             <span>Their callbacks are blocked for about 200 ms, since async does not move CPU work off the loop</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c1" value="1" />
-             <span>They continue, because Node sends async functions to the libuv worker pool automatically</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c1" value="2" />
-             <span>They continue, because the promise lets the hashing run in parallel on another core</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c1" value="3" />
-             <span>Only requests to the same route are delayed, while other routes run as normal</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-concurrency-vs-parallelism-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c1" value="0" />
+            <span>Their callbacks are blocked for about 200 ms, since async does not move CPU work off the loop</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c1" value="1" />
+            <span>They continue, because Node sends async functions to the libuv worker pool automatically</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c1" value="2" />
+            <span>They continue, because the promise lets the hashing run in parallel on another core</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c1" value="3" />
+            <span>Only requests to the same route are delayed, while other routes run as normal</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="concurrency-vs-parallelism-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="concurrency-vs-parallelism-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-concurrency-vs-parallelism-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1047,35 +1052,39 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-concurrency-vs-parallelism-c2" data-type="mcq" data-slug="concurrency-vs-parallelism" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">The single-core CPU floor</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: How a server handles many requests</div>
+        <div class="check-slider__section">Section: How a server handles many requests</div>
+        
         <p class="check-slider__prompt">Each request needs 5 ms of CPU, waits 40 ms on the database, then needs 1 ms more of CPU. Thirty-two requests arrive at once on one core. However well the waits overlap, what is the minimum time to finish them all?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c2" value="0" />
-             <span>About 46 ms, since every request can wait at the same time</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c2" value="1" />
-             <span>About 96 ms, the CPU time of the lesson&#039;s sixteen-request batch</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c2" value="2" />
-             <span>About 192 ms, the total CPU work that one core must execute</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c2" value="3" />
-             <span>About 1,472 ms, since each request takes 46 ms end to end</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-concurrency-vs-parallelism-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c2" value="0" />
+            <span>About 46 ms, since every request can wait at the same time</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c2" value="1" />
+            <span>About 96 ms, the CPU time of the lesson&#039;s sixteen-request batch</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c2" value="2" />
+            <span>About 192 ms, the total CPU work that one core must execute</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c2" value="3" />
+            <span>About 1,472 ms, since each request takes 46 ms end to end</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="concurrency-vs-parallelism-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="concurrency-vs-parallelism-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-concurrency-vs-parallelism-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1084,35 +1093,39 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-concurrency-vs-parallelism-c3" data-type="mcq" data-slug="concurrency-vs-parallelism" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Connection caps add up</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: How a server handles many requests</div>
+        <div class="check-slider__section">Section: How a server handles many requests</div>
+        
         <p class="check-slider__prompt">You run 30 app instances, each with a database pool capped at 10, plus 20 background workers holding 2 connections each. The database allows 200 connections. What is the risk?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c3" value="0" />
-             <span>None, because every process stays within its own configured cap</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c3" value="1" />
-             <span>Up to 300 connections, fine if workers borrow from the app pools</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c3" value="2" />
-             <span>Up to 40 connections, since pooled connections are shared across instances</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-concurrency-vs-parallelism-c3" value="3" />
-             <span>Up to 340 connections, more than the database allows; per-process caps are not global</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-concurrency-vs-parallelism-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c3" value="0" />
+            <span>None, because every process stays within its own configured cap</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c3" value="1" />
+            <span>Up to 300 connections, fine if workers borrow from the app pools</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c3" value="2" />
+            <span>Up to 40 connections, since pooled connections are shared across instances</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-concurrency-vs-parallelism-c3" value="3" />
+            <span>Up to 340 connections, more than the database allows; per-process caps are not global</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="concurrency-vs-parallelism-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="concurrency-vs-parallelism-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-concurrency-vs-parallelism-c3" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1121,7 +1134,7 @@
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
         <div class="simulator-card" id="sim-littles">
@@ -1254,15 +1267,15 @@
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

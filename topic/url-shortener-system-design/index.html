@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -972,44 +972,55 @@ flowchart LR
 <!-- enriched -->
 <h2>Worked example: does it fit on one machine?</h2><ul><li><strong>Writes:</strong> 1 million new links per day is about 12 per second on average, perhaps 100 per second at peak.</li><li><strong>Reads:</strong> 100 million redirects per day is about 1,160 per second on average, perhaps 5,000 per second at peak.</li><li><strong>Storage:</strong> about 500 bytes per row (code, URL, owner, timestamps) x 365 million rows per year is about 180 GB per year, which a single PostgreSQL instance on NVMe handles easily.</li><li><strong>Hot set:</strong> if 20% of the links created in the last month receive most clicks, that is 6 million rows x 500 B = 3 GB. It fits in the database buffer cache, or in a local LRU cache inside the application.</li></ul><p>Conclusion: one primary database, a read replica for failover and one or two stateless app servers are enough. Scaling out (next unit) becomes necessary at 100x this load.</p><h2>Code generation options</h2><table><thead><tr><th>Approach</th><th>Collisions</th><th>Guessable?</th><th>Coordination</th><th>Notes</th></tr></thead><tbody><tr><td>Base62(auto-increment ID)</td><td>None</td><td>Yes, sequential</td><td>The database sequence</td><td>Short (a 7-character code covers 62^7, about 3.5 trillion)</td></tr><tr><td>Base62(permute(ID))</td><td>None (the permutation is one-to-one)</td><td>Not easily</td><td>The database sequence</td><td>For example a small Feistel network or multiplication by an odd constant modulo 62^7</td></tr><tr><td>Random 7 characters + unique insert</td><td>Rare; retry on conflict</td><td>No</td><td>None beyond a unique index</td><td>With 100 million codes in use, the chance a new code collides is 100M / 3.5T, about 0.003%</td></tr><tr><td>Hash(URL) truncated</td><td>Possible (birthday bound)</td><td>No</td><td>A unique index</td><td>Same URL gives the same code, which you may or may not want. Salt and retry on collision</td></tr></tbody></table><h2>Redirect status codes</h2><table><thead><tr><th>Code</th><th>Meaning</th><th>Browser caching</th><th>Method preserved?</th></tr></thead><tbody><tr><td>301</td><td>Moved permanently</td><td>Cached aggressively unless headers say otherwise</td><td>May change POST to GET</td></tr><tr><td>302</td><td>Found (temporary)</td><td>Only if Cache-Control or Expires allow it</td><td>May change POST to GET</td></tr><tr><td>307 / 308</td><td>Temporary / permanent</td><td>Same as 302 / 301</td><td>Yes</td></tr></tbody></table><p>Bitly returns 301 with short cache lifetimes. Whichever code you choose, set explicit <code>Cache-Control</code> so the behaviour is deliberate rather than dependent on browser defaults.</p>
 </div></article>
-      <section class="check-slider" data-slug="url-shortener-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="url-shortener-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Single-node storage math" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Stopping enumeration" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Counting every click" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Base62 Short Code Namespace Capacity" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: HTTP 301 (Permanent) vs HTTP 302 (Temporary) Redirect Status Codes" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-url-shortener-system-design-c1" data-type="mcq" data-slug="url-shortener-system-design" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Single-node storage math</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: does it fit on one machine?</div>
+        <div class="check-slider__section">Section: Worked example: does it fit on one machine?</div>
+        
         <p class="check-slider__prompt">Your shortener creates 2 million links per day, and each row (code, URL, owner, timestamps) is about 500 bytes. Roughly how much new storage does one year of links need?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c1" value="0" />
-             <span>About 36 GB per year</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c1" value="1" />
-             <span>About 3.6 TB per year</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c1" value="2" />
-             <span>About 1 TB per year</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c1" value="3" />
-             <span>About 365 GB per year</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-url-shortener-system-design-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c1" value="0" />
+            <span>About 36 GB per year</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c1" value="1" />
+            <span>About 3.6 TB per year</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c1" value="2" />
+            <span>About 1 TB per year</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c1" value="3" />
+            <span>About 365 GB per year</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-url-shortener-system-design-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1018,35 +1029,39 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-url-shortener-system-design-c2" data-type="mcq" data-slug="url-shortener-system-design" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Stopping enumeration</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Code generation options</div>
+        <div class="check-slider__section">Section: Code generation options</div>
+        
         <p class="check-slider__prompt">Codes are Base62 of an auto-increment ID, and a competitor is walking through b7, b8, b9 to scrape every link and estimate your volume. Which change stops this while keeping 7-character codes and zero collisions?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c2" value="0" />
-             <span>Hash each URL with MD5 and keep the first 7 characters</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c2" value="1" />
-             <span>Encode a one-to-one permutation of the ID, such as a small Feistel network</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c2" value="2" />
-             <span>Switch to Snowflake IDs so codes include a timestamp and worker ID</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c2" value="3" />
-             <span>Append a random character to each sequential Base62 code</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-url-shortener-system-design-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c2" value="0" />
+            <span>Hash each URL with MD5 and keep the first 7 characters</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c2" value="1" />
+            <span>Encode a one-to-one permutation of the ID, such as a small Feistel network</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c2" value="2" />
+            <span>Switch to Snowflake IDs so codes include a timestamp and worker ID</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c2" value="3" />
+            <span>Append a random character to each sequential Base62 code</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-url-shortener-system-design-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1055,139 +1070,217 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-url-shortener-system-design-c3" data-type="mcq" data-slug="url-shortener-system-design" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Counting every click</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Redirect status codes</div>
+        <div class="check-slider__section">Section: Redirect status codes</div>
+        
         <p class="check-slider__prompt">Marketing complains that repeat clicks by the same user never show up in click analytics. The service returns 301 with no cache headers. What is the most robust fix?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c3" value="0" />
-             <span>Keep 301 but add a query string with a timestamp to each short link</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c3" value="1" />
-             <span>Switch to 308 so the browser preserves the request method on redirect</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c3" value="2" />
-             <span>Return 302 or 307 with Cache-Control: private, max-age=0 on the redirect</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-url-shortener-system-design-c3" value="3" />
-             <span>Return 301 and count clicks from the destination site&#039;s referrer logs</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-url-shortener-system-design-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c3" value="0" />
+            <span>Keep 301 but add a query string with a timestamp to each short link</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c3" value="1" />
+            <span>Switch to 308 so the browser preserves the request method on redirect</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c3" value="2" />
+            <span>Return 302 or 307 with Cache-Control: private, max-age=0 on the redirect</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-url-shortener-system-design-c3" value="3" />
+            <span>Return 301 and count clicks from the destination site&#039;s referrer logs</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-url-shortener-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Browsers cache a 301 aggressively, so repeat clicks never reach the origin; a temporary redirect with explicit no-cache headers makes each click hit you. 308 is also a permanent redirect and is cached like a 301, so it has the same problem.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-url-shortener-system-design-n1" data-type="numeric" data-slug="url-shortener-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Base62 Short Code Namespace Capacity</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You design a short code generator using a Base62 alphabet (`a-z`, `A-Z`, `0-9` = 62 characters). A 6-character code provides `62^6 ≈ 56.8 billion` codes, and a 7-character code provides `62^7 ≈ 3.52 trillion` (`3,521 billion`) codes.</p>
+          </div>
+        
+        <p class="check-slider__prompt">At a write rate of 1 billion new links per year, how many years would it take to exhaust 56 billion 6-character Base62 codes (rounded to the nearest integer)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-url-shortener-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-url-shortener-system-design-n1"
+              aria-label="Numeric estimate in years"
+              placeholder="Enter numeric estimate (years)..."
+            />
+            <span class="quiz-unit-badge">years</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 56 billion total codes by 1 billion codes per year.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-url-shortener-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`62^6 = 56,800,235,584` (~56.8 billion) unique codes. At 1 billion links/year (~31.7 writes/sec), a 6-character Base62 namespace lasts ~56–57 years (and a 7-character namespace lasts ~3,521 years).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-url-shortener-system-design-t1" data-type="tradeoff" data-slug="url-shortener-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: HTTP 301 (Permanent) vs HTTP 302 (Temporary) Redirect Status Codes</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Product management wants your URL shortener to provide accurate real-time click analytics (total clicks, referrer, geo, device breakdown) AND allow enterprise customers to update a link&#039;s destination URL during a campaign.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which HTTP redirect status code and caching policy must you choose, and what is the trade-off?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-url-shortener-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-url-shortener-system-design-t1" value="0" />
+                  <span>Return `HTTP 301 Moved Permanently` with `Cache-Control: max-age=31536000` so browsers never contact your servers again</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-url-shortener-system-design-t1" value="1" />
+                  <span>Return `HTTP 302 Found` (or `307` with controlled `Cache-Control: no-cache` / edge beacon logging) so every click reaches your edge/service to record analytics and respect destination updates, trading off higher edge request QPS</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-url-shortener-system-design-t1" value="2" />
+                  <span>Return `HTTP 200 OK` with an HTML `&lt;iframe src=&#039;...&#039;&gt;` wrapping the destination site</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-url-shortener-system-design-t1" value="0" />
+                  <span>Browsers cache HTTP 301 permanently in local disk cache and still send click analytics to the shortener on subsequent clicks</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-url-shortener-system-design-t1" value="1" />
+                  <span>HTTP 301 causes browsers to bypass the shortener on repeat clicks (losing analytics and serving stale destinations if edited); HTTP 302 (handled at CDN edge with log streaming) preserves click telemetry and mutability</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-url-shortener-system-design-t1" value="2" />
+                  <span>All websites allow being embedded in third-party iframes (`X-Frame-Options: DENY` does not exist)</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What does a browser do on the second click of an `HTTP 301` redirect?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-url-shortener-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">With `HTTP 301`, browsers cache the redirect locally and jump straight to the target URL on repeat clicks, blinding your analytics pipeline and ignoring destination edits. `HTTP 302` ensures repeat clicks hit your edge (or API) where click events are captured.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-url-shortener-system-design-n1" data-type="numeric" data-slug="url-shortener-system-design">
+      <div class="exercise-box" id="exercise-url-shortener-system-design" data-slug="url-shortener-system-design">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Napkin Math: Base62 Short Code Namespace Capacity</span>
+            <span>Architecture Challenge: URL Shortener Collision &amp; Key Space</span>
           </div>
-          <span class="exercise-box__difficulty">apply</span>
+          <span class="exercise-box__difficulty">Intermediate</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> You design a short code generator using a Base62 alphabet (`a-z`, `A-Z`, `0-9` = 62 characters). A 6-character code provides `62^6 ≈ 56.8 billion` codes, and a 7-character code provides `62^7 ≈ 3.52 trillion` (`3,521 billion`) codes.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> At a write rate of 1 billion new links per year, how many years would it take to exhaust 56 billion 6-character Base62 codes (rounded to the nearest integer)?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Divide 56 billion total codes by 1 billion codes per year.</div>
+        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> Scale: Generating 1 billion short URLs per month without database lookup overhead.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> Why is an auto-incrementing counter encoded in Base62 preferred over an MD5 hash prefix for generating 7-character short codes?</div>
         
-        <div class="quiz-options exercise-options" id="quiz-options-url-shortener-system-design-n1" style="margin-top: 15px;">
+        <div class="exercise-options">
           
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-url-shortener-system-design-n1" placeholder="Enter numeric estimate (years)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">years</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="url-shortener-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-url-shortener-system-design-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> `62^6 = 56,800,235,584` (~56.8 billion) unique codes. At 1 billion links/year (~31.7 writes/sec), a 6-character Base62 namespace lasts ~56–57 years (and a 7-character namespace lasts ~3,521 years).</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-url-shortener-system-design-t1" data-type="tradeoff" data-slug="url-shortener-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: HTTP 301 (Permanent) vs HTTP 302 (Temporary) Redirect Status Codes</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> Product management wants your URL shortener to provide accurate real-time click analytics (total clicks, referrer, geo, device breakdown) AND allow enterprise customers to update a link&#039;s destination URL during a campaign.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which HTTP redirect status code and caching policy must you choose, and what is the trade-off?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> What does a browser do on the second click of an `HTTP 301` redirect?</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-url-shortener-system-design-t1" style="margin-top: 15px;">
+            <div class="exercise-option" data-action="exercise-option" data-idx="0">
+              <span class="exercise-option__bullet">A</span>
+              <span class="exercise-option__text">A counter converted to Base62 mathematically guarantees 100% uniqueness with zero hash collisions.</span>
+            </div>
           
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-url-shortener-system-design-t1" value="0" />
-               <span>Return `HTTP 301 Moved Permanently` with `Cache-Control: max-age=31536000` so browsers never contact your servers again</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-url-shortener-system-design-t1" value="1" />
-               <span>Return `HTTP 302 Found` (or `307` with controlled `Cache-Control: no-cache` / edge beacon logging) so every click reaches your edge/service to record analytics and respect destination updates, trading off higher edge request QPS</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-url-shortener-system-design-t1" value="2" />
-               <span>Return `HTTP 200 OK` with an HTML `&lt;iframe src=&#039;...&#039;&gt;` wrapping the destination site</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-url-shortener-system-design-t1" value="0" />
-               <span>Browsers cache HTTP 301 permanently in local disk cache and still send click analytics to the shortener on subsequent clicks</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-url-shortener-system-design-t1" value="1" />
-               <span>HTTP 301 causes browsers to bypass the shortener on repeat clicks (losing analytics and serving stale destinations if edited); HTTP 302 (handled at CDN edge with log streaming) preserves click telemetry and mutability</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-url-shortener-system-design-t1" value="2" />
-               <span>All websites allow being embedded in third-party iframes (`X-Frame-Options: DENY` does not exist)</span>
-             </label>
-           
-         </div>
-       
+            <div class="exercise-option" data-action="exercise-option" data-idx="1">
+              <span class="exercise-option__bullet">B</span>
+              <span class="exercise-option__text">Base62 uses fewer bytes in JSON payloads.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="2">
+              <span class="exercise-option__bullet">C</span>
+              <span class="exercise-option__text">MD5 hashing is deprecated for security reasons and cannot be used in URLs.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="3">
+              <span class="exercise-option__bullet">D</span>
+              <span class="exercise-option__text">Base62 can be decrypted back into the original long URL without a database.</span>
+            </div>
+          
         </div>
 
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="url-shortener-system-design-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="url-shortener-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-url-shortener-system-design-t1" style="display: none;">
+        <div class="exercise-feedback" id="feedback-url-shortener-system-design">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> With `HTTP 301`, browsers cache the redirect locally and jump straight to the target URL on repeat clicks, blinding your analytics pipeline and ignoring destination edits. `HTTP 302` ensures repeat clicks hit your edge (or API) where click events are captured.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> Taking the first 7 characters of an MD5 hash inevitably suffers from hash collisions due to the Birthday Paradox, requiring expensive database collision lookups. Converting sequential or Snowflake IDs to Base62 guarantees zero collisions.</div>
         </div>
       </div>
     
@@ -1299,14 +1392,14 @@ flowchart LR
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

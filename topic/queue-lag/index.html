@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -978,44 +978,55 @@ flowchart LR
 <!-- enriched -->
 <h2>Worked example: how long until we catch up?</h2><p>A topic receives 20,000 messages per second. Ten consumers each process 2,500 per second, 25,000 in total. A deploy pauses consumption for 5 minutes.</p><ul><li>Backlog built up: 20,000 x 300 s = 6,000,000 messages.</li><li>Net drain rate: 25,000 - 20,000 = 5,000 per second.</li><li>Time to drain: 6,000,000 / 5,000 = 1,200 s = <strong>20 minutes</strong>, four times longer than the outage.</li><li>Scale to 20 consumers (if there are at least 20 partitions): drain at 50,000 - 20,000 = 30,000 per second, done in <strong>200 s</strong>.</li><li>With only 12 partitions, 12 consumers give 30,000 capacity and a 10,000 per second net drain, so 10 minutes. Consumers beyond 12 do nothing.</li></ul><p>Little's law cross-check: at steady state, 20,000 messages per second arriving with an average of 50 ms in the system means about 1,000 messages in flight. A lag of 6 million means that much excess backlog on top of normal.</p><h2>Metrics that matter</h2><table><thead><tr><th>Metric</th><th>What it tells you</th><th>Caveat</th></tr></thead><tbody><tr><td>Offset lag per partition</td><td>Messages behind</td><td>Not comparable across topics with different processing costs</td></tr><tr><td>Time lag (age of the oldest unconsumed message)</td><td>User-visible delay</td><td>Needs timestamps. Burrow and Kafka Lag Exporter estimate it</td></tr><tr><td>Consume rate against produce rate</td><td>Whether lag is shrinking</td><td>Look at trends, not snapshots</td></tr><tr><td>Rebalance count</td><td>Group instability</td><td>Frequent rebalances stall consumption</td></tr><tr><td>DLQ and retry topic rate</td><td>Poison or failing messages</td><td>Retries can hide lag in another topic</td></tr></tbody></table><h2>Levers when lag grows</h2><ul><li><strong>Scale out</strong>, up to the partition count. Adding partitions later remaps keys, so plan for peak throughput up front.</li><li><strong>Batch downstream writes:</strong> one bulk insert of 500 rows instead of 500 single inserts.</li><li><strong>Fix slow handlers:</strong> tune <code>max.poll.records</code> and <code>max.poll.interval.ms</code> so slow batches do not trigger rebalances.</li><li><strong>Shed or defer:</strong> drop low-value events, such as analytics pings, during incidents.</li><li><strong>Autoscale on lag:</strong> KEDA's Kafka scaler targets lag per partition. Cap maximum replicas at the partition count.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="queue-lag" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="queue-lag" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Time to drain" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Alerting on user delay" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Scaling past partitions" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Queue Backlog Drain Time After a Traffic Spike" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Scaling Kafka Consumers Past Partition Count" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-queue-lag-c1" data-type="mcq" data-slug="queue-lag" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Time to drain</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: how long until we catch up?</div>
+        <div class="check-slider__section">Section: Worked example: how long until we catch up?</div>
+        
         <p class="check-slider__prompt">A topic receives 30,000 messages per second. Eight consumers each handle 5,000 per second. A deploy pauses consumption for 10 minutes. How long does the backlog take to drain once consumers resume?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c1" value="0" />
-             <span>About 7.5 minutes</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c1" value="1" />
-             <span>About 30 minutes</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c1" value="2" />
-             <span>About 10 minutes</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c1" value="3" />
-             <span>About 45 minutes</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-queue-lag-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c1" value="0" />
+            <span>About 7.5 minutes</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c1" value="1" />
+            <span>About 30 minutes</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c1" value="2" />
+            <span>About 10 minutes</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c1" value="3" />
+            <span>About 45 minutes</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="queue-lag-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="queue-lag-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-queue-lag-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1024,35 +1035,39 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-queue-lag-c2" data-type="mcq" data-slug="queue-lag" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Alerting on user delay</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Metrics that matter</div>
+        <div class="check-slider__section">Section: Metrics that matter</div>
+        
         <p class="check-slider__prompt">Which metric best tells you how delayed users are by a backed-up consumer, across topics with very different per-message costs?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c2" value="0" />
-             <span>Total offset lag summed across all partitions</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c2" value="1" />
-             <span>Consumer rebalance count per hour</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c2" value="2" />
-             <span>Consume rate divided by produce rate</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c2" value="3" />
-             <span>Age of the oldest unconsumed message</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-queue-lag-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c2" value="0" />
+            <span>Total offset lag summed across all partitions</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c2" value="1" />
+            <span>Consumer rebalance count per hour</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c2" value="2" />
+            <span>Consume rate divided by produce rate</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c2" value="3" />
+            <span>Age of the oldest unconsumed message</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="queue-lag-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="queue-lag-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-queue-lag-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1061,77 +1076,180 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-queue-lag-c3" data-type="mcq" data-slug="queue-lag" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Scaling past partitions</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Levers when lag grows</div>
+        <div class="check-slider__section">Section: Levers when lag grows</div>
+        
         <p class="check-slider__prompt">A lag-based autoscaler scales a consumer group to 30 pods on a topic with 12 partitions. What is the effect?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c3" value="0" />
-             <span>18 pods sit idle, throughput caps at 12 consumers, and adding partitions now would remap keys</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c3" value="1" />
-             <span>Throughput rises about 2.5 times, since Kafka balances records across all pods</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c3" value="2" />
-             <span>Kafka automatically splits the 12 partitions so all 30 pods receive work</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-queue-lag-c3" value="3" />
-             <span>The pods share partitions round-robin, which raises throughput but loses ordering</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-queue-lag-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c3" value="0" />
+            <span>18 pods sit idle, throughput caps at 12 consumers, and adding partitions now would remap keys</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c3" value="1" />
+            <span>Throughput rises about 2.5 times, since Kafka balances records across all pods</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c3" value="2" />
+            <span>Kafka automatically splits the 12 partitions so all 30 pods receive work</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-queue-lag-c3" value="3" />
+            <span>The pods share partitions round-robin, which raises throughput but loses ordering</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="queue-lag-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="queue-lag-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-queue-lag-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Each partition goes to one consumer in a group, so pods beyond 12 do nothing; the lesson says to cap replicas at the partition count. Adding partitions later changes key-to-partition mapping, which is why partition count should be planned for peak up front.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-queue-lag-n1" data-type="numeric" data-slug="queue-lag" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Queue Backlog Drain Time After a Traffic Spike</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A Kafka topic normally receives 5,000 msg/s. During a 10-minute (600-second) flash event, producer traffic spikes to 15,000 msg/s while your consumer fleet processes at its fixed maximum capacity of 10,000 msg/s. After the 10-minute spike ends, producer traffic drops back to 5,000 msg/s.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many minutes does it take for the consumer fleet (processing 10,000 msg/s against 5,000 msg/s new arrivals) to completely drain the accumulated backlog?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-queue-lag-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-queue-lag-n1"
+              aria-label="Numeric estimate in minutes"
+              placeholder="Enter numeric estimate (minutes)..."
+            />
+            <span class="quiz-unit-badge">minutes</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Backlog accumulated = (15,000 - 10,000) × 10 min. Net drain rate after spike = (10,000 - 5,000) msg/s.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="queue-lag-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-queue-lag-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">During the 10-minute spike, the queue accumulates `(15,000 - 10,000) = 5,000 msg/s` of lag, totaling `5,000 × 600 s = 3,000,000` messages. Once arrivals return to 5,000 msg/s, the consumer fleet has `10,000 - 5,000 = 5,000 msg/s` of net catch-up capacity, taking `3,000,000 / 5,000 = 600 seconds = 10 minutes` to drain.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-queue-lag-t1" data-type="tradeoff" data-slug="queue-lag" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Scaling Kafka Consumers Past Partition Count</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A single Kafka topic has 12 partitions and is experiencing growing consumer lag because each message invokes a slow external webhook (50 ms RTT). An engineer scales the consumer group deployment from 12 pods to 48 pods, but throughput does not change.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why did scaling to 48 pods fail, and what architectural change fixes consumer throughput safely?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-queue-lag-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-queue-lag-t1" value="0" />
+                  <span>Kafka only allows 1 consumer group per cluster; you must deploy 48 separate Kafka clusters</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-queue-lag-t1" value="1" />
+                  <span>In a Kafka consumer group, each partition is assigned to at most one consumer instance (leaving 36 pods idle); either increase partitions (mindful of key ordering) or decouple polling from bounded async worker pools per partition with ordered offset commits</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-queue-lag-t1" value="2" />
+                  <span>Have all 48 pods read Partition 0 simultaneously without consumer group coordination</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-queue-lag-t1" value="0" />
+                  <span>Kafka brokers crash when more than 12 pods join a consumer group</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-queue-lag-t1" value="1" />
+                  <span>Kafka&#039;s partition-to-consumer assignment rule caps active consumers in a group at the partition count; bounded per-partition async worker pools (or repartitioning) hide webhook I/O latency without losing offset safety</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-queue-lag-t1" value="2" />
+                  <span>Reading the same partition from 48 uncoordinated pods prevents duplicate webhook calls</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How many consumers in a single consumer group can actively read from a 12-partition topic?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="queue-lag-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-queue-lag-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Because a Kafka partition is assigned to at most one consumer within a consumer group, 36 of the 48 pods sit completely idle. Increasing partition count or using bounded non-blocking I/O worker pools per partition (committing contiguous high-water offsets) unlocks concurrency.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-queue-lag-n1" data-type="numeric" data-slug="queue-lag">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Queue Backlog Drain Time After a Traffic Spike</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A Kafka topic normally receives 5,000 msg/s. During a 10-minute (600-second) flash event, producer traffic spikes to 15,000 msg/s while your consumer fleet processes at its fixed maximum capacity of 10,000 msg/s. After the 10-minute spike ends, producer traffic drops back to 5,000 msg/s.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How many minutes does it take for the consumer fleet (processing 10,000 msg/s against 5,000 msg/s new arrivals) to completely drain the accumulated backlog?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Backlog accumulated = (15,000 - 10,000) × 10 min. Net drain rate after spike = (10,000 - 5,000) msg/s.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-queue-lag-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-queue-lag-n1" placeholder="Enter numeric estimate (minutes)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">minutes</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="queue-lag-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="queue-lag" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-queue-lag-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> During the 10-minute spike, the queue accumulates `(15,000 - 10,000) = 5,000 msg/s` of lag, totaling `5,000 × 600 s = 3,000,000` messages. Once arrivals return to 5,000 msg/s, the consumer fleet has `10,000 - 5,000 = 5,000 msg/s` of net catch-up capacity, taking `3,000,000 / 5,000 = 600 seconds = 10 minutes` to drain.</div>
-        </div>
-      </div>
-    
         <div class="simulator-card" id="sim-queue-lag">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Queue Backpressure & Lag</div>
@@ -1163,71 +1281,6 @@ flowchart LR
           <button class="btn btn--secondary" id="ql-toggle" style="margin-top:12px;">Start Simulation</button>
         </div>
       
-      <div class="exercise-box quiz-card" id="quiz-queue-lag-t1" data-type="tradeoff" data-slug="queue-lag">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Scaling Kafka Consumers Past Partition Count</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A single Kafka topic has 12 partitions and is experiencing growing consumer lag because each message invokes a slow external webhook (50 ms RTT). An engineer scales the consumer group deployment from 12 pods to 48 pods, but throughput does not change.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Why did scaling to 48 pods fail, and what architectural change fixes consumer throughput safely?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> How many consumers in a single consumer group can actively read from a 12-partition topic?</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-queue-lag-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-queue-lag-t1" value="0" />
-               <span>Kafka only allows 1 consumer group per cluster; you must deploy 48 separate Kafka clusters</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-queue-lag-t1" value="1" />
-               <span>In a Kafka consumer group, each partition is assigned to at most one consumer instance (leaving 36 pods idle); either increase partitions (mindful of key ordering) or decouple polling from bounded async worker pools per partition with ordered offset commits</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-queue-lag-t1" value="2" />
-               <span>Have all 48 pods read Partition 0 simultaneously without consumer group coordination</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-queue-lag-t1" value="0" />
-               <span>Kafka brokers crash when more than 12 pods join a consumer group</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-queue-lag-t1" value="1" />
-               <span>Kafka&#039;s partition-to-consumer assignment rule caps active consumers in a group at the partition count; bounded per-partition async worker pools (or repartitioning) hide webhook I/O latency without losing offset safety</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-queue-lag-t1" value="2" />
-               <span>Reading the same partition from 48 uncoordinated pods prevents duplicate webhook calls</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="queue-lag-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="queue-lag" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-queue-lag-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Because a Kafka partition is assigned to at most one consumer within a consumer group, 36 of the 48 pods sit completely idle. Increasing partition count or using bounded non-blocking I/O worker pools per partition (committing contiguous high-water offsets) unlocks concurrency.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1360,15 +1413,15 @@ flowchart LR
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

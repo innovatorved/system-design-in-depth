@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -965,40 +965,45 @@ WHERE deleted_at IS NULL;
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
           <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Re-registering after delete" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Archive in two steps" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Reading past the dead" aria-label="Go to question 3"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-soft-delete-c1" data-type="mcq" data-slug="soft-delete" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Re-registering after delete</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: The Pitfalls of Soft Deletes</div>
+        <div class="check-slider__section">Section: The Pitfalls of Soft Deletes</div>
+        
         <p class="check-slider__prompt">users.email has a plain UNIQUE constraint, and accounts are soft-deleted by setting deleted_at. A user deletes their account and later signs up again with the same email. What happens?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c1" value="0" />
-             <span>The signup succeeds, because the database treats soft-deleted rows as absent</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c1" value="1" />
-             <span>The signup succeeds, and the old row is restored automatically on insert</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c1" value="2" />
-             <span>The signup fails only if the old row&#039;s deleted_at is NULL for some reason</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c1" value="3" />
-             <span>The signup fails, because the soft-deleted row still holds that email value</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-soft-delete-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c1" value="0" />
+            <span>The signup succeeds, because the database treats soft-deleted rows as absent</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c1" value="1" />
+            <span>The signup succeeds, and the old row is restored automatically on insert</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c1" value="2" />
+            <span>The signup fails only if the old row&#039;s deleted_at is NULL for some reason</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c1" value="3" />
+            <span>The signup fails, because the soft-deleted row still holds that email value</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="soft-delete-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="soft-delete-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-soft-delete-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1007,35 +1012,39 @@ WHERE deleted_at IS NULL;
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-soft-delete-c2" data-type="mcq" data-slug="soft-delete" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Archive in two steps</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Engineering Solutions for Soft Deletes</div>
+        <div class="check-slider__section">Section: Engineering Solutions for Soft Deletes</div>
+        
         <p class="check-slider__prompt">To stop table bloat, a team hard-deletes rows from users and then inserts them into users_archive in a separate transaction. What is the risk, and what is the fix?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c2" value="0" />
-             <span>Archived rows keep their foreign keys, so orders block the delete; drop those constraints first</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c2" value="1" />
-             <span>A crash between the steps loses the record entirely; do both in one atomic statement or transaction</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c2" value="2" />
-             <span>The archive table fills with duplicates on every retry; add a unique key to users_archive</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c2" value="3" />
-             <span>The hard delete stops VACUUM from reclaiming space; soft-delete first and archive later</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-soft-delete-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c2" value="0" />
+            <span>Archived rows keep their foreign keys, so orders block the delete; drop those constraints first</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c2" value="1" />
+            <span>A crash between the steps loses the record entirely; do both in one atomic statement or transaction</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c2" value="2" />
+            <span>The archive table fills with duplicates on every retry; add a unique key to users_archive</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c2" value="3" />
+            <span>The hard delete stops VACUUM from reclaiming space; soft-delete first and archive later</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="soft-delete-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="soft-delete-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-soft-delete-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1044,35 +1053,39 @@ WHERE deleted_at IS NULL;
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-soft-delete-c3" data-type="mcq" data-slug="soft-delete" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Reading past the dead</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: the cost of keeping deleted rows</div>
+        <div class="check-slider__section">Section: Worked example: the cost of keeping deleted rows</div>
+        
         <p class="check-slider__prompt">A conversation&#039;s messages are 75% soft-deleted, and the index on (conversation_id, created_at DESC) includes deleted rows. Roughly how many index entries must be read to return the newest 50 visible messages?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c3" value="0" />
-             <span>About 200</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c3" value="1" />
-             <span>About 50</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c3" value="2" />
-             <span>About 67</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-soft-delete-c3" value="3" />
-             <span>About 250</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-soft-delete-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c3" value="0" />
+            <span>About 200</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c3" value="1" />
+            <span>About 50</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c3" value="2" />
+            <span>About 67</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-soft-delete-c3" value="3" />
+            <span>About 250</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="soft-delete-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="soft-delete-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-soft-delete-c3" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1081,7 +1094,7 @@ WHERE deleted_at IS NULL;
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
         <div class="takeaways">
@@ -1192,14 +1205,14 @@ WHERE deleted_at IS NULL;
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -1007,44 +1007,55 @@ redis.call('DECR', KEYS[1])
 redis.call('SADD', KEYS[2], ARGV[1])
 return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr><th>Strategy</th><th>Correctness</th><th>Throughput on one SKU</th><th>Complexity</th></tr></thead><tbody><tr><td>SELECT FOR UPDATE then UPDATE</td><td>Strong</td><td>Hundreds per second (serialised on one row)</td><td>Low</td></tr><tr><td>Single atomic UPDATE with WHERE stock &gt; 0</td><td>Strong</td><td>A few thousand per second (still one hot row)</td><td>Low</td></tr><tr><td>Stock split into N bucket rows</td><td>Strong</td><td>N times higher</td><td>Medium: pick buckets, rebalance near zero</td></tr><tr><td>Redis Lua counter plus async DB</td><td>Strong at Redis, with a failover risk</td><td>Tens of thousands per second or more</td><td>Medium: reconciliation</td></tr><tr><td>Pre-generated tokens in a queue</td><td>Strong: each token is claimed once</td><td>High</td><td>Medium</td></tr><tr><td>Waiting room in front of any of the above</td><td>Unchanged</td><td>Protects backends</td><td>Adds a UX component</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Alibaba's Singles' Day</strong> uses layered throttling, cached stock checks, and database hot-row optimisations (queued updates on a hot row in AliSQL).</li><li><strong>Ticketmaster's Smart Queue</strong> and <strong>Cloudflare's Waiting Room</strong> meter admission so that the inventory system only sees a manageable rate.</li><li><strong>Shopify</strong> throttles checkout per shop and load-tests flash-sale merchants ahead of drops.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="flash-sale-inventory-locking" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="flash-sale-inventory-locking" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why the Lua script works" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Funnel timing" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Redis failover risk" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Single-Row Lock Contention Ceiling" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Pessimistic SQL Row Locking vs Striped Inventory / Atomic Lua Reservation" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-flash-sale-inventory-locking-c1" data-type="mcq" data-slug="flash-sale-inventory-locking" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Why the Lua script works</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Under the Hood: Atomic Redis Lua Script</div>
+        <div class="check-slider__section">Section: Under the Hood: Atomic Redis Lua Script</div>
+        
         <p class="check-slider__prompt">Why does running check-stock-then-decrement as a Redis Lua script prevent overselling, when the same two steps in application code do not?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c1" value="0" />
-             <span>Lua scripts take a row-level lock on the stock key that other clients must wait for</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c1" value="1" />
-             <span>Redis replicates each Lua script synchronously to replicas before it returns</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c1" value="2" />
-             <span>Lua scripts retry automatically when they detect a concurrent write to the key</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c1" value="3" />
-             <span>Redis runs the script atomically on its single-threaded loop, so no other command runs between the read and the decrement</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-flash-sale-inventory-locking-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c1" value="0" />
+            <span>Lua scripts take a row-level lock on the stock key that other clients must wait for</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c1" value="1" />
+            <span>Redis replicates each Lua script synchronously to replicas before it returns</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c1" value="2" />
+            <span>Lua scripts retry automatically when they detect a concurrent write to the key</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c1" value="3" />
+            <span>Redis runs the script atomically on its single-threaded loop, so no other command runs between the read and the decrement</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-flash-sale-inventory-locking-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1053,35 +1064,39 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-flash-sale-inventory-locking-c2" data-type="mcq" data-slug="flash-sale-inventory-locking" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Funnel timing</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: funnel sizing</div>
+        <div class="check-slider__section">Section: Worked example: funnel sizing</div>
+        
         <p class="check-slider__prompt">A sale has 2,000 units. The waiting room admits 8,000 users per second to the reservation step, and 20% of reservations are abandoned within their 10-minute hold. How fast do units sell out, and how many return at expiry?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c2" value="0" />
-             <span>Reserved in about 0.25 seconds; about 400 units return at hold expiry</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c2" value="1" />
-             <span>Reserved in about 4 seconds; about 400 units return at hold expiry</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c2" value="2" />
-             <span>Reserved in about 0.25 seconds; about 1,600 units return at hold expiry</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c2" value="3" />
-             <span>Reserved in about 2.5 seconds; about 400 units return at hold expiry</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-flash-sale-inventory-locking-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c2" value="0" />
+            <span>Reserved in about 0.25 seconds; about 400 units return at hold expiry</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c2" value="1" />
+            <span>Reserved in about 4 seconds; about 400 units return at hold expiry</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c2" value="2" />
+            <span>Reserved in about 0.25 seconds; about 1,600 units return at hold expiry</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c2" value="3" />
+            <span>Reserved in about 2.5 seconds; about 400 units return at hold expiry</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-flash-sale-inventory-locking-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1090,142 +1105,180 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-flash-sale-inventory-locking-c3" data-type="mcq" data-slug="flash-sale-inventory-locking" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Redis failover risk</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Inventory strategies compared</div>
+        <div class="check-slider__section">Section: Inventory strategies compared</div>
+        
         <p class="check-slider__prompt">Inventory is decremented in Redis with a Lua script and persisted to Postgres asynchronously. The Redis primary fails over before replicating its last few decrements. What is the risk, and the mitigation?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c3" value="0" />
-             <span>No risk, because Lua scripts are atomic across the primary and its replicas</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c3" value="1" />
-             <span>The new primary may have too high a count and oversell; reconcile against the database and hold back a small buffer</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c3" value="2" />
-             <span>The new primary may have too low a count, so the only risk is a few unsold units</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-flash-sale-inventory-locking-c3" value="3" />
-             <span>Reservation tokens may be duplicated, but the stock count itself stays correct</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-flash-sale-inventory-locking-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c3" value="0" />
+            <span>No risk, because Lua scripts are atomic across the primary and its replicas</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c3" value="1" />
+            <span>The new primary may have too high a count and oversell; reconcile against the database and hold back a small buffer</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c3" value="2" />
+            <span>The new primary may have too low a count, so the only risk is a few unsold units</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-flash-sale-inventory-locking-c3" value="3" />
+            <span>Reservation tokens may be duplicated, but the stock count itself stays correct</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-flash-sale-inventory-locking-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Redis replication is asynchronous, so lost decrements leave the new primary thinking more stock remains, and it can sell units that are gone. Atomicity is per node; it says nothing about replication, so the lesson reconciles with the database and keeps a buffer or a refund policy.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-flash-sale-inventory-locking-n1" data-type="numeric" data-slug="flash-sale-inventory-locking" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Single-Row Lock Contention Ceiling</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">During a flash sale for 1,000 limited-edition GPUs, 50,000 buyers click &#039;Buy&#039; in the same second. Each SQL transaction locks the single SKU row `WHERE sku_id = &#039;GPU-99&#039;` and holds the row lock for 2 milliseconds (0.002 s) before committing.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the maximum number of serial row-lock transactions per second that a single SQL row can complete when each lock is held for 2 ms?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-flash-sale-inventory-locking-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-flash-sale-inventory-locking-n1"
+              aria-label="Numeric estimate in tx/s"
+              placeholder="Enter numeric estimate (tx/s)..."
+            />
+            <span class="quiz-unit-badge">tx/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">1,000 ms/sec ÷ 2 ms/transaction = 500 transactions/sec.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-flash-sale-inventory-locking-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Because exclusive row locks on a single row serialize execution (`Amdahl&#039;s Law`), holding the lock for 2 ms caps throughput at `1,000 ms / 2 ms = 500 tx/s`, regardless of whether the database server has 64 or 128 CPU cores.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-flash-sale-inventory-locking-t1" data-type="tradeoff" data-slug="flash-sale-inventory-locking" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Pessimistic SQL Row Locking vs Striped Inventory / Atomic Lua Reservation</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A flash sale receives 100,000 checkout requests/sec for a hot SKU with 10,000 units in stock. You must guarantee zero overselling (`sold &lt;= 10,000`) while keeping checkout response latency under 50 ms.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which inventory reservation architecture should you deploy, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-flash-sale-inventory-locking-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-flash-sale-inventory-locking-t1" value="0" />
+                  <span>Open a `SELECT ... FOR UPDATE` SQL transaction before calling the external payment gateway and hold the row lock until payment succeeds</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-flash-sale-inventory-locking-t1" value="1" />
+                  <span>Pre-allocate inventory into striped sub-buckets (or execute an atomic Redis Lua `DECR` reservation with a TTL hold token) at the edge, then asynchronously persist confirmed orders and release expired holds</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-flash-sale-inventory-locking-t1" value="2" />
+                  <span>Check `if (stock &gt; 0)` in application memory without synchronization and reconcile oversold orders via customer support emails</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-flash-sale-inventory-locking-t1" value="0" />
+                  <span>Holding a database row lock across a 600 ms external HTTP payment call maximizes database concurrency</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-flash-sale-inventory-locking-t1" value="1" />
+                  <span>Atomic in-memory reservation (or inventory striping across K rows) removes the single-row lock bottleneck and fast-rejects excess buyers in &lt;1 ms without touching SQL</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-flash-sale-inventory-locking-t1" value="2" />
+                  <span>Overselling 90,000 units and canceling paid orders satisfies the zero-oversell invariant</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Never hold a database lock across an external network RPC, and avoid a single hot lock point.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-flash-sale-inventory-locking-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Atomic in-memory token decrement (via Redis Lua script) or striping the 10,000 units across 100 inventory sub-rows absorbs 100k req/s in sub-millisecond time, immediately shedding the 90,000 excess requests before they ever reach the relational database.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-flash-sale-inventory-locking-n1" data-type="numeric" data-slug="flash-sale-inventory-locking">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Single-Row Lock Contention Ceiling</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> During a flash sale for 1,000 limited-edition GPUs, 50,000 buyers click &#039;Buy&#039; in the same second. Each SQL transaction locks the single SKU row `WHERE sku_id = &#039;GPU-99&#039;` and holds the row lock for 2 milliseconds (0.002 s) before committing.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> What is the maximum number of serial row-lock transactions per second that a single SQL row can complete when each lock is held for 2 ms?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 1,000 ms/sec ÷ 2 ms/transaction = 500 transactions/sec.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-flash-sale-inventory-locking-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-flash-sale-inventory-locking-n1" placeholder="Enter numeric estimate (tx/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">tx/s</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="flash-sale-inventory-locking" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-flash-sale-inventory-locking-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Because exclusive row locks on a single row serialize execution (`Amdahl&#039;s Law`), holding the lock for 2 ms caps throughput at `1,000 ms / 2 ms = 500 tx/s`, regardless of whether the database server has 64 or 128 CPU cores.</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-flash-sale-inventory-locking-t1" data-type="tradeoff" data-slug="flash-sale-inventory-locking">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Pessimistic SQL Row Locking vs Striped Inventory / Atomic Lua Reservation</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A flash sale receives 100,000 checkout requests/sec for a hot SKU with 10,000 units in stock. You must guarantee zero overselling (`sold &lt;= 10,000`) while keeping checkout response latency under 50 ms.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which inventory reservation architecture should you deploy, and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Never hold a database lock across an external network RPC, and avoid a single hot lock point.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-flash-sale-inventory-locking-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-flash-sale-inventory-locking-t1" value="0" />
-               <span>Open a `SELECT ... FOR UPDATE` SQL transaction before calling the external payment gateway and hold the row lock until payment succeeds</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-flash-sale-inventory-locking-t1" value="1" />
-               <span>Pre-allocate inventory into striped sub-buckets (or execute an atomic Redis Lua `DECR` reservation with a TTL hold token) at the edge, then asynchronously persist confirmed orders and release expired holds</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-flash-sale-inventory-locking-t1" value="2" />
-               <span>Check `if (stock &gt; 0)` in application memory without synchronization and reconcile oversold orders via customer support emails</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-flash-sale-inventory-locking-t1" value="0" />
-               <span>Holding a database row lock across a 600 ms external HTTP payment call maximizes database concurrency</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-flash-sale-inventory-locking-t1" value="1" />
-               <span>Atomic in-memory reservation (or inventory striping across K rows) removes the single-row lock bottleneck and fast-rejects excess buyers in &lt;1 ms without touching SQL</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-flash-sale-inventory-locking-t1" value="2" />
-               <span>Overselling 90,000 units and canceling paid orders satisfies the zero-oversell invariant</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="flash-sale-inventory-locking-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="flash-sale-inventory-locking" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-flash-sale-inventory-locking-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Atomic in-memory token decrement (via Redis Lua script) or striping the 10,000 units across 100 inventory sub-rows absorbs 100k req/s in sub-millisecond time, immediately shedding the 90,000 excess requests before they ever reach the relational database.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1346,14 +1399,14 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

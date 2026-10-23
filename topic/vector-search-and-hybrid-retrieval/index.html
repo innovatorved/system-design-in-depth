@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -1007,44 +1007,55 @@ flowchart TD
 </tbody></table>
 <p><strong>Filtering pitfall:</strong> applying a restrictive filter such as tenant or in-stock after ANN search can leave too few results; engines such as Elasticsearch, OpenSearch, Vespa and Weaviate implement filtered HNSW traversal or fall back to exact search when the filter is very selective.</p><h2>Tuning knobs that matter</h2><p>For HNSW, <code>M</code> controls graph degree (memory and recall), <code>ef_construction</code> controls build quality, and <code>ef_search</code> controls the query-time candidate list. Raising ef_search from 40 to 200 commonly lifts recall at 10 from around 0.9 into the high 0.9s at a few times the latency. Measure recall against exact brute-force results on a sample of real queries, not synthetic ones.</p>
 </div></article>
-      <section class="check-slider" data-slug="vector-search-and-hybrid-retrieval" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="vector-search-and-hybrid-retrieval" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why rank fusion" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Vector memory math" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Post-filtering ANN" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Uncompressed Float32 HNSW Vector Index RAM Sizing" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Dense Vector ANN vs Hybrid Lexical (BM25) + Vector Retrieval with RRF" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-vector-search-and-hybrid-retrieval-c1" data-type="mcq" data-slug="vector-search-and-hybrid-retrieval" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Why rank fusion</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Under the Hood: Hybrid Search Fusion (RRF)</div>
+        <div class="check-slider__section">Section: Under the Hood: Hybrid Search Fusion (RRF)</div>
+        
         <p class="check-slider__prompt">A hybrid search returns BM25 scores in the range 0 to 40 and cosine similarities in the range 0.6 to 0.9. Why do most systems fuse them with Reciprocal Rank Fusion instead of adding the raw scores?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c1" value="0" />
-             <span>Because RRF runs the two retrievers sequentially, which halves the query latency</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c1" value="1" />
-             <span>Because the scores are on incompatible scales, and RRF uses only rank positions so neither ranker dominates by accident</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c1" value="2" />
-             <span>Because cosine similarity cannot be computed for documents that BM25 did not retrieve</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c1" value="3" />
-             <span>Because adding scores requires both retrievers to return the same documents in the same order</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-vector-search-and-hybrid-retrieval-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c1" value="0" />
+            <span>Because RRF runs the two retrievers sequentially, which halves the query latency</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c1" value="1" />
+            <span>Because the scores are on incompatible scales, and RRF uses only rank positions so neither ranker dominates by accident</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c1" value="2" />
+            <span>Because cosine similarity cannot be computed for documents that BM25 did not retrieve</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c1" value="3" />
+            <span>Because adding scores requires both retrievers to return the same documents in the same order</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="vector-search-and-hybrid-retrieval-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="vector-search-and-hybrid-retrieval-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-vector-search-and-hybrid-retrieval-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1053,35 +1064,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-vector-search-and-hybrid-retrieval-c2" data-type="mcq" data-slug="vector-search-and-hybrid-retrieval" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Vector memory math</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: memory for 100 million vectors</div>
+        <div class="check-slider__section">Section: Worked example: memory for 100 million vectors</div>
+        
         <p class="check-slider__prompt">You must store 50 million 1,024-dimensional embeddings. How much memory do the raw float32 vectors take, and how much with int8 scalar quantisation?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c2" value="0" />
-             <span>About 51 GB as float32 and about 13 GB as int8</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c2" value="1" />
-             <span>About 205 GB as float32 and about 102 GB as int8</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c2" value="2" />
-             <span>About 410 GB as float32 and about 51 GB as int8</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c2" value="3" />
-             <span>About 205 GB as float32 and about 51 GB as int8</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-vector-search-and-hybrid-retrieval-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c2" value="0" />
+            <span>About 51 GB as float32 and about 13 GB as int8</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c2" value="1" />
+            <span>About 205 GB as float32 and about 102 GB as int8</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c2" value="2" />
+            <span>About 410 GB as float32 and about 51 GB as int8</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c2" value="3" />
+            <span>About 205 GB as float32 and about 51 GB as int8</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="vector-search-and-hybrid-retrieval-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="vector-search-and-hybrid-retrieval-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-vector-search-and-hybrid-retrieval-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1090,142 +1105,180 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-vector-search-and-hybrid-retrieval-c3" data-type="mcq" data-slug="vector-search-and-hybrid-retrieval" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Post-filtering ANN</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: ANN index trade-offs</div>
+        <div class="check-slider__section">Section: ANN index trade-offs</div>
+        
         <p class="check-slider__prompt">A multi-tenant app runs HNSW for the top 10 nearest vectors, then filters to the requesting tenant, who owns 0.5 percent of vectors. Users report empty or near-empty results. What is the fix?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c3" value="0" />
-             <span>Apply the filter during graph traversal, or fall back to exact search over the tenant&#039;s vectors when the filter is very selective</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c3" value="1" />
-             <span>Raise ef_construction so the graph is built with more links, which guarantees more tenant matches</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c3" value="2" />
-             <span>Switch from cosine to dot-product similarity so tenant vectors cluster closer to each query</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c3" value="3" />
-             <span>Lower M so each node has fewer neighbours and the search visits more distinct regions of the graph</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-vector-search-and-hybrid-retrieval-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c3" value="0" />
+            <span>Apply the filter during graph traversal, or fall back to exact search over the tenant&#039;s vectors when the filter is very selective</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c3" value="1" />
+            <span>Raise ef_construction so the graph is built with more links, which guarantees more tenant matches</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c3" value="2" />
+            <span>Switch from cosine to dot-product similarity so tenant vectors cluster closer to each query</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-vector-search-and-hybrid-retrieval-c3" value="3" />
+            <span>Lower M so each node has fewer neighbours and the search visits more distinct regions of the graph</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="vector-search-and-hybrid-retrieval-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="vector-search-and-hybrid-retrieval-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-vector-search-and-hybrid-retrieval-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Post-filtering 10 global neighbours to a 0.5 percent tenant leaves almost nothing; filtered HNSW traversal or exact search over the small filtered set solves it. A better-built graph still returns the global top 10, which are mostly other tenants&#039; vectors.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-vector-search-and-hybrid-retrieval-n1" data-type="numeric" data-slug="vector-search-and-hybrid-retrieval" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Uncompressed Float32 HNSW Vector Index RAM Sizing</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You are indexing 10 million document chunks using 768-dimensional `float32` embeddings (4 bytes per dimension) inside an in-memory HNSW graph. Assume HNSW graph adjacency links add ~25% overhead on top of the raw vector bytes (`3,072 bytes × 1.25 ≈ 3,840 bytes ≈ 4,000 bytes` per vector).</p>
+          </div>
+        
+        <p class="check-slider__prompt">Using 4,000 bytes (4 KB) per indexed vector including HNSW graph overhead, how many gigabytes (GB, using 1 GB = 10^9 bytes) of RAM are required for 10 million vectors?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-vector-search-and-hybrid-retrieval-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-vector-search-and-hybrid-retrieval-n1"
+              aria-label="Numeric estimate in GB"
+              placeholder="Enter numeric estimate (GB)..."
+            />
+            <span class="quiz-unit-badge">GB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">10,000,000 vectors × 4,000 bytes/vector ÷ 10^9 bytes/GB.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="vector-search-and-hybrid-retrieval-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-vector-search-and-hybrid-retrieval-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Raw vectors alone require `10M × 768 × 4 B = 30.72 GB`. Adding ~25% HNSW neighbor-list graph overhead brings the memory footprint to ~38.4–40 GB of RAM per replica for just 10M vectors.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-vector-search-and-hybrid-retrieval-t1" data-type="tradeoff" data-slug="vector-search-and-hybrid-retrieval" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Dense Vector ANN vs Hybrid Lexical (BM25) + Vector Retrieval with RRF</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An enterprise e-commerce search engine switches 100% of queries from BM25 lexical search to dense `float32` vector embeddings. Support tickets immediately spike because searches for exact SKU model numbers (e.g., `WH-1000XM5` or `error_code_0x80070005`) return semantically vague headphones instead of the exact model.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which retrieval architecture fixes exact-token recall while preserving semantic understanding, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-vector-search-and-hybrid-retrieval-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-vector-search-and-hybrid-retrieval-t1" value="0" />
+                  <span>Increase vector embedding dimensions from 768 to 4096 and remove all text indexes</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-vector-search-and-hybrid-retrieval-t1" value="1" />
+                  <span>Run parallel hybrid retrieval combining sparse lexical BM25 (exact token/SKU matching) with dense ANN vector search, fusing candidate lists via Reciprocal Rank Fusion (RRF) and a cross-encoder reranker</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-vector-search-and-hybrid-retrieval-t1" value="2" />
+                  <span>Replace vector search with SQL `LIKE &#039;%query%&#039;` full-table scans</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-vector-search-and-hybrid-retrieval-t1" value="0" />
+                  <span>Dense bi-encoder embeddings natively memorize every arbitrary alphanumeric SKU and hex error code without compression loss</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-vector-search-and-hybrid-retrieval-t1" value="1" />
+                  <span>BM25 provides exact rare-token precision while dense ANN captures semantic synonyms; fusing top candidates via RRF and reranking the top 50–100 delivers high recall and precision within latency bounds</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-vector-search-and-hybrid-retrieval-t1" value="2" />
+                  <span>Full-table `LIKE &#039;%...%&#039;` scans scale to 100M documents at &lt;20 ms latency</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why do dense bi-encoder embeddings struggle with out-of-vocabulary SKUs, part numbers, and exact identifiers?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="vector-search-and-hybrid-retrieval-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-vector-search-and-hybrid-retrieval-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Dense embeddings compress passages into fixed-width semantic vectors, losing fidelity on exact rare tokens like SKUs or hex codes. Hybrid retrieval (BM25 + dense ANN fused via Reciprocal Rank Fusion and top-K cross-encoder reranking) combines exact lexical precision with semantic recall.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-vector-search-and-hybrid-retrieval-n1" data-type="numeric" data-slug="vector-search-and-hybrid-retrieval">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Uncompressed Float32 HNSW Vector Index RAM Sizing</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> You are indexing 10 million document chunks using 768-dimensional `float32` embeddings (4 bytes per dimension) inside an in-memory HNSW graph. Assume HNSW graph adjacency links add ~25% overhead on top of the raw vector bytes (`3,072 bytes × 1.25 ≈ 3,840 bytes ≈ 4,000 bytes` per vector).</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Using 4,000 bytes (4 KB) per indexed vector including HNSW graph overhead, how many gigabytes (GB, using 1 GB = 10^9 bytes) of RAM are required for 10 million vectors?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 10,000,000 vectors × 4,000 bytes/vector ÷ 10^9 bytes/GB.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-vector-search-and-hybrid-retrieval-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-vector-search-and-hybrid-retrieval-n1" placeholder="Enter numeric estimate (GB)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">GB</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="vector-search-and-hybrid-retrieval-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="vector-search-and-hybrid-retrieval" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-vector-search-and-hybrid-retrieval-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Raw vectors alone require `10M × 768 × 4 B = 30.72 GB`. Adding ~25% HNSW neighbor-list graph overhead brings the memory footprint to ~38.4–40 GB of RAM per replica for just 10M vectors.</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-vector-search-and-hybrid-retrieval-t1" data-type="tradeoff" data-slug="vector-search-and-hybrid-retrieval">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Dense Vector ANN vs Hybrid Lexical (BM25) + Vector Retrieval with RRF</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> An enterprise e-commerce search engine switches 100% of queries from BM25 lexical search to dense `float32` vector embeddings. Support tickets immediately spike because searches for exact SKU model numbers (e.g., `WH-1000XM5` or `error_code_0x80070005`) return semantically vague headphones instead of the exact model.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which retrieval architecture fixes exact-token recall while preserving semantic understanding, and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Why do dense bi-encoder embeddings struggle with out-of-vocabulary SKUs, part numbers, and exact identifiers?</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-vector-search-and-hybrid-retrieval-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-vector-search-and-hybrid-retrieval-t1" value="0" />
-               <span>Increase vector embedding dimensions from 768 to 4096 and remove all text indexes</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-vector-search-and-hybrid-retrieval-t1" value="1" />
-               <span>Run parallel hybrid retrieval combining sparse lexical BM25 (exact token/SKU matching) with dense ANN vector search, fusing candidate lists via Reciprocal Rank Fusion (RRF) and a cross-encoder reranker</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-vector-search-and-hybrid-retrieval-t1" value="2" />
-               <span>Replace vector search with SQL `LIKE &#039;%query%&#039;` full-table scans</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-vector-search-and-hybrid-retrieval-t1" value="0" />
-               <span>Dense bi-encoder embeddings natively memorize every arbitrary alphanumeric SKU and hex error code without compression loss</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-vector-search-and-hybrid-retrieval-t1" value="1" />
-               <span>BM25 provides exact rare-token precision while dense ANN captures semantic synonyms; fusing top candidates via RRF and reranking the top 50–100 delivers high recall and precision within latency bounds</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-vector-search-and-hybrid-retrieval-t1" value="2" />
-               <span>Full-table `LIKE &#039;%...%&#039;` scans scale to 100M documents at &lt;20 ms latency</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="vector-search-and-hybrid-retrieval-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="vector-search-and-hybrid-retrieval" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-vector-search-and-hybrid-retrieval-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Dense embeddings compress passages into fixed-width semantic vectors, losing fidelity on exact rare tokens like SKUs or hex codes. Hybrid retrieval (BM25 + dense ANN fused via Reciprocal Rank Fusion and top-K cross-encoder reranking) combines exact lexical precision with semantic recall.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1334,14 +1387,14 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

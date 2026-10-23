@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -991,40 +991,45 @@ flowchart TD
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
           <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: MOVED vs ASK" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sizing Redis Cluster" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Minority primary writes" aria-label="Go to question 3"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-distributed-cache-design-c1" data-type="mcq" data-slug="distributed-cache-design" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">MOVED vs ASK</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Redirection Mechanics: MOVED vs. ASK</div>
+        <div class="check-slider__section">Section: Redirection Mechanics: MOVED vs. ASK</div>
+        
         <p class="check-slider__prompt">While slot 8402 is being migrated from node B to node C, a client sends a GET for a key in that slot to node B and receives an ASK redirect. What should the client do?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c1" value="0" />
-             <span>Send ASKING followed by the command to node C, without updating its permanent slot map</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c1" value="1" />
-             <span>Update its slot map so slot 8402 points to node C, then retry there</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c1" value="2" />
-             <span>Retry on node B after a short backoff, because the migration will finish soon</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c1" value="3" />
-             <span>Fetch the full cluster topology before sending any further commands</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-cache-design-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c1" value="0" />
+            <span>Send ASKING followed by the command to node C, without updating its permanent slot map</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c1" value="1" />
+            <span>Update its slot map so slot 8402 points to node C, then retry there</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c1" value="2" />
+            <span>Retry on node B after a short backoff, because the migration will finish soon</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c1" value="3" />
+            <span>Fetch the full cluster topology before sending any further commands</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-cache-design-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-cache-design-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-cache-design-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1033,35 +1038,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-distributed-cache-design-c2" data-type="mcq" data-slug="distributed-cache-design" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Sizing Redis Cluster</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: sizing a cache cluster</div>
+        <div class="check-slider__section">Section: Worked example: sizing a cache cluster</div>
+        
         <p class="check-slider__prompt">You need to cache 300M objects averaging 1 KB, with about 100 bytes of per-key overhead. Following the lesson, you keep nodes at no more than 70 percent memory and give each primary one replica. With 64 GB nodes, how many nodes do you need?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c2" value="0" />
-             <span>6 nodes, since 330 GB divided by 64 GB is about 5.2</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c2" value="1" />
-             <span>10 nodes, 5 primaries plus 5 replicas</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c2" value="2" />
-             <span>16 nodes, 8 primaries plus 8 replicas</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c2" value="3" />
-             <span>24 nodes, 12 primaries plus 12 replicas</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-cache-design-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c2" value="0" />
+            <span>6 nodes, since 330 GB divided by 64 GB is about 5.2</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c2" value="1" />
+            <span>10 nodes, 5 primaries plus 5 replicas</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c2" value="2" />
+            <span>16 nodes, 8 primaries plus 8 replicas</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c2" value="3" />
+            <span>24 nodes, 12 primaries plus 12 replicas</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-cache-design-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-cache-design-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-cache-design-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1070,35 +1079,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-distributed-cache-design-c3" data-type="mcq" data-slug="distributed-cache-design" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Minority primary writes</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Failure modes</div>
+        <div class="check-slider__section">Section: Failure modes</div>
+        
         <p class="check-slider__prompt">A network partition isolates one Redis Cluster primary with a few clients on its side. Those clients keep writing successfully. After the partition heals, those writes are gone. Why?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c3" value="0" />
-             <span>Redis Cluster discards all writes made during a failover by design, even on the majority side</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c3" value="1" />
-             <span>The minority primary accepted writes until cluster-node-timeout expired, while the majority promoted its replica; on rejoin it became a replica and its writes were discarded</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c3" value="2" />
-             <span>The clients&#039; writes went to replicas, which do not accept writes and silently drop them</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-distributed-cache-design-c3" value="3" />
-             <span>The ASK redirect caused the clients to write to a node that did not own the slot</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-distributed-cache-design-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c3" value="0" />
+            <span>Redis Cluster discards all writes made during a failover by design, even on the majority side</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c3" value="1" />
+            <span>The minority primary accepted writes until cluster-node-timeout expired, while the majority promoted its replica; on rejoin it became a replica and its writes were discarded</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c3" value="2" />
+            <span>The clients&#039; writes went to replicas, which do not accept writes and silently drop them</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-distributed-cache-design-c3" value="3" />
+            <span>The ASK redirect caused the clients to write to a node that did not own the slot</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-cache-design-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="distributed-cache-design-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-distributed-cache-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1107,7 +1120,7 @@ flowchart TD
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
         <div class="takeaways">
@@ -1258,14 +1271,14 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

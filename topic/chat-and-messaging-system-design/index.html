@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -998,44 +998,55 @@ flowchart TD
   B-->>R: delivered 42, double tick
   B-->>R: read up to 42, blue ticks</div><p>The <code>client_msg_id</code> makes resends idempotent. If the sender's network drops before the acknowledgement arrives, the retry is deduplicated rather than stored twice. With end-to-end encryption (the Signal protocol, used by WhatsApp), the server stores and routes only ciphertext. Group messages use sender keys, so a sender encrypts once rather than once per member.</p>
 </div></article>
-      <section class="check-slider" data-slug="chat-and-messaging-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="chat-and-messaging-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Syncing after offline" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Gateway and heartbeat math" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Delivered means app ack" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Group Chat Typing-Indicator Amplification" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Per-Channel Partitioning &amp; Ephemeral Presence Suppression in Large Groups" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-chat-and-messaging-system-design-c1" data-type="mcq" data-slug="chat-and-messaging-system-design" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Syncing after offline</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Handling Offline Messages</div>
+        <div class="check-slider__section">Section: Handling Offline Messages</div>
+        
         <p class="check-slider__prompt">User B&#039;s phone was offline for three hours while several conversations continued. On reconnect, how does B receive the missed messages in the right order?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c1" value="0" />
-             <span>The gateway replays the messages it buffered in memory for B&#039;s socket</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c1" value="1" />
-             <span>The client sends its last received sequence ID and fetches later messages from the store</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c1" value="2" />
-             <span>APNs and FCM deliver every missed message in order as push payloads</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c1" value="3" />
-             <span>The router re-sends each message when B&#039;s presence flips to online</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-chat-and-messaging-system-design-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c1" value="0" />
+            <span>The gateway replays the messages it buffered in memory for B&#039;s socket</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c1" value="1" />
+            <span>The client sends its last received sequence ID and fetches later messages from the store</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c1" value="2" />
+            <span>APNs and FCM deliver every missed message in order as push payloads</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c1" value="3" />
+            <span>The router re-sends each message when B&#039;s presence flips to online</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="chat-and-messaging-system-design-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="chat-and-messaging-system-design-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-chat-and-messaging-system-design-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1044,35 +1055,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-chat-and-messaging-system-design-c2" data-type="mcq" data-slug="chat-and-messaging-system-design" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Gateway and heartbeat math</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: connection and message scale</div>
+        <div class="check-slider__section">Section: Worked example: connection and message scale</div>
+        
         <p class="check-slider__prompt">You expect 60 million concurrently connected clients, each gateway holds about 400,000 sockets, and clients send a heartbeat every 30 s. What are the gateway count and heartbeat rate?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c2" value="0" />
-             <span>About 150 gateways plus headroom, and about 2 million heartbeats per second</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c2" value="1" />
-             <span>About 15 gateways plus headroom, and about 200,000 heartbeats per second</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c2" value="2" />
-             <span>About 150 gateways plus headroom, and about 60 million heartbeats per second</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c2" value="3" />
-             <span>About 1,500 gateways plus headroom, and about 2 million heartbeats per second</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-chat-and-messaging-system-design-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c2" value="0" />
+            <span>About 150 gateways plus headroom, and about 2 million heartbeats per second</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c2" value="1" />
+            <span>About 15 gateways plus headroom, and about 200,000 heartbeats per second</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c2" value="2" />
+            <span>About 150 gateways plus headroom, and about 60 million heartbeats per second</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c2" value="3" />
+            <span>About 1,500 gateways plus headroom, and about 2 million heartbeats per second</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="chat-and-messaging-system-design-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="chat-and-messaging-system-design-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-chat-and-messaging-system-design-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1081,142 +1096,180 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-chat-and-messaging-system-design-c3" data-type="mcq" data-slug="chat-and-messaging-system-design" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Delivered means app ack</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Message lifecycle and receipts</div>
+        <div class="check-slider__section">Section: Message lifecycle and receipts</div>
+        
         <p class="check-slider__prompt">Gateway B writes message 42 to B&#039;s socket and the kernel accepts it, but B&#039;s phone loses signal a moment later. When should the server mark message 42 as delivered?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c3" value="0" />
-             <span>Immediately, because TCP has accepted the bytes into the socket buffer</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c3" value="1" />
-             <span>After the gateway&#039;s next heartbeat from B succeeds</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c3" value="2" />
-             <span>Only when B&#039;s app acknowledges seq 42; otherwise it syncs on reconnect</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-chat-and-messaging-system-design-c3" value="3" />
-             <span>After a fixed timeout with no error from the gateway</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-chat-and-messaging-system-design-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c3" value="0" />
+            <span>Immediately, because TCP has accepted the bytes into the socket buffer</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c3" value="1" />
+            <span>After the gateway&#039;s next heartbeat from B succeeds</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c3" value="2" />
+            <span>Only when B&#039;s app acknowledges seq 42; otherwise it syncs on reconnect</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-chat-and-messaging-system-design-c3" value="3" />
+            <span>After a fixed timeout with no error from the gateway</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="chat-and-messaging-system-design-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="chat-and-messaging-system-design-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-chat-and-messaging-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Receipts are application-level acknowledgements: only B&#039;s app saying delivered 42 proves it arrived, and if it never does, the reconnect cursor fetches it again. Treating a socket write as delivery is the classic trap, because bytes in a buffer on a dying connection are lost.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-chat-and-messaging-system-design-n1" data-type="numeric" data-slug="chat-and-messaging-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Group Chat Typing-Indicator Amplification</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A workspace messaging app has 10,000 active large channels, each with 200 online members. In each channel, 2 members are typing concurrently, emitting 1 `user_typing` event every 3 seconds. If the server broadcasts every typing event to all 200 online members in each channel, traffic is `(10,000 × 2 / 3) × 200 ≈ 1.33M msg/s`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Using `10,000 channels × 1 typing event/sec per channel × 200 members`, how many millions of outbound typing-indicator messages per second are sent across the fleet?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-chat-and-messaging-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-chat-and-messaging-system-design-n1"
+              aria-label="Numeric estimate in million msg/s"
+              placeholder="Enter numeric estimate (million msg/s)..."
+            />
+            <span class="quiz-unit-badge">million msg/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">10,000 channels × 1 event/s × 200 recipients = 2,000,000 msg/s = 2 million msg/s.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="chat-and-messaging-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-chat-and-messaging-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Even at just 1 typing event/sec per channel across 10,000 channels of 200 members, outbound fan-out reaches `10,000 × 200 = 2,000,000 (2 million) msg/s`—often exceeding actual persisted chat message traffic!</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-chat-and-messaging-system-design-t1" data-type="tradeoff" data-slug="chat-and-messaging-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Per-Channel Partitioning &amp; Ephemeral Presence Suppression in Large Groups</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your chat platform supports both 1-on-1 DMs and 10,000-member community channels. In 10,000-member channels, broadcasting typing indicators, read receipts, and online-presence flips to all 10,000 members saturates WebSocket gateways.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should message ordering, storage partitioning, and ephemeral signals (typing/presence/read-receipts) be designed across small vs large channels?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-chat-and-messaging-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-chat-and-messaging-system-design-t1" value="0" />
+                  <span>Partition messages by `sender_user_id` and broadcast full read-receipts and typing events in 10,000-member channels</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-chat-and-messaging-system-design-t1" value="1" />
+                  <span>Partition messages by `(channel_id, bucket_id)` with per-channel monotonic sequence numbers (`Snowflake`), and dynamically degrade/disable broadcast of typing indicators, per-user read receipts, and push presence in channels exceeding a member threshold (e.g., &gt;100 members, switching to pull-based presence on viewport)</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-chat-and-messaging-system-design-t1" value="2" />
+                  <span>Use a single global SQL sequence for all messages across all channels worldwide</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-chat-and-messaging-system-design-t1" value="0" />
+                  <span>Partitioning by `sender_user_id` allows fetching a channel&#039;s conversation history in a single range scan</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-chat-and-messaging-system-design-t1" value="1" />
+                  <span>Partitioning by `(channel_id, time_bucket)` co-locates a channel&#039;s history for single-partition range scans, while adaptive feature degradation prevents `O(N^2)` ephemeral presence/typing storms in large rooms</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-chat-and-messaging-system-design-t1" value="2" />
+                  <span>A single global counter across continents adds zero latency to every chat message</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why do Slack, Discord, and WhatsApp disable per-user read receipts and typing indicators in large channels?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="chat-and-messaging-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-chat-and-messaging-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Chat reads always query a chronological slice of a single `channel_id`, so partitioning by `(channel_id, time_bucket)` guarantees single-partition reads. For large channels (&gt;100–500 members), disabling `O(N^2)` typing/read-receipt broadcasts and switching to viewport/pull presence prevents gateway overload.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-chat-and-messaging-system-design-n1" data-type="numeric" data-slug="chat-and-messaging-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Group Chat Typing-Indicator Amplification</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A workspace messaging app has 10,000 active large channels, each with 200 online members. In each channel, 2 members are typing concurrently, emitting 1 `user_typing` event every 3 seconds. If the server broadcasts every typing event to all 200 online members in each channel, traffic is `(10,000 × 2 / 3) × 200 ≈ 1.33M msg/s`.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Using `10,000 channels × 1 typing event/sec per channel × 200 members`, how many millions of outbound typing-indicator messages per second are sent across the fleet?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 10,000 channels × 1 event/s × 200 recipients = 2,000,000 msg/s = 2 million msg/s.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-chat-and-messaging-system-design-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-chat-and-messaging-system-design-n1" placeholder="Enter numeric estimate (million msg/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">million msg/s</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="chat-and-messaging-system-design-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="chat-and-messaging-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-chat-and-messaging-system-design-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Even at just 1 typing event/sec per channel across 10,000 channels of 200 members, outbound fan-out reaches `10,000 × 200 = 2,000,000 (2 million) msg/s`—often exceeding actual persisted chat message traffic!</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-chat-and-messaging-system-design-t1" data-type="tradeoff" data-slug="chat-and-messaging-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Per-Channel Partitioning &amp; Ephemeral Presence Suppression in Large Groups</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> Your chat platform supports both 1-on-1 DMs and 10,000-member community channels. In 10,000-member channels, broadcasting typing indicators, read receipts, and online-presence flips to all 10,000 members saturates WebSocket gateways.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How should message ordering, storage partitioning, and ephemeral signals (typing/presence/read-receipts) be designed across small vs large channels?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Why do Slack, Discord, and WhatsApp disable per-user read receipts and typing indicators in large channels?</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-chat-and-messaging-system-design-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-chat-and-messaging-system-design-t1" value="0" />
-               <span>Partition messages by `sender_user_id` and broadcast full read-receipts and typing events in 10,000-member channels</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-chat-and-messaging-system-design-t1" value="1" />
-               <span>Partition messages by `(channel_id, bucket_id)` with per-channel monotonic sequence numbers (`Snowflake`), and dynamically degrade/disable broadcast of typing indicators, per-user read receipts, and push presence in channels exceeding a member threshold (e.g., &gt;100 members, switching to pull-based presence on viewport)</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-chat-and-messaging-system-design-t1" value="2" />
-               <span>Use a single global SQL sequence for all messages across all channels worldwide</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-chat-and-messaging-system-design-t1" value="0" />
-               <span>Partitioning by `sender_user_id` allows fetching a channel&#039;s conversation history in a single range scan</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-chat-and-messaging-system-design-t1" value="1" />
-               <span>Partitioning by `(channel_id, time_bucket)` co-locates a channel&#039;s history for single-partition range scans, while adaptive feature degradation prevents `O(N^2)` ephemeral presence/typing storms in large rooms</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-chat-and-messaging-system-design-t1" value="2" />
-               <span>A single global counter across continents adds zero latency to every chat message</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="chat-and-messaging-system-design-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="chat-and-messaging-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-chat-and-messaging-system-design-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Chat reads always query a chronological slice of a single `channel_id`, so partitioning by `(channel_id, time_bucket)` guarantees single-partition reads. For large channels (&gt;100–500 members), disabling `O(N^2)` typing/read-receipt broadcasts and switching to viewport/pull presence prevents gateway overload.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1325,14 +1378,14 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

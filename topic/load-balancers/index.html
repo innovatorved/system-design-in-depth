@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -1008,44 +1008,55 @@ flowchart TD
 <h2>How real systems do it</h2>
 <p>Google's Maglev is a software L4 balancer that runs on commodity servers and uses consistent hashing so that connections survive balancer failover. Twitter's Finagle and Linkerd popularised P2C with a peak EWMA latency estimate for client-side balancing. NGINX and HAProxy support round robin, least connections and hashing; Envoy's least-request policy uses power of two choices by default.</p>
 </div></article>
-      <section class="check-slider" data-slug="load-balancers" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="load-balancers" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Herding on stale state" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Two choices, in numbers" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Deep checks fail together" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: L7 Load Balancer Ephemeral Port Exhaustion" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: L4 Direct Server Return (DSR) vs L7 Reverse Proxy" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-load-balancers-c1" data-type="mcq" data-slug="load-balancers" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Herding on stale state</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Under the Hood: Algorithm Deep Dive</div>
+        <div class="check-slider__section">Section: Under the Hood: Algorithm Deep Dive</div>
+        
         <p class="check-slider__prompt">Why does having every load balancer instance send each request to the globally least-loaded server work poorly with many independent balancers?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c1" value="0" />
-             <span>Finding the minimum takes O(n) time, which is too slow to do per request</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c1" value="1" />
-             <span>Least-loaded ignores request duration, so long requests still pile up</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c1" value="2" />
-             <span>They act on the same stale view and all pick the same server at once</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c1" value="3" />
-             <span>It forces sticky sessions, which breaks backends that are stateless</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-load-balancers-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c1" value="0" />
+            <span>Finding the minimum takes O(n) time, which is too slow to do per request</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c1" value="1" />
+            <span>Least-loaded ignores request duration, so long requests still pile up</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c1" value="2" />
+            <span>They act on the same stale view and all pick the same server at once</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c1" value="3" />
+            <span>It forces sticky sessions, which breaks backends that are stateless</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="load-balancers-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="load-balancers-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-load-balancers-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1054,35 +1065,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-load-balancers-c2" data-type="mcq" data-slug="load-balancers" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Two choices, in numbers</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: why random is not good enough, and two choices is</div>
+        <div class="check-slider__section">Section: Worked example: why random is not good enough, and two choices is</div>
+        
         <p class="check-slider__prompt">You send 1,000 requests to 1,000 servers. Roughly what is the busiest server&#039;s load when each request picks one server at random, versus when it samples two and takes the less loaded?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c2" value="0" />
-             <span>About 5 or 6 with random choice, and about 3 with two choices</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c2" value="1" />
-             <span>About 3 with random choice, and exactly 1 with two choices</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c2" value="2" />
-             <span>About 2 with either strategy, since the average load is 1</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c2" value="3" />
-             <span>About 30 with random choice, and about 10 with two choices</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-load-balancers-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c2" value="0" />
+            <span>About 5 or 6 with random choice, and about 3 with two choices</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c2" value="1" />
+            <span>About 3 with random choice, and exactly 1 with two choices</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c2" value="2" />
+            <span>About 2 with either strategy, since the average load is 1</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c2" value="3" />
+            <span>About 30 with random choice, and about 10 with two choices</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="load-balancers-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="load-balancers-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-load-balancers-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1091,77 +1106,180 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-load-balancers-c3" data-type="mcq" data-slug="load-balancers" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Deep checks fail together</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Health checking details</div>
+        <div class="check-slider__section">Section: Health checking details</div>
+        
         <p class="check-slider__prompt">Every node&#039;s /healthz also runs a database query. The database blips for 5 seconds, and the balancer marks a node down after 2 failed checks. What happens, and which setting limits the damage?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c3" value="0" />
-             <span>Only the nodes with the slowest queries fail, and outlier detection removes them</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c3" value="1" />
-             <span>Every node is marked down at once; a panic threshold keeps sending traffic to all of them</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c3" value="2" />
-             <span>Connection draining lets in-flight requests finish, so users notice nothing at all</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-load-balancers-c3" value="3" />
-             <span>Nodes stay healthy, because active checks ignore dependency errors by default</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-load-balancers-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c3" value="0" />
+            <span>Only the nodes with the slowest queries fail, and outlier detection removes them</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c3" value="1" />
+            <span>Every node is marked down at once; a panic threshold keeps sending traffic to all of them</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c3" value="2" />
+            <span>Connection draining lets in-flight requests finish, so users notice nothing at all</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-load-balancers-c3" value="3" />
+            <span>Nodes stay healthy, because active checks ignore dependency errors by default</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="load-balancers-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="load-balancers-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-load-balancers-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">A health check that depends on a shared database fails on every node at the same moment, emptying the pool. With a panic threshold, when too many nodes look unhealthy (for example over 50%), the balancer sends traffic to all of them instead of to nobody. Outlier detection ejects individual bad nodes, which does not help when all of them look bad.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-load-balancers-n1" data-type="numeric" data-slug="load-balancers" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: L7 Load Balancer Ephemeral Port Exhaustion</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An L7 reverse proxy opens a new non-pooled TCP connection to a single upstream backend IP:port for every incoming request, and closed connections remain in `TIME_WAIT` for 60 seconds. The OS ephemeral port range has 60,000 usable ports.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the maximum sustained request rate (in req/s) to that single backend IP:port before ephemeral ports are exhausted?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-load-balancers-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-load-balancers-n1"
+              aria-label="Numeric estimate in req/s"
+              placeholder="Enter numeric estimate (req/s)..."
+            />
+            <span class="quiz-unit-badge">req/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Max rate = usable ephemeral ports (60,000) ÷ TIME_WAIT duration in seconds (60 s).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="load-balancers-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-load-balancers-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Each unique 4-tuple (LB IP, ephemeral port, backend IP, backend port) is locked for the 60-second `TIME_WAIT` window. With 60,000 ephemeral ports and no HTTP keep-alive connection pooling, the LB can sustain at most 60,000 / 60 = 1,000 connections/sec to that backend IP:port.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-load-balancers-t1" data-type="tradeoff" data-slug="load-balancers" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: L4 Direct Server Return (DSR) vs L7 Reverse Proxy</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You are designing the edge ingress for a video chunk CDN origin serving 400 Gbps of egress traffic where requests are 500-byte HTTP GETs and responses are 4 MB video segments.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which load-balancing topology should you deploy at the edge, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-load-balancers-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-load-balancers-t1" value="0" />
+                  <span>Full L7 proxy where all 4 MB response payloads traverse the load balancer CPU and NICs</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-load-balancers-t1" value="1" />
+                  <span>L4 load balancer with Direct Server Return (DSR / Maglev-style encapsulation) so backend servers send response packets directly to clients</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-load-balancers-t1" value="2" />
+                  <span>DNS round-robin directly to backend server IPs with no health checks or anycast</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-load-balancers-t1" value="0" />
+                  <span>L7 proxies double the NIC bandwidth capacity without adding packet processing overhead</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-load-balancers-t1" value="1" />
+                  <span>Because egress bytes are 8,000x larger than ingress bytes, bypassing the load balancer on the return path prevents LB egress NIC saturation</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-load-balancers-t1" value="2" />
+                  <span>DNS round-robin guarantees instantaneous sub-second failover when a node crashes</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Compare the ingress request size (500 B) to the egress response size (4 MB).</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="load-balancers-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-load-balancers-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">In asymmetric media workloads (500 B request vs 4 MB response), routing return traffic through an L7 load balancer forces the LB fleet to handle 400 Gbps of egress. L4 DSR lets the LB process only tiny ingress packets while backends stream responses directly to the client IP.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-load-balancers-n1" data-type="numeric" data-slug="load-balancers">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: L7 Load Balancer Ephemeral Port Exhaustion</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> An L7 reverse proxy opens a new non-pooled TCP connection to a single upstream backend IP:port for every incoming request, and closed connections remain in `TIME_WAIT` for 60 seconds. The OS ephemeral port range has 60,000 usable ports.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> What is the maximum sustained request rate (in req/s) to that single backend IP:port before ephemeral ports are exhausted?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Max rate = usable ephemeral ports (60,000) ÷ TIME_WAIT duration in seconds (60 s).</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-load-balancers-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-load-balancers-n1" placeholder="Enter numeric estimate (req/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">req/s</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="load-balancers-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="load-balancers" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-load-balancers-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Each unique 4-tuple (LB IP, ephemeral port, backend IP, backend port) is locked for the 60-second `TIME_WAIT` window. With 60,000 ephemeral ports and no HTTP keep-alive connection pooling, the LB can sustain at most 60,000 / 60 = 1,000 connections/sec to that backend IP:port.</div>
-        </div>
-      </div>
-    
         <div class="simulator-card" id="sim-lb">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Load-Balancing Algorithms (one slow server)</div>
@@ -1184,68 +1302,43 @@ flowchart TD
           <div class="sim-cols" id="lb-cols"></div>
           <div class="sim-verdict" id="lb-verdict">Press Run to stream requests.</div>
         </div>
-      <div class="exercise-box quiz-card" id="quiz-load-balancers-t1" data-type="tradeoff" data-slug="load-balancers">
+      <div class="exercise-box" id="exercise-load-balancers" data-slug="load-balancers">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Trade-Off Matrix: L4 Direct Server Return (DSR) vs L7 Reverse Proxy</span>
+            <span>Architecture Challenge: L4 vs L7 Load Balancing Selection</span>
           </div>
-          <span class="exercise-box__difficulty">staff</span>
+          <span class="exercise-box__difficulty">Intermediate</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> You are designing the edge ingress for a video chunk CDN origin serving 400 Gbps of egress traffic where requests are 500-byte HTTP GETs and responses are 4 MB video segments.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which load-balancing topology should you deploy at the edge, and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Compare the ingress request size (500 B) to the egress response size (4 MB).</div>
+        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> Fleet of microservices: /api/v1/auth, /api/v1/billing, and /static/media on distinct server pools.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> When would you choose a Layer 7 (Application) Load Balancer over a Layer 4 (Transport) Load Balancer?</div>
         
-        <div class="quiz-options exercise-options" id="quiz-options-load-balancers-t1" style="margin-top: 15px;">
+        <div class="exercise-options">
           
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-load-balancers-t1" value="0" />
-               <span>Full L7 proxy where all 4 MB response payloads traverse the load balancer CPU and NICs</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-load-balancers-t1" value="1" />
-               <span>L4 load balancer with Direct Server Return (DSR / Maglev-style encapsulation) so backend servers send response packets directly to clients</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-load-balancers-t1" value="2" />
-               <span>DNS round-robin directly to backend server IPs with no health checks or anycast</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-load-balancers-t1" value="0" />
-               <span>L7 proxies double the NIC bandwidth capacity without adding packet processing overhead</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-load-balancers-t1" value="1" />
-               <span>Because egress bytes are 8,000x larger than ingress bytes, bypassing the load balancer on the return path prevents LB egress NIC saturation</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-load-balancers-t1" value="2" />
-               <span>DNS round-robin guarantees instantaneous sub-second failover when a node crashes</span>
-             </label>
-           
-         </div>
-       
+            <div class="exercise-option" data-action="exercise-option" data-idx="0">
+              <span class="exercise-option__bullet">A</span>
+              <span class="exercise-option__text">When you want to avoid decrypting HTTPS traffic entirely.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="1">
+              <span class="exercise-option__bullet">B</span>
+              <span class="exercise-option__text">When you need path-based routing (/api/v1/checkout), HTTP header inspection, cookie-based session stickiness, and TLS termination.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="2">
+              <span class="exercise-option__bullet">C</span>
+              <span class="exercise-option__text">When you only need ultra-high-throughput routing based purely on IP and TCP port numbers.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="3">
+              <span class="exercise-option__bullet">D</span>
+              <span class="exercise-option__text">When handling UDP packet streams for video conferencing.</span>
+            </div>
+          
         </div>
 
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="load-balancers-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="load-balancers" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-load-balancers-t1" style="display: none;">
+        <div class="exercise-feedback" id="feedback-load-balancers">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> In asymmetric media workloads (500 B request vs 4 MB response), routing return traffic through an L7 load balancer forces the LB fleet to handle 400 Gbps of egress. L4 DSR lets the LB process only tiny ingress packets while backends stream responses directly to the client IP.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> Layer 7 load balancers (like Nginx, Envoy, AWS ALB) terminate HTTP/TLS and parse request paths and headers, allowing intelligent microservice routing.</div>
         </div>
       </div>
     
@@ -1369,15 +1462,15 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-ops.js?v=ff1d2ff9b7"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

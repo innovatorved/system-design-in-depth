@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -971,44 +971,55 @@
   DB --> M["Per-tenant usage metrics"]
   M -->|"sustained heavy use"| MV["Move tenant to its own shard or silo"]</div><p>Tag every metric and log line with <code>tenant_id</code>, keeping it in logs and exemplars where cardinality is too high for metric labels. Without per-tenant usage data you cannot find the noisy neighbour, charge fairly, or decide who to move.</p>
 </div></article>
-      <section class="check-slider" data-slug="multi-tenant-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="multi-tenant-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Catalogue bloat model" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Promoting a whale tenant" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: RLS setting leak" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Shuffle Sharding Blast Radius Reduction" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Pool vs Bridge (Schema-per-Tenant) vs Silo Multi-Tenant Database Isolation" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-multi-tenant-design-c1" data-type="mcq" data-slug="multi-tenant-design" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Catalogue bloat model</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Isolation models compared</div>
+        <div class="check-slider__section">Section: Isolation models compared</div>
+        
         <p class="check-slider__prompt">Which tenancy model runs into repeating every schema migration per tenant and PostgreSQL catalogue bloat as you approach 10,000 tenants?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c1" value="0" />
-             <span>Bridge, a schema per tenant</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c1" value="1" />
-             <span>Pool, shared tables with tenant_id</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c1" value="2" />
-             <span>Silo, a database per tenant</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c1" value="3" />
-             <span>Cell-based, pools inside cells</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-multi-tenant-design-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c1" value="0" />
+            <span>Bridge, a schema per tenant</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c1" value="1" />
+            <span>Pool, shared tables with tenant_id</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c1" value="2" />
+            <span>Silo, a database per tenant</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c1" value="3" />
+            <span>Cell-based, pools inside cells</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="multi-tenant-design-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="multi-tenant-design-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-multi-tenant-design-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1017,35 +1028,39 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-multi-tenant-design-c2" data-type="mcq" data-slug="multi-tenant-design" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Promoting a whale tenant</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: tiered tenancy for a B2B analytics product</div>
+        <div class="check-slider__section">Section: Worked example: tiered tenancy for a B2B analytics product</div>
+        
         <p class="check-slider__prompt">A pooled tenant has grown from 2 GB to 1.3 TB, and its queries now slow down its shard. Following the lesson&#039;s tiering rules, what should happen?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c2" value="0" />
-             <span>Raise its statement timeout so heavy queries can finish on the shared shard</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c2" value="1" />
-             <span>Split its rows across all 8 pooled shards to spread out the load evenly</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c2" value="2" />
-             <span>Keep it pooled but lower its limit from 50 to 10 queries per second</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c2" value="3" />
-             <span>Move it to a silo database via copy, dual-write and cut-over on tenant_id</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-multi-tenant-design-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c2" value="0" />
+            <span>Raise its statement timeout so heavy queries can finish on the shared shard</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c2" value="1" />
+            <span>Split its rows across all 8 pooled shards to spread out the load evenly</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c2" value="2" />
+            <span>Keep it pooled but lower its limit from 50 to 10 queries per second</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c2" value="3" />
+            <span>Move it to a silo database via copy, dual-write and cut-over on tenant_id</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="multi-tenant-design-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="multi-tenant-design-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-multi-tenant-design-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1054,142 +1069,180 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-multi-tenant-design-c3" data-type="mcq" data-slug="multi-tenant-design" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">RLS setting leak</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Enforcing isolation in the pool</div>
+        <div class="check-slider__section">Section: Enforcing isolation in the pool</div>
+        
         <p class="check-slider__prompt">RLS filters on current_setting(&#039;app.tenant_id&#039;). The app runs SET app.tenant_id once when it checks out a connection from PgBouncer in transaction mode. Occasionally tenant B sees tenant A&#039;s rows. What is the cause?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c3" value="0" />
-             <span>The session-level SET persists on a pooled connection; use SET LOCAL in each transaction</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c3" value="1" />
-             <span>RLS policies are evaluated only once per session, not per statement</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c3" value="2" />
-             <span>The app runs as the table owner, so RLS is bypassed for all queries</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-multi-tenant-design-c3" value="3" />
-             <span>PgBouncer strips custom settings, so the policy falls back to showing all rows</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-multi-tenant-design-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c3" value="0" />
+            <span>The session-level SET persists on a pooled connection; use SET LOCAL in each transaction</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c3" value="1" />
+            <span>RLS policies are evaluated only once per session, not per statement</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c3" value="2" />
+            <span>The app runs as the table owner, so RLS is bypassed for all queries</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-multi-tenant-design-c3" value="3" />
+            <span>PgBouncer strips custom settings, so the policy falls back to showing all rows</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="multi-tenant-design-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="multi-tenant-design-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-multi-tenant-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">In transaction pooling, consecutive transactions on one server connection can belong to different clients, so a session SET leaks to whoever gets the connection next. SET LOCAL scopes it to the transaction. Owner bypass is a real pitfall, but it would leak on every query, not occasionally.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-multi-tenant-design-n1" data-type="numeric" data-slug="multi-tenant-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Shuffle Sharding Blast Radius Reduction</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You operate an 8-worker-node stateless cluster and assign each customer a virtual shard of 2 nodes using Shuffle Sharding. The total number of unique 2-node combinations from 8 nodes is `C(8, 2) = (8 × 7) / 2`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many distinct 2-node virtual shards (`C(8, 2)`) exist in an 8-node cluster (such that a noisy neighbor Poison Pill affecting both of its assigned nodes only impacts the `1 / C(8, 2)` fraction of tenants sharing that exact pair)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-multi-tenant-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-multi-tenant-design-n1"
+              aria-label="Numeric estimate in virtual shards"
+              placeholder="Enter numeric estimate (virtual shards)..."
+            />
+            <span class="quiz-unit-badge">virtual shards</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Compute C(8, 2) = (8 × 7) ÷ 2.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="multi-tenant-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-multi-tenant-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`C(8, 2) = 56 / 2 = 28` unique 2-node combinations. If one tenant sends a poison-pill request that crashes both of its assigned nodes, any other tenant with a different 2-node pair still has at least 1 healthy node—cutting the multi-tenant outage blast radius from 25% (simple 4-shard partitioning) down to `1/28 ≈ 3.57%`!</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-multi-tenant-design-t1" data-type="tradeoff" data-slug="multi-tenant-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Pool vs Bridge (Schema-per-Tenant) vs Silo Multi-Tenant Database Isolation</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your B2B SaaS platform serves 50,000 free/SMB tenants (each storing &lt;10 MB) and 25 regulated Enterprise healthcare tenants (each storing 500 GB, requiring customer-managed KMS encryption keys, custom maintenance windows, and contractual noisy-neighbor isolation).</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which multi-tenant storage architecture best serves this hybrid customer base, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-multi-tenant-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-multi-tenant-design-t1" value="0" />
+                  <span>Provision 50,025 dedicated RDS instances (one physical database cluster per free and enterprise tenant)</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-multi-tenant-design-t1" value="1" />
+                  <span>Put all 50,025 tenants into a single unsharded shared table with no tenant-level quotas or row-level security</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-multi-tenant-design-t1" value="2" />
+                  <span>Use a tiered Cell/Silo + Pool model: pack the 50,000 SMB tenants into shared multi-tenant Pooled shards (enforcing `tenant_id` RLS + per-tenant rate quotas), and provision dedicated Silo instances/cells for the 25 high-value Enterprise tenants</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-multi-tenant-design-t1" value="0" />
+                  <span>Running 50,000 idle RDS instances for free-tier users minimizes cloud infrastructure cost</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-multi-tenant-design-t1" value="1" />
+                  <span>A single unsharded table supports per-tenant KMS keys and isolates 500 GB enterprise batch jobs from SMB queries</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-multi-tenant-design-t1" value="2" />
+                  <span>Tiered Pool + Silo isolation matches unit economics: pooled shards amortize fixed baseline costs across 50k small tenants, while enterprise silos satisfy strict KMS, noisy-neighbor, and blast-radius SLAs</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Match infrastructure isolation cost to tenant revenue and compliance requirements.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="multi-tenant-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-multi-tenant-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Dedicated silos for 50,000 free-tier tenants would bankrupt the business in idle compute, while forcing regulated 500 GB enterprise tenants into a shared pool violates KMS/noisy-neighbor requirements. A hybrid Pool (with tenant routing + RLS + quotas) + Enterprise Silo architecture optimizes both margin and compliance.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-multi-tenant-design-n1" data-type="numeric" data-slug="multi-tenant-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Shuffle Sharding Blast Radius Reduction</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> You operate an 8-worker-node stateless cluster and assign each customer a virtual shard of 2 nodes using Shuffle Sharding. The total number of unique 2-node combinations from 8 nodes is `C(8, 2) = (8 × 7) / 2`.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How many distinct 2-node virtual shards (`C(8, 2)`) exist in an 8-node cluster (such that a noisy neighbor Poison Pill affecting both of its assigned nodes only impacts the `1 / C(8, 2)` fraction of tenants sharing that exact pair)?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Compute C(8, 2) = (8 × 7) ÷ 2.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-multi-tenant-design-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-multi-tenant-design-n1" placeholder="Enter numeric estimate (virtual shards)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">virtual shards</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="multi-tenant-design-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="multi-tenant-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-multi-tenant-design-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> `C(8, 2) = 56 / 2 = 28` unique 2-node combinations. If one tenant sends a poison-pill request that crashes both of its assigned nodes, any other tenant with a different 2-node pair still has at least 1 healthy node—cutting the multi-tenant outage blast radius from 25% (simple 4-shard partitioning) down to `1/28 ≈ 3.57%`!</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-multi-tenant-design-t1" data-type="tradeoff" data-slug="multi-tenant-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Pool vs Bridge (Schema-per-Tenant) vs Silo Multi-Tenant Database Isolation</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> Your B2B SaaS platform serves 50,000 free/SMB tenants (each storing &lt;10 MB) and 25 regulated Enterprise healthcare tenants (each storing 500 GB, requiring customer-managed KMS encryption keys, custom maintenance windows, and contractual noisy-neighbor isolation).</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which multi-tenant storage architecture best serves this hybrid customer base, and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Match infrastructure isolation cost to tenant revenue and compliance requirements.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-multi-tenant-design-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-multi-tenant-design-t1" value="0" />
-               <span>Provision 50,025 dedicated RDS instances (one physical database cluster per free and enterprise tenant)</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-multi-tenant-design-t1" value="1" />
-               <span>Put all 50,025 tenants into a single unsharded shared table with no tenant-level quotas or row-level security</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-multi-tenant-design-t1" value="2" />
-               <span>Use a tiered Cell/Silo + Pool model: pack the 50,000 SMB tenants into shared multi-tenant Pooled shards (enforcing `tenant_id` RLS + per-tenant rate quotas), and provision dedicated Silo instances/cells for the 25 high-value Enterprise tenants</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-multi-tenant-design-t1" value="0" />
-               <span>Running 50,000 idle RDS instances for free-tier users minimizes cloud infrastructure cost</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-multi-tenant-design-t1" value="1" />
-               <span>A single unsharded table supports per-tenant KMS keys and isolates 500 GB enterprise batch jobs from SMB queries</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-multi-tenant-design-t1" value="2" />
-               <span>Tiered Pool + Silo isolation matches unit economics: pooled shards amortize fixed baseline costs across 50k small tenants, while enterprise silos satisfy strict KMS, noisy-neighbor, and blast-radius SLAs</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="multi-tenant-design-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="multi-tenant-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-multi-tenant-design-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Dedicated silos for 50,000 free-tier tenants would bankrupt the business in idle compute, while forcing regulated 500 GB enterprise tenants into a shared pool violates KMS/noisy-neighbor requirements. A hybrid Pool (with tenant routing + RLS + quotas) + Enterprise Silo architecture optimizes both margin and compliance.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1298,14 +1351,14 @@
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

@@ -254,12 +254,7 @@ window.Exercises = (() => {
    * Render an interactive exercise card for a unit
    */
   function renderExercise(slug, unitTitle) {
-    // Extra end-of-lesson practice only: questions anchored to a section are already shown inline
-    if (window.Quiz && window.Quiz.hasEndQuestions && window.Quiz.hasEndQuestions(slug)) {
-      return window.Quiz.renderQuiz(slug);
-    }
-
-    // Hand-written challenges only; lessons without one rely on their inline self-checks
+    // Hand-written challenges only; all QUESTION_BANK questions (mcq, numeric, tradeoff) are rendered in Quiz.renderCheckSlider
     const ex = exerciseBank[slug];
     if (!ex) return '';
 

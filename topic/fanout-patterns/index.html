@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -985,44 +985,55 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: capacity maths</h2><p>Assume 200 million daily active users, 500 million posts per day (about 5,800 per second on average, 3 times that at peak), an average of 200 followers, and 20 billion feed reads per day (about 230,000 per second).</p><ul><li><strong>Pure push:</strong> 5,800 x 200 = 1.16 million inbox inserts per second on average, about 3.5 million at peak. Feasible on a sharded Redis or Cassandra tier. Reads are a single range query.</li><li><strong>A celebrity with 100 million followers</strong> posting once needs 100 million inserts. At a fanout budget of 1 million per second that is 100 seconds of the whole pipeline for one post, and some celebrities post many times a day.</li><li><strong>Pure pull:</strong> each feed read merges recent posts from about 200 followees, so 230,000 x 200 = 46 million post-list reads per second. Too expensive.</li><li><strong>Hybrid:</strong> push for authors below a threshold (commonly discussed in the range of about 10,000 to 1 million followers), and pull for the rest. A feed read fetches the precomputed inbox and merges the recent posts of the few followed celebrities, cached hot, so about 5 to 10 extra reads per feed load.</li></ul><h2>Strategy comparison</h2><table><thead><tr><th>Strategy</th><th>Write cost</th><th>Read cost</th><th>Freshness</th><th>Storage</th><th>Best for</th></tr></thead><tbody><tr><td>Fanout on write (push)</td><td>O(followers) per post</td><td>One range read</td><td>Seconds of fanout delay</td><td>An inbox per user</td><td>Typical accounts, read-heavy feeds</td></tr><tr><td>Fanout on read (pull)</td><td>O(1)</td><td>O(followees) merge</td><td>Instant</td><td>Minimal</td><td>Celebrities, rarely read feeds</td></tr><tr><td>Hybrid</td><td>Bounded</td><td>Inbox plus a few merges</td><td>Mixed</td><td>Moderate</td><td>Large social networks</td></tr><tr><td>Message fanout (SNS to SQS, Kafka consumer groups)</td><td>One publish</td><td>One queue per subscriber</td><td>Near real time</td><td>Per-subscriber copies or offsets</td><td>Service-to-service events</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Twitter</strong> (per Raffi Krikorian's "Timelines at Scale" talk) kept home timelines as lists of tweet IDs in Redis, capped at about 800 entries, fanned out on write. Very high-follower accounts were merged at read time.</li><li><strong>Instagram and Facebook</strong> rank feeds at read time from candidate sets. Fanout builds candidates and ranking picks the order.</li><li>Inbox caps (for example the last 800 IDs) bound storage. Older history falls back to pull.</li></ul><h2>Failure modes</h2><ul><li><strong>Fanout backlog</strong> during viral events. Prioritise active followers first.</li><li><strong>Deletes and blocks</strong> must be filtered at read time, because inboxes may still hold the IDs.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="fanout-patterns" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="fanout-patterns" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Hybrid feed read" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Celebrity fanout time" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Deleting a pushed post" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Celebrity Push Fan-Out Write Amplification" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Push (Fan-Out-on-Write) vs Hybrid Push-Pull Timeline Architecture" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-fanout-patterns-c1" data-type="mcq" data-slug="fanout-patterns" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Hybrid feed read</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Under the Hood: The Hybrid Fanout Architecture</div>
+        <div class="check-slider__section">Section: Under the Hood: The Hybrid Fanout Architecture</div>
+        
         <p class="check-slider__prompt">In the hybrid fanout model, what happens when a user opens their home feed?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c1" value="0" />
-             <span>The service pulls and merges recent posts from every account the user follows</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c1" value="1" />
-             <span>It reads the user&#039;s precomputed inbox and merges in recent posts from any followed celebrities</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c1" value="2" />
-             <span>It reads the precomputed inbox only, because celebrity posts were also pushed into it</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c1" value="3" />
-             <span>It reads each celebrity&#039;s inbox and merges in the user&#039;s own recent posts</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-fanout-patterns-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c1" value="0" />
+            <span>The service pulls and merges recent posts from every account the user follows</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c1" value="1" />
+            <span>It reads the user&#039;s precomputed inbox and merges in recent posts from any followed celebrities</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c1" value="2" />
+            <span>It reads the precomputed inbox only, because celebrity posts were also pushed into it</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c1" value="3" />
+            <span>It reads each celebrity&#039;s inbox and merges in the user&#039;s own recent posts</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="fanout-patterns-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="fanout-patterns-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-fanout-patterns-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1031,35 +1042,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-fanout-patterns-c2" data-type="mcq" data-slug="fanout-patterns" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Celebrity fanout time</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: capacity maths</div>
+        <div class="check-slider__section">Section: Worked example: capacity maths</div>
+        
         <p class="check-slider__prompt">Under pure fanout-on-write, an account with 20 million followers posts once. The fanout pipeline can insert 500,000 inbox entries per second in total. How long does this single post take to fan out?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c2" value="0" />
-             <span>About 4 seconds</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c2" value="1" />
-             <span>About 400 seconds</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c2" value="2" />
-             <span>About 40 seconds</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c2" value="3" />
-             <span>About 0.4 seconds</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-fanout-patterns-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c2" value="0" />
+            <span>About 4 seconds</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c2" value="1" />
+            <span>About 400 seconds</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c2" value="2" />
+            <span>About 40 seconds</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c2" value="3" />
+            <span>About 0.4 seconds</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="fanout-patterns-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="fanout-patterns-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-fanout-patterns-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1068,77 +1083,180 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-fanout-patterns-c3" data-type="mcq" data-slug="fanout-patterns" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Deleting a pushed post</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Failure modes</div>
+        <div class="check-slider__section">Section: Failure modes</div>
+        
         <p class="check-slider__prompt">A user deletes a post whose ID was already pushed into 3 million follower inboxes. How should the system make sure followers stop seeing it?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c3" value="0" />
-             <span>Filter deleted and blocked IDs at read time, since inboxes may still hold them and the post is stored once</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c3" value="1" />
-             <span>Synchronously remove the ID from all 3 million inboxes before confirming the deletion</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c3" value="2" />
-             <span>Do nothing, since inbox entries expire on their own within a few hours</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-fanout-patterns-c3" value="3" />
-             <span>Fan out a tombstone to every inbox and hide the post only after all of them are written</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-fanout-patterns-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c3" value="0" />
+            <span>Filter deleted and blocked IDs at read time, since inboxes may still hold them and the post is stored once</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c3" value="1" />
+            <span>Synchronously remove the ID from all 3 million inboxes before confirming the deletion</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c3" value="2" />
+            <span>Do nothing, since inbox entries expire on their own within a few hours</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-fanout-patterns-c3" value="3" />
+            <span>Fan out a tombstone to every inbox and hide the post only after all of them are written</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="fanout-patterns-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="fanout-patterns-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-fanout-patterns-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Inboxes hold IDs, so a read-time filter against the single stored post handles deletes and blocks immediately. Synchronously scrubbing millions of inboxes makes the delete as slow as a celebrity fanout, and until it finishes the post stays visible.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-fanout-patterns-n1" data-type="numeric" data-slug="fanout-patterns" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Celebrity Push Fan-Out Write Amplification</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A social platform uses pure push fan-out-on-write into follower home-timeline caches. A celebrity with 30 million followers publishes 1 post, and your Redis timeline cluster can sustain 300,000 `LPUSH` writes/sec dedicated to fan-out.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many seconds does it take to complete the fan-out of that single celebrity post across all 30 million follower timelines?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-fanout-patterns-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-fanout-patterns-n1"
+              aria-label="Numeric estimate in seconds"
+              placeholder="Enter numeric estimate (seconds)..."
+            />
+            <span class="quiz-unit-badge">seconds</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 30,000,000 follower writes by 300,000 writes/sec.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="fanout-patterns-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-fanout-patterns-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">30,000,000 timeline writes ÷ 300,000 writes/sec = 100 seconds of saturated cluster write capacity for a single post—demonstrating why pure fan-out-on-write breaks down for high-follower accounts.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-fanout-patterns-t1" data-type="tradeoff" data-slug="fanout-patterns" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Push (Fan-Out-on-Write) vs Hybrid Push-Pull Timeline Architecture</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">99.9% of users on your social network have fewer than 5,000 followers, while 0.1% of accounts (celebrities/news outlets) have 1M–50M followers and post 20 times a day.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which timeline architecture should you adopt, and what is the primary engineering justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-fanout-patterns-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-fanout-patterns-t1" value="0" />
+                  <span>Use pure fan-out-on-write (push) for all accounts and provision 100x more Redis RAM for inactive followers</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-fanout-patterns-t1" value="1" />
+                  <span>Use pure fan-out-on-read (pull) for all accounts, querying 1,000 followed users&#039; outboxes on every home-feed read</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-fanout-patterns-t1" value="2" />
+                  <span>Use hybrid fan-out: push posts on write for normal accounts (&lt;50k followers) into active followers&#039; inbox caches, and merge celebrity outbox caches at read time</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-fanout-patterns-t1" value="0" />
+                  <span>Pushing 50M writes per celebrity tweet keeps write queues small and predictable</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-fanout-patterns-t1" value="1" />
+                  <span>Fanning out 1,000 database queries on every timeline read guarantees sub-5ms p99 read latency</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-fanout-patterns-t1" value="2" />
+                  <span>Hybrid push-pull bounds write amplification to O(1) outbox writes for celebrities while preserving O(1) precomputed inbox reads plus a tiny K-way merge of followed celebrities on read</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">How did Twitter/X solve the &#039;Justin Bieber problem&#039; on timeline fan-out?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="fanout-patterns-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-fanout-patterns-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Hybrid fan-out pushes normal users&#039; posts into followers&#039; precomputed timelines (fast reads) while keeping high-follower celebrity posts in a per-author outbox cache that is merged into the reader&#039;s timeline at read time (preventing 50M-write storms).</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-fanout-patterns-n1" data-type="numeric" data-slug="fanout-patterns">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Celebrity Push Fan-Out Write Amplification</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A social platform uses pure push fan-out-on-write into follower home-timeline caches. A celebrity with 30 million followers publishes 1 post, and your Redis timeline cluster can sustain 300,000 `LPUSH` writes/sec dedicated to fan-out.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How many seconds does it take to complete the fan-out of that single celebrity post across all 30 million follower timelines?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Divide 30,000,000 follower writes by 300,000 writes/sec.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-fanout-patterns-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-fanout-patterns-n1" placeholder="Enter numeric estimate (seconds)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">seconds</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="fanout-patterns-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="fanout-patterns" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-fanout-patterns-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 30,000,000 timeline writes ÷ 300,000 writes/sec = 100 seconds of saturated cluster write capacity for a single post—demonstrating why pure fan-out-on-write breaks down for high-follower accounts.</div>
-        </div>
-      </div>
-    
       <div class="simulator-card" id="sim-fanout">
         <div class="simulator-card__header">
           <div class="simulator-card__title"><span>Feed Fan-out Calculator</span></div>
@@ -1168,71 +1286,6 @@ flowchart TD
              <p>Writes/sec: <span id="sim-fo-pull-w">0</span></p>
              <p>Read Amplification: High (Compute intensive)</p>
            </div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-fanout-patterns-t1" data-type="tradeoff" data-slug="fanout-patterns">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Push (Fan-Out-on-Write) vs Hybrid Push-Pull Timeline Architecture</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> 99.9% of users on your social network have fewer than 5,000 followers, while 0.1% of accounts (celebrities/news outlets) have 1M–50M followers and post 20 times a day.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which timeline architecture should you adopt, and what is the primary engineering justification?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> How did Twitter/X solve the &#039;Justin Bieber problem&#039; on timeline fan-out?</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-fanout-patterns-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-fanout-patterns-t1" value="0" />
-               <span>Use pure fan-out-on-write (push) for all accounts and provision 100x more Redis RAM for inactive followers</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-fanout-patterns-t1" value="1" />
-               <span>Use pure fan-out-on-read (pull) for all accounts, querying 1,000 followed users&#039; outboxes on every home-feed read</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-fanout-patterns-t1" value="2" />
-               <span>Use hybrid fan-out: push posts on write for normal accounts (&lt;50k followers) into active followers&#039; inbox caches, and merge celebrity outbox caches at read time</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-fanout-patterns-t1" value="0" />
-               <span>Pushing 50M writes per celebrity tweet keeps write queues small and predictable</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-fanout-patterns-t1" value="1" />
-               <span>Fanning out 1,000 database queries on every timeline read guarantees sub-5ms p99 read latency</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-fanout-patterns-t1" value="2" />
-               <span>Hybrid push-pull bounds write amplification to O(1) outbox writes for celebrities while preserving O(1) precomputed inbox reads plus a tiny K-way merge of followed celebrities on read</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="fanout-patterns-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="fanout-patterns" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-fanout-patterns-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Hybrid fan-out pushes normal users&#039; posts into followers&#039; precomputed timelines (fast reads) while keeping high-follower celebrity posts in a per-author outbox cache that is merged into the reader&#039;s timeline at read time (preventing 50M-write storms).</div>
         </div>
       </div>
     
@@ -1344,15 +1397,15 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

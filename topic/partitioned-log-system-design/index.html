@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -985,44 +985,55 @@ flowchart LR
   L -->|"high watermark"| C["Consumer reads committed offsets"]
   C --> O["Commit offset after processing"]</div><ul><li><strong>At-least-once</strong> (the default pattern): process the message, then commit the offset. A crash between the two causes reprocessing, so make handlers idempotent.</li><li><strong>At-most-once:</strong> commit before processing. A crash loses the message.</li><li><strong>Exactly-once within Kafka:</strong> idempotent producers plus transactions that atomically write the output and commit the input offsets (Kafka Streams <code>exactly_once_v2</code>). Side effects outside Kafka, such as sending email or charging a card, still need idempotency keys.</li><li><strong>Metadata:</strong> Kafka 4.0 removed ZooKeeper entirely. Clusters now use the built-in KRaft Raft quorum for controller metadata.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="partitioned-log-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="partitioned-log-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Replaying for a new team" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Partition count sizing" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Duplicate charges" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Kafka Broker Disk Capacity With 7-Day Retention &amp; RF=3" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Zero-Copy `sendfile` + OS Page Cache vs Application-Heap Buffering" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-partitioned-log-system-design-c1" data-type="mcq" data-slug="partitioned-log-system-design" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Replaying for a new team</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Offset-Based Consumer State</div>
+        <div class="check-slider__section">Section: Offset-Based Consumer State</div>
+        
         <p class="check-slider__prompt">Billing has already consumed the last three days of order events from a Kafka topic with 7-day retention. A new analytics team wants those same three days. What do they do?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c1" value="0" />
-             <span>Ask billing to re-publish the events to a new topic for analytics</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c1" value="1" />
-             <span>Start a new consumer group and reset its offsets to three days ago</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c1" value="2" />
-             <span>Join billing&#039;s consumer group so that the partitions are shared</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c1" value="3" />
-             <span>Restore the events from a backup, because acknowledged messages are gone</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-partitioned-log-system-design-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c1" value="0" />
+            <span>Ask billing to re-publish the events to a new topic for analytics</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c1" value="1" />
+            <span>Start a new consumer group and reset its offsets to three days ago</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c1" value="2" />
+            <span>Join billing&#039;s consumer group so that the partitions are shared</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c1" value="3" />
+            <span>Restore the events from a backup, because acknowledged messages are gone</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="partitioned-log-system-design-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="partitioned-log-system-design-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-partitioned-log-system-design-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1031,35 +1042,39 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-partitioned-log-system-design-c2" data-type="mcq" data-slug="partitioned-log-system-design" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Partition count sizing</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: sizing a cluster</div>
+        <div class="check-slider__section">Section: Worked example: sizing a cluster</div>
+        
         <p class="check-slider__prompt">A topic ingests 200,000 messages per second at 2 KB each. One consumer instance can process about 8 MB/s. What partition count should you create?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c2" value="0" />
-             <span>25 partitions, matching 200 MB/s divided by 8 MB/s</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c2" value="1" />
-             <span>400 partitions, one per 500 messages per second</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c2" value="2" />
-             <span>50 partitions, exactly the minimum needed to keep up</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c2" value="3" />
-             <span>64 or more partitions, leaving headroom above the minimum of 50</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-partitioned-log-system-design-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c2" value="0" />
+            <span>25 partitions, matching 200 MB/s divided by 8 MB/s</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c2" value="1" />
+            <span>400 partitions, one per 500 messages per second</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c2" value="2" />
+            <span>50 partitions, exactly the minimum needed to keep up</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c2" value="3" />
+            <span>64 or more partitions, leaving headroom above the minimum of 50</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="partitioned-log-system-design-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="partitioned-log-system-design-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-partitioned-log-system-design-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1068,77 +1083,180 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-partitioned-log-system-design-c3" data-type="mcq" data-slug="partitioned-log-system-design" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Duplicate charges</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Delivery semantics</div>
+        <div class="check-slider__section">Section: Delivery semantics</div>
+        
         <p class="check-slider__prompt">A consumer charges a card, then commits its offset. After a crash between the two steps, the customer is charged twice. The team proposes enabling Kafka exactly_once_v2. Does that fix it?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c3" value="0" />
-             <span>No; the charge is outside Kafka, so it needs an idempotency key</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c3" value="1" />
-             <span>Yes, because idempotent producers prevent the message being read twice</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c3" value="2" />
-             <span>Yes, because transactions make the charge and the offset commit atomic</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-partitioned-log-system-design-c3" value="3" />
-             <span>No; the fix is committing the offset before charging the card</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-partitioned-log-system-design-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c3" value="0" />
+            <span>No; the charge is outside Kafka, so it needs an idempotency key</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c3" value="1" />
+            <span>Yes, because idempotent producers prevent the message being read twice</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c3" value="2" />
+            <span>Yes, because transactions make the charge and the offset commit atomic</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-partitioned-log-system-design-c3" value="3" />
+            <span>No; the fix is committing the offset before charging the card</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="partitioned-log-system-design-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="partitioned-log-system-design-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-partitioned-log-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Kafka&#039;s exactly-once covers writes to Kafka and offset commits, not external side effects, so the payment call must carry an idempotency key. Committing first switches to at-most-once, which avoids the duplicate by risking a lost charge.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-partitioned-log-system-design-n1" data-type="numeric" data-slug="partitioned-log-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Kafka Broker Disk Capacity With 7-Day Retention &amp; RF=3</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A partitioned log cluster ingests 200 MB/s of compressed events (`200 MB/s × 86,400 s/day ≈ 17.28 TB/day`, or using 100,000 s/day napkin math = 20 TB/day). Events are retained for 5 days with a Replication Factor of `RF = 3`.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Using the napkin figure of 20 TB/day of logical ingress, how many terabytes (TB) of raw broker disk storage are required for 5 days of retention at `RF = 3`?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-partitioned-log-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-partitioned-log-system-design-n1"
+              aria-label="Numeric estimate in TB"
+              placeholder="Enter numeric estimate (TB)..."
+            />
+            <span class="quiz-unit-badge">TB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">20 TB/day × 5 days × 3 replicas = 300 TB (or ~259 TB using exact 86,400 s/day).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="partitioned-log-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-partitioned-log-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">At ~20 TB/day (17.28 TB/day exact), 5 days of logical data is 86.4–100 TB. Multiplying by `RF = 3` requires 259–300 TB of physical broker disk capacity before headroom.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-partitioned-log-system-design-t1" data-type="tradeoff" data-slug="partitioned-log-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Zero-Copy `sendfile` + OS Page Cache vs Application-Heap Buffering</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your partitioned log broker must serve 1 primary real-time consumer group (reading the tail within 10 ms of write) and 1 backfill consumer group (reading 3-day-old segments) at 2 GB/s per broker without JVM GC stalls.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should the broker manage segment caching and network socket writes, and what happens when a backfill consumer scans cold disk?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-partitioned-log-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-partitioned-log-system-design-t1" value="0" />
+                  <span>Cache all log messages as deserialized Java objects inside a 128 GB JVM heap</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-partitioned-log-system-design-t1" value="1" />
+                  <span>Write binary batches directly to append-only segment files backed by the OS page cache and stream to consumers via `sendfile()` zero-copy DMA (and use tiered object storage / `fadvise(DONTNEED)` for cold backfills so historical scans don&#039;t evict the hot tail from page cache)</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-partitioned-log-system-design-t1" value="2" />
+                  <span>Call `fsync()` synchronously on every single 100-byte message before writing to the OS page cache</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-partitioned-log-system-design-t1" value="0" />
+                  <span>Storing 100 GB of small objects in JVM heap eliminates garbage collection pauses</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-partitioned-log-system-design-t1" value="1" />
+                  <span>OS page cache + `sendfile()` DMA transfers bytes from page cache to NIC buffer without copying into user space or touching JVM heap, while isolating cold backfill reads prevents page-cache thrashing</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-partitioned-log-system-design-t1" value="2" />
+                  <span>Single-message unbatched `fsync()` maximizes NVMe sequential write throughput</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why does Kafka rely on the Linux page cache + `sendfile()` syscall, and how can a cold backfill ruin tail latency?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="partitioned-log-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-partitioned-log-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">`sendfile()` streams bytes directly from the kernel page cache to the NIC via DMA without user-space copies or JVM heap allocation. However, a cold historical backfill can thrash the OS page cache and evict the hot tail unless cold segments are served from tiered storage or isolated via `POSIX_FADV_DONTNEED` / direct I/O.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-partitioned-log-system-design-n1" data-type="numeric" data-slug="partitioned-log-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Kafka Broker Disk Capacity With 7-Day Retention &amp; RF=3</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A partitioned log cluster ingests 200 MB/s of compressed events (`200 MB/s × 86,400 s/day ≈ 17.28 TB/day`, or using 100,000 s/day napkin math = 20 TB/day). Events are retained for 5 days with a Replication Factor of `RF = 3`.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Using the napkin figure of 20 TB/day of logical ingress, how many terabytes (TB) of raw broker disk storage are required for 5 days of retention at `RF = 3`?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 20 TB/day × 5 days × 3 replicas = 300 TB (or ~259 TB using exact 86,400 s/day).</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-partitioned-log-system-design-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-partitioned-log-system-design-n1" placeholder="Enter numeric estimate (TB)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">TB</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="partitioned-log-system-design-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="partitioned-log-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-partitioned-log-system-design-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> At ~20 TB/day (17.28 TB/day exact), 5 days of logical data is 86.4–100 TB. Multiplying by `RF = 3` requires 259–300 TB of physical broker disk capacity before headroom.</div>
-        </div>
-      </div>
-    
         <div class="simulator-card" id="sim-queue-lag">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Queue Backpressure & Lag</div>
@@ -1170,68 +1288,43 @@ flowchart LR
           <button class="btn btn--secondary" id="ql-toggle" style="margin-top:12px;">Start Simulation</button>
         </div>
       
-      <div class="exercise-box quiz-card" id="quiz-partitioned-log-system-design-t1" data-type="tradeoff" data-slug="partitioned-log-system-design">
+      <div class="exercise-box" id="exercise-partitioned-log-system-design" data-slug="partitioned-log-system-design">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Zero-Copy `sendfile` + OS Page Cache vs Application-Heap Buffering</span>
+            <span>Architecture Challenge: Kafka Consumer Lag &amp; Partition Scalability</span>
           </div>
-          <span class="exercise-box__difficulty">staff</span>
+          <span class="exercise-box__difficulty">Staff Level</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> Your partitioned log broker must serve 1 primary real-time consumer group (reading the tail within 10 ms of write) and 1 backfill consumer group (reading 3-day-old segments) at 2 GB/s per broker without JVM GC stalls.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How should the broker manage segment caching and network socket writes, and what happens when a backfill consumer scans cold disk?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Why does Kafka rely on the Linux page cache + `sendfile()` syscall, and how can a cold backfill ruin tail latency?</div>
+        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> Kafka topic with 10 partitions. High message arrival volume.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> A Kafka topic has 10 partitions. You deploy 15 instances in the same Consumer Group. How many consumer instances will actively process messages?</div>
         
-        <div class="quiz-options exercise-options" id="quiz-options-partitioned-log-system-design-t1" style="margin-top: 15px;">
+        <div class="exercise-options">
           
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-partitioned-log-system-design-t1" value="0" />
-               <span>Cache all log messages as deserialized Java objects inside a 128 GB JVM heap</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-partitioned-log-system-design-t1" value="1" />
-               <span>Write binary batches directly to append-only segment files backed by the OS page cache and stream to consumers via `sendfile()` zero-copy DMA (and use tiered object storage / `fadvise(DONTNEED)` for cold backfills so historical scans don&#039;t evict the hot tail from page cache)</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-partitioned-log-system-design-t1" value="2" />
-               <span>Call `fsync()` synchronously on every single 100-byte message before writing to the OS page cache</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-partitioned-log-system-design-t1" value="0" />
-               <span>Storing 100 GB of small objects in JVM heap eliminates garbage collection pauses</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-partitioned-log-system-design-t1" value="1" />
-               <span>OS page cache + `sendfile()` DMA transfers bytes from page cache to NIC buffer without copying into user space or touching JVM heap, while isolating cold backfill reads prevents page-cache thrashing</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-partitioned-log-system-design-t1" value="2" />
-               <span>Single-message unbatched `fsync()` maximizes NVMe sequential write throughput</span>
-             </label>
-           
-         </div>
-       
+            <div class="exercise-option" data-action="exercise-option" data-idx="0">
+              <span class="exercise-option__bullet">A</span>
+              <span class="exercise-option__text">The cluster will reject the deployment with a PartitionOverflowException.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="1">
+              <span class="exercise-option__bullet">B</span>
+              <span class="exercise-option__text">1 instance will become the leader and process all 10 partitions alone.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="2">
+              <span class="exercise-option__bullet">C</span>
+              <span class="exercise-option__text">All 15 instances will process messages concurrently via round-robin.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="3">
+              <span class="exercise-option__bullet">D</span>
+              <span class="exercise-option__text">Exactly 10 instances will each read from 1 partition; 5 instances will sit idle as standby spares.</span>
+            </div>
+          
         </div>
 
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="partitioned-log-system-design-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="partitioned-log-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-partitioned-log-system-design-t1" style="display: none;">
+        <div class="exercise-feedback" id="feedback-partitioned-log-system-design">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> `sendfile()` streams bytes directly from the kernel page cache to the NIC via DMA without user-space copies or JVM heap allocation. However, a cold historical backfill can thrash the OS page cache and evict the hot tail unless cold segments are served from tiered storage or isolated via `POSIX_FADV_DONTNEED` / direct I/O.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> In Kafka, a single partition within a topic can only be consumed by at most one consumer instance within the same consumer group at any given time. Max active consumers per group is bounded by partition count.</div>
         </div>
       </div>
     
@@ -1367,15 +1460,15 @@ flowchart LR
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

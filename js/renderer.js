@@ -375,11 +375,8 @@ window.Renderer = (() => {
 
     html += '</article>';
 
-    // Check yourself: this lesson's questions as a one-at-a-time slider
+    // Check yourself: unified slider with Concept Checks, Napkin Math (numeric), and Staff Trade-Off Matrix (tradeoff)
     if (window.Quiz?.renderCheckSlider) html += window.Quiz.renderCheckSlider(slug);
-
-    // End-of-lesson Napkin Math (numeric) & Staff Trade-Off Matrix (tradeoff) drills
-    if (window.Quiz?.renderQuiz) html += window.Quiz.renderQuiz(slug);
 
     // Interactive Visual Simulator (if applicable for unit)
     if (window.Simulators && window.Simulators.getSimulatorForUnit) {

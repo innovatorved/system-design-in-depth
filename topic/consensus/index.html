@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -955,44 +955,55 @@
 <!-- enriched -->
 <h2>Worked example: quorum sizing and latency</h2><p>A Raft group replicates a metadata log. A commit needs acknowledgements from a majority, counting the leader.</p><table><thead><tr><th>Cluster size N</th><th>Majority</th><th>Failures tolerated</th><th>Write latency (leader in site 1)</th></tr></thead><tbody><tr><td>3 (one zone)</td><td>2</td><td>1</td><td>About 1 ms: one fast LAN round trip plus fsync</td></tr><tr><td>3 (three zones, same region)</td><td>2</td><td>1 (or one zone)</td><td>About 2 to 3 ms</td></tr><tr><td>5 (three regions: 2+2+1)</td><td>3</td><td>2 (or one region)</td><td>Round trip to the nearest other region, about 30 to 80 ms</td></tr><tr><td>4</td><td>3</td><td>1</td><td>Same fault tolerance as 3 but slower. Avoid even sizes</td></tr></tbody></table><p>Each commit also needs a durable fsync on each acknowledging node. On cloud SSDs that is typically 0.5 to 2 ms, which is why etcd's documentation stresses low-latency disks.</p><h2>What consensus guarantees</h2><ul><li><strong>Agreement:</strong> no two nodes decide different values for the same log slot.</li><li><strong>Validity:</strong> the decided value was proposed by someone.</li><li><strong>Termination:</strong> guaranteed only when the network is stable enough. FLP (1985) proves no deterministic protocol can guarantee it in a fully asynchronous system with even one crash.</li></ul><h2>Paxos, Raft and friends</h2><table><thead><tr><th>Protocol</th><th>Key idea</th><th>Where it runs</th></tr></thead><tbody><tr><td>Multi-Paxos</td><td>A stable leader skips phase 1 for successive slots</td><td>Chubby, Spanner (per split), many Google systems</td></tr><tr><td>Raft</td><td>A strong leader, term numbers, and a log-matching property. Designed for understandability</td><td>etcd, Consul, CockroachDB, TiKV, Kafka KRaft</td></tr><tr><td>Zab</td><td>Primary-backup atomic broadcast with epochs</td><td>ZooKeeper</td></tr><tr><td>Viewstamped Replication</td><td>View changes, predating Paxos's publication</td><td>Academic, and the basis for some storage systems</td></tr><tr><td>PBFT / HotStuff</td><td>Byzantine tolerance with 3f+1 nodes</td><td>Permissioned blockchains</td></tr></tbody></table><h2>Failure modes seen in production</h2><ul><li><strong>Disk stalls</strong> make the leader miss heartbeats, which triggers election churn.</li><li><strong>Membership changes</strong> done by editing config files on each node can create two disjoint majorities. Use joint consensus or single-server changes.</li><li><strong>Log growth</strong> without snapshots makes restarts replay millions of entries.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="consensus" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="consensus" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Randomised timeouts&#039; role" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Adding a fourth node" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Unsafe membership change" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Raft Quorum Size and Fault Tolerance" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: 3-Node vs 5-Node vs 6-Node Consensus Cluster Topologies" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-consensus-c1" data-type="mcq" data-slug="consensus" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Randomised timeouts&#039; role</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Mechanics</div>
+        <div class="check-slider__section">Section: Mechanics</div>
+        
         <p class="check-slider__prompt">What do Raft&#039;s randomised election timeouts actually achieve?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c1" value="0" />
-             <span>They guarantee termination even in a fully asynchronous network, defeating FLP</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c1" value="1" />
-             <span>They are what prevents two leaders from committing conflicting entries</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c1" value="2" />
-             <span>They make repeated split votes unlikely, which helps liveness, while safety comes from terms and quorum intersection</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c1" value="3" />
-             <span>They ensure the node with the longest log always wins the election</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-consensus-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c1" value="0" />
+            <span>They guarantee termination even in a fully asynchronous network, defeating FLP</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c1" value="1" />
+            <span>They are what prevents two leaders from committing conflicting entries</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c1" value="2" />
+            <span>They make repeated split votes unlikely, which helps liveness, while safety comes from terms and quorum intersection</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c1" value="3" />
+            <span>They ensure the node with the longest log always wins the election</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="consensus-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="consensus-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-consensus-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1001,35 +1012,39 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-consensus-c2" data-type="mcq" data-slug="consensus" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Adding a fourth node</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: quorum sizing and latency</div>
+        <div class="check-slider__section">Section: Worked example: quorum sizing and latency</div>
+        
         <p class="check-slider__prompt">Your 3-node etcd cluster tolerates one failure. A manager proposes adding a fourth node for extra resilience. What is the effect?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c2" value="0" />
-             <span>It now tolerates two failures, because a majority of four is two</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c2" value="1" />
-             <span>It tolerates two failures, but only if the new node is in a different zone</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c2" value="2" />
-             <span>No change to fault tolerance or to write latency</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c2" value="3" />
-             <span>The majority becomes 3, so it still tolerates only one failure and each commit waits for an extra acknowledgement</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-consensus-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c2" value="0" />
+            <span>It now tolerates two failures, because a majority of four is two</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c2" value="1" />
+            <span>It tolerates two failures, but only if the new node is in a different zone</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c2" value="2" />
+            <span>No change to fault tolerance or to write latency</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c2" value="3" />
+            <span>The majority becomes 3, so it still tolerates only one failure and each commit waits for an extra acknowledgement</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="consensus-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="consensus-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-consensus-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1038,77 +1053,180 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-consensus-c3" data-type="mcq" data-slug="consensus" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Unsafe membership change</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Failure modes seen in production</div>
+        <div class="check-slider__section">Section: Failure modes seen in production</div>
+        
         <p class="check-slider__prompt">An operator grows a 3-node Raft cluster to 5 by editing the peer list in each node&#039;s config file and restarting the nodes one at a time. What is the danger?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c3" value="0" />
-             <span>Mid-rollout, nodes on the old and new configurations can each form their own majority, allowing two leaders to commit conflicting entries</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c3" value="1" />
-             <span>The restarts will lose committed entries, because Raft logs are not durable</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c3" value="2" />
-             <span>The cluster will refuse all writes until all five nodes have restarted</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-consensus-c3" value="3" />
-             <span>Term numbers reset to zero on restart, which confuses the next election</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-consensus-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c3" value="0" />
+            <span>Mid-rollout, nodes on the old and new configurations can each form their own majority, allowing two leaders to commit conflicting entries</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c3" value="1" />
+            <span>The restarts will lose committed entries, because Raft logs are not durable</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c3" value="2" />
+            <span>The cluster will refuse all writes until all five nodes have restarted</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-consensus-c3" value="3" />
+            <span>Term numbers reset to zero on restart, which confuses the next election</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="consensus-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="consensus-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-consensus-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Changing membership outside the protocol can create two disjoint majorities, one under each configuration, which breaks the quorum intersection that safety relies on. Raft avoids this with joint consensus or one-server-at-a-time changes; its logs and terms are durable, so the other options do not apply.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-consensus-n1" data-type="numeric" data-slug="consensus" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Raft Quorum Size and Fault Tolerance</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You deploy a 5-node Raft consensus cluster across 5 availability zones to store cluster metadata.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many simultaneous node failures can a 5-node Raft cluster tolerate while still maintaining a majority quorum to commit writes?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-consensus-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-consensus-n1"
+              aria-label="Numeric estimate in nodes"
+              placeholder="Enter numeric estimate (nodes)..."
+            />
+            <span class="quiz-unit-badge">nodes</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">For N = 2f + 1 = 5 nodes, majority quorum is floor(5/2) + 1 = 3 nodes, so f = 2 failures are tolerated.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="consensus-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-consensus-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">A 5-node Raft cluster requires a majority quorum of 3 nodes (`floor(5/2) + 1 = 3`) to elect a leader and commit log entries. Thus it can lose at most 5 - 3 = 2 nodes while remaining available for writes.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-consensus-t1" data-type="tradeoff" data-slug="consensus" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: 3-Node vs 5-Node vs 6-Node Consensus Cluster Topologies</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A team proposes upgrading a 5-node etcd/Raft cluster to 6 nodes across 3 Availability Zones (2 nodes per AZ) to &#039;increase fault tolerance and survive an entire AZ outage&#039;.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What should you advise in the architecture review, and what is the primary engineering justification?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-consensus-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-consensus-t1" value="0" />
+                  <span>Approve the 6-node cluster across 3 AZs because 6 nodes tolerate more failures than 5 nodes</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-consensus-t1" value="1" />
+                  <span>Reject the 6-node cluster and use a 3-node or 5-node odd-sized topology (or 5 nodes across 3 AZs with 2-2-1 placement), because a 6-node cluster requires a quorum of 4 and still only tolerates 2 node failures</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-consensus-t1" value="2" />
+                  <span>Use a 2-node cluster across 2 AZs so either node can commit writes independently</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-consensus-t1" value="0" />
+                  <span>Even-numbered Raft clusters increase fault tolerance while reducing replication overhead</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-consensus-t1" value="1" />
+                  <span>Moving from 5 to 6 nodes raises the majority requirement from 3 to 4 (still tolerating only 6 - 4 = 2 failures) while adding replication traffic and making split-brain 3v3 partitions more likely</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-consensus-t1" value="2" />
+                  <span>A 2-node Raft cluster can lose 1 node and still form a majority quorum of 2</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Compare `N - (floor(N/2) + 1)` for N = 5 vs N = 6.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="consensus-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-consensus-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">For N = 5, quorum is 3 (tolerates 2 failures). For N = 6, quorum is 4 (tolerates 6 - 4 = 2 failures). A 6-node cluster adds extra network replication overhead and worsens availability (since 4 nodes must stay up instead of 3) without tolerating a single additional failure.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-consensus-n1" data-type="numeric" data-slug="consensus">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Raft Quorum Size and Fault Tolerance</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> You deploy a 5-node Raft consensus cluster across 5 availability zones to store cluster metadata.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How many simultaneous node failures can a 5-node Raft cluster tolerate while still maintaining a majority quorum to commit writes?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> For N = 2f + 1 = 5 nodes, majority quorum is floor(5/2) + 1 = 3 nodes, so f = 2 failures are tolerated.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-consensus-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-consensus-n1" placeholder="Enter numeric estimate (nodes)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">nodes</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="consensus-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="consensus" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-consensus-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> A 5-node Raft cluster requires a majority quorum of 3 nodes (`floor(5/2) + 1 = 3`) to elect a leader and commit log entries. Thus it can lose at most 5 - 3 = 2 nodes while remaining available for writes.</div>
-        </div>
-      </div>
-    
       <div class="simulator-card" id="sim-raft">
         <div class="simulator-card__header">
           <div class="simulator-card__title"><span>Raft Consensus (3 Nodes)</span></div>
@@ -1123,68 +1241,43 @@
         <div id="sim-raft-log" style="padding: 1rem; font-family: monospace; font-size: 0.85rem; background: var(--bg-surface); max-height: 80px; overflow-y: auto;"></div>
       </div>
     
-      <div class="exercise-box quiz-card" id="quiz-consensus-t1" data-type="tradeoff" data-slug="consensus">
+      <div class="exercise-box" id="exercise-consensus" data-slug="consensus">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Trade-Off Matrix: 3-Node vs 5-Node vs 6-Node Consensus Cluster Topologies</span>
+            <span>Architecture Challenge: Raft &amp; Paxos Quorum Math</span>
           </div>
-          <span class="exercise-box__difficulty">staff</span>
+          <span class="exercise-box__difficulty">Staff Level</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A team proposes upgrading a 5-node etcd/Raft cluster to 6 nodes across 3 Availability Zones (2 nodes per AZ) to &#039;increase fault tolerance and survive an entire AZ outage&#039;.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> What should you advise in the architecture review, and what is the primary engineering justification?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Compare `N - (floor(N/2) + 1)` for N = 5 vs N = 6.</div>
+        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> Cluster size N = 5. Majority quorum rule applies.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> A Raft consensus cluster consists of 5 nodes. What is the minimum number of healthy nodes required to elect a leader and commit write entries?</div>
         
-        <div class="quiz-options exercise-options" id="quiz-options-consensus-t1" style="margin-top: 15px;">
+        <div class="exercise-options">
           
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-consensus-t1" value="0" />
-               <span>Approve the 6-node cluster across 3 AZs because 6 nodes tolerate more failures than 5 nodes</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-consensus-t1" value="1" />
-               <span>Reject the 6-node cluster and use a 3-node or 5-node odd-sized topology (or 5 nodes across 3 AZs with 2-2-1 placement), because a 6-node cluster requires a quorum of 4 and still only tolerates 2 node failures</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-consensus-t1" value="2" />
-               <span>Use a 2-node cluster across 2 AZs so either node can commit writes independently</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-consensus-t1" value="0" />
-               <span>Even-numbered Raft clusters increase fault tolerance while reducing replication overhead</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-consensus-t1" value="1" />
-               <span>Moving from 5 to 6 nodes raises the majority requirement from 3 to 4 (still tolerating only 6 - 4 = 2 failures) while adding replication traffic and making split-brain 3v3 partitions more likely</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-consensus-t1" value="2" />
-               <span>A 2-node Raft cluster can lose 1 node and still form a majority quorum of 2</span>
-             </label>
-           
-         </div>
-       
+            <div class="exercise-option" data-action="exercise-option" data-idx="0">
+              <span class="exercise-option__bullet">A</span>
+              <span class="exercise-option__text">All 5 nodes must agree unanimously</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="1">
+              <span class="exercise-option__bullet">B</span>
+              <span class="exercise-option__text">3 nodes (floor(N/2) + 1)</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="2">
+              <span class="exercise-option__bullet">C</span>
+              <span class="exercise-option__text">2 nodes</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="3">
+              <span class="exercise-option__bullet">D</span>
+              <span class="exercise-option__text">4 nodes</span>
+            </div>
+          
         </div>
 
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="consensus-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="consensus" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-consensus-t1" style="display: none;">
+        <div class="exercise-feedback" id="feedback-consensus">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> For N = 5, quorum is 3 (tolerates 2 failures). For N = 6, quorum is 4 (tolerates 6 - 4 = 2 failures). A 6-node cluster adds extra network replication overhead and worsens availability (since 4 nodes must stay up instead of 3) without tolerating a single additional failure.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> Majority quorum requires floor(N/2) + 1 nodes. For a 5-node cluster, a quorum is floor(5/2) + 1 = 3. The cluster can survive the loss of up to 2 nodes without losing consensus.</div>
         </div>
       </div>
     
@@ -1328,15 +1421,15 @@
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

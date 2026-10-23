@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -992,44 +992,55 @@
 <!-- enriched -->
 <h2>Worked example: picking a resolution</h2><p>Surge pricing wants zones of roughly neighbourhood size.</p><ul><li><strong>H3</strong> resolution 7 hexagons average about 5.2 square km, resolution 8 about 0.74 square km, resolution 9 about 0.11 square km. Each step divides area by about 7 (aperture 7). Resolution 8 gives about 1,600 cells over a 1,200 square km city.</li><li><strong>S2</strong> has 31 levels (0 to 30). Level 13 cells average about 1.3 square km and each level divides area by exactly 4; a level 30 cell is under a square centimetre. Cell IDs are 64-bit integers ordered along a Hilbert curve, so a region covering is a small set of integer ranges.</li><li><strong>Geohash</strong> precision 6 gives 1.2 km by 0.6 km cells at the equator, but only about 0.6 km wide at 60 degrees latitude, so zone areas vary with latitude.</li></ul><h2>Comparison</h2><table><thead><tr><th>Property</th><th>Geohash</th><th>S2</th><th>H3</th></tr></thead><tbody><tr><td>Cell shape</td><td>Lat/lon rectangle</td><td>Spherical quadrilateral</td><td>Hexagon (plus 12 pentagons)</td></tr><tr><td>Hierarchy</td><td>Exact nesting, 32 children</td><td>Exact nesting, 4 children</td><td>Approximate nesting, 7 children</td></tr><tr><td>ID ordering</td><td>Z-order curve (base32 string or integer)</td><td>Hilbert curve (64-bit integer)</td><td>Hierarchical 64-bit index, not a locality-preserving range</td></tr><tr><td>Area distortion</td><td>Large, grows toward poles</td><td>Small (roughly 2x across the globe)</td><td>Small (roughly 2x across the globe)</td></tr><tr><td>Neighbours</td><td>8, at two distances</td><td>8 (edge plus vertex)</td><td>6, all at one distance</td></tr><tr><td>Best at</td><td>Simple prefix queries in any database</td><td>Region coverings and range scans</td><td>Aggregation, smoothing, movement between cells</td></tr><tr><td>Known users</td><td>Redis GEO, Elasticsearch grids</td><td>Google, MongoDB 2dsphere, Tinder geosharding</td><td>Uber marketplace and surge, many analytics tools</td></tr></tbody></table><h2>Common patterns</h2><ul><li><strong>Coverings:</strong> S2's RegionCoverer turns a circle or polygon into a bounded number of cells at mixed levels (for example max 8 cells), trading over-coverage for fewer lookups.</li><li><strong>k-rings:</strong> H3's gridDisk(cell, k) returns all cells within k steps, which approximates a radius and is ideal for "demand near this driver".</li><li><strong>Sharding:</strong> assign coarse cells (S2 level 5 or H3 resolution 2 or 3) to shards; hot cities may need to be split further.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="geospatial-grid-systems-h3-s2-geohash" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="geospatial-grid-systems-h3-s2-geohash" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Why hexagons for ride-sharing" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Picking a surge resolution" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Exact rollups by parent" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: H3 Hexagonal K-Ring Neighbor Cell Count" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Uber H3 Hexagons vs Rectangular Geohash for Surge Pricing &amp; Smoothing" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-geospatial-grid-systems-h3-s2-geohash-c1" data-type="mcq" data-slug="geospatial-grid-systems-h3-s2-geohash" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Why hexagons for ride-sharing</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Comparing Geospatial Grid Systems</div>
+        <div class="check-slider__section">Section: Comparing Geospatial Grid Systems</div>
+        
         <p class="check-slider__prompt">Uber&#039;s H3 is favoured for continuous neighbour traversal such as spreading demand to nearby cells. Which property of its cells is the main reason?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c1" value="0" />
-             <span>Each hexagon has six neighbours that all share an edge and sit at one distance</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c1" value="1" />
-             <span>Cell IDs are ordered along a Hilbert curve, so neighbours have adjacent integer IDs</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c1" value="2" />
-             <span>Each child hexagon nests exactly inside its parent, so rollups are exact</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c1" value="3" />
-             <span>Cell areas are identical everywhere on Earth, so radius checks become unnecessary</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-geospatial-grid-systems-h3-s2-geohash-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c1" value="0" />
+            <span>Each hexagon has six neighbours that all share an edge and sit at one distance</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c1" value="1" />
+            <span>Cell IDs are ordered along a Hilbert curve, so neighbours have adjacent integer IDs</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c1" value="2" />
+            <span>Each child hexagon nests exactly inside its parent, so rollups are exact</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c1" value="3" />
+            <span>Cell areas are identical everywhere on Earth, so radius checks become unnecessary</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="geospatial-grid-systems-h3-s2-geohash-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="geospatial-grid-systems-h3-s2-geohash-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-geospatial-grid-systems-h3-s2-geohash-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1038,35 +1049,39 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-geospatial-grid-systems-h3-s2-geohash-c2" data-type="mcq" data-slug="geospatial-grid-systems-h3-s2-geohash" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Picking a surge resolution</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: picking a resolution</div>
+        <div class="check-slider__section">Section: Worked example: picking a resolution</div>
+        
         <p class="check-slider__prompt">A surge-pricing team wants zones of about 5 square km across an 800 square km city. Using the lesson&#039;s H3 averages, which resolution fits and roughly how many cells cover the city?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c2" value="0" />
-             <span>Resolution 8, about 1,100 cells</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c2" value="1" />
-             <span>Resolution 7, about 150 cells</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c2" value="2" />
-             <span>Resolution 9, about 7,300 cells</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c2" value="3" />
-             <span>Resolution 6, about 20 cells</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-geospatial-grid-systems-h3-s2-geohash-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c2" value="0" />
+            <span>Resolution 8, about 1,100 cells</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c2" value="1" />
+            <span>Resolution 7, about 150 cells</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c2" value="2" />
+            <span>Resolution 9, about 7,300 cells</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c2" value="3" />
+            <span>Resolution 6, about 20 cells</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="geospatial-grid-systems-h3-s2-geohash-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="geospatial-grid-systems-h3-s2-geohash-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-geospatial-grid-systems-h3-s2-geohash-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1075,77 +1090,180 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-geospatial-grid-systems-h3-s2-geohash-c3" data-type="mcq" data-slug="geospatial-grid-systems-h3-s2-geohash" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Exact rollups by parent</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Comparison</div>
+        <div class="check-slider__section">Section: Comparison</div>
+        
         <p class="check-slider__prompt">Finance wants billing totals per parent zone that exactly equal the sum of trips recorded at a finer resolution. The analytics team indexes trips by H3 resolution 9 and rolls up to parents. What problem should you raise?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c3" value="0" />
-             <span>H3 has no parent cells, so rollups require re-indexing each trip at the coarser resolution</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c3" value="1" />
-             <span>H3 IDs are strings, so aggregation by prefix is too slow for billing workloads</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c3" value="2" />
-             <span>H3 parents nest approximately, so child cells do not exactly tile the parent and edge trips can be misassigned; S2 or geohash nest exactly</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c3" value="3" />
-             <span>H3 pentagons make every rollup inaccurate, so results must be corrected by a factor of five-sixths</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-geospatial-grid-systems-h3-s2-geohash-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c3" value="0" />
+            <span>H3 has no parent cells, so rollups require re-indexing each trip at the coarser resolution</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c3" value="1" />
+            <span>H3 IDs are strings, so aggregation by prefix is too slow for billing workloads</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c3" value="2" />
+            <span>H3 parents nest approximately, so child cells do not exactly tile the parent and edge trips can be misassigned; S2 or geohash nest exactly</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-geospatial-grid-systems-h3-s2-geohash-c3" value="3" />
+            <span>H3 pentagons make every rollup inaccurate, so results must be corrected by a factor of five-sixths</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="geospatial-grid-systems-h3-s2-geohash-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="geospatial-grid-systems-h3-s2-geohash-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-geospatial-grid-systems-h3-s2-geohash-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">The comparison table lists H3 hierarchy as approximate nesting with 7 children, so parent totals from child cells are approximate at the edges, while S2 and geohash nest exactly. H3 does have parents; the issue is that seven children only approximately cover their parent.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-geospatial-grid-systems-h3-s2-geohash-n1" data-type="numeric" data-slug="geospatial-grid-systems-h3-s2-geohash" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: H3 Hexagonal K-Ring Neighbor Cell Count</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">To find all drivers within ~1.5 km of a rider without boundary blind spots, your matching service queries the rider&#039;s H3 hexagon cell plus its immediate `k = 1` ring of adjacent hexagons (`kRing(origin, 1)`), and for wider searches its `k = 2` ring (`1 + 6×1 + 6×2`).</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many total H3 hexagonal cells are queried in a `k = 2` ring (`1 + 6 + 12`)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-geospatial-grid-systems-h3-s2-geohash-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-geospatial-grid-systems-h3-s2-geohash-n1"
+              aria-label="Numeric estimate in cells"
+              placeholder="Enter numeric estimate (cells)..."
+            />
+            <span class="quiz-unit-badge">cells</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Ring 0 = 1 center cell; Ring 1 = 6 neighbor cells; Ring 2 = 12 outer cells. Sum: 1 + 6 + 12.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="geospatial-grid-systems-h3-s2-geohash-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-geospatial-grid-systems-h3-s2-geohash-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">A hexagonal grid has `3k(k + 1) + 1` cells within distance `k`. For `k = 1`, that is `1 + 6 = 7` cells; for `k = 2`, that is `1 + 6 + 12 = 19` cells, all with uniform center-to-center neighbor distances.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-geospatial-grid-systems-h3-s2-geohash-t1" data-type="tradeoff" data-slug="geospatial-grid-systems-h3-s2-geohash" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Uber H3 Hexagons vs Rectangular Geohash for Surge Pricing &amp; Smoothing</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You are building a real-time dynamic surge pricing engine that computes supply-to-demand ratios per spatial cell and smooths surge multipliers across neighboring cells via convolution.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why did Uber choose H3 hexagonal cells over rectangular Geohash / S2 squares for surge smoothing, and what trade-off do hexagons introduce?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-geospatial-grid-systems-h3-s2-geohash-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-geospatial-grid-systems-h3-s2-geohash-t1" value="0" />
+                  <span>Hexagons subdivide into 4 exact child hexagons with zero boundary distortion</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-geospatial-grid-systems-h3-s2-geohash-t1" value="1" />
+                  <span>Every neighbor of a hexagon shares an edge and has an identical center-to-center distance (6 equidistant neighbors), eliminating the corner-vs-edge distance bias of squares at the cost of approximate (1-to-7) hierarchical parent-child containment</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-geospatial-grid-systems-h3-s2-geohash-t1" value="2" />
+                  <span>Geohash rectangles have identical area at the equator and at 75° latitude</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-geospatial-grid-systems-h3-s2-geohash-t1" value="0" />
+                  <span>A regular hexagon can be tiled cleanly into smaller congruent hexagons without overhanging edges</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-geospatial-grid-systems-h3-s2-geohash-t1" value="1" />
+                  <span>Squares have 4 edge neighbors (distance 1) and 4 diagonal corner neighbors (distance √2 ≈ 1.414), whereas hexagons have 6 equidistant neighbors ideal for isotropic radial smoothing, trading off exact hierarchical containment</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-geospatial-grid-systems-h3-s2-geohash-t1" value="2" />
+                  <span>Mercator/lat-lng Geohash boxes never distort cell width near the poles</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Compare neighbor distances in a square grid (edge = 1, diagonal = √2) vs a hexagonal grid (all 6 neighbors = 1).</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="geospatial-grid-systems-h3-s2-geohash-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-geospatial-grid-systems-h3-s2-geohash-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">In a square grid, diagonal neighbors are 41% farther away than edge neighbors, biasing radial gradients and surge smoothing. Hexagons have 6 equidistant neighbors, making radial k-ring expansion and spatial smoothing isotropic, at the cost of approximate 7-child subdivision.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-geospatial-grid-systems-h3-s2-geohash-n1" data-type="numeric" data-slug="geospatial-grid-systems-h3-s2-geohash">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: H3 Hexagonal K-Ring Neighbor Cell Count</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> To find all drivers within ~1.5 km of a rider without boundary blind spots, your matching service queries the rider&#039;s H3 hexagon cell plus its immediate `k = 1` ring of adjacent hexagons (`kRing(origin, 1)`), and for wider searches its `k = 2` ring (`1 + 6×1 + 6×2`).</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How many total H3 hexagonal cells are queried in a `k = 2` ring (`1 + 6 + 12`)?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Ring 0 = 1 center cell; Ring 1 = 6 neighbor cells; Ring 2 = 12 outer cells. Sum: 1 + 6 + 12.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-geospatial-grid-systems-h3-s2-geohash-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-geospatial-grid-systems-h3-s2-geohash-n1" placeholder="Enter numeric estimate (cells)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">cells</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="geospatial-grid-systems-h3-s2-geohash-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="geospatial-grid-systems-h3-s2-geohash" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-geospatial-grid-systems-h3-s2-geohash-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> A hexagonal grid has `3k(k + 1) + 1` cells within distance `k`. For `k = 1`, that is `1 + 6 = 7` cells; for `k = 2`, that is `1 + 6 + 12 = 19` cells, all with uniform center-to-center neighbor distances.</div>
-        </div>
-      </div>
-    
         <div class="simulator-card" id="sim-geohash">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Geohash Explorer</div>
@@ -1166,71 +1284,6 @@
           </div>
         </div>
       
-      <div class="exercise-box quiz-card" id="quiz-geospatial-grid-systems-h3-s2-geohash-t1" data-type="tradeoff" data-slug="geospatial-grid-systems-h3-s2-geohash">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Uber H3 Hexagons vs Rectangular Geohash for Surge Pricing &amp; Smoothing</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> You are building a real-time dynamic surge pricing engine that computes supply-to-demand ratios per spatial cell and smooths surge multipliers across neighboring cells via convolution.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Why did Uber choose H3 hexagonal cells over rectangular Geohash / S2 squares for surge smoothing, and what trade-off do hexagons introduce?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Compare neighbor distances in a square grid (edge = 1, diagonal = √2) vs a hexagonal grid (all 6 neighbors = 1).</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-geospatial-grid-systems-h3-s2-geohash-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-geospatial-grid-systems-h3-s2-geohash-t1" value="0" />
-               <span>Hexagons subdivide into 4 exact child hexagons with zero boundary distortion</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-geospatial-grid-systems-h3-s2-geohash-t1" value="1" />
-               <span>Every neighbor of a hexagon shares an edge and has an identical center-to-center distance (6 equidistant neighbors), eliminating the corner-vs-edge distance bias of squares at the cost of approximate (1-to-7) hierarchical parent-child containment</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-geospatial-grid-systems-h3-s2-geohash-t1" value="2" />
-               <span>Geohash rectangles have identical area at the equator and at 75° latitude</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-geospatial-grid-systems-h3-s2-geohash-t1" value="0" />
-               <span>A regular hexagon can be tiled cleanly into smaller congruent hexagons without overhanging edges</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-geospatial-grid-systems-h3-s2-geohash-t1" value="1" />
-               <span>Squares have 4 edge neighbors (distance 1) and 4 diagonal corner neighbors (distance √2 ≈ 1.414), whereas hexagons have 6 equidistant neighbors ideal for isotropic radial smoothing, trading off exact hierarchical containment</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-geospatial-grid-systems-h3-s2-geohash-t1" value="2" />
-               <span>Mercator/lat-lng Geohash boxes never distort cell width near the poles</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="geospatial-grid-systems-h3-s2-geohash-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="geospatial-grid-systems-h3-s2-geohash" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-geospatial-grid-systems-h3-s2-geohash-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> In a square grid, diagonal neighbors are 41% farther away than edge neighbors, biasing radial gradients and surge smoothing. Hexagons have 6 equidistant neighbors, making radial k-ring expansion and spatial smoothing isotropic, at the cost of approximate 7-child subdivision.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1339,15 +1392,15 @@
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

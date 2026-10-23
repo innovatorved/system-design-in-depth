@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -996,44 +996,55 @@ flowchart LR
   K --> S["SETTLED"]
   K --> R["REFUNDED or partially refunded"]</div><p>Card authorisations usually expire after about 7 days (this varies by network and merchant category), so a capture must happen before then or the hold on the customer's funds lapses. Only move between states along allowed transitions, using a conditional update, the same pattern as seat booking.</p><h2>Reconciliation example</h2><table><thead><tr><th>Finding</th><th>Likely cause</th><th>Action</th></tr></thead><tbody><tr><td>In the PSP file, missing from the ledger</td><td>Timeout left the payment UNKNOWN, and the webhook was lost</td><td>Create ledger entries from the PSP record, and mark the order paid</td></tr><tr><td>In the ledger, missing from the PSP file</td><td>Capture never actually happened, or will settle in the next batch</td><td>Recheck the next day, then investigate</td></tr><tr><td>Amount differs</td><td>FX conversion, fee change, partial capture</td><td>Post an adjustment entry</td></tr><tr><td>Chargeback line</td><td>Customer disputed the payment with their bank</td><td>Open a dispute case, and reverse the merchant payable</td></tr></tbody></table><p>Stripe keeps idempotency keys for at least 24 hours and returns the original response for any repeated request with the same key. Your own idempotency table should keep keys at least as long as the longest client retry window.</p>
 </div></article>
-      <section class="check-slider" data-slug="payment-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="payment-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Timeout is not failure" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Ledger entry amounts" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Missing from the ledger" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Double-Entry Ledger Storage Growth Over 5 Years" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Two-Phase Commit (2PC) Across External PSPs vs Transactional Outbox + Reconciliation Saga" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-payment-system-design-c1" data-type="mcq" data-slug="payment-system-design" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Timeout is not failure</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Idempotency Execution Pattern</div>
+        <div class="check-slider__section">Section: Idempotency Execution Pattern</div>
+        
         <p class="check-slider__prompt">The call to the PSP times out with no reply. The client asks the payment service to try again. What should the service do?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c1" value="0" />
-             <span>Mark the payment FAILED and let the client start a fresh checkout</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c1" value="1" />
-             <span>Keep it UNKNOWN and recover with the same key: repeat the call, query the PSP, or await the webhook</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c1" value="2" />
-             <span>Retry immediately with a new idempotency key so the PSP treats it as a new charge</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c1" value="3" />
-             <span>Hold the database transaction open and retry until the PSP responds</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-payment-system-design-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c1" value="0" />
+            <span>Mark the payment FAILED and let the client start a fresh checkout</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c1" value="1" />
+            <span>Keep it UNKNOWN and recover with the same key: repeat the call, query the PSP, or await the webhook</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c1" value="2" />
+            <span>Retry immediately with a new idempotency key so the PSP treats it as a new charge</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c1" value="3" />
+            <span>Hold the database transaction open and retry until the PSP responds</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="payment-system-design-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="payment-system-design-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-payment-system-design-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1042,35 +1053,39 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-payment-system-design-c2" data-type="mcq" data-slug="payment-system-design" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Ledger entry amounts</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: ledger entries for one card payment</div>
+        <div class="check-slider__section">Section: Worked example: ledger entries for one card payment</div>
+        
         <p class="check-slider__prompt">A 250.00 USD order is captured. The PSP fee is 2.9% + 0.30 and the PSP pays out net. In integer cents, what is the capture journal entry?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c2" value="0" />
-             <span>Debit PSP receivable 24245 and fees 755; credit sales revenue 25000</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c2" value="1" />
-             <span>Debit PSP receivable 25000; credit sales revenue 24245 and fees 755</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c2" value="2" />
-             <span>Debit PSP receivable 24275 and fees 725; credit sales revenue 25000</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c2" value="3" />
-             <span>Debit bank cash 24245 and fees 755; credit sales revenue 25000</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-payment-system-design-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c2" value="0" />
+            <span>Debit PSP receivable 24245 and fees 755; credit sales revenue 25000</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c2" value="1" />
+            <span>Debit PSP receivable 25000; credit sales revenue 24245 and fees 755</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c2" value="2" />
+            <span>Debit PSP receivable 24275 and fees 725; credit sales revenue 25000</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c2" value="3" />
+            <span>Debit bank cash 24245 and fees 755; credit sales revenue 25000</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="payment-system-design-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="payment-system-design-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-payment-system-design-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1079,139 +1094,217 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-payment-system-design-c3" data-type="mcq" data-slug="payment-system-design" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Missing from the ledger</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Reconciliation example</div>
+        <div class="check-slider__section">Section: Reconciliation example</div>
+        
         <p class="check-slider__prompt">Nightly reconciliation finds a successful charge in the PSP settlement file with no matching ledger entry. What is the likely cause and the right action?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c3" value="0" />
-             <span>The capture never happened; recheck the next day, then investigate</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c3" value="1" />
-             <span>The customer filed a chargeback; open a dispute case and reverse the payable</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c3" value="2" />
-             <span>An FX difference changed the amount; post an adjustment entry</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-payment-system-design-c3" value="3" />
-             <span>A timeout left it UNKNOWN and the webhook was lost; create ledger entries from the PSP record</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-payment-system-design-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c3" value="0" />
+            <span>The capture never happened; recheck the next day, then investigate</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c3" value="1" />
+            <span>The customer filed a chargeback; open a dispute case and reverse the payable</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c3" value="2" />
+            <span>An FX difference changed the amount; post an adjustment entry</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-payment-system-design-c3" value="3" />
+            <span>A timeout left it UNKNOWN and the webhook was lost; create ledger entries from the PSP record</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="payment-system-design-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="payment-system-design-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-payment-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">The PSP&#039;s record proves the charge succeeded, so the ledger is behind, typically because a timeout left the payment UNKNOWN and the webhook never arrived; you post the entries and mark the order paid. Rechecking later is the action for the opposite case, a ledger entry missing from the PSP file.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-payment-system-design-n1" data-type="numeric" data-slug="payment-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Double-Entry Ledger Storage Growth Over 5 Years</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A payment platform processes 20 million payment transactions per day. Each payment writes 1 transaction header row plus 2 double-entry ledger lines (debit + credit), totaling 1,000 bytes (1 KB) per payment including indexes.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Using 365 days/year, how many terabytes (TB, using 1 TB = 10^12 bytes) of primary ledger storage accumulate over 5 years (rounded to the nearest integer)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-payment-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-payment-system-design-n1"
+              aria-label="Numeric estimate in TB"
+              placeholder="Enter numeric estimate (TB)..."
+            />
+            <span class="quiz-unit-badge">TB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Daily storage = 20,000,000 × 1,000 B = 20 GB/day. Over 5 years (1,825 days): 20 GB × 1,825 = 36,500 GB = 36.5 TB.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="payment-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-payment-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">20M payments/day × 1 KB = 20 GB/day. Over `5 × 365 = 1,825` days, the immutable ledger grows by `20 GB × 1,825 = 36,500 GB = 36.5 TB` (~37 TB).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-payment-system-design-t1" data-type="tradeoff" data-slug="payment-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Two-Phase Commit (2PC) Across External PSPs vs Transactional Outbox + Reconciliation Saga</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Executing a payment requires updating your internal SQL ledger AND calling an external Payment Service Provider (PSP like Stripe/Adyen) over HTTPS. External PSPs do not expose XA/2PC transactions, and network timeouts leave it ambiguous whether the PSP charged the card.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which architecture guarantees zero lost or double-charged payments across crashes and timeouts?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-payment-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-payment-system-design-t1" value="0" />
+                  <span>Hold an open SQL serializable transaction lock while making the synchronous 2-second HTTPS call to the external PSP, and roll back the SQL transaction if the HTTPS call times out</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-payment-system-design-t1" value="1" />
+                  <span>Persist the payment intent + client `Idempotency-Key` in state `PENDING` via a local ACID transaction (Outbox pattern) before calling the PSP with a deterministic PSP idempotency key; on timeout, never blindly mark failed—poll/reconcile PSP state and verify T+1 settlement files against the immutable double-entry ledger</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-payment-system-design-t1" value="2" />
+                  <span>Charge the external PSP first and ignore database write failures</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-payment-system-design-t1" value="0" />
+                  <span>Rolling back the local DB when an HTTP call times out guarantees the remote PSP did not already capture the customer&#039;s money</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-payment-system-design-t1" value="1" />
+                  <span>Because a network timeout can occur after the PSP succeeded, persisting `PENDING` state first and driving retries/status checks with a deterministic idempotency key + daily settlement reconciliation prevents both phantom charges and double captures</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-payment-system-design-t1" value="2" />
+                  <span>Dropping database ledger writes after charging a credit card passes financial audits</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">If your HTTPS request to Visa/Stripe times out after 3 seconds, did the charge succeed or fail?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="payment-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-payment-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Rolling back the local DB on an HTTP timeout is a classic catastrophic bug: if the PSP actually processed the charge before the response packet was dropped, rolling back erases your record of taking the user&#039;s money! You must persist `PENDING` state before the external call and drive convergence via idempotent retries, webhooks, and T+1 settlement reconciliation.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-payment-system-design-n1" data-type="numeric" data-slug="payment-system-design">
+      <div class="exercise-box" id="exercise-payment-system-design" data-slug="payment-system-design">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Napkin Math: Double-Entry Ledger Storage Growth Over 5 Years</span>
+            <span>Architecture Challenge: Payment Idempotency &amp; Two-Phase Commit</span>
           </div>
-          <span class="exercise-box__difficulty">apply</span>
+          <span class="exercise-box__difficulty">Staff Level</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A payment platform processes 20 million payment transactions per day. Each payment writes 1 transaction header row plus 2 double-entry ledger lines (debit + credit), totaling 1,000 bytes (1 KB) per payment including indexes.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Using 365 days/year, how many terabytes (TB, using 1 TB = 10^12 bytes) of primary ledger storage accumulate over 5 years (rounded to the nearest integer)?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Daily storage = 20,000,000 × 1,000 B = 20 GB/day. Over 5 years (1,825 days): 20 GB × 1,825 = 36,500 GB = 36.5 TB.</div>
+        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> Mobile network timeout on credit card payment submission.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> A customer clicks &#039;Pay $100&#039;. The network connection drops before the browser receives the HTTP response. The customer clicks &#039;Pay $100&#039; again. How do you ensure they are only charged once?</div>
         
-        <div class="quiz-options exercise-options" id="quiz-options-payment-system-design-n1" style="margin-top: 15px;">
+        <div class="exercise-options">
           
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-payment-system-design-n1" placeholder="Enter numeric estimate (TB)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">TB</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="payment-system-design-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="payment-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-payment-system-design-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 20M payments/day × 1 KB = 20 GB/day. Over `5 × 365 = 1,825` days, the immutable ledger grows by `20 GB × 1,825 = 36,500 GB = 36.5 TB` (~37 TB).</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-payment-system-design-t1" data-type="tradeoff" data-slug="payment-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Two-Phase Commit (2PC) Across External PSPs vs Transactional Outbox + Reconciliation Saga</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> Executing a payment requires updating your internal SQL ledger AND calling an external Payment Service Provider (PSP like Stripe/Adyen) over HTTPS. External PSPs do not expose XA/2PC transactions, and network timeouts leave it ambiguous whether the PSP charged the card.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which architecture guarantees zero lost or double-charged payments across crashes and timeouts?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> If your HTTPS request to Visa/Stripe times out after 3 seconds, did the charge succeed or fail?</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-payment-system-design-t1" style="margin-top: 15px;">
+            <div class="exercise-option" data-action="exercise-option" data-idx="0">
+              <span class="exercise-option__bullet">A</span>
+              <span class="exercise-option__text">Block all requests coming from the same IP address for 60 seconds.</span>
+            </div>
           
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-payment-system-design-t1" value="0" />
-               <span>Hold an open SQL serializable transaction lock while making the synchronous 2-second HTTPS call to the external PSP, and roll back the SQL transaction if the HTTPS call times out</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-payment-system-design-t1" value="1" />
-               <span>Persist the payment intent + client `Idempotency-Key` in state `PENDING` via a local ACID transaction (Outbox pattern) before calling the PSP with a deterministic PSP idempotency key; on timeout, never blindly mark failed—poll/reconcile PSP state and verify T+1 settlement files against the immutable double-entry ledger</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-payment-system-design-t1" value="2" />
-               <span>Charge the external PSP first and ignore database write failures</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-payment-system-design-t1" value="0" />
-               <span>Rolling back the local DB when an HTTP call times out guarantees the remote PSP did not already capture the customer&#039;s money</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-payment-system-design-t1" value="1" />
-               <span>Because a network timeout can occur after the PSP succeeded, persisting `PENDING` state first and driving retries/status checks with a deterministic idempotency key + daily settlement reconciliation prevents both phantom charges and double captures</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-payment-system-design-t1" value="2" />
-               <span>Dropping database ledger writes after charging a credit card passes financial audits</span>
-             </label>
-           
-         </div>
-       
+            <div class="exercise-option" data-action="exercise-option" data-idx="1">
+              <span class="exercise-option__bullet">B</span>
+              <span class="exercise-option__text">Prompt the customer with a JavaScript alert asking if they really meant to pay again.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="2">
+              <span class="exercise-option__bullet">C</span>
+              <span class="exercise-option__text">Refund all duplicate charges automatically at midnight.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="3">
+              <span class="exercise-option__bullet">D</span>
+              <span class="exercise-option__text">Require a client-generated UUID Idempotency-Key header; for a repeated key within the retention window (e.g. 24 hours) the server returns the original result instead of charging again.</span>
+            </div>
+          
         </div>
 
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="payment-system-design-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="payment-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-payment-system-design-t1" style="display: none;">
+        <div class="exercise-feedback" id="feedback-payment-system-design">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Rolling back the local DB on an HTTP timeout is a classic catastrophic bug: if the PSP actually processed the charge before the response packet was dropped, rolling back erases your record of taking the user&#039;s money! You must persist `PENDING` state before the external call and drive convergence via idempotent retries, webhooks, and T+1 settlement reconciliation.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> Idempotency keys (popularized by Stripe; being standardized in an IETF draft) map each transaction uniquely. If a request with an existing key is received, the server returns the cached result without charging the card again.</div>
         </div>
       </div>
     
@@ -1347,14 +1440,14 @@ flowchart LR
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

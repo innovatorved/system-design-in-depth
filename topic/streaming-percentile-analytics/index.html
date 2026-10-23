@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -998,40 +998,45 @@ flowchart LR
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
           <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Store sketches, not p99s" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Rollup arithmetic" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Coordinated omission" aria-label="Go to question 3"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-streaming-percentile-analytics-c1" data-type="mcq" data-slug="streaming-percentile-analytics" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Store sketches, not p99s</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Architecting Streaming Percentiles</div>
+        <div class="check-slider__section">Section: Architecting Streaming Percentiles</div>
+        
         <p class="check-slider__prompt">A pipeline computes a sketch per series every 10 seconds. Why should it store the sketch itself rather than only the p99 value it computes?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c1" value="0" />
-             <span>Because sketches can be merged across hosts and time ranges later, while stored p99 values can never be combined correctly</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c1" value="1" />
-             <span>Because a TSDB cannot index floating-point percentile values efficiently</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c1" value="2" />
-             <span>Because a sketch is smaller on disk than a single double-precision p99 value</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c1" value="3" />
-             <span>Because p99 values must be recomputed at query time to adjust for clock skew</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-streaming-percentile-analytics-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c1" value="0" />
+            <span>Because sketches can be merged across hosts and time ranges later, while stored p99 values can never be combined correctly</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c1" value="1" />
+            <span>Because a TSDB cannot index floating-point percentile values efficiently</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c1" value="2" />
+            <span>Because a sketch is smaller on disk than a single double-precision p99 value</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c1" value="3" />
+            <span>Because p99 values must be recomputed at query time to adjust for clock skew</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="streaming-percentile-analytics-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="streaming-percentile-analytics-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-streaming-percentile-analytics-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1040,35 +1045,39 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-streaming-percentile-analytics-c2" data-type="mcq" data-slug="streaming-percentile-analytics" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Rollup arithmetic</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: why rollups are needed</div>
+        <div class="check-slider__section">Section: Worked example: why rollups are needed</div>
+        
         <p class="check-slider__prompt">A service has 100 hosts and 30 endpoints, giving 3,000 series, with sketches emitted every 10 seconds. How many sketches must be merged for the whole-service p99 over the last hour without rollups, and with 1-minute service-level rollups?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c2" value="0" />
-             <span>360 without rollups; 60 with rollups</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c2" value="1" />
-             <span>180,000 without rollups; 3,000 with rollups</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c2" value="2" />
-             <span>About 1.08 million without rollups; 60 with rollups</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c2" value="3" />
-             <span>About 1.08 million without rollups; 3,000 with rollups</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-streaming-percentile-analytics-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c2" value="0" />
+            <span>360 without rollups; 60 with rollups</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c2" value="1" />
+            <span>180,000 without rollups; 3,000 with rollups</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c2" value="2" />
+            <span>About 1.08 million without rollups; 60 with rollups</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c2" value="3" />
+            <span>About 1.08 million without rollups; 3,000 with rollups</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="streaming-percentile-analytics-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="streaming-percentile-analytics-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-streaming-percentile-analytics-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1077,35 +1086,39 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-streaming-percentile-analytics-c3" data-type="mcq" data-slug="streaming-percentile-analytics" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Coordinated omission</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Coordinated omission in one example</div>
+        <div class="check-slider__section">Section: Coordinated omission in one example</div>
+        
         <p class="check-slider__prompt">A closed-loop load tester sends one request every 5 ms but waits for each response before sending the next. The server stalls for 1 second. What does the naive report hide?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c3" value="0" />
-             <span>Nothing important, because a single 1-second sample already shows up in p99.9</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c3" value="1" />
-             <span>The stall is double counted, because the tester records both the timeout and the retried request</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c3" value="2" />
-             <span>The server&#039;s own queueing time, which the tester cannot see from the client side</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-streaming-percentile-analytics-c3" value="3" />
-             <span>About 200 requests that should have been sent during the stall and would each have waited up to 1 second</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-streaming-percentile-analytics-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c3" value="0" />
+            <span>Nothing important, because a single 1-second sample already shows up in p99.9</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c3" value="1" />
+            <span>The stall is double counted, because the tester records both the timeout and the retried request</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c3" value="2" />
+            <span>The server&#039;s own queueing time, which the tester cannot see from the client side</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-streaming-percentile-analytics-c3" value="3" />
+            <span>About 200 requests that should have been sent during the stall and would each have waited up to 1 second</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="streaming-percentile-analytics-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="streaming-percentile-analytics-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-streaming-percentile-analytics-c3" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1114,7 +1127,7 @@ flowchart LR
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
         <div class="takeaways">
@@ -1225,14 +1238,14 @@ flowchart LR
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

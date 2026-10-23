@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -977,44 +977,55 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: when does each rung stop working?</h2><p>Suppose an app has 30,000 reads/s, 3,000 writes/s, 4 TB of data growing 150 GB/month, and a primary on 32 vCPUs.</p><ul><li><strong>Vertical:</strong> moving to 96 vCPUs and 768 GB of RAM keeps the hot set cached. That buys perhaps 2-3x on reads, less on writes if WAL fsync or lock contention is the limit.</li><li><strong>Replicas:</strong> 4 replicas at about 10k reads/s each absorb reads easily. Writes are unchanged, because every replica must replay all 3,000 writes/s.</li><li><strong>Functional split:</strong> moving the analytics/events tables (60% of writes) to their own cluster or a columnar store leaves the primary at about 1,200 writes/s.</li><li><strong>Sharding:</strong> needed only if single-primary writes, storage (for example over 10-20 TB per node, where backups and restores take too long), or blast radius become the limit.</li></ul><h3>Trade-off table</h3><table><thead><tr><th>Technique</th><th>Scales</th><th>You lose</th><th>Typical operational cost</th></tr></thead><tbody><tr><td>Vertical scaling</td><td>Everything, up to hardware limits</td><td>Nothing, except cost and one big failure domain</td><td>Low</td></tr><tr><td>Read replicas</td><td>Reads</td><td>Read-your-writes on replicas</td><td>Low-medium: lag monitoring, routing</td></tr><tr><td>Caching</td><td>Hot reads</td><td>Freshness; invalidation complexity</td><td>Medium</td></tr><tr><td>Table partitioning (same node)</td><td>Maintenance: vacuum, index size, retention drops</td><td>Some cross-partition uniqueness</td><td>Low-medium</td></tr><tr><td>Functional split</td><td>Writes per domain</td><td>Cross-domain joins and transactions</td><td>Medium</td></tr><tr><td>Horizontal sharding</td><td>Writes and storage, near-linearly</td><td>Cross-shard joins, global constraints, simple transactions</td><td>High: routing, resharding, schema changes on N shards</td></tr></tbody></table><h3>Read-your-writes, done precisely</h3><p>A time threshold ("route to the primary for 2 s after a write") is a heuristic. A precise version records the primary's WAL position after the write (<code>pg_current_wal_lsn()</code>) in the user's session, and reads from a replica only if its <code>pg_last_wal_replay_lsn()</code> is at or beyond that position. MySQL offers the equivalent with GTIDs (<code>WAIT_FOR_EXECUTED_GTID_SET</code>).</p><h3>How real companies climbed the ladder</h3><ul><li><strong>Figma:</strong> vertical partitioning by table groups first, then horizontal sharding with a custom proxy (DBProxy), keeping Postgres.</li><li><strong>Notion:</strong> sharded Postgres by workspace ID into 480 logical shards on 32 physical hosts, later expanded to 96.</li><li><strong>Shopify:</strong> "pods" that each hold a set of shops in their own MySQL, and moves shops between pods to fix hotspots.</li><li><strong>Instagram:</strong> thousands of logical shards mapped onto fewer Postgres servers, with IDs embedding the shard number.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="relational-database-scaling" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="relational-database-scaling" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Read-your-own-writes routing" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Shard key vs access path" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Replicas and a functional split" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Read Replica Fleet Sizing With Write Replay Overhead" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Read-Your-Own-Writes Consistency Across Async Replicas" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-relational-database-scaling-c1" data-type="mcq" data-slug="relational-database-scaling" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Read-your-own-writes routing</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Replication Lag &amp; Read-Your-Own-Writes</div>
+        <div class="check-slider__section">Section: Replication Lag &amp; Read-Your-Own-Writes</div>
+        
         <p class="check-slider__prompt">A user saves their profile and immediately reloads the page. Replicas lag the primary by up to a few hundred milliseconds. What does the read-your-own-writes pattern do?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c1" value="0" />
-             <span>It routes every user&#039;s reads to the primary until all replicas report zero lag</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c1" value="1" />
-             <span>It sends that user&#039;s reads to the primary for a short time after they write</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c1" value="2" />
-             <span>It makes each write wait until all replicas have applied it before replying</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c1" value="3" />
-             <span>It caches the saved profile in the browser and skips the database read</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-relational-database-scaling-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c1" value="0" />
+            <span>It routes every user&#039;s reads to the primary until all replicas report zero lag</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c1" value="1" />
+            <span>It sends that user&#039;s reads to the primary for a short time after they write</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c1" value="2" />
+            <span>It makes each write wait until all replicas have applied it before replying</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c1" value="3" />
+            <span>It caches the saved profile in the browser and skips the database read</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="relational-database-scaling-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="relational-database-scaling-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-relational-database-scaling-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1023,35 +1034,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-relational-database-scaling-c2" data-type="mcq" data-slug="relational-database-scaling" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Shard key vs access path</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Horizontal Sharding Challenges</div>
+        <div class="check-slider__section">Section: Horizontal Sharding Challenges</div>
+        
         <p class="check-slider__prompt">A multi-tenant SaaS shards its orders table by hash(order_id) to spread data evenly. Almost every query is &quot;this tenant&#039;s orders and customers&quot;. What goes wrong?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c2" value="0" />
-             <span>Nothing, because hashing gives even shards, which is the main goal of a shard key</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c2" value="1" />
-             <span>Writes concentrate on one shard, because order IDs are issued in increasing order</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c2" value="2" />
-             <span>Only resharding gets harder, while normal queries still hit a single shard</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c2" value="3" />
-             <span>Tenant queries scatter across every shard and must be gathered in application memory</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-relational-database-scaling-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c2" value="0" />
+            <span>Nothing, because hashing gives even shards, which is the main goal of a shard key</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c2" value="1" />
+            <span>Writes concentrate on one shard, because order IDs are issued in increasing order</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c2" value="2" />
+            <span>Only resharding gets harder, while normal queries still hit a single shard</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c2" value="3" />
+            <span>Tenant queries scatter across every shard and must be gathered in application memory</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="relational-database-scaling-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="relational-database-scaling-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-relational-database-scaling-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1060,142 +1075,180 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-relational-database-scaling-c3" data-type="mcq" data-slug="relational-database-scaling" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Replicas and a functional split</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: when does each rung stop working?</div>
+        <div class="check-slider__section">Section: Worked example: when does each rung stop working?</div>
+        
         <p class="check-slider__prompt">An app does 20,000 reads per second and 4,000 writes per second, and each replica serves about 8,000 reads per second. Event tables account for 50% of writes. How many replicas cover the reads, and what write load is left on the primary after moving the event tables to their own cluster?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c3" value="0" />
-             <span>3 replicas, with the primary still taking 4,000 writes per second</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c3" value="1" />
-             <span>2 replicas, with the primary dropping to 2,000 writes per second</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c3" value="2" />
-             <span>3 replicas, with the primary dropping to 2,000 writes per second</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-relational-database-scaling-c3" value="3" />
-             <span>3 replicas, with the primary dropping to about 1,000 writes per second</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-relational-database-scaling-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c3" value="0" />
+            <span>3 replicas, with the primary still taking 4,000 writes per second</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c3" value="1" />
+            <span>2 replicas, with the primary dropping to 2,000 writes per second</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c3" value="2" />
+            <span>3 replicas, with the primary dropping to 2,000 writes per second</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-relational-database-scaling-c3" value="3" />
+            <span>3 replicas, with the primary dropping to about 1,000 writes per second</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="relational-database-scaling-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="relational-database-scaling-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-relational-database-scaling-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">20,000 divided by 8,000 is 2.5, which rounds up to 3 replicas. Moving half the writes elsewhere leaves 2,000 per second. Replicas never reduce write load, because each one must replay every write, so only the functional split lowers the 4,000. Two replicas is the tempting answer if you round down.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-relational-database-scaling-n1" data-type="numeric" data-slug="relational-database-scaling" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Read Replica Fleet Sizing With Write Replay Overhead</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A primary SQL node handles 4,000 writes/sec (consuming 40% of a node&#039;s CPU capacity). Every read replica must also replay all 4,000 writes/sec (consuming 40% CPU on each replica), leaving 60% CPU capacity per replica to serve read queries (which equates to 6,000 reads/sec per replica).</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many read replicas are required to serve 30,000 reads/sec while keeping every replica within its 6,000 reads/sec net read capacity?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-relational-database-scaling-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-relational-database-scaling-n1"
+              aria-label="Numeric estimate in replicas"
+              placeholder="Enter numeric estimate (replicas)..."
+            />
+            <span class="quiz-unit-badge">replicas</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide total read QPS (30,000) by net read capacity per replica after write replay (6,000).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="relational-database-scaling-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-relational-database-scaling-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Because every read replica must replay 100% of the primary&#039;s write WAL stream (using 40% of its CPU/IO), each replica only has 6,000 reads/sec of remaining headroom. Serving 30,000 reads/sec requires 30,000 / 6,000 = 5 read replicas (or 6 for N+1 failover).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-relational-database-scaling-t1" data-type="tradeoff" data-slug="relational-database-scaling" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Read-Your-Own-Writes Consistency Across Async Replicas</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">After offloading 90% of SELECT queries to asynchronous read replicas (replication lag 50–300 ms), users complain that when they update their profile bio and the page immediately reloads, their old bio is displayed.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which routing pattern resolves the stale read-after-write anomaly without routing all traffic back to the primary, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-relational-database-scaling-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-relational-database-scaling-t1" value="0" />
+                  <span>Switch all 5 read replicas to synchronous commit (`synchronous_commit = remote_apply`) across availability zones</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-relational-database-scaling-t1" value="1" />
+                  <span>Attach the primary&#039;s commit LSN (Log Sequence Number) or a short-lived write timestamp token to the user&#039;s session, routing that user&#039;s reads to replicas that have caught up to that LSN (or falling back to the primary briefly)</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-relational-database-scaling-t1" value="2" />
+                  <span>Add a 1-second `sleep(1000)` before returning from every HTTP POST request</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-relational-database-scaling-t1" value="0" />
+                  <span>Synchronous replication across 5 replicas has zero impact on write latency or availability</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-relational-database-scaling-t1" value="1" />
+                  <span>Causal LSN/session pinning scopes strong freshness solely to the mutating user for a few hundred milliseconds while keeping global reads on async replicas</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-relational-database-scaling-t1" value="2" />
+                  <span>Sleeping in application threads scales throughput under heavy write load</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Only the user who just performed a write needs to see at least commit position `LSN_w`.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="relational-database-scaling-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-relational-database-scaling-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Tracking the commit LSN (or a 1-second sticky-primary cookie) per mutating user enforces causal Read-Your-Own-Writes consistency without penalizing write latency with synchronous multi-replica commits.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-relational-database-scaling-n1" data-type="numeric" data-slug="relational-database-scaling">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Read Replica Fleet Sizing With Write Replay Overhead</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A primary SQL node handles 4,000 writes/sec (consuming 40% of a node&#039;s CPU capacity). Every read replica must also replay all 4,000 writes/sec (consuming 40% CPU on each replica), leaving 60% CPU capacity per replica to serve read queries (which equates to 6,000 reads/sec per replica).</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How many read replicas are required to serve 30,000 reads/sec while keeping every replica within its 6,000 reads/sec net read capacity?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Divide total read QPS (30,000) by net read capacity per replica after write replay (6,000).</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-relational-database-scaling-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-relational-database-scaling-n1" placeholder="Enter numeric estimate (replicas)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">replicas</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="relational-database-scaling-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="relational-database-scaling" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-relational-database-scaling-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Because every read replica must replay 100% of the primary&#039;s write WAL stream (using 40% of its CPU/IO), each replica only has 6,000 reads/sec of remaining headroom. Serving 30,000 reads/sec requires 30,000 / 6,000 = 5 read replicas (or 6 for N+1 failover).</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-relational-database-scaling-t1" data-type="tradeoff" data-slug="relational-database-scaling">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Read-Your-Own-Writes Consistency Across Async Replicas</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> After offloading 90% of SELECT queries to asynchronous read replicas (replication lag 50–300 ms), users complain that when they update their profile bio and the page immediately reloads, their old bio is displayed.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which routing pattern resolves the stale read-after-write anomaly without routing all traffic back to the primary, and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Only the user who just performed a write needs to see at least commit position `LSN_w`.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-relational-database-scaling-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-relational-database-scaling-t1" value="0" />
-               <span>Switch all 5 read replicas to synchronous commit (`synchronous_commit = remote_apply`) across availability zones</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-relational-database-scaling-t1" value="1" />
-               <span>Attach the primary&#039;s commit LSN (Log Sequence Number) or a short-lived write timestamp token to the user&#039;s session, routing that user&#039;s reads to replicas that have caught up to that LSN (or falling back to the primary briefly)</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-relational-database-scaling-t1" value="2" />
-               <span>Add a 1-second `sleep(1000)` before returning from every HTTP POST request</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-relational-database-scaling-t1" value="0" />
-               <span>Synchronous replication across 5 replicas has zero impact on write latency or availability</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-relational-database-scaling-t1" value="1" />
-               <span>Causal LSN/session pinning scopes strong freshness solely to the mutating user for a few hundred milliseconds while keeping global reads on async replicas</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-relational-database-scaling-t1" value="2" />
-               <span>Sleeping in application threads scales throughput under heavy write load</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="relational-database-scaling-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="relational-database-scaling" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-relational-database-scaling-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Tracking the commit LSN (or a 1-second sticky-primary cookie) per mutating user enforces causal Read-Your-Own-Writes consistency without penalizing write latency with synchronous multi-replica commits.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1328,14 +1381,14 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

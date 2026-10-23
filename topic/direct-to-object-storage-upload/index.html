@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -980,44 +980,55 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: why proxying bytes hurts</h2><p>With 50,000 concurrent mobile uploads averaging 5 Mbit/s, proxying through your API means about 250 Gbit/s of ingress and egress on application servers. A 20 MB photo on a 2 Mbit/s uplink takes about 80 seconds, holding a worker, a socket and buffer memory the whole time. With direct upload, the API handles one small signing request (a few milliseconds of CPU) and one completion callback per file.</p><h2>Upload flow in detail</h2><ol><li>Client calls <code>POST /uploads</code> with intended type and size. The server checks quota and auth, creates a metadata row with state pending, and picks key <code>pending/u42/9f1c...jpg</code>.</li><li>The server signs a presigned POST policy with conditions: exact key, content-length-range from 1 byte to 25 MB, Content-Type starting with image/, expiry 15 minutes. Signing is a local HMAC computation with the server's credentials; no call to S3 is needed.</li><li>The client uploads directly to the bucket.</li><li>An object-created event goes to a queue; a worker checks the real size and magic bytes, scans it, strips EXIF location data, generates thumbnails, and copies it to its final key.</li><li>The worker marks the metadata row ready; only now can the object be referenced by posts or profiles.</li></ol><h2>Trade-offs</h2><table><thead><tr><th>Method</th><th>Size enforcement</th><th>Resumable</th><th>Server load</th><th>Best for</th></tr></thead><tbody><tr><td>Proxy through app server</td><td>Full control</td><td>Only if you build it</td><td>High: all bytes</td><td>Tiny files, strict inline validation</td></tr><tr><td>Presigned PUT</td><td>Exact length only if Content-Length is a signed header; otherwise verify after</td><td>No</td><td>Minimal</td><td>Simple uploads up to a few hundred MB</td></tr><tr><td>Presigned POST with policy</td><td>content-length-range condition enforced by S3</td><td>No</td><td>Minimal</td><td>Browser form uploads with size limits</td></tr><tr><td>Multipart with presigned parts</td><td>Per part, verify total after</td><td>Yes, per part</td><td>Minimal; one signing call per part</td><td>Large files and flaky networks</td></tr></tbody></table><h2>Equivalents in other clouds</h2><ul><li>Google Cloud Storage offers signed URLs and a resumable upload protocol.</li><li>Azure Blob Storage uses shared access signature (SAS) tokens scoped to a blob, permissions and expiry.</li><li>If the URL is created with temporary credentials (for example an IAM role session), it stops working when those credentials expire, even if its own expiry is later.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="direct-to-object-storage-upload" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="direct-to-object-storage-upload" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: What a presigned PUT binds" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Cost of proxying bytes" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Trust nothing until validated" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: App-Server Bandwidth Saved via Presigned S3 Uploads" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Presigned Upload Completion Verification &amp; Orphan Cleanup" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-direct-to-object-storage-upload-c1" data-type="mcq" data-slug="direct-to-object-storage-upload" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">What a presigned PUT binds</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: How Pre-Signed URLs Work</div>
+        <div class="check-slider__section">Section: How Pre-Signed URLs Work</div>
+        
         <p class="check-slider__prompt">Your API issues presigned S3 PUT URLs for avatar uploads and wants to allow any file between 1 byte and 5 MB. Which statement from the lesson is correct?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c1" value="0" />
-             <span>A presigned PUT can sign a content-length range, so S3 rejects anything over 5 MB</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c1" value="1" />
-             <span>A presigned PUT cannot express a size range; use a presigned POST with content-length-range, and verify size afterwards</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c1" value="2" />
-             <span>Size limits are enforced by the expiry timestamp, since a short URL cannot carry a large upload</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c1" value="3" />
-             <span>Signing the Content-Type header also caps the upload size for that media type</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-direct-to-object-storage-upload-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c1" value="0" />
+            <span>A presigned PUT can sign a content-length range, so S3 rejects anything over 5 MB</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c1" value="1" />
+            <span>A presigned PUT cannot express a size range; use a presigned POST with content-length-range, and verify size afterwards</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c1" value="2" />
+            <span>Size limits are enforced by the expiry timestamp, since a short URL cannot carry a large upload</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c1" value="3" />
+            <span>Signing the Content-Type header also caps the upload size for that media type</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="direct-to-object-storage-upload-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="direct-to-object-storage-upload-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-direct-to-object-storage-upload-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1026,35 +1037,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-direct-to-object-storage-upload-c2" data-type="mcq" data-slug="direct-to-object-storage-upload" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Cost of proxying bytes</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: why proxying bytes hurts</div>
+        <div class="check-slider__section">Section: Worked example: why proxying bytes hurts</div>
+        
         <p class="check-slider__prompt">You expect 20,000 concurrent uploads averaging 4 Mbit/s each. If they are proxied through your API servers to S3, roughly what bandwidth must the API tier carry, and how long does one 40 MB video hold a worker on a 2 Mbit/s uplink?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c2" value="0" />
-             <span>About 8 Gbit/s in and out; about 20 seconds per video</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c2" value="1" />
-             <span>About 80 Gbit/s in only, since egress to S3 is internal; about 160 seconds per video</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c2" value="2" />
-             <span>About 80 Gbit/s of ingress plus about 80 Gbit/s of egress; about 160 seconds per video</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c2" value="3" />
-             <span>About 800 Gbit/s in and out; about 16 seconds per video</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-direct-to-object-storage-upload-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c2" value="0" />
+            <span>About 8 Gbit/s in and out; about 20 seconds per video</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c2" value="1" />
+            <span>About 80 Gbit/s in only, since egress to S3 is internal; about 160 seconds per video</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c2" value="2" />
+            <span>About 80 Gbit/s of ingress plus about 80 Gbit/s of egress; about 160 seconds per video</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c2" value="3" />
+            <span>About 800 Gbit/s in and out; about 16 seconds per video</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="direct-to-object-storage-upload-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="direct-to-object-storage-upload-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-direct-to-object-storage-upload-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1063,142 +1078,180 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-direct-to-object-storage-upload-c3" data-type="mcq" data-slug="direct-to-object-storage-upload" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Trust nothing until validated</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Upload flow in detail</div>
+        <div class="check-slider__section">Section: Upload flow in detail</div>
+        
         <p class="check-slider__prompt">An attacker uploads an executable renamed to photo.jpg, sending Content-Type image/jpeg and a size within limits, so the presigned POST policy accepts it. In the lesson&#039;s flow, what stops it being shown on profiles?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c3" value="0" />
-             <span>The worker checks real size, magic bytes and malware, and only then copies it to a final key and marks the row ready</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c3" value="1" />
-             <span>S3 inspects the file extension against the signed Content-Type and rejects the mismatch at upload time</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c3" value="2" />
-             <span>The CDN refuses to serve objects whose bytes do not match their declared Content-Type</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-direct-to-object-storage-upload-c3" value="3" />
-             <span>The 15 minute expiry prevents the object from being referenced after the URL lapses</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-direct-to-object-storage-upload-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c3" value="0" />
+            <span>The worker checks real size, magic bytes and malware, and only then copies it to a final key and marks the row ready</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c3" value="1" />
+            <span>S3 inspects the file extension against the signed Content-Type and rejects the mismatch at upload time</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c3" value="2" />
+            <span>The CDN refuses to serve objects whose bytes do not match their declared Content-Type</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-direct-to-object-storage-upload-c3" value="3" />
+            <span>The 15 minute expiry prevents the object from being referenced after the URL lapses</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="direct-to-object-storage-upload-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="direct-to-object-storage-upload-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-direct-to-object-storage-upload-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">The object lands under a pending key and stays unreferenced until the async worker validates magic bytes, scans it and marks the metadata row ready. S3 does not sniff content against Content-Type; the policy only checks the declared header, which the attacker controls.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-direct-to-object-storage-upload-n1" data-type="numeric" data-slug="direct-to-object-storage-upload" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: App-Server Bandwidth Saved via Presigned S3 Uploads</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Users upload 1,000 videos/sec with an average file size of 50 MB. Originally, clients uploaded the 50 MB binary through your API servers (50 GB/s ingress + 50 GB/s egress to S3 = 100 GB/s total NIC traffic on app servers). You migrate to presigned S3 multipart URLs where the API server only returns a 2 KB JSON presigned URL.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many gigabytes per second (GB/s) of total network traffic (ingress + egress) do your API servers save by switching to direct-to-object-storage uploads?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-direct-to-object-storage-upload-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-direct-to-object-storage-upload-n1"
+              aria-label="Numeric estimate in GB/s"
+              placeholder="Enter numeric estimate (GB/s)..."
+            />
+            <span class="quiz-unit-badge">GB/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">App server ingress (50 GB/s) + app server egress to S3 (50 GB/s) = 100 GB/s eliminated (replaced by 2 MB/s of JSON).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="direct-to-object-storage-upload-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-direct-to-object-storage-upload-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Proxying 1,000 × 50 MB/s through stateless API servers consumes 50 GB/s inbound and 50 GB/s outbound (100 GB/s = 800 Gbps total). Presigned URLs reduce API traffic to 1,000 × 2 KB/s = 2 MB/s, saving ~100 GB/s.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-direct-to-object-storage-upload-t1" data-type="tradeoff" data-slug="direct-to-object-storage-upload" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Presigned Upload Completion Verification &amp; Orphan Cleanup</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">When clients upload directly to S3 via presigned URLs, the API server is no longer in the data path. Some clients crash mid-upload, while malicious clients call your `POST /upload-complete` API without actually uploading a valid image.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should the control plane track upload lifecycle and enforce validation safely?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-direct-to-object-storage-upload-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-direct-to-object-storage-upload-t1" value="0" />
+                  <span>Trust the client&#039;s `POST /upload-complete` call blindly and immediately publish the object URL to all users</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-direct-to-object-storage-upload-t1" value="1" />
+                  <span>Record a `PENDING` metadata row when issuing the presigned URL (with strict Content-Length / SHA-256 policy conditions), transition to `READY` only upon verified S3 Event Notification (`ObjectCreated`) + magic-byte/virus scan, and expire incomplete multipart uploads via S3 Lifecycle rules</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-direct-to-object-storage-upload-t1" value="2" />
+                  <span>Make the S3 bucket publicly writable without presigned URLs</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-direct-to-object-storage-upload-t1" value="0" />
+                  <span>Clients never lie about completing an upload or uploading malicious executables disguised as JPEGs</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-direct-to-object-storage-upload-t1" value="1" />
+                  <span>Storage-emitted event notifications (`ObjectCreated`) provide ground-truth confirmation out-of-band from the untrusted client, while S3 lifecycle policies garbage-collect abandoned multipart chunks automatically</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-direct-to-object-storage-upload-t1" value="2" />
+                  <span>Publicly writable buckets prevent unauthorized overwrites and storage-cost attacks</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Who is the source of truth that the bytes actually landed in S3: the untrusted browser or S3&#039;s own event notification?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="direct-to-object-storage-upload-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-direct-to-object-storage-upload-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Never trust the client to self-report upload completion. Enforce size/hash constraints in the presigned policy, trigger post-upload validation from S3 `ObjectCreated` event notifications, and configure S3 `AbortIncompleteMultipartUpload` lifecycle rules.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-direct-to-object-storage-upload-n1" data-type="numeric" data-slug="direct-to-object-storage-upload">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: App-Server Bandwidth Saved via Presigned S3 Uploads</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> Users upload 1,000 videos/sec with an average file size of 50 MB. Originally, clients uploaded the 50 MB binary through your API servers (50 GB/s ingress + 50 GB/s egress to S3 = 100 GB/s total NIC traffic on app servers). You migrate to presigned S3 multipart URLs where the API server only returns a 2 KB JSON presigned URL.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How many gigabytes per second (GB/s) of total network traffic (ingress + egress) do your API servers save by switching to direct-to-object-storage uploads?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> App server ingress (50 GB/s) + app server egress to S3 (50 GB/s) = 100 GB/s eliminated (replaced by 2 MB/s of JSON).</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-direct-to-object-storage-upload-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-direct-to-object-storage-upload-n1" placeholder="Enter numeric estimate (GB/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">GB/s</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="direct-to-object-storage-upload-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="direct-to-object-storage-upload" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-direct-to-object-storage-upload-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Proxying 1,000 × 50 MB/s through stateless API servers consumes 50 GB/s inbound and 50 GB/s outbound (100 GB/s = 800 Gbps total). Presigned URLs reduce API traffic to 1,000 × 2 KB/s = 2 MB/s, saving ~100 GB/s.</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-direct-to-object-storage-upload-t1" data-type="tradeoff" data-slug="direct-to-object-storage-upload">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Presigned Upload Completion Verification &amp; Orphan Cleanup</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> When clients upload directly to S3 via presigned URLs, the API server is no longer in the data path. Some clients crash mid-upload, while malicious clients call your `POST /upload-complete` API without actually uploading a valid image.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How should the control plane track upload lifecycle and enforce validation safely?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Who is the source of truth that the bytes actually landed in S3: the untrusted browser or S3&#039;s own event notification?</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-direct-to-object-storage-upload-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-direct-to-object-storage-upload-t1" value="0" />
-               <span>Trust the client&#039;s `POST /upload-complete` call blindly and immediately publish the object URL to all users</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-direct-to-object-storage-upload-t1" value="1" />
-               <span>Record a `PENDING` metadata row when issuing the presigned URL (with strict Content-Length / SHA-256 policy conditions), transition to `READY` only upon verified S3 Event Notification (`ObjectCreated`) + magic-byte/virus scan, and expire incomplete multipart uploads via S3 Lifecycle rules</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-direct-to-object-storage-upload-t1" value="2" />
-               <span>Make the S3 bucket publicly writable without presigned URLs</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-direct-to-object-storage-upload-t1" value="0" />
-               <span>Clients never lie about completing an upload or uploading malicious executables disguised as JPEGs</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-direct-to-object-storage-upload-t1" value="1" />
-               <span>Storage-emitted event notifications (`ObjectCreated`) provide ground-truth confirmation out-of-band from the untrusted client, while S3 lifecycle policies garbage-collect abandoned multipart chunks automatically</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-direct-to-object-storage-upload-t1" value="2" />
-               <span>Publicly writable buckets prevent unauthorized overwrites and storage-cost attacks</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="direct-to-object-storage-upload-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="direct-to-object-storage-upload" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-direct-to-object-storage-upload-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Never trust the client to self-report upload completion. Enforce size/hash constraints in the presigned policy, trigger post-upload validation from S3 `ObjectCreated` event notifications, and configure S3 `AbortIncompleteMultipartUpload` lifecycle rules.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1307,14 +1360,14 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

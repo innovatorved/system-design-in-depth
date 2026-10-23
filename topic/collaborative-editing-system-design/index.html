@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -987,44 +987,55 @@ flowchart TD
   S --> P[("Snapshot store, every N ops")]
   S --> R["Presence and cursors, not persisted"]</div><ul><li>Route all clients of one document to the same session server (consistent hashing on <code>doc_id</code>). The document state then lives in one process's memory, and ordering is local to that process.</li><li>With 50 concurrent editors each sending about 5 operations per second, the server receives 250 operations per second and must broadcast about 12,500 messages per second. Batch outgoing operations every 30 to 50 ms to cut message counts.</li><li>Snapshot every 500 to 1,000 operations, so opening a document loads the latest snapshot plus a short tail of operations instead of the entire history.</li><li>Throttle cursor and selection updates (for example to 10 per second) and never store them; they are ephemeral.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="collaborative-editing-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="collaborative-editing-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Transforming an insert" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: What CRDTs do not remove" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Hot document fan-out" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Collaborative Document Keystroke Fan-Out Rate" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Operational Transformation (OT) vs Conflict-Free Replicated Data Types (CRDTs)" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-collaborative-editing-system-design-c1" data-type="mcq" data-slug="collaborative-editing-system-design" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Transforming an insert</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: one OT transform</div>
+        <div class="check-slider__section">Section: Worked example: one OT transform</div>
+        
         <p class="check-slider__prompt">The document is abcd. Concurrently, Alice inserts x at index 3 (giving abcxd) and Bob deletes index 1 (giving acd). The server applies Bob&#039;s delete first. What must Alice&#039;s operation become?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c1" value="0" />
-             <span>insert(x, 3), giving acdx</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c1" value="1" />
-             <span>insert(x, 0), giving xacd</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c1" value="2" />
-             <span>insert(x, 1), giving axcd</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c1" value="3" />
-             <span>insert(x, 2), giving acxd</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-collaborative-editing-system-design-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c1" value="0" />
+            <span>insert(x, 3), giving acdx</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c1" value="1" />
+            <span>insert(x, 0), giving xacd</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c1" value="2" />
+            <span>insert(x, 1), giving axcd</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c1" value="3" />
+            <span>insert(x, 2), giving acxd</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="collaborative-editing-system-design-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="collaborative-editing-system-design-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-collaborative-editing-system-design-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1033,35 +1044,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-collaborative-editing-system-design-c2" data-type="mcq" data-slug="collaborative-editing-system-design" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">What CRDTs do not remove</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: CRDTs (Conflict-free Replicated Data Types)</div>
+        <div class="check-slider__section">Section: CRDTs (Conflict-free Replicated Data Types)</div>
+        
         <p class="check-slider__prompt">A team switching from OT to Yjs plans to delete their collaboration servers entirely. Which job still needs server-side coordination?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c2" value="0" />
-             <span>Choosing a single global order for every character insertion</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c2" value="1" />
-             <span>Authentication, persistence, fan-out and history garbage collection</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c2" value="2" />
-             <span>Transforming concurrent operations against each other&#039;s indices</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c2" value="3" />
-             <span>Resolving conflicts by picking the last writer&#039;s whole document</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-collaborative-editing-system-design-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c2" value="0" />
+            <span>Choosing a single global order for every character insertion</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c2" value="1" />
+            <span>Authentication, persistence, fan-out and history garbage collection</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c2" value="2" />
+            <span>Transforming concurrent operations against each other&#039;s indices</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c2" value="3" />
+            <span>Resolving conflicts by picking the last writer&#039;s whole document</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="collaborative-editing-system-design-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="collaborative-editing-system-design-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-collaborative-editing-system-design-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1070,77 +1085,180 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-collaborative-editing-system-design-c3" data-type="mcq" data-slug="collaborative-editing-system-design" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Hot document fan-out</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Service architecture and numbers</div>
+        <div class="check-slider__section">Section: Service architecture and numbers</div>
+        
         <p class="check-slider__prompt">A document has 200 concurrent editors each sending about 5 operations per second, so the session server faces about 200,000 outbound messages per second. What is the best first lever?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c3" value="0" />
-             <span>Batch outgoing operations every 30 to 50 ms and throttle ephemeral cursor updates</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c3" value="1" />
-             <span>Split the document across several session servers by paragraph range</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c3" value="2" />
-             <span>Persist cursor positions in the op log so clients can fetch them lazily</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-collaborative-editing-system-design-c3" value="3" />
-             <span>Remove the session server and let clients broadcast peer to peer</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-collaborative-editing-system-design-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c3" value="0" />
+            <span>Batch outgoing operations every 30 to 50 ms and throttle ephemeral cursor updates</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c3" value="1" />
+            <span>Split the document across several session servers by paragraph range</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c3" value="2" />
+            <span>Persist cursor positions in the op log so clients can fetch them lazily</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-collaborative-editing-system-design-c3" value="3" />
+            <span>Remove the session server and let clients broadcast peer to peer</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="collaborative-editing-system-design-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="collaborative-editing-system-design-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-collaborative-editing-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Batching collapses many ops into one message per client per window, and cursors are ephemeral traffic that should be throttled and never stored. Splitting the document across servers breaks the single-process ordering that sticky routing by doc_id exists to provide.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-collaborative-editing-system-design-n1" data-type="numeric" data-slug="collaborative-editing-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Collaborative Document Keystroke Fan-Out Rate</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">50 editors are simultaneously typing in the same shared document room. Each editor emits 4 keystroke/cursor operations per second (after 250 ms micro-batching), and the room coordinator broadcasts every operation to the other 49 connected editors (`50 × 4 × 49 ≈ 50 × 4 × 50`).</p>
+          </div>
+        
+        <p class="check-slider__prompt">Approximating `50 senders × 4 ops/s × 50 recipients`, how many outbound operation messages per second does the document room coordinator fan out?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-collaborative-editing-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-collaborative-editing-system-design-n1"
+              aria-label="Numeric estimate in msg/s"
+              placeholder="Enter numeric estimate (msg/s)..."
+            />
+            <span class="quiz-unit-badge">msg/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">50 editors × 4 ops/sec = 200 inbound ops/sec. Multiply by ~50 recipients (or 49 exact = 9,800).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="collaborative-editing-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-collaborative-editing-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">With `N = 50` active editors each sending 4 ops/sec, inbound traffic is 200 ops/sec, and outbound broadcast scales quadratically (`O(N^2)`): `200 × 49 = 9,800 msg/s` (~10,000 msg/s)—which is why active editors per document are capped (e.g., ~100 writers + read-only viewers).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-collaborative-editing-system-design-t1" data-type="tradeoff" data-slug="collaborative-editing-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Operational Transformation (OT) vs Conflict-Free Replicated Data Types (CRDTs)</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You are designing a local-first collaborative note-taking app where users frequently edit documents offline on airplanes for hours, sync with peers over P2P or edge relays, and merge without a single central ordering server.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Should you choose central-server Operational Transformation (OT) or a sequence CRDT (like Yjs / Automerge RGA), and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-collaborative-editing-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-collaborative-editing-system-design-t1" value="0" />
+                  <span>Use classic Google Docs single-server OT because it requires no central sequencing server to merge multi-hour offline branches</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-collaborative-editing-system-design-t1" value="1" />
+                  <span>Use a sequence CRDT (with run-length encoded Lamport/actor IDs and periodic snapshot compaction), because CRDT operations commute idempotently across arbitrary offline/decentralized merge orders, trading off tombstone metadata overhead</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-collaborative-editing-system-design-t1" value="2" />
+                  <span>Use `Last-Write-Wins` on the entire document blob so the second user to come online overwrites the first user&#039;s 3-hour flight edits</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-collaborative-editing-system-design-t1" value="0" />
+                  <span>Classic OT transformation functions (`TP1/TP2`) easily scale to decentralized multi-peer offline merges without a central sequencer</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-collaborative-editing-system-design-t1" value="1" />
+                  <span>Sequence CRDTs assign immutable unique IDs to character/block insertions so concurrent offline edits converge deterministically without a central ordering authority, at the cost of tombstone metadata that must be compacted</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-collaborative-editing-system-design-t1" value="2" />
+                  <span>Overwriting 3 hours of offline edits on reconnect delights collaborative users</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Why did Figma and Notion/Linear/Yjs adopt CRDT-style structures when offline and decentralized sync mattered?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="collaborative-editing-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-collaborative-editing-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Classic OT (like Jupiter/Google Wave) relies on a single authoritative server to assign a total order of state revisions (`TP1`). When clients work offline for hours or sync across edge nodes, sequence CRDTs (like Yjs) guarantee strong eventual convergence without central coordination.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-collaborative-editing-system-design-n1" data-type="numeric" data-slug="collaborative-editing-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Collaborative Document Keystroke Fan-Out Rate</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> 50 editors are simultaneously typing in the same shared document room. Each editor emits 4 keystroke/cursor operations per second (after 250 ms micro-batching), and the room coordinator broadcasts every operation to the other 49 connected editors (`50 × 4 × 49 ≈ 50 × 4 × 50`).</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Approximating `50 senders × 4 ops/s × 50 recipients`, how many outbound operation messages per second does the document room coordinator fan out?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 50 editors × 4 ops/sec = 200 inbound ops/sec. Multiply by ~50 recipients (or 49 exact = 9,800).</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-collaborative-editing-system-design-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-collaborative-editing-system-design-n1" placeholder="Enter numeric estimate (msg/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">msg/s</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="collaborative-editing-system-design-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="collaborative-editing-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-collaborative-editing-system-design-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> With `N = 50` active editors each sending 4 ops/sec, inbound traffic is 200 ops/sec, and outbound broadcast scales quadratically (`O(N^2)`): `200 × 49 = 9,800 msg/s` (~10,000 msg/s)—which is why active editors per document are capped (e.g., ~100 writers + read-only viewers).</div>
-        </div>
-      </div>
-    
         <div class="simulator-card" id="sim-crdt">
           <div class="simulator-card__header">
             <div class="simulator-card__title">CRDT PN-Counter</div>
@@ -1169,71 +1287,6 @@ flowchart TD
           <button class="btn btn--primary" id="crdt-sync" style="width:100%;">Sync & Merge</button>
         </div>
       
-      <div class="exercise-box quiz-card" id="quiz-collaborative-editing-system-design-t1" data-type="tradeoff" data-slug="collaborative-editing-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Operational Transformation (OT) vs Conflict-Free Replicated Data Types (CRDTs)</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> You are designing a local-first collaborative note-taking app where users frequently edit documents offline on airplanes for hours, sync with peers over P2P or edge relays, and merge without a single central ordering server.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Should you choose central-server Operational Transformation (OT) or a sequence CRDT (like Yjs / Automerge RGA), and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Why did Figma and Notion/Linear/Yjs adopt CRDT-style structures when offline and decentralized sync mattered?</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-collaborative-editing-system-design-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-collaborative-editing-system-design-t1" value="0" />
-               <span>Use classic Google Docs single-server OT because it requires no central sequencing server to merge multi-hour offline branches</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-collaborative-editing-system-design-t1" value="1" />
-               <span>Use a sequence CRDT (with run-length encoded Lamport/actor IDs and periodic snapshot compaction), because CRDT operations commute idempotently across arbitrary offline/decentralized merge orders, trading off tombstone metadata overhead</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-collaborative-editing-system-design-t1" value="2" />
-               <span>Use `Last-Write-Wins` on the entire document blob so the second user to come online overwrites the first user&#039;s 3-hour flight edits</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-collaborative-editing-system-design-t1" value="0" />
-               <span>Classic OT transformation functions (`TP1/TP2`) easily scale to decentralized multi-peer offline merges without a central sequencer</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-collaborative-editing-system-design-t1" value="1" />
-               <span>Sequence CRDTs assign immutable unique IDs to character/block insertions so concurrent offline edits converge deterministically without a central ordering authority, at the cost of tombstone metadata that must be compacted</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-collaborative-editing-system-design-t1" value="2" />
-               <span>Overwriting 3 hours of offline edits on reconnect delights collaborative users</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="collaborative-editing-system-design-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="collaborative-editing-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-collaborative-editing-system-design-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Classic OT (like Jupiter/Google Wave) relies on a single authoritative server to assign a total order of state revisions (`TP1`). When clients work offline for hours or sync across edge nodes, sequence CRDTs (like Yjs) guarantee strong eventual convergence without central coordination.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1342,15 +1395,15 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

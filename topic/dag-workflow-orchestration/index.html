@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -997,40 +997,45 @@ flowchart TD
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
           <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: No clock in workflows" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Crash after a charge" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Changing live workflows" aria-label="Go to question 3"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-dag-workflow-orchestration-c1" data-type="mcq" data-slug="dag-workflow-orchestration" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">No clock in workflows</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Under the Hood: Deterministic Workflow Replay</div>
+        <div class="check-slider__section">Section: Under the Hood: Deterministic Workflow Replay</div>
+        
         <p class="check-slider__prompt">Why must Temporal workflow code not call the system clock directly, for example to decide whether a deadline has passed?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c1" value="0" />
-             <span>On replay the clock returns a different value, so the code can take a different branch than the recorded history</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c1" value="1" />
-             <span>Workflow workers run in a sandbox with no access to the system clock</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c1" value="2" />
-             <span>Reading the clock is slow and would add latency to every workflow task</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c1" value="3" />
-             <span>Temporal servers in different regions have skewed clocks, so the value is unreliable</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-dag-workflow-orchestration-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c1" value="0" />
+            <span>On replay the clock returns a different value, so the code can take a different branch than the recorded history</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c1" value="1" />
+            <span>Workflow workers run in a sandbox with no access to the system clock</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c1" value="2" />
+            <span>Reading the clock is slow and would add latency to every workflow task</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c1" value="3" />
+            <span>Temporal servers in different regions have skewed clocks, so the value is unreliable</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="dag-workflow-orchestration-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="dag-workflow-orchestration-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-dag-workflow-orchestration-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1039,35 +1044,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-dag-workflow-orchestration-c2" data-type="mcq" data-slug="dag-workflow-orchestration" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Crash after a charge</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: an order saga with compensation</div>
+        <div class="check-slider__section">Section: Worked example: an order saga with compensation</div>
+        
         <p class="check-slider__prompt">The order workflow&#039;s worker crashes right after ChargeCard completed and was recorded with txn t_55. A new worker picks up the workflow. What happens?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c2" value="0" />
-             <span>ChargeCard runs again, and the payment provider&#039;s idempotency key prevents a double charge</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c2" value="1" />
-             <span>The workflow restarts from the beginning and runs compensations for completed steps</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c2" value="2" />
-             <span>The workflow pauses until an operator confirms whether the card was charged</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c2" value="3" />
-             <span>Replay returns t_55 from history without charging again, and execution continues at ReserveInventory</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-dag-workflow-orchestration-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c2" value="0" />
+            <span>ChargeCard runs again, and the payment provider&#039;s idempotency key prevents a double charge</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c2" value="1" />
+            <span>The workflow restarts from the beginning and runs compensations for completed steps</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c2" value="2" />
+            <span>The workflow pauses until an operator confirms whether the card was charged</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c2" value="3" />
+            <span>Replay returns t_55 from history without charging again, and execution continues at ReserveInventory</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="dag-workflow-orchestration-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="dag-workflow-orchestration-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-dag-workflow-orchestration-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1076,35 +1085,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-dag-workflow-orchestration-c3" data-type="mcq" data-slug="dag-workflow-orchestration" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Changing live workflows</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Operational concerns</div>
+        <div class="check-slider__section">Section: Operational concerns</div>
+        
         <p class="check-slider__prompt">You deploy new workflow code that inserts a fraud-check activity before ReserveInventory while 10,000 order workflows are in flight. What happens without extra care?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c3" value="0" />
-             <span>The new code automatically applies only to workflows started after the deploy</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c3" value="1" />
-             <span>In-flight workflows replay against the new code, no longer match their history, and fail with nondeterminism errors</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c3" value="2" />
-             <span>In-flight workflows restart from the beginning using the new step order</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-dag-workflow-orchestration-c3" value="3" />
-             <span>Temporal holds the deploy until all in-flight workflows finish on the old code</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-dag-workflow-orchestration-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c3" value="0" />
+            <span>The new code automatically applies only to workflows started after the deploy</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c3" value="1" />
+            <span>In-flight workflows replay against the new code, no longer match their history, and fail with nondeterminism errors</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c3" value="2" />
+            <span>In-flight workflows restart from the beginning using the new step order</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-dag-workflow-orchestration-c3" value="3" />
+            <span>Temporal holds the deploy until all in-flight workflows finish on the old code</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="dag-workflow-orchestration-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="dag-workflow-orchestration-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-dag-workflow-orchestration-c3" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1113,7 +1126,7 @@ flowchart TD
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
         <div class="takeaways">
@@ -1236,14 +1249,14 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

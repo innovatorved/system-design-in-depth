@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -976,44 +976,55 @@
 <!-- enriched -->
 <h2>Sizing formulas and a rotation example</h2><p>For n items and target false-positive rate p, the optimal bit count is m = -n ln(p) / (ln 2)^2 and the number of hash functions is k = (m / n) ln 2. For n = 100,000 and p = 0.01, m is about 958,506 bits (about 117 KiB) and k is about 7. Halving p to 0.005 adds only about 1.44 bits per item.</p><p>Time-windowed rotation: keep an exact Redis set for the last 7 days of impressions (say 3,000 IDs per active user) and one Bloom filter per month for the previous six months, each sized for 15,000 items at 1 percent (about 18 KB each). A check probes the exact set, then each monthly filter; the combined false-positive rate is at most about 6 x 1 percent = 6 percent in the worst case, which you can lower by sizing older filters for 0.5 percent. Filters older than six months are simply dropped.</p><table><thead><tr><th>Approach</th><th>Memory per 100k items</th><th>False positives</th><th>Deletion</th><th>Best for</th></tr></thead><tbody><tr><td>Redis set of 8-byte IDs</td><td>Several MB in practice (object and hash overhead)</td><td>None</td><td>Yes</td><td>Recent, high-value history</td></tr><tr><td>Sorted set by timestamp</td><td>Larger than a plain set</td><td>None</td><td>Yes, by time range</td><td>Recent history with expiry</td></tr><tr><td>Bloom filter at 1 percent</td><td>About 120 KB</td><td>About 1 percent</td><td>No</td><td>Long history where skipping is harmless</td></tr><tr><td>Cuckoo filter</td><td>Similar to Bloom at low error rates</td><td>Tunable</td><td>Yes</td><td>History that must support un-see</td></tr></tbody></table><p>Real systems: RedisBloom provides BF.ADD and BF.EXISTS with scalable sub-filters; Medium has described using Bloom filters to avoid recommending already-read posts; dating apps apply the same idea to never re-show swiped profiles.</p>
 </div></article>
-      <section class="check-slider" data-slug="seen-filtering-bloom-vs-exact-sets" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="seen-filtering-bloom-vs-exact-sets" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Which error Bloom makes" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Overfilled filter" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Sizing a large filter" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Per-User Seen-Post Bloom Filter Fleet Memory" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Bloom Filter False Positives in Content Feed Seen-Filtering" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-seen-filtering-bloom-vs-exact-sets-c1" data-type="mcq" data-slug="seen-filtering-bloom-vs-exact-sets" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Which error Bloom makes</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Filtering &#039;Seen&#039; Items in Recommendations</div>
+        <div class="check-slider__section">Section: Filtering &#039;Seen&#039; Items in Recommendations</div>
+        
         <p class="check-slider__prompt">A feed checks a Bloom filter of seen item IDs before showing each candidate. What is the only kind of mistake the filter can make, and what does the user experience?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c1" value="0" />
-             <span>A false negative: an already seen item is reported unseen and shown again</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c1" value="1" />
-             <span>A false positive: an unseen item is reported seen and silently skipped</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c1" value="2" />
-             <span>Both kinds equally often, so the feed sometimes repeats and sometimes skips items</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c1" value="3" />
-             <span>A deletion error: removed items reappear once the filter is rebuilt</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-seen-filtering-bloom-vs-exact-sets-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c1" value="0" />
+            <span>A false negative: an already seen item is reported unseen and shown again</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c1" value="1" />
+            <span>A false positive: an unseen item is reported seen and silently skipped</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c1" value="2" />
+            <span>Both kinds equally often, so the feed sometimes repeats and sometimes skips items</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c1" value="3" />
+            <span>A deletion error: removed items reappear once the filter is rebuilt</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="seen-filtering-bloom-vs-exact-sets-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="seen-filtering-bloom-vs-exact-sets-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-seen-filtering-bloom-vs-exact-sets-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1022,35 +1033,39 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-seen-filtering-bloom-vs-exact-sets-c2" data-type="mcq" data-slug="seen-filtering-bloom-vs-exact-sets" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Overfilled filter</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Filtering &#039;Seen&#039; Items in Recommendations</div>
+        <div class="check-slider__section">Section: Filtering &#039;Seen&#039; Items in Recommendations</div>
+        
         <p class="check-slider__prompt">Monthly seen-filters are sized for 15,000 items at 1 percent (about 9.6 bits per item, 7 hashes). A heavy user racks up 45,000 impressions in one month. What happens to that user&#039;s filter?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c2" value="0" />
-             <span>The false-positive rate stays near 1 percent, because the hash count was fixed at sizing time</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c2" value="1" />
-             <span>The filter starts producing false negatives, so seen items reappear in the feed</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c2" value="2" />
-             <span>The false-positive rate climbs to roughly 40 percent, so many fresh items are wrongly skipped</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c2" value="3" />
-             <span>The false-positive rate rises linearly to about 3 percent, which is still acceptable</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-seen-filtering-bloom-vs-exact-sets-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c2" value="0" />
+            <span>The false-positive rate stays near 1 percent, because the hash count was fixed at sizing time</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c2" value="1" />
+            <span>The filter starts producing false negatives, so seen items reappear in the feed</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c2" value="2" />
+            <span>The false-positive rate climbs to roughly 40 percent, so many fresh items are wrongly skipped</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c2" value="3" />
+            <span>The false-positive rate rises linearly to about 3 percent, which is still acceptable</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="seen-filtering-bloom-vs-exact-sets-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="seen-filtering-bloom-vs-exact-sets-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-seen-filtering-bloom-vs-exact-sets-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1059,77 +1074,180 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-seen-filtering-bloom-vs-exact-sets-c3" data-type="mcq" data-slug="seen-filtering-bloom-vs-exact-sets" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Sizing a large filter</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Sizing formulas and a rotation example</div>
+        <div class="check-slider__section">Section: Sizing formulas and a rotation example</div>
+        
         <p class="check-slider__prompt">Using m = -n ln(p) / (ln 2)^2 and k = (m / n) ln 2, size a Bloom filter for 1,000,000 seen items at a 1 percent false-positive rate. What are the approximate memory and hash count?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c3" value="0" />
-             <span>About 1.2 MB with 3 hash functions</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c3" value="1" />
-             <span>About 120 KB with 7 hash functions</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c3" value="2" />
-             <span>About 12 MB with 10 hash functions</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c3" value="3" />
-             <span>About 1.2 MB with 7 hash functions</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-seen-filtering-bloom-vs-exact-sets-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c3" value="0" />
+            <span>About 1.2 MB with 3 hash functions</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c3" value="1" />
+            <span>About 120 KB with 7 hash functions</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c3" value="2" />
+            <span>About 12 MB with 10 hash functions</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-seen-filtering-bloom-vs-exact-sets-c3" value="3" />
+            <span>About 1.2 MB with 7 hash functions</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="seen-filtering-bloom-vs-exact-sets-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="seen-filtering-bloom-vs-exact-sets-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-seen-filtering-bloom-vs-exact-sets-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">m is about 9.59 bits per item, so 1M items need about 9.6 million bits, roughly 1.2 MB, and k = 9.59 x 0.693 is about 7. The 120 KB option is the lesson&#039;s figure for 100,000 items; memory scales linearly with n at a fixed error rate.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-seen-filtering-bloom-vs-exact-sets-n1" data-type="numeric" data-slug="seen-filtering-bloom-vs-exact-sets" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Per-User Seen-Post Bloom Filter Fleet Memory</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A short-video feed tracks the last 50,000 watched video IDs for each of 20 million Daily Active Users (DAU) so users aren&#039;t shown duplicate videos. Using a Bloom filter at 10 bits per item, each user&#039;s filter takes `50,000 × 10 bits = 500,000 bits = 62.5 KB ≈ 60 KB` (compared to 400 KB for raw 8-byte IDs).</p>
+          </div>
+        
+        <p class="check-slider__prompt">Using 60 KB per active user, how many gigabytes (GB, using 1 GB = 1,000,000 KB) of storage/memory are required across the 20 million DAU?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-seen-filtering-bloom-vs-exact-sets-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-seen-filtering-bloom-vs-exact-sets-n1"
+              aria-label="Numeric estimate in GB"
+              placeholder="Enter numeric estimate (GB)..."
+            />
+            <span class="quiz-unit-badge">GB</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply 20,000,000 users × 60 KB/user and divide by 1,000,000 KB/GB.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="seen-filtering-bloom-vs-exact-sets-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-seen-filtering-bloom-vs-exact-sets-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">20,000,000 × 60 KB = 1,200,000,000 KB = 1,200 GB (1.2 TB), compared to 8 TB for raw 64-bit integer arrays—savingnearly 7 TB of cluster memory.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-seen-filtering-bloom-vs-exact-sets-t1" data-type="tradeoff" data-slug="seen-filtering-bloom-vs-exact-sets" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Bloom Filter False Positives in Content Feed Seen-Filtering</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You use a per-user Bloom filter (1% false-positive rate) to filter out previously watched videos from a recommendation candidate pool of 500 videos per feed refresh.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Why is a 1% false-positive rate acceptable for feed seen-filtering (unlike financial/security blocklists), and how do you prevent the filter from saturating over years?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-seen-filtering-bloom-vs-exact-sets-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-seen-filtering-bloom-vs-exact-sets-t1" value="0" />
+                  <span>A false positive shows the user an already-watched video 1% of the time</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-seen-filtering-bloom-vs-exact-sets-t1" value="1" />
+                  <span>A false positive merely skips 1% of unseen candidate videos (harmless when millions of unseen videos exist), and time-bucketed / rotating sliding-window Bloom filters prevent bit saturation as history grows</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-seen-filtering-bloom-vs-exact-sets-t1" value="2" />
+                  <span>Bloom filters automatically evict old bits when 100% of bits become 1</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-seen-filtering-bloom-vs-exact-sets-t1" value="0" />
+                  <span>Bloom filters have false negatives that let watched videos slip through</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-seen-filtering-bloom-vs-exact-sets-t1" value="1" />
+                  <span>In seen-filtering, a false positive means &#039;falsely marked as already seen&#039;, which only drops ~5 of 500 candidate recommendations; rotating time-windowed filters (e.g., 30-day buckets) bounds fill ratio</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-seen-filtering-bloom-vs-exact-sets-t1" value="2" />
+                  <span>A single fixed-size Bloom filter maintains a 1% false-positive rate even after 100 million insertions</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">In a seen-filter, what does a false positive (&#039;filter says seen when actually unseen&#039;) do to the user experience?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="seen-filtering-bloom-vs-exact-sets-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-seen-filtering-bloom-vs-exact-sets-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Bloom filters have zero false negatives (so a watched video is never re-shown). A 1% false positive simply hides 1% of unseen candidate videos—invisible to the user when the catalog has millions of videos. Rotating time-bucketed filters retires old epochs before bit density saturates.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-seen-filtering-bloom-vs-exact-sets-n1" data-type="numeric" data-slug="seen-filtering-bloom-vs-exact-sets">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Per-User Seen-Post Bloom Filter Fleet Memory</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A short-video feed tracks the last 50,000 watched video IDs for each of 20 million Daily Active Users (DAU) so users aren&#039;t shown duplicate videos. Using a Bloom filter at 10 bits per item, each user&#039;s filter takes `50,000 × 10 bits = 500,000 bits = 62.5 KB ≈ 60 KB` (compared to 400 KB for raw 8-byte IDs).</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Using 60 KB per active user, how many gigabytes (GB, using 1 GB = 1,000,000 KB) of storage/memory are required across the 20 million DAU?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Multiply 20,000,000 users × 60 KB/user and divide by 1,000,000 KB/GB.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-seen-filtering-bloom-vs-exact-sets-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-seen-filtering-bloom-vs-exact-sets-n1" placeholder="Enter numeric estimate (GB)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">GB</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="seen-filtering-bloom-vs-exact-sets-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="seen-filtering-bloom-vs-exact-sets" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-seen-filtering-bloom-vs-exact-sets-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 20,000,000 × 60 KB = 1,200,000,000 KB = 1,200 GB (1.2 TB), compared to 8 TB for raw 64-bit integer arrays—savingnearly 7 TB of cluster memory.</div>
-        </div>
-      </div>
-    
       <div class="simulator-card" id="sim-bloom">
         <div class="simulator-card__header">
           <div class="simulator-card__title"><span>Bloom Filter (m=16, k=3)</span></div>
@@ -1146,71 +1264,6 @@
         <div style="padding: 1rem; background: var(--bg-surface); display:flex; justify-content:space-between; align-items:center;">
            <div id="sim-bloom-res" style="font-weight:bold;"></div>
            <div style="font-size:0.85rem; color:var(--text-muted);">Elements (n): <span id="sim-bloom-n">0</span> | False Pos Prob: <span id="sim-bloom-prob">0.00</span>%</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-seen-filtering-bloom-vs-exact-sets-t1" data-type="tradeoff" data-slug="seen-filtering-bloom-vs-exact-sets">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Bloom Filter False Positives in Content Feed Seen-Filtering</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> You use a per-user Bloom filter (1% false-positive rate) to filter out previously watched videos from a recommendation candidate pool of 500 videos per feed refresh.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Why is a 1% false-positive rate acceptable for feed seen-filtering (unlike financial/security blocklists), and how do you prevent the filter from saturating over years?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> In a seen-filter, what does a false positive (&#039;filter says seen when actually unseen&#039;) do to the user experience?</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-seen-filtering-bloom-vs-exact-sets-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-seen-filtering-bloom-vs-exact-sets-t1" value="0" />
-               <span>A false positive shows the user an already-watched video 1% of the time</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-seen-filtering-bloom-vs-exact-sets-t1" value="1" />
-               <span>A false positive merely skips 1% of unseen candidate videos (harmless when millions of unseen videos exist), and time-bucketed / rotating sliding-window Bloom filters prevent bit saturation as history grows</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-seen-filtering-bloom-vs-exact-sets-t1" value="2" />
-               <span>Bloom filters automatically evict old bits when 100% of bits become 1</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-seen-filtering-bloom-vs-exact-sets-t1" value="0" />
-               <span>Bloom filters have false negatives that let watched videos slip through</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-seen-filtering-bloom-vs-exact-sets-t1" value="1" />
-               <span>In seen-filtering, a false positive means &#039;falsely marked as already seen&#039;, which only drops ~5 of 500 candidate recommendations; rotating time-windowed filters (e.g., 30-day buckets) bounds fill ratio</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-seen-filtering-bloom-vs-exact-sets-t1" value="2" />
-               <span>A single fixed-size Bloom filter maintains a 1% false-positive rate even after 100 million insertions</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="seen-filtering-bloom-vs-exact-sets-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="seen-filtering-bloom-vs-exact-sets" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-seen-filtering-bloom-vs-exact-sets-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Bloom filters have zero false negatives (so a watched video is never re-shown). A 1% false positive simply hides 1% of unseen candidate videos—invisible to the user when the catalog has millions of videos. Rotating time-bucketed filters retires old epochs before bit density saturates.</div>
         </div>
       </div>
     
@@ -1334,15 +1387,15 @@
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

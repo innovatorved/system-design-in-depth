@@ -499,13 +499,13 @@
           '<tr>' +
             '<td><strong>' + escapeHtml(item.op) + '</strong></td>' +
             '<td><span class="eco-pill">' + escapeHtml(item.category) + '</span></td>' +
-            '<td style="font-family:var(--font-mono);font-weight:600;color:var(--c-accent);">' + escapeHtml(isHumanScale ? item.human : item.real) + '</td>' +
+            '<td class="latency-val-cell">' + escapeHtml(isHumanScale ? item.human : item.real) + '</td>' +
             '<td style="min-width:140px;">' +
-              '<div style="background:var(--c-bg-alt);border-radius:4px;height:8px;overflow:hidden;">' +
-                '<div style="width:' + logPct + '%;height:100%;background:var(--c-accent);"></div>' +
+              '<div class="latency-bar-track">' +
+                '<div class="latency-bar-fill" style="width:' + logPct + '%;"></div>' +
               '</div>' +
             '</td>' +
-            '<td class="eco-muted" style="font-size:0.82rem;">' + escapeHtml(item.note) + '</td>' +
+            '<td class="latency-note-cell">' + escapeHtml(item.note) + '</td>' +
           '</tr>'
         );
       }).join('');
@@ -535,7 +535,7 @@
             '<td style="font-size:0.84rem;">' + escapeHtml(r.write) + '</td>' +
             '<td style="font-size:0.84rem;">' + escapeHtml(r.read) + '</td>' +
             '<td style="font-size:0.84rem;">' + escapeHtml(r.bestFor) + '</td>' +
-            '<td style="font-size:0.84rem;color:var(--c-text-muted);">' + escapeHtml(r.watchOut) + '</td>' +
+            '<td style="font-size:0.84rem;color:var(--fg-muted);">' + escapeHtml(r.watchOut) + '</td>' +
             '<td style="white-space:nowrap;">' +
               '<button class="eco-btn eco-btn--sm" data-open-topic="' + escapeHtml(r.slug) + '">Topic →</button> ' +
               '<button class="eco-btn eco-btn--sm eco-btn--primary" data-open-build="' + escapeHtml(r.buildId) + '">CodeLab →</button>' +
@@ -601,14 +601,14 @@
                 '<button class="eco-btn eco-btn--sm ' + (isHumanScale ? 'eco-btn--primary' : '') + '" data-latency-scale="human">Humanized Scale (1 ns = 1 sec)</button>' +
               '</div>' +
             '</div>' +
-            '<div style="overflow-x:auto;">' +
-              '<table class="eco-table" style="width:100%;border-collapse:collapse;">' +
-                '<thead><tr style="text-align:left;border-bottom:1px solid var(--c-border);">' +
-                  '<th style="padding:8px;">Operation</th>' +
-                  '<th style="padding:8px;">Layer</th>' +
-                  '<th style="padding:8px;">' + (isHumanScale ? 'Humanized (1ns=1s)' : 'Typical Latency') + '</th>' +
-                  '<th style="padding:8px;">Log10 Scale</th>' +
-                  '<th style="padding:8px;">Architectural Implication</th>' +
+            '<div class="eco-table-wrap">' +
+              '<table class="eco-table">' +
+                '<thead><tr>' +
+                  '<th>Operation</th>' +
+                  '<th>Layer</th>' +
+                  '<th>' + (isHumanScale ? 'Humanized (1ns=1s)' : 'Typical Latency') + '</th>' +
+                  '<th>Log10 Scale</th>' +
+                  '<th>Architectural Implication</th>' +
                 '</tr></thead>' +
                 '<tbody>' + latencyRowsHtml + '</tbody>' +
               '</table>' +
@@ -629,15 +629,15 @@
                 }).join('') +
               '</div>' +
             '</div>' +
-            '<div style="overflow-x:auto;">' +
-              '<table class="eco-table" style="width:100%;border-collapse:collapse;">' +
-                '<thead><tr style="text-align:left;border-bottom:1px solid var(--c-border);">' +
-                  '<th style="padding:8px;">Primitive / Pattern</th>' +
-                  '<th style="padding:8px;">Write Path</th>' +
-                  '<th style="padding:8px;">Read Path</th>' +
-                  '<th style="padding:8px;">Sweet Spot</th>' +
-                  '<th style="padding:8px;">Production Failure Mode</th>' +
-                  '<th style="padding:8px;">Deep Dive &amp; Lab</th>' +
+            '<div class="eco-table-wrap">' +
+              '<table class="eco-table">' +
+                '<thead><tr>' +
+                  '<th>Primitive / Pattern</th>' +
+                  '<th>Write Path</th>' +
+                  '<th>Read Path</th>' +
+                  '<th>Sweet Spot</th>' +
+                  '<th>Production Failure Mode</th>' +
+                  '<th>Deep Dive &amp; Lab</th>' +
                 '</tr></thead>' +
                 '<tbody>' + matrixHtml + '</tbody>' +
               '</table>' +

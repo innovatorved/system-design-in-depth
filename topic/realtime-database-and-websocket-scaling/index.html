@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -980,44 +980,55 @@
     G2-->>C: "replay 42 to 47 then live stream"
 </div><h2>How real systems do it</h2><ul><li><strong>Discord</strong> gateway sessions carry a sequence number; a client that drops sends a Resume with its session id and last sequence to receive missed events instead of a full re-sync.</li><li><strong>Slack</strong> separates gateway servers (hold sockets) from channel servers (own channels via consistent hashing), so fan-out and connection holding scale independently.</li><li><strong>Netflix Zuul Push</strong> keeps a push registry mapping client to server and treats connections as ephemeral, deliberately recycling them to rebalance load.</li></ul><h2>Failure modes to name in an interview</h2><ul><li>Split-brain registry entries after a network partition: fence with a node generation or epoch and expire entries without heartbeats.</li><li>Slow client: bound the outbound queue, coalesce state updates (send the latest presence, not all of them), then disconnect.</li><li>Thundering herd after a regional failover: server-sent retry hints plus client jitter.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="realtime-database-and-websocket-scaling" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="realtime-database-and-websocket-scaling" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Pub/Sub is not an inbox" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sizing a gateway fleet" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Stale registry after partition" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: WebSocket Gateway Fleet Sizing by Connection Memory" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Reconnection Thundering Herd After WebSocket Gateway Crash" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-realtime-database-and-websocket-scaling-c1" data-type="mcq" data-slug="realtime-database-and-websocket-scaling" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Pub/Sub is not an inbox</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Scaling Real-Time Connections</div>
+        <div class="check-slider__section">Section: Scaling Real-Time Connections</div>
+        
         <p class="check-slider__prompt">A chat backend publishes every new message to Redis Pub/Sub, and each WebSocket node forwards what it receives to its local sockets. A user&#039;s phone drops off Wi-Fi for 20 seconds. What happens to messages published during that gap, and what does the lesson say must fix it?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c1" value="0" />
-             <span>Redis buffers them per channel until the node acknowledges them, so only acknowledgements need to be tuned</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c1" value="1" />
-             <span>They are missed, because Pub/Sub is fire-and-forget; the client must resume from its last acknowledged position in a durable store</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c1" value="2" />
-             <span>The load balancer&#039;s sticky session replays them once the phone reconnects to the same node</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c1" value="3" />
-             <span>They are queued in the node&#039;s outbound buffer indefinitely, so the fix is simply a larger per-socket queue</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-realtime-database-and-websocket-scaling-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c1" value="0" />
+            <span>Redis buffers them per channel until the node acknowledges them, so only acknowledgements need to be tuned</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c1" value="1" />
+            <span>They are missed, because Pub/Sub is fire-and-forget; the client must resume from its last acknowledged position in a durable store</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c1" value="2" />
+            <span>The load balancer&#039;s sticky session replays them once the phone reconnects to the same node</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c1" value="3" />
+            <span>They are queued in the node&#039;s outbound buffer indefinitely, so the fix is simply a larger per-socket queue</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="realtime-database-and-websocket-scaling-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="realtime-database-and-websocket-scaling-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-realtime-database-and-websocket-scaling-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1026,35 +1037,39 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-realtime-database-and-websocket-scaling-c2" data-type="mcq" data-slug="realtime-database-and-websocket-scaling" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Sizing a gateway fleet</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: sizing a WebSocket fleet</div>
+        <div class="check-slider__section">Section: Worked example: sizing a WebSocket fleet</div>
+        
         <p class="check-slider__prompt">You expect 6 million concurrent users averaging 1.5 devices each. One gateway node comfortably holds 150,000 sockets, and you want about 30 percent headroom so a node can be drained or lost. Roughly how many gateway nodes should you provision?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c2" value="0" />
-             <span>About 40 nodes</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c2" value="1" />
-             <span>About 60 nodes</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c2" value="2" />
-             <span>About 78 nodes</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c2" value="3" />
-             <span>About 117 nodes</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-realtime-database-and-websocket-scaling-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c2" value="0" />
+            <span>About 40 nodes</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c2" value="1" />
+            <span>About 60 nodes</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c2" value="2" />
+            <span>About 78 nodes</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c2" value="3" />
+            <span>About 117 nodes</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="realtime-database-and-websocket-scaling-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="realtime-database-and-websocket-scaling-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-realtime-database-and-websocket-scaling-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1063,142 +1078,180 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-realtime-database-and-websocket-scaling-c3" data-type="mcq" data-slug="realtime-database-and-websocket-scaling" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Stale registry after partition</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Failure modes to name in an interview</div>
+        <div class="check-slider__section">Section: Failure modes to name in an interview</div>
+        
         <p class="check-slider__prompt">Gateway A is partitioned away for 40 seconds; its users reconnect to Gateway B and re-register. When the partition heals, A still believes it owns those connections and rewrites its old registry entries. Which safeguard from the lesson stops messages being routed to A&#039;s dead sockets?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c3" value="0" />
-             <span>Fence registry entries with a node generation or epoch and expire entries whose heartbeats stop</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c3" value="1" />
-             <span>Enable sticky sessions on the load balancer so users always return to Gateway A after the partition</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c3" value="2" />
-             <span>Switch the routing strategy to broadcasting every message to all gateway nodes so ownership never matters</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c3" value="3" />
-             <span>Increase the heartbeat interval so fewer registry writes race with each other during recovery</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-realtime-database-and-websocket-scaling-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c3" value="0" />
+            <span>Fence registry entries with a node generation or epoch and expire entries whose heartbeats stop</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c3" value="1" />
+            <span>Enable sticky sessions on the load balancer so users always return to Gateway A after the partition</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c3" value="2" />
+            <span>Switch the routing strategy to broadcasting every message to all gateway nodes so ownership never matters</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-realtime-database-and-websocket-scaling-c3" value="3" />
+            <span>Increase the heartbeat interval so fewer registry writes race with each other during recovery</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="realtime-database-and-websocket-scaling-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="realtime-database-and-websocket-scaling-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-realtime-database-and-websocket-scaling-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">An epoch or generation number lets the registry reject writes from a node whose ownership has been superseded, and heartbeat expiry removes entries nobody is renewing. Broadcasting sidesteps the registry but its traffic grows with nodes times messages and fails beyond a few dozen nodes, so it trades one problem for a worse one.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-realtime-database-and-websocket-scaling-n1" data-type="numeric" data-slug="realtime-database-and-websocket-scaling" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: WebSocket Gateway Fleet Sizing by Connection Memory</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">You need to terminate 10 million concurrent WebSocket connections. Each open connection consumes 25 KB of kernel socket buffer + application session state, and each gateway server has 50 GB (50,000,000 KB) of RAM dedicated to connection state.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many WebSocket gateway servers are required to hold all 10 million concurrent connections?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-realtime-database-and-websocket-scaling-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-realtime-database-and-websocket-scaling-n1"
+              aria-label="Numeric estimate in servers"
+              placeholder="Enter numeric estimate (servers)..."
+            />
+            <span class="quiz-unit-badge">servers</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Connections per server = 50,000,000 KB ÷ 25 KB = 2,000,000 connections/server. Divide 10,000,000 by 2,000,000.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="realtime-database-and-websocket-scaling-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-realtime-database-and-websocket-scaling-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Each server holds `50,000,000 KB / 25 KB = 2,000,000` concurrent connections. Thus 10M connections require `10,000,000 / 2,000,000 = 5` servers minimum (typically provisioned as 7–8 servers for N+2 rolling deploy &amp; failover capacity).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-realtime-database-and-websocket-scaling-t1" data-type="tradeoff" data-slug="realtime-database-and-websocket-scaling" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Reconnection Thundering Herd After WebSocket Gateway Crash</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">One WebSocket gateway server holding 500,000 active client connections crashes abruptly. All 500,000 clients detect TCP `FIN/RST` within the same 100 ms window and immediately attempt TLS handshakes + auth token validation + initial state sync against the remaining gateways.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which defense layers prevent this reconnection storm from cascading across the remaining fleet?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-realtime-database-and-websocket-scaling-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-realtime-database-and-websocket-scaling-t1" value="0" />
+                  <span>Configure clients to retry every 50 ms with zero jitter so users reconnect as quickly as possible</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-realtime-database-and-websocket-scaling-t1" value="1" />
+                  <span>Enforce client-side randomized exponential backoff with full jitter, perform stateless JWT verification + TLS session resumption at the edge, and shed non-essential state-sync queries when gateway handshake queues saturate</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-realtime-database-and-websocket-scaling-t1" value="2" />
+                  <span>Store all WebSocket TCP sockets inside the primary PostgreSQL database</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-realtime-database-and-websocket-scaling-t1" value="0" />
+                  <span>Synchronized 50 ms retries spread 500,000 RSA/ECDSA TLS handshakes evenly across time</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-realtime-database-and-websocket-scaling-t1" value="1" />
+                  <span>Full-jitter backoff desynchronizes the 500k reconnects over tens of seconds, while TLS session tickets and stateless JWTs prevent auth-DB collapse during handshake bursts</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-realtime-database-and-websocket-scaling-t1" value="2" />
+                  <span>PostgreSQL natively terminates raw client WebSocket connections</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Consider both the CPU cost of 500k simultaneous TLS handshakes and the DB cost of 500k simultaneous auth lookups.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="realtime-database-and-websocket-scaling-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-realtime-database-and-websocket-scaling-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">When a stateful gateway drops 500k connections at once, synchronized reconnects overwhelm both LB CPU (TLS handshakes) and the auth/state backend. Full-jitter client backoff, TLS session resumption, and edge admission control smooth the burst.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-realtime-database-and-websocket-scaling-n1" data-type="numeric" data-slug="realtime-database-and-websocket-scaling">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: WebSocket Gateway Fleet Sizing by Connection Memory</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> You need to terminate 10 million concurrent WebSocket connections. Each open connection consumes 25 KB of kernel socket buffer + application session state, and each gateway server has 50 GB (50,000,000 KB) of RAM dedicated to connection state.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How many WebSocket gateway servers are required to hold all 10 million concurrent connections?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Connections per server = 50,000,000 KB ÷ 25 KB = 2,000,000 connections/server. Divide 10,000,000 by 2,000,000.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-realtime-database-and-websocket-scaling-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-realtime-database-and-websocket-scaling-n1" placeholder="Enter numeric estimate (servers)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">servers</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="realtime-database-and-websocket-scaling-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="realtime-database-and-websocket-scaling" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-realtime-database-and-websocket-scaling-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Each server holds `50,000,000 KB / 25 KB = 2,000,000` concurrent connections. Thus 10M connections require `10,000,000 / 2,000,000 = 5` servers minimum (typically provisioned as 7–8 servers for N+2 rolling deploy &amp; failover capacity).</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-realtime-database-and-websocket-scaling-t1" data-type="tradeoff" data-slug="realtime-database-and-websocket-scaling">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Reconnection Thundering Herd After WebSocket Gateway Crash</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> One WebSocket gateway server holding 500,000 active client connections crashes abruptly. All 500,000 clients detect TCP `FIN/RST` within the same 100 ms window and immediately attempt TLS handshakes + auth token validation + initial state sync against the remaining gateways.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which defense layers prevent this reconnection storm from cascading across the remaining fleet?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Consider both the CPU cost of 500k simultaneous TLS handshakes and the DB cost of 500k simultaneous auth lookups.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-realtime-database-and-websocket-scaling-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-realtime-database-and-websocket-scaling-t1" value="0" />
-               <span>Configure clients to retry every 50 ms with zero jitter so users reconnect as quickly as possible</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-realtime-database-and-websocket-scaling-t1" value="1" />
-               <span>Enforce client-side randomized exponential backoff with full jitter, perform stateless JWT verification + TLS session resumption at the edge, and shed non-essential state-sync queries when gateway handshake queues saturate</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-realtime-database-and-websocket-scaling-t1" value="2" />
-               <span>Store all WebSocket TCP sockets inside the primary PostgreSQL database</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-realtime-database-and-websocket-scaling-t1" value="0" />
-               <span>Synchronized 50 ms retries spread 500,000 RSA/ECDSA TLS handshakes evenly across time</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-realtime-database-and-websocket-scaling-t1" value="1" />
-               <span>Full-jitter backoff desynchronizes the 500k reconnects over tens of seconds, while TLS session tickets and stateless JWTs prevent auth-DB collapse during handshake bursts</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-realtime-database-and-websocket-scaling-t1" value="2" />
-               <span>PostgreSQL natively terminates raw client WebSocket connections</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="realtime-database-and-websocket-scaling-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="realtime-database-and-websocket-scaling" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-realtime-database-and-websocket-scaling-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> When a stateful gateway drops 500k connections at once, synchronized reconnects overwhelm both LB CPU (TLS handshakes) and the auth/state backend. Full-jitter client backoff, TLS session resumption, and edge admission control smooth the burst.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1307,14 +1360,14 @@
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -1025,44 +1025,55 @@ flowchart TD
 <li>Migrations of this size need a purpose-built, restartable, checkpointed copier and a validation pass comparing reads from both clusters.</li>
 </ul>
 </div></article>
-      <section class="check-slider" data-slug="case-discord-message-storage" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="case-discord-message-storage" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Buckets and hot channels" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sizing a bucket" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Why route by channel" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Request Coalescing Amplification on Hot Discord Channels" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Why Discord&#039;s `(channel_id, bucket)` Partition Key Still Suffered Hot Partitions in Cassandra" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-case-discord-message-storage-c1" data-type="mcq" data-slug="case-discord-message-storage" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Buckets and hot channels</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Case: How Discord Stores Trillions of Messages</div>
+        <div class="check-slider__section">Section: Case: How Discord Stores Trillions of Messages</div>
+        
         <p class="check-slider__prompt">Discord&#039;s partition key is (channel_id, bucket) with roughly 10-day buckets. A channel suddenly goes viral. What does bucketing do for its write load?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c1" value="0" />
-             <span>It spreads the viral channel&#039;s writes evenly across every node</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c1" value="1" />
-             <span>It caps writes per bucket, so excess messages overflow to a new bucket</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c1" value="2" />
-             <span>It bounds partition size over time, but the current bucket stays on one replica set</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c1" value="3" />
-             <span>It routes the viral channel to dedicated ScyllaDB shards automatically</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-case-discord-message-storage-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c1" value="0" />
+            <span>It spreads the viral channel&#039;s writes evenly across every node</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c1" value="1" />
+            <span>It caps writes per bucket, so excess messages overflow to a new bucket</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c1" value="2" />
+            <span>It bounds partition size over time, but the current bucket stays on one replica set</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c1" value="3" />
+            <span>It routes the viral channel to dedicated ScyllaDB shards automatically</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-case-discord-message-storage-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1071,35 +1082,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-case-discord-message-storage-c2" data-type="mcq" data-slug="case-discord-message-storage" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Sizing a bucket</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: why buckets bound partitions</div>
+        <div class="check-slider__section">Section: Worked example: why buckets bound partitions</div>
+        
         <p class="check-slider__prompt">A channel receives 600 messages per minute of about 1 KB each. Roughly how large is one 10-day bucket, and how large would an unbucketed year be?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c2" value="0" />
-             <span>About 860 MB per bucket and about 31 GB per year</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c2" value="1" />
-             <span>About 8.6 GB per bucket and about 315 GB per year</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c2" value="2" />
-             <span>About 86 GB per bucket and about 3.1 TB per year</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c2" value="3" />
-             <span>About 8.6 GB per bucket and about 86 GB per year</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-case-discord-message-storage-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c2" value="0" />
+            <span>About 860 MB per bucket and about 31 GB per year</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c2" value="1" />
+            <span>About 8.6 GB per bucket and about 315 GB per year</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c2" value="2" />
+            <span>About 86 GB per bucket and about 3.1 TB per year</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c2" value="3" />
+            <span>About 8.6 GB per bucket and about 86 GB per year</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-case-discord-message-storage-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1108,142 +1123,180 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-case-discord-message-storage-c3" data-type="mcq" data-slug="case-discord-message-storage" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Why route by channel</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Request coalescing in the data services</div>
+        <div class="check-slider__section">Section: Request coalescing in the data services</div>
+        
         <p class="check-slider__prompt">Discord&#039;s data services coalesce identical in-flight queries. Why must requests be routed to instances by channel ID rather than spread by a round-robin load balancer?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c3" value="0" />
-             <span>Round-robin cannot keep the long-lived connections the data services need</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c3" value="1" />
-             <span>Channel routing lets each instance cache whole channels in memory indefinitely</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c3" value="2" />
-             <span>Channel routing is required for ScyllaDB&#039;s shard-per-core model to work</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-case-discord-message-storage-c3" value="3" />
-             <span>Identical requests can only merge if they reach the same instance at the same moment</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-case-discord-message-storage-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c3" value="0" />
+            <span>Round-robin cannot keep the long-lived connections the data services need</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c3" value="1" />
+            <span>Channel routing lets each instance cache whole channels in memory indefinitely</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c3" value="2" />
+            <span>Channel routing is required for ScyllaDB&#039;s shard-per-core model to work</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-case-discord-message-storage-c3" value="3" />
+            <span>Identical requests can only merge if they reach the same instance at the same moment</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-case-discord-message-storage-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Coalescing merges queries that are simultaneously in flight within one process, so 100,000 requests for channel 42 must converge on one instance to become a handful of database reads. Caching is the tempting answer, but the lesson stresses these services shape traffic and are not a cache.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-case-discord-message-storage-n1" data-type="numeric" data-slug="case-discord-message-storage" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Request Coalescing Amplification on Hot Discord Channels</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">In Discord&#039;s migration from Cassandra to ScyllaDB with a Rust data-service intermediary, a popular announcement channel has 1,000 users open the channel in the same 20 ms window. Without coalescing, all 1,000 requests query the database for `(channel_id, bucket)`. With the Rust data service coalescing concurrent in-flight reads for the same `(channel_id, bucket)`, only 1 query hits ScyllaDB.</p>
+          </div>
+        
+        <p class="check-slider__prompt">By what factor (`1,000 ÷ 1`) does singleflight request coalescing reduce database read QPS for that 20 ms burst on the hot channel?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-case-discord-message-storage-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-case-discord-message-storage-n1"
+              aria-label="Numeric estimate in x"
+              placeholder="Enter numeric estimate (x)..."
+            />
+            <span class="quiz-unit-badge">x</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">1,000 concurrent requests collapsed into 1 database query = 1,000x reduction.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-case-discord-message-storage-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">When an `@everyone` ping triggers 1,000 simultaneous channel history reads within a 20 ms window, routing by `channel_id` to a single Rust service instance that coalesces identical in-flight queries collapses 1,000 DB reads into 1 DB read (a 1,000x reduction on the hot partition).</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-case-discord-message-storage-t1" data-type="tradeoff" data-slug="case-discord-message-storage" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Why Discord&#039;s `(channel_id, bucket)` Partition Key Still Suffered Hot Partitions in Cassandra</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Discord partitioned messages by `(channel_id, time_bucket)` so partitions wouldn&#039;t grow unboundedly. Yet large servers still caused 10-second latency spikes in Cassandra when a single channel received a burst of reads alongside background compactions and JVM GC pauses.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What combination of architectural changes resolved Discord&#039;s hot-partition tail latency when migrating from Cassandra to ScyllaDB?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-case-discord-message-storage-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-case-discord-message-storage-t1" value="0" />
+                  <span>Remove `channel_id` from the partition key and shard randomly by `message_id`</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-case-discord-message-storage-t1" value="1" />
+                  <span>Introduce a consistent-hashed Rust data-service layer in front of the DB to coalesce concurrent identical `(channel_id, bucket)` reads (singleflight), and migrate storage from JVM-based Cassandra to C++ shard-per-core ScyllaDB to eliminate JVM stop-the-world GC pauses</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-case-discord-message-storage-t1" value="2" />
+                  <span>Move trillions of chat messages into a single unsharded SQLite file</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-case-discord-message-storage-t1" value="0" />
+                  <span>Sharding by random `message_id` makes fetching a channel&#039;s last 50 messages a fast single-node query</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-case-discord-message-storage-t1" value="1" />
+                  <span>`(channel_id, bucket)` bounds partition size on disk but still concentrates concurrent live reads on one replica set; coalescing duplicate reads in the Rust proxy eliminated hot-channel read amplification while ScyllaDB eliminated JVM GC stalls</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-case-discord-message-storage-t1" value="2" />
+                  <span>A single SQLite file easily stores trillions of messages at millions of QPS</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Time-bucketing bounds *storage size* per partition, but what bounds *concurrent read QPS* when 50,000 users open the same channel at once?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-case-discord-message-storage-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Time-bucketing `(channel_id, bucket)` stops partitions from growing forever on disk, but all current activity in a hot channel still hits the current time bucket! Consistent-routing requests by `channel_id` through a Rust proxy that deduplicates concurrent in-flight reads, paired with GC-free ScyllaDB, solved both hot-partition amplification and GC tail latency.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-case-discord-message-storage-n1" data-type="numeric" data-slug="case-discord-message-storage">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Request Coalescing Amplification on Hot Discord Channels</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> In Discord&#039;s migration from Cassandra to ScyllaDB with a Rust data-service intermediary, a popular announcement channel has 1,000 users open the channel in the same 20 ms window. Without coalescing, all 1,000 requests query the database for `(channel_id, bucket)`. With the Rust data service coalescing concurrent in-flight reads for the same `(channel_id, bucket)`, only 1 query hits ScyllaDB.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> By what factor (`1,000 ÷ 1`) does singleflight request coalescing reduce database read QPS for that 20 ms burst on the hot channel?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 1,000 concurrent requests collapsed into 1 database query = 1,000x reduction.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-case-discord-message-storage-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-case-discord-message-storage-n1" placeholder="Enter numeric estimate (x)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">x</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="case-discord-message-storage" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-case-discord-message-storage-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> When an `@everyone` ping triggers 1,000 simultaneous channel history reads within a 20 ms window, routing by `channel_id` to a single Rust service instance that coalesces identical in-flight queries collapses 1,000 DB reads into 1 DB read (a 1,000x reduction on the hot partition).</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-case-discord-message-storage-t1" data-type="tradeoff" data-slug="case-discord-message-storage">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Why Discord&#039;s `(channel_id, bucket)` Partition Key Still Suffered Hot Partitions in Cassandra</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> Discord partitioned messages by `(channel_id, time_bucket)` so partitions wouldn&#039;t grow unboundedly. Yet large servers still caused 10-second latency spikes in Cassandra when a single channel received a burst of reads alongside background compactions and JVM GC pauses.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> What combination of architectural changes resolved Discord&#039;s hot-partition tail latency when migrating from Cassandra to ScyllaDB?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Time-bucketing bounds *storage size* per partition, but what bounds *concurrent read QPS* when 50,000 users open the same channel at once?</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-case-discord-message-storage-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-case-discord-message-storage-t1" value="0" />
-               <span>Remove `channel_id` from the partition key and shard randomly by `message_id`</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-case-discord-message-storage-t1" value="1" />
-               <span>Introduce a consistent-hashed Rust data-service layer in front of the DB to coalesce concurrent identical `(channel_id, bucket)` reads (singleflight), and migrate storage from JVM-based Cassandra to C++ shard-per-core ScyllaDB to eliminate JVM stop-the-world GC pauses</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-case-discord-message-storage-t1" value="2" />
-               <span>Move trillions of chat messages into a single unsharded SQLite file</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-case-discord-message-storage-t1" value="0" />
-               <span>Sharding by random `message_id` makes fetching a channel&#039;s last 50 messages a fast single-node query</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-case-discord-message-storage-t1" value="1" />
-               <span>`(channel_id, bucket)` bounds partition size on disk but still concentrates concurrent live reads on one replica set; coalescing duplicate reads in the Rust proxy eliminated hot-channel read amplification while ScyllaDB eliminated JVM GC stalls</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-case-discord-message-storage-t1" value="2" />
-               <span>A single SQLite file easily stores trillions of messages at millions of QPS</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="case-discord-message-storage-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="case-discord-message-storage" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-case-discord-message-storage-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Time-bucketing `(channel_id, bucket)` stops partitions from growing forever on disk, but all current activity in a hot channel still hits the current time bucket! Consistent-routing requests by `channel_id` through a Rust proxy that deduplicates concurrent in-flight reads, paired with GC-free ScyllaDB, solved both hot-partition amplification and GC tail latency.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1352,14 +1405,14 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

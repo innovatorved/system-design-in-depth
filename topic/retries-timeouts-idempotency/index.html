@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -1020,44 +1020,55 @@ flowchart TD
 <h2>How real systems do it</h2>
 <p>AWS SDKs use exponential backoff with jitter and a client-side retry token bucket by default. gRPC supports retry policies with a retry throttling ratio configured per service. Google's SRE book recommends per-request retry limits and per-client retry budgets of around 10% to prevent retry amplification.</p>
 </div></article>
-      <section class="check-slider" data-slug="retries-timeouts-idempotency" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="retries-timeouts-idempotency" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Layered retry multiplier" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Retry budget vs breaker" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Safe to retry blindly" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Cascading Retry Amplification Across 3 Tiers" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Idempotency Key Storage &amp; Concurrency Locking" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-retries-timeouts-idempotency-c1" data-type="mcq" data-slug="retries-timeouts-idempotency" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Layered retry multiplier</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Under the Hood: The Retry Storm Catastrophe</div>
+        <div class="check-slider__section">Section: Under the Hood: The Retry Storm Catastrophe</div>
+        
         <p class="check-slider__prompt">The API, the order service and the database client each retry up to 2 times (3 attempts each). If every attempt fails, how many calls can one user request cause at the database?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c1" value="0" />
-             <span>6</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c1" value="1" />
-             <span>9</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c1" value="2" />
-             <span>81</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c1" value="3" />
-             <span>27</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-retries-timeouts-idempotency-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c1" value="0" />
+            <span>6</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c1" value="1" />
+            <span>9</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c1" value="2" />
+            <span>81</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c1" value="3" />
+            <span>27</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="retries-timeouts-idempotency-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="retries-timeouts-idempotency-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-retries-timeouts-idempotency-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1066,35 +1077,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-retries-timeouts-idempotency-c2" data-type="mcq" data-slug="retries-timeouts-idempotency" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Retry budget vs breaker</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Under the Hood: Retry Budgets &amp; Timeout Tiers</div>
+        <div class="check-slider__section">Section: Under the Hood: Retry Budgets &amp; Timeout Tiers</div>
+        
         <p class="check-slider__prompt">A client uses a 10% retry budget, and a dependency starts failing half of all requests. How does the budget behave differently from a circuit breaker?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c2" value="0" />
-             <span>The budget stops every request once 10% of them fail, while a breaker only stops retries</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c2" value="1" />
-             <span>The budget drops retries above 10% of traffic while originals flow; a breaker stops all requests</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c2" value="2" />
-             <span>The budget delays retries with jitter up to a 10% cap, while a breaker drops them outright</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c2" value="3" />
-             <span>The two behave the same way, and the budget is just a breaker measured in percentages</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-retries-timeouts-idempotency-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c2" value="0" />
+            <span>The budget stops every request once 10% of them fail, while a breaker only stops retries</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c2" value="1" />
+            <span>The budget drops retries above 10% of traffic while originals flow; a breaker stops all requests</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c2" value="2" />
+            <span>The budget delays retries with jitter up to a 10% cap, while a breaker drops them outright</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c2" value="3" />
+            <span>The two behave the same way, and the budget is just a breaker measured in percentages</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="retries-timeouts-idempotency-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="retries-timeouts-idempotency-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-retries-timeouts-idempotency-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1103,77 +1118,180 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-retries-timeouts-idempotency-c3" data-type="mcq" data-slug="retries-timeouts-idempotency" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Safe to retry blindly</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Which failures to retry</div>
+        <div class="check-slider__section">Section: Which failures to retry</div>
+        
         <p class="check-slider__prompt">For a POST that is not idempotent and has no idempotency key, which failure can be retried without risking a duplicate side effect?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c3" value="0" />
-             <span>The connection was refused before any bytes of the request were sent</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c3" value="1" />
-             <span>The read timed out after the full request body had been sent</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c3" value="2" />
-             <span>The server returned 500 Internal Server Error partway through</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-retries-timeouts-idempotency-c3" value="3" />
-             <span>The server returned 422 because the payload failed validation</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-retries-timeouts-idempotency-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c3" value="0" />
+            <span>The connection was refused before any bytes of the request were sent</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c3" value="1" />
+            <span>The read timed out after the full request body had been sent</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c3" value="2" />
+            <span>The server returned 500 Internal Server Error partway through</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-retries-timeouts-idempotency-c3" value="3" />
+            <span>The server returned 422 because the payload failed validation</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="retries-timeouts-idempotency-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="retries-timeouts-idempotency-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-retries-timeouts-idempotency-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">If the connection was refused before sending, the server never processed the request, so retrying cannot repeat it. A timeout after sending is the tempting case, but the outcome is unknown and the server may have done the work. 422 will simply fail again in the same way.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-retries-timeouts-idempotency-n1" data-type="numeric" data-slug="retries-timeouts-idempotency" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Cascading Retry Amplification Across 3 Tiers</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">An API Gateway calls Service A, which calls Service B, which queries a Database (3 sequential hops). Each hop is configured with 1 initial attempt plus 2 retries (3 total attempts per failed call) and no retry budget.</p>
+          </div>
+        
+        <p class="check-slider__prompt">When the database experiences a transient brownout, how many database query attempts are triggered by a single incoming user request?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-retries-timeouts-idempotency-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-retries-timeouts-idempotency-n1"
+              aria-label="Numeric estimate in attempts"
+              placeholder="Enter numeric estimate (attempts)..."
+            />
+            <span class="quiz-unit-badge">attempts</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Multiply total attempts per tier across the 3 tiers: 3 × 3 × 3.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="retries-timeouts-idempotency-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-retries-timeouts-idempotency-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Without per-tier retry budgets or single-layer retry ownership, retries multiply exponentially across call depth: 3 (Gateway→A) × 3 (A→B) × 3 (B→DB) = 3^3 = 27 database attempts per user request, turning a brief brownout into a 27x load spike.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-retries-timeouts-idempotency-t1" data-type="tradeoff" data-slug="retries-timeouts-idempotency" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Idempotency Key Storage &amp; Concurrency Locking</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A payment capture API receives duplicate POST requests with the same `Idempotency-Key` 15 ms apart when a mobile client retries on a flaky cellular handoff while the first request is still in flight.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should the server coordinate concurrent requests sharing an `Idempotency-Key`, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-retries-timeouts-idempotency-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-retries-timeouts-idempotency-t1" value="0" />
+                  <span>Write the idempotency record only after the downstream payment gateway returns HTTP 200</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-retries-timeouts-idempotency-t1" value="1" />
+                  <span>Atomically insert the `Idempotency-Key` with state `IN_PROGRESS` (and a lease timestamp) before calling the gateway, returning `409 Conflict` or awaiting completion for concurrent duplicates</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-retries-timeouts-idempotency-t1" value="2" />
+                  <span>Hash the request timestamp into the idempotency key so both requests execute independently</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-retries-timeouts-idempotency-t1" value="0" />
+                  <span>Post-execution writes prevent concurrent in-flight duplicates from racing to the payment gateway</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-retries-timeouts-idempotency-t1" value="1" />
+                  <span>Atomic pre-execution reservation serializes concurrent retries so the side effect is triggered at most once</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-retries-timeouts-idempotency-t1" value="2" />
+                  <span>Including the client timestamp guarantees duplicate retries are deduplicated</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">What happens if the second request arrives before the first request finishes calling Stripe/Visa?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="retries-timeouts-idempotency-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-retries-timeouts-idempotency-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">If the idempotency key is only recorded after execution completes, two concurrent retries arriving 15 ms apart will both pass the lookup check and double-charge the card. Atomically claiming the key as `IN_PROGRESS` before invoking external side effects closes the race window.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-retries-timeouts-idempotency-n1" data-type="numeric" data-slug="retries-timeouts-idempotency">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Cascading Retry Amplification Across 3 Tiers</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> An API Gateway calls Service A, which calls Service B, which queries a Database (3 sequential hops). Each hop is configured with 1 initial attempt plus 2 retries (3 total attempts per failed call) and no retry budget.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> When the database experiences a transient brownout, how many database query attempts are triggered by a single incoming user request?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Multiply total attempts per tier across the 3 tiers: 3 × 3 × 3.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-retries-timeouts-idempotency-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-retries-timeouts-idempotency-n1" placeholder="Enter numeric estimate (attempts)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">attempts</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="retries-timeouts-idempotency-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="retries-timeouts-idempotency" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-retries-timeouts-idempotency-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Without per-tier retry budgets or single-layer retry ownership, retries multiply exponentially across call depth: 3 (Gateway→A) × 3 (A→B) × 3 (B→DB) = 3^3 = 27 database attempts per user request, turning a brief brownout into a 27x load spike.</div>
-        </div>
-      </div>
-    
         <div class="simulator-card" id="sim-retry">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Retry Strategy & Jitter</div>
@@ -1200,68 +1318,43 @@ flowchart TD
           </div>
         </div>
       
-      <div class="exercise-box quiz-card" id="quiz-retries-timeouts-idempotency-t1" data-type="tradeoff" data-slug="retries-timeouts-idempotency">
+      <div class="exercise-box" id="exercise-retries-timeouts-idempotency" data-slug="retries-timeouts-idempotency">
         <div class="exercise-box__header">
           <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Idempotency Key Storage &amp; Concurrency Locking</span>
+            <span>Architecture Challenge: Thundering Herd &amp; Retry Storm Mitigation</span>
           </div>
-          <span class="exercise-box__difficulty">staff</span>
+          <span class="exercise-box__difficulty">Staff Level</span>
         </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A payment capture API receives duplicate POST requests with the same `Idempotency-Key` 15 ms apart when a mobile client retries on a flaky cellular handoff while the first request is still in flight.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How should the server coordinate concurrent requests sharing an `Idempotency-Key`, and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> What happens if the second request arrives before the first request finishes calling Stripe/Visa?</div>
+        <div class="exercise-box__scenario"><strong>Context / Scenario:</strong> Failure mode: Cascading retry storm saturating backend connection pools.</div>
+        <div class="exercise-box__prompt"><strong>Problem:</strong> A payment microservice experiences an intermittent 2-second network blip. 10,000 client requests immediately retry every 500ms. The backend crashes completely upon recovery. What pattern fixes this?</div>
         
-        <div class="quiz-options exercise-options" id="quiz-options-retries-timeouts-idempotency-t1" style="margin-top: 15px;">
+        <div class="exercise-options">
           
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-retries-timeouts-idempotency-t1" value="0" />
-               <span>Write the idempotency record only after the downstream payment gateway returns HTTP 200</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-retries-timeouts-idempotency-t1" value="1" />
-               <span>Atomically insert the `Idempotency-Key` with state `IN_PROGRESS` (and a lease timestamp) before calling the gateway, returning `409 Conflict` or awaiting completion for concurrent duplicates</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-retries-timeouts-idempotency-t1" value="2" />
-               <span>Hash the request timestamp into the idempotency key so both requests execute independently</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-retries-timeouts-idempotency-t1" value="0" />
-               <span>Post-execution writes prevent concurrent in-flight duplicates from racing to the payment gateway</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-retries-timeouts-idempotency-t1" value="1" />
-               <span>Atomic pre-execution reservation serializes concurrent retries so the side effect is triggered at most once</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-retries-timeouts-idempotency-t1" value="2" />
-               <span>Including the client timestamp guarantees duplicate retries are deduplicated</span>
-             </label>
-           
-         </div>
-       
+            <div class="exercise-option" data-action="exercise-option" data-idx="0">
+              <span class="exercise-option__bullet">A</span>
+              <span class="exercise-option__text">Implement Exponential Backoff with Jitter (randomized delay) and strict circuit breakers.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="1">
+              <span class="exercise-option__bullet">B</span>
+              <span class="exercise-option__text">Disable all timeouts so client requests wait indefinitely.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="2">
+              <span class="exercise-option__bullet">C</span>
+              <span class="exercise-option__text">Switch all HTTP calls to synchronous REST polling.</span>
+            </div>
+          
+            <div class="exercise-option" data-action="exercise-option" data-idx="3">
+              <span class="exercise-option__bullet">D</span>
+              <span class="exercise-option__text">Increase client retry attempts from 3 to 10 to ensure delivery.</span>
+            </div>
+          
         </div>
 
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="retries-timeouts-idempotency-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="retries-timeouts-idempotency" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-retries-timeouts-idempotency-t1" style="display: none;">
+        <div class="exercise-feedback" id="feedback-retries-timeouts-idempotency">
           <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> If the idempotency key is only recorded after execution completes, two concurrent retries arriving 15 ms apart will both pass the lookup check and double-charge the card. Atomically claiming the key as `IN_PROGRESS` before invoking external side effects closes the race window.</div>
+          <div class="feedback-exp" style="margin-top:6px;"><strong>Deep Dive Rationale:</strong> Exponential backoff (wait = base × 2^attempt) spreads out retries. Adding random jitter breaks up synchronized client retry spikes (&#039;thundering herd&#039;), allowing the recovering service to clear its queue.</div>
         </div>
       </div>
     
@@ -1421,15 +1514,15 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

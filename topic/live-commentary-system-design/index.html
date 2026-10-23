@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -980,44 +980,55 @@
     E3 --> V3["Local viewers"]
 </div><h2>Controlling the firehose</h2><table><thead><tr><th>Technique</th><th>What it does</th><th>Trade-off</th></tr></thead><tbody><tr><td>Sampling</td><td>Randomly keep a fraction of messages per viewer</td><td>Viewers see different subsets; fine for chat, not for scores</td></tr><tr><td>Prioritization</td><td>Always keep friends, hosts, moderators, paid highlights</td><td>Needs per-viewer context at the edge</td></tr><tr><td>Batching</td><td>Send one frame every 100 to 500 ms</td><td>Adds up to one batch interval of latency</td></tr><tr><td>Slow mode and rate limits</td><td>Limit each commenter to one message every N seconds</td><td>Product friction, but reduces spam and load at the source</td></tr><tr><td>Coalescing reactions</td><td>Send counts per emoji per interval, not individual taps</td><td>Loses per-user detail, which viewers do not need</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>LinkedIn</strong> keeps an in-memory subscription table mapping each live video to the front-end servers with viewers, and a dispatcher publishes each event only to those servers, which then fan out to their connections.</li><li><strong>Twitch</strong> chat runs over WebSockets with edge servers holding viewer connections and a separate distribution layer between them.</li><li>If you use Redis for the pub/sub layer, note that classic Redis Cluster PUBLISH is broadcast to every node; Redis 7 sharded pub/sub (SPUBLISH) keeps a channel's traffic on its own shard.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="live-commentary-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="live-commentary-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Database off the live path" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Edge server frame rate" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Redis Cluster pub/sub trap" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Live Event Broadcast Egress Bandwidth" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Per-Comment Push vs Windowed Reservoir Sampling &amp; Edge Coalescing" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-live-commentary-system-design-c1" data-type="mcq" data-slug="live-commentary-system-design" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Database off the live path</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Designing Live Commentary (Twitch Chat)</div>
+        <div class="check-slider__section">Section: Designing Live Commentary (Twitch Chat)</div>
+        
         <p class="check-slider__prompt">In the lesson&#039;s live commentary design, how are chat messages persisted for later VOD replay without slowing the live experience?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c1" value="0" />
-             <span>Each WebSocket server writes messages to Cassandra synchronously before pushing them to viewers</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c1" value="1" />
-             <span>Messages are also sent to Kafka, and background consumers batch-write them to cold storage</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c1" value="2" />
-             <span>The pub/sub layer keeps a full history per channel that replay later reads back</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c1" value="3" />
-             <span>Clients upload their received messages at the end of the stream for server-side merging</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-live-commentary-system-design-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c1" value="0" />
+            <span>Each WebSocket server writes messages to Cassandra synchronously before pushing them to viewers</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c1" value="1" />
+            <span>Messages are also sent to Kafka, and background consumers batch-write them to cold storage</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c1" value="2" />
+            <span>The pub/sub layer keeps a full history per channel that replay later reads back</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c1" value="3" />
+            <span>Clients upload their received messages at the end of the stream for server-side merging</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="live-commentary-system-design-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="live-commentary-system-design-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-live-commentary-system-design-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1026,35 +1037,39 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-live-commentary-system-design-c2" data-type="mcq" data-slug="live-commentary-system-design" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Edge server frame rate</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: 500,000 viewers, 2,000 messages per second</div>
+        <div class="check-slider__section">Section: Worked example: 500,000 viewers, 2,000 messages per second</div>
+        
         <p class="check-slider__prompt">A stream has 1,000,000 viewers spread over 400 edge servers. Each edge flushes a batched frame to each viewer every 250 ms. How many frames per second does each edge server send?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c2" value="0" />
-             <span>About 2,500 frames per second</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c2" value="1" />
-             <span>About 4,000 frames per second</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c2" value="2" />
-             <span>About 10,000 frames per second</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c2" value="3" />
-             <span>About 40,000 frames per second</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-live-commentary-system-design-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c2" value="0" />
+            <span>About 2,500 frames per second</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c2" value="1" />
+            <span>About 4,000 frames per second</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c2" value="2" />
+            <span>About 10,000 frames per second</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c2" value="3" />
+            <span>About 40,000 frames per second</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="live-commentary-system-design-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="live-commentary-system-design-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-live-commentary-system-design-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1063,142 +1078,180 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-live-commentary-system-design-c3" data-type="mcq" data-slug="live-commentary-system-design" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Redis Cluster pub/sub trap</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: How real systems do it</div>
+        <div class="check-slider__section">Section: How real systems do it</div>
+        
         <p class="check-slider__prompt">You build the live pub/sub layer on a 30-node Redis Cluster using classic PUBLISH. As more hot streams go live, every node&#039;s network usage climbs, not just the nodes serving those streams. What explains it and what does the lesson suggest?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c3" value="0" />
-             <span>Classic cluster PUBLISH is broadcast to every node; use Redis 7 sharded pub/sub (SPUBLISH) so a channel stays on its shard</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c3" value="1" />
-             <span>Subscribers are unevenly hashed across nodes; rebalance hash slots so each node owns an equal share of channels</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c3" value="2" />
-             <span>Too many edge servers subscribe per channel; move per-viewer fan-out back to the central pub/sub layer</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-live-commentary-system-design-c3" value="3" />
-             <span>Messages are persisted synchronously by each node; move persistence to a Kafka consumer path</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-live-commentary-system-design-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c3" value="0" />
+            <span>Classic cluster PUBLISH is broadcast to every node; use Redis 7 sharded pub/sub (SPUBLISH) so a channel stays on its shard</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c3" value="1" />
+            <span>Subscribers are unevenly hashed across nodes; rebalance hash slots so each node owns an equal share of channels</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c3" value="2" />
+            <span>Too many edge servers subscribe per channel; move per-viewer fan-out back to the central pub/sub layer</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-live-commentary-system-design-c3" value="3" />
+            <span>Messages are persisted synchronously by each node; move persistence to a Kafka consumer path</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="live-commentary-system-design-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="live-commentary-system-design-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-live-commentary-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">In classic Redis Cluster a PUBLISH is propagated to all nodes, so total traffic grows with nodes times messages; sharded pub/sub keeps each channel&#039;s traffic on its own shard. Rebalancing hash slots does not help because classic pub/sub channels are not confined to slots in the first place.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-live-commentary-system-design-n1" data-type="numeric" data-slug="live-commentary-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Live Event Broadcast Egress Bandwidth</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">During a World Cup final, 2 million concurrent viewers watch a live commentary stream. You batch and broadcast a 500-byte (0.5 KB) compressed commentary delta frame once per second to every connected viewer.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the total outbound payload bandwidth across the edge broadcast tier in GB/s (using 1 GB = 1,000 MB = 1,000,000 KB)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-live-commentary-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-live-commentary-system-design-n1"
+              aria-label="Numeric estimate in GB/s"
+              placeholder="Enter numeric estimate (GB/s)..."
+            />
+            <span class="quiz-unit-badge">GB/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">2,000,000 viewers × 0.5 KB/s = 1,000,000 KB/s = 1 GB/s.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="live-commentary-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-live-commentary-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">2,000,000 viewers × 0.5 KB/s = 1,000,000 KB/s = 1 GB/s (8 Gbps) of pure payload egress. Notice that if you sent 20 unbatched comments/sec individually with frame overhead, egress and packet-per-second rates would jump 10–20x.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-live-commentary-system-design-t1" data-type="tradeoff" data-slug="live-commentary-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Per-Comment Push vs Windowed Reservoir Sampling &amp; Edge Coalescing</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">When a goal is scored in a live match with 2 million concurrent viewers, 50,000 viewers submit a comment in the same second. Pushing all 50,000 comments/sec to all 2 million viewers would require 100 billion message deliveries/sec and render the client UI unreadable.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should a Staff engineer design the live comment ingestion and broadcast pipeline for mega-events?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-live-commentary-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-live-commentary-system-design-t1" value="0" />
+                  <span>Broadcast all 50,000 comments/sec to all 2 million clients and let the browser DOM sort and render them at 60 fps</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-live-commentary-system-design-t1" value="1" />
+                  <span>Echo the author&#039;s own comment locally immediately (optimistic UI), sample/rank incoming comments in 250–500 ms micro-batches (e.g., reservoir/quality sampling to ~5–10 comments/sec), and fan out via a hierarchical pub/sub tree or short-TTL edge CDN micro-cache</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-live-commentary-system-design-t1" value="2" />
+                  <span>Lock the comment box globally so only 1 user per minute can submit a comment</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-live-commentary-system-design-t1" value="0" />
+                  <span>Human eyes can read 50,000 scrolling chat messages per second and mobile browsers never drop frames rendering 50,000 DOM nodes/sec</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-live-commentary-system-design-t1" value="1" />
+                  <span>Humans can only read ~5–10 messages/sec; optimistic local echo satisfies the sender&#039;s Read-Your-Own-Writes expectation while micro-batch sampling caps broadcast egress by 5,000x</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-live-commentary-system-design-t1" value="2" />
+                  <span>Blocking 99.999% of users from commenting meets the product engagement goal</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Can a human read 50,000 messages/sec? What does the sender of a comment need to see vs everyone else?</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="live-commentary-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-live-commentary-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">In mega-event live chat (YouTube Live / Twitch / Hotstar), no human can read 50,000 messages/sec. Echoing the sender&#039;s own message locally preserves instant feedback, while window-sampling the global firehose down to ~10 messages/sec caps egress bandwidth and client CPU.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-live-commentary-system-design-n1" data-type="numeric" data-slug="live-commentary-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Live Event Broadcast Egress Bandwidth</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> During a World Cup final, 2 million concurrent viewers watch a live commentary stream. You batch and broadcast a 500-byte (0.5 KB) compressed commentary delta frame once per second to every connected viewer.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> What is the total outbound payload bandwidth across the edge broadcast tier in GB/s (using 1 GB = 1,000 MB = 1,000,000 KB)?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> 2,000,000 viewers × 0.5 KB/s = 1,000,000 KB/s = 1 GB/s.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-live-commentary-system-design-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-live-commentary-system-design-n1" placeholder="Enter numeric estimate (GB/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">GB/s</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="live-commentary-system-design-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="live-commentary-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-live-commentary-system-design-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 2,000,000 viewers × 0.5 KB/s = 1,000,000 KB/s = 1 GB/s (8 Gbps) of pure payload egress. Notice that if you sent 20 unbatched comments/sec individually with frame overhead, egress and packet-per-second rates would jump 10–20x.</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-live-commentary-system-design-t1" data-type="tradeoff" data-slug="live-commentary-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Per-Comment Push vs Windowed Reservoir Sampling &amp; Edge Coalescing</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> When a goal is scored in a live match with 2 million concurrent viewers, 50,000 viewers submit a comment in the same second. Pushing all 50,000 comments/sec to all 2 million viewers would require 100 billion message deliveries/sec and render the client UI unreadable.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How should a Staff engineer design the live comment ingestion and broadcast pipeline for mega-events?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Can a human read 50,000 messages/sec? What does the sender of a comment need to see vs everyone else?</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-live-commentary-system-design-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-live-commentary-system-design-t1" value="0" />
-               <span>Broadcast all 50,000 comments/sec to all 2 million clients and let the browser DOM sort and render them at 60 fps</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-live-commentary-system-design-t1" value="1" />
-               <span>Echo the author&#039;s own comment locally immediately (optimistic UI), sample/rank incoming comments in 250–500 ms micro-batches (e.g., reservoir/quality sampling to ~5–10 comments/sec), and fan out via a hierarchical pub/sub tree or short-TTL edge CDN micro-cache</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-live-commentary-system-design-t1" value="2" />
-               <span>Lock the comment box globally so only 1 user per minute can submit a comment</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-live-commentary-system-design-t1" value="0" />
-               <span>Human eyes can read 50,000 scrolling chat messages per second and mobile browsers never drop frames rendering 50,000 DOM nodes/sec</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-live-commentary-system-design-t1" value="1" />
-               <span>Humans can only read ~5–10 messages/sec; optimistic local echo satisfies the sender&#039;s Read-Your-Own-Writes expectation while micro-batch sampling caps broadcast egress by 5,000x</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-live-commentary-system-design-t1" value="2" />
-               <span>Blocking 99.999% of users from commenting meets the product engagement goal</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="live-commentary-system-design-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="live-commentary-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-live-commentary-system-design-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> In mega-event live chat (YouTube Live / Twitch / Hotstar), no human can read 50,000 messages/sec. Echoing the sender&#039;s own message locally preserves instant feedback, while window-sampling the global firehose down to ~10 messages/sec caps egress bandwidth and client CPU.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1307,14 +1360,14 @@
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

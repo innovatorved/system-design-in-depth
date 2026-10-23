@@ -217,7 +217,7 @@ describe('Tier 5: All-in-One Ecosystem Hubs (Roadmap, Challenges, Dashboard, San
       assert.ok(sandboxCheck.activeNodes >= 5, 'URL query ?blueprint=uber-geo-dispatch should auto-load blueprint nodes');
       assert.equal(sandboxCheck.hasRubricAudit, true, 'Sandbox inspector should render Architecture Rubric Audit');
 
-      // 4. Verify Lesson page renders End-of-Lesson Numeric/Tradeoff Drills & Cross-links
+      // 4. Verify Lesson page renders Cross-links & Unified Check-Slider (Concept Check + Napkin Math + Trade-Off in one drawer)
       await page.goto(`${server.baseUrl}/topic/circuit-breakers-and-timeouts/`, { waitUntil: 'networkidle2' });
       const lessonCheck = await page.evaluate(() => ({
         hasBuildCard: !!document.querySelector('.lesson-builds'),
@@ -226,6 +226,28 @@ describe('Tier 5: All-in-One Ecosystem Hubs (Roadmap, Challenges, Dashboard, San
       }));
       assert.equal(lessonCheck.hasBuildCard, true, 'circuit-breakers-and-timeouts should link to Circuit Breaker Build Lab');
       assert.equal(lessonCheck.hasChallengeCard, true, 'circuit-breakers-and-timeouts should link to related Incident Challenges');
+
+      await page.goto(`${server.baseUrl}/topic/requirements-clarification/`, { waitUntil: 'networkidle2' });
+      await page.waitForSelector('.check-slider', { timeout: 5000 });
+      const sliderCheck = await page.evaluate(() => ({
+        sliderCount: document.querySelectorAll('.check-slider').length,
+        slideCount: document.querySelectorAll('.check-slider__slide').length,
+        hasNumericSlide: !!document.querySelector('.check-slider__slide[data-type="numeric"]'),
+        hasTradeoffSlide: !!document.querySelector('.check-slider__slide[data-type="tradeoff"]'),
+        hasModeTabs: document.querySelectorAll('.check-slider__tab').length
+      }));
+      assert.equal(sliderCheck.sliderCount, 1, 'Lesson should render a single unified .check-slider drawer');
+      assert.equal(sliderCheck.slideCount, 5, 'Unified .check-slider should contain 3 concept MCQs + 1 Napkin Math + 1 Trade-Off slide');
+      assert.equal(sliderCheck.hasNumericSlide, true, 'Unified .check-slider should include numeric Napkin Math slide');
+      assert.equal(sliderCheck.hasTradeoffSlide, true, 'Unified .check-slider should include tradeoff Staff Matrix slide');
+      assert.equal(sliderCheck.hasModeTabs, 3, 'Header should render 3 category jump tabs (Concept, Napkin Math, Trade-Off)');
+
+      // Jump directly to Napkin Math slide via header tab and submit estimate
+      await page.click('.check-slider__tab[data-tab-type="numeric"]');
+      await page.type('.check-slider__slide[data-type="numeric"] .quiz-number-input', '20');
+      await page.click('.check-slider__slide[data-type="numeric"] .quiz-submit-btn');
+      const numericFeedback = await page.$eval('.check-slider__slide[data-type="numeric"] .check-slider__feedback', el => el.textContent);
+      assert.ok(numericFeedback.includes('Correct!'), 'Submitting 20 GB/day in Napkin Math slide should grade as Correct');
     } finally {
       await page.close();
     }

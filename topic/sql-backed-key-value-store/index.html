@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -1000,40 +1000,45 @@ WHERE key IN (
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
           <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: CAS affected zero rows" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Sweeper is not correctness" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Sizing the heap" aria-label="Go to question 3"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-sql-backed-key-value-store-c1" data-type="mcq" data-slug="sql-backed-key-value-store" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">CAS affected zero rows</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Atomic Mutations: Compare-and-Swap (CAS)</div>
+        <div class="check-slider__section">Section: Atomic Mutations: Compare-and-Swap (CAS)</div>
+        
         <p class="check-slider__prompt">A client read feature_flags at version 4, then ran UPDATE kv_store SET value = ..., version = version + 1 WHERE key = &#039;feature_flags&#039; AND version = 4. It reports 0 rows updated. What does that mean?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c1" value="0" />
-             <span>The key has expired, so the sweeper must run before any update can succeed</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c1" value="1" />
-             <span>Another writer changed the row after the read; re-read the new version and retry</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c1" value="2" />
-             <span>The row lock timed out, so resending the same statement should now succeed</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c1" value="3" />
-             <span>The update succeeded, but PostgreSQL only counts rows once the transaction commits</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-sql-backed-key-value-store-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c1" value="0" />
+            <span>The key has expired, so the sweeper must run before any update can succeed</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c1" value="1" />
+            <span>Another writer changed the row after the read; re-read the new version and retry</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c1" value="2" />
+            <span>The row lock timed out, so resending the same statement should now succeed</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c1" value="3" />
+            <span>The update succeeded, but PostgreSQL only counts rows once the transaction commits</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="sql-backed-key-value-store-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="sql-backed-key-value-store-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-sql-backed-key-value-store-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1042,35 +1047,39 @@ WHERE key IN (
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-sql-backed-key-value-store-c2" data-type="mcq" data-slug="sql-backed-key-value-store" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Sweeper is not correctness</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Background Expiration Sweeper</div>
+        <div class="check-slider__section">Section: Background Expiration Sweeper</div>
+        
         <p class="check-slider__prompt">Session reads use only WHERE key = ?, and a reaper deletes expired rows every five minutes in batches of 1,000. During a traffic spike, the reaper falls an hour behind. What do users see?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c2" value="0" />
-             <span>Nothing, because the partial index on expires_at already hides expired rows</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c2" value="1" />
-             <span>Expired sessions keep working until reaped; reads must filter on expires_at themselves</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c2" value="2" />
-             <span>Only a larger table, since expiry is enforced when a value is written, not when it is read</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c2" value="3" />
-             <span>Reads fail with an error, since PostgreSQL rejects lookups of rows past their expires_at</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-sql-backed-key-value-store-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c2" value="0" />
+            <span>Nothing, because the partial index on expires_at already hides expired rows</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c2" value="1" />
+            <span>Expired sessions keep working until reaped; reads must filter on expires_at themselves</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c2" value="2" />
+            <span>Only a larger table, since expiry is enforced when a value is written, not when it is read</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c2" value="3" />
+            <span>Reads fail with an error, since PostgreSQL rejects lookups of rows past their expires_at</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="sql-backed-key-value-store-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="sql-backed-key-value-store-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-sql-backed-key-value-store-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1079,35 +1088,39 @@ WHERE key IN (
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-sql-backed-key-value-store-c3" data-type="mcq" data-slug="sql-backed-key-value-store" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Sizing the heap</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: sizing a Postgres-backed config and session store</div>
+        <div class="check-slider__section">Section: Worked example: sizing a Postgres-backed config and session store</div>
+        
         <p class="check-slider__prompt">Using the lesson&#039;s numbers (about 500 bytes per row and about 14 rows per 8 KB page at fillfactor 90), roughly how large is the heap for 30 million session keys?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c3" value="0" />
-             <span>About 1.7 GB</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c3" value="1" />
-             <span>About 15 GB</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c3" value="2" />
-             <span>About 17 GB</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-sql-backed-key-value-store-c3" value="3" />
-             <span>About 170 GB</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-sql-backed-key-value-store-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c3" value="0" />
+            <span>About 1.7 GB</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c3" value="1" />
+            <span>About 15 GB</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c3" value="2" />
+            <span>About 17 GB</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-sql-backed-key-value-store-c3" value="3" />
+            <span>About 170 GB</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="sql-backed-key-value-store-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="sql-backed-key-value-store-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-sql-backed-key-value-store-c3" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1116,7 +1129,7 @@ WHERE key IN (
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
         <div class="takeaways">
@@ -1227,14 +1240,14 @@ WHERE key IN (
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

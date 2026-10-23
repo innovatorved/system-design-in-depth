@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -1019,44 +1019,55 @@ flowchart TD
 <!-- enriched -->
 <h2>Worked example: what each layer buys you</h2><p>Take a product page API serving 50,000 requests per second. The origin database can comfortably handle about 2,000 queries per second. Suppose the browser cache absorbs 30 percent of requests through revalidation or fresh hits, the CDN absorbs 60 percent of what remains, and an in-process L1 plus Redis L2 absorb 95 percent of what reaches the app tier.</p><ul><li>After the browser: 50,000 x 0.70 = 35,000 rps leave devices.</li><li>After the CDN: 35,000 x 0.40 = 14,000 rps reach the origin.</li><li>After L1 and L2: 14,000 x 0.05 = 700 rps hit the database, about a third of its capacity.</li></ul><p>Now let the CDN hit ratio fall from 60 to 30 percent because someone added a per-user query string. Origin traffic becomes 35,000 x 0.70 = 24,500 rps and database load becomes about 1,225 qps. That is still survivable, but the headroom is gone. Hit ratios multiply, so a regression in one layer shows up downstream.</p><h2>Layer trade-offs</h2><table><thead><tr><th>Layer</th><th>Typical latency saved</th><th>Invalidation control</th><th>Main risk</th></tr></thead><tbody><tr><td>Browser / app</td><td>Full round trip</td><td>Weak: only TTL, validators, or versioned URLs</td><td>Users stuck on stale assets</td></tr><tr><td>CDN edge</td><td>Tens of ms of WAN</td><td>Medium: purge APIs, surrogate keys</td><td>Leaking personalised content, purge lag</td></tr><tr><td>Reverse proxy</td><td>App CPU</td><td>Good: you own it</td><td>Cache key mistakes, header handling</td></tr><tr><td>In-process L1</td><td>Network hop plus deserialisation</td><td>Poor across a fleet</td><td>Inconsistent copies per instance, heap pressure</td></tr><tr><td>Distributed L2</td><td>Database query cost</td><td>Good: single logical copy</td><td>Hot keys, outage causes miss storm</td></tr><tr><td>DB buffer pool</td><td>Disk I/O</td><td>Automatic</td><td>Evicted by large scans</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Static assets:</strong> content-hashed filenames plus <code>Cache-Control: max-age=31536000, immutable</code>. You never invalidate. You ship a new URL.</li><li><strong>Facebook</strong> puts memcache between web servers and MySQL and uses McSqueal, which tails MySQL commits, to broadcast deletes to every region.</li><li><strong>Fastly and Cloudflare</strong> support tag-based purge (surrogate keys, cache tags), so one product update can purge every page that shows the product.</li></ul><h2>Failure modes</h2><ul><li>A deploy changes an API response shape, but browsers keep the old cached JSON. Version your API responses or keep TTLs short.</li><li>An L1 without a size bound grows until garbage-collection pauses appear. Always cap L1 caches by entries or bytes.</li></ul>
 </div></div></article>
-      <section class="check-slider" data-slug="caching-layers" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="caching-layers" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Immutable vs ETag" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Hit ratios multiply" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Flip-flopping prices" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Origin Database QPS Reduction via Multi-Tier Cache" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: L1 In-Process Cache Invalidation vs Redis Hot-Key Bottleneck" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-caching-layers-c1" data-type="mcq" data-slug="caching-layers" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Immutable vs ETag</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Under the Hood: Layer Mechanics &amp; Headers</div>
+        <div class="check-slider__section">Section: Under the Hood: Layer Mechanics &amp; Headers</div>
+        
         <p class="check-slider__prompt">A content-hashed file app.3f9c.js is served with Cache-Control: public, max-age=31536000, immutable. A user reloads the page a week later. What does the browser do for that file?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c1" value="0" />
-             <span>Sends If-None-Match with the ETag and receives a 304 Not Modified with no body</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c1" value="1" />
-             <span>Downloads the file again because a page reload bypasses max-age</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c1" value="2" />
-             <span>Serves it from its local cache without making any network request</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c1" value="3" />
-             <span>Asks the CDN edge, which answers from its own cache</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-caching-layers-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c1" value="0" />
+            <span>Sends If-None-Match with the ETag and receives a 304 Not Modified with no body</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c1" value="1" />
+            <span>Downloads the file again because a page reload bypasses max-age</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c1" value="2" />
+            <span>Serves it from its local cache without making any network request</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c1" value="3" />
+            <span>Asks the CDN edge, which answers from its own cache</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="caching-layers-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="caching-layers-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-caching-layers-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1065,35 +1076,39 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-caching-layers-c2" data-type="mcq" data-slug="caching-layers" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Hit ratios multiply</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: what each layer buys you</div>
+        <div class="check-slider__section">Section: Worked example: what each layer buys you</div>
+        
         <p class="check-slider__prompt">A product API gets 50,000 rps. The browser cache absorbs 30 percent, the CDN absorbs a share of the rest, and L1 plus Redis absorb 95 percent of what reaches the app. If a bad query-string change drops the CDN hit ratio to 20 percent, roughly how many qps reach the database?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c2" value="0" />
-             <span>About 700 qps, unchanged, because L1 and Redis absorb the difference</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c2" value="1" />
-             <span>About 1,400 qps</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c2" value="2" />
-             <span>About 2,800 qps</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c2" value="3" />
-             <span>About 10,000 qps</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-caching-layers-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c2" value="0" />
+            <span>About 700 qps, unchanged, because L1 and Redis absorb the difference</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c2" value="1" />
+            <span>About 1,400 qps</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c2" value="2" />
+            <span>About 2,800 qps</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c2" value="3" />
+            <span>About 10,000 qps</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="caching-layers-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="caching-layers-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-caching-layers-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1102,142 +1117,180 @@ flowchart TD
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-caching-layers-c3" data-type="mcq" data-slug="caching-layers" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Flip-flopping prices</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Layer trade-offs</div>
+        <div class="check-slider__section">Section: Layer trade-offs</div>
+        
         <p class="check-slider__prompt">After an admin updates a price, the same user sees the new price, then the old one, then the new one again on successive refreshes for several minutes. The service runs 50 instances, each with an in-process L1 in front of Redis. What is the most likely cause and fix?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c3" value="0" />
-             <span>Redis replication lag; read from the Redis primary only</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c3" value="1" />
-             <span>The browser cache is serving stale JSON; add Cache-Control: no-store</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c3" value="2" />
-             <span>CDN purge lag; switch to tag-based purging</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-caching-layers-c3" value="3" />
-             <span>Each instance&#039;s L1 holds its own copy and expires independently; broadcast invalidations via pub/sub or shorten the L1 TTL</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-caching-layers-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c3" value="0" />
+            <span>Redis replication lag; read from the Redis primary only</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c3" value="1" />
+            <span>The browser cache is serving stale JSON; add Cache-Control: no-store</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c3" value="2" />
+            <span>CDN purge lag; switch to tag-based purging</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-caching-layers-c3" value="3" />
+            <span>Each instance&#039;s L1 holds its own copy and expires independently; broadcast invalidations via pub/sub or shorten the L1 TTL</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="caching-layers-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="caching-layers-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-caching-layers-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">Successive requests hit different instances behind the load balancer, and each L1 is an independent copy with poor fleet-wide invalidation control. Redis replication lag is usually milliseconds, and a stale browser cache would show the old price consistently rather than alternating.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-caching-layers-n1" data-type="numeric" data-slug="caching-layers" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Origin Database QPS Reduction via Multi-Tier Cache</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A product catalog service receives 100,000 read req/s. Requests first check an L1 in-process cache (50% hit rate), and L1 misses check an L2 distributed Redis cluster (90% hit rate of the traffic reaching L2).</p>
+          </div>
+        
+        <p class="check-slider__prompt">How many read requests per second (in req/s) miss both cache tiers and hit the origin database?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-caching-layers-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-caching-layers-n1"
+              aria-label="Numeric estimate in req/s"
+              placeholder="Enter numeric estimate (req/s)..."
+            />
+            <span class="quiz-unit-badge">req/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">L1 misses = 100,000 × (1 - 0.50) = 50,000 req/s. L2 misses = 50,000 × (1 - 0.90) = 5,000 req/s.</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="caching-layers-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-caching-layers-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Of 100,000 req/s, 50% (50,000 req/s) miss L1 and reach L2 Redis. Of those 50,000 req/s, 10% (5,000 req/s) miss L2 and hit the database—an effective combined hit rate of 95%.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-caching-layers-t1" data-type="tradeoff" data-slug="caching-layers" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: L1 In-Process Cache Invalidation vs Redis Hot-Key Bottleneck</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A celebrity post receives 250,000 reads/sec, saturating the single Redis shard holding that key (`100% CPU` on one Redis node), even though the overall Redis cluster is at 15% CPU.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which caching architecture resolves the single-shard hot-key bottleneck while keeping staleness bounded, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-caching-layers-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-caching-layers-t1" value="0" />
+                  <span>Double the number of shards in the Redis cluster using consistent hashing</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-caching-layers-t1" value="1" />
+                  <span>Add a tiny L1 in-memory cache (or key replication across N sub-keys `key#1..N`) with a 1–2 second TTL + Redis client-side invalidation broadcasts for detected hot keys</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-caching-layers-t1" value="2" />
+                  <span>Bypass Redis for hot keys and query the primary SQL database directly</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-caching-layers-t1" value="0" />
+                  <span>Adding more consistent-hashing shards splits a single key across multiple nodes automatically</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-caching-layers-t1" value="1" />
+                  <span>Asingle key always hashes to one shard; absorbing hot-key reads in stateless app-tier L1 memory (with short TTL / pub-sub invalidation) eliminates the network and single-thread Redis bottleneck</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-caching-layers-t1" value="2" />
+                  <span>Primary SQL databases handle 250,000 point reads/sec more cheaply than in-memory caches</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Consistent hashing maps a single key to a single shard no matter how many shards exist.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="caching-layers-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-caching-layers-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Adding shards to Redis does not split a single hot key. Absorbing hot keys in an application-local L1 cache with a 1-2s micro-TTL (or salting the key across N replicas) spreads the 250k req/s across all stateless app servers.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-caching-layers-n1" data-type="numeric" data-slug="caching-layers">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Origin Database QPS Reduction via Multi-Tier Cache</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A product catalog service receives 100,000 read req/s. Requests first check an L1 in-process cache (50% hit rate), and L1 misses check an L2 distributed Redis cluster (90% hit rate of the traffic reaching L2).</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How many read requests per second (in req/s) miss both cache tiers and hit the origin database?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> L1 misses = 100,000 × (1 - 0.50) = 50,000 req/s. L2 misses = 50,000 × (1 - 0.90) = 5,000 req/s.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-caching-layers-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-caching-layers-n1" placeholder="Enter numeric estimate (req/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">req/s</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="caching-layers-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="caching-layers" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-caching-layers-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Of 100,000 req/s, 50% (50,000 req/s) miss L1 and reach L2 Redis. Of those 50,000 req/s, 10% (5,000 req/s) miss L2 and hit the database—an effective combined hit rate of 95%.</div>
-        </div>
-      </div>
-    
-      <div class="exercise-box quiz-card" id="quiz-caching-layers-t1" data-type="tradeoff" data-slug="caching-layers">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: L1 In-Process Cache Invalidation vs Redis Hot-Key Bottleneck</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A celebrity post receives 250,000 reads/sec, saturating the single Redis shard holding that key (`100% CPU` on one Redis node), even though the overall Redis cluster is at 15% CPU.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which caching architecture resolves the single-shard hot-key bottleneck while keeping staleness bounded, and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Consistent hashing maps a single key to a single shard no matter how many shards exist.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-caching-layers-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-caching-layers-t1" value="0" />
-               <span>Double the number of shards in the Redis cluster using consistent hashing</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-caching-layers-t1" value="1" />
-               <span>Add a tiny L1 in-memory cache (or key replication across N sub-keys `key#1..N`) with a 1–2 second TTL + Redis client-side invalidation broadcasts for detected hot keys</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-caching-layers-t1" value="2" />
-               <span>Bypass Redis for hot keys and query the primary SQL database directly</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-caching-layers-t1" value="0" />
-               <span>Adding more consistent-hashing shards splits a single key across multiple nodes automatically</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-caching-layers-t1" value="1" />
-               <span>Asingle key always hashes to one shard; absorbing hot-key reads in stateless app-tier L1 memory (with short TTL / pub-sub invalidation) eliminates the network and single-thread Redis bottleneck</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-caching-layers-t1" value="2" />
-               <span>Primary SQL databases handle 250,000 point reads/sec more cheaply than in-memory caches</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="caching-layers-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="caching-layers" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-caching-layers-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Adding shards to Redis does not split a single hot key. Absorbing hot keys in an application-local L1 cache with a 1-2s micro-TTL (or salting the key across N replicas) spreads the 250k req/s across all stateless app servers.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1386,14 +1439,14 @@ flowchart TD
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -955,44 +955,55 @@
 <!-- enriched -->
 <h2>Worked example: sizing the fallback</h2><p>Traffic is 100,000 reads per second with a 99 percent hit ratio, so the database normally serves 1,000 qps. Load tests show it saturates at 4,000 qps, with p99 latency degrading above 3,000. If the cache disappears:</p><ul><li>Unprotected, the database receives 100,000 qps, 25 times its capacity. Connection pools fill, latency explodes, and requests for uncached data fail too.</li><li>With a fallback limiter of 2,500 qps spread across app servers (for example 25 qps each on 100 instances), the database stays healthy. The remaining 97,500 rps must be served from an in-process stale copy, served as a degraded response, or rejected quickly with 503 and Retry-After.</li><li>If a local L1 with a 60-second soft TTL covers 80 percent of keys, only about 20,000 rps need the database, and the limiter decides which 2,500 of those get through.</li></ul><h2>Options when the cache is down</h2><table><thead><tr><th>Strategy</th><th>Availability</th><th>Correctness</th><th>Cost</th></tr></thead><tbody><tr><td>Unlimited DB fallback</td><td>Collapses under load</td><td>Fresh while it lasts</td><td>None, until the outage</td></tr><tr><td>Rate-limited fallback plus fast reject</td><td>Partial</td><td>Fresh for admitted requests</td><td>Limiter and tuning</td></tr><tr><td>Serve stale from L1 within a hard TTL</td><td>High</td><td>Bounded staleness</td><td>Memory on every instance</td></tr><tr><td>Replicated cache across zones</td><td>High</td><td>Replication lag</td><td>Two to three times the cache cost</td></tr><tr><td>Gutter pool (Facebook)</td><td>High</td><td>Short TTLs limit staleness</td><td>A small spare cache pool</td></tr><tr><td>Static degraded response</td><td>Highest</td><td>Feature partially off</td><td>Product design effort</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Netflix EVCache</strong> writes to every availability zone and reads from the local zone. On a miss or timeout it reads from another zone before going to the source of truth.</li><li><strong>Facebook</strong> routes requests for a failed memcache host to a small Gutter pool with short TTLs instead of rehashing onto healthy hosts, which avoids a cascade.</li><li><strong>Circuit breaker around the cache client:</strong> after repeated timeouts, skip the cache immediately and go straight to the rate-limited fallback, rather than waiting on every request.</li></ul><h2>Recovery</h2><p>When the cache returns empty, the hit ratio climbs from 0 percent. Keep the fallback limiter on during warm-up. Optionally pre-warm the top N keys from access logs, and shift traffic back in steps (10, 25, 50, 100 percent).</p>
 </div></article>
-      <section class="check-slider" data-slug="cache-availability-and-database-fallback" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="cache-availability-and-database-fallback" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Soft vs hard TTL" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Setting the limiter" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Coming back empty" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Database Load Surge on Cache Cluster Outage" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Protecting the Origin Database During a Cold-Cache Restart" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-cache-availability-and-database-fallback-c1" data-type="mcq" data-slug="cache-availability-and-database-fallback" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Soft vs hard TTL</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Mechanics</div>
+        <div class="check-slider__section">Section: Mechanics</div>
+        
         <p class="check-slider__prompt">During a cache outage, app servers serve stale values from an in-process L1. In this design, what does the hard TTL represent?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c1" value="0" />
-             <span>The time after which a background refresh is triggered</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c1" value="1" />
-             <span>The product-defined limit beyond which stale data must no longer be served</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c1" value="2" />
-             <span>The timeout for each call to the remote cache</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c1" value="3" />
-             <span>The maximum time an entry can stay in memory before eviction for space</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-cache-availability-and-database-fallback-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c1" value="0" />
+            <span>The time after which a background refresh is triggered</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c1" value="1" />
+            <span>The product-defined limit beyond which stale data must no longer be served</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c1" value="2" />
+            <span>The timeout for each call to the remote cache</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c1" value="3" />
+            <span>The maximum time an entry can stay in memory before eviction for space</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cache-availability-and-database-fallback-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cache-availability-and-database-fallback-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-cache-availability-and-database-fallback-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1001,35 +1012,39 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-cache-availability-and-database-fallback-c2" data-type="mcq" data-slug="cache-availability-and-database-fallback" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Setting the limiter</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: sizing the fallback</div>
+        <div class="check-slider__section">Section: Worked example: sizing the fallback</div>
+        
         <p class="check-slider__prompt">A cache normally absorbs 99 percent of 80,000 reads/s. Load tests show the database&#039;s p99 degrades above 2,000 qps and it saturates at 3,000. There are 80 app instances. Which per-instance fallback limit fits the lesson&#039;s approach?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c2" value="0" />
-             <span>1,000 qps per instance, so every request can still reach the database</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c2" value="1" />
-             <span>40 qps per instance, matching the 3,200 qps the database can take in a burst</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c2" value="2" />
-             <span>No limit, but a 2-second timeout on database calls</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c2" value="3" />
-             <span>20 qps per instance, about 1,600 qps total, below the 2,000 qps knee</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-cache-availability-and-database-fallback-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c2" value="0" />
+            <span>1,000 qps per instance, so every request can still reach the database</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c2" value="1" />
+            <span>40 qps per instance, matching the 3,200 qps the database can take in a burst</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c2" value="2" />
+            <span>No limit, but a 2-second timeout on database calls</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c2" value="3" />
+            <span>20 qps per instance, about 1,600 qps total, below the 2,000 qps knee</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cache-availability-and-database-fallback-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cache-availability-and-database-fallback-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-cache-availability-and-database-fallback-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1038,77 +1053,180 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-cache-availability-and-database-fallback-c3" data-type="mcq" data-slug="cache-availability-and-database-fallback" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Coming back empty</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Recovery</div>
+        <div class="check-slider__section">Section: Recovery</div>
+        
         <p class="check-slider__prompt">After a 20-minute outage the cache cluster is healthy again but empty. An on-call engineer proposes removing the fallback limiter and sending 100 percent of traffic back immediately. What is the risk and the better approach?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c3" value="0" />
-             <span>A second miss storm while the hit ratio climbs from zero; keep the limiter on, pre-warm top keys and shift traffic back in steps</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c3" value="1" />
-             <span>No real risk, because the cache refills within a second at 80,000 reads/s</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c3" value="2" />
-             <span>Stale data from before the outage will be served; flush the database buffer pool first</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-cache-availability-and-database-fallback-c3" value="3" />
-             <span>Clients will get MOVED redirects; restart all app servers to refresh their slot maps</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-cache-availability-and-database-fallback-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c3" value="0" />
+            <span>A second miss storm while the hit ratio climbs from zero; keep the limiter on, pre-warm top keys and shift traffic back in steps</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c3" value="1" />
+            <span>No real risk, because the cache refills within a second at 80,000 reads/s</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c3" value="2" />
+            <span>Stale data from before the outage will be served; flush the database buffer pool first</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-cache-availability-and-database-fallback-c3" value="3" />
+            <span>Clients will get MOVED redirects; restart all app servers to refresh their slot maps</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cache-availability-and-database-fallback-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cache-availability-and-database-fallback-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-cache-availability-and-database-fallback-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">An empty cache has a 0 percent hit ratio, so the database briefly sees the full outage load again; the lesson keeps the limiter on during warm-up, pre-warms hot keys and ramps traffic in steps. The cache does not refill instantly, because every miss must first be served by the capacity-limited database.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-cache-availability-and-database-fallback-n1" data-type="numeric" data-slug="cache-availability-and-database-fallback" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Database Load Surge on Cache Cluster Outage</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your caching tier serves 80,000 req/s at a 95% cache hit rate, leaving 4,000 req/s hitting the database. Your database cluster is provisioned for a maximum of 8,000 req/s.</p>
+          </div>
+        
+        <p class="check-slider__prompt">If the cache cluster fails completely and all 80,000 req/s fall back directly to the database, by what factor (multiplier) does the incoming load exceed the database&#039;s 8,000 req/s maximum capacity?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-cache-availability-and-database-fallback-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-cache-availability-and-database-fallback-n1"
+              aria-label="Numeric estimate in x"
+              placeholder="Enter numeric estimate (x)..."
+            />
+            <span class="quiz-unit-badge">x</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide total fallback traffic (80,000 req/s) by maximum database capacity (8,000 req/s).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cache-availability-and-database-fallback-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-cache-availability-and-database-fallback-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">80,000 req/s ÷ 8,000 req/s = 10x over capacity (and a 20x jump from the normal 4,000 req/s DB load). Without load shedding or circuit breaking on the DB fallback path, a cache outage triggers immediate database collapse.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-cache-availability-and-database-fallback-t1" data-type="tradeoff" data-slug="cache-availability-and-database-fallback" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Protecting the Origin Database During a Cold-Cache Restart</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">After a regional power event, your Redis cluster restarts completely empty while user traffic is at 80,000 req/s and the database can only sustain 8,000 req/s.</p>
+          </div>
+        
+        <p class="check-slider__prompt">Which recovery and fallback strategy prevents the database from crashing during cache warm-up, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-cache-availability-and-database-fallback-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-cache-availability-and-database-fallback-t1" value="0" />
+                  <span>Route 100% of cache misses directly to the database so the cache warms up as fast as possible</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-cache-availability-and-database-fallback-t1" value="1" />
+                  <span>Enforce a strict concurrency/token-bucket rate limiter on the DB fallback path (capping DB queries at &lt;8,000 req/s), coalesce duplicate misses via singleflight, and serve degraded/stale responses for shed misses while warming the cache</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-cache-availability-and-database-fallback-t1" value="2" />
+                  <span>Block all traffic at the load balancer until a single-threaded script sequentially loads 500M rows into Redis</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-cache-availability-and-database-fallback-t1" value="0" />
+                  <span>Sending 10x over-capacity traffic to the DB warms the cache without exhausting DB connection pools</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-cache-availability-and-database-fallback-t1" value="1" />
+                  <span>Rate-limiting the cache-miss fallback path protects DB survival while allowing up to 8,000 unique keys/sec to populate the cache organically</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-cache-availability-and-database-fallback-t1" value="2" />
+                  <span>Multi-hour total site downtime is preferable to serving degraded fallback responses</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">The database must never receive more than its 8,000 req/s ceiling, even when the cache hit rate is 0%.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="cache-availability-and-database-fallback-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-cache-availability-and-database-fallback-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">When a high-hit-rate cache goes cold, the cache acts as a load-bearing component. Capping DB fallback concurrency via a circuit breaker / token bucket at &lt;8,000 req/s lets successful queries warm the hot working set within seconds without crashing the DB.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-cache-availability-and-database-fallback-n1" data-type="numeric" data-slug="cache-availability-and-database-fallback">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Database Load Surge on Cache Cluster Outage</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> Your caching tier serves 80,000 req/s at a 95% cache hit rate, leaving 4,000 req/s hitting the database. Your database cluster is provisioned for a maximum of 8,000 req/s.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> If the cache cluster fails completely and all 80,000 req/s fall back directly to the database, by what factor (multiplier) does the incoming load exceed the database&#039;s 8,000 req/s maximum capacity?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Divide total fallback traffic (80,000 req/s) by maximum database capacity (8,000 req/s).</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-cache-availability-and-database-fallback-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-cache-availability-and-database-fallback-n1" placeholder="Enter numeric estimate (x)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">x</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="cache-availability-and-database-fallback-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="cache-availability-and-database-fallback" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-cache-availability-and-database-fallback-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 80,000 req/s ÷ 8,000 req/s = 10x over capacity (and a 20x jump from the normal 4,000 req/s DB load). Without load shedding or circuit breaking on the DB fallback path, a cache outage triggers immediate database collapse.</div>
-        </div>
-      </div>
-    
         <div class="simulator-card" id="sim-cb">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Circuit Breaker</div>
@@ -1138,71 +1256,6 @@
           </div>
         </div>
       
-      <div class="exercise-box quiz-card" id="quiz-cache-availability-and-database-fallback-t1" data-type="tradeoff" data-slug="cache-availability-and-database-fallback">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Protecting the Origin Database During a Cold-Cache Restart</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> After a regional power event, your Redis cluster restarts completely empty while user traffic is at 80,000 req/s and the database can only sustain 8,000 req/s.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> Which recovery and fallback strategy prevents the database from crashing during cache warm-up, and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> The database must never receive more than its 8,000 req/s ceiling, even when the cache hit rate is 0%.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-cache-availability-and-database-fallback-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-cache-availability-and-database-fallback-t1" value="0" />
-               <span>Route 100% of cache misses directly to the database so the cache warms up as fast as possible</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-cache-availability-and-database-fallback-t1" value="1" />
-               <span>Enforce a strict concurrency/token-bucket rate limiter on the DB fallback path (capping DB queries at &lt;8,000 req/s), coalesce duplicate misses via singleflight, and serve degraded/stale responses for shed misses while warming the cache</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-cache-availability-and-database-fallback-t1" value="2" />
-               <span>Block all traffic at the load balancer until a single-threaded script sequentially loads 500M rows into Redis</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-cache-availability-and-database-fallback-t1" value="0" />
-               <span>Sending 10x over-capacity traffic to the DB warms the cache without exhausting DB connection pools</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-cache-availability-and-database-fallback-t1" value="1" />
-               <span>Rate-limiting the cache-miss fallback path protects DB survival while allowing up to 8,000 unique keys/sec to populate the cache organically</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-cache-availability-and-database-fallback-t1" value="2" />
-               <span>Multi-hour total site downtime is preferable to serving degraded fallback responses</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="cache-availability-and-database-fallback-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="cache-availability-and-database-fallback" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-cache-availability-and-database-fallback-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> When a high-hit-rate cache goes cold, the cache acts as a load-bearing component. Capping DB fallback concurrency via a circuit breaker / token bucket at &lt;8,000 req/s lets successful queries warm the hot working set within seconds without crashing the DB.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1335,15 +1388,15 @@
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

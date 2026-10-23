@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -991,44 +991,55 @@
 <!-- enriched -->
 <h2>Worked example: sizing a covering</h2><p>A user in San Francisco (latitude about 37.8) searches a 2 km radius. Geohash cells are fixed in degrees, so their width in kilometres shrinks with the cosine of latitude.</p><ul><li><strong>Precision 5</strong> (0.0439 degrees of longitude by 0.0439 of latitude): about 3.9 km wide by 4.9 km tall here. The 4 km wide circle fits inside the center cell plus its 8 neighbours: 9 cells covering about 171 square km, while the circle is only 12.6 square km, so roughly 7 percent of candidates are real hits.</li><li><strong>Precision 6</strong> (about 0.98 km by 0.61 km here): the circle needs about 6 x 8 = 48 cells covering about 29 square km, so about 44 percent are hits, at the price of 48 key lookups.</li><li>At a density of 500 places per square km, precision 5 returns about 85,000 candidates and precision 6 about 14,000, of which about 6,300 are inside 2 km. Rank by relevance and distance and return the top 20. For very dense areas, cap candidates or shrink the radius.</li></ul><h2>Technology choices</h2><table><thead><tr><th>Option</th><th>Best for</th><th>Strength</th><th>Weakness</th></tr></thead><tbody><tr><td>PostGIS with a GiST index</td><td>Static POIs with rich filters and joins</td><td>Exact geography types, SQL, polygons</td><td>Write-heavy moving objects; single-node scaling limits</td></tr><tr><td>Elasticsearch or OpenSearch geo_point</td><td>Search combined with text and facets</td><td>Distance filters plus relevance scoring</td><td>Refresh lag; operational weight</td></tr><tr><td>Redis GEO</td><td>Hot, frequently updated positions</td><td>In-memory, simple commands</td><td>One key per shard; no per-member expiry</td></tr><tr><td>In-memory quadtree or grid service</td><td>Custom, very high QPS</td><td>Adapts to density, full control</td><td>You own rebuilds, replication and failover</td></tr><tr><td>H3 or S2 cell IDs in any key-value store</td><td>Global scale, sharding by cell</td><td>Uniform cell hierarchy, easy partitioning</td><td>Still needs exact filtering and coverings</td></tr></tbody></table><h2>Scaling the read path</h2><ul><li>POI data changes rarely, so a proximity service is read-heavy: keep the index in memory on stateless replicas and rebuild or update from a change stream.</li><li>Cache results per (cell, filter) for popular areas; business details are cached separately by ID.</li><li>Partition by region only if the dataset outgrows one machine; 200 million POIs at about 50 bytes of index entry each is about 10 GB, which still fits in memory on one large node.</li></ul><h2>How real systems do it</h2><ul><li>Yelp has written about using Elasticsearch for location-aware search.</li><li>Uber open-sourced H3 and indexes marketplace data by hexagonal cell.</li><li>Tinder described geosharding its recommendation index by S2 cells so each query touches only a few shards.</li></ul>
 </div></article>
-      <section class="check-slider" data-slug="nearby-geospatial-search-system-design" data-total="3" aria-label="Check yourself">
+      <section class="check-slider" data-slug="nearby-geospatial-search-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
-          <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          <span class="check-slider__count">Question <b>1</b> of 5</span>
+          
+      <div class="check-slider__tabs" role="tablist" aria-label="Question categories">
+        <button type="button" class="check-slider__tab is-active" data-jump-index="0" data-tab-type="mcq">Concept (3)</button>
+        <button type="button" class="check-slider__tab" data-jump-index="3" data-tab-type="numeric">Napkin Math</button>
+        <button type="button" class="check-slider__tab" data-jump-index="4" data-tab-type="tradeoff">Trade-Off</button>
+      </div>
+    
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Candidates are not answers" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Covering size and hit rate" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Do you need to geo-shard?" aria-label="Go to question 3"></button><button type="button" class="check-slider__dot is-numeric" data-slide-index="3" title="4. Napkin Math: Napkin Math: Driver Location Ping Write Throughput" aria-label="Go to question 4"></button><button type="button" class="check-slider__dot is-tradeoff" data-slide-index="4" title="5. Trade-Off: Trade-Off Matrix: Ephemeral In-Memory Spatial Index vs Durable SQL Row Updates for Live GPS Pings" aria-label="Go to question 5"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-nearby-geospatial-search-system-design-c1" data-type="mcq" data-slug="nearby-geospatial-search-system-design" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Candidates are not answers</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Understanding Nearby Geospatial Search</div>
+        <div class="check-slider__section">Section: Understanding Nearby Geospatial Search</div>
+        
         <p class="check-slider__prompt">A courier search for &quot;within 3 km&quot; fetches candidates from the spatial index cells covering the circle. One courier sits inside a covered cell, 2.1 km away, but last reported location five minutes ago. According to the lesson, what should happen to that courier?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c1" value="0" />
-             <span>Return it, because the index already proved it lies inside the covering</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c1" value="1" />
-             <span>Return it ranked last, because distance is the only hard filter after the index</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c1" value="2" />
-             <span>Drop it only if its cell is a neighbour cell rather than the centre cell</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c1" value="3" />
-             <span>Drop it in the exact filter step, because a stale location fails the freshness cutoff</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-nearby-geospatial-search-system-design-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c1" value="0" />
+            <span>Return it, because the index already proved it lies inside the covering</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c1" value="1" />
+            <span>Return it ranked last, because distance is the only hard filter after the index</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c1" value="2" />
+            <span>Drop it only if its cell is a neighbour cell rather than the centre cell</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c1" value="3" />
+            <span>Drop it in the exact filter step, because a stale location fails the freshness cutoff</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-nearby-geospatial-search-system-design-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1037,35 +1048,39 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-nearby-geospatial-search-system-design-c2" data-type="mcq" data-slug="nearby-geospatial-search-system-design" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Covering size and hit rate</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: sizing a covering</div>
+        <div class="check-slider__section">Section: Worked example: sizing a covering</div>
+        
         <p class="check-slider__prompt">Using the lesson&#039;s San Francisco example (2 km radius, precision 5 covering about 171 square km with 9 cells, precision 6 covering about 29 square km with 48 cells), suppose density is 200 places per square km. Roughly how many candidates does each covering return, and how many are real hits?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c2" value="0" />
-             <span>Precision 5 about 3,400 and precision 6 about 580, with about 250 real hits</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c2" value="1" />
-             <span>Precision 5 about 34,000 and precision 6 about 5,800, with about 2,500 real hits</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c2" value="2" />
-             <span>Precision 5 about 34,000 and precision 6 about 5,800, with all 5,800 at precision 6 being real hits</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c2" value="3" />
-             <span>Both about 2,500, because the covering choice does not change the candidate count</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-nearby-geospatial-search-system-design-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c2" value="0" />
+            <span>Precision 5 about 3,400 and precision 6 about 580, with about 250 real hits</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c2" value="1" />
+            <span>Precision 5 about 34,000 and precision 6 about 5,800, with about 2,500 real hits</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c2" value="2" />
+            <span>Precision 5 about 34,000 and precision 6 about 5,800, with all 5,800 at precision 6 being real hits</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c2" value="3" />
+            <span>Both about 2,500, because the covering choice does not change the candidate count</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-nearby-geospatial-search-system-design-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1074,77 +1089,180 @@
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-nearby-geospatial-search-system-design-c3" data-type="mcq" data-slug="nearby-geospatial-search-system-design" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Do you need to geo-shard?</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Scaling the read path</div>
+        <div class="check-slider__section">Section: Scaling the read path</div>
+        
         <p class="check-slider__prompt">A team plans to shard a 150 million POI proximity index across 20 regional shards from day one. POIs change rarely and each index entry is about 50 bytes. What does the lesson&#039;s reasoning suggest instead?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c3" value="0" />
-             <span>Keep the whole index, about 7.5 GB, in memory on stateless replicas updated from a change stream, and shard only if it outgrows a node</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c3" value="1" />
-             <span>Shard by region anyway, because boundary queries between regions are cheaper than replicating a full index</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c3" value="2" />
-             <span>Store the index only in PostGIS and scale with read replicas, since in-memory indexes cannot be rebuilt</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-nearby-geospatial-search-system-design-c3" value="3" />
-             <span>Shard by POI ID hash so each shard is balanced, and scatter-gather every proximity query</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-nearby-geospatial-search-system-design-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c3" value="0" />
+            <span>Keep the whole index, about 7.5 GB, in memory on stateless replicas updated from a change stream, and shard only if it outgrows a node</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c3" value="1" />
+            <span>Shard by region anyway, because boundary queries between regions are cheaper than replicating a full index</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c3" value="2" />
+            <span>Store the index only in PostGIS and scale with read replicas, since in-memory indexes cannot be rebuilt</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-nearby-geospatial-search-system-design-c3" value="3" />
+            <span>Shard by POI ID hash so each shard is balanced, and scatter-gather every proximity query</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="3">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-nearby-geospatial-search-system-design-c3" style="display: none;">
           <div class="feedback-msg"></div>
           <div class="feedback-exp">150M x 50 bytes is about 7.5 GB, which fits in memory, so read-heavy traffic scales by adding stateless replicas; regional partitioning brings boundary queries, hot-city imbalance and handoff work. Sharding by ID hash is worse still, because every nearby query would have to touch every shard.</div>
         </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-nearby-geospatial-search-system-design-n1" data-type="numeric" data-slug="nearby-geospatial-search-system-design" data-index="3" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-numeric">Napkin Math · Capacity</span>
+          <span class="check-slider__title">Napkin Math: Driver Location Ping Write Throughput</span>
+          <span class="check-slider__level">apply</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">A ride-hailing platform has 2,000,000 concurrently active drivers on the road globally. Every active driver&#039;s app transmits a GPS coordinate ping once every 4 seconds.</p>
+          </div>
+        
+        <p class="check-slider__prompt">What is the sustained global location update write rate in thousands of requests per second (k req/s)?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-nearby-geospatial-search-system-design-n1">
+        <div class="quiz-napkin-card">
+          <div class="quiz-number-wrap">
+            <input
+              type="number"
+              step="any"
+              class="quiz-number-input"
+              name="quiz-nearby-geospatial-search-system-design-n1"
+              aria-label="Numeric estimate in k req/s"
+              placeholder="Enter numeric estimate (k req/s)..."
+            />
+            <span class="quiz-unit-badge">k req/s</span>
+            <span class="quiz-tolerance-badge" title="Back-of-the-envelope tolerance band">±25% accepted</span>
+          </div>
+          
+            <details class="quiz-hint-details">
+              <summary class="quiz-hint-summary">Show Napkin Formula / Estimation Hint</summary>
+              <div class="quiz-hint-body">Divide 2,000,000 active drivers by 4 seconds per ping, and express in thousands (k req/s).</div>
+            </details>
+          
+        </div>
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="2">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-n1">Verify Estimate</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="4">Skip →</button>
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-nearby-geospatial-search-system-design-n1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">2,000,000 drivers ÷ 4 seconds = 500,000 location pings/sec = 500 k req/s of continuous mutable coordinate writes—far too high for unsharded disk-backed B+Tree updates.</div>
+        </div>
+      </div>
+      <div class="quiz-card check-slider__slide" id="quiz-nearby-geospatial-search-system-design-t1" data-type="tradeoff" data-slug="nearby-geospatial-search-system-design" data-index="4" hidden>
+        <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-tradeoff">Staff Trade-Off Matrix</span>
+          <span class="check-slider__title">Trade-Off Matrix: Ephemeral In-Memory Spatial Index vs Durable SQL Row Updates for Live GPS Pings</span>
+          <span class="check-slider__level">staff</span>
+        </div>
+        
+        
+          <div class="quiz-scenario-box">
+            <span class="quiz-scenario-box__label">Scenario</span>
+            <p class="quiz-scenario-box__text">Your location ingestion service receives 500,000 GPS pings/sec from active drivers and must serverider nearby-driver queries (`radius &lt;= 3 km`) within 15 ms p99.</p>
+          </div>
+        
+        <p class="check-slider__prompt">How should live driver coordinates be stored and indexed vs historical trip traces, and why?</p>
+        <div class="quiz-options check-slider__options" id="quiz-options-nearby-geospatial-search-system-design-t1">
+        <div class="quiz-tradeoff-grid">
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 1</span>
+              <span class="quiz-tradeoff-step__label">Select Architecture Decision</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-nearby-geospatial-search-system-design-t1" value="0" />
+                  <span>Execute synchronous `UPDATE drivers SET lat=?, lng=?` + R-Tree re-indexing in PostgreSQL on all 500,000 pings/sec</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-nearby-geospatial-search-system-design-t1" value="1" />
+                  <span>Maintain live driver positions in a city-sharded in-memory spatial index (H3/S2/Geohash cells in RAM/Redis) for sub-10ms matching, while asynchronously batching pings to an append-only stream (Kafka → columnar/object store) for trip history</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-opt-nearby-geospatial-search-system-design-t1" value="2" />
+                  <span>Have rider apps broadcast Bluetooth beacons to discover drivers within 3 km</span>
+                </label>
+              
+            </div>
+          </div>
+          <div class="quiz-tradeoff-col">
+            <div class="quiz-tradeoff-step">
+              <span class="quiz-tradeoff-step__num">Part 2</span>
+              <span class="quiz-tradeoff-step__label">Select Primary Engineering Justification</span>
+            </div>
+            <div class="quiz-tradeoff-list">
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-nearby-geospatial-search-system-design-t1" value="0" />
+                  <span>Synchronous disk B+Tree/R-Tree page splits handle 500,000 random updates/sec on a single database effortlessly</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-nearby-geospatial-search-system-design-t1" value="1" />
+                  <span>A 4-second-old GPS coordinate is ephemeral state; decoupling the in-memory H3/Geohash matching hot path from batched async archival avoids random disk write amplification</span>
+                </label>
+              
+                <label class="exercise-option quiz-option-label">
+                  <input type="radio" name="quiz-tradeoff-rsn-nearby-geospatial-search-system-design-t1" value="2" />
+                  <span>Bluetooth Low Energy has a 3 km urban non-line-of-sight range</span>
+                </label>
+              
+            </div>
+          </div>
+        </div>
+        
+          <details class="quiz-hint-details">
+            <summary class="quiz-hint-summary">Show Architectural Hint</summary>
+            <div class="quiz-hint-body">Separate the mutable ephemeral &#039;current location&#039; hot path from the immutable &#039;historical breadcrumb&#039; log.</div>
+          </details>
+        
+      </div>
+        <div class="check-slider__actions">
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="3">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-t1">Verify Trade-Off</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
+        </div>
+        <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-nearby-geospatial-search-system-design-t1" style="display: none;">
+          <div class="feedback-msg"></div>
+          <div class="feedback-exp">Current driver location is overwritten every 4 seconds. Holding the latest coordinate in an in-memory city-sharded H3/Geohash index serves K-ring lookups in &lt;5 ms, while async streaming batches historical breadcrumbs to cold storage.</div>
+        </div>
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
-      <div class="exercise-box quiz-card" id="quiz-nearby-geospatial-search-system-design-n1" data-type="numeric" data-slug="nearby-geospatial-search-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Napkin Math: Driver Location Ping Write Throughput</span>
-          </div>
-          <span class="exercise-box__difficulty">apply</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> A ride-hailing platform has 2,000,000 concurrently active drivers on the road globally. Every active driver&#039;s app transmits a GPS coordinate ping once every 4 seconds.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> What is the sustained global location update write rate in thousands of requests per second (k req/s)?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Divide 2,000,000 active drivers by 4 seconds per ping, and express in thousands (k req/s).</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-nearby-geospatial-search-system-design-n1" style="margin-top: 15px;">
-          
-         <div style="display: flex; align-items: center; gap: 10px;">
-           <input type="number" step="any" class="quiz-number-input" name="quiz-nearby-geospatial-search-system-design-n1" placeholder="Enter numeric estimate (k req/s)" style="padding: 9px 12px; width: 100%; max-width: 320px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono);" />
-           <span class="badge" style="font-family: var(--font-mono);">k req/s</span>
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-n1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="nearby-geospatial-search-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-nearby-geospatial-search-system-design-n1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> 2,000,000 drivers ÷ 4 seconds = 500,000 location pings/sec = 500 k req/s of continuous mutable coordinate writes—far too high for unsharded disk-backed B+Tree updates.</div>
-        </div>
-      </div>
-    
         <div class="simulator-card" id="sim-geohash">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Geohash Explorer</div>
@@ -1165,71 +1283,6 @@
           </div>
         </div>
       
-      <div class="exercise-box quiz-card" id="quiz-nearby-geospatial-search-system-design-t1" data-type="tradeoff" data-slug="nearby-geospatial-search-system-design">
-        <div class="exercise-box__header">
-          <div class="exercise-box__title">
-            <span>Trade-Off Matrix: Ephemeral In-Memory Spatial Index vs Durable SQL Row Updates for Live GPS Pings</span>
-          </div>
-          <span class="exercise-box__difficulty">staff</span>
-        </div>
-        <div class="exercise-box__scenario"><strong>Scenario:</strong> Your location ingestion service receives 500,000 GPS pings/sec from active drivers and must serverider nearby-driver queries (`radius &lt;= 3 km`) within 15 ms p99.</div>
-        <div class="exercise-box__prompt"><strong>Problem:</strong> How should live driver coordinates be stored and indexed vs historical trip traces, and why?</div>
-        <div class="exercise-box__hint" style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);"><strong>Formula / Hint:</strong> Separate the mutable ephemeral &#039;current location&#039; hot path from the immutable &#039;historical breadcrumb&#039; log.</div>
-        
-        <div class="quiz-options exercise-options" id="quiz-options-nearby-geospatial-search-system-design-t1" style="margin-top: 15px;">
-          
-         <div style="margin-bottom: 12px;">
-           <strong style="display:block; margin-bottom: 6px;">1. Select Architecture Decision:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-nearby-geospatial-search-system-design-t1" value="0" />
-               <span>Execute synchronous `UPDATE drivers SET lat=?, lng=?` + R-Tree re-indexing in PostgreSQL on all 500,000 pings/sec</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-nearby-geospatial-search-system-design-t1" value="1" />
-               <span>Maintain live driver positions in a city-sharded in-memory spatial index (H3/S2/Geohash cells in RAM/Redis) for sub-10ms matching, while asynchronously batching pings to an append-only stream (Kafka → columnar/object store) for trip history</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-opt-nearby-geospatial-search-system-design-t1" value="2" />
-               <span>Have rider apps broadcast Bluetooth beacons to discover drivers within 3 km</span>
-             </label>
-           
-         </div>
-         <div>
-           <strong style="display:block; margin-bottom: 6px;">2. Select Primary Engineering Justification:</strong>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-nearby-geospatial-search-system-design-t1" value="0" />
-               <span>Synchronous disk B+Tree/R-Tree page splits handle 500,000 random updates/sec on a single database effortlessly</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-nearby-geospatial-search-system-design-t1" value="1" />
-               <span>A 4-second-old GPS coordinate is ephemeral state; decoupling the in-memory H3/Geohash matching hot path from batched async archival avoids random disk write amplification</span>
-             </label>
-           
-             <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-               <input type="radio" name="quiz-tradeoff-rsn-nearby-geospatial-search-system-design-t1" value="2" />
-               <span>Bluetooth Low Energy has a 3 km urban non-line-of-sight range</span>
-             </label>
-           
-         </div>
-       
-        </div>
-
-        <div class="quiz-actions" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
-           <button class="btn btn--primary quiz-submit-btn" data-qid="nearby-geospatial-search-system-design-t1">Submit Answer</button>
-           <button class="btn btn--secondary quiz-next-btn" data-slug="nearby-geospatial-search-system-design" style="">Next Drill (2 available) →</button>
-        </div>
-
-        <div class="exercise-feedback quiz-feedback" id="feedback-nearby-geospatial-search-system-design-t1" style="display: none;">
-          <div class="feedback-msg"></div>
-          <div class="feedback-exp" style="margin-top:6px;"><strong>Explanation:</strong> Current driver location is overwritten every 4 seconds. Holding the latest coordinate in an in-memory city-sharded H3/Geohash index serves K-ring lookups in &lt;5 ms, while async streaming batches historical breadcrumbs to cold storage.</div>
-        </div>
-      </div>
-    
         <div class="takeaways">
           <h3 class="takeaways__title">Key Takeaways</h3>
           <div class="takeaways__list">
@@ -1338,15 +1391,15 @@
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

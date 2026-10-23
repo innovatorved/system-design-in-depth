@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -1021,40 +1021,45 @@ flowchart LR
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
           <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: TCP zero window" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Draining the backlog" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Rejected, then retried" aria-label="Go to question 3"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-backpressure-c1" data-type="mcq" data-slug="backpressure" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">TCP zero window</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Under the Hood: The Three Backpressure Defenses</div>
+        <div class="check-slider__section">Section: Under the Hood: The Three Backpressure Defenses</div>
+        
         <p class="check-slider__prompt">A consumer&#039;s application thread stops reading from its TCP socket, while the sender keeps writing. What happens at the transport layer?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c1" value="0" />
-             <span>The receiver&#039;s kernel drops the new segments, and the sender retransmits them</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c1" value="1" />
-             <span>The receive buffer fills, the window shrinks to zero, and the sender&#039;s kernel stops sending</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c1" value="2" />
-             <span>The sender&#039;s kernel buffers data without limit until the receiver starts reading again</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c1" value="3" />
-             <span>The connection is reset after a timeout, because the receiver looks unresponsive</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-backpressure-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c1" value="0" />
+            <span>The receiver&#039;s kernel drops the new segments, and the sender retransmits them</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c1" value="1" />
+            <span>The receive buffer fills, the window shrinks to zero, and the sender&#039;s kernel stops sending</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c1" value="2" />
+            <span>The sender&#039;s kernel buffers data without limit until the receiver starts reading again</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c1" value="3" />
+            <span>The connection is reset after a timeout, because the receiver looks unresponsive</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="backpressure-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="backpressure-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-backpressure-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1063,35 +1068,39 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-backpressure-c2" data-type="mcq" data-slug="backpressure" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Draining the backlog</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: how fast a queue fills</div>
+        <div class="check-slider__section">Section: Worked example: how fast a queue fills</div>
+        
         <p class="check-slider__prompt">A consumer handles 2,000 messages per second. A spike sends 2,500 per second for 20 minutes, then arrivals drop back to 1,500 per second. How long does the backlog take to clear after the spike?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c2" value="0" />
-             <span>About 5 minutes</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c2" value="1" />
-             <span>About 10 minutes</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c2" value="2" />
-             <span>About 20 minutes</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c2" value="3" />
-             <span>About 5 hours</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-backpressure-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c2" value="0" />
+            <span>About 5 minutes</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c2" value="1" />
+            <span>About 10 minutes</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c2" value="2" />
+            <span>About 20 minutes</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c2" value="3" />
+            <span>About 5 hours</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="backpressure-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="backpressure-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-backpressure-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1100,35 +1109,39 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-backpressure-c3" data-type="mcq" data-slug="backpressure" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Rejected, then retried</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Failure modes</div>
+        <div class="check-slider__section">Section: Failure modes</div>
+        
         <p class="check-slider__prompt">Your service correctly returns 503 when its queue is full, but load stays high and the queue never recovers. What is the most likely reason?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c3" value="0" />
-             <span>Clients retry immediately, so rejected work returns as new load</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c3" value="1" />
-             <span>503 is the wrong status code, since backpressure must use 429</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c3" value="2" />
-             <span>The queue limit is too small, so it should be made unbounded</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-backpressure-c3" value="3" />
-             <span>The TCP window has shrunk to zero, so the 503s never reach clients</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-backpressure-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c3" value="0" />
+            <span>Clients retry immediately, so rejected work returns as new load</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c3" value="1" />
+            <span>503 is the wrong status code, since backpressure must use 429</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c3" value="2" />
+            <span>The queue limit is too small, so it should be made unbounded</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-backpressure-c3" value="3" />
+            <span>The TCP window has shrunk to zero, so the 503s never reach clients</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="backpressure-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="backpressure-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-backpressure-c3" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1137,7 +1150,7 @@ flowchart LR
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
         <div class="simulator-card" id="sim-queue-lag">
@@ -1327,15 +1340,15 @@ flowchart LR
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>

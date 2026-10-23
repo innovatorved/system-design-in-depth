@@ -30,9 +30,9 @@
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=ba2fe69781">
+  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
   <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=20326961ff">
+  <link rel="stylesheet" href="css/components.css?v=ccc9c32121">
   <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
   <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
 
@@ -1014,40 +1014,45 @@ flowchart LR
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
           <span class="check-slider__count">Question <b>1</b> of 3</span>
-          <span class="check-slider__dots"><span class="check-slider__dot is-current"></span><span class="check-slider__dot"></span><span class="check-slider__dot"></span></span>
+          
+          <span class="check-slider__dots"><button type="button" class="check-slider__dot is-mcq is-current" data-slide-index="0" title="1. Concept: Leaky generic repository" aria-label="Go to question 1"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="1" title="2. Concept: Atomic insert-if-absent" aria-label="Go to question 2"></button><button type="button" class="check-slider__dot is-mcq" data-slide-index="2" title="3. Concept: Two repositories, one crash" aria-label="Go to question 3"></button></span>
         </div>
         <div class="check-slider__track">
       <div class="quiz-card check-slider__slide" id="quiz-repository-pattern-c1" data-type="mcq" data-slug="repository-pattern" data-index="0">
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Leaky generic repository</span>
           <span class="check-slider__level">recall</span>
         </div>
-        <div class="check-slider__section">From: Engineering Realities &amp; Anti-Patterns</div>
+        <div class="check-slider__section">Section: Engineering Realities &amp; Anti-Patterns</div>
+        
         <p class="check-slider__prompt">Why does a generic repository that accepts arbitrary query predicates or query builders from service code defeat the purpose of the pattern?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c1" value="0" />
-             <span>Generic repositories cannot be swapped for in-memory fakes in unit tests</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c1" value="1" />
-             <span>Schema and query details leak into domain services, so storage changes spread to every caller</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c1" value="2" />
-             <span>Predicates always compile to full table scans, which hurts query performance</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c1" value="3" />
-             <span>It forces every aggregate to share one table, which breaks domain boundaries</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-repository-pattern-c1">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c1" value="0" />
+            <span>Generic repositories cannot be swapped for in-memory fakes in unit tests</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c1" value="1" />
+            <span>Schema and query details leak into domain services, so storage changes spread to every caller</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c1" value="2" />
+            <span>Predicates always compile to full table scans, which hurts query performance</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c1" value="3" />
+            <span>It forces every aggregate to share one table, which breaks domain boundaries</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="repository-pattern-c1">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="repository-pattern-c1">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="1">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-repository-pattern-c1" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1056,35 +1061,39 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-repository-pattern-c2" data-type="mcq" data-slug="repository-pattern" data-index="1" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Atomic insert-if-absent</span>
           <span class="check-slider__level">apply</span>
         </div>
-        <div class="check-slider__section">From: Worked example: a link repository</div>
+        <div class="check-slider__section">Section: Worked example: a link repository</div>
+        
         <p class="check-slider__prompt">Two requests generate the same short code at the same moment. How should the Postgres adapter implement insertIfAbsent so that exactly one returns Inserted and the other returns CodeTaken?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c2" value="0" />
-             <span>SELECT by code first, and INSERT only when no row comes back</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c2" value="1" />
-             <span>Hold an in-process mutex around code generation and the insert</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c2" value="2" />
-             <span>INSERT and treat any exception from the driver as CodeTaken</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c2" value="3" />
-             <span>INSERT ... ON CONFLICT (code) DO NOTHING, then check rows affected</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-repository-pattern-c2">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c2" value="0" />
+            <span>SELECT by code first, and INSERT only when no row comes back</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c2" value="1" />
+            <span>Hold an in-process mutex around code generation and the insert</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c2" value="2" />
+            <span>INSERT and treat any exception from the driver as CodeTaken</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c2" value="3" />
+            <span>INSERT ... ON CONFLICT (code) DO NOTHING, then check rows affected</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="repository-pattern-c2">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="0">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="repository-pattern-c2">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>Next question →</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__skip" data-target-index="2">Skip →</button>
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-repository-pattern-c2" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1093,35 +1102,39 @@ flowchart LR
       </div>
       <div class="quiz-card check-slider__slide" id="quiz-repository-pattern-c3" data-type="mcq" data-slug="repository-pattern" data-index="2" hidden>
         <div class="check-slider__meta">
+          <span class="check-slider__type-badge is-mcq">Concept Check</span>
           <span class="check-slider__title">Two repositories, one crash</span>
           <span class="check-slider__level">staff</span>
         </div>
-        <div class="check-slider__section">From: Failure modes</div>
+        <div class="check-slider__section">Section: Failure modes</div>
+        
         <p class="check-slider__prompt">Checkout saves an order through OrderRepository and decrements stock through InventoryRepository, and each commits its own transaction. The process crashes between the two commits. What state are you left in?</p>
-        <div class="quiz-options check-slider__options">
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c3" value="0" />
-             <span>The order is committed but stock was never reduced, because nothing grouped the writes</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c3" value="1" />
-             <span>Both writes roll back, because the repositories share one connection pool</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c3" value="2" />
-             <span>The stock is reduced but the order is missing, since inventory always commits first</span>
-           </label>
-         
-           <label class="exercise-option quiz-option-label" style="display: flex; gap: 10px; cursor: pointer;">
-             <input type="radio" name="quiz-repository-pattern-c3" value="3" />
-             <span>Nothing is lost, because the ORM replays unfinished repository calls on restart</span>
-           </label>
-         </div>
+        <div class="quiz-options check-slider__options" id="quiz-options-repository-pattern-c3">
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c3" value="0" />
+            <span>The order is committed but stock was never reduced, because nothing grouped the writes</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c3" value="1" />
+            <span>Both writes roll back, because the repositories share one connection pool</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c3" value="2" />
+            <span>The stock is reduced but the order is missing, since inventory always commits first</span>
+          </label>
+        
+          <label class="exercise-option quiz-option-label">
+            <input type="radio" name="quiz-repository-pattern-c3" value="3" />
+            <span>Nothing is lost, because the ORM replays unfinished repository calls on restart</span>
+          </label>
+        </div>
         <div class="check-slider__actions">
-          <button class="btn btn--sm btn--primary quiz-submit-btn" data-qid="repository-pattern-c3">Check answer</button>
-          <button class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          <button type="button" class="btn btn--sm btn--ghost check-slider__prev" data-target-index="1">← Prev</button>
+          <button type="button" class="btn btn--sm btn--primary quiz-submit-btn" data-qid="repository-pattern-c3">Check answer</button>
+          <button type="button" class="btn btn--sm btn--primary check-slider__next" hidden>See score</button>
+          
         </div>
         <div class="exercise-feedback quiz-feedback check-slider__feedback" id="feedback-repository-pattern-c3" style="display: none;">
           <div class="feedback-msg"></div>
@@ -1130,7 +1143,7 @@ flowchart LR
       </div></div>
         <div class="check-slider__done" hidden>
           <p class="check-slider__score"></p>
-          <button class="btn btn--sm btn--outline check-slider__retry">Try again</button>
+          <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
       </section>
         <div class="takeaways">
@@ -1241,14 +1254,14 @@ flowchart LR
   <script type="text/plain" data-defer src="js/analytics.js?v=9f97cc0531"></script>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
-  <script type="text/plain" data-defer src="js/exercises.js?v=94728bc41f"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=424dd91afa"></script>
+  <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=aac5fe3659"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
   
-  <script type="text/plain" data-defer src="js/quiz.js?v=87769d59cd"></script>
+  <script type="text/plain" data-defer src="js/quiz.js?v=013fc67ad0"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=3afbe3d896"></script>
   <script type="text/plain" data-defer src="js/challenges.js?v=dbe98ee3fc"></script>
-  <script type="text/plain" data-defer src="js/dashboard.js?v=dba89cbd61"></script>
+  <script type="text/plain" data-defer src="js/dashboard.js?v=3eb9f35f1a"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=30eee4e571"></script>
   
   <script type="text/plain" data-defer src="js/app.js?v=8129daf6e8"></script>
