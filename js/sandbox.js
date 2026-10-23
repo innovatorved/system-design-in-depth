@@ -697,6 +697,116 @@
       }
     },
 
+    simulateActiveBoardInCodeLab: function() {
+      var board = this._getActiveBoard();
+      var title = (board && board.title) ? board.title : 'Architecture Topology';
+      var nodes = (this._nodes || []).map(function(n, idx) {
+        return {
+          id: n.id,
+          type: n.type || 'Microservice',
+          name: n.name || (n.type + '-' + (idx + 1)),
+          replicas: n.replicas || n.instances || 2,
+          port: 3000 + idx
+        };
+      });
+      var nodeById = {};
+      nodes.forEach(function(n) { nodeById[n.id] = n; });
+      var edges = (this._connections || []).map(function(c) {
+        var s = nodeById[c.from];
+        var t = nodeById[c.to];
+        if (!s || !t) return null;
+        return {
+          fromId: s.id,
+          toId: t.id,
+          fromName: s.name,
+          toName: t.name,
+          fromPort: s.port,
+          toPort: t.port,
+          label: c.label || 'RPC'
+        };
+      }).filter(Boolean);
+
+      var entryPort = nodes.length > 0 ? nodes[0].port : 3000;
+      var clusterCode = [
+        "const http = require('node:http');",
+        "const { Database } = require('bun:sqlite');",
+        "",
+        "// Generated from Architecture Whiteboard: " + title,
+        "const TOPOLOGY = " + JSON.stringify({ title: title, nodes: nodes, edges: edges }, null, 2) + ";",
+        "",
+        "const db = new Database('whiteboard-state.db');",
+        "db.exec('CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY, node TEXT, port INTEGER, path TEXT, ts INTEGER)');",
+        "",
+        "function requestUpstream(targetPort, path, fromPort) {",
+        "  return new Promise((resolve, reject) => {",
+        "    const req = http.request({ hostname: 'localhost', port: targetPort, path, method: 'GET', _fromPort: fromPort }, (res) => {",
+        "      let body = '';",
+        "      res.on('data', (c) => (body += c));",
+        "      res.on('end', () => resolve({ status: res.statusCode, body }));",
+        "    });",
+        "    req.on('error', reject);",
+        "    req.end();",
+        "  });",
+        "}",
+        "",
+        "async function bootTopology() {",
+        "  for (const node of TOPOLOGY.nodes) {",
+        "    const outEdges = TOPOLOGY.edges.filter((e) => e.fromPort === node.port);",
+        "    const srv = http.createServer(async (req, res) => {",
+        "      db.query('INSERT INTO events (node, port, path, ts) VALUES (?, ?, ?, ?)').run(node.name, node.port, req.url || '/', Date.now());",
+        "      const downstream = [];",
+        "      for (const edge of outEdges) {",
+        "        try {",
+        "          const up = await requestUpstream(edge.toPort, req.url || '/hop', node.port);",
+        "          downstream.push({ target: edge.toName, port: edge.toPort, protocol: edge.label, status: up.status });",
+        "        } catch (err) {",
+        "          downstream.push({ target: edge.toName, port: edge.toPort, error: err.code || err.message });",
+        "        }",
+        "      }",
+        "      const failed = downstream.some((d) => d.error || d.status >= 500);",
+        "      res.writeHead(failed ? 502 : 200, { 'content-type': 'application/json' });",
+        "      res.end(JSON.stringify({ service: node.name, type: node.type, port: node.port, replicas: node.replicas, downstream }));",
+        "    });",
+        "    await new Promise((r) => srv.listen(node.port, r));",
+        "    console.log('✓ [' + node.type + '] ' + node.name + ' listening on http://localhost:' + node.port);",
+        "  }",
+        "  console.log('\\n=== Live Topology Booted (' + TOPOLOGY.nodes.length + ' nodes, ' + TOPOLOGY.edges.length + ' edges) ===');",
+        "  console.log('Try in terminal:');",
+        "  console.log('  hey -n 40 -c 8 http://localhost:' + entryPort + '/api');",
+        "  console.log('  chaos latency ' + (TOPOLOGY.nodes[1] ? TOPOLOGY.nodes[1].port : entryPort) + ' 200');",
+        "  console.log('  sqlite3 -column -header whiteboard-state.db \"SELECT node, port, COUNT(*) AS hits FROM events GROUP BY node\"');",
+        "}",
+        "",
+        "bootTopology();"
+      ].join('\n') + '\n';
+
+      var readme = [
+        '# ' + title + ' — Live CodeLab Cluster Simulation',
+        '',
+        'Compiled directly from your **Architecture Whiteboard** (' + nodes.length + ' nodes, ' + edges.length + ' connections).',
+        '',
+        '### Quick Start',
+        '1. Click **Run** (or run `node cluster.js &` in the terminal) to bind every whiteboard node to its own virtual loopback port (`:' + entryPort + '` .. `:' + (entryPort + Math.max(0, nodes.length - 1)) + '`).',
+        '2. Open the **Ports** or **Network** tab in the bottom drawer to see the live **Service Topology Map**, **SLO Telemetry Bar**, and **1-Click Chaos Injection** controls (`+200ms`, `25% 503`, `Crash`).',
+        '3. Benchmark with `hey -n 50 -c 10 http://localhost:' + entryPort + '/api`!'
+      ].join('\n') + '\n';
+
+      if (root.App && typeof root.App.openGlobalCodeLab === 'function') {
+        root.App.openGlobalCodeLab({
+          labId: 'whiteboard-' + (this._activeBlueprintId || 'cluster'),
+          title: title + ' — Live Cluster Simulation',
+          summary: 'Multi-node HTTP & SQLite topology compiled from the Architecture Whiteboard (' + nodes.length + ' services)',
+          mode: 'sandbox',
+          entry: 'cluster.js',
+          files: {
+            'cluster.js': clusterCode,
+            'topology.json': JSON.stringify({ title: title, nodes: nodes, edges: edges }, null, 2) + '\n',
+            'README.md': readme
+          }
+        });
+      }
+    },
+
     _triggerDownload: function(content, filename, mime) {
       try {
         var blob = new Blob([content], { type: mime });
@@ -880,6 +990,7 @@
                 bpButtonsHtml +
               '</div>' +
               '<div class="sandbox-canvas-actions">' +
+                '<button class="eco-btn eco-btn--sm eco-btn--primary" data-sandbox-action="simulate-cluster-codelab" title="Compile active whiteboard topology into a runnable multi-node cluster inside CodeLab">⚡ Simulate in CodeLab</button>' +
                 '<button class="eco-btn eco-btn--sm ' + (this._connectMode || this._activeTool === 'connect' ? 'eco-btn--primary' : '') + '" data-sandbox-action="toggle-connect">' +
                   (this._connectMode || this._activeTool === 'connect' ? 'Connect Mode: ON' : 'Connect Nodes (C)') +
                 '</button>' +
@@ -1572,6 +1683,8 @@
             self.exportSvgOrJson('svg');
           } else if (act === 'export-json') {
             self.exportSvgOrJson('json');
+          } else if (act === 'simulate-cluster-codelab') {
+            self.simulateActiveBoardInCodeLab();
           }
           return;
         }

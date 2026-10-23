@@ -521,8 +521,8 @@
         { cat: 'messaging', name: 'Log Broker (Apache Kafka / Redpanda)', write: 'Sequential partition append; O(1) throughput', read: 'Consumer groups track offsets; full replayability', bestFor: 'Event sourcing, CDC pipelines, multi-consumer stream processing', watchOut: 'Max parallelism inside a consumer group is capped by partition count', slug: 'log-based-brokers', buildId: 'mini-kafka-log' },
         { cat: 'messaging', name: 'Queue Broker (RabbitMQ / SQS)', write: 'Per-message routing via exchanges & queues', read: 'Competing workers ACK individual messages + DLQ', bestFor: 'Task queues, variable-duration background jobs, per-msg retries', watchOut: 'No log replay once ACKed; memory pressure when queues back up', slug: 'message-queues-vs-event-streams', buildId: 'outbox-cdc-relay' },
         { cat: 'protocol', name: 'gRPC (HTTP/2 + Protobuf)', write: 'Binary framing, multiplexed streams, strict schema codegen', read: 'Low CPU serialization overhead; bidirectional streaming', bestFor: 'Internal microservice-to-microservice East-West RPC', watchOut: 'Needs gRPC-Web proxy for browsers; harder human curl debugging', slug: 'rest-vs-graphql-vs-grpc', buildId: 'circuit-breaker' },
-        { cat: 'protocol', name: 'WebSockets vs Server-Sent Events (SSE)', write: 'WS: Full-duplex TCP frame; SSE: HTTP unidirectional stream', read: 'Sub-10ms server push without polling overhead', bestFor: 'WS: Chat/collaborative editing; SSE: AI token streaming & live tickers', watchOut: 'Stateful L7 connections require sticky load balancing & pub/sub backplane', slug: 'websockets-vs-sse-vs-long-polling', buildId: 'realtime-collab-ot' },
-        { cat: 'coordination', name: 'Token Bucket vs Sliding Window Counter', write: 'O(1) atomic Redis Lua evaluation per request', read: 'Immediate allow/reject with Retry-After headers', bestFor: 'API Gateway burst tolerance (Token Bucket) vs strict quota enforcement', watchOut: 'Fixed windows allow 2x boundary bursts; distributed sync needs atomic Lua', slug: 'rate-limiting-algorithms', buildId: 'token-bucket' },
+        { cat: 'protocol', name: 'WebSockets vs Server-Sent Events (SSE)', write: 'WS: Full-duplex TCP frame; SSE: HTTP unidirectional stream', read: 'Sub-10ms server push without polling overhead', bestFor: 'WS: Chat/collaborative editing; SSE: AI token streaming & live tickers', watchOut: 'Stateful L7 connections require sticky load balancing & pub/sub backplane', slug: 'websockets-vs-sse-vs-long-polling', buildId: 'gossip-protocol' },
+        { cat: 'coordination', name: 'Token Bucket vs Sliding Window Counter', write: 'O(1) atomic Redis Lua evaluation per request', read: 'Immediate allow/reject with Retry-After headers', bestFor: 'API Gateway burst tolerance (Token Bucket) vs strict quota enforcement', watchOut: 'Fixed windows allow 2x boundary bursts; distributed sync needs atomic Lua', slug: 'rate-limiting-algorithms', buildId: 'sliding-window-rate-limiter' },
         { cat: 'coordination', name: 'Singleflight & Cache Stampede Lock', write: 'Coalesces N concurrent cache-miss callers into 1 DB query', read: 'Shares single in-flight Promise/Future across all waiters', bestFor: 'Hot keys (celebrity profiles, flash sales) on cache expiration', watchOut: 'If underlying DB call hangs without timeout, all coalesced callers block', slug: 'singleflight-and-request-coalescing', buildId: 'singleflight-coalescer' }
       ];
 
@@ -682,13 +682,17 @@
         'console.log(`Redis Hot Cache    : ${hotCacheGb} GB (~${Math.ceil(hotCacheGb / 64)} x 64GB shards)`);'
       ].join('\n');
 
-      if (root.App && typeof root.App.openPlaygroundModal === 'function') {
-        root.App.openPlaygroundModal({
+      if (root.App && typeof root.App.openGlobalCodeLab === 'function') {
+        root.App.openGlobalCodeLab({
+          labId: 'capacity-estimator',
           title: 'Back-of-the-Envelope Capacity Simulator',
-          subtitle: 'Interactive Node.js Capacity & Cluster Sizing Model',
-          files: { 'capacity-model.js': code },
-          entryFile: 'capacity-model.js',
-          runCommand: 'node capacity-model.js'
+          summary: 'Interactive Node.js Capacity & Cluster Sizing Model',
+          mode: 'sandbox',
+          entry: 'capacity-model.js',
+          files: {
+            'capacity-model.js': code,
+            'README.md': '# Back-of-the-Envelope Capacity Simulator\n\nClick **Run** or execute `node capacity-model.js` in the terminal to calculate QPS, Little\'s Law concurrency, egress bandwidth, and multi-year storage.\n'
+          }
         });
       }
     },

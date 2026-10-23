@@ -1898,32 +1898,68 @@ window.App = (() => {
   function openSnippetInCodeLab(code, lang, title) {
     const norm = (lang || 'javascript').toLowerCase();
     let fileName = 'snippet.js';
+    let entryFile = 'snippet.js';
     let runCmd = 'node snippet.js';
+    const files = {};
     if (norm === 'py' || norm === 'python') {
       fileName = 'snippet.py';
+      entryFile = 'snippet.py';
       runCmd = 'python3 snippet.py';
     } else if (norm === 'ts' || norm === 'typescript') {
       fileName = 'snippet.ts';
-      runCmd = 'npx tsx snippet.ts';
+      entryFile = 'snippet.ts';
+      runCmd = 'bun run snippet.ts';
     } else if (norm === 'go' || norm === 'golang') {
       fileName = 'main.go';
+      entryFile = 'main.go';
       runCmd = 'go run main.go';
     } else if (norm === 'sh' || norm === 'bash' || norm === 'shell') {
       fileName = 'script.sh';
+      entryFile = 'script.sh';
       runCmd = 'sh script.sh';
-    } else if (norm === 'sql') {
+    } else if (norm === 'sql' || norm === 'sqlite' || norm === 'postgres' || norm === 'postgresql') {
       fileName = 'schema.sql';
-      runCmd = 'cat schema.sql';
+      entryFile = 'run-sql.js';
+      runCmd = 'sqlite3 -column -header app.db < schema.sql';
+      files['run-sql.js'] = [
+        "const { Database } = require('bun:sqlite');",
+        "const fs = require('node:fs');",
+        "const sql = fs.readFileSync('schema.sql', 'utf8');",
+        "const db = new Database('app.db');",
+        "console.log('Executing schema.sql on VFS-backed SQLite (app.db)...\\n');",
+        "for (const stmt of sql.split(';').map(s => s.trim()).filter(Boolean)) {",
+        "  if (/^(SELECT|EXPLAIN|PRAGMA)\\b/i.test(stmt)) {",
+        "    console.log('> ' + stmt);",
+        "    console.table(db.query(stmt).all());",
+        "  } else {",
+        "    db.run(stmt);",
+        "  }",
+        "}",
+        "console.log('\\n✓ Done. Try `sqlite3 -column -header app.db \".tables\"` in the terminal!');"
+      ].join('\n') + '\n';
+    } else if (norm === 'redis') {
+      fileName = 'redis-commands.txt';
+      entryFile = 'run-redis.sh';
+      runCmd = 'sh run-redis.sh';
+      const lines = code.split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#') && !l.startsWith('//'));
+      files['run-redis.sh'] = [
+        '#!/bin/sh',
+        'echo "=== Executing Redis commands via CodeLab redis-cli ==="',
+        ...lines.map(c => {
+          const clean = c.replace(/^redis-cli\s+/i, '');
+          return `echo "> redis-cli ${clean.replace(/"/g, '\\"')}"\nredis-cli ${clean}`;
+        })
+      ].join('\n') + '\n';
     }
+    files[fileName] = code.trim() + '\n';
+    files['README.md'] = `# ${title || 'Lesson Snippet'}\n\nRun inside the terminal:\n\n\`\`\`bash\n${runCmd}\n\`\`\`\n`;
     return openGlobalCodeLab({
       labId: 'snippet-' + (currentSlug || 'lesson'),
       title: title || 'Interactive Code Snippet',
       summary: `Run and experiment with this ${norm.toUpperCase()} snippet inside @innovatorved/code-lab (${runCmd}).`,
       mode: 'sandbox',
-      files: {
-        [fileName]: code.trim() + '\n',
-        'README.md': `# ${title || 'Lesson Snippet'}\n\nRun inside the terminal:\n\n\`\`\`bash\n${runCmd}\n\`\`\`\n`
-      }
+      entry: entryFile,
+      files
     });
   }
 
