@@ -820,16 +820,16 @@ window.App = (() => {
         if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
-          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.12/dist/code-lab.css';
+          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.13/dist/code-lab.css';
           link.crossOrigin = 'anonymous';
           link.onerror = function () {
             this.onerror = null;
-            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.12/dist/code-lab.css';
+            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.13/dist/code-lab.css';
           };
           document.head.appendChild(link);
         }
         if (!window.CodeLab) {
-          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.12/dist/code-lab.js');
+          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.13/dist/code-lab.js');
         }
 
         if (neededBuildScripts.length > 0 && window.loadScript) {
@@ -1823,17 +1823,17 @@ window.App = (() => {
     if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.12/dist/code-lab.css';
+      link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.13/dist/code-lab.css';
       link.crossOrigin = 'anonymous';
       link.onerror = function () {
         this.onerror = null;
-        this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.12/dist/code-lab.css';
+        this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.13/dist/code-lab.css';
       };
       document.head.appendChild(link);
     }
     if (window.CodeLab) return Promise.resolve(window.CodeLab);
     if (window.loadScript) {
-      return window.loadScript('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.12/dist/code-lab.js').then(() => window.CodeLab);
+      return window.loadScript('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.13/dist/code-lab.js').then(() => window.CodeLab);
     }
     return Promise.resolve(null);
   }
@@ -1873,7 +1873,7 @@ window.App = (() => {
       globalCodeLabInstance = null;
     }
     if (mountEl) {
-      mountEl.innerHTML = '<div style="padding:2rem;color:var(--fg-muted);font-family:var(--font-mono);">Loading @innovatorved/code-lab@0.1.12 IDE...</div>';
+      mountEl.innerHTML = '<div style="padding:2rem;color:var(--fg-muted);font-family:var(--font-mono);">Loading @innovatorved/code-lab@0.1.13 IDE...</div>';
     }
 
     return ensureCodeLabLoaded().then((CodeLab) => {
