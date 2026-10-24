@@ -823,16 +823,16 @@ window.App = (() => {
         if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
-          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.2.0/dist/code-lab.css';
+          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.3.0/dist/code-lab.css';
           link.crossOrigin = 'anonymous';
           link.onerror = function () {
             this.onerror = null;
-            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.2.0/dist/code-lab.css';
+            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.3.0/dist/code-lab.css';
           };
           document.head.appendChild(link);
         }
         if (!window.CodeLab) {
-          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.2.0/dist/code-lab.js');
+          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.3.0/dist/code-lab.js');
         }
 
         if (neededBuildScripts.length > 0 && window.loadScript) {
@@ -1845,6 +1845,20 @@ window.App = (() => {
         }
       }
     }
+    if (typeof ext.python === 'function') {
+      const pyToolchain = ext.python(null, {
+        preloadPackages: ['numpy', 'pytest']
+      });
+      if (pyToolchain) {
+        wb.pythonToolchain = pyToolchain;
+        wb.pythonCompiler = window.__codelabPythonCompiler || null;
+        wb.pythonOptions = pyToolchain.options;
+        const vfs = wb.vfs || wb.shell?.vfs;
+        if (vfs && typeof window.CodeLab.seedPythonModulesIntoVfs === 'function') {
+          window.CodeLab.seedPythonModulesIntoVfs(vfs);
+        }
+      }
+    }
     return wb;
   }
 
@@ -1852,17 +1866,17 @@ window.App = (() => {
     if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.2.0/dist/code-lab.css';
+      link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.3.0/dist/code-lab.css';
       link.crossOrigin = 'anonymous';
       link.onerror = function () {
         this.onerror = null;
-        this.href = 'https://unpkg.com/@innovatorved/code-lab@0.2.0/dist/code-lab.css';
+        this.href = 'https://unpkg.com/@innovatorved/code-lab@0.3.0/dist/code-lab.css';
       };
       document.head.appendChild(link);
     }
     if (window.CodeLab) return Promise.resolve(window.CodeLab);
     if (window.loadScript) {
-      return window.loadScript('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.2.0/dist/code-lab.js').then(() => window.CodeLab);
+      return window.loadScript('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.3.0/dist/code-lab.js').then(() => window.CodeLab);
     }
     return Promise.resolve(null);
   }
@@ -1902,7 +1916,7 @@ window.App = (() => {
       globalCodeLabInstance = null;
     }
     if (mountEl) {
-      mountEl.innerHTML = '<div style="padding:2rem;color:var(--fg-muted);font-family:var(--font-mono);">Loading @innovatorved/code-lab@0.2.0 IDE...</div>';
+      mountEl.innerHTML = '<div style="padding:2rem;color:var(--fg-muted);font-family:var(--font-mono);">Loading @innovatorved/code-lab@0.3.0 IDE...</div>';
     }
 
     return ensureCodeLabLoaded().then((CodeLab) => {

@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * @innovatorved/code-lab v0.2.0 — Standalone Browser Code IDE & Virtual Runtime
+ * @innovatorved/code-lab v0.3.0 — Standalone Browser Code IDE & Virtual Runtime
  * ============================================================
  * Features:
  *   - Sandboxed Web Worker Execution Engine with Multi-Instance Isolation & Watchdog Timer
