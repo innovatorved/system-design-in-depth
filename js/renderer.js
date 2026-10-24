@@ -594,7 +594,7 @@ window.Renderer = (() => {
             </div>
             <h2 class="build-lab-card__title">Code &amp; Verify in the Browser Workbench</h2>
             <p class="build-lab-card__desc">
-              Complete ${totalSteps} progressive engineering steps in <strong>JavaScript</strong> or <strong>TypeScript</strong> against an in-browser Node.js v22 runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
+              Complete ${totalSteps} progressive engineering steps in <strong>JavaScript</strong>, <strong>TypeScript</strong>, or <strong>C++20 (WebAssembly)</strong> against an in-browser Node.js v22, Bun v1.1 &amp; Clang/WASI runtime (virtual filesystem, loopback TCP/HTTP, and automated unit tests) — zero local setup required.
             </p>
             <div class="build-lab-progress-track" aria-hidden="true">
               <div class="build-lab-progress-track__fill" style="width:${progressPct}%"></div>

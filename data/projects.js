@@ -132,9 +132,9 @@ window.PROJECTS_DATA = [
   {
     id: 'code-lab',
     name: 'code-lab',
-    title: 'code-lab — Browser IDE, POSIX Shell & Node/Bun Virtual Runtime',
-    description: 'Zero-server, browser-native JS/TS IDE with public GitHub repository cloning (git clone), a full POSIX shell (pipes, redirects, 64 UNIX coreutils including hey, chaos, sqlite3, redis-cli), Node.js v22 + Bun v1.1 runtime, Chaos & Load Engine, and modular Guided Lab extensions.',
-    stars: 'v0.1.13',
+    title: 'code-lab — Browser IDE, POSIX Shell & Node/Bun/C++20 WASI Runtime',
+    description: 'Zero-server, browser-native JS/TS/C++20 IDE with public GitHub repository cloning (git clone), a full POSIX shell (pipes, redirects, 67 UNIX coreutils including g++, clang++, hey, chaos, sqlite3, redis-cli), Node.js v22 + Bun v1.1 + Clang/LLVM WebAssembly C++20 runtime, Chaos & Load Engine, and modular Guided Lab extensions.',
+    stars: 'v0.2.0',
     starsCount: 60,
     forks: 0,
     language: 'TypeScript',
@@ -144,11 +144,11 @@ window.PROJECTS_DATA = [
     githubRepo: 'innovatorved/code-lab',
     githubUrl: 'https://github.com/innovatorved/code-lab',
     liveUrl: 'https://code-lab-3dr.pages.dev',
-    tags: ['Monaco Editor', 'POSIX Shell & Git Clone', 'Virtual Node.js & Bun', 'Web Worker Sandbox', 'Web Component'],
+    tags: ['Monaco Editor', 'POSIX Shell & Git Clone', 'Virtual Node.js, Bun & C++20 WASI', 'Web Worker Sandbox', 'Web Component'],
     highlights: [
+      'Real C++20 in WebAssembly (Clang/LLVM + LLD + WASI libc++ with <bits/stdc++.h>, <codelab/dsa.hpp>, and <codelab/test.hpp>) alongside Node.js v22 & Bun v1.1',
       'Clone & run any public GitHub repository (git clone owner/repo) directly in the browser with zero auth',
-      '100% browser-native Node.js v22 (50 modules) + Bun v1.1 (Bun.serve, bun:sqlite, bun:test)',
-      'Interactive PTY terminal & POSIX shell with pipes, redirects, background jobs, curl, git, jq, npm & bun'
+      'Interactive PTY terminal & POSIX shell with 67 commands (g++, clang++, curl, git, jq, sqlite3, redis-cli, hey, chaos, npm & bun)'
     ]
   }
 ];

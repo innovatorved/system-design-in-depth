@@ -737,6 +737,9 @@ window.App = (() => {
                 starterFiles: guidedEntry?.starterFiles || null,
                 tsStarterFiles: guidedEntry?.tsStarterFiles || null,
                 tsSolutionFiles: guidedEntry?.tsSolutionFiles || null,
+                cppFiles: guidedEntry?.cppFiles || buildEntry?.cppFiles || null,
+                cppStarterFiles: guidedEntry?.cppStarterFiles || null,
+                cppSolutionFiles: guidedEntry?.cppSolutionFiles || null,
                 steps: guidedEntry?.steps || null,
                 guided: guidedEntry || null,
                 backLabel: 'Back to Build Guide',
@@ -764,13 +767,13 @@ window.App = (() => {
               if (opts.mode === 'guided' || opts.mode === 'sandbox') {
                 mountOpts.mode = opts.mode;
               }
-              if (opts.lang === 'js' || opts.lang === 'ts') {
+              if (opts.lang === 'js' || opts.lang === 'ts' || opts.lang === 'cpp') {
                 mountOpts.language = opts.lang;
               }
               if (window.Analytics?.trackCodeLabOpen) {
                 window.Analytics.trackCodeLabOpen(currentSlug, mountOpts.mode || 'guided', mountOpts.language || 'javascript');
               }
-              activeCodeLab = window.CodeLab.mount(mountEl, mountOpts);
+              activeCodeLab = attachCodeLabExtensions(window.CodeLab.mount(mountEl, mountOpts), mountOpts);
               if (typeof opts.stepIndex === 'number' && !Number.isNaN(opts.stepIndex) && activeCodeLab?.selectStep) {
                 setTimeout(() => activeCodeLab.selectStep(opts.stepIndex, true), 80);
               }
@@ -820,16 +823,16 @@ window.App = (() => {
         if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
-          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.13/dist/code-lab.css';
+          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.2.0/dist/code-lab.css';
           link.crossOrigin = 'anonymous';
           link.onerror = function () {
             this.onerror = null;
-            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.13/dist/code-lab.css';
+            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.2.0/dist/code-lab.css';
           };
           document.head.appendChild(link);
         }
         if (!window.CodeLab) {
-          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.13/dist/code-lab.js');
+          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.2.0/dist/code-lab.js');
         }
 
         if (neededBuildScripts.length > 0 && window.loadScript) {
@@ -1819,21 +1822,47 @@ window.App = (() => {
 
   let globalCodeLabInstance = null;
 
+  function attachCodeLabExtensions(wb) {
+    if (!wb || !window.CodeLab) return wb;
+    const ext = window.CodeLab.extensions || {};
+    if (typeof ext.cpp === 'function') {
+      const toolchain = ext.cpp(null, {
+        std: 'c++20',
+        optLevel: '-O2',
+        cacheInIndexedDB: true
+      });
+      if (toolchain) {
+        wb.cppToolchain = toolchain;
+        wb.cppCompiler = window.__codelabCppCompiler || null;
+        wb.cppOptions = toolchain.options;
+        const vfs = wb.vfs || wb.shell?.vfs;
+        if (vfs) {
+          if (typeof toolchain.prepareVfs === 'function') {
+            toolchain.prepareVfs(vfs);
+          } else if (typeof window.CodeLab.seedCppHeadersIntoVfs === 'function') {
+            window.CodeLab.seedCppHeadersIntoVfs(vfs, toolchain.options?.extraHeaders);
+          }
+        }
+      }
+    }
+    return wb;
+  }
+
   function ensureCodeLabLoaded() {
     if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.13/dist/code-lab.css';
+      link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.2.0/dist/code-lab.css';
       link.crossOrigin = 'anonymous';
       link.onerror = function () {
         this.onerror = null;
-        this.href = 'https://unpkg.com/@innovatorved/code-lab@0.1.13/dist/code-lab.css';
+        this.href = 'https://unpkg.com/@innovatorved/code-lab@0.2.0/dist/code-lab.css';
       };
       document.head.appendChild(link);
     }
     if (window.CodeLab) return Promise.resolve(window.CodeLab);
     if (window.loadScript) {
-      return window.loadScript('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.1.13/dist/code-lab.js').then(() => window.CodeLab);
+      return window.loadScript('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.2.0/dist/code-lab.js').then(() => window.CodeLab);
     }
     return Promise.resolve(null);
   }
@@ -1873,7 +1902,7 @@ window.App = (() => {
       globalCodeLabInstance = null;
     }
     if (mountEl) {
-      mountEl.innerHTML = '<div style="padding:2rem;color:var(--fg-muted);font-family:var(--font-mono);">Loading @innovatorved/code-lab@0.1.13 IDE...</div>';
+      mountEl.innerHTML = '<div style="padding:2rem;color:var(--fg-muted);font-family:var(--font-mono);">Loading @innovatorved/code-lab@0.2.0 IDE...</div>';
     }
 
     return ensureCodeLabLoaded().then((CodeLab) => {
@@ -1886,7 +1915,7 @@ window.App = (() => {
       if (window.Analytics?.trackCodeLabOpen) {
         window.Analytics.trackCodeLabOpen(opts.labId || 'global-lab', opts.mode || 'sandbox', opts.language || 'javascript');
       }
-      globalCodeLabInstance = CodeLab.mount(mountEl, opts);
+      globalCodeLabInstance = attachCodeLabExtensions(CodeLab.mount(mountEl, opts), opts);
       setTimeout(() => {
         const ed = globalCodeLabInstance?._editor || globalCodeLabInstance?.editor;
         if (ed && typeof ed.layout === 'function') ed.layout();
@@ -1900,6 +1929,7 @@ window.App = (() => {
     let fileName = 'snippet.js';
     let entryFile = 'snippet.js';
     let runCmd = 'node snippet.js';
+    let language = 'js';
     const files = {};
     if (norm === 'py' || norm === 'python') {
       fileName = 'snippet.py';
@@ -1909,6 +1939,12 @@ window.App = (() => {
       fileName = 'snippet.ts';
       entryFile = 'snippet.ts';
       runCmd = 'bun run snippet.ts';
+      language = 'ts';
+    } else if (norm === 'cpp' || norm === 'c++' || norm === 'cc' || norm === 'cxx' || norm === 'hpp' || norm === 'c') {
+      fileName = 'main.cpp';
+      entryFile = 'main.cpp';
+      runCmd = 'g++ -std=c++20 -O2 main.cpp -o app && ./app';
+      language = 'cpp';
     } else if (norm === 'go' || norm === 'golang') {
       fileName = 'main.go';
       entryFile = 'main.go';
@@ -1958,8 +1994,10 @@ window.App = (() => {
       title: title || 'Interactive Code Snippet',
       summary: `Run and experiment with this ${norm.toUpperCase()} snippet inside @innovatorved/code-lab (${runCmd}).`,
       mode: 'sandbox',
+      language,
       entry: entryFile,
-      files
+      files,
+      ...(language === 'cpp' ? { cppFiles: files, cppEntry: entryFile } : {})
     });
   }
 
