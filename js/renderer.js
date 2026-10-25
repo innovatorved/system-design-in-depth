@@ -301,11 +301,14 @@ window.Renderer = (() => {
       <div class="lesson-header">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--${kindClass}">${unit.kind}</span>
-          ${unit.archive?.tags?.map(t => '<span class="tag">' + t + '</span>').join('') || ''}
+          ${unit.archive?.tags?.map(t => ' <span class="tag">' + t + '</span>').join('') || ''}
         </div>
         <h1 class="lesson-header__title">${unit.title}</h1>
         <div class="lesson-header__meta">
-          ${unit.archive?.wordCount ? '<span class="lesson-header__meta-item">' + icons.clock + ' ' + Math.ceil(unit.archive.wordCount / 200) + ' min read</span>' : ''}
+          ${(() => {
+            const words = unit.archive?.wordCount || (archiveContent?.content ? archiveContent.content.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).length : (moduleContent?.content ? moduleContent.content.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).length : 0));
+            return words ? '<span class="lesson-header__meta-item">' + icons.clock + ' ' + Math.ceil(words / 200) + ' min read</span>' : '';
+          })()}
           <span class="lesson-header__meta-item">${icons.book} Module ${mod.number}: ${mod.title}</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date">${icons.calendar} Updated ${reviewDate}</span>
         </div>
@@ -330,11 +333,12 @@ window.Renderer = (() => {
       html += `
         <aside class="intuition">
           <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body">${moduleContent.intuition}</div>
+          <div class="intuition__body">${convertMarkdownToHTML(moduleContent.intuition)}</div>
         </aside>`;
     }
 
     // Audio player
+    const initialDuration = unit.archive?.audioDuration || unit.audioDuration || '--:--';
     html += `
       <div class="audio-player" id="audio-player-${slug}">
         <button class="audio-player__play-btn" id="audio-btn-${slug}" data-action="toggle-audio" data-slug="${slug}" aria-label="Play audio" title="Play audio">
@@ -345,7 +349,7 @@ window.Renderer = (() => {
             <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
           </svg>
         </button>
-        <span class="audio-player__time" id="audio-time-${slug}">0:00 / --:--</span>
+        <span class="audio-player__time" id="audio-time-${slug}">0:00 / ${initialDuration}</span>
         <div class="audio-player__track" data-action="seek-audio" data-slug="${slug}" id="audio-track-${slug}">
           <div class="audio-player__progress" id="audio-bar-${slug}" style="width: 0%;"></div>
         </div>
@@ -1174,12 +1178,12 @@ window.Renderer = (() => {
       return m + ':' + (s < 10 ? '0' : '') + s;
     }
 
-    if (audio.duration && timeDisplay) {
+    if (audio.duration && isFinite(audio.duration) && timeDisplay) {
       timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
     }
 
     audio.addEventListener('loadedmetadata', () => {
-      if (timeDisplay && audio.duration) {
+      if (timeDisplay && audio.duration && isFinite(audio.duration)) {
         timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
       }
     });

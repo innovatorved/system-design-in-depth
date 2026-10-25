@@ -56,8 +56,8 @@ window.Landing = (() => {
     const lastUnit = last && findUnit(last);
     const first = allUnits()[0];
     const primary = lastUnit
-      ? `<a class="btn btn--primary landing-btn" href="#topic/${esc(last)}">Continue learning →</a>`
-      : `<a class="btn btn--primary landing-btn" href="#topic/${esc(first?.slug || '')}">Start learning →</a>`;
+      ? `<a class="btn btn--primary landing-btn" href="/topic/${esc(last)}/">Continue learning →</a>`
+      : `<a class="btn btn--primary landing-btn" href="/topic/${esc(first?.slug || '')}/">Start learning →</a>`;
     return `
       <section class="landing-hero">
         <div class="landing-hero__eyebrow"><span class="landing-dot"></span>Free &amp; open source</div>
@@ -126,8 +126,9 @@ window.Landing = (() => {
       for (const mod of part.modules) {
         const prog = window.Progress.getModuleProgress(mod.id);
         const pct = prog.total ? Math.round((prog.completed / prog.total) * 100) : 0;
+        const firstUnitSlug = mod.units[0]?.slug || '';
         html += `
-          <a class="landing-module" href="#" data-module="${mod.id}" data-units="${mod.units.map(u => esc(u.slug)).join(' ')}">
+          <a class="landing-module" href="/topic/${esc(firstUnitSlug)}/" data-module="${mod.id}" data-units="${mod.units.map(u => esc(u.slug)).join(' ')}">
             <span class="landing-module__num">${esc(mod.number)}</span>
             <span class="landing-module__title">${esc(mod.title)}</span>
             <span class="landing-module__meta">${mod.units.length} topics</span>
@@ -144,7 +145,7 @@ window.Landing = (() => {
     return `
       <section class="landing-closing">
         <h2 class="landing-closing__title">Start with the first lesson.</h2>
-        <a class="btn btn--primary landing-btn" href="#topic/${esc(first?.slug || '')}">Start learning →</a>
+        <a class="btn btn--primary landing-btn" href="/topic/${esc(first?.slug || '')}/">Start learning →</a>
       </section>`;
   }
 
@@ -172,7 +173,7 @@ window.Landing = (() => {
       sim.mount(stage);
       active = sim;
       root.querySelectorAll('.landing-tab').forEach((t, j) => { t.classList.toggle('is-active', j === i); t.setAttribute('aria-selected', String(j === i)); });
-      root.querySelector('#landing-demo-lesson')?.setAttribute('href', '#topic/' + demos[i].lesson);
+      root.querySelector('#landing-demo-lesson')?.setAttribute('href', '/topic/' + demos[i].lesson + '/');
     };
 
     on(root.querySelector('.landing-tabs'), 'click', e => {

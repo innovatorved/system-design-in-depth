@@ -38,8 +38,12 @@
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=17af84f241"></script>
-  <script src="js/manifest.js?v=b58192447f"></script>
+  <script src="js/manifest.js?v=6aedf81985"></script>
 
+  
+  
+  
+  
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -867,11 +871,11 @@
       <div class="lesson-header">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">design</span>
-          <span class="tag">system-design</span><span class="tag">design</span><span class="tag">rate-limiting</span><span class="tag">abuse-prevention</span>
+           <span class="tag">system-design</span> <span class="tag">design</span> <span class="tag">rate-limiting</span> <span class="tag">abuse-prevention</span>
         </div>
         <h1 class="lesson-header__title">Design: rate limiting and abuse prevention</h1>
         <div class="lesson-header__meta">
-          
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 3 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 6.1: Infrastructure & Core Service Designs</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 18, 2026</span>
         </div>
@@ -934,7 +938,7 @@
       </div>
         <aside class="intuition">
           <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p>A rate limiter is a bank of turnstiles at a stadium. Each turnstile lets people through at a steady rate, and a small crowd can bunch up at the front and pass quickly (the <strong>burst</strong>), but the long-run flow is capped. In a distributed system there are many turnstiles, one per gateway server, so they need a <strong>shared counter</strong> (Redis). Otherwise a fan could queue at each of 50 gates in turn and get 50 times the allowance.</p><p><strong>Mental model:</strong> <em>token bucket = refill rate r (the average) + bucket size b (the largest burst)</em>. The distributed version keeps each bucket in Redis and updates it atomically in a single round trip.</p><ul><li><strong>Trap: the limiter becomes the outage.</strong> If Redis is down and the limiter fails closed, you have taken down your own API. Default to failing open, with local approximate limits as a backstop.</li><li><strong>Trap: a Redis round trip on every request at very high QPS.</strong> Consider local token leases, where each node takes 100 tokens at a time, trading a little accuracy for far fewer network calls.</li><li><strong>Trap: clients retrying immediately after a 429.</strong> Send <code>Retry-After</code> and document exponential backoff with jitter. Otherwise throttled clients produce a retry storm.</li></ul></div>
+          <div class="intuition__body"><p><p>A rate limiter is a bank of turnstiles at a stadium. Each turnstile lets people through at a steady rate, and a small crowd can bunch up at the front and pass quickly (the <strong>burst</strong>), but the long-run flow is capped. In a distributed system there are many turnstiles, one per gateway server, so they need a <strong>shared counter</strong> (Redis). Otherwise a fan could queue at each of 50 gates in turn and get 50 times the allowance.</p><p><strong>Mental model:</strong> <em>token bucket = refill rate r (the average) + bucket size b (the largest burst)</em>. The distributed version keeps each bucket in Redis and updates it atomically in a single round trip.</p><ul><li><strong>Trap: the limiter becomes the outage.</strong> If Redis is down and the limiter fails closed, you have taken down your own API. Default to failing open, with local approximate limits as a backstop.</li><li><strong>Trap: a Redis round trip on every request at very high QPS.</strong> Consider local token leases, where each node takes 100 tokens at a time, trading a little accuracy for far fewer network calls.</li><li><strong>Trap: clients retrying immediately after a 429.</strong> Send <code>Retry-After</code> and document exponential backoff with jitter. Otherwise throttled clients produce a retry storm.</li></ul></p></div>
         </aside>
       <div class="audio-player" id="audio-player-rate-limiting-and-abuse-prevention-case-study">
         <button class="audio-player__play-btn" id="audio-btn-rate-limiting-and-abuse-prevention-case-study" data-action="toggle-audio" data-slug="rate-limiting-and-abuse-prevention-case-study" aria-label="Play audio" title="Play audio">
@@ -945,7 +949,7 @@
             <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
           </svg>
         </button>
-        <span class="audio-player__time" id="audio-time-rate-limiting-and-abuse-prevention-case-study">0:00 / --:--</span>
+        <span class="audio-player__time" id="audio-time-rate-limiting-and-abuse-prevention-case-study">0:00 / 3:43</span>
         <div class="audio-player__track" data-action="seek-audio" data-slug="rate-limiting-and-abuse-prevention-case-study" id="audio-track-rate-limiting-and-abuse-prevention-case-study">
           <div class="audio-player__progress" id="audio-bar-rate-limiting-and-abuse-prevention-case-study" style="width: 0%;"></div>
         </div>
@@ -1412,7 +1416,7 @@ flowchart TD
   </div>
 
   <!-- Data Scripts -->
-  <script type="text/plain" data-defer src="data/curriculum.js?v=373685b700"></script>
+  <script type="text/plain" data-defer src="data/curriculum.js?v=be371d2fb3"></script>
   <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
@@ -1427,8 +1431,8 @@ flowchart TD
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators.js?v=b8038d5a4b"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=0d2af98234"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=bc86837fd6"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=1097b4baa8"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1436,7 +1440,7 @@ flowchart TD
   <script type="text/plain" data-defer src="js/dashboard.js?v=3fc347d571"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=334b85900d"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=062226f346"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=da0346f650"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=df2bb60aeb"></script>

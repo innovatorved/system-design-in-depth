@@ -190,7 +190,7 @@ for (const sFile of simulatorFiles) {
   }
 }
 
-for (const s of ['js/exercises.js', 'js/quiz.js', 'js/renderer.js']) {
+for (const s of ['js/manifest.js', 'js/exercises.js', 'js/quiz.js', 'js/renderer.js', 'js/landing.js']) {
   const p = path.join(root, s);
   if (fs.existsSync(p)) {
     vm.runInNewContext(fs.readFileSync(p, 'utf8'), context);
@@ -264,8 +264,10 @@ if (!curriculum) {
   process.exit(1);
 }
 
-// 4. Read Base index.html Shell
+// 4. Read Base index.html Shell & Audio Manifest
 const baseHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const audioManifestPath = path.join(root, 'audio/manifest.json');
+const audioManifest = fs.existsSync(audioManifestPath) ? JSON.parse(fs.readFileSync(audioManifestPath, 'utf8')) : {};
 
 // Curriculum baseline release date
 const defaultLastmod = '2026-09-18';
@@ -302,10 +304,94 @@ for (const part of curriculum.parts) {
   }
 }
 
+// Helper to robustly replace the inner content of <div class="sidebar__content" id="sidebar-content">
+function replaceSidebarContent(html, newSidebarHtml) {
+  const startMarker = '<div class="sidebar__content" id="sidebar-content">';
+  const startIndex = html.indexOf(startMarker);
+  if (startIndex === -1) return html;
+  const contentStart = startIndex + startMarker.length;
+
+  const asideEnd = html.indexOf('</aside>', contentStart);
+  if (asideEnd === -1) return html;
+
+  const lastDivEnd = html.lastIndexOf('</div>', asideEnd);
+  if (lastDivEnd === -1 || lastDivEnd < contentStart) return html;
+
+  return html.slice(0, contentStart) +
+    `\n${newSidebarHtml}\n    ` +
+    html.slice(lastDivEnd);
+}
+
+// Helper to set or replace JSON-LD structured data deterministically before </head>
+function setJsonLd(doc, jsonLdObj) {
+  const stripped = doc
+    .replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/gi, '')
+    .replace(/\s*<\/head>/i, '');
+  const jsonLdTag = `\n\n  <script type="application/ld+json">\n${JSON.stringify(jsonLdObj, null, 2)}\n  </script>\n</head>`;
+  return stripped + jsonLdTag;
+}
+
+// 4a. Statically Pre-render Homepage index.html with Full Sidebar & Crawlable Curriculum Links
+console.log('Pre-rendering homepage index.html with crawlable curriculum & JSON-LD structured data...');
+const totalSims = Object.keys(context.window.SIMULATORS || {}).length;
+const totalBuilds = Object.keys(context.window.IMPLEMENTATIONS_DATA || {}).length;
+context.window.SITE_COUNTS = context.window.SITE_COUNTS || {
+  topics: units.length,
+  simulators: totalSims,
+  builds: totalBuilds,
+  videos: 469,
+  questions: 1000
+};
+
+let homeHtml = baseHtml;
+const homeSidebarHtml = renderStaticSidebar(curriculum, null);
+homeHtml = replaceSidebarContent(homeHtml, homeSidebarHtml);
+
+if (context.window.Landing && typeof context.window.Landing.render === 'function') {
+  const landingHtml = context.window.Landing.render().replace('<div class="landing">', '<div class="landing landing-shell">');
+  homeHtml = homeHtml.replace(
+    /(<!-- landing:start[^>]*-->\n)[\s\S]*?(\s*<!-- landing:end -->)/i,
+    (_, open, close) => open + landingHtml + close
+  );
+}
+
+const homeJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${baseUrl}/#website`,
+      'url': `${baseUrl}/`,
+      'name': 'System Design In Depth',
+      'description': 'An interactive, open-source curriculum for system design and distributed systems engineering — architectural tracks, interactive simulators, from-scratch builds, and authoritative source citations.',
+      'author': {
+        '@type': 'Person',
+        'name': 'Ved Gupta',
+        'url': 'https://vedgupta.in'
+      }
+    },
+    {
+      '@type': 'Course',
+      '@id': `${baseUrl}/#course`,
+      'name': 'System Design In Depth',
+      'description': 'A comprehensive curriculum covering system design patterns, distributed consensus, storage engines, high-availability tradeoffs, and real-world production postmortems.',
+      'provider': {
+        '@type': 'Organization',
+        'name': 'System Design In Depth',
+        'url': baseUrl
+      }
+    }
+  ]
+};
+homeHtml = setJsonLd(homeHtml, homeJsonLd);
+
+fs.writeFileSync(path.join(root, 'index.html'), homeHtml, 'utf8');
+console.log('✓ Pre-rendered homepage index.html with 200 crawlable topic links & JSON-LD');
+
 console.log(`Starting SSG generation for ${units.length} curriculum units...`);
 
-// Ensure <base href="/"> is in head if not already present
-let template = baseHtml;
+// Clean template for topic and build pages (stripped of homepage-specific JSON-LD)
+let template = baseHtml.replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/gi, '');
 if (!template.includes('<base href="/">')) {
   template = template.replace('<head>', '<head>\n  <base href="/">');
 }
@@ -320,6 +406,32 @@ template = template.replace(/<html\b([^>]*)>/i, (match, attrs) => {
 for (const { unit, mod } of units) {
   const slug = unit.slug;
 
+  const modContent = context.window.MODULE_CONTENT[mod.id]?.[slug];
+  const archiveContent = context.window.ARCHIVE_CONTENT[slug];
+
+  // Precompute actual word count
+  const rawContent = archiveContent?.content || modContent?.content || '';
+  const cleanProse = rawContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const actualWords = cleanProse ? cleanProse.split(/\s+/).length : (unit.archive?.wordCount || 500);
+  if (!unit.archive) unit.archive = {};
+  unit.archive.wordCount = actualWords;
+
+  // Precompute audio duration from MP3 / manifest (48kbps CBR = 6000 bytes/sec)
+  let audioSecs = 0;
+  if (audioManifest[slug]?.size) {
+    audioSecs = Math.round(audioManifest[slug].size / 6000);
+  } else {
+    const mp3Path = path.join(root, 'audio', `${slug}.mp3`);
+    if (fs.existsSync(mp3Path)) {
+      audioSecs = Math.round(fs.statSync(mp3Path).size / 6000);
+    }
+  }
+  const audioMin = Math.floor(audioSecs / 60);
+  const audioRemSec = Math.floor(audioSecs % 60);
+  const audioDurationStr = audioSecs > 0 ? `${audioMin}:${audioRemSec < 10 ? '0' : ''}${audioRemSec}` : '--:--';
+  unit.archive.audioDuration = audioDurationStr;
+  unit.audioDuration = audioDurationStr;
+
   // Seed deterministic PRNG per slug so rendering is 100% reproducible
   let seed = 0;
   for (let i = 0; i < slug.length; i++) {
@@ -332,8 +444,6 @@ for (const { unit, mod } of units) {
     return currentSeed / 233280;
   };
 
-  const modContent = context.window.MODULE_CONTENT[mod.id]?.[slug];
-  const archiveContent = context.window.ARCHIVE_CONTENT[slug];
   const desc = makeDescription(unit, mod, modContent, archiveContent);
   const title = `${unit.title} — System Design In Depth`;
   const canonicalUrl = `${baseUrl}/topic/${slug}/`;
@@ -431,15 +541,11 @@ for (const { unit, mod } of units) {
     }
   };
 
-  const jsonLdTag = `\n  <script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n  </script>`;
-  page = page.replace('</head>', () => `${jsonLdTag}\n</head>`);
+  page = setJsonLd(page, jsonLd);
 
   // Pre-render sidebar HTML with current unit active
   const sidebarHtml = renderStaticSidebar(curriculum, slug);
-  page = page.replace(
-    /<div class="sidebar__content" id="sidebar-content"><\/div>/i,
-    () => `<div class="sidebar__content" id="sidebar-content">\n${sidebarHtml}\n    </div>`
-  );
+  page = replaceSidebarContent(page, sidebarHtml);
 
   // Replace #reader content with prerendered lesson
   page = page.replace(
@@ -579,8 +685,7 @@ for (const [buildId, build] of buildEntries) {
     }
   };
 
-  const jsonLdTag = `\n  <script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n  </script>`;
-  page = page.replace('</head>', () => `${jsonLdTag}\n</head>`);
+  page = setJsonLd(page, jsonLd);
 
   // Activate Builds tab in sidebar and pre-render Builds sidebar list
   page = page.replace(
@@ -592,10 +697,7 @@ for (const [buildId, build] of buildEntries) {
     'class="sidebar__tab active" data-tab="builds" role="tab" aria-selected="true"'
   );
   const buildsSidebarHtml = renderStaticBuildsSidebar(implementations, buildId);
-  page = page.replace(
-    /<div class="sidebar__content" id="sidebar-content"><\/div>/i,
-    () => `<div class="sidebar__content" id="sidebar-content">\n${buildsSidebarHtml}\n    </div>`
-  );
+  page = replaceSidebarContent(page, buildsSidebarHtml);
 
   // Replace #reader content with prerendered build page
   page = page.replace(

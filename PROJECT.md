@@ -46,7 +46,8 @@ Data Flow & Dependency Structure:
 ## Code Layout
 ### `system-design-in-depth` (`/Users/vedgupta/Desktop/system-design`)
 - `tools/stamp-assets.js`: Asset discovery and hash replacement script.
-- `tools/generate-static.js`: Static HTML prerender generator for topic and build pages.
+- `tools/generate-static.js`: Static HTML prerender generator for topic, build pages, and pre-rendered homepage index.html with Schema.org JSON-LD and full crawlable sidebar.
+- `tools/check-rendered.js`: QA gate verifying 0 duplicate paragraphs, 0 raw Markdown leaks, badge spacing, precomputed audio durations, and crawlable homepage links.
 - `tools/validate.js`: Repository integrity and validation harness.
 - `tools/build.js`: Production `dist/` assembler.
 - `build/*/index.html`: 15 static build lab pages.

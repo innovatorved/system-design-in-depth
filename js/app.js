@@ -898,7 +898,10 @@ window.App = (() => {
         (currentView === 'cheatsheet' && findModule(currentSlug)?.id === mod.id);
       if (needed) {
         const reader = document.getElementById('reader');
-        if (reader) reader.removeAttribute('data-prerendered');
+        const isPrerenderedTopic = reader && reader.getAttribute('data-prerendered') === currentSlug;
+        if (!isPrerenderedTopic && reader) {
+          reader.removeAttribute('data-prerendered');
+        }
         renderCurrentView();
       }
     }).catch(err => {

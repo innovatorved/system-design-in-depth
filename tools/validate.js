@@ -498,6 +498,23 @@ if (fs.existsSync(topicBaseDir)) {
         reportError(`Static page topic/${slug}/index.html body text has only ${words} words (< 300 required)`);
       }
     }
+
+    // Verify no duplicate consecutive paragraphs
+    const pMatches = [...html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)]
+      .map(m => m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim())
+      .filter(t => t.length > 20);
+    for (let i = 0; i < pMatches.length - 1; i++) {
+      if (pMatches[i] === pMatches[i + 1] || (pMatches[i].length > 40 && pMatches[i + 1].length > 40 && pMatches[i].slice(0, 40) === pMatches[i + 1].slice(0, 40))) {
+        reportError(`topic/${slug}/index.html: consecutive duplicate paragraph detected: "${pMatches[i].slice(0, 50)}..."`);
+        break;
+      }
+    }
+
+    // Verify no raw markdown leaks in intuition
+    const intuitionMatch = html.match(/class="intuition__body">([\s\S]*?)<\/div>/i);
+    if (intuitionMatch && /\*\*[^*]+?\*\*/.test(intuitionMatch[1])) {
+      reportError(`topic/${slug}/index.html: raw markdown bold (**...**) leaked into .intuition__body`);
+    }
   }
 
   if (missingStaticCount === 0 && invalidCanonicalCount === 0 && emptyReaderCount === 0 && lowWordCount === 0) {
