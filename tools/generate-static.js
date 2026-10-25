@@ -324,11 +324,9 @@ function replaceSidebarContent(html, newSidebarHtml) {
 
 // Helper to set or replace JSON-LD structured data deterministically before </head>
 function setJsonLd(doc, jsonLdObj) {
-  const stripped = doc
-    .replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/gi, '')
-    .replace(/\s*<\/head>/i, '');
+  const stripped = doc.replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/gi, '');
   const jsonLdTag = `\n\n  <script type="application/ld+json">\n${JSON.stringify(jsonLdObj, null, 2)}\n  </script>\n</head>`;
-  return stripped + jsonLdTag;
+  return stripped.replace(/\s*<\/head>/i, jsonLdTag);
 }
 
 // 4a. Statically Pre-render Homepage index.html with Full Sidebar & Crawlable Curriculum Links
