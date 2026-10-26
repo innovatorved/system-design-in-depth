@@ -777,7 +777,7 @@ window.Renderer = (() => {
         const cleanLang = (lang || 'text').toLowerCase();
         const isRunnable = ['js', 'javascript', 'ts', 'typescript', 'node', 'sh', 'bash'].includes(cleanLang);
         const runBtn = isRunnable
-          ? `<button type="button" class="code-block__copy" data-action="run-snippet-codelab" data-lang="${escapeHtml(cleanLang)}" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE">⚡ Run in CodeLab</button>`
+          ? `<button type="button" class="code-block__copy code-block__run-btn" data-action="run-snippet-codelab" data-lang="${escapeHtml(cleanLang)}" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg><span>Run in CodeLab</span></button>`
           : '';
         codeBlocks.push(
           '<div class="code-block">' +

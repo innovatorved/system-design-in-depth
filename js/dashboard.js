@@ -555,7 +555,7 @@
                 '<h2 class="eco-card__title">Interactive Back-of-the-Envelope Capacity &amp; Cost Estimator</h2>' +
                 '<p class="eco-card__desc">Adjust workload parameters to compute real-time QPS, Little\'s Law concurrency, network bandwidth, 5-year storage with replication, and Redis cache shards.</p>' +
               '</div>' +
-              '<button class="eco-btn eco-btn--primary" data-action="open-capacity-codelab">⚡ Run Capacity Model in CodeLab</button>' +
+              '<button class="eco-btn eco-btn--primary" data-action="open-capacity-codelab">Run Capacity Model in CodeLab</button>' +
             '</div>' +
 
             '<div class="eco-grid eco-grid--4" style="gap:12px;margin-bottom:20px;">' +

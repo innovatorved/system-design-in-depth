@@ -990,7 +990,7 @@
                 bpButtonsHtml +
               '</div>' +
               '<div class="sandbox-canvas-actions">' +
-                '<button class="eco-btn eco-btn--sm eco-btn--primary" data-sandbox-action="simulate-cluster-codelab" title="Compile active whiteboard topology into a runnable multi-node cluster inside CodeLab">⚡ Simulate in CodeLab</button>' +
+                '<button class="eco-btn eco-btn--sm eco-btn--primary" data-sandbox-action="simulate-cluster-codelab" title="Compile active whiteboard topology into a runnable multi-node cluster inside CodeLab">Simulate in CodeLab</button>' +
                 '<button class="eco-btn eco-btn--sm ' + (this._connectMode || this._activeTool === 'connect' ? 'eco-btn--primary' : '') + '" data-sandbox-action="toggle-connect">' +
                   (this._connectMode || this._activeTool === 'connect' ? 'Connect Mode: ON' : 'Connect Nodes (C)') +
                 '</button>' +
