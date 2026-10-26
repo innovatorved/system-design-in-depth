@@ -93,7 +93,7 @@ Each reference implementation runs in the browser at `/build/<slug>/` using **`@
 20. [`/build/outbox-cdc-relay/`](build/outbox-cdc-relay/) — Transactional Outbox Pattern, Polling CDC Relay & Idempotent Consumer Deduplication
 
 ### `@innovatorved/code-lab`
-The interactive build labs run on [`@innovatorved/code-lab`](https://github.com/innovatorved/code-lab) (`v0.3.1`), a standalone browser IDE, public GitHub repository cloner (`git clone`), modular language & guided lab extension engine (`js`, `ts`, `cpp`, `python`, `guided-lab`), and Web Worker Node.js v22, Bun v1.1, C++20 WebAssembly (Clang/LLVM + WASI `libc++`) & Python 3.12 WebAssembly (Pyodide) runtime. The embedded labs pin the npm bundle (`0.3.1`) via jsDelivr with an unpkg fallback:
+The interactive build labs run on [`@innovatorved/code-lab`](https://github.com/innovatorved/code-lab) (`v0.3.2`), a standalone browser IDE, public GitHub repository cloner (`git clone`), modular language & guided lab extension engine (`js`, `ts`, `cpp`, `python`, `guided-lab`), and Web Worker Node.js v22, Bun v1.1, C++20 WebAssembly (Clang/LLVM + WASI `libc++`) & Python 3.12 WebAssembly (Pyodide) runtime. The embedded labs pin the npm bundle (`0.3.2`) via jsDelivr with an unpkg fallback:
 - **[Live Cloud IDE & GitHub Repo Explorer (`code-lab-3dr.pages.dev`)](https://code-lab-3dr.pages.dev)** — Enter any public GitHub repository URL (`owner/repo`) to clone and run it directly in the browser.
 - **[GitHub Repository (`innovatorved/code-lab`)](https://github.com/innovatorved/code-lab)** — Source code, issues, and release history.
 - **[Documentation Wiki](https://github.com/innovatorved/code-lab/wiki)** — Quick start, workbench configuration, POSIX shell & coreutils, and runtime APIs.

@@ -1,11 +1,11 @@
 /**
  * ============================================================
- * @innovatorved/code-lab v0.3.1 — Standalone Browser Code IDE & Virtual Runtime
+ * @innovatorved/code-lab v0.3.2 — Standalone Browser Code IDE & Virtual Runtime
  * ============================================================
  * Features:
  *   - Sandboxed Web Worker Execution Engine with Multi-Instance Isolation & Watchdog Timer
  *   - First-Class Node.js and Bun Runtimes (Bun.serve, bun:test, bun:sqlite, Bun.*)
- *   - Full POSIX Shell AST & 55+ UNIX Coreutils (pipes, redirects, globs, env vars, git & git clone)
+ *   - Full POSIX Shell AST & 71 UNIX Coreutils (pipes, redirects, globs, env vars, git & git clone)
  *   - Interactive PTY Terminal Emulator with inline prompt, Tab completion & ANSI colors
  *   - Persistent HTTP/TCP Servers, CLI curl & Live Port/HTTP Preview
  *   - Modular VS Code Workbench: File Tree, Tabs, Command Palette, Diff Viewer
@@ -160,7 +160,12 @@ var CodeLabCsp = (() => {
       directive("worker-src", [self, "blob:"].concat(sourcesFor(mode, allow, "workerSrc"))),
       directive("frame-src", withData("frameSrc")),
       directive("form-action", [self]),
-      directive("frame-ancestors", [options.frameAncestors || "'self'"])
+      directive("frame-ancestors", (() => {
+        const rawFa = typeof options.frameAncestors === "string" ? options.frameAncestors.trim() : "";
+        if (!rawFa) return ["'self'"];
+        const tokens = cleanSources(rawFa.split(/\s+/));
+        return tokens.length > 0 ? tokens : ["'self'"];
+      })())
     ].join("; ");
   }
   function describePreviewNetwork(config) {
@@ -198,15 +203,6 @@ var CodeLabCsp = (() => {
     };
   }
   function shim(name) {
-    var blocked = false;
-    try {
-      var existing = window[name];
-      if (existing) { existing.getItem('__codelab_probe__'); return; }
-    } catch (err) {
-      // Expected on an opaque origin: the accessor itself throws.
-      blocked = Boolean(err);
-    }
-    void blocked;
     try {
       Object.defineProperty(window, name, { configurable: true, value: memoryStorage() });
     } catch (err) {
@@ -366,6 +362,7 @@ var CodeLabCsp = (() => {
   }
 
   window.addEventListener('message', function (event) {
+    if (event && event.source && event.source !== window.parent) return;
     var data = event && event.data;
     if (!data || typeof data !== 'object') return;
     if (data.type === 'codelab:preview-fetch-res' && data.reqId) {
@@ -578,6 +575,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('message', (event) => {
   const data = event && event.data;
   if (!data || data.type !== 'codelab:config') return;
+  // Reject configuration attempts originating from preview tabs/frames themselves.
+  if (event.source && event.source.url && /\/__preview\//.test(event.source.url)) return;
   const csp = typeof data.csp === 'string' ? data.csp.trim() : '';
   if (!csp || csp.length > MAX_CONFIG_LENGTH) return;
   configuredCsp = csp;
@@ -600,10 +599,15 @@ function parsePreviewPath(pathname) {
   return { port: Number(match[1]), path: match[2] || '/' };
 }
 
+function escapeMetaAttr(val) {
+  return String(val || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function previewErrorResponse(status, title, message) {
   const csp = previewPolicy();
+  const safeCsp = escapeMetaAttr(csp);
   const body = `<!doctype html><meta charset="utf-8">` +
-    `<meta http-equiv="Content-Security-Policy" content="${csp}">` +
+    `<meta http-equiv="Content-Security-Policy" content="${safeCsp}">` +
     `<title>${title}</title>` +
     `<body style="font-family:system-ui,-apple-system,sans-serif;padding:32px;color:#666;background:#0a0a0a">` +
     `<h1 style="color:#e5e5e5;font-size:18px">${title}</h1><p>${message}</p></body>`;
@@ -620,14 +624,15 @@ function previewErrorResponse(status, title, message) {
 /** Inject the policy, a base URL and the sandbox shims into an HTML response. */
 function injectPreviewHead(html, port) {
   const csp = previewPolicy();
+  const safeCsp = escapeMetaAttr(csp);
   const shims = previewShims();
   const tags = [];
   const hasCsp = /<meta[^>]+http-equiv=["']?content-security-policy/i.test(html);
   const hasBase = /<base\b/i.test(html);
   const hasShims = html.indexOf('data-codelab-preview-shims') !== -1;
 
-  if (!hasCsp) tags.push(`<meta http-equiv="Content-Security-Policy" content="${csp}">`);
-  if (!hasBase) tags.push(`<base href="${PREVIEW_PREFIX}${port}/">`);
+  if (!hasCsp) tags.push(`<meta http-equiv="Content-Security-Policy" content="${safeCsp}">`);
+  if (!hasBase) tags.push(`<base href="${PREVIEW_PREFIX}${Number(port) || 3000}/">`);
   if (!hasShims && shims) tags.push(shims);
   if (tags.length === 0) return html;
 
@@ -643,7 +648,8 @@ function injectPreviewHead(html, port) {
 
 async function proxyVirtualRequest(event, port, targetPath) {
   const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-  if (!clients || !clients.length) {
+  const workbenchClients = (clients || []).filter((c) => !c.url || !/\/__preview\//.test(c.url));
+  if (!workbenchClients.length) {
     return previewErrorResponse(
       503,
       'No active CodeLab workbench',
@@ -651,7 +657,7 @@ async function proxyVirtualRequest(event, port, targetPath) {
     );
   }
 
-  const client = clients[0];
+  const client = workbenchClients[0];
   const channel = new MessageChannel();
   const request = event.request;
   const method = request.method || 'GET';
@@ -706,6 +712,17 @@ async function proxyVirtualRequest(event, port, targetPath) {
   let responseBody = response && response.body;
   const responseHeaders = new Headers((response && response.headers) || {});
   const contentType = responseHeaders.get('content-type') || '';
+
+  // Decode Uint8Array / ArrayBuffer HTML bodies so head injection always applies.
+  if (/text\/html/i.test(contentType) && responseBody && typeof responseBody !== 'string') {
+    try {
+      if (responseBody instanceof ArrayBuffer || ArrayBuffer.isView(responseBody)) {
+        responseBody = new TextDecoder('utf-8').decode(responseBody);
+      }
+    } catch (err) {
+      console.warn('[code-lab] preview-sw: failed to decode HTML buffer', err);
+    }
+  }
 
   // Inject the policy and a <base> so relative asset URLs in HTML responses
   // resolve under the `/__preview/:port/` namespace rather than the host root.
