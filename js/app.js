@@ -1052,11 +1052,12 @@ window.App = (() => {
     html.setAttribute('data-theme', next);
 
     // Update icons
+    const isDark = next === 'dark';
     const sunIcon = document.querySelector('.icon-sun');
     const moonIcon = document.querySelector('.icon-moon');
     if (sunIcon && moonIcon) {
-      sunIcon.style.display = next === 'light' ? '' : 'none';
-      moonIcon.style.display = next === 'dark' ? '' : 'none';
+      sunIcon.style.display = isDark ? '' : 'none';
+      moonIcon.style.display = isDark ? 'none' : '';
     }
 
     // Update theme-color meta

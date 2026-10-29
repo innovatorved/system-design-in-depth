@@ -265,7 +265,7 @@ window.Analytics = (() => {
       if (Array.isArray(p.bookmarks)) bookmarksCount = p.bookmarks.length;
     } catch {}
     const viewport = `${window.innerWidth || 0}x${window.innerHeight || 0}`;
-    const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const theme = document.documentElement.getAttribute('data-theme') || 'light';
     return {
       completed_topics_count: completedCount,
       bookmarks_count: bookmarksCount,

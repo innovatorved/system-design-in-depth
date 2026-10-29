@@ -30,7 +30,7 @@
   // 3. Theme initialization (prevent FOUC)
   try {
     const stored = localStorage.getItem('sd-theme');
-    const dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const dark = stored === 'dark';
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#000000' : '#ffffff');
   } catch {}

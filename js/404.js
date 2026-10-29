@@ -11,12 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  syncThemeIcons(document.documentElement.getAttribute('data-theme') || 'dark');
+  syncThemeIcons(document.documentElement.getAttribute('data-theme') || 'light');
 
   const toggleBtn = document.getElementById('theme-toggle');
   if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       try { localStorage.setItem('sd-theme', next); } catch {}
