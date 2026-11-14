@@ -448,7 +448,7 @@ window.Landing = (() => {
   function render() {
     if (!window.CURRICULUM_DATA) return '<p>Loading curriculum data...</p>';
     const c = counts();
-    return `<div class="landing">${renderHero(c)}${renderFlagshipCases()}${renderDemos()}${renderBuilds(c)}${renderCurriculum()}${renderClosing()}</div>`;
+    return `<div class="landing">${renderHero(c)}${renderFlagshipCases()}${renderDemos()}${renderCurriculum()}${renderBuilds(c)}${renderClosing()}</div>`;
   }
 
   /**
