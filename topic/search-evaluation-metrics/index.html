@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Search evaluation metrics — System Design In Depth</title>
   <meta name="description" content="Grading a search engine is like grading a sommelier who recommends five wines. Did they pick good wines precision? Did they find all the great ones in the.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Search evaluation metrics — System Design In Depth">
   <meta property="og:description" content="Grading a search engine is like grading a sommelier who recommends five wines. Did they pick good wines precision? Did they find all the great ones in the.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/search-evaluation-metrics/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-search-evaluation-metrics.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Search evaluation metrics — System Design In Depth">
   <meta name="twitter:description" content="Grading a search engine is like grading a sommelier who recommends five wines. Did they pick good wines precision? Did they find all the great ones in the.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-search-evaluation-metrics.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/search-evaluation-metrics/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Search evaluation metrics",
+  "description": "Grading a search engine is like grading a sommelier who recommends five wines. Did they pick good wines precision? Did they find all the great ones in the.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-search-evaluation-metrics.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/search-evaluation-metrics/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="search-evaluation-metrics">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,65 @@
         <span class="breadcrumbs__current">Search evaluation metrics</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">search</span>
         </div>
-        <h1 class="lesson-header__title">Search evaluation metrics</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Search evaluation metrics</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 5.4: Information Retrieval & Search Engines</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="search-evaluation-metrics">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-search-retrieval" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/search-evaluation-metrics/" data-share-title="Search evaluation metrics — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;2XegvMul_mE&quot;,&quot;title&quot;:&quot;Every Ranking Metric : MRR, MAP, NDCG&quot;,&quot;channel&quot;:&quot;ritvikmath&quot;,&quot;why&quot;:&quot;Works through MRR, MAP and NDCG on the same example ranking so the differences are obvious, exactly what this unit teaches.&quot;,&quot;length&quot;:&quot;21:17&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Grading a search engine is like grading a sommelier who recommends five wines. Did they pick good wines (precision)? Did they find all the great ones in the cellar (recall)? Did they put the best wine first, since you will probably only taste the first one or two (NDCG)?</p> <p><strong>Mental model:</strong> every IR metric is <em>relevance, discounted by position</em>. Precision@K ignores order inside the top K; MRR only cares about the first good hit; NDCG rewards graded relevance and punishes pushing great results down.</p></p>
+<ul>
+<li><strong>Trap:</strong> quoting recall for web or product search. You rarely know the total number of relevant documents, so recall is only measurable on judged test collections.</li>
+<li><strong>Trap:</strong> comparing NDCG across different query sets. It is normalised per query, but hard and easy queries still have different ceilings.</li>
+<li><strong>Trap:</strong> trusting offline gains without an online test. A model can improve NDCG on old judgments and still lose clicks or revenue.</li>
+<p></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-search-evaluation-metrics">
+        <button class="audio-player__play-btn" id="audio-btn-search-evaluation-metrics" data-action="toggle-audio" data-slug="search-evaluation-metrics" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-search-evaluation-metrics" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-search-evaluation-metrics" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-search-evaluation-metrics">0:00 / 4:00</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="search-evaluation-metrics" id="audio-track-search-evaluation-metrics">
+          <div class="audio-player__progress" id="audio-bar-search-evaluation-metrics" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="search-evaluation-metrics" id="audio-speed-search-evaluation-metrics" title="Playback speed">1x</button>
+        <audio id="audio-search-evaluation-metrics" src="audio/search-evaluation-metrics.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> Every Ranking Metric : MRR, MAP, NDCG</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">ritvikmath · 21:17 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;2XegvMul_mE&quot;,&quot;title&quot;:&quot;Every Ranking Metric : MRR, MAP, NDCG&quot;,&quot;channel&quot;:&quot;ritvikmath&quot;,&quot;why&quot;:&quot;Works through MRR, MAP and NDCG on the same example ranking so the differences are obvious, exactly what this unit teaches.&quot;,&quot;length&quot;:&quot;21:17&quot;}">
       <div class="video-embed" id="video-2XegvMul_mE"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="2XegvMul_mE">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/2XegvMul_mE/hqdefault.jpg"
                alt="Every Ranking Metric : MRR, MAP, NDCG"
@@ -877,6 +943,7 @@
         </a>
       </div>
       <p class="video-embed__why">Works through MRR, MAP and NDCG on the same example ranking so the differences are obvious, exactly what this unit teaches.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,35 +978,12 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Grading a search engine is like grading a sommelier who recommends five wines. Did they pick good wines (precision)? Did they find all the great ones in the cellar (recall)? Did they put the best wine first, since you will probably only taste the first one or two (NDCG)?</p> <p><strong>Mental model:</strong> every IR metric is <em>relevance, discounted by position</em>. Precision@K ignores order inside the top K; MRR only cares about the first good hit; NDCG rewards graded relevance and punishes pushing great results down.</p></p>
-<ul>
-<li><strong>Trap:</strong> quoting recall for web or product search. You rarely know the total number of relevant documents, so recall is only measurable on judged test collections.</li>
-<li><strong>Trap:</strong> comparing NDCG across different query sets. It is normalised per query, but hard and easy queries still have different ceilings.</li>
-<li><strong>Trap:</strong> trusting offline gains without an online test. A model can improve NDCG on old judgments and still lose clicks or revenue.</li>
-<p></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-search-evaluation-metrics">
-        <button class="audio-player__play-btn" id="audio-btn-search-evaluation-metrics" data-action="toggle-audio" data-slug="search-evaluation-metrics" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-search-evaluation-metrics" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-search-evaluation-metrics" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-search-evaluation-metrics">0:00 / 4:00</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="search-evaluation-metrics" id="audio-track-search-evaluation-metrics">
-          <div class="audio-player__progress" id="audio-bar-search-evaluation-metrics" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="search-evaluation-metrics" id="audio-speed-search-evaluation-metrics" title="Playback speed">1x</button>
-        <audio id="audio-search-evaluation-metrics" src="audio/search-evaluation-metrics.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>Under the Hood: Quantifying Search Quality</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">Under the Hood: Quantifying Search Quality</h2>
       <p>You cannot improve search relevance without rigorous mathematical evaluation metrics. In information retrieval, search quality is evaluated using both offline benchmark datasets (judged by human evaluators) and online user telemetry.</p>
 
-      <h2>The Core IR Evaluation Metrics</h2>
+      <h2 id="topic-sec-2">The Core IR Evaluation Metrics</h2>
       <table>
         <thead>
           <tr><th>Metric</th><th>Formula & Focus</th><th>When to Use</th></tr>
@@ -952,7 +996,7 @@
         </tbody>
       </table>
 
-      <h2>Under the Hood: Interleaving A/B Testing</h2>
+      <h2 id="topic-sec-3">Under the Hood: Interleaving A/B Testing</h2>
       <div class="mermaid">
 flowchart TD
     subgraph TraditionalAB ["Traditional A/B Test (High Variance: large samples needed)"]
@@ -969,7 +1013,7 @@ flowchart TD
       <p>Interleaving blends the top results of Model A and Model B into a single merged result list presented to every user. Because every user sees both rankers, between-user variance largely cancels out, and published results (Netflix, Bing, Airbnb) report detecting ranker preferences with roughly 10x to over 100x less traffic, depending on the setting.</p>
     
 <!-- enriched -->
-<h2>Worked example: scoring one ranking five ways</h2>
+<h2 id="topic-sec-4">Worked example: scoring one ranking five ways</h2>
 <p>A query returns five results with graded relevance (0 to 3) of <strong>[3, 2, 3, 0, 1]</strong>. Assume these four relevant documents are all the relevant ones that exist.</p>
 <table><thead><tr><th>Metric</th><th>Computation</th><th>Value</th></tr></thead><tbody>
 <tr><td>Precision@5, relevant = grade 1 or more</td><td>4 relevant out of 5</td><td>0.80</td></tr>
@@ -979,14 +1023,14 @@ flowchart TD
 <tr><td>NDCG@5</td><td>DCG 12.78 divided by ideal DCG 13.35</td><td>0.96</td></tr>
 </tbody></table>
 <p>DCG uses gain 2 to the power rel minus 1, divided by log2 of position plus 1: 7/1 + 3/1.585 + 7/2 + 0 + 1/2.585 = 12.78. The ideal order [3, 3, 2, 1, 0] gives 7 + 4.42 + 1.5 + 0.43 = 13.35. The only loss is that a grade-3 document sits at position 3 instead of 2, so NDCG is high but not perfect.</p>
-<h2>Online vs offline evaluation</h2>
+<h2 id="topic-sec-5">Online vs offline evaluation</h2>
 <table><thead><tr><th>Method</th><th>Needs</th><th>Strength</th><th>Weakness</th></tr></thead><tbody>
 <tr><td>Offline judged set</td><td>Human labels for a few thousand queries</td><td>Fast iteration, repeatable</td><td>Labels age; misses user behaviour</td></tr>
 <tr><td>A/B test</td><td>Traffic split, business metric</td><td>Measures real outcomes</td><td>Needs large samples, takes days or weeks</td></tr>
 <tr><td>Interleaving</td><td>Merged result lists</td><td>Detects ranking preference with far less traffic</td><td>Tells you which ranker users prefer, not by how much revenue</td></tr>
 </tbody></table>
-<p>Netflix and Microsoft Bing have both published results showing interleaving detects ranker differences with one to two orders of magnitude less traffic than a conventional A/B test, which is why teams use it as a fast pre-screen before a full A/B launch.</p><h2>Choosing a metric</h2><p>Use NDCG@10 when you have graded labels and care about the first page; MRR for navigational queries where one right answer exists, such as "gmail login"; Recall@1000 to evaluate the first retrieval stage of a two-stage system, since the re-ranker cannot fix documents that were never retrieved; and business metrics such as conversion or successful sessions to decide launches. Report confidence intervals: a 0.5 point NDCG gain on 200 queries is often noise.</p>
-</div></article>
+<p>Netflix and Microsoft Bing have both published results showing interleaving detects ranker differences with one to two orders of magnitude less traffic than a conventional A/B test, which is why teams use it as a fast pre-screen before a full A/B launch.</p><h2 id="topic-sec-6">Choosing a metric</h2><p>Use NDCG@10 when you have graded labels and care about the first page; MRR for navigational queries where one right answer exists, such as "gmail login"; Recall@1000 to evaluate the first retrieval stage of a two-stage system, since the re-ranker cannot fix documents that were never retrieved; and business metrics such as conversion or successful sessions to decide launches. Report confidence intervals: a 0.5 point NDCG gain on 200 queries is often noise.</p>
+</div></article><div id="check-slider-search-evaluation-metrics">
       <section class="check-slider" data-slug="search-evaluation-metrics" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1258,15 +1302,15 @@ flowchart TD
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-search-evaluation-metrics">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">NDCG (Normalized Discounted Cumulative Gain) is the gold standard metric for graded relevance rankings.</div><div class="takeaways__item">Precision@K measures top-slot purity; Recall@K measures corpus coverage.</div><div class="takeaways__item">Interleaved A/B testing blends candidate rankings to detect statistically significant user preference with far fewer queries than traditional A/B testing (see: Radlinski & Craswell, 'Comparing the Sensitivity of Information Retrieval Metrics', SIGIR 2010).</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://dl.acm.org/doi/10.1145/2094072.2094078" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Chapelle et al.: Large-scale Validation and Analysis of Interleaved Search Evaluation (ACM TOIS, 2012)</a><a class="further-reading__link" href="https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-in-information-retrieval-1.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Manning et al.: Evaluation in Information Retrieval (Stanford IR Book)</a><a class="further-reading__link" href="https://en.wikipedia.org/wiki/Discounted_cumulative_gain" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Wikipedia: Normalized Discounted Cumulative Gain (NDCG)</a>
           </div>
@@ -1279,10 +1323,10 @@ flowchart TD
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="search-evaluation-metrics" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="search-evaluation-metrics" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Search%20evaluation%20metrics&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Search%20evaluation%20metrics%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fsearch-evaluation-metrics%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1295,9 +1339,92 @@ flowchart TD
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/search-index-synchronization/" data-nav="topic" data-slug="search-index-synchronization">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Search index synchronization</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Under the Hood: Quantifying Search Quality</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">The Core IR Evaluation Metrics</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Under the Hood: Interleaving A/B Testing</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Worked example: scoring one ranking five ways</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Online vs offline evaluation</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Choosing a metric</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-search-evaluation-metrics">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-search-evaluation-metrics">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 5.4</span>
+            <span>0/17 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/search-evaluation-metrics/" data-share-title="Search evaluation metrics — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1305,7 +1432,7 @@ flowchart TD
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1359,7 +1486,7 @@ flowchart TD
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1368,8 +1495,8 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1377,30 +1504,9 @@ flowchart TD
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Search evaluation metrics",
-  "description": "Grading a search engine is like grading a sommelier who recommends five wines. Did they pick good wines precision? Did they find all the great ones in the.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/search-evaluation-metrics/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

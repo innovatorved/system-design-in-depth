@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Count-min sketch — System Design In Depth</title>
   <meta name="description" content="Imagine counting how often each song is played using a few rows of pigeonholes. For each play, you drop a marble into one hole per row, chosen by that row&#39;s.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Count-min sketch — System Design In Depth">
   <meta property="og:description" content="Imagine counting how often each song is played using a few rows of pigeonholes. For each play, you drop a marble into one hole per row, chosen by that row&#39;s.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/count-min-sketch/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-count-min-sketch.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Count-min sketch — System Design In Depth">
   <meta name="twitter:description" content="Imagine counting how often each song is played using a few rows of pigeonholes. For each play, you drop a marble into one hole per row, chosen by that row&#39;s.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-count-min-sketch.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/count-min-sketch/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Count-min sketch",
+  "description": "Imagine counting how often each song is played using a few rows of pigeonholes. For each play, you drop a marble into one hole per row, chosen by that row's.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-count-min-sketch.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/count-min-sketch/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="count-min-sketch">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,65 @@
         <span class="breadcrumbs__current">Count-min sketch</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">probabilistic-structures</span>
         </div>
-        <h1 class="lesson-header__title">Count-min sketch</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Count-min sketch</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 3 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 4.3: Probabilistic Sketches & Stream Analytics</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="count-min-sketch">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-analytics-sketches" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/count-min-sketch/" data-share-title="Count-min sketch — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;hJitoHv4rAU&quot;,&quot;title&quot;:&quot;CountMin sketch, part 1&quot;,&quot;channel&quot;:&quot;Ben Langmead&quot;,&quot;why&quot;:&quot;Johns Hopkins lecture that builds the Count-Min sketch step by step and explains why it only overestimates, with worked numbers.&quot;,&quot;length&quot;:&quot;26:48&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Imagine counting how often each song is played using a few rows of pigeonholes. For each play, you drop a marble into one hole per row, chosen by that row's hash. Different songs sometimes share a hole, so a hole can only overstate a song's count, never understate it. To estimate a song, look at its hole in every row and take the smallest pile: the row with the least collision noise.</p> <p><strong>Mental model:</strong> <em>d rows by w counters; add 1 at d hashed positions; estimate = minimum</em>. Width controls how big the overcount can be; depth controls how often you are unlucky.</p></p>
+<ul>
+<li><strong>Trap:</strong> trusting counts for rare items. The error is relative to the total stream size, so small counts are dominated by noise.</li>
+<li><strong>Trap:</strong> expecting it to list the top items. It answers "how many for this key?" but does not remember keys; pair it with a heap or Space-Saving.</li>
+<li><strong>Trap:</strong> decrementing or using negative updates and still assuming the never-undercounts guarantee.</li>
+<p></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-count-min-sketch">
+        <button class="audio-player__play-btn" id="audio-btn-count-min-sketch" data-action="toggle-audio" data-slug="count-min-sketch" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-count-min-sketch" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-count-min-sketch" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-count-min-sketch">0:00 / 3:39</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="count-min-sketch" id="audio-track-count-min-sketch">
+          <div class="audio-player__progress" id="audio-bar-count-min-sketch" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="count-min-sketch" id="audio-speed-count-min-sketch" title="Playback speed">1x</button>
+        <audio id="audio-count-min-sketch" src="audio/count-min-sketch.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> CountMin sketch, part 1</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Ben Langmead · 26:48 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;hJitoHv4rAU&quot;,&quot;title&quot;:&quot;CountMin sketch, part 1&quot;,&quot;channel&quot;:&quot;Ben Langmead&quot;,&quot;why&quot;:&quot;Johns Hopkins lecture that builds the Count-Min sketch step by step and explains why it only overestimates, with worked numbers.&quot;,&quot;length&quot;:&quot;26:48&quot;}">
       <div class="video-embed" id="video-hJitoHv4rAU"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="hJitoHv4rAU">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/hJitoHv4rAU/hqdefault.jpg"
                alt="CountMin sketch, part 1"
@@ -877,6 +943,7 @@
         </a>
       </div>
       <p class="video-embed__why">Johns Hopkins lecture that builds the Count-Min sketch step by step and explains why it only overestimates, with worked numbers.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,32 +978,9 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Imagine counting how often each song is played using a few rows of pigeonholes. For each play, you drop a marble into one hole per row, chosen by that row's hash. Different songs sometimes share a hole, so a hole can only overstate a song's count, never understate it. To estimate a song, look at its hole in every row and take the smallest pile: the row with the least collision noise.</p> <p><strong>Mental model:</strong> <em>d rows by w counters; add 1 at d hashed positions; estimate = minimum</em>. Width controls how big the overcount can be; depth controls how often you are unlucky.</p></p>
-<ul>
-<li><strong>Trap:</strong> trusting counts for rare items. The error is relative to the total stream size, so small counts are dominated by noise.</li>
-<li><strong>Trap:</strong> expecting it to list the top items. It answers "how many for this key?" but does not remember keys; pair it with a heap or Space-Saving.</li>
-<li><strong>Trap:</strong> decrementing or using negative updates and still assuming the never-undercounts guarantee.</li>
-<p></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-count-min-sketch">
-        <button class="audio-player__play-btn" id="audio-btn-count-min-sketch" data-action="toggle-audio" data-slug="count-min-sketch" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-count-min-sketch" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-count-min-sketch" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-count-min-sketch">0:00 / 3:39</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="count-min-sketch" id="audio-track-count-min-sketch">
-          <div class="audio-player__progress" id="audio-bar-count-min-sketch" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="count-min-sketch" id="audio-speed-count-min-sketch" title="Playback speed">1x</button>
-        <audio id="audio-count-min-sketch" src="audio/count-min-sketch.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>Estimating Frequencies with Count-Min Sketch</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">Estimating Frequencies with Count-Min Sketch</h2>
       <p>If you need to know how many times a specific user has visited a site (frequency), keeping a hash map of UserID -> Count works until you hit millions of users, at which point memory becomes a bottleneck.</p>
       
       <h3>How Count-Min Sketch Works</h3>
@@ -948,7 +992,7 @@
       <p>It is heavily used in NLP (counting word frequencies), networking (tracking heavy traffic flows), and recommendation engines where perfect frequency accuracy isn't required but memory is strictly constrained.</p>
     
 <!-- enriched -->
-<h2>Worked example: sizing from error targets</h2>
+<h2 id="topic-sec-2">Worked example: sizing from error targets</h2>
 <p>Target: overcount at most 0.1 percent of the stream (epsilon = 0.001) with 99 percent confidence (delta = 0.01).</p>
 <table><thead><tr><th>Parameter</th><th>Formula</th><th>Value</th></tr></thead><tbody>
 <tr><td>Width w</td><td>ceil(e divided by epsilon)</td><td>2,719</td></tr>
@@ -958,9 +1002,9 @@
 </tbody></table>
 <p>Guarantee: for every item, estimate is at least the true count, and with probability at least 99 percent it is at most true count plus epsilon x N, where N is the total number of events.</p>
 <p>With N = 100 million events, epsilon x N = 100,000. An item that truly occurred 5 million times is estimated within 2 percent. An item that occurred 50 times could be reported as anything up to about 100,050. That is why Count-Min is great for heavy hitters and useless for the long tail.</p>
-<h2>A tiny example</h2>
+<h2 id="topic-sec-3">A tiny example</h2>
 <p>Width 4, depth 2. Insert "a" (row 1 col 0, row 2 col 3), "b" (row 1 col 0, row 2 col 1), "a" again. Row 1 col 0 now holds 3 (a, b, a); row 2 col 3 holds 2. Query "a": minimum of 3 and 2 is 2, correct, because row 2 had no collision.</p>
-<h2>Variants and alternatives</h2>
+<h2 id="topic-sec-4">Variants and alternatives</h2>
 <table><thead><tr><th>Structure</th><th>Strength</th><th>Weakness</th></tr></thead><tbody>
 <tr><td>Count-Min</td><td>Simple, mergeable by adding counters</td><td>Overestimates; error scales with total N</td></tr>
 <tr><td>Count-Min with conservative update</td><td>Much lower overcount: only raise counters that equal the current minimum</td><td>No longer mergeable by simple addition in all cases; no deletes</td></tr>
@@ -968,7 +1012,7 @@
 <tr><td>Exact hash map</td><td>Exact</td><td>Memory grows with distinct keys</td></tr>
 </tbody></table>
 <p><strong>In the wild:</strong> Redis Stack exposes CMS.INCRBY and CMS.QUERY; network devices use Count-Min style sketches to find heavy flows; the Caffeine cache's TinyLFU admission policy uses a compact frequency sketch with periodic halving so old popularity decays.</p>
-</div></article>
+</div></article><div id="check-slider-count-min-sketch">
       <section class="check-slider" data-slug="count-min-sketch" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1240,7 +1284,7 @@
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
+      </section></div><div id="topic-simulator-count-min-sketch">
         <div class="simulator-card" id="sim-cms">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Count-Min Sketch (d = 3 rows)</div>
@@ -1260,15 +1304,15 @@
           <div class="sim-grid-wrap"><table class="sim-grid" id="cms-grid"></table></div>
           <div class="sim-verdict" id="cms-verdict">Add items or stream a skewed workload.</div>
           <div class="sim-topk" id="cms-topk"></div>
-        </div>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+        </div></div>
+        <div class="takeaways" id="topic-takeaways-count-min-sketch">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Count-Min Sketch estimates frequency using a tiny, fixed memory footprint.</div><div class="takeaways__item">With non-negative updates, sufficient counter width, and compatible hashes, collision error is one-sided; other update models need separate guarantees.</div><div class="takeaways__item">Uses a 2D array of counters and takes the minimum value upon query to reduce error.</div>
           </div>
         </div>
       <div class="lesson-builds">
-        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
+        <h2 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h2>
         
           <a class="lesson-builds__item" href="/build/hyperloglog-cardinality/" data-action="navigate-build" data-build-id="hyperloglog-cardinality">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1280,7 +1324,7 @@
           </a>
       </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://en.wikipedia.org/wiki/Count%E2%80%93min_sketch" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Count-Min Sketch Wikipedia</a><a class="further-reading__link" href="https://link.springer.com/chapter/10.1007/978-3-540-24698-5_7" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Cormode & Muthukrishnan: An Improved Data Stream Summary: The Count-Min Sketch and Its Applications (LATIN 2004)</a>
           </div>
@@ -1293,10 +1337,10 @@
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="count-min-sketch" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="count-min-sketch" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Count-min%20sketch&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Count-min%20sketch%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fcount-min-sketch%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1309,9 +1353,88 @@
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/top-k-heavy-hitters/" data-nav="topic" data-slug="top-k-heavy-hitters">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Top-k heavy hitters</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Estimating Frequencies with Count-Min Sketch</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Worked example: sizing from error targets</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">A tiny example</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Variants and alternatives</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-count-min-sketch">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-simulator-count-min-sketch">Interactive simulator</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-count-min-sketch">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 4.3</span>
+            <span>0/13 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/count-min-sketch/" data-share-title="Count-min sketch — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1319,7 +1442,7 @@
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1373,7 +1496,7 @@
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1383,8 +1506,8 @@
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-distributed.js?v=30d663cc4e"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1392,30 +1515,9 @@
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Count-min sketch",
-  "description": "Imagine counting how often each song is played using a few rows of pigeonholes. For each play, you drop a marble into one hole per row, chosen by that row's.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/count-min-sketch/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

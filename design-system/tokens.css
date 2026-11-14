@@ -1,0 +1,247 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   In-Depth Engineering Series — Portable Shared Design Tokens (v1.0)
+   Compatible with: sql-in-depth · system-design-in-depth · dsa-in-depth
+   License: MIT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ── Typography Scale (1rem = 16px comfortable prose base) ─────────────── */
+  --ds-font-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ds-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Consolas, monospace;
+
+  --ds-text-2xs: 0.6875rem; /* 11px — compact badges & mono counters */
+  --ds-text-xs:  0.75rem;   /* 12px — metadata, table labels */
+  --ds-text-sm:  0.8125rem; /* 13px — UI controls, sidebar items, dense code */
+  --ds-text-base: 0.9375rem;/* 15px — cards, compact UI copy */
+  --ds-text-prose: 0.9375rem;/* 15px — primary long-form lesson reading */
+  --ds-text-lg:  1.0625rem; /* 17px — lead copy, h3 */
+  --ds-text-xl:  1.25rem;   /* 20px — lesson h2 */
+  --ds-text-2xl: 1.5rem;    /* 24px — section headers */
+  --ds-text-3xl: 1.75rem;   /* 28px — lesson h1 */
+  --ds-text-4xl: 2.75rem;   /* 44px — hero display */
+
+  --ds-leading-tight:   1.16;
+  --ds-leading-snug:    1.32;
+  --ds-leading-normal:  1.52;
+  --ds-leading-prose:   1.68;
+
+  /* Craft-floor tracking: never tighter than -0.035em */
+  --ds-tracking-display: -0.032em;
+  --ds-tracking-heading: -0.022em;
+  --ds-tracking-normal:  0em;
+  --ds-tracking-mono:    0.02em;
+
+  /* ── Spacing Scale (4px rhythm) ────────────────────────────────────────── */
+  --ds-space-1:  0.25rem;  /* 4px */
+  --ds-space-2:  0.5rem;   /* 8px */
+  --ds-space-3:  0.75rem;  /* 12px */
+  --ds-space-4:  1rem;     /* 16px */
+  --ds-space-5:  1.25rem;  /* 20px */
+  --ds-space-6:  1.5rem;   /* 24px */
+  --ds-space-8:  2rem;     /* 32px */
+  --ds-space-10: 2.5rem;   /* 40px */
+  --ds-space-12: 3rem;     /* 48px */
+  --ds-space-16: 4rem;     /* 64px */
+
+  /* ── Radius Scale ──────────────────────────────────────────────────────── */
+  --ds-radius-xs: 4px;
+  --ds-radius-sm: 6px;
+  --ds-radius-md: 8px;
+  --ds-radius-lg: 12px;
+  --ds-radius-xl: 16px;
+  --ds-radius-pill: 999px;
+
+  /* ── Layout Geometry ───────────────────────────────────────────────────── */
+  --ds-topbar-h: 56px;
+  --ds-sidebar-w: 276px;
+  --ds-toc-w: 224px;
+  --ds-prose-measure: 68ch;      /* Optimal 65-75ch reading width */
+  --ds-article-max: 760px;       /* Reading column container */
+  --ds-breakout-max: 960px;      /* Diagrams & embedded SQL playgrounds */
+  --ds-shell-max: 1320px;        /* Landing / Sandbox / Hub max width */
+
+  /* ── Motion Tokens ─────────────────────────────────────────────────────── */
+  --ds-dur-fast: 120ms;
+  --ds-dur-base: 180ms;
+  --ds-dur-slow: 280ms;
+  --ds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Light Theme — Warm Neutral Paper (calm, ink-first hierarchy)
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root,
+[data-theme="light"] {
+  --ds-canvas:          #F7F7F5; /* Warm paper ground */
+  --ds-canvas-subtle:   #F1F1EE; /* Secondary well / gutter */
+  --ds-surface:         #FFFFFF; /* Crisp elevated card surface */
+  --ds-surface-hover:   #F5F5F2;
+  --ds-surface-active:  #ECEBE7;
+  --ds-topbar-bg:       rgba(247, 247, 245, 0.88);
+
+  --ds-border:          #E6E4DF; /* 1px crisp structural hairline */
+  --ds-border-strong:   #D3D0C9;
+  --ds-divider:         #EDECE8;
+
+  /* WCAG AA Verified Ink Scale (>= 4.8:1 on #FFFFFF and #F7F7F5) */
+  --ds-ink:             #1A1917; /* 17.2:1 */
+  --ds-ink-prose:       #2E2C29; /* 13.9:1 */
+  --ds-ink-muted:       #5C5853; /* 7.0:1 */
+  --ds-ink-faint:       #6E6A64; /* 5.4:1 — passes AA even for 12px text */
+  --ds-ink-inverse:     #FFFFFF;
+
+  /* Semantic Status Palette (Light) */
+  --ds-success:         #067647;
+  --ds-success-bg:      #ECFDF3;
+  --ds-success-border:  #ABEFC6;
+
+  --ds-warning:         #B54708;
+  --ds-warning-bg:      #FFFAEB;
+  --ds-warning-border:  #FEDF89;
+
+  --ds-danger:          #B42318;
+  --ds-danger-bg:       #FEF3F2;
+  --ds-danger-border:   #FECDCA;
+
+  --ds-info:            #0E7490;
+  --ds-info-bg:         #ECFAFC;
+  --ds-info-border:     #A5E4EE;
+
+  /* Elevation (used only on floating overlays; resting cards use 1px border) */
+  --ds-shadow-overlay:  0 12px 32px -4px rgba(26, 25, 23, 0.12), 0 4px 12px -2px rgba(26, 25, 23, 0.06);
+  --ds-shadow-pop:      0 4px 14px rgba(26, 25, 23, 0.08);
+
+  /* Default Product Accent: SQL In Depth — Ink actions + Ember highlight (WCAG AA >= 5.2:1 on #FFFFFF) */
+  --brand-accent:        #1A1917;
+  --brand-accent-hover:  #34312D;
+  --brand-accent-soft:   rgba(26, 25, 23, 0.06);
+  --brand-accent-border: rgba(26, 25, 23, 0.20);
+  --brand-accent-ink:    #FFFFFF;
+  --brand-ember:         #C2410C;
+  --brand-ember-soft:    rgba(194, 65, 12, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Dark Theme — Neutral Charcoal (Zero #000000 OLED glare, no blue cast)
+   ═══════════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --ds-canvas:          #0F0F10; /* Calm charcoal ground */
+  --ds-canvas-subtle:   #141415; /* Sidebar & code gutter ground */
+  --ds-surface:         #18181A; /* Elevated card surface */
+  --ds-surface-hover:   #1F1F22;
+  --ds-surface-active:  #28282B;
+  --ds-topbar-bg:       rgba(15, 15, 16, 0.86);
+
+  --ds-border:          #27272A;
+  --ds-border-strong:   #3A3A3E;
+  --ds-divider:         #202023;
+
+  /* WCAG AA Verified Ink Scale (>= 5.3:1 on #0F0F10 and #18181A) */
+  --ds-ink:             #F4F4F5; /* 17.0:1 */
+  --ds-ink-prose:       #D4D4D8; /* 12.6:1 */
+  --ds-ink-muted:       #A1A1AA; /* 7.4:1 */
+  --ds-ink-faint:       #8E8E97; /* 5.6:1 — passes AA on dark cards */
+  --ds-ink-inverse:     #0F0F10;
+
+  /* Semantic Status Palette (Dark) */
+  --ds-success:         #34D399;
+  --ds-success-bg:      rgba(16, 185, 129, 0.11);
+  --ds-success-border:  rgba(52, 211, 153, 0.30);
+
+  --ds-warning:         #FBBF24;
+  --ds-warning-bg:      rgba(245, 158, 11, 0.11);
+  --ds-warning-border:  rgba(251, 191, 36, 0.30);
+
+  --ds-danger:          #F87171;
+  --ds-danger-bg:       rgba(239, 68, 68, 0.11);
+  --ds-danger-border:   rgba(248, 113, 113, 0.32);
+
+  --ds-info:            #67D3E3;
+  --ds-info-bg:         rgba(103, 211, 227, 0.10);
+  --ds-info-border:     rgba(103, 211, 227, 0.30);
+
+  --ds-shadow-overlay:  0 16px 40px rgba(0, 0, 0, 0.55);
+  --ds-shadow-pop:      0 6px 18px rgba(0, 0, 0, 0.42);
+
+  /* Default Product Accent (Dark): Ink actions + Ember highlight */
+  --brand-accent:        #F4F4F5;
+  --brand-accent-hover:  #FFFFFF;
+  --brand-accent-soft:   rgba(244, 244, 245, 0.08);
+  --brand-accent-border: rgba(244, 244, 245, 0.22);
+  --brand-accent-ink:    #111113;
+  --brand-ember:         #FB923C;
+  --brand-ember-soft:    rgba(251, 146, 60, 0.12);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Product-Family Accent Presets (Reusable across all 3 repositories)
+   Set <html data-product="sql | system-design | dsa">
+   ═══════════════════════════════════════════════════════════════════════════ */
+[data-product="system-design"]:root,
+[data-product="system-design"][data-theme="light"] {
+  --brand-accent:        #0D9488;
+  --brand-accent-hover:  #0F766E;
+  --brand-accent-soft:   rgba(13, 148, 136, 0.09);
+  --brand-accent-border: rgba(13, 148, 136, 0.28);
+  --brand-accent-ink:    #FFFFFF;
+}
+[data-product="system-design"][data-theme="dark"] {
+  --brand-accent:        #2DD4BF;
+  --brand-accent-hover:  #5EEAD4;
+  --brand-accent-soft:   rgba(45, 212, 191, 0.13);
+  --brand-accent-border: rgba(45, 212, 191, 0.34);
+  --brand-accent-ink:    #042F2E;
+}
+
+[data-product="dsa"]:root,
+[data-product="dsa"][data-theme="light"] {
+  --brand-accent:        #6D28D9;
+  --brand-accent-hover:  #5B21B6;
+  --brand-accent-soft:   rgba(109, 40, 217, 0.09);
+  --brand-accent-border: rgba(109, 40, 217, 0.28);
+  --brand-accent-ink:    #FFFFFF;
+}
+[data-product="dsa"][data-theme="dark"] {
+  --brand-accent:        #A78BFA;
+  --brand-accent-hover:  #C4B5FD;
+  --brand-accent-soft:   rgba(167, 139, 250, 0.13);
+  --brand-accent-border: rgba(167, 139, 250, 0.34);
+  --brand-accent-ink:    #1E1035;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Global Browser Surfaces, Focus Ring & Reduced Motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+::selection {
+  background: var(--brand-ember-soft);
+  color: var(--ds-ink);
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ds-border-strong) transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+
+.tabular-nums,
+table td,
+table th,
+.ds-metric {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

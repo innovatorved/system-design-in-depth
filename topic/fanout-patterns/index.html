@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Fanout patterns — System Design In Depth</title>
   <meta name="description" content="A newspaper can be delivered to every subscriber&#39;s doorstep each morning push, or subscribers can walk to the newsstand and pick up the papers they follow.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Fanout patterns — System Design In Depth">
   <meta property="og:description" content="A newspaper can be delivered to every subscriber&#39;s doorstep each morning push, or subscribers can walk to the newsstand and pick up the papers they follow.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/fanout-patterns/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-fanout-patterns.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Fanout patterns — System Design In Depth">
   <meta name="twitter:description" content="A newspaper can be delivered to every subscriber&#39;s doorstep each morning push, or subscribers can walk to the newsstand and pick up the papers they follow.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-fanout-patterns.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/fanout-patterns/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Fanout patterns",
+  "description": "A newspaper can be delivered to every subscriber's doorstep each morning push, or subscribers can walk to the newsstand and pick up the papers they follow.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-fanout-patterns.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/fanout-patterns/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="fanout-patterns">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Fanout patterns</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">fanout</span> <span class="tag">delivery</span>
         </div>
-        <h1 class="lesson-header__title">Fanout patterns</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Fanout patterns</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 4.2: Asynchronous Workflows & Partitioned Logs</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="fanout-patterns">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-async-streams" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/fanout-patterns/" data-share-title="Fanout patterns — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;Qj4-GruzyDU&quot;,&quot;title&quot;:&quot;Design FB News Feed System Design Interview w/ ex: Meta Senior Manager&quot;,&quot;channel&quot;:&quot;Hello Interview&quot;,&quot;why&quot;:&quot;Hello Interview&#039;s news feed breakdown centres on fanout-on-write versus fanout-on-read and the celebrity hybrid, the exact trade-off this lesson covers, with capacity reasoning. The current video is a generic message-queue intro.&quot;,&quot;length&quot;:&quot;26:12&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>A newspaper can be delivered to every subscriber's doorstep each morning (push), or subscribers can walk to the newsstand and pick up the papers they follow (pull). Doorstep delivery makes reading instant but costs a lot for a paper with 100 million subscribers. The newsstand costs nothing up front but makes every reader do the walking. Real feeds deliver most papers to the doorstep and leave a few giant ones at the newsstand.</p><p><strong>Mental model:</strong> fanout-on-write pays at post time, once per follower. Fanout-on-read pays at read time, once per followee. Hybrid systems push for normal accounts and pull for celebrities.</p><ul><li><strong>Pushing full posts into every inbox.</strong> Push post IDs, and store the post once. Edits and deletes then happen in one place.</li><li><strong>Fanning out to inactive users.</strong> Most followers may not open the app this week. Skip or lazily rebuild feeds for dormant users.</li><li><strong>A synchronous fanout on the post request.</strong> Always enqueue the fanout job. The author should see "posted" in milliseconds.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-fanout-patterns">
+        <button class="audio-player__play-btn" id="audio-btn-fanout-patterns" data-action="toggle-audio" data-slug="fanout-patterns" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-fanout-patterns" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-fanout-patterns" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-fanout-patterns">0:00 / 3:17</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="fanout-patterns" id="audio-track-fanout-patterns">
+          <div class="audio-player__progress" id="audio-bar-fanout-patterns" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="fanout-patterns" id="audio-speed-fanout-patterns" title="Playback speed">1x</button>
+        <audio id="audio-fanout-patterns" src="audio/fanout-patterns.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> Design FB News Feed System Design Interview w/ ex: Meta Senior Manager</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Hello Interview · 26:12 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;Qj4-GruzyDU&quot;,&quot;title&quot;:&quot;Design FB News Feed System Design Interview w/ ex: Meta Senior Manager&quot;,&quot;channel&quot;:&quot;Hello Interview&quot;,&quot;why&quot;:&quot;Hello Interview&#039;s news feed breakdown centres on fanout-on-write versus fanout-on-read and the celebrity hybrid, the exact trade-off this lesson covers, with capacity reasoning. The current video is a generic message-queue intro.&quot;,&quot;length&quot;:&quot;26:12&quot;}">
       <div class="video-embed" id="video-Qj4-GruzyDU"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="Qj4-GruzyDU">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/Qj4-GruzyDU/hqdefault.jpg"
                alt="Design FB News Feed System Design Interview w/ ex: Meta Senior Manager"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">Hello Interview&#039;s news feed breakdown centres on fanout-on-write versus fanout-on-read and the celebrity hybrid, the exact trade-off this lesson covers, with capacity reasoning. The current video is a generic message-queue intro.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,30 +973,12 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>A newspaper can be delivered to every subscriber's doorstep each morning (push), or subscribers can walk to the newsstand and pick up the papers they follow (pull). Doorstep delivery makes reading instant but costs a lot for a paper with 100 million subscribers. The newsstand costs nothing up front but makes every reader do the walking. Real feeds deliver most papers to the doorstep and leave a few giant ones at the newsstand.</p><p><strong>Mental model:</strong> fanout-on-write pays at post time, once per follower. Fanout-on-read pays at read time, once per followee. Hybrid systems push for normal accounts and pull for celebrities.</p><ul><li><strong>Pushing full posts into every inbox.</strong> Push post IDs, and store the post once. Edits and deletes then happen in one place.</li><li><strong>Fanning out to inactive users.</strong> Most followers may not open the app this week. Skip or lazily rebuild feeds for dormant users.</li><li><strong>A synchronous fanout on the post request.</strong> Always enqueue the fanout job. The author should see "posted" in milliseconds.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-fanout-patterns">
-        <button class="audio-player__play-btn" id="audio-btn-fanout-patterns" data-action="toggle-audio" data-slug="fanout-patterns" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-fanout-patterns" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-fanout-patterns" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-fanout-patterns">0:00 / 3:17</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="fanout-patterns" id="audio-track-fanout-patterns">
-          <div class="audio-player__progress" id="audio-bar-fanout-patterns" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="fanout-patterns" id="audio-speed-fanout-patterns" title="Playback speed">1x</button>
-        <audio id="audio-fanout-patterns" src="audio/fanout-patterns.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>The Fanout Dilemma: Social Feeds & Notifications</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">The Fanout Dilemma: Social Feeds & Notifications</h2>
       <p>When a user publishes content (a tweet, an Instagram photo, or a LinkedIn post), how is that content distributed to all of their followers? Social network engineering relies on two foundational strategies: <strong>Fanout-on-Write (Push)</strong> and <strong>Fanout-on-Read (Pull)</strong>.</p>
 
-      <h2>Architectural Comparison: Push vs Pull</h2>
+      <h2 id="topic-sec-2">Architectural Comparison: Push vs Pull</h2>
       <div class="mermaid">
 flowchart TD
     subgraph Push ["1. Fanout-on-Write (Push Model: Default)"]
@@ -953,7 +997,7 @@ flowchart TD
     end
       </div>
 
-      <h2>Under the Hood: The Hybrid Fanout Architecture</h2>
+      <h2 id="topic-sec-3">Under the Hood: The Hybrid Fanout Architecture</h2>
       <p>Neither pure push nor pure pull works at scale:</p>
       <ul>
         <li><strong>The Push Catastrophe (Write Amplification):</strong> If an account with 100,000,000 followers tweets, fanout-on-write requires generating and writing 100,000,000 Redis entries. At 50,000 writes/sec, the fanout pipeline takes 33 minutes to complete.</li>
@@ -962,8 +1006,8 @@ flowchart TD
       </ul>
     
 <!-- enriched -->
-<h2>Worked example: capacity maths</h2><p>Assume 200 million daily active users, 500 million posts per day (about 5,800 per second on average, 3 times that at peak), an average of 200 followers, and 20 billion feed reads per day (about 230,000 per second).</p><ul><li><strong>Pure push:</strong> 5,800 x 200 = 1.16 million inbox inserts per second on average, about 3.5 million at peak. Feasible on a sharded Redis or Cassandra tier. Reads are a single range query.</li><li><strong>A celebrity with 100 million followers</strong> posting once needs 100 million inserts. At a fanout budget of 1 million per second that is 100 seconds of the whole pipeline for one post, and some celebrities post many times a day.</li><li><strong>Pure pull:</strong> each feed read merges recent posts from about 200 followees, so 230,000 x 200 = 46 million post-list reads per second. Too expensive.</li><li><strong>Hybrid:</strong> push for authors below a threshold (commonly discussed in the range of about 10,000 to 1 million followers), and pull for the rest. A feed read fetches the precomputed inbox and merges the recent posts of the few followed celebrities, cached hot, so about 5 to 10 extra reads per feed load.</li></ul><h2>Strategy comparison</h2><table><thead><tr><th>Strategy</th><th>Write cost</th><th>Read cost</th><th>Freshness</th><th>Storage</th><th>Best for</th></tr></thead><tbody><tr><td>Fanout on write (push)</td><td>O(followers) per post</td><td>One range read</td><td>Seconds of fanout delay</td><td>An inbox per user</td><td>Typical accounts, read-heavy feeds</td></tr><tr><td>Fanout on read (pull)</td><td>O(1)</td><td>O(followees) merge</td><td>Instant</td><td>Minimal</td><td>Celebrities, rarely read feeds</td></tr><tr><td>Hybrid</td><td>Bounded</td><td>Inbox plus a few merges</td><td>Mixed</td><td>Moderate</td><td>Large social networks</td></tr><tr><td>Message fanout (SNS to SQS, Kafka consumer groups)</td><td>One publish</td><td>One queue per subscriber</td><td>Near real time</td><td>Per-subscriber copies or offsets</td><td>Service-to-service events</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Twitter</strong> (per Raffi Krikorian's "Timelines at Scale" talk) kept home timelines as lists of tweet IDs in Redis, capped at about 800 entries, fanned out on write. Very high-follower accounts were merged at read time.</li><li><strong>Instagram and Facebook</strong> rank feeds at read time from candidate sets. Fanout builds candidates and ranking picks the order.</li><li>Inbox caps (for example the last 800 IDs) bound storage. Older history falls back to pull.</li></ul><h2>Failure modes</h2><ul><li><strong>Fanout backlog</strong> during viral events. Prioritise active followers first.</li><li><strong>Deletes and blocks</strong> must be filtered at read time, because inboxes may still hold the IDs.</li></ul>
-</div></article>
+<h2 id="topic-sec-4">Worked example: capacity maths</h2><p>Assume 200 million daily active users, 500 million posts per day (about 5,800 per second on average, 3 times that at peak), an average of 200 followers, and 20 billion feed reads per day (about 230,000 per second).</p><ul><li><strong>Pure push:</strong> 5,800 x 200 = 1.16 million inbox inserts per second on average, about 3.5 million at peak. Feasible on a sharded Redis or Cassandra tier. Reads are a single range query.</li><li><strong>A celebrity with 100 million followers</strong> posting once needs 100 million inserts. At a fanout budget of 1 million per second that is 100 seconds of the whole pipeline for one post, and some celebrities post many times a day.</li><li><strong>Pure pull:</strong> each feed read merges recent posts from about 200 followees, so 230,000 x 200 = 46 million post-list reads per second. Too expensive.</li><li><strong>Hybrid:</strong> push for authors below a threshold (commonly discussed in the range of about 10,000 to 1 million followers), and pull for the rest. A feed read fetches the precomputed inbox and merges the recent posts of the few followed celebrities, cached hot, so about 5 to 10 extra reads per feed load.</li></ul><h2 id="topic-sec-5">Strategy comparison</h2><table><thead><tr><th>Strategy</th><th>Write cost</th><th>Read cost</th><th>Freshness</th><th>Storage</th><th>Best for</th></tr></thead><tbody><tr><td>Fanout on write (push)</td><td>O(followers) per post</td><td>One range read</td><td>Seconds of fanout delay</td><td>An inbox per user</td><td>Typical accounts, read-heavy feeds</td></tr><tr><td>Fanout on read (pull)</td><td>O(1)</td><td>O(followees) merge</td><td>Instant</td><td>Minimal</td><td>Celebrities, rarely read feeds</td></tr><tr><td>Hybrid</td><td>Bounded</td><td>Inbox plus a few merges</td><td>Mixed</td><td>Moderate</td><td>Large social networks</td></tr><tr><td>Message fanout (SNS to SQS, Kafka consumer groups)</td><td>One publish</td><td>One queue per subscriber</td><td>Near real time</td><td>Per-subscriber copies or offsets</td><td>Service-to-service events</td></tr></tbody></table><h2 id="topic-sec-6">How real systems do it</h2><ul><li><strong>Twitter</strong> (per Raffi Krikorian's "Timelines at Scale" talk) kept home timelines as lists of tweet IDs in Redis, capped at about 800 entries, fanned out on write. Very high-follower accounts were merged at read time.</li><li><strong>Instagram and Facebook</strong> rank feeds at read time from candidate sets. Fanout builds candidates and ranking picks the order.</li><li>Inbox caps (for example the last 800 IDs) bound storage. Older history falls back to pull.</li></ul><h2 id="topic-sec-7">Failure modes</h2><ul><li><strong>Fanout backlog</strong> during viral events. Prioritise active followers first.</li><li><strong>Deletes and blocks</strong> must be filtered at read time, because inboxes may still hold the IDs.</li></ul>
+</div></article><div id="check-slider-fanout-patterns">
       <section class="check-slider" data-slug="fanout-patterns" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1235,7 +1279,7 @@ flowchart TD
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
+      </section></div><div id="topic-simulator-fanout-patterns">
       <div class="simulator-card" id="sim-fanout">
         <div class="simulator-card__header">
           <div class="simulator-card__title"><span>Feed Fan-out Calculator</span></div>
@@ -1267,15 +1311,15 @@ flowchart TD
            </div>
         </div>
       </div>
-    
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+    </div>
+        <div class="takeaways" id="topic-takeaways-fanout-patterns">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Fanout-on-Write delivers fast single-range-read feeds but collapses on high-follower celebrity posts.</div><div class="takeaways__item">Fanout-on-Read eliminates write amplification but incurs heavy multi-query latency on user feed loads.</div><div class="takeaways__item">Modern platforms use a hybrid model: push for normal users, dynamic pull-and-merge for celebrities.</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://www.infoq.com/presentations/Twitter-Timeline-Scalability/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Raffi Krikorian (Twitter): Timelines at Scale (QCon SF 2012, InfoQ)</a><a class="further-reading__link" href="https://docs.aws.amazon.com/sns/latest/dg/sns-sqs-as-subscriber.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> AWS SNS Documentation: Fanout Amazon SNS Notifications to Amazon SQS Queues</a><a class="further-reading__link" href="https://dl.acm.org/doi/10.1145/1807167.1807257" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Silberstein et al.: Feeding Frenzy: Selectively Materializing Users' Event Feeds (SIGMOD, 2010)</a>
           </div>
@@ -1288,10 +1332,10 @@ flowchart TD
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="fanout-patterns" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="fanout-patterns" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Fanout%20patterns&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Fanout%20patterns%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Ffanout-patterns%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1304,9 +1348,100 @@ flowchart TD
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/flash-sale-inventory-locking/" data-nav="topic" data-slug="flash-sale-inventory-locking">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Flash sale inventory locking</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">The Fanout Dilemma: Social Feeds &amp; Notifications</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Architectural Comparison: Push vs Pull</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Under the Hood: The Hybrid Fanout Architecture</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Worked example: capacity maths</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Strategy comparison</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">How real systems do it</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Failure modes</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-fanout-patterns">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-simulator-fanout-patterns">Interactive simulator</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-fanout-patterns">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 4.2</span>
+            <span>0/10 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/fanout-patterns/" data-share-title="Fanout patterns — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1314,7 +1449,7 @@ flowchart TD
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1368,7 +1503,7 @@ flowchart TD
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1378,8 +1513,8 @@ flowchart TD
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1387,30 +1522,9 @@ flowchart TD
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Fanout patterns",
-  "description": "A newspaper can be delivered to every subscriber's doorstep each morning push, or subscribers can walk to the newsstand and pick up the papers they follow.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/fanout-patterns/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

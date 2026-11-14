@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Database ticket servers — System Design In Depth</title>
   <meta name="description" content="A ticket server is the &quot;take a number&quot; dispenser at a deli counter. Every customer pulls the next number from one machine, so numbers never repeat.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Database ticket servers — System Design In Depth">
   <meta property="og:description" content="A ticket server is the &quot;take a number&quot; dispenser at a deli counter. Every customer pulls the next number from one machine, so numbers never repeat.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/database-ticket-servers/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-database-ticket-servers.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Database ticket servers — System Design In Depth">
   <meta name="twitter:description" content="A ticket server is the &quot;take a number&quot; dispenser at a deli counter. Every customer pulls the next number from one machine, so numbers never repeat.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-database-ticket-servers.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/database-ticket-servers/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Database ticket servers",
+  "description": "A ticket server is the \"take a number\" dispenser at a deli counter. Every customer pulls the next number from one machine, so numbers never repeat.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-database-ticket-servers.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/database-ticket-servers/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="database-ticket-servers">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Database ticket servers</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">identifiers</span> <span class="tag">databases</span>
         </div>
-        <h1 class="lesson-header__title">Database ticket servers</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Database ticket servers</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 3 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 2.1: Relational Modeling & Query Execution</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="database-ticket-servers">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-data-sql" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/database-ticket-servers/" data-share-title="Database ticket servers — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;ogOKDhOa_cs&quot;,&quot;title&quot;:&quot;System Design - Part 12 | Design a Unique ID Generator | 4 Methods&quot;,&quot;channel&quot;:&quot;Nikhil Lohia&quot;,&quot;why&quot;:&quot;Walks through multi-master auto-increment, UUID, ticket server and Snowflake side by side, so the ticket-server approach is explained in context with its trade-offs.&quot;,&quot;length&quot;:&quot;20:52&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>A ticket server is the "take a number" dispenser at a deli counter. Every customer pulls the next number from one machine, so numbers never repeat. To keep the line moving when one dispenser jams, Flickr put two dispensers side by side, one printing only odd numbers and the other only even ones.</p><p><strong>Mental model:</strong> <em>centralize only the counter</em>. Shards stay independent, and a tiny, dedicated database hands out globally unique 64-bit integers. Better still, it hands out whole blocks of them so that callers rarely need to ask.</p><ul><li><strong>Expecting global ordering:</strong> with two servers, ID 1001 may be issued after 1004. IDs are unique, not strictly time-ordered.</li><li><strong>One round trip per ID:</strong> at 50k inserts/s, a network hop per ID is the bottleneck. Lease ranges (for example 1,000 IDs at a time) and hand them out from memory.</li><li><strong>Gaps are normal:</strong> crashed callers, rolled-back transactions and unused leased ranges all leave holes. Never use these IDs for anything needing gap-free numbering, such as invoice numbers.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-database-ticket-servers">
+        <button class="audio-player__play-btn" id="audio-btn-database-ticket-servers" data-action="toggle-audio" data-slug="database-ticket-servers" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-database-ticket-servers" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-database-ticket-servers" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-database-ticket-servers">0:00 / 3:52</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="database-ticket-servers" id="audio-track-database-ticket-servers">
+          <div class="audio-player__progress" id="audio-bar-database-ticket-servers" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="database-ticket-servers" id="audio-speed-database-ticket-servers" title="Playback speed">1x</button>
+        <audio id="audio-database-ticket-servers" src="audio/database-ticket-servers.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> System Design - Part 12 | Design a Unique ID Generator | 4 Methods</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Nikhil Lohia · 20:52 +1 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;ogOKDhOa_cs&quot;,&quot;title&quot;:&quot;System Design - Part 12 | Design a Unique ID Generator | 4 Methods&quot;,&quot;channel&quot;:&quot;Nikhil Lohia&quot;,&quot;why&quot;:&quot;Walks through multi-master auto-increment, UUID, ticket server and Snowflake side by side, so the ticket-server approach is explained in context with its trade-offs.&quot;,&quot;length&quot;:&quot;20:52&quot;}">
       <div class="video-embed" id="video-ogOKDhOa_cs"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="ogOKDhOa_cs">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/ogOKDhOa_cs/hqdefault.jpg"
                alt="System Design - Part 12 | Design a Unique ID Generator | 4 Methods"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">Walks through multi-master auto-increment, UUID, ticket server and Snowflake side by side, so the ticket-server approach is explained in context with its trade-offs.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -896,26 +958,8 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>A ticket server is the "take a number" dispenser at a deli counter. Every customer pulls the next number from one machine, so numbers never repeat. To keep the line moving when one dispenser jams, Flickr put two dispensers side by side, one printing only odd numbers and the other only even ones.</p><p><strong>Mental model:</strong> <em>centralize only the counter</em>. Shards stay independent, and a tiny, dedicated database hands out globally unique 64-bit integers. Better still, it hands out whole blocks of them so that callers rarely need to ask.</p><ul><li><strong>Expecting global ordering:</strong> with two servers, ID 1001 may be issued after 1004. IDs are unique, not strictly time-ordered.</li><li><strong>One round trip per ID:</strong> at 50k inserts/s, a network hop per ID is the bottleneck. Lease ranges (for example 1,000 IDs at a time) and hand them out from memory.</li><li><strong>Gaps are normal:</strong> crashed callers, rolled-back transactions and unused leased ranges all leave holes. Never use these IDs for anything needing gap-free numbering, such as invoice numbers.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-database-ticket-servers">
-        <button class="audio-player__play-btn" id="audio-btn-database-ticket-servers" data-action="toggle-audio" data-slug="database-ticket-servers" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-database-ticket-servers" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-database-ticket-servers" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-database-ticket-servers">0:00 / 3:52</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="database-ticket-servers" id="audio-track-database-ticket-servers">
-          <div class="audio-player__progress" id="audio-bar-database-ticket-servers" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="database-ticket-servers" id="audio-speed-database-ticket-servers" title="Playback speed">1x</button>
-        <audio id="audio-database-ticket-servers" src="audio/database-ticket-servers.mp3" preload="metadata"></audio>
-      </div><article class="prose"><h2>Database ticket servers</h2>
+      </details><article class="prose"><h2 id="topic-sec-1">Database ticket servers</h2>
 <p>A database ticket server allocates unique IDs for other parts of an application. It returns a number; the application uses that number when it stores a record in its own database.</p>
 <p>This is useful when data is spread across several databases and their records need unique numeric IDs across all of them. Each database's local auto-increment counter cannot provide that guarantee on its own.</p>
 <p>We'll work through three parts:</p>
@@ -924,19 +968,19 @@
 <li>How reserving several IDs per database call works, with a small SQLite exercise.</li>
 <li>What happens to unused IDs after a crash, and how that affects range size.</li>
 </ul>
-<h2>Why a separate ID allocator?</h2>
+<h2 id="topic-sec-2">Why a separate ID allocator?</h2>
 <p>In Flickr's 2010 system, photos were spread across many databases. The company needed to move them between databases without primary-key collisions.</p>
 <p>Two independent databases can both assign photo ID 42. Each ID is unique within its own table, but combining or moving those records creates a collision.</p>
 <p>A ticket server moves ID generation into a shared service. The application asks for an ID before storing the photo. The allocator keeps track of IDs it has issued; it doesn't store the photo itself.</p>
 <p><a href="#" data-nav="topic" data-slug="uuid-objectid-and-snowflake">UUIDs</a> and <a href="#" data-nav="topic" data-slug="snowflake-id-design">Snowflake IDs</a> are alternatives. A ticket server is useful when you want numeric IDs allocated through a database you already know how to operate.</p>
 <p>The IDs only need to be unique within the chosen scope. Photos can share one sequence and accounts another. Photo 42 and account 42 are different records, identified by both their type and their number.</p>
-<h2>How Flickr's ticket table worked</h2>
+<h2 id="topic-sec-3">How Flickr's ticket table worked</h2>
 <p>In Flickr's implementation, asking for an ID meant updating a small MySQL table. It had an auto-incrementing ID and a unique marker column called <code>stub</code>. Each allocation supplied the same marker.</p>
 <p>MySQL's <code>REPLACE</code> operation removed the row with that marker and inserted a replacement with a new ID. The table held one row while the counter advanced.</p>
 <p>The application then called <code>LAST_INSERT_ID()</code> on the same database connection to retrieve that ID. Connection pools matter here: both statements must use the same connection because the value is connection-local.</p>
 <p>To avoid relying on one ticket server, Flickr used two. One allocated odd IDs and the other even IDs. They couldn't issue the same ID, even if one server allocated more than the other.</p>
 <p>A replacement server must preserve its counter position as well as its odd/even role. Restarting the odd sequence at 1 would reuse old IDs. Restoring an old backup can cause the same problem.</p>
-<h2>Allocating several IDs at once</h2>
+<h2 id="topic-sec-4">Allocating several IDs at once</h2>
 <p>So far, every new record needs a network call to the allocator. Reserving several IDs in one call reduces that traffic: a worker can issue IDs locally until its range runs out.</p>
 <p>Meituan's 2017 Leaf-segment design does this with a shared counter. The database records the highest reserved ID; each worker tracks the next unused ID in its own range.</p>
 <p>With a range size of three, starting from zero:</p>
@@ -964,7 +1008,7 @@ first_id|last_id
 <p>This output was captured with SQLite 3.51.0 on 2026-09-15. The <code>RETURNING</code> clause requires SQLite 3.35 or newer.</p>
 <p><code>BEGIN IMMEDIATE</code> starts a write transaction. Another writer to the same database must wait or receive a busy error. This example uses one connection to show the reservation arithmetic.</p>
 <p>The SQL client prints <code>RETURNING</code> values before <code>COMMIT</code>. A real allocator must wait until the commit succeeds before returning the range to its caller.</p>
-<h2>Unused IDs after a crash</h2>
+<h2 id="topic-sec-5">Unused IDs after a crash</h2>
 <p>Reserving a range and using it happen separately. A worker can stop after the reservation commits, leaving some IDs unused.</p>
 <p><strong>A reserves 1 through 3, uses 1 and crashes. B owns 4 through 6 and hasn't used any yet. Which ID should B use next? Can A's replacement reuse 2?</strong></p>
 <p>B uses 4, the first ID in its range. A's replacement reserves a fresh range starting at 7. It discards 2 and 3 because it cannot safely assume that A never issued them before crashing.</p>
@@ -972,16 +1016,16 @@ first_id|last_id
 <p>ID order also doesn't give creation order. A worker holding ID 1 can pause while another worker stores a photo with ID 4, even when both obtained their ranges from the same allocator.</p>
 <p>A lost allocator reply has a similar result: the caller can request another range and abandon the uncertain one. It uses more numbers but avoids reissuing them.</p>
 <p>This doesn't prevent duplicate uploads. Retrying the same photo upload may obtain a new ID and store a second photo. That requires separate <a href="#" data-nav="topic" data-slug="retries-timeouts-idempotency">idempotency handling</a>.</p>
-<h2>Choosing a range size</h2>
+<h2 id="topic-sec-6">Choosing a range size</h2>
 <p>Larger ranges can leave more unused IDs when a worker stops. In return, workers call the database less often and can continue through an allocator outage until their ranges run out.</p>
 <p>Leaf also fetches the next range before the current one is exhausted. This reduces the chance that a request has to wait for a refill.</p>
 <p>If one database already generates all your IDs, a ticket service adds another dependency without solving a current collision problem. Consider it when independent writers need a shared numeric ID space.</p>
 <p>Monitor allocation failures and remaining integer space. Sequential IDs also require normal authorization checks: guessing another record's number must not grant access to it.</p>
 <p>For a larger exercise, the Python allocation replay extends the SQLite example with two worker processes and a deliberately lost reply.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
-      <h2>Under the Hood: Flickr Ticket Servers and ID Generation</h2>
+      <h2 id="topic-sec-7">Under the Hood: Flickr Ticket Servers and ID Generation</h2>
       <p>Before Twitter created Snowflake, large-scale sharded MySQL databases (pioneered by Flickr in 2006) solved unique 64-bit ID generation across independent database shards using dedicated <strong>Ticket Servers</strong>.</p>
 
-      <h2>Dual Ticket Server Architecture</h2>
+      <h2 id="topic-sec-8">Dual Ticket Server Architecture</h2>
       <div class="mermaid">
 flowchart TD
     Client["App Server Fleet"] --> LB{"Client-side round-robin (parity comes from each server's auto_increment_offset)"}
@@ -998,7 +1042,7 @@ flowchart TD
     TS2 --> S2["id = id + 2 (2, 4, 6, 8...)"]
       </div>
 
-      <h2>Under the Hood: The MySQL REPLACE INTO Trick</h2>
+      <h2 id="topic-sec-9">Under the Hood: The MySQL REPLACE INTO Trick</h2>
       <p>To generate sequential IDs without table bloat, Flickr used a 1-row table with <code>auto_increment_increment</code> and <code>auto_increment_offset</code>:</p>
       <pre><code>-- Ticket Server Configuration
 -- Server 1: offset = 1, increment = 2 (Generates: 1, 3, 5, 7...)
@@ -1018,8 +1062,8 @@ SELECT LAST_INSERT_ID();
       <p><strong>Limitations:</strong> Requires a network round-trip for every ID generation, IDs from the two servers are not globally time-ordered, and scaling beyond two servers means reconfiguring every server's offset and increment. Running two independent servers is what removes the single point of failure: if one dies, clients keep drawing IDs from the other.</p>
     
 <!-- enriched -->
-<h2>Worked example: range leasing (the "segment" or hi/lo pattern)</h2><p>Instead of one round trip per ID, each app server leases a block:</p><p><code>UPDATE id_alloc SET max_id = max_id + 1000 WHERE biz_tag = 'orders' RETURNING max_id;</code></p><p>If this returns 51000, the server owns IDs 50001-51000 and serves them from an in-memory counter.</p><ul><li><strong>Load:</strong> 100 app servers at 2,000 IDs/s each is 200k IDs/s. With 1,000-ID blocks, the allocator sees only 200 UPDATEs/s, which a single Postgres or MySQL handles easily.</li><li><strong>Waste on restart:</strong> a server that crashes loses at most 1,000 unused IDs. Out of 2^63, that is irrelevant.</li><li><strong>Latency spikes:</strong> fetch the next block asynchronously when the current one is 20% remaining (a double buffer), so no request ever waits on the allocator.</li></ul><h3>Comparison with the alternatives</h3><table><thead><tr><th>Scheme</th><th>Size</th><th>Ordering</th><th>Coordination</th><th>Main risk</th></tr></thead><tbody><tr><td>Single auto-increment</td><td>64-bit</td><td>Strict</td><td>Every insert</td><td>Single point of failure and throughput ceiling</td></tr><tr><td>Flickr odd/even ticket servers</td><td>64-bit</td><td>Roughly increasing</td><td>Every ID (one round trip)</td><td>Adding a third server needs reconfiguring offsets</td></tr><tr><td>Range lease (segment)</td><td>64-bit</td><td>Increasing per server, interleaved globally</td><td>Once per block</td><td>Allocator outage once blocks run out</td></tr><tr><td>Snowflake</td><td>64-bit</td><td>Time-ordered (k-sorted)</td><td>Only worker-ID assignment</td><td>Clock rollback</td></tr><tr><td>UUIDv4 / v7</td><td>128-bit</td><td>None / time-ordered</td><td>None</td><td>Index size (v4: random inserts)</td></tr></tbody></table><h3>Failure modes</h3><ul><li><strong>Both ticket servers configured with the same offset</strong> after a rebuild produces duplicate IDs. Guard with a startup check against the max ID already issued.</li><li><strong>Restoring a ticket server from an old backup</strong> rewinds the counter and reissues IDs. Always bump the counter well past the last known value after a restore.</li><li><strong>REPLACE INTO</strong> deletes and reinserts the row. Under heavy concurrency on InnoDB this can cause lock waits. Flickr's load was fine, but range leasing scales further.</li></ul><p><strong>Who does this:</strong> Flickr (2010 blog post, "Ticket Servers: Distributed Unique Primary Keys on the Cheap"), Meituan's Leaf-segment, Hibernate's hi/lo and pooled optimizers, and database sequences with <code>CACHE n</code> use the same leasing idea.</p>
-</div></div></article>
+<h2 id="topic-sec-10">Worked example: range leasing (the "segment" or hi/lo pattern)</h2><p>Instead of one round trip per ID, each app server leases a block:</p><p><code>UPDATE id_alloc SET max_id = max_id + 1000 WHERE biz_tag = 'orders' RETURNING max_id;</code></p><p>If this returns 51000, the server owns IDs 50001-51000 and serves them from an in-memory counter.</p><ul><li><strong>Load:</strong> 100 app servers at 2,000 IDs/s each is 200k IDs/s. With 1,000-ID blocks, the allocator sees only 200 UPDATEs/s, which a single Postgres or MySQL handles easily.</li><li><strong>Waste on restart:</strong> a server that crashes loses at most 1,000 unused IDs. Out of 2^63, that is irrelevant.</li><li><strong>Latency spikes:</strong> fetch the next block asynchronously when the current one is 20% remaining (a double buffer), so no request ever waits on the allocator.</li></ul><h3>Comparison with the alternatives</h3><table><thead><tr><th>Scheme</th><th>Size</th><th>Ordering</th><th>Coordination</th><th>Main risk</th></tr></thead><tbody><tr><td>Single auto-increment</td><td>64-bit</td><td>Strict</td><td>Every insert</td><td>Single point of failure and throughput ceiling</td></tr><tr><td>Flickr odd/even ticket servers</td><td>64-bit</td><td>Roughly increasing</td><td>Every ID (one round trip)</td><td>Adding a third server needs reconfiguring offsets</td></tr><tr><td>Range lease (segment)</td><td>64-bit</td><td>Increasing per server, interleaved globally</td><td>Once per block</td><td>Allocator outage once blocks run out</td></tr><tr><td>Snowflake</td><td>64-bit</td><td>Time-ordered (k-sorted)</td><td>Only worker-ID assignment</td><td>Clock rollback</td></tr><tr><td>UUIDv4 / v7</td><td>128-bit</td><td>None / time-ordered</td><td>None</td><td>Index size (v4: random inserts)</td></tr></tbody></table><h3>Failure modes</h3><ul><li><strong>Both ticket servers configured with the same offset</strong> after a rebuild produces duplicate IDs. Guard with a startup check against the max ID already issued.</li><li><strong>Restoring a ticket server from an old backup</strong> rewinds the counter and reissues IDs. Always bump the counter well past the last known value after a restore.</li><li><strong>REPLACE INTO</strong> deletes and reinserts the row. Under heavy concurrency on InnoDB this can cause lock waits. Flickr's load was fine, but range leasing scales further.</li></ul><p><strong>Who does this:</strong> Flickr (2010 blog post, "Ticket Servers: Distributed Unique Primary Keys on the Cheap"), Meituan's Leaf-segment, Hibernate's hi/lo and pooled optimizers, and database sequences with <code>CACHE n</code> use the same leasing idea.</p>
+</div></div></article><div id="check-slider-database-ticket-servers">
       <section class="check-slider" data-slug="database-ticket-servers" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1291,15 +1335,15 @@ SELECT LAST_INSERT_ID();
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-database-ticket-servers">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Ticket servers generate unique, roughly increasing (not globally time-ordered) IDs across sharded databases using odd/even increments.</div><div class="takeaways__item">MySQL REPLACE INTO generates auto-increment IDs on a single row without unbounded table bloat.</div><div class="takeaways__item">Modern high-throughput systems prefer coordinate-free ID generators (Snowflake / UUIDv7) to avoid network hops.</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://code.flickr.net/2010/02/08/ticket-servers-distributed-unique-primary-keys-on-the-cheap/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Flickr Engineering: Ticket Servers: Distributed Unique Primary Keys on the Cheap</a><a class="further-reading__link" href="https://blog.twitter.com/engineering/en_us/a/2010/announcing-snowflake" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Twitter Engineering: Announcing Snowflake</a>
           </div>
@@ -1312,10 +1356,10 @@ SELECT LAST_INSERT_ID();
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="database-ticket-servers" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="database-ticket-servers" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Database%20ticket%20servers&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Database%20ticket%20servers%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fdatabase-ticket-servers%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1328,9 +1372,108 @@ SELECT LAST_INSERT_ID();
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/relational-database-scaling/" data-nav="topic" data-slug="relational-database-scaling">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Relational database scaling</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Database ticket servers</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Why a separate ID allocator?</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">How Flickr&#039;s ticket table worked</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Allocating several IDs at once</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Unused IDs after a crash</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Choosing a range size</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Under the Hood: Flickr Ticket Servers and ID Generation</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-8">Dual Ticket Server Architecture</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-9">Under the Hood: The MySQL REPLACE INTO Trick</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-10">Worked example: range leasing (the &quot;segment&quot; or hi/lo pattern)</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-database-ticket-servers">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-database-ticket-servers">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 2.1</span>
+            <span>0/13 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/database-ticket-servers/" data-share-title="Database ticket servers — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1338,7 +1481,7 @@ SELECT LAST_INSERT_ID();
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1392,7 +1535,7 @@ SELECT LAST_INSERT_ID();
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1401,8 +1544,8 @@ SELECT LAST_INSERT_ID();
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1410,30 +1553,9 @@ SELECT LAST_INSERT_ID();
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Database ticket servers",
-  "description": "A ticket server is the \"take a number\" dispenser at a deli counter. Every customer pulls the next number from one machine, so numbers never repeat.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/database-ticket-servers/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

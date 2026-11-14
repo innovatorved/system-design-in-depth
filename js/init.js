@@ -32,7 +32,7 @@
     const stored = localStorage.getItem('sd-theme');
     const dark = stored === 'dark';
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#000000' : '#ffffff');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0f0f10' : '#f7f7f5');
   } catch {}
 
   // 4. Google Analytics 4 & Consent Mode v2 (GDPR / DPDP compliant)
@@ -76,10 +76,18 @@
         const cards = [...shell.querySelectorAll('.landing-module[data-units]')];
         const slugs = new Set(cards.flatMap(c => c.dataset.units.split(' ')));
         const last = typeof p.lastVisited === 'string' && slugs.has(p.lastVisited) ? p.lastVisited : null;
-        const cta = shell.querySelector('.landing-hero__actions .btn--primary');
+        const cta = shell.querySelector('#landing-primary-cta') || shell.querySelector('.landing-hero__actions .btn--primary');
         if (cta && last) {
           cta.textContent = 'Continue learning →';
-          cta.setAttribute('href', '#topic/' + last);
+          cta.setAttribute('href', '/topic/' + last + '/');
+        }
+        const resumeWrap = shell.querySelector('#landing-resume');
+        const resumeLink = shell.querySelector('#landing-resume-link');
+        const resumeTitle = shell.querySelector('#landing-resume-title');
+        if (last && resumeWrap && resumeLink && resumeTitle) {
+          resumeLink.setAttribute('href', '/topic/' + last + '/');
+          resumeTitle.textContent = last.replace(/-/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
+          resumeWrap.hidden = false;
         }
         for (const card of cards) {
           const units = card.dataset.units.split(' ');

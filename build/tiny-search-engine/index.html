@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Tiny Search Engine (Inverted Index, Compression &amp; BM25) — Interactive Build Lab | System Design In Depth</title>
   <meta name="description" content="Tiny Search Engine (Inverted Index, Compression &amp; BM25): A complete in-memory search engine: tokenizer, positional inverted index, delta VByte posting...">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Tiny Search Engine (Inverted Index, Compression &amp; BM25) — Interactive Build Lab | System Design In Depth">
   <meta property="og:description" content="Tiny Search Engine (Inverted Index, Compression &amp; BM25): A complete in-memory search engine: tokenizer, positional inverted index, delta VByte posting...">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/build/tiny-search-engine/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/build-tiny-search-engine.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Tiny Search Engine (Inverted Index, Compression &amp; BM25) — Interactive Build Lab | System Design In Depth">
   <meta name="twitter:description" content="Tiny Search Engine (Inverted Index, Compression &amp; BM25): A complete in-memory search engine: tokenizer, positional inverted index, delta VByte posting...">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/build-tiny-search-engine.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/build/tiny-search-engine/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Tiny Search Engine (Inverted Index, Compression & BM25) — Interactive Build Lab",
+  "description": "Tiny Search Engine (Inverted Index, Compression & BM25): A complete in-memory search engine: tokenizer, positional inverted index, delta VByte posting...",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/build-tiny-search-engine.png",
+  "url": "https://system-design-in-depth.vedgupta.in/build/tiny-search-engine/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab" data-tab="curriculum" role="tab" aria-selected="false">Curriculum</button>
       <button class="sidebar__tab active" data-tab="builds" role="tab" aria-selected="true">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Interactive Build Labs (20)</div><a class="unit-item" data-build="load-balancer-from-scratch" href="/build/load-balancer-from-scratch/">
         <span class="unit-item__status unit-item__status--pending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
@@ -166,25 +191,31 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered-build="tiny-search-engine">
 
       <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="#" data-nav="home">Home</a>
+        <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
         <span class="breadcrumbs__current">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--build"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> From-Scratch Build</span>
         </div>
-        <h1 class="lesson-header__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</h1>
-        <p class="build-summary">A complete in-memory search engine: tokenizer, positional inverted index, delta + VByte posting compression, Boolean intersection, champion lists, phrase search and BM25 ranking, with a test suite.</p>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Tiny Search Engine (Inverted Index, Compression &amp; BM25)</h1>
+        <p class="build-summary ds-lesson-hero__promise">A complete in-memory search engine: tokenizer, positional inverted index, delta + VByte posting compression, Boolean intersection, champion lists, phrase search and BM25 ranking, with a test suite.</p>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~40 min</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Advanced</span>
-          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="#" data-nav="topic" data-slug="inverted-index-and-posting-lists">Inverted index and posting lists</a>, <a href="#" data-nav="topic" data-slug="bm25-production-ranking">BM25 production ranking</a>, <a href="#" data-nav="topic" data-slug="tf-idf-relevance-scoring">TF-IDF relevance scoring</a>, <a href="#" data-nav="topic" data-slug="boolean-tiered-search">Boolean and tiered search</a>, <a href="#" data-nav="topic" data-slug="stop-words-and-champion-lists">Stop words and champion lists</a>, <a href="#" data-nav="topic" data-slug="search-engine-system-design">Design: a search service</a></span>
+          <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Lessons: <a href="/topic/inverted-index-and-posting-lists/" data-nav="topic" data-slug="inverted-index-and-posting-lists">Inverted index and posting lists</a>, <a href="/topic/bm25-production-ranking/" data-nav="topic" data-slug="bm25-production-ranking">BM25 production ranking</a>, <a href="/topic/tf-idf-relevance-scoring/" data-nav="topic" data-slug="tf-idf-relevance-scoring">TF-IDF relevance scoring</a>, <a href="/topic/boolean-tiered-search/" data-nav="topic" data-slug="boolean-tiered-search">Boolean and tiered search</a>, <a href="/topic/stop-words-and-champion-lists/" data-nav="topic" data-slug="stop-words-and-champion-lists">Stop words and champion lists</a>, <a href="/topic/search-engine-system-design/" data-nav="topic" data-slug="search-engine-system-design">Design: a search service</a></span>
+        </div>
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/build/tiny-search-engine/" data-share-title="Tiny Search Engine (Inverted Index, Compression &amp; BM25) — System Design In Depth" title="Share link to this build lab">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
       </div>
 
@@ -314,7 +345,7 @@ Inverted Index: &quot;consensus&quot;  ──► [ Doc 1, Doc 3 ]   &lt;── P
 <div class="code-block"><div class="code-block__header"><span class="code-block__lang">javascript</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy code-block__run-btn" data-action="run-snippet-codelab" data-lang="javascript" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg><span>Run in CodeLab</span></button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-javascript">const cleaned = text.toLowerCase().replace(/[^a-z0-9\s]/g, &#039; &#039;).trim();</code></pre></div>
 <h3>Step 2.2: Stop-Word Elimination</h3>
 <p>Ubiquitous grammatical words (<code>the</code>, <code>is</code>, <code>at</code>, <code>and</code>, <code>to</code>) appear in almost every document. They carry near-zero information entropy while inflating index memory.</p>
-<div class="callout callout--note"><div class="callout__title">ℹ️ Note</div><p>> Early search engines aggressively stripped all stop words. Modern search engines retain stop words for phrase and positional lookups (e.g. <em>"To be or not to be"</em> or the band <em>"The Who"</em>), but assign them near-zero weight using inverse document frequency (IDF).</p></div>
+<div class="callout callout--note"><div class="callout__title">Note</div><p>> Early search engines aggressively stripped all stop words. Modern search engines retain stop words for phrase and positional lookups (e.g. <em>"To be or not to be"</em> or the band <em>"The Who"</em>), but assign them near-zero weight using inverse document frequency (IDF).</p></div>
 <h3>Step 2.3: Algorithmic Suffix Stemming</h3>
 <p>Users searching for <code>&quot;searched&quot;</code> or <code>&quot;searching&quot;</code> expect documents containing <code>&quot;search&quot;</code> to match. We apply a Porter-style morphological suffix reduction:</p>
 <ul>
@@ -364,7 +395,7 @@ Inverted Index: &quot;consensus&quot;  ──► [ Doc 1, Doc 3 ]   &lt;── P
 <li>Values <code>&lt; 128</code> consume only <strong>1 byte</strong> (a 75% immediate reduction).</li>
 <li>Values <code>&lt; 16,384</code> consume <strong>2 bytes</strong> (a 50% reduction).</li>
 </ul>
-<div class="callout callout--tip"><div class="callout__title">💡 Tip</div><p>> Apache Lucene uses <strong>Frame of Reference (FoR)</strong> bit-packing for blocks of 128 integers, calculating the maximum bit-width required in each block to pack integers with zero wasted bits.</p></div>
+<div class="callout callout--tip"><div class="callout__title">Tip</div><p>> Apache Lucene uses <strong>Frame of Reference (FoR)</strong> bit-packing for blocks of 128 integers, calculating the maximum bit-width required in each block to pack integers with zero wasted bits.</p></div>
 <hr>
 <h2>6. Scale & Tiered Architecture: Champion Lists</h2>
 <p>When serving millions of users, querying the full multi-gigabyte postings archive on every keystroke exhausts disk I/O.</p>
@@ -414,7 +445,31 @@ const ranked = engine.searchBM25(&quot;consensus protocols&quot;, { topK: 5 });<
         <div id="codelab-mount-tiny-search-engine" class="build-lab-overlay__mount" data-build-id="tiny-search-engine"></div>
       </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -422,7 +477,7 @@ const ranked = engine.searchBM25(&quot;consensus protocols&quot;, { topK: 5 });<
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -478,7 +533,7 @@ const ranked = engine.searchBM25(&quot;consensus protocols&quot;, { topK: 5 });<
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
   <script type="text/plain" data-defer src="data/implementations_code.js?v=7189880a2f"></script>
   <script type="text/plain" data-defer src="data/guided_labs.js?v=e41a33646f"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -487,8 +542,8 @@ const ranked = engine.searchBM25(&quot;consensus protocols&quot;, { topK: 5 });<
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -496,30 +551,9 @@ const ranked = engine.searchBM25(&quot;consensus protocols&quot;, { topK: 5 });<
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Tiny Search Engine (Inverted Index, Compression & BM25) — Interactive Build Lab",
-  "description": "Tiny Search Engine (Inverted Index, Compression & BM25): A complete in-memory search engine: tokenizer, positional inverted index, delta VByte posting...",
-  "url": "https://system-design-in-depth.vedgupta.in/build/tiny-search-engine/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

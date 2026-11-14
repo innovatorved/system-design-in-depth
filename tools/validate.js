@@ -486,7 +486,7 @@ if (fs.existsSync(topicBaseDir)) {
     }
 
     // Verify substantial prerendered lesson text (>= 300 words)
-    const readerMatch = html.match(/id="reader"[^>]*>([\s\S]*?)<\/div>\s*<\/main>/);
+    const readerMatch = html.match(/id="reader"[^>]*>([\s\S]*?)<\/div>\s*(?:<footer\b|<\/main>)/i);
     if (!readerMatch) {
       emptyReaderCount++;
       reportError(`Missing #reader container in topic/${slug}/index.html`);
@@ -555,7 +555,7 @@ if (fs.existsSync(buildBaseDir)) {
       reportError(`Legacy tab switcher markup found in build/${buildId}/index.html`);
     }
 
-    const readerMatch = html.match(/id="reader"[^>]*>([\s\S]*?)<\/div>\s*<\/main>/);
+    const readerMatch = html.match(/id="reader"[^>]*>([\s\S]*?)<\/div>\s*(?:<footer\b|<\/main>)/i);
     if (!readerMatch) {
       emptyBuildReaderCount++;
       reportError(`Missing #reader container in build/${buildId}/index.html`);
@@ -580,7 +580,7 @@ if (fs.existsSync(buildBaseDir)) {
 if (fs.existsSync(sitemapFile)) {
   const sitemapContent = fs.readFileSync(sitemapFile, 'utf8');
   let missingSitemapUrls = 0;
-  const hubPaths = ['/roadmap/', '/challenges/', '/sandbox/', '/dashboard/', '/projects/'];
+  const hubPaths = ['/roadmap/', '/challenges/', '/sandbox/', '/dashboard/', '/glossary/', '/projects/'];
   for (const hub of hubPaths) {
     const expectedLoc = `<loc>https://system-design-in-depth.vedgupta.in${hub}</loc>`;
     if (!sitemapContent.includes(expectedLoc)) {
@@ -628,6 +628,12 @@ const allHtmlFiles = [
   'index.html',
   '404.html',
   'projects/index.html',
+  'roadmap/index.html',
+  'challenges/index.html',
+  'sandbox/index.html',
+  'dashboard/index.html',
+  'glossary/index.html',
+  ...Array.from(allChallengeIds).map(c => `challenges/${c}/index.html`),
   ...Array.from(allSlugs).map(s => `topic/${s}/index.html`),
   ...Array.from(allBuildIds).map(b => `build/${b}/index.html`)
 ];
@@ -642,8 +648,8 @@ for (const relPath of allHtmlFiles) {
 
   const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
   const descMatch = html.match(/<meta\s+name="description"\s+content="([^"]+)"/i);
-  const ogImgMatch = html.match(/<meta\s+property="og:image"\s+content="https:\/\/system-design-in-depth\.vedgupta\.in\/assets\/og-image\.png"/i);
-  const twImgMatch = html.match(/<meta\s+name="twitter:image"\s+content="https:\/\/system-design-in-depth\.vedgupta\.in\/assets\/og-image\.png"/i);
+  const ogImgMatch = html.match(/<meta\s+property="og:image"\s+content="https:\/\/system-design-in-depth\.vedgupta\.in\/assets\/og\/([a-z0-9_-]+\.png)"/i);
+  const twImgMatch = html.match(/<meta\s+name="twitter:image"\s+content="https:\/\/system-design-in-depth\.vedgupta\.in\/assets\/og\/([a-z0-9_-]+\.png)"/i);
   const h1Count = (html.match(/<h1[\s>]/gi) || []).length;
 
   if (!titleMatch) {
@@ -667,8 +673,14 @@ for (const relPath of allHtmlFiles) {
   }
 
   if (!ogImgMatch || !twImgMatch) {
-    reportError(`${relPath}: missing absolute og:image or twitter:image tag`);
+    reportError(`${relPath}: missing absolute per-page og:image or twitter:image tag`);
     metaErrors++;
+  } else {
+    const ogDiskPath = path.join(__dirname, '..', 'assets', 'og', ogImgMatch[1]);
+    if (!fs.existsSync(ogDiskPath)) {
+      reportError(`${relPath}: referenced OG card assets/og/${ogImgMatch[1]} does not exist on disk`);
+      metaErrors++;
+    }
   }
 
   if (h1Count !== 1) {

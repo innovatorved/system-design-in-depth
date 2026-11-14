@@ -19,6 +19,8 @@ window.App = (() => {
   let currentBuildParams = new URLSearchParams();
   let currentRouteParams = new URLSearchParams();
   let landingCleanup = null;  // live demo on the landing page
+  let _tocScrollCleanup = null;
+  let _toastTimer = null;
   const collapsedModules = new Set();
 
   // Helper: find module ID for a given slug
@@ -190,7 +192,7 @@ window.App = (() => {
       window.location.hash = '';
       return;
     }
-    if (hash === '/glossary' || hash === 'glossary') {
+    if (path === 'glossary' || path.startsWith('glossary/') || hash === '/glossary' || hash === 'glossary') {
       currentView = 'glossary';
       currentSlug = null;
       activeTab = 'curriculum';
@@ -295,6 +297,10 @@ window.App = (() => {
       const params = qIdx >= 0 ? new URLSearchParams(str.slice(qIdx)) : null;
       const sub = str.split('?')[0].replace(/^\/sandbox\/?/, '').replace(/\/+$/, '');
       navigateToSandbox(sub || params?.get('blueprint') || null, event);
+      return;
+    }
+    if (str.startsWith('/glossary')) {
+      navigateToGlossary(event);
       return;
     }
     history.pushState(null, '', str);
@@ -439,6 +445,10 @@ window.App = (() => {
     if (landingCleanup) {
       landingCleanup();
       landingCleanup = null;
+    }
+    if (_tocScrollCleanup) {
+      _tocScrollCleanup();
+      _tocScrollCleanup = null;
     }
     if (activeRoadmap) {
       if (window.RoadmapController?.unmount) window.RoadmapController.unmount();
@@ -597,6 +607,7 @@ window.App = (() => {
         }
         
         initMermaid();
+        setupLessonTocScrollSpy(reader);
         if (window.setupAudioListeners) {
           window.setupAudioListeners(currentSlug);
         }
@@ -820,26 +831,27 @@ window.App = (() => {
         if (!window.GUIDED_LABS_DATA) {
           neededBuildScripts.push('data/guided_labs.js');
         }
-        if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
+        if (!document.querySelector('link[href*="code-lab.css"]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
-          link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.3.2/dist/code-lab.css';
-          link.crossOrigin = 'anonymous';
+          const cssHash = window.LAZY_MANIFEST?.['css/vendor/code-lab.css'] || window.ASSET_VERSION || '';
+          link.href = 'css/vendor/code-lab.css' + (cssHash ? '?v=' + cssHash : '');
           link.onerror = function () {
             this.onerror = null;
-            this.href = 'https://unpkg.com/@innovatorved/code-lab@0.3.2/dist/code-lab.css';
+            this.crossOrigin = 'anonymous';
+            this.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.4.0/dist/code-lab.css';
           };
           document.head.appendChild(link);
         }
         if (!window.CodeLab) {
-          neededBuildScripts.push('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.3.2/dist/code-lab.js');
+          neededBuildScripts.push(['js/vendor/code-lab.js', 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.4.0/dist/code-lab.js']);
         }
 
         if (neededBuildScripts.length > 0 && window.loadScript) {
           if (!isPrerenderedBuild) {
             reader.innerHTML = '<div class="prose"><p style="padding:2rem 0;color:var(--fg-muted);">Loading Interactive IDE Lab &amp; Reference Build...</p></div>';
           }
-          Promise.all(neededBuildScripts.map(s => window.loadScript(s))).then(renderBuildView).catch(err => {
+          Promise.all(neededBuildScripts.map(s => Array.isArray(s) ? window.loadScript(s[0], s[1]) : window.loadScript(s))).then(renderBuildView).catch(err => {
             console.error('[Failed to load build lab scripts]', err);
             renderBuildView();
           });
@@ -1062,7 +1074,7 @@ window.App = (() => {
 
     // Update theme-color meta
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', next === 'dark' ? '#000000' : '#ffffff');
+    if (meta) meta.setAttribute('content', next === 'dark' ? '#0f0f10' : '#f7f7f5');
 
     // Re-init mermaid with correct theme
     if (window.mermaid) {
@@ -1071,27 +1083,27 @@ window.App = (() => {
         theme: 'base', // base honours themeVariables; 'default'/'dark' override them
         themeVariables: {
           darkMode: next === 'dark',
-          background: next === 'dark' ? '#0a0a0a' : '#ffffff',
-          primaryColor: next === 'dark' ? '#171717' : '#fafafa',
-          primaryTextColor: next === 'dark' ? '#ffffff' : '#0a0a0a',
-          primaryBorderColor: next === 'dark' ? '#404040' : '#d4d4d4',
-          lineColor: next === 'dark' ? '#737373' : '#a1a1a1',
-          secondaryColor: next === 'dark' ? '#0a0a0a' : '#f5f5f5',
-          tertiaryColor: next === 'dark' ? '#262626' : '#e5e5e5',
-          mainBkg: (next === 'dark') ? '#171717' : '#fafafa',
-          nodeBorder: (next === 'dark') ? '#404040' : '#d4d4d4',
-          clusterBkg: (next === 'dark') ? '#0a0a0a' : '#ffffff',
-          clusterBorder: (next === 'dark') ? '#262626' : '#e5e5e5',
-          textColor: (next === 'dark') ? '#e5e5e5' : '#262626',
-          edgeLabelBackground: (next === 'dark') ? '#0a0a0a' : '#ffffff',
-          actorBkg: (next === 'dark') ? '#171717' : '#fafafa',
-          actorBorder: (next === 'dark') ? '#404040' : '#d4d4d4',
-          actorTextColor: (next === 'dark') ? '#ffffff' : '#0a0a0a',
-          signalColor: (next === 'dark') ? '#a1a1a1' : '#525252',
-          signalTextColor: (next === 'dark') ? '#e5e5e5' : '#262626',
-          noteBkgColor: (next === 'dark') ? '#262626' : '#f5f5f5',
-          noteBorderColor: (next === 'dark') ? '#404040' : '#d4d4d4',
-          noteTextColor: (next === 'dark') ? '#e5e5e5' : '#262626',
+          background: next === 'dark' ? '#121213' : '#ffffff',
+          primaryColor: next === 'dark' ? '#18181a' : '#f7f7f5',
+          primaryTextColor: next === 'dark' ? '#f4f4f5' : '#18181b',
+          primaryBorderColor: next === 'dark' ? '#27272a' : '#e6e4df',
+          lineColor: next === 'dark' ? '#a1a1aa' : '#52525b',
+          secondaryColor: next === 'dark' ? '#121213' : '#f1f0ec',
+          tertiaryColor: next === 'dark' ? '#27272a' : '#e6e4df',
+          mainBkg: next === 'dark' ? '#18181a' : '#f7f7f5',
+          nodeBorder: next === 'dark' ? '#27272a' : '#d4d1ca',
+          clusterBkg: next === 'dark' ? '#121213' : '#ffffff',
+          clusterBorder: next === 'dark' ? '#27272a' : '#e6e4df',
+          textColor: next === 'dark' ? '#e4e4e7' : '#27272a',
+          edgeLabelBackground: next === 'dark' ? '#121213' : '#ffffff',
+          actorBkg: next === 'dark' ? '#18181a' : '#f7f7f5',
+          actorBorder: next === 'dark' ? '#27272a' : '#d4d1ca',
+          actorTextColor: next === 'dark' ? '#f4f4f5' : '#18181b',
+          signalColor: next === 'dark' ? '#a1a1aa' : '#52525b',
+          signalTextColor: next === 'dark' ? '#e4e4e7' : '#27272a',
+          noteBkgColor: next === 'dark' ? '#1f1f23' : '#f1f0ec',
+          noteBorderColor: next === 'dark' ? '#3f3f46' : '#d4d1ca',
+          noteTextColor: next === 'dark' ? '#e4e4e7' : '#27272a',
           fontFamily: '"Geist", -apple-system, sans-serif',
           fontSize: '13px'
         }
@@ -1767,7 +1779,19 @@ window.App = (() => {
         return;
       }
 
-      // 9. Intercept internal /build/<slug>/, /topic/<slug>/, /challenges/<id>, /sandbox?blueprint=<id> links for SPA navigation
+      // 8b. Share lesson / page URL
+      const shareBtn = target.closest('[data-action="share-page"]');
+      if (shareBtn) {
+        e.preventDefault();
+        sharePageUrl(
+          shareBtn.getAttribute('data-share-url') || shareBtn.getAttribute('data-url'),
+          shareBtn.getAttribute('data-share-title') || shareBtn.getAttribute('data-title'),
+          shareBtn
+        );
+        return;
+      }
+
+      // 9. Intercept internal /build/<slug>/, /topic/<slug>/, /challenges/<id>, /sandbox?blueprint=<id>, /glossary/ links for SPA navigation
       const anchor = target.closest('a[href]');
       if (anchor && !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0 || anchor.target === '_blank')) {
         const href = anchor.getAttribute('href') || '';
@@ -1804,6 +1828,11 @@ window.App = (() => {
         if (sandboxBpMatch) {
           e.preventDefault();
           navigateToSandbox(decodeURIComponent(sandboxBpMatch[1]), e);
+          return;
+        }
+        if (/^\/glossary\/?$/.test(href)) {
+          e.preventDefault();
+          navigateToGlossary(e);
           return;
         }
       }
@@ -1867,20 +1896,21 @@ window.App = (() => {
   }
 
   function ensureCodeLabLoaded() {
-    if (!document.querySelector('link[href*="@innovatorved/code-lab"], link[href*="innovatorved/code-lab"]')) {
+    if (!document.querySelector('link[href*="code-lab.css"]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.3.2/dist/code-lab.css';
-      link.crossOrigin = 'anonymous';
+      const cssHash = window.LAZY_MANIFEST?.['css/vendor/code-lab.css'] || window.ASSET_VERSION || '';
+      link.href = 'css/vendor/code-lab.css' + (cssHash ? '?v=' + cssHash : '');
       link.onerror = function () {
         this.onerror = null;
-        this.href = 'https://unpkg.com/@innovatorved/code-lab@0.3.2/dist/code-lab.css';
+        this.crossOrigin = 'anonymous';
+        this.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.4.0/dist/code-lab.css';
       };
       document.head.appendChild(link);
     }
     if (window.CodeLab) return Promise.resolve(window.CodeLab);
     if (window.loadScript) {
-      return window.loadScript('https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.3.2/dist/code-lab.js').then(() => window.CodeLab);
+      return window.loadScript('js/vendor/code-lab.js', 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.4.0/dist/code-lab.js').then(() => window.CodeLab);
     }
     return Promise.resolve(null);
   }
@@ -1920,7 +1950,7 @@ window.App = (() => {
       globalCodeLabInstance = null;
     }
     if (mountEl) {
-      mountEl.innerHTML = '<div style="padding:2rem;color:var(--fg-muted);font-family:var(--font-mono);">Loading @innovatorved/code-lab@0.3.2 IDE...</div>';
+      mountEl.innerHTML = '<div style="padding:2rem;color:var(--fg-muted);font-family:var(--font-mono);">Loading @innovatorved/code-lab@0.4.0 IDE...</div>';
     }
 
     return ensureCodeLabLoaded().then((CodeLab) => {
@@ -2130,6 +2160,114 @@ window.App = (() => {
     return slugs;
   }
 
+  function showToast(message) {
+    let el = document.getElementById('ds-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'ds-toast';
+      el.className = 'ds-toast';
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      document.body.appendChild(el);
+    }
+    el.textContent = message;
+    el.hidden = false;
+    el.classList.add('is-visible');
+    if (_toastTimer) clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => {
+      el.classList.remove('is-visible');
+      setTimeout(() => { el.hidden = true; }, 180);
+    }, 2400);
+  }
+
+  function sharePageUrl(url, title, triggerBtn) {
+    const cleanUrl = url || window.location.href;
+    const isMobile = typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile && navigator.share) {
+      navigator.share({ title: title || document.title, url: cleanUrl }).catch(() => {});
+      return;
+    }
+    const copyDone = () => {
+      showToast('Link copied to clipboard');
+      if (triggerBtn) {
+        const labelEl = triggerBtn.querySelector('.ds-share-btn__label');
+        if (labelEl) {
+          const orig = labelEl.textContent;
+          labelEl.textContent = 'Copied!';
+          setTimeout(() => { labelEl.textContent = orig; }, 1800);
+        }
+      }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(cleanUrl).then(copyDone).catch(() => {
+        showToast(cleanUrl);
+      });
+    } else {
+      showToast(cleanUrl);
+    }
+  }
+
+  function setupLessonTocScrollSpy(container) {
+    if (_tocScrollCleanup) {
+      _tocScrollCleanup();
+      _tocScrollCleanup = null;
+    }
+    if (!container) return;
+    const tocLinks = Array.from(container.querySelectorAll('.ds-toc__link[href^="#"]'));
+    if (tocLinks.length === 0) return;
+
+    const targets = tocLinks
+      .map(link => {
+        const id = link.getAttribute('href').slice(1);
+        const el = id ? document.getElementById(id) : null;
+        return el ? { link, el, id } : null;
+      })
+      .filter(Boolean);
+
+    if (targets.length === 0) return;
+
+    tocLinks.forEach(link => {
+      link.addEventListener('click', (ev) => {
+        const id = link.getAttribute('href').slice(1);
+        const dest = id ? document.getElementById(id) : null;
+        if (dest) {
+          ev.preventDefault();
+          dest.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          history.replaceState(null, '', window.location.pathname + window.location.search + '#' + id);
+        }
+      });
+    });
+
+    let ticking = false;
+    const updateActive = () => {
+      ticking = false;
+      const threshold = 120;
+      let activeItem = targets[0];
+      for (const item of targets) {
+        const rect = item.el.getBoundingClientRect();
+        if (rect.top <= threshold) {
+          activeItem = item;
+        } else {
+          break;
+        }
+      }
+      targets.forEach(item => {
+        item.link.classList.toggle('is-active', item === activeItem);
+      });
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(updateActive);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    updateActive();
+    _tocScrollCleanup = () => window.removeEventListener('scroll', onScroll);
+  }
+
   const App = {
     navigate,
     navigateTo,
@@ -2155,6 +2293,8 @@ window.App = (() => {
     openSnippetInCodeLab,
     openRepoInCodeLab,
     openChallengeCodeLab,
+    showToast,
+    sharePageUrl,
     getCurrentSlug: () => currentSlug,
     getCurrentView: () => currentView,
     getActiveTab: () => activeTab

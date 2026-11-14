@@ -21,11 +21,13 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: Validate curriculum and asset stamps
-        run: node tools/validate.js
+      - name: Run schema, rendered HTML, and asset stamp checks
+        run: |
+          npm test
+          npm run stamp:check
 
       - name: Verify static pages, sitemap, and dist build are in sync
         run: |
-          node tools/generate-static.js
-          git diff --exit-code topic/ build/ sitemap.xml
-          node tools/build.js
+          npm run prerender
+          git diff --exit-code index.html topic/ build/ roadmap/ challenges/ sandbox/ dashboard/ glossary/ sitemap.xml
+          npm run build

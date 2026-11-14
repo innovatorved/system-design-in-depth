@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Social graph: follows and FlockDB — System Design In Depth</title>
   <meta name="description" content="Your phone&#39;s contact list answers &quot;who do I know?&quot; instantly. Answering &quot;whose phones have me in their contacts?&quot; would mean checking every phone on earth.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Social graph: follows and FlockDB — System Design In Depth">
   <meta property="og:description" content="Your phone&#39;s contact list answers &quot;who do I know?&quot; instantly. Answering &quot;whose phones have me in their contacts?&quot; would mean checking every phone on earth.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/social-graph-follows-and-flockdb/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-social-graph-follows-and-flockdb.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Social graph: follows and FlockDB — System Design In Depth">
   <meta name="twitter:description" content="Your phone&#39;s contact list answers &quot;who do I know?&quot; instantly. Answering &quot;whose phones have me in their contacts?&quot; would mean checking every phone on earth.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-social-graph-follows-and-flockdb.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/social-graph-follows-and-flockdb/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Social graph: follows and FlockDB",
+  "description": "Your phone's contact list answers \"who do I know?\" instantly. Answering \"whose phones have me in their contacts?\" would mean checking every phone on earth.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-social-graph-follows-and-flockdb.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/social-graph-follows-and-flockdb/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="social-graph-follows-and-flockdb">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Social graph: follows and FlockDB</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">social</span> <span class="tag">graphs</span>
         </div>
-        <h1 class="lesson-header__title">Social graph: follows and FlockDB</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Social graph: follows and FlockDB</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 4.4: Real-Time Messaging & Feed Architectures</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 18, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="social-graph-follows-and-flockdb">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-realtime-social" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/social-graph-follows-and-flockdb/" data-share-title="Social graph: follows and FlockDB — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;Dg07kVN4U28&quot;,&quot;title&quot;:&quot;TAO: Facebook’s Distributed Data Store for the Social Graph&quot;,&quot;channel&quot;:&quot;Gaurav Sen&quot;,&quot;why&quot;:&quot;Clear, learner-friendly walkthrough of how a production social graph stores directed edges (associations) with inverse edges on sharded MySQL, the same design space as FlockDB.&quot;,&quot;length&quot;:&quot;24:59&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Your phone's contact list answers "who do I know?" instantly. Answering "whose phones have <em>me</em> in their contacts?" would mean checking every phone on earth, unless someone maintains a second list per person. A social graph store is exactly that: two address books per user, one forward and one reverse, kept in agreement.</p><p><strong>Mental model:</strong> a follow is one logical edge stored twice, once sharded by the follower and once sharded by the followee, so both directions are single-shard range reads.</p><ul><li><strong>Assuming a graph database is required.</strong> Follow graphs are mostly one-hop lookups; Twitter's FlockDB and Facebook's TAO are sharded adjacency lists, not traversal engines.</li><li><strong>Writing both directions non-idempotently.</strong> The two copies live on different shards, so the write must be retry-safe and ordered (for example, with a position or timestamp per edge) and repaired asynchronously.</li><li><strong>Forgetting the celebrity shard.</strong> One account with 100 million followers makes its reverse list enormous; sub-shard or page it rather than keeping it in one row range.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-social-graph-follows-and-flockdb">
+        <button class="audio-player__play-btn" id="audio-btn-social-graph-follows-and-flockdb" data-action="toggle-audio" data-slug="social-graph-follows-and-flockdb" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-social-graph-follows-and-flockdb" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-social-graph-follows-and-flockdb" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-social-graph-follows-and-flockdb">0:00 / 3:44</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="social-graph-follows-and-flockdb" id="audio-track-social-graph-follows-and-flockdb">
+          <div class="audio-player__progress" id="audio-bar-social-graph-follows-and-flockdb" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="social-graph-follows-and-flockdb" id="audio-speed-social-graph-follows-and-flockdb" title="Playback speed">1x</button>
+        <audio id="audio-social-graph-follows-and-flockdb" src="audio/social-graph-follows-and-flockdb.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> TAO: Facebook’s Distributed Data Store for the Social Graph</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Gaurav Sen · 24:59 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;Dg07kVN4U28&quot;,&quot;title&quot;:&quot;TAO: Facebook’s Distributed Data Store for the Social Graph&quot;,&quot;channel&quot;:&quot;Gaurav Sen&quot;,&quot;why&quot;:&quot;Clear, learner-friendly walkthrough of how a production social graph stores directed edges (associations) with inverse edges on sharded MySQL, the same design space as FlockDB.&quot;,&quot;length&quot;:&quot;24:59&quot;}">
       <div class="video-embed" id="video-Dg07kVN4U28"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="Dg07kVN4U28">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/Dg07kVN4U28/hqdefault.jpg"
                alt="TAO: Facebook’s Distributed Data Store for the Social Graph"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">Clear, learner-friendly walkthrough of how a production social graph stores directed edges (associations) with inverse edges on sharded MySQL, the same design space as FlockDB.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,33 +973,15 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Your phone's contact list answers "who do I know?" instantly. Answering "whose phones have <em>me</em> in their contacts?" would mean checking every phone on earth, unless someone maintains a second list per person. A social graph store is exactly that: two address books per user, one forward and one reverse, kept in agreement.</p><p><strong>Mental model:</strong> a follow is one logical edge stored twice, once sharded by the follower and once sharded by the followee, so both directions are single-shard range reads.</p><ul><li><strong>Assuming a graph database is required.</strong> Follow graphs are mostly one-hop lookups; Twitter's FlockDB and Facebook's TAO are sharded adjacency lists, not traversal engines.</li><li><strong>Writing both directions non-idempotently.</strong> The two copies live on different shards, so the write must be retry-safe and ordered (for example, with a position or timestamp per edge) and repaired asynchronously.</li><li><strong>Forgetting the celebrity shard.</strong> One account with 100 million followers makes its reverse list enormous; sub-shard or page it rather than keeping it in one row range.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-social-graph-follows-and-flockdb">
-        <button class="audio-player__play-btn" id="audio-btn-social-graph-follows-and-flockdb" data-action="toggle-audio" data-slug="social-graph-follows-and-flockdb" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-social-graph-follows-and-flockdb" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-social-graph-follows-and-flockdb" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-social-graph-follows-and-flockdb">0:00 / 3:44</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="social-graph-follows-and-flockdb" id="audio-track-social-graph-follows-and-flockdb">
-          <div class="audio-player__progress" id="audio-bar-social-graph-follows-and-flockdb" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="social-graph-follows-and-flockdb" id="audio-speed-social-graph-follows-and-flockdb" title="Playback speed">1x</button>
-        <audio id="audio-social-graph-follows-and-flockdb" src="audio/social-graph-follows-and-flockdb.mp3" preload="metadata"></audio>
-      </div><article class="prose"><h2>Social graph follows and FlockDB</h2>
+      </details><article class="prose"><h2 id="topic-sec-1">Social graph follows and FlockDB</h2>
 <p>Ada follows Bo. Opening Ada's following list asks for edges leaving Ada; publishing Bo's post asks for edges entering Bo. The relationship is the same, but the two reads need different access paths.</p>
 <p>Most follow-graph work is shallow: test one relationship, list neighbors, page through followers, or count them. Start with those operations. A graph-shaped data model does not automatically require arbitrary graph traversal.</p>
-<h2>Store the direction, then the relationship rule</h2>
+<h2 id="topic-sec-2">Store the direction, then the relationship rule</h2>
 <p>The <a href="#" data-nav="topic" data-slug="social-network-database-modeling">previous model</a> uses <code>(follower, followee)</code> as a unique pair. A mutual friendship would need a different acceptance rule or two confirmed directions. A reverse lookup for Ada following Bo is not a second friendship and does not mean Bo follows Ada.</p>
 <p>A broader <code>relations(source, type, target, state, position)</code> model can support follows, blocks or mutes when their storage needs are shared. Include the type in relationship identity. Keep each type's permissions and state transitions explicit: a pending follow request and an active block are not interchangeable just because both connect accounts.</p>
 <p>A sort position supports ordered listing. State can distinguish active, removed or archived edges. Extra metadata belongs to the relationship it describes; it should not turn every pair into an unvalidated bag of unrelated values.</p>
-<h2>Why the reverse lookup changes after sharding</h2>
+<h2 id="topic-sec-3">Why the reverse lookup changes after sharding</h2>
 <p>On one database, a forward index on <code>(follower, followee)</code> and a reverse index on <code>(followee, follower)</code> can serve both reads. The database maintains the indexes when a row changes.</p>
 <p>Now partition the rows by follower. Ada's outgoing list stays on Ada's partition. Bo's followers can be spread across all the other users' partitions. A local index on <code>followee</code> helps inside each partition, but does not tell the router which partitions contain Bo's incoming edges.</p>
 <p>A separately placed reverse list solves that routing problem. The forward entry is grouped by Ada, and its reverse entry is grouped by Bo.</p>
@@ -949,11 +993,11 @@
     F --> A[Following list<br/>contains Bo]
     R --> B[Follower list<br/>contains Ada]</div>
 <p>If Bo also follows Ada, that is a second logical relationship with its own forward and reverse entries: four entries for two follows. The cost is two logical entries per relationship before indexes and replication, plus the work of keeping them consistent. It is not a universal two-times storage estimate.</p>
-<h2>What FlockDB chose</h2>
+<h2 id="topic-sec-4">What FlockDB chose</h2>
 <p>Twitter's 2010 FlockDB design used MySQL-backed adjacency lists, indexed and partitioned in both directions. It targeted large neighbor lists, ordered pagination and set operations rather than multi-hop graph walks. Its position field supported ordered reads; removed and archived states let it retain edges without exposing them as active follows.</p>
 <p>That design also accepted retried and out-of-order writes using operation ordering. It did not make an arbitrary pair of remote database writes into a single SQLite transaction. The archived repository is no longer maintained; this is a historical design to understand, not a current package recommendation.</p>
 <p>The useful distinction survives the implementation: listing direct followers is different work from finding paths, communities or recommendations across many hops. Choose an online adjacency service and an offline graph-analysis pipeline according to the queries each must answer.</p>
-<h2>Keep the two representations consistent</h2>
+<h2 id="topic-sec-5">Keep the two representations consistent</h2>
 <p>Our social example, with its shared helpers, deliberately stores two tables in one SQLite database. One transaction writes the forward row, reverse row and operation receipt. An exception between the row writes rolls everything back. This exposes the maintenance obligation without pretending to implement distributed FlockDB.</p>
 <p>The six-account graph starts with Ada and Dee following Bo and Cy, plus Eli and Fay following Cy. The replay interrupts Eli's new follow of Bo, retries it, and then unfollows. A delayed retry of the old follow returns its historical receipt without restoring the edge.</p>
 <div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy code-block__run-btn" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg><span>Run in CodeLab</span></button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">python3 m22-social.py graph</code></pre></div>
@@ -967,7 +1011,7 @@ changed operation: 409
 committed forward/reverse pairs: 6 6</code></pre></div>
 <p>The successful retry is repeated before printing, hence <code>duplicate:true</code>. Reusing its operation identity with different input returns conflict. The receipt describes an accepted operation; the current adjacency list describes the relationship now. The final check compares complete forward and reverse pair sets, not just equal counts.</p>
 <p>Across independent stores, choose a consistency and recovery contract. A reverse projection updated asynchronously needs retained changes, duplicate handling, an applied position and repair. If it drives delivery, lag can omit recipients. A cached follower count cannot reconstruct who is missing.</p>
-<h2>Page by a stable boundary</h2>
+<h2 id="topic-sec-6">Page by a stable boundary</h2>
 <p>Offset pagination repeatedly skips earlier rows. An indexed cursor can seek to the last returned ordering key instead. Include a tie-breaker: several follows can share one timestamp.</p>
 <p>For a relational extension with non-null <code>created_at</code> and a unique <code>(followee, follower)</code> pair, use an index beginning with <code>(followee, created_at DESC, follower DESC)</code>. After returning the row at <code>(100, &#039;Eli&#039;)</code>, the next-page query is:</p>
 <div class="code-block"><div class="code-block__header"><span class="code-block__lang">sql</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-sql">SELECT follower, created_at
@@ -978,11 +1022,11 @@ ORDER BY created_at DESC, follower DESC
 LIMIT :page_size;</code></pre></div>
 <p>This is a proposed time-ordered table, separate from the example's alphabetically sorted lists. If Cy's followers sort as <code>Fay@100, Eli@100, Dee@99, Ada@99</code>, a two-row first page ends at <code>(100, &#039;Eli&#039;)</code>; the next page returns Dee and Ada. A one-row page ending at <code>(100, &#039;Fay&#039;)</code> still reaches Eli because the ID breaks the timestamp tie.</p>
 <p>Keyset pagination avoids deep offset scans when an appropriate index is used. It does not freeze a changing graph. If an edge is removed or its sort position changes between requests, define whether the caller accepts a live list or needs a versioned snapshot. The cursor must also belong to the requested account and relationship type.</p>
-<h2>Handle a very large follower list deliberately</h2>
+<h2 id="topic-sec-7">Handle a very large follower list deliberately</h2>
 <p>A single popular account can dominate one reverse partition. Isolating it protects other accounts, but does not divide its own workload. Bucketing that list spreads storage and writes; reads now need to merge ordered bucket pages and carry enough cursor state to resume them.</p>
 <p>Cache frequently read first pages when their freshness policy permits it. Separate an approximate public count from exact edge membership, and batch recipient enumeration for downstream delivery. Preserve current access rules when a cached list is used for a protected action.</p>
 <p>Once outgoing and incoming relationships have clear meanings, the <a href="#" data-nav="topic" data-slug="feed-generation-push-pull-hybrid">feed-generation comparison</a> can decide whether to write feed references when a post appears or collect posts when a reader opens the page.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
-      <h2>Managing the Follower Graph</h2>
+      <h2 id="topic-sec-8">Managing the Follower Graph</h2>
       <p>The "social graph" is the mapping of relationships between users. In systems like Twitter or Instagram, this is a directed graph (User A follows User B, but B might not follow A). Managing this graph efficiently is crucial because every feed generation relies on knowing who a user follows.</p>
       
       <h3>The Twitter Approach: FlockDB</h3>
@@ -998,14 +1042,14 @@ LIMIT :page_size;</code></pre></div>
       
     
 <!-- enriched -->
-<h2>Worked example: how big is the graph?</h2><p>Assume 400 million users following an average of 200 accounts: 80 billion logical edges. Storing both directions gives 160 billion rows. With two 8-byte IDs plus an 8-byte position or timestamp and a state byte, a row is about 25 bytes raw, so roughly 4 TB of raw data; index and storage-engine overhead typically multiply that by 2 to 3, landing around 10 TB before replication. With three replicas that is about 30 TB, easily spread over a few hundred MySQL shards.</p><h2>Operations and their cost</h2><table><thead><tr><th>Operation</th><th>Served by</th><th>Cost</th><th>Notes</th></tr></thead><tbody><tr><td>Who does A follow? (page of 100)</td><td>Forward list, shard of A</td><td>One indexed range read</td><td>Used by pull-based feeds</td></tr><tr><td>Who follows B? (page of 100)</td><td>Reverse list, shard of B</td><td>One indexed range read</td><td>Used by push fan-out; huge for celebrities</td></tr><tr><td>Does A follow B?</td><td>Forward list, shard of A</td><td>Point lookup</td><td>Used for button state and privacy checks</td></tr><tr><td>Follower count of B</td><td>Denormalized counter</td><td>Point lookup</td><td>Counting 100M rows per request is not acceptable</td></tr><tr><td>Mutual follows of A and B</td><td>Intersect two forward lists</td><td>Two reads plus merge</td><td>Cap list sizes or precompute for large accounts</td></tr></tbody></table><h2>Write path for a follow</h2><div class="mermaid">flowchart LR
+<h2 id="topic-sec-9">Worked example: how big is the graph?</h2><p>Assume 400 million users following an average of 200 accounts: 80 billion logical edges. Storing both directions gives 160 billion rows. With two 8-byte IDs plus an 8-byte position or timestamp and a state byte, a row is about 25 bytes raw, so roughly 4 TB of raw data; index and storage-engine overhead typically multiply that by 2 to 3, landing around 10 TB before replication. With three replicas that is about 30 TB, easily spread over a few hundred MySQL shards.</p><h2 id="topic-sec-10">Operations and their cost</h2><table><thead><tr><th>Operation</th><th>Served by</th><th>Cost</th><th>Notes</th></tr></thead><tbody><tr><td>Who does A follow? (page of 100)</td><td>Forward list, shard of A</td><td>One indexed range read</td><td>Used by pull-based feeds</td></tr><tr><td>Who follows B? (page of 100)</td><td>Reverse list, shard of B</td><td>One indexed range read</td><td>Used by push fan-out; huge for celebrities</td></tr><tr><td>Does A follow B?</td><td>Forward list, shard of A</td><td>Point lookup</td><td>Used for button state and privacy checks</td></tr><tr><td>Follower count of B</td><td>Denormalized counter</td><td>Point lookup</td><td>Counting 100M rows per request is not acceptable</td></tr><tr><td>Mutual follows of A and B</td><td>Intersect two forward lists</td><td>Two reads plus merge</td><td>Cap list sizes or precompute for large accounts</td></tr></tbody></table><h2 id="topic-sec-11">Write path for a follow</h2><div class="mermaid">flowchart LR
     API["Follow API"] --> F["Write forward edge on shard of follower"]
     F --> Q["Durable queue"]
     Q --> R["Write reverse edge on shard of followee"]
     Q --> C["Increment follower and following counters"]
     Q --> FO["Optional backfill of recent posts into follower timeline"]
-</div><p>Each edge row carries a state (active, removed, blocked) and a position. An unfollow is a state change with a newer position, so a delayed retry of the original follow cannot resurrect the edge: the store keeps whichever write has the higher position. A background repair job compares forward and reverse lists and fixes drift.</p><h2>How real systems do it</h2><ul><li><strong>FlockDB</strong> (Twitter) stored edges as (source, destination, position, state) in MySQL via the Gizzard sharding framework, keeping forward and backward copies so both directions were cheap, and supported set operations like intersection for "who follows both".</li><li><strong>TAO</strong> (Facebook) stores associations with an inverse association type; the two directions live on different shards and are written separately, with the inverse write repaired if it fails.</li><li><strong>LinkedIn</strong> built dedicated in-memory graph services (most recently LIquid) because degree-of-connection queries need two and three hop answers quickly.</li></ul>
-</div></div></article>
+</div><p>Each edge row carries a state (active, removed, blocked) and a position. An unfollow is a state change with a newer position, so a delayed retry of the original follow cannot resurrect the edge: the store keeps whichever write has the higher position. A background repair job compares forward and reverse lists and fixes drift.</p><h2 id="topic-sec-12">How real systems do it</h2><ul><li><strong>FlockDB</strong> (Twitter) stored edges as (source, destination, position, state) in MySQL via the Gizzard sharding framework, keeping forward and backward copies so both directions were cheap, and supported set operations like intersection for "who follows both".</li><li><strong>TAO</strong> (Facebook) stores associations with an inverse association type; the two directions live on different shards and are written separately, with the inverse write repaired if it fails.</li><li><strong>LinkedIn</strong> built dedicated in-memory graph services (most recently LIquid) because degree-of-connection queries need two and three hop answers quickly.</li></ul>
+</div></div></article><div id="check-slider-social-graph-follows-and-flockdb">
       <section class="check-slider" data-slug="social-graph-follows-and-flockdb" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1277,15 +1321,15 @@ LIMIT :page_size;</code></pre></div>
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-social-graph-follows-and-flockdb">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Large-scale follow graphs are often implemented as simple, distributed adjacency lists.</div><div class="takeaways__item">Sharding by source ID optimizes read queries for feed generation.</div><div class="takeaways__item">Twitter's FlockDB demonstrated how to scale graph edges using standard relational databases.</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://github.com/twitter-archive/flockdb" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> FlockDB Architecture</a><a class="further-reading__link" href="https://blog.x.com/engineering/en_us/a/2010/introducing-flockdb" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Twitter Engineering: Introducing FlockDB</a><a class="further-reading__link" href="https://arxiv.org/abs/1004.1001" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Marko Rodriguez & Peter Neubauer: The Graph Traversal Pattern (arXiv)</a>
           </div>
@@ -1298,10 +1342,10 @@ LIMIT :page_size;</code></pre></div>
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="social-graph-follows-and-flockdb" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="social-graph-follows-and-flockdb" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Social%20graph%3A%20follows%20and%20FlockDB&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Social%20graph%3A%20follows%20and%20FlockDB%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fsocial-graph-follows-and-flockdb%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1314,9 +1358,116 @@ LIMIT :page_size;</code></pre></div>
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/feed-generation-push-pull-hybrid/" data-nav="topic" data-slug="feed-generation-push-pull-hybrid">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Feed generation: push, pull, hybrid</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Social graph follows and FlockDB</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Store the direction, then the relationship rule</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Why the reverse lookup changes after sharding</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">What FlockDB chose</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Keep the two representations consistent</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Page by a stable boundary</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Handle a very large follower list deliberately</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-8">Managing the Follower Graph</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-9">Worked example: how big is the graph?</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-10">Operations and their cost</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-11">Write path for a follow</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-12">How real systems do it</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-social-graph-follows-and-flockdb">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-social-graph-follows-and-flockdb">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 4.4</span>
+            <span>0/10 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/social-graph-follows-and-flockdb/" data-share-title="Social graph: follows and FlockDB — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1324,7 +1475,7 @@ LIMIT :page_size;</code></pre></div>
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1378,7 +1529,7 @@ LIMIT :page_size;</code></pre></div>
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1387,8 +1538,8 @@ LIMIT :page_size;</code></pre></div>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1396,30 +1547,9 @@ LIMIT :page_size;</code></pre></div>
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Social graph: follows and FlockDB",
-  "description": "Your phone's contact list answers \"who do I know?\" instantly. Answering \"whose phones have me in their contacts?\" would mean checking every phone on earth.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/social-graph-follows-and-flockdb/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

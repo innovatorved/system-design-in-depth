@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>TF-IDF relevance scoring — System Design In Depth</title>
   <meta name="description" content="At a party, if someone says &quot;the&quot;, you learn nothing. If someone says &quot;Paxos&quot;, you instantly know the topic. And if a person says &quot;Paxos&quot; ten times, they are.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="TF-IDF relevance scoring — System Design In Depth">
   <meta property="og:description" content="At a party, if someone says &quot;the&quot;, you learn nothing. If someone says &quot;Paxos&quot;, you instantly know the topic. And if a person says &quot;Paxos&quot; ten times, they are.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/tf-idf-relevance-scoring/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-tf-idf-relevance-scoring.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="TF-IDF relevance scoring — System Design In Depth">
   <meta name="twitter:description" content="At a party, if someone says &quot;the&quot;, you learn nothing. If someone says &quot;Paxos&quot;, you instantly know the topic. And if a person says &quot;Paxos&quot; ten times, they are.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-tf-idf-relevance-scoring.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/tf-idf-relevance-scoring/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "TF-IDF relevance scoring",
+  "description": "At a party, if someone says \"the\", you learn nothing. If someone says \"Paxos\", you instantly know the topic. And if a person says \"Paxos\" ten times, they are.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-tf-idf-relevance-scoring.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/tf-idf-relevance-scoring/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="tf-idf-relevance-scoring">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,65 @@
         <span class="breadcrumbs__current">TF-IDF relevance scoring</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">search</span>
         </div>
-        <h1 class="lesson-header__title">TF-IDF relevance scoring</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">TF-IDF relevance scoring</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 3 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 5.4: Information Retrieval & Search Engines</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="tf-idf-relevance-scoring">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-search-retrieval" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/tf-idf-relevance-scoring/" data-share-title="TF-IDF relevance scoring — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;k1tD7pYKWuM&quot;,&quot;title&quot;:&quot;8 7 Calculating TF IDF Cosine Scores 12 47&quot;,&quot;channel&quot;:&quot;From Languages to Information&quot;,&quot;why&quot;:&quot;Manning computes log-TF, IDF and cosine scores by hand on a real example, matching this unit’s exact formulas.&quot;,&quot;length&quot;:&quot;12:47&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>At a party, if someone says "the", you learn nothing. If someone says "Paxos", you instantly know the topic. And if a person says "Paxos" ten times, they are probably really talking about it, but the tenth mention tells you less than the first. TF-IDF encodes exactly those two instincts.</p> <p><strong>Mental model:</strong> weight of a word in a document = <em>how much this document talks about it</em> (TF, damped with a log) times <em>how surprising the word is in the whole corpus</em> (IDF). Rare words dominate the score; common words barely move it.</p></p>
+<ul>
+<li><strong>Trap:</strong> using raw counts. A document repeating a common word 30 times can outrank a document that mentions the rare, decisive term.</li>
+<li><strong>Trap:</strong> forgetting length normalisation. Without cosine or similar normalisation, long documents win just by containing more words.</li>
+<li><strong>Trap:</strong> thinking TF-IDF understands meaning. "Car" and "automobile" share zero weight; that gap is why synonyms and embeddings exist.</li>
+<p></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-tf-idf-relevance-scoring">
+        <button class="audio-player__play-btn" id="audio-btn-tf-idf-relevance-scoring" data-action="toggle-audio" data-slug="tf-idf-relevance-scoring" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-tf-idf-relevance-scoring" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-tf-idf-relevance-scoring" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-tf-idf-relevance-scoring">0:00 / 4:02</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="tf-idf-relevance-scoring" id="audio-track-tf-idf-relevance-scoring">
+          <div class="audio-player__progress" id="audio-bar-tf-idf-relevance-scoring" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="tf-idf-relevance-scoring" id="audio-speed-tf-idf-relevance-scoring" title="Playback speed">1x</button>
+        <audio id="audio-tf-idf-relevance-scoring" src="audio/tf-idf-relevance-scoring.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> 8 7 Calculating TF IDF Cosine Scores 12 47</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">From Languages to Information · 12:47 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;k1tD7pYKWuM&quot;,&quot;title&quot;:&quot;8 7 Calculating TF IDF Cosine Scores 12 47&quot;,&quot;channel&quot;:&quot;From Languages to Information&quot;,&quot;why&quot;:&quot;Manning computes log-TF, IDF and cosine scores by hand on a real example, matching this unit’s exact formulas.&quot;,&quot;length&quot;:&quot;12:47&quot;}">
       <div class="video-embed" id="video-k1tD7pYKWuM"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="k1tD7pYKWuM">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/k1tD7pYKWuM/hqdefault.jpg"
                alt="8 7 Calculating TF IDF Cosine Scores 12 47"
@@ -877,6 +943,7 @@
         </a>
       </div>
       <p class="video-embed__why">Manning computes log-TF, IDF and cosine scores by hand on a real example, matching this unit’s exact formulas.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,35 +978,12 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>At a party, if someone says "the", you learn nothing. If someone says "Paxos", you instantly know the topic. And if a person says "Paxos" ten times, they are probably really talking about it, but the tenth mention tells you less than the first. TF-IDF encodes exactly those two instincts.</p> <p><strong>Mental model:</strong> weight of a word in a document = <em>how much this document talks about it</em> (TF, damped with a log) times <em>how surprising the word is in the whole corpus</em> (IDF). Rare words dominate the score; common words barely move it.</p></p>
-<ul>
-<li><strong>Trap:</strong> using raw counts. A document repeating a common word 30 times can outrank a document that mentions the rare, decisive term.</li>
-<li><strong>Trap:</strong> forgetting length normalisation. Without cosine or similar normalisation, long documents win just by containing more words.</li>
-<li><strong>Trap:</strong> thinking TF-IDF understands meaning. "Car" and "automobile" share zero weight; that gap is why synonyms and embeddings exist.</li>
-<p></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-tf-idf-relevance-scoring">
-        <button class="audio-player__play-btn" id="audio-btn-tf-idf-relevance-scoring" data-action="toggle-audio" data-slug="tf-idf-relevance-scoring" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-tf-idf-relevance-scoring" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-tf-idf-relevance-scoring" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-tf-idf-relevance-scoring">0:00 / 4:02</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="tf-idf-relevance-scoring" id="audio-track-tf-idf-relevance-scoring">
-          <div class="audio-player__progress" id="audio-bar-tf-idf-relevance-scoring" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="tf-idf-relevance-scoring" id="audio-speed-tf-idf-relevance-scoring" title="Playback speed">1x</button>
-        <audio id="audio-tf-idf-relevance-scoring" src="audio/tf-idf-relevance-scoring.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>The Foundations of Lexical Relevance</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">The Foundations of Lexical Relevance</h2>
       <p>How does a search engine decide whether Document A is more relevant to a query than Document B? The foundational mathematical model of information retrieval is <strong>TF-IDF</strong> (Term Frequency - Inverse Document Frequency).</p>
 
-      <h2>The Two Core Components of TF-IDF</h2>
+      <h2 id="topic-sec-2">The Two Core Components of TF-IDF</h2>
       <div class="mermaid">
 flowchart LR
     TF["Term Frequency (TF): How often does term t appear in doc d? (Local Importance)"] --> Mult["Multiply: TF x IDF"]
@@ -947,7 +991,7 @@ flowchart LR
     Mult --> Score["Relevance Weight for (t, d)"]
       </div>
 
-      <h2>Under the Hood: The Mathematical Formulas</h2>
+      <h2 id="topic-sec-3">Under the Hood: The Mathematical Formulas</h2>
       <h3>1. Term Frequency (TF)</h3>
       <p>Measures how frequently term <code>t</code> occurs in document <code>d</code>. The simplest form is raw count <code>freq(t, d)</code>, but modern systems apply logarithmic damping to prevent documents with 100 mentions of a word from dominating documents with 10 mentions:</p>
       <pre><code>TF(t, d) = 1 + ln(freq(t, d))  (for freq > 0)</code></pre>
@@ -961,7 +1005,7 @@ flowchart LR
       <pre><code>Cosine_Similarity(q, d) = (q . d) / (||q|| * ||d||)</code></pre>
     
 <!-- enriched -->
-<h2>Worked example: why the log matters</h2>
+<h2 id="topic-sec-4">Worked example: why the log matters</h2>
 <p>Corpus: N = 1,000,000 documents. Query: <code>raft system</code>.</p>
 <table><thead><tr><th>Term</th><th>DF</th><th>IDF = ln(1 + N/DF)</th></tr></thead><tbody>
 <tr><td>raft</td><td>1,000</td><td>ln(1001) = 6.91</td></tr>
@@ -973,17 +1017,17 @@ flowchart LR
 <tr><td>Log TF x IDF, TF = 1 + ln f</td><td>2.10 x 6.91 + 3.30 x 1.25 = 18.6</td><td>1.00 x 6.91 + 4.40 x 1.25 = 12.4</td><td>A</td></tr>
 </tbody></table>
 <p>With raw counts, B wins by repeating a near-useless word. With log damping, A wins because it talks more about the rare, discriminating term. This is the core lesson of TF-IDF.</p>
-<h2>Cosine normalisation in one line</h2>
+<h2 id="topic-sec-5">Cosine normalisation in one line</h2>
 <p>Dividing by vector length means a 10,000-word document is not rewarded simply for containing more terms. In practice engines precompute each document's norm at index time so query-time cost stays proportional to the query's postings.</p>
-<h2>TF variants compared</h2>
+<h2 id="topic-sec-6">TF variants compared</h2>
 <table><thead><tr><th>TF form</th><th>Behaviour</th><th>Used in</th></tr></thead><tbody>
 <tr><td>Raw count</td><td>Linear, easily gamed by repetition</td><td>Teaching examples</td></tr>
 <tr><td>1 + ln f</td><td>Grows slowly but without bound</td><td>Classic SMART lnc.ltc schemes</td></tr>
 <tr><td>sqrt f</td><td>Sub-linear</td><td>Lucene ClassicSimilarity, the pre-BM25 default</td></tr>
 <tr><td>BM25 saturation</td><td>Bounded, tunable, length-aware</td><td>Default in Lucene 6 and later, Elasticsearch 5 and later</td></tr>
 </tbody></table>
-<p><strong>Failure modes:</strong> IDF computed per shard can differ across shards when documents are unevenly distributed, which is why Elasticsearch offers a <code>dfs_query_then_fetch</code> mode that gathers global term statistics first; tiny corpora produce noisy IDF values.</p><h2>Interview framing</h2><p>If asked "how would you rank documents for a keyword query?", start with TF-IDF to show you understand the two forces, local frequency and global rarity, then say production engines use BM25 because it bounds repetition and normalises length with tunable parameters, and finally mention a learned re-ranker on top for non-text signals such as popularity and freshness. That three-step answer covers the evolution from 1970s vector space models to modern two-stage ranking.</p>
-</div></article>
+<p><strong>Failure modes:</strong> IDF computed per shard can differ across shards when documents are unevenly distributed, which is why Elasticsearch offers a <code>dfs_query_then_fetch</code> mode that gathers global term statistics first; tiny corpora produce noisy IDF values.</p><h2 id="topic-sec-7">Interview framing</h2><p>If asked "how would you rank documents for a keyword query?", start with TF-IDF to show you understand the two forces, local frequency and global rarity, then say production engines use BM25 because it bounds repetition and normalises length with tunable parameters, and finally mention a learned re-ranker on top for non-text signals such as popularity and freshness. That three-step answer covers the evolution from 1970s vector space models to modern two-stage ranking.</p>
+</div></article><div id="check-slider-tf-idf-relevance-scoring">
       <section class="check-slider" data-slug="tf-idf-relevance-scoring" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1255,7 +1299,7 @@ flowchart LR
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
+      </section></div><div id="topic-simulator-tf-idf-relevance-scoring">
         <div class="simulator-card" id="sim-bm25">
           <div class="simulator-card__header">
             <div class="simulator-card__title">BM25 Search Ranking</div>
@@ -1268,15 +1312,15 @@ flowchart LR
             <!-- Results populate here -->
           </div>
         </div>
-      
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </div>
+        <div class="takeaways" id="topic-takeaways-tf-idf-relevance-scoring">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">TF measures how often a term appears in a document; logarithmic damping prevents term-stuffing manipulation.</div><div class="takeaways__item">IDF penalizes ubiquitous common words and boosts rare, highly informative keywords.</div><div class="takeaways__item">The Vector Space Model computes document relevance via cosine similarity between query and document vectors.</div>
           </div>
         </div>
       <div class="lesson-builds">
-        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
+        <h2 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h2>
         
           <a class="lesson-builds__item" href="/build/tiny-search-engine/" data-action="navigate-build" data-build-id="tiny-search-engine">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1288,7 +1332,7 @@ flowchart LR
           </a>
       </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://www.sciencedirect.com/science/article/pii/0306457388900210" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Salton & Buckley: Term-Weighting Approaches in Automatic Text Retrieval</a><a class="further-reading__link" href="https://nlp.stanford.edu/IR-book/html/htmledition/tf-idf-weighting-1.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Manning et al.: TF-IDF and the Vector Space Model (Stanford IR Book)</a><a class="further-reading__link" href="https://nlp.stanford.edu/IR-book/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Manning, Raghavan & Schütze: Introduction to Information Retrieval (Cambridge University Press, 2008)</a>
           </div>
@@ -1301,10 +1345,10 @@ flowchart LR
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="tf-idf-relevance-scoring" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="tf-idf-relevance-scoring" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20TF-IDF%20relevance%20scoring&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20TF-IDF%20relevance%20scoring%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Ftf-idf-relevance-scoring%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1317,9 +1361,100 @@ flowchart LR
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/bm25-production-ranking/" data-nav="topic" data-slug="bm25-production-ranking">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">BM25 production ranking</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">The Foundations of Lexical Relevance</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">The Two Core Components of TF-IDF</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Under the Hood: The Mathematical Formulas</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Worked example: why the log matters</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Cosine normalisation in one line</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">TF variants compared</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Interview framing</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-tf-idf-relevance-scoring">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-simulator-tf-idf-relevance-scoring">Interactive simulator</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-tf-idf-relevance-scoring">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 5.4</span>
+            <span>0/17 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/tf-idf-relevance-scoring/" data-share-title="TF-IDF relevance scoring — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1327,7 +1462,7 @@ flowchart LR
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1381,7 +1516,7 @@ flowchart LR
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1390,9 +1525,9 @@ flowchart LR
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/simulators-advanced.js?v=02e2d93d9c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1400,30 +1535,9 @@ flowchart LR
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "TF-IDF relevance scoring",
-  "description": "At a party, if someone says \"the\", you learn nothing. If someone says \"Paxos\", you instantly know the topic. And if a person says \"Paxos\" ten times, they are.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/tf-idf-relevance-scoring/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

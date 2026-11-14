@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Design: photo tagging coordinates — System Design In Depth</title>
   <meta name="description" content="Imagine leaving a sticky note on a printed photo that says &quot;Sam is 40 percent from the left and 30 percent from the top&quot;. Learn system design patterns and.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Design: photo tagging coordinates — System Design In Depth">
   <meta property="og:description" content="Imagine leaving a sticky note on a printed photo that says &quot;Sam is 40 percent from the left and 30 percent from the top&quot;. Learn system design patterns and.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/photo-tagging-coordinate-model/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-photo-tagging-coordinate-model.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Design: photo tagging coordinates — System Design In Depth">
   <meta name="twitter:description" content="Imagine leaving a sticky note on a printed photo that says &quot;Sam is 40 percent from the left and 30 percent from the top&quot;. Learn system design patterns and.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-photo-tagging-coordinate-model.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/photo-tagging-coordinate-model/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Design: photo tagging coordinates",
+  "description": "Imagine leaving a sticky note on a printed photo that says \"Sam is 40 percent from the left and 30 percent from the top\". Learn system design patterns and.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-photo-tagging-coordinate-model.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/photo-tagging-coordinate-model/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="photo-tagging-coordinate-model">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Design: photo tagging coordinates</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">design</span>
            <span class="tag">system-design</span> <span class="tag">social</span> <span class="tag">images</span>
         </div>
-        <h1 class="lesson-header__title">Design: photo tagging coordinates</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Design: photo tagging coordinates</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 3 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 4.4: Real-Time Messaging & Feed Architectures</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 18, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="photo-tagging-coordinate-model">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-realtime-social" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/photo-tagging-coordinate-model/" data-share-title="Design: photo tagging coordinates — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;VJpfO6KdyWE&quot;,&quot;title&quot;:&quot;System Design Mock Interview: Design Instagram&quot;,&quot;channel&quot;:&quot;Aced (formerly Exponent)&quot;,&quot;why&quot;:&quot;No dedicated photo-tagging video exists; this mock interview covers the surrounding design (photo storage, metadata tables, tagging users and feed fan-out) in the most directly relevant way.&quot;,&quot;length&quot;:&quot;31:12&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Imagine leaving a sticky note on a printed photo that says "Sam is 40 percent from the left and 30 percent from the top". Whether the photo is printed as a wallet size or a poster, the note still points at Sam. Store tags as fractions of a specific image version, never as pixels on one screen.</p><p><strong>Mental model:</strong> a tag is (image_version, u, v, target, state), with u and v in [0, 1] measured on the canonical, orientation-corrected image; every rendering maps fractions to pixels through the same transform used to draw the image.</p><ul><li><strong>Ignoring EXIF orientation and crops.</strong> A phone photo stored sideways with a rotation flag, or shown as a square center-crop thumbnail, needs the same transform applied to the tag, or the tag lands on the wrong face.</li><li><strong>Tying tags to a mutable image.</strong> If the owner re-crops or replaces the photo, tags must be re-validated against the new version, not silently reused.</li><li><strong>Doing notifications and timeline fan-out synchronously.</strong> Tag creation should commit fast; approval, privacy checks and notifications run asynchronously and idempotently.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-photo-tagging-coordinate-model">
+        <button class="audio-player__play-btn" id="audio-btn-photo-tagging-coordinate-model" data-action="toggle-audio" data-slug="photo-tagging-coordinate-model" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-photo-tagging-coordinate-model" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-photo-tagging-coordinate-model" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-photo-tagging-coordinate-model">0:00 / 3:58</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="photo-tagging-coordinate-model" id="audio-track-photo-tagging-coordinate-model">
+          <div class="audio-player__progress" id="audio-bar-photo-tagging-coordinate-model" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="photo-tagging-coordinate-model" id="audio-speed-photo-tagging-coordinate-model" title="Playback speed">1x</button>
+        <audio id="audio-photo-tagging-coordinate-model" src="audio/photo-tagging-coordinate-model.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> System Design Mock Interview: Design Instagram</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Aced (formerly Exponent) · 31:12 +1 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;VJpfO6KdyWE&quot;,&quot;title&quot;:&quot;System Design Mock Interview: Design Instagram&quot;,&quot;channel&quot;:&quot;Aced (formerly Exponent)&quot;,&quot;why&quot;:&quot;No dedicated photo-tagging video exists; this mock interview covers the surrounding design (photo storage, metadata tables, tagging users and feed fan-out) in the most directly relevant way.&quot;,&quot;length&quot;:&quot;31:12&quot;}">
       <div class="video-embed" id="video-VJpfO6KdyWE"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="VJpfO6KdyWE">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/VJpfO6KdyWE/hqdefault.jpg"
                alt="System Design Mock Interview: Design Instagram"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">No dedicated photo-tagging video exists; this mock interview covers the surrounding design (photo storage, metadata tables, tagging users and feed fan-out) in the most directly relevant way.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -896,29 +958,11 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Imagine leaving a sticky note on a printed photo that says "Sam is 40 percent from the left and 30 percent from the top". Whether the photo is printed as a wallet size or a poster, the note still points at Sam. Store tags as fractions of a specific image version, never as pixels on one screen.</p><p><strong>Mental model:</strong> a tag is (image_version, u, v, target, state), with u and v in [0, 1] measured on the canonical, orientation-corrected image; every rendering maps fractions to pixels through the same transform used to draw the image.</p><ul><li><strong>Ignoring EXIF orientation and crops.</strong> A phone photo stored sideways with a rotation flag, or shown as a square center-crop thumbnail, needs the same transform applied to the tag, or the tag lands on the wrong face.</li><li><strong>Tying tags to a mutable image.</strong> If the owner re-crops or replaces the photo, tags must be re-validated against the new version, not silently reused.</li><li><strong>Doing notifications and timeline fan-out synchronously.</strong> Tag creation should commit fast; approval, privacy checks and notifications run asynchronously and idempotently.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-photo-tagging-coordinate-model">
-        <button class="audio-player__play-btn" id="audio-btn-photo-tagging-coordinate-model" data-action="toggle-audio" data-slug="photo-tagging-coordinate-model" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-photo-tagging-coordinate-model" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-photo-tagging-coordinate-model" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-photo-tagging-coordinate-model">0:00 / 3:58</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="photo-tagging-coordinate-model" id="audio-track-photo-tagging-coordinate-model">
-          <div class="audio-player__progress" id="audio-bar-photo-tagging-coordinate-model" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="photo-tagging-coordinate-model" id="audio-speed-photo-tagging-coordinate-model" title="Playback speed">1x</button>
-        <audio id="audio-photo-tagging-coordinate-model" src="audio/photo-tagging-coordinate-model.mp3" preload="metadata"></audio>
-      </div><article class="prose"><h2>Design: photo tags that survive resizing</h2>
+      </details><article class="prose"><h2 id="topic-sec-1">Design: photo tags that survive resizing</h2>
 <p>A photo tag associates an account with a place in an image. That place should stay attached to its subject when a laptop-sized photo becomes a phone thumbnail. Storing the click's screen coordinates cannot provide that guarantee: the next display may have a different size, margins or crop.</p>
 <p>We'll work through source coordinates, map a point into a square card, and extend the model to boxes and crop edits. Then we'll follow a tag through placement, approval and image replacement in a small executable service.</p>
-<h2>Store a place in the source image</h2>
+<h2 id="topic-sec-2">Store a place in the source image</h2>
 <p>Choose a coordinate convention before choosing a database. Here the origin is the upper-left corner, horizontal coordinates increase rightward, and vertical coordinates increase downward. Each tag belongs to one immutable image version with known dimensions and orientation.</p>
 <p>For our 800 by 600 source, a point at (200,150) is one quarter of the way across and down. Store those fractions as <code>u=0.25</code> and <code>v=0.25</code>. In a simple 400 by 300 resize, the same point becomes (100,75).</p>
 <div class="code-block"><div class="code-block__header"><span class="code-block__lang">text</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-text">u = source_x / source_width
@@ -929,7 +973,7 @@ rendered_y = v * rendered_image_height</code></pre></div>
 <p>Source pixels would also work if every consumer knew which source dimensions they referred to. The mistake is storing pixels from an unspecified display. Ratios make the convention convenient; the image version keeps their meaning stable.</p>
 <p>Keep full precision in storage. For example, rounding a 600/1024 ratio to 0.586 before multiplying it by 512 yields 300.032 instead of 300. Round only when presenting a value or placing a raster pixel.</p>
 <p>Our point domain includes 0 and 1. The point (1,1) denotes the lower-right boundary of the image extent, not an indexed raster pixel. Whether the marker's label extends beyond that boundary is a separate layout choice.</p>
-<h2>Account for the display box</h2>
+<h2 id="topic-sec-3">Account for the display box</h2>
 <p>The rendered image and its surrounding box are not always the same size. With <code>contain</code>, the entire image fits and unused space becomes margins. With <code>cover</code>, the image fills the box and some source content may be cropped. Both preserve aspect ratio.</p>
 <p>For a centered image in a box of width W and height H, choose a scale and then an offset:</p>
 <div class="code-block"><div class="code-block__header"><span class="code-block__lang">text</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-text">contain: s = min(W / 800, H / 600)
@@ -945,7 +989,7 @@ Y = oy + 600*s*v</code></pre></div>
 <p>The generated preview below puts the marker over the source's upper-left circle. Its raster rounds the 62.5-pixel top offset to an integer row; the calculation above retains the fractional position.</p>
 <p>For editing, invert the transform: subtract the offsets, then divide by the scaled source dimensions. Reject a click in a contain margin. For viewing, hide a point outside a cover crop instead of moving it to the edge, where it would label a different place.</p>
 <p>The example checks exact display-space membership first and clips only floating-point quotient roundoff at 0 and 1. It does not use clamping to turn an invalid click into a valid tag.</p>
-<h2>Boxes and crop edits</h2>
+<h2 id="topic-sec-4">Boxes and crop edits</h2>
 <p>A point is enough for a small name marker. To identify an area, store a rectangle using either normalized corners <code>(u1,v1,u2,v2)</code> or normalized origin and size <code>(u,v,width,height)</code>.</p>
 <p>For corners, require finite values with <code>0 &lt;= u1 &lt; u2 &lt;= 1</code> and <code>0 &lt;= v1 &lt; v2 &lt;= 1</code>. For origin and size, require positive dimensions and an extent that stays inside the source. Keep the representation explicit; a point with a decorative label is not automatically a bounding box.</p>
 <p>Render both corners through the same transform. A partially cropped box can be clipped for display while retaining its original source bounds. This box extension is a design choice; the executable below accepts only points.</p>
@@ -954,7 +998,7 @@ Y = oy + 600*s*v</code></pre></div>
 cropped_v = (source_v * 600 - crop_top) / crop_height</code></pre></div>
 <p>A point outside the crop is hidden, not reassigned to its nearest edge. Store the crop transform with the derived variant so the client can recover this relationship. A rotation needs its own transform and orientation convention too.</p>
 <p>An unrelated replacement has no such relationship. Even another 800 by 600 image may contain something different at the same fractions. Give it a new version and require explicit retagging. The <a href="#" data-nav="topic" data-slug="image-cdn-and-resizing">image pipeline</a> should normalize orientation before establishing the canonical coordinate space.</p>
-<h2>Separate the tag from the image bytes</h2>
+<h2 id="topic-sec-5">Separate the tag from the image bytes</h2>
 <p>Our service starts with a generated upright geometric image. Ada owns it and selects Bo as the target of a point tag. This records a person's account selection; it performs no face recognition.</p>
 <p>The image bytes stay immutable. A database stores version metadata and tag relationships. The client reads the image through the media path, while the tagging API handles coordinates and permission.</p>
 <div class="mermaid">flowchart TB
@@ -967,7 +1011,7 @@ cropped_v = (source_v * 600 - crop_top) / crop_height</code></pre></div>
 <table><thead><tr><th>Record</th><th>Meaning</th></tr></thead><tbody><tr><td>Image</td><td>Owner, current version, visibility and placement revision</td></tr><tr><td>Immutable version</td><td>Image/version key, digest, dimensions and orientation</td></tr><tr><td>Tag</td><td>Tag ID, image/version, target account, u, v and approval state</td></tr></tbody></table>
 <p>An extended box schema would replace the point fields with one declared rectangle representation. Record the creator and creation time explicitly if other accounts may propose tags; this fixture restricts all placement to the image owner.</p>
 <p>Decide the product rules early. Unregistered names need a separate label identity rather than a fabricated account ID. Machine-suggested boxes need an explicit confirmation state. A per-image tag limit, bounded reads and marker clustering keep hundreds of tags from turning into an unreadable overlay. Those extensions are not implemented here.</p>
-<h2>Place, approve and read</h2>
+<h2 id="topic-sec-6">Place, approve and read</h2>
 <p>Ada sends <code>POST /images/photo-1/tags</code> with an operation ID, image version, base placement revision, target and point. The server binds Ada from her credential, validates the numbers and verifies ownership. It never accepts a caller-supplied owner as authority.</p>
 <p>The new tag begins pending. In one transaction the service inserts it, advances the placement revision and saves the operation receipt. Repeating the identical request returns the receipt; reusing its identity with changed coordinates conflicts.</p>
 <p>Bo can approve or withdraw through <code>POST /tags/1/consent</code>. Reads expose only approved tags for the current version, with active owner and target accounts and current permission to view the image. Placement and approval answer different questions: Ada can suggest an association, while Bo controls whether this design displays it.</p>
@@ -986,7 +1030,7 @@ cropped_v = (source_v * 600 - crop_top) / crop_height</code></pre></div>
 <p>Two placements based on revision 1 cannot both advance this editor to revision 2. One succeeds; the other refetches. This whole-image precondition is a deliberate editing policy. Independent annotations could instead use per-tag revisions or a declared merge rule.</p>
 <p>Consent does not advance the placement revision. The fixture serializes new consent writes in arrival order, so a production interface with multiple active editing devices would need a separate consent revision if it must reject stale new intentions.</p>
 <p>An identical old approval retry only returns its historical receipt; it does not undo a later withdrawal. As in <a href="#" data-nav="topic" data-slug="reaction-modeling">reaction modeling</a>, the client must distinguish an operation result from current state.</p>
-<h2>Run the geometry and HTTP example</h2>
+<h2 id="topic-sec-7">Run the geometry and HTTP example</h2>
 <p>Save the tagging service, shared helpers and pinned image dependency together. Use an isolated Python environment with the pinned Pillow version. The program generates geometric images, owns a temporary SQLite database and serves requests only on loopback.</p>
 <div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy code-block__run-btn" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg><span>Run in CodeLab</span></button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">python3 -m venv /tmp/fanout-m22
 uv pip install --python /tmp/fanout-m22/bin/python -r m22-image-requirements.txt</code></pre></div>
@@ -1015,7 +1059,7 @@ private image read: 404</code></pre></div>
 <p>The inverse calculation is checked before its error is rounded for printing. The HTTP run exercises retries, permission, approval and concurrent placement. The five malformed framing probes are refused without adding tags. Either concurrent target may win; sorting the status codes makes the capture independent of that choice.</p>
 <p>Two rows remain because the initial placement and one concurrent placement succeeded. Replacement retains those rows under version 1 but makes the current version's visible list empty. An old editor must reload the image and ask for confirmation; silently resending its fractions under version 2 defeats the version check.</p>
 <p>Finally, Bo's earlier approval does not grant access after Ada makes the image private. The fixture returns 404 for that read. A real private-media product must also authorize the image bytes and every variant: filtering tag metadata alone cannot protect a publicly served photo.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
-      <h2>System Design: Photo Tagging</h2>
+      <h2 id="topic-sec-8">System Design: Photo Tagging</h2>
       <p>Photo tagging requires mapping a user entity to specific geometric coordinates within an image. This involves coordinate mathematics, database modeling, and permission handling.</p>
       
       <h3>Coordinate Modeling</h3>
@@ -1029,7 +1073,7 @@ private image read: 404</code></pre></div>
       
     
 <!-- enriched -->
-<h2>Worked example: from tap to stored tag to rendering</h2><ol><li>The canonical image version is 4032 x 3024 pixels after applying EXIF orientation.</li><li>The user taps at pixel (1612, 907) on that image: u = 1612 / 4032 = 0.3998, v = 907 / 3024 = 0.2999. Store u = 0.3998, v = 0.2999 with image_version_id.</li><li>On a phone showing the image at 375 x 281 points: x = 0.3998 x 375 = 150, y = 0.2999 x 281 = 84.</li><li>In a square center-crop thumbnail, the crop is 3024 x 3024 starting at x offset 504. The tag's position in the crop is u' = (1612 - 504) / 3024 = 0.366, v' = 0.2999. If u' fell outside [0, 1], the tag would be hidden in that view.</li></ol><p>For boxes, store (u1, v1, u2, v2) and validate 0 &lt;= u1 &lt; u2 &lt;= 1 and 0 &lt;= v1 &lt; v2 &lt;= 1, so every box has positive, in-bounds extent.</p><h2>Representation trade-offs</h2><table><thead><tr><th>Representation</th><th>Survives resizing</th><th>Survives crop or rotation</th><th>Notes</th></tr></thead><tbody><tr><td>Absolute pixels on one rendition</td><td>No</td><td>No</td><td>Breaks on every other device</td></tr><tr><td>Normalized (u, v) on the original</td><td>Yes</td><td>Only with an explicit transform</td><td>Must know which orientation was normalized</td></tr><tr><td>Normalized on an immutable image version</td><td>Yes</td><td>Yes, via the version's recorded crop and rotation</td><td>Recommended; edits create a new version and re-validation</td></tr></tbody></table><h2>Workflow and privacy</h2><div class="mermaid">flowchart LR
+<h2 id="topic-sec-9">Worked example: from tap to stored tag to rendering</h2><ol><li>The canonical image version is 4032 x 3024 pixels after applying EXIF orientation.</li><li>The user taps at pixel (1612, 907) on that image: u = 1612 / 4032 = 0.3998, v = 907 / 3024 = 0.2999. Store u = 0.3998, v = 0.2999 with image_version_id.</li><li>On a phone showing the image at 375 x 281 points: x = 0.3998 x 375 = 150, y = 0.2999 x 281 = 84.</li><li>In a square center-crop thumbnail, the crop is 3024 x 3024 starting at x offset 504. The tag's position in the crop is u' = (1612 - 504) / 3024 = 0.366, v' = 0.2999. If u' fell outside [0, 1], the tag would be hidden in that view.</li></ol><p>For boxes, store (u1, v1, u2, v2) and validate 0 &lt;= u1 &lt; u2 &lt;= 1 and 0 &lt;= v1 &lt; v2 &lt;= 1, so every box has positive, in-bounds extent.</p><h2 id="topic-sec-10">Representation trade-offs</h2><table><thead><tr><th>Representation</th><th>Survives resizing</th><th>Survives crop or rotation</th><th>Notes</th></tr></thead><tbody><tr><td>Absolute pixels on one rendition</td><td>No</td><td>No</td><td>Breaks on every other device</td></tr><tr><td>Normalized (u, v) on the original</td><td>Yes</td><td>Only with an explicit transform</td><td>Must know which orientation was normalized</td></tr><tr><td>Normalized on an immutable image version</td><td>Yes</td><td>Yes, via the version's recorded crop and rotation</td><td>Recommended; edits create a new version and re-validation</td></tr></tbody></table><h2 id="topic-sec-11">Workflow and privacy</h2><div class="mermaid">flowchart LR
     T["Create tag request"] --> V["Validate version and bounds"]
     V --> S["Insert tag with state pending or approved"]
     S --> Q["Queue tag event"]
@@ -1037,7 +1081,7 @@ private image read: 404</code></pre></div>
     P --> N["Notify tagged user"]
     P --> F["Add to tagged user timeline if approved"]
 </div><ul><li>Tag review: the tagged user can approve before the photo appears on their profile, and can remove a tag at any time; removal must also retract fan-out.</li><li>Blocks: a blocked user cannot tag you, and the check runs at write time and again at render time.</li><li>Idempotency: a retried tag request carries a client operation ID, so the tag and its notification are created once.</li></ul>
-</div></div></article>
+</div></div></article><div id="check-slider-photo-tagging-coordinate-model">
       <section class="check-slider" data-slug="photo-tagging-coordinate-model" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1309,15 +1353,15 @@ private image read: 404</code></pre></div>
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-photo-tagging-coordinate-model">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Store image coordinates as relative percentages, not absolute pixels.</div><div class="takeaways__item">Tags involve complex privacy and permission workflows.</div><div class="takeaways__item">The social fan-out resulting from a tag should be handled asynchronously.</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://developer.mozilla.org/en-US/docs/Web/API/CSSOM_view_API/Coordinate_systems" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> MDN: Coordinate systems (CSSOM View)</a><a class="further-reading__link" href="https://www.w3.org/TR/media-frags/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> W3C: Media Fragments URI 1.0 (spatial xywh fragments, pixel and percent)</a><a class="further-reading__link" href="https://doi.org/10.1007/978-3-540-77974-2" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> de Berg, Cheong, van Kreveld & Overmars: Computational Geometry: Algorithms and Applications (3rd ed., Springer, 2008)</a>
           </div>
@@ -1330,10 +1374,10 @@ private image read: 404</code></pre></div>
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="photo-tagging-coordinate-model" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="photo-tagging-coordinate-model" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Design%3A%20photo%20tagging%20coordinates&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Design%3A%20photo%20tagging%20coordinates%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fphoto-tagging-coordinate-model%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1346,9 +1390,112 @@ private image read: 404</code></pre></div>
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/live-commentary-system-design/" data-nav="topic" data-slug="live-commentary-system-design">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Design: live commentary</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Design: photo tags that survive resizing</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Store a place in the source image</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Account for the display box</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Boxes and crop edits</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Separate the tag from the image bytes</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Place, approve and read</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Run the geometry and HTTP example</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-8">System Design: Photo Tagging</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-9">Worked example: from tap to stored tag to rendering</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-10">Representation trade-offs</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-11">Workflow and privacy</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-photo-tagging-coordinate-model">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-photo-tagging-coordinate-model">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 4.4</span>
+            <span>0/10 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/photo-tagging-coordinate-model/" data-share-title="Design: photo tagging coordinates — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1356,7 +1503,7 @@ private image read: 404</code></pre></div>
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1410,7 +1557,7 @@ private image read: 404</code></pre></div>
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1419,8 +1566,8 @@ private image read: 404</code></pre></div>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1428,30 +1575,9 @@ private image read: 404</code></pre></div>
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Design: photo tagging coordinates",
-  "description": "Imagine leaving a sticky note on a printed photo that says \"Sam is 40 percent from the left and 30 percent from the top\". Learn system design patterns and.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/photo-tagging-coordinate-model/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

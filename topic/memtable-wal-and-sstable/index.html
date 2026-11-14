@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Memtable, WAL, and SSTable — System Design In Depth</title>
   <meta name="description" content="A busy restaurant takes orders three ways at once. The waiter shouts the order to the kitchen log so it is not forgotten if the waiter faints, pins the.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Memtable, WAL, and SSTable — System Design In Depth">
   <meta property="og:description" content="A busy restaurant takes orders three ways at once. The waiter shouts the order to the kitchen log so it is not forgotten if the waiter faints, pins the.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/memtable-wal-and-sstable/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-memtable-wal-and-sstable.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Memtable, WAL, and SSTable — System Design In Depth">
   <meta name="twitter:description" content="A busy restaurant takes orders three ways at once. The waiter shouts the order to the kitchen log so it is not forgotten if the waiter faints, pins the.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-memtable-wal-and-sstable.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/memtable-wal-and-sstable/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Memtable, WAL, and SSTable",
+  "description": "A busy restaurant takes orders three ways at once. The waiter shouts the order to the kitchen log so it is not forgotten if the waiter faints, pins the.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-memtable-wal-and-sstable.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/memtable-wal-and-sstable/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="memtable-wal-and-sstable">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,61 +870,32 @@
         <span class="breadcrumbs__current">Memtable, WAL, and SSTable</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">storage-engines</span>
         </div>
-        <h1 class="lesson-header__title">Memtable, WAL, and SSTable</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Memtable, WAL, and SSTable</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 3 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 2.3: Storage Engine Internals & Blob Systems</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="memtable-wal-and-sstable">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-storage-engines" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/memtable-wal-and-sstable/" data-share-title="Memtable, WAL, and SSTable — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;ciGAVER_erw&quot;,&quot;title&quot;:&quot;LSM Tree + SSTable Database Indexes | Systems Design Interview: 0 to 1 with Google Software Engineer&quot;,&quot;channel&quot;:&quot;Jordan has no life&quot;,&quot;why&quot;:&quot;Jordan walks the write path through WAL, memtable and SSTable, plus sparse indexes and compaction, at exactly the depth this unit targets.&quot;,&quot;length&quot;:&quot;15:35&quot;}">
-      <div class="video-embed" id="video-ciGAVER_erw"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="ciGAVER_erw">
-          <img class="video-embed__thumb" src="https://img.youtube.com/vi/ciGAVER_erw/hqdefault.jpg"
-               alt="LSM Tree + SSTable Database Indexes | Systems Design Interview: 0 to 1 with Google Software Engineer"
-               loading="lazy">
-          <div class="video-embed__play-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
-        </div></div>
-      <div class="video-embed__info">
-        <span class="video-embed__channel">Jordan has no life</span>
-        <span class="video-embed__title">LSM Tree + SSTable Database Indexes | Systems Design Interview: 0 to 1 with Google Software Engineer</span>
-        <a href="https://www.youtube.com/watch?v=ciGAVER_erw" target="_blank" rel="noopener noreferrer" style="margin-left:auto; font-size:11px; color:var(--accent,#6366f1); text-decoration:none; display:flex; align-items:center; gap:2px;">
-          Watch on YouTube ↗
-        </a>
-      </div>
-      <p class="video-embed__why">Jordan walks the write path through WAL, memtable and SSTable, plus sparse indexes and compaction, at exactly the depth this unit targets.</p></div>
-      <div class="video-more">
-        <h2 class="video-more__heading">More videos on this topic</h2>
-        <div class="video-more__list">
-      <a class="video-more__card" href="https://www.youtube.com/watch?v=V_C-T5S-w8g" target="_blank" rel="noopener noreferrer"
-         data-action="play-in-main-video" data-video="{&quot;youtubeId&quot;:&quot;V_C-T5S-w8g&quot;,&quot;title&quot;:&quot;RocksDB: A High Performance Embedded Key-Value Store for Flash Storage - Data@Scale&quot;,&quot;channel&quot;:&quot;Meta Developers&quot;,&quot;role&quot;:&quot;deep-dive&quot;,&quot;why&quot;:&quot;Dhruba Borthakur&#039;s Data@Scale talk on RocksDB&#039;s design at Facebook: memtables, WAL, SST files and why it was built for flash.&quot;,&quot;length&quot;:&quot;27:14&quot;}"
-         title="Play here (Ctrl/⌘-click to open on YouTube)">
-        <span class="video-more__thumb">
-          <img src="https://img.youtube.com/vi/V_C-T5S-w8g/mqdefault.jpg" alt="" loading="lazy">
-          <span class="video-more__play"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-          <span class="video-more__len">27:14</span>
-        </span>
-        <span class="video-more__meta">
-          <span class="video-more__role">Deep dive</span>
-          <span class="video-more__title">RocksDB: A High Performance Embedded Key-Value Store for Flash Storage - Data@Scale</span>
-          <span class="video-more__channel">Meta Developers</span>
-          <span class="video-more__why">Dhruba Borthakur&#039;s Data@Scale talk on RocksDB&#039;s design at Facebook: memtables, WAL, SST files and why it was built for flash.</span>
-        </span>
-      </a></div>
       </div>
         <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
           <div class="intuition__body"><p><p>A busy restaurant takes orders three ways at once. The waiter shouts the order to the kitchen log (so it is not forgotten if the waiter faints), pins the ticket on a sorted rail the cooks work from (fast to see, but it would be lost in a fire), and at closing, all the day's tickets are filed into a bound ledger that never changes.</p> <p><strong>Mental model:</strong> the WAL gives durability, the memtable gives a fast sorted view in memory, and the SSTable is the immutable sorted file the memtable becomes when it fills.</p></p>
 <ul>
 <li><strong>Trap: assuming every write is fsynced.</strong> Many engines default to leaving WAL writes in the OS page cache (RocksDB <code>sync=false</code>, Cassandra periodic commitlog sync every 10 s). A process crash is safe; a power loss can lose the last moments.</li>
@@ -920,11 +918,57 @@
         </div>
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="memtable-wal-and-sstable" id="audio-speed-memtable-wal-and-sstable" title="Playback speed">1x</button>
         <audio id="audio-memtable-wal-and-sstable" src="audio/memtable-wal-and-sstable.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>The Triad of LSM Engines: Write Path Deep Dive</h2>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> LSM Tree + SSTable Database Indexes | Systems Design Interview: 0 to 1 with Google Software Engineer</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Jordan has no life · 15:35 +1 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;ciGAVER_erw&quot;,&quot;title&quot;:&quot;LSM Tree + SSTable Database Indexes | Systems Design Interview: 0 to 1 with Google Software Engineer&quot;,&quot;channel&quot;:&quot;Jordan has no life&quot;,&quot;why&quot;:&quot;Jordan walks the write path through WAL, memtable and SSTable, plus sparse indexes and compaction, at exactly the depth this unit targets.&quot;,&quot;length&quot;:&quot;15:35&quot;}">
+      <div class="video-embed" id="video-ciGAVER_erw"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="ciGAVER_erw">
+          <img class="video-embed__thumb" src="https://img.youtube.com/vi/ciGAVER_erw/hqdefault.jpg"
+               alt="LSM Tree + SSTable Database Indexes | Systems Design Interview: 0 to 1 with Google Software Engineer"
+               loading="lazy">
+          <div class="video-embed__play-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        </div></div>
+      <div class="video-embed__info">
+        <span class="video-embed__channel">Jordan has no life</span>
+        <span class="video-embed__title">LSM Tree + SSTable Database Indexes | Systems Design Interview: 0 to 1 with Google Software Engineer</span>
+        <a href="https://www.youtube.com/watch?v=ciGAVER_erw" target="_blank" rel="noopener noreferrer" style="margin-left:auto; font-size:11px; color:var(--accent,#6366f1); text-decoration:none; display:flex; align-items:center; gap:2px;">
+          Watch on YouTube ↗
+        </a>
+      </div>
+      <p class="video-embed__why">Jordan walks the write path through WAL, memtable and SSTable, plus sparse indexes and compaction, at exactly the depth this unit targets.</p></div>
+          
+      <div class="video-more">
+        <h2 class="video-more__heading">More videos on this topic</h2>
+        <div class="video-more__list">
+      <a class="video-more__card" href="https://www.youtube.com/watch?v=V_C-T5S-w8g" target="_blank" rel="noopener noreferrer"
+         data-action="play-in-main-video" data-video="{&quot;youtubeId&quot;:&quot;V_C-T5S-w8g&quot;,&quot;title&quot;:&quot;RocksDB: A High Performance Embedded Key-Value Store for Flash Storage - Data@Scale&quot;,&quot;channel&quot;:&quot;Meta Developers&quot;,&quot;role&quot;:&quot;deep-dive&quot;,&quot;why&quot;:&quot;Dhruba Borthakur&#039;s Data@Scale talk on RocksDB&#039;s design at Facebook: memtables, WAL, SST files and why it was built for flash.&quot;,&quot;length&quot;:&quot;27:14&quot;}"
+         title="Play here (Ctrl/⌘-click to open on YouTube)">
+        <span class="video-more__thumb">
+          <img src="https://img.youtube.com/vi/V_C-T5S-w8g/mqdefault.jpg" alt="" loading="lazy">
+          <span class="video-more__play"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+          <span class="video-more__len">27:14</span>
+        </span>
+        <span class="video-more__meta">
+          <span class="video-more__role">Deep dive</span>
+          <span class="video-more__title">RocksDB: A High Performance Embedded Key-Value Store for Flash Storage - Data@Scale</span>
+          <span class="video-more__channel">Meta Developers</span>
+          <span class="video-more__why">Dhruba Borthakur&#039;s Data@Scale talk on RocksDB&#039;s design at Facebook: memtables, WAL, SST files and why it was built for flash.</span>
+        </span>
+      </a></div>
+      </div>
+        </div>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">The Triad of LSM Engines: Write Path Deep Dive</h2>
       <p>Every write operation in an LSM-tree database coordinates between three distinct components to provide durability (once the WAL append is synced), high concurrency, and rapid searchability.</p>
 
-      <h2>The Write Path Coordination</h2>
+      <h2 id="topic-sec-2">The Write Path Coordination</h2>
       <div class="mermaid">
 flowchart LR
     Req["Mutation: Put(Key, Val)"] --> WAL["1. Append to WAL (Disk: O_APPEND)"]
@@ -937,7 +981,7 @@ flowchart LR
     SSTable --> Truncate["Truncate Obsolete WAL Log"]
       </div>
 
-      <h2>Under the Hood: Component Mechanics</h2>
+      <h2 id="topic-sec-3">Under the Hood: Component Mechanics</h2>
       <h3>1. The Write-Ahead Log (WAL)</h3>
       <p>Because the in-memory Memtable is volatile, a server power failure would lose uncommitted writes. Before inserting into the Memtable, the engine appends the operation to the WAL on disk. Because the WAL is append-only, disk throughput reaches hundreds of megabytes per second. Upon recovery, the engine replays the WAL to reconstruct the Memtable.</p>
 
@@ -948,7 +992,7 @@ flowchart LR
       <p>When the Memtable exceeds its threshold (typically 64MB or 128MB), it transitions to an immutable state and a fresh Memtable is allocated. A background thread iterates over the sorted Memtable sequentially, writing it to disk as an <strong>SSTable</strong>. An SSTable consists of data blocks (typically about 4KB before compression), an index block mapping keys to block offsets, and a Bloom filter.</p>
     
 <!-- enriched -->
-<h2>Worked example: one write, one flush, one crash</h2>
+<h2 id="topic-sec-4">Worked example: one write, one flush, one crash</h2>
 <ol>
 <li><code>put("k17", v)</code> is appended to <code>000123.log</code> and inserted into the active 64 MB memtable (a skiplist).</li>
 <li>After roughly 64 MB of writes (about 60,000 records of 1 KB), the memtable becomes immutable and a new memtable and a new log file start.</li>
@@ -956,7 +1000,7 @@ flowchart LR
 <li>After the SST is synced and recorded in the MANIFEST, <code>000123.log</code> can be deleted.</li>
 <li>If the process crashes before step 4, recovery reads the MANIFEST to learn the live SSTs and replays any log files not yet covered, rebuilding the memtable.</li>
 </ol>
-<h2>Durability knobs</h2>
+<h2 id="topic-sec-5">Durability knobs</h2>
 <table>
 <thead><tr><th>Mode</th><th>What is lost on power failure</th><th>Throughput</th><th>Example</th></tr></thead>
 <tbody>
@@ -966,15 +1010,15 @@ flowchart LR
 <tr><td>No WAL</td><td>Entire memtable</td><td>Highest</td><td>Bulk loads that can be redone</td></tr>
 </tbody>
 </table>
-<h2>Why a skiplist</h2>
+<h2 id="topic-sec-6">Why a skiplist</h2>
 <p>A skiplist keeps keys sorted with expected O(log n) inserts and is easy to make safe for concurrent readers with a single writer (LevelDB) or concurrent writers using compare-and-swap on forward pointers (RocksDB's concurrent memtable writes). Sorted order is what makes the flush a single sequential pass.</p>
-<h2>Failure modes</h2>
+<h2 id="topic-sec-7">Failure modes</h2>
 <ul>
 <li><strong>Write stalls:</strong> if flushes cannot keep up, immutable memtables pile up and the engine blocks writers.</li>
 <li><strong>Slow recovery:</strong> many large WAL files mean long replay after a crash.</li>
 <li><strong>Torn WAL tail:</strong> per-record checksums let recovery stop at the last complete record.</li>
 </ul>
-</div></article>
+</div></article><div id="check-slider-memtable-wal-and-sstable">
       <section class="check-slider" data-slug="memtable-wal-and-sstable" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1246,7 +1290,7 @@ flowchart LR
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
+      </section></div><div id="topic-simulator-memtable-wal-and-sstable">
       <div class="simulator-card" id="sim-lsm">
         <div class="simulator-card__header">
           <div class="simulator-card__title"><span>Storage Write Amplifier</span></div>
@@ -1280,15 +1324,15 @@ flowchart LR
         </div>
         <div id="sim-lsm-desc" style="padding: 1rem; font-size:0.9rem; background:var(--bg-surface);"></div>
       </div>
-    
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+    </div>
+        <div class="takeaways" id="topic-takeaways-memtable-wal-and-sstable">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">WAL provides durability (once appends are synced) via fast sequential appends, while Memtable provides fast concurrent in-memory sorting.</div><div class="takeaways__item">SkipLists are preferred over balanced trees for Memtables because CAS pointers allow lock-free concurrent writes.</div><div class="takeaways__item">Flushing Memtables sequentially writes immutable SSTables containing data blocks, sparse indexes, and Bloom filters.</div>
           </div>
         </div>
       <div class="lesson-builds">
-        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
+        <h2 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h2>
         
           <a class="lesson-builds__item" href="/build/write-ahead-log/" data-action="navigate-build" data-build-id="write-ahead-log">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1308,7 +1352,7 @@ flowchart LR
           </a>
       </div>
       <div class="lesson-builds lesson-challenges">
-        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        <h2 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h2>
         
           <a class="lesson-builds__item" href="/challenges/wal-torn-write-corruption/" data-nav="challenges" data-challenge="wal-torn-write-corruption">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1320,7 +1364,7 @@ flowchart LR
           </a>
       </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://github.com/facebook/rocksdb/wiki/RocksDB-Basics" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> RocksDB Architecture Guide: Memtable and WAL</a><a class="further-reading__link" href="https://15445.courses.cs.cmu.edu/fall2024/notes/20-logging.pdf" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Andy Pavlo: Database Logging (CMU 15-445/645 Lecture Notes, Fall 2024)</a><a class="further-reading__link" href="https://github.com/google/leveldb/blob/main/doc/impl.md" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Google LevelDB: Implementation Notes (Log, Memtable, Sorted Tables, Compactions)</a>
           </div>
@@ -1333,10 +1377,10 @@ flowchart LR
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="memtable-wal-and-sstable" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="memtable-wal-and-sstable" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Memtable%2C%20WAL%2C%20and%20SSTable&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Memtable%2C%20WAL%2C%20and%20SSTable%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fmemtable-wal-and-sstable%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1349,9 +1393,100 @@ flowchart LR
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/lsm-read-path-bloom-and-sparse-index/" data-nav="topic" data-slug="lsm-read-path-bloom-and-sparse-index">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">LSM read path: Bloom filters and sparse index</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">The Triad of LSM Engines: Write Path Deep Dive</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">The Write Path Coordination</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Under the Hood: Component Mechanics</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Worked example: one write, one flush, one crash</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Durability knobs</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Why a skiplist</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Failure modes</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-memtable-wal-and-sstable">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-simulator-memtable-wal-and-sstable">Interactive simulator</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-memtable-wal-and-sstable">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 2.3</span>
+            <span>0/20 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/memtable-wal-and-sstable/" data-share-title="Memtable, WAL, and SSTable — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1359,7 +1494,7 @@ flowchart LR
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1413,7 +1548,7 @@ flowchart LR
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1423,8 +1558,8 @@ flowchart LR
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-extra.js?v=37273649b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1432,30 +1567,9 @@ flowchart LR
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Memtable, WAL, and SSTable",
-  "description": "A busy restaurant takes orders three ways at once. The waiter shouts the order to the kitchen log so it is not forgotten if the waiter faints, pins the.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/memtable-wal-and-sstable/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

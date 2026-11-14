@@ -101,6 +101,7 @@ const context = {
     QUESTION_BANK: {},
     IMPLEMENTATIONS_DATA: {},
     GUIDED_LABS_DATA: {},
+    GLOSSARY_DATA: [],
     CURRICULUM_DATA: null,
     SIMULATORS: {},
     Progress: {
@@ -150,6 +151,9 @@ if (fs.existsSync(path.join(root, 'data/challenges.js'))) {
 }
 if (fs.existsSync(path.join(root, 'data/whiteboard-blueprints.js'))) {
   vm.runInNewContext(fs.readFileSync(path.join(root, 'data/whiteboard-blueprints.js'), 'utf8'), context);
+}
+if (fs.existsSync(path.join(root, 'data/glossary.js'))) {
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'data/glossary.js'), 'utf8'), context);
 }
 
 for (const dir of ['data/content', 'data/archive', 'data/questions']) {
@@ -278,6 +282,7 @@ const sitemapUrls = [
   { loc: `${baseUrl}/challenges/`, priority: '0.8', changefreq: 'weekly', lastmod: defaultLastmod },
   { loc: `${baseUrl}/sandbox/`, priority: '0.8', changefreq: 'weekly', lastmod: defaultLastmod },
   { loc: `${baseUrl}/dashboard/`, priority: '0.7', changefreq: 'weekly', lastmod: defaultLastmod },
+  { loc: `${baseUrl}/glossary/`, priority: '0.7', changefreq: 'weekly', lastmod: defaultLastmod },
   { loc: `${baseUrl}/projects/`, priority: '0.8', changefreq: 'weekly', lastmod: defaultLastmod }
 ];
 
@@ -481,15 +486,16 @@ for (const { unit, mod } of units) {
     /<meta\s+property="og:url"\s+content="[^"]*">/i,
     () => `<meta property="og:url" content="${canonicalUrl}">`
   );
+  const topicOgUrl = `${baseUrl}/assets/og/topic-${slug}.png`;
   if (/<meta\s+property="og:image"/i.test(page)) {
     page = page.replace(
       /<meta\s+property="og:image"\s+content="[^"]*">/i,
-      `<meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      `<meta property="og:image" content="${topicOgUrl}">`
     );
   } else {
     page = page.replace(
       /<meta\s+property="og:url"\s+content="[^"]*">/i,
-      () => `<meta property="og:url" content="${canonicalUrl}">\n  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      () => `<meta property="og:url" content="${canonicalUrl}">\n  <meta property="og:image" content="${topicOgUrl}">`
     );
   }
 
@@ -511,12 +517,12 @@ for (const { unit, mod } of units) {
   if (/<meta\s+name="twitter:image"/i.test(page)) {
     page = page.replace(
       /<meta\s+name="twitter:image"\s+content="[^"]*">/i,
-      `<meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      `<meta name="twitter:image" content="${topicOgUrl}">`
     );
   } else {
     page = page.replace(
       /<meta\s+name="twitter:description"\s+content="[^"]*">/i,
-      () => `<meta name="twitter:description" content="${escapeAttr(desc)}">\n  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      () => `<meta name="twitter:description" content="${escapeAttr(desc)}">\n  <meta name="twitter:image" content="${topicOgUrl}">`
     );
   }
 
@@ -526,6 +532,7 @@ for (const { unit, mod } of units) {
     '@type': 'TechArticle',
     'headline': unit.title,
     'description': desc,
+    'image': topicOgUrl,
     'url': canonicalUrl,
     'author': {
       '@type': 'Person',
@@ -547,7 +554,7 @@ for (const { unit, mod } of units) {
 
   // Replace #reader content with prerendered lesson
   page = page.replace(
-    /<div class="main__content" id="reader">[\s\S]*?<\/div>(\s*<\/main>)/i,
+    /<div class="main__content" id="reader"[^>]*>[\s\S]*?<\/div>(\s*(?:<footer\b[\s\S]*?<\/footer>\s*)?<\/main>)/i,
     (_, closingMain) => `<div class="main__content" id="reader" data-prerendered="${slug}">\n${lessonHtml}\n    </div>${closingMain}`
   );
 
@@ -625,15 +632,16 @@ for (const [buildId, build] of buildEntries) {
     /<meta\s+property="og:url"\s+content="[^"]*">/i,
     () => `<meta property="og:url" content="${canonicalUrl}">`
   );
+  const buildOgUrl = `${baseUrl}/assets/og/build-${buildId}.png`;
   if (/<meta\s+property="og:image"/i.test(page)) {
     page = page.replace(
       /<meta\s+property="og:image"\s+content="[^"]*">/i,
-      `<meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      `<meta property="og:image" content="${buildOgUrl}">`
     );
   } else {
     page = page.replace(
       /<meta\s+property="og:url"\s+content="[^"]*">/i,
-      () => `<meta property="og:url" content="${canonicalUrl}">\n  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      () => `<meta property="og:url" content="${canonicalUrl}">\n  <meta property="og:image" content="${buildOgUrl}">`
     );
   }
 
@@ -655,12 +663,12 @@ for (const [buildId, build] of buildEntries) {
   if (/<meta\s+name="twitter:image"/i.test(page)) {
     page = page.replace(
       /<meta\s+name="twitter:image"\s+content="[^"]*">/i,
-      `<meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      `<meta name="twitter:image" content="${buildOgUrl}">`
     );
   } else {
     page = page.replace(
       /<meta\s+name="twitter:description"\s+content="[^"]*">/i,
-      () => `<meta name="twitter:description" content="${escapeAttr(desc)}">\n  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">`
+      () => `<meta name="twitter:description" content="${escapeAttr(desc)}">\n  <meta name="twitter:image" content="${buildOgUrl}">`
     );
   }
 
@@ -670,6 +678,7 @@ for (const [buildId, build] of buildEntries) {
     '@type': 'TechArticle',
     'headline': `${build.title} — Interactive Build Lab`,
     'description': desc,
+    'image': buildOgUrl,
     'url': canonicalUrl,
     'author': {
       '@type': 'Person',
@@ -699,7 +708,7 @@ for (const [buildId, build] of buildEntries) {
 
   // Replace #reader content with prerendered build page
   page = page.replace(
-    /<div class="main__content" id="reader">[\s\S]*?<\/div>(\s*<\/main>)/i,
+    /<div class="main__content" id="reader"[^>]*>[\s\S]*?<\/div>(\s*(?:<footer\b[\s\S]*?<\/footer>\s*)?<\/main>)/i,
     (_, closingMain) => `<div class="main__content" id="reader" data-prerendered-build="${buildId}">\n${buildHtml}\n    </div>${closingMain}`
   );
 
@@ -724,6 +733,149 @@ for (const [buildId, build] of buildEntries) {
   generatedBuildsCount++;
 }
 
+// 4c. Generate Static Hub & Challenge Entry Pages (/roadmap/, /challenges/, /challenges/<id>/, /sandbox/, /dashboard/, /glossary/)
+function writeHubPage({ routeDir, title, desc, ogSlug, h1, bodyHtml, schemaType = 'CollectionPage' }) {
+  const canonicalUrl = `${baseUrl}/${routeDir}/`;
+  const ogUrl = `${baseUrl}/assets/og/${ogSlug}.png`;
+  let page = template;
+
+  page = page.replace(/<title>.*?<\/title>/i, () => `<title>${escapeHtml(title)}</title>`);
+  page = page.replace(
+    /<meta\s+name="description"\s+content="[^"]*">/i,
+    () => `<meta name="description" content="${escapeAttr(desc)}">`
+  );
+  page = page.replace(
+    /<link\s+rel="canonical"\s+href="[^"]*">/i,
+    () => `<link rel="canonical" href="${canonicalUrl}">`
+  );
+  page = page.replace(/<meta\s+property="og:type"\s+content="[^"]*">/i, '<meta property="og:type" content="website">');
+  page = page.replace(
+    /<meta\s+property="og:title"\s+content="[^"]*">/i,
+    () => `<meta property="og:title" content="${escapeAttr(title)}">`
+  );
+  page = page.replace(
+    /<meta\s+property="og:description"\s+content="[^"]*">/i,
+    () => `<meta property="og:description" content="${escapeAttr(desc)}">`
+  );
+  page = page.replace(
+    /<meta\s+property="og:url"\s+content="[^"]*">/i,
+    () => `<meta property="og:url" content="${canonicalUrl}">`
+  );
+  page = page.replace(
+    /<meta\s+property="og:image"\s+content="[^"]*">/i,
+    () => `<meta property="og:image" content="${ogUrl}">`
+  );
+  page = page.replace(
+    /<meta\s+name="twitter:title"\s+content="[^"]*">/i,
+    () => `<meta name="twitter:title" content="${escapeAttr(title)}">`
+  );
+  page = page.replace(
+    /<meta\s+name="twitter:description"\s+content="[^"]*">/i,
+    () => `<meta name="twitter:description" content="${escapeAttr(desc)}">`
+  );
+  page = page.replace(
+    /<meta\s+name="twitter:image"\s+content="[^"]*">/i,
+    () => `<meta name="twitter:image" content="${ogUrl}">`
+  );
+
+  page = setJsonLd(page, {
+    '@context': 'https://schema.org',
+    '@type': schemaType,
+    'name': title,
+    'description': desc,
+    'image': ogUrl,
+    'url': canonicalUrl,
+    'author': { '@type': 'Person', 'name': 'Ved Gupta', 'url': 'https://vedgupta.in' }
+  });
+
+  page = replaceSidebarContent(page, homeSidebarHtml);
+
+  if (routeDir !== 'glossary') {
+    page = page.replace(/<body>/i, '<body class="view-ecosystem">');
+  }
+
+  const innerHtml = bodyHtml || `<div class="view-canvas" data-ssg-hub="${escapeAttr(routeDir)}" style="min-height:120vh;"><div class="view-header"><h1 class="ds-lesson-hero__title lesson-header__title">${escapeHtml(h1)}</h1><p class="view-subtitle">${escapeHtml(desc)}</p></div></div>`;
+  page = page.replace(
+    /<div class="main__content" id="reader"[^>]*>[\s\S]*?<\/div>(\s*(?:<footer\b[\s\S]*?<\/footer>\s*)?<\/main>)/i,
+    (_, closingMain) => `<div class="main__content" id="reader">\n${innerHtml}\n    </div>${closingMain}`
+  );
+
+  const outDir = path.join(root, ...routeDir.split('/'));
+  fs.mkdirSync(outDir, { recursive: true });
+  fs.writeFileSync(path.join(outDir, 'index.html'), page, 'utf8');
+}
+
+const glossaryHtml = context.window.Renderer && typeof context.window.Renderer.renderGlossary === 'function'
+  ? context.window.Renderer.renderGlossary()
+  : '';
+
+const hubDefs = [
+  {
+    routeDir: 'roadmap',
+    title: 'Interactive System Design Roadmap | System Design In Depth',
+    desc: 'Visual 34-node dependency DAG, 5 career learning paths, and 18-module explorer across 200 distributed systems topics.',
+    ogSlug: 'roadmap',
+    h1: 'Interactive System Design Roadmap'
+  },
+  {
+    routeDir: 'challenges',
+    title: 'Production Incident & Outage Challenges | System Design In Depth',
+    desc: 'Diagnose retry storms, split-brain quorums, thundering herds, and ship verified recovery runbooks across 12 incident rooms.',
+    ogSlug: 'challenges',
+    h1: 'Production Incident & Outage Challenges'
+  },
+  {
+    routeDir: 'sandbox',
+    title: 'Architecture Whiteboard & Capacity Sandbox | System Design In Depth',
+    desc: 'Interactive architecture whiteboard and capacity estimator with 10 reference blueprints, rubric audits, and QPS math.',
+    ogSlug: 'sandbox',
+    h1: 'Architecture Whiteboard & Capacity Sandbox'
+  },
+  {
+    routeDir: 'dashboard',
+    title: 'Learner Study Hub, SRS Flashcards & Capacity Toolkit | System Design In Depth',
+    desc: 'Track completed modules, review spaced-repetition system design flashcards, and run live napkin-math capacity estimators.',
+    ogSlug: 'dashboard',
+    h1: 'Learner Study Hub & SRS Flashcards'
+  },
+  {
+    routeDir: 'glossary',
+    title: 'Distributed Systems & Architecture Glossary | System Design In Depth',
+    desc: 'Concise engineering definitions for linearizability, Raft quorums, WAL, LSM compaction, consistent hashing, and tail latency.',
+    ogSlug: 'glossary',
+    h1: 'Distributed Systems & Architecture Glossary',
+    bodyHtml: glossaryHtml
+  }
+];
+
+for (const hub of hubDefs) {
+  writeHubPage(hub);
+}
+
+let generatedChallengesCount = 0;
+for (const ch of challengesData) {
+  if (!ch || !ch.id) continue;
+  const rawDesc = cleanText(`${ch.title}: ${ch.summary || ch.subtitle || ch.incidentSummary || 'Diagnose the distributed bottleneck and verify the production recovery runbook.'}`);
+  const desc = rawDesc.length > 158 ? rawDesc.slice(0, 155).replace(/\s+\S*$/, '') + '...' : rawDesc;
+  writeHubPage({
+    routeDir: `challenges/${ch.id}`,
+    title: `${ch.title} — Incident Challenge | System Design In Depth`,
+    desc,
+    ogSlug: `challenge-${ch.id}`,
+    h1: ch.title,
+    schemaType: 'TechArticle'
+  });
+  generatedChallengesCount++;
+}
+
+// Populate sidebar in projects/index.html as well
+const projectsHtmlPath = path.join(root, 'projects', 'index.html');
+if (fs.existsSync(projectsHtmlPath)) {
+  let projectsHtml = fs.readFileSync(projectsHtmlPath, 'utf8');
+  projectsHtml = replaceSidebarContent(projectsHtml, homeSidebarHtml);
+  fs.writeFileSync(projectsHtmlPath, projectsHtml, 'utf8');
+}
+
 // 5. Generate sitemap.xml
 let sitemapXml = '<?xml version="1.0" encoding="UTF-8"?>\n';
 sitemapXml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
@@ -740,5 +892,9 @@ sitemapXml += '</urlset>\n';
 fs.writeFileSync(path.join(root, 'sitemap.xml'), sitemapXml, 'utf8');
 console.log(`✓ Generated sitemap.xml with ${sitemapUrls.length} entries`);
 
-console.log(`\nSSG Completed: ${generatedCount} units and ${generatedBuildsCount} build labs generated successfully.`);
+console.log(`\nSSG Completed: ${generatedCount} units, ${generatedBuildsCount} build labs, ${hubDefs.length} hub pages, and ${generatedChallengesCount} challenge pages generated successfully.`);
+
+// 6. Stamp all generated HTML files & js/manifest.js with content hashes
+require('child_process').execFileSync(process.execPath, [path.join(__dirname, 'stamp-assets.js')], { stdio: 'inherit' });
+
 

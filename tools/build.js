@@ -25,11 +25,17 @@ const PUBLIC_ITEMS = [
   'assets',
   'audio',
   'build',
+  'challenges',
   'css',
+  'dashboard',
   'data',
+  'design-system',
   'fonts',
+  'glossary',
   'js',
   'projects',
+  'roadmap',
+  'sandbox',
   'topic'
 ];
 

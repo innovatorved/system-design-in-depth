@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Database locking and isolation — System Design In Depth</title>
   <meta name="description" content="Picture a shared Google Doc where many people edit at once. The weakest setting lets you see someone&#39;s half-typed sentence they might delete a dirty read.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Database locking and isolation — System Design In Depth">
   <meta property="og:description" content="Picture a shared Google Doc where many people edit at once. The weakest setting lets you see someone&#39;s half-typed sentence they might delete a dirty read.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/database-locking-and-isolation/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-database-locking-and-isolation.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Database locking and isolation — System Design In Depth">
   <meta name="twitter:description" content="Picture a shared Google Doc where many people edit at once. The weakest setting lets you see someone&#39;s half-typed sentence they might delete a dirty read.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-database-locking-and-isolation.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/database-locking-and-isolation/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Database locking and isolation",
+  "description": "Picture a shared Google Doc where many people edit at once. The weakest setting lets you see someone's half-typed sentence they might delete a dirty read.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-database-locking-and-isolation.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/database-locking-and-isolation/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="database-locking-and-isolation">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Database locking and isolation</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">relational-databases</span> <span class="tag">transactions</span>
         </div>
-        <h1 class="lesson-header__title">Database locking and isolation</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Database locking and isolation</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 2.1: Relational Modeling & Query Execution</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="database-locking-and-isolation">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-data-sql" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/database-locking-and-isolation/" data-share-title="Database locking and isolation — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;5ZjhNTM8XU8&quot;,&quot;title&quot;:&quot;\&quot;Transactions: myths, surprises and opportunities\&quot; by Martin Kleppmann&quot;,&quot;channel&quot;:&quot;Strange Loop Conference&quot;,&quot;why&quot;:&quot;Kleppmann explains isolation levels, what each anomaly really means, and why write skew needs serializability; the definitive talk on this topic.&quot;,&quot;length&quot;:&quot;41:08&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Picture a shared Google Doc where many people edit at once. The weakest setting lets you see someone's half-typed sentence they might delete (a dirty read). Stronger settings give you a frozen photo of the doc as of when you started (snapshot). The strongest guarantees the final doc looks as if everyone took turns, one at a time (serializable), even though they typed simultaneously.</p><p><strong>Mental model:</strong> an isolation level is a <em>promise about which interleavings you can observe</em>. Databases keep that promise with locks (block others), versions (show old snapshots), or validation (abort a transaction on conflict).</p><ul><li><strong>Assuming the default is serializable:</strong> PostgreSQL, Oracle and SQL Server default to Read Committed, and MySQL InnoDB to Repeatable Read. Neither prevents write skew.</li><li><strong>Check-then-act:</strong> <code>SELECT count(*)</code> then <code>INSERT</code> is a race at Read Committed. Use a constraint, <code>SELECT ... FOR UPDATE</code>, or Serializable with retries.</li><li><strong>Forgetting retries:</strong> Serializable and optimistic schemes abort transactions by design. Application code must catch serialization failures (SQLSTATE 40001) and retry.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-database-locking-and-isolation">
+        <button class="audio-player__play-btn" id="audio-btn-database-locking-and-isolation" data-action="toggle-audio" data-slug="database-locking-and-isolation" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-database-locking-and-isolation" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-database-locking-and-isolation" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-database-locking-and-isolation">0:00 / 3:35</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="database-locking-and-isolation" id="audio-track-database-locking-and-isolation">
+          <div class="audio-player__progress" id="audio-bar-database-locking-and-isolation" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="database-locking-and-isolation" id="audio-speed-database-locking-and-isolation" title="Playback speed">1x</button>
+        <audio id="audio-database-locking-and-isolation" src="audio/database-locking-and-isolation.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> &quot;Transactions: myths, surprises and opportunities&quot; by Martin Kleppmann</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Strange Loop Conference · 41:08 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;5ZjhNTM8XU8&quot;,&quot;title&quot;:&quot;\&quot;Transactions: myths, surprises and opportunities\&quot; by Martin Kleppmann&quot;,&quot;channel&quot;:&quot;Strange Loop Conference&quot;,&quot;why&quot;:&quot;Kleppmann explains isolation levels, what each anomaly really means, and why write skew needs serializability; the definitive talk on this topic.&quot;,&quot;length&quot;:&quot;41:08&quot;}">
       <div class="video-embed" id="video-5ZjhNTM8XU8"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="5ZjhNTM8XU8">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/5ZjhNTM8XU8/hqdefault.jpg"
                alt="&quot;Transactions: myths, surprises and opportunities&quot; by Martin Kleppmann"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">Kleppmann explains isolation levels, what each anomaly really means, and why write skew needs serializability; the definitive talk on this topic.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,30 +973,12 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Picture a shared Google Doc where many people edit at once. The weakest setting lets you see someone's half-typed sentence they might delete (a dirty read). Stronger settings give you a frozen photo of the doc as of when you started (snapshot). The strongest guarantees the final doc looks as if everyone took turns, one at a time (serializable), even though they typed simultaneously.</p><p><strong>Mental model:</strong> an isolation level is a <em>promise about which interleavings you can observe</em>. Databases keep that promise with locks (block others), versions (show old snapshots), or validation (abort a transaction on conflict).</p><ul><li><strong>Assuming the default is serializable:</strong> PostgreSQL, Oracle and SQL Server default to Read Committed, and MySQL InnoDB to Repeatable Read. Neither prevents write skew.</li><li><strong>Check-then-act:</strong> <code>SELECT count(*)</code> then <code>INSERT</code> is a race at Read Committed. Use a constraint, <code>SELECT ... FOR UPDATE</code>, or Serializable with retries.</li><li><strong>Forgetting retries:</strong> Serializable and optimistic schemes abort transactions by design. Application code must catch serialization failures (SQLSTATE 40001) and retry.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-database-locking-and-isolation">
-        <button class="audio-player__play-btn" id="audio-btn-database-locking-and-isolation" data-action="toggle-audio" data-slug="database-locking-and-isolation" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-database-locking-and-isolation" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-database-locking-and-isolation" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-database-locking-and-isolation">0:00 / 3:35</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="database-locking-and-isolation" id="audio-track-database-locking-and-isolation">
-          <div class="audio-player__progress" id="audio-bar-database-locking-and-isolation" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="database-locking-and-isolation" id="audio-speed-database-locking-and-isolation" title="Playback speed">1x</button>
-        <audio id="audio-database-locking-and-isolation" src="audio/database-locking-and-isolation.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>Under the Hood: Concurrency Anomalies & Isolation Levels</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">Under the Hood: Concurrency Anomalies & Isolation Levels</h2>
       <p>When multiple client transactions execute concurrently, the database must prevent data corruption without serializing all execution. The SQL standard defines <strong>four isolation levels</strong> based on which concurrency anomalies they prevent.</p>
 
-      <h2>The Concurrency Anomaly Hierarchy</h2>
+      <h2 id="topic-sec-2">The Concurrency Anomaly Hierarchy</h2>
       <table>
         <thead>
           <tr><th>Isolation Level</th><th>Dirty Read</th><th>Non-Repeatable Read</th><th>Phantom Read</th><th>Write Skew</th></tr>
@@ -949,7 +993,7 @@
 
       <p><strong>Two caveats on this table.</strong> The <em>lost update</em> anomaly (two read-modify-write cycles overwriting each other) occurs at Read Committed; PostgreSQL's Repeatable Read prevents it by aborting the second writer with a serialization error, while MySQL InnoDB's Repeatable Read does not. And the SQL standard <em>permits</em> phantoms at Repeatable Read: PostgreSQL's snapshot prevents them, while InnoDB prevents them for plain reads via its snapshot and for locking reads via next-key locks.</p>
 
-      <h2>Under the Hood: The Four Real-World Anomalies</h2>
+      <h2 id="topic-sec-3">Under the Hood: The Four Real-World Anomalies</h2>
       <ul>
         <li><strong>Dirty Read:</strong> Transaction A modifies row R. Transaction B reads the modified row <em>before</em> Transaction A commits. Transaction A rolls back; Transaction B has acted on phantom data.</li>
         <li><strong>Non-Repeatable Read:</strong> Transaction A reads row R. Transaction B updates row R and commits. Transaction A reads row R again and observes different column values.</li>
@@ -958,8 +1002,8 @@
       </ul>
     
 <!-- enriched -->
-<h2>Worked example: the lost update and three fixes</h2><p>Two requests each add 10 to an account balance of 100.</p><table><thead><tr><th>Time</th><th>Transaction A</th><th>Transaction B</th></tr></thead><tbody><tr><td>t1</td><td><code>SELECT balance</code> returns 100</td><td></td></tr><tr><td>t2</td><td></td><td><code>SELECT balance</code> returns 100</td></tr><tr><td>t3</td><td><code>UPDATE SET balance = 110</code>, COMMIT</td><td></td></tr><tr><td>t4</td><td></td><td><code>UPDATE SET balance = 110</code>, COMMIT</td></tr></tbody></table><p>The final balance is 110 instead of 120, and this happens at Read Committed with no error. Three fixes:</p><ul><li><strong>Atomic update:</strong> <code>UPDATE accounts SET balance = balance + 10 WHERE id = 1;</code> The row lock serializes the two writers. This is the simplest and best option when possible.</li><li><strong>Pessimistic lock:</strong> <code>SELECT balance FROM accounts WHERE id = 1 FOR UPDATE;</code> B blocks at t2 until A commits, then reads 110.</li><li><strong>Optimistic check:</strong> <code>UPDATE ... SET balance = 110, version = 8 WHERE id = 1 AND version = 7;</code> B updates 0 rows, then re-reads and retries.</li></ul><h3>Lock types you will meet</h3><table><thead><tr><th>Lock</th><th>Taken by</th><th>Blocks</th></tr></thead><tbody><tr><td>Row exclusive (FOR UPDATE)</td><td>UPDATE, DELETE, SELECT FOR UPDATE</td><td>Other writers and FOR UPDATE on the same row, but not plain MVCC reads</td></tr><tr><td>Row shared (FOR SHARE)</td><td>SELECT FOR SHARE, FK checks</td><td>Writers on that row</td></tr><tr><td>Gap / next-key (InnoDB)</td><td>Range reads at Repeatable Read</td><td>Inserts into the locked range, which prevents phantoms</td></tr><tr><td>Predicate SIRead (PostgreSQL SSI)</td><td>Reads at Serializable</td><td>Blocks nothing; tracked to detect dangerous read-write cycles</td></tr><tr><td>Table ACCESS EXCLUSIVE</td><td>ALTER TABLE, DROP, some DDL</td><td>Everything, including reads</td></tr></tbody></table><h3>Deadlocks</h3><p>A locks row 1 then wants row 2, while B locks row 2 then wants row 1. The database detects the cycle (PostgreSQL checks after <code>deadlock_timeout</code>, 1 s by default) and aborts one transaction. The prevention is to always lock rows in a consistent order, for example by ascending primary key.</p><h3>How real systems implement Serializable</h3><ul><li><strong>PostgreSQL:</strong> Serializable Snapshot Isolation, which runs optimistically and aborts on dangerous structures.</li><li><strong>MySQL InnoDB:</strong> Serializable turns plain SELECTs into locking reads (two-phase locking).</li><li><strong>CockroachDB:</strong> Serializable by default, using timestamps and transaction restarts.</li><li><strong>Spanner:</strong> strict serializability via two-phase locking plus TrueTime.</li></ul>
-</div></article>
+<h2 id="topic-sec-4">Worked example: the lost update and three fixes</h2><p>Two requests each add 10 to an account balance of 100.</p><table><thead><tr><th>Time</th><th>Transaction A</th><th>Transaction B</th></tr></thead><tbody><tr><td>t1</td><td><code>SELECT balance</code> returns 100</td><td></td></tr><tr><td>t2</td><td></td><td><code>SELECT balance</code> returns 100</td></tr><tr><td>t3</td><td><code>UPDATE SET balance = 110</code>, COMMIT</td><td></td></tr><tr><td>t4</td><td></td><td><code>UPDATE SET balance = 110</code>, COMMIT</td></tr></tbody></table><p>The final balance is 110 instead of 120, and this happens at Read Committed with no error. Three fixes:</p><ul><li><strong>Atomic update:</strong> <code>UPDATE accounts SET balance = balance + 10 WHERE id = 1;</code> The row lock serializes the two writers. This is the simplest and best option when possible.</li><li><strong>Pessimistic lock:</strong> <code>SELECT balance FROM accounts WHERE id = 1 FOR UPDATE;</code> B blocks at t2 until A commits, then reads 110.</li><li><strong>Optimistic check:</strong> <code>UPDATE ... SET balance = 110, version = 8 WHERE id = 1 AND version = 7;</code> B updates 0 rows, then re-reads and retries.</li></ul><h3>Lock types you will meet</h3><table><thead><tr><th>Lock</th><th>Taken by</th><th>Blocks</th></tr></thead><tbody><tr><td>Row exclusive (FOR UPDATE)</td><td>UPDATE, DELETE, SELECT FOR UPDATE</td><td>Other writers and FOR UPDATE on the same row, but not plain MVCC reads</td></tr><tr><td>Row shared (FOR SHARE)</td><td>SELECT FOR SHARE, FK checks</td><td>Writers on that row</td></tr><tr><td>Gap / next-key (InnoDB)</td><td>Range reads at Repeatable Read</td><td>Inserts into the locked range, which prevents phantoms</td></tr><tr><td>Predicate SIRead (PostgreSQL SSI)</td><td>Reads at Serializable</td><td>Blocks nothing; tracked to detect dangerous read-write cycles</td></tr><tr><td>Table ACCESS EXCLUSIVE</td><td>ALTER TABLE, DROP, some DDL</td><td>Everything, including reads</td></tr></tbody></table><h3>Deadlocks</h3><p>A locks row 1 then wants row 2, while B locks row 2 then wants row 1. The database detects the cycle (PostgreSQL checks after <code>deadlock_timeout</code>, 1 s by default) and aborts one transaction. The prevention is to always lock rows in a consistent order, for example by ascending primary key.</p><h3>How real systems implement Serializable</h3><ul><li><strong>PostgreSQL:</strong> Serializable Snapshot Isolation, which runs optimistically and aborts on dangerous structures.</li><li><strong>MySQL InnoDB:</strong> Serializable turns plain SELECTs into locking reads (two-phase locking).</li><li><strong>CockroachDB:</strong> Serializable by default, using timestamps and transaction restarts.</li><li><strong>Spanner:</strong> strict serializability via two-phase locking plus TrueTime.</li></ul>
+</div></article><div id="check-slider-database-locking-and-isolation">
       <section class="check-slider" data-slug="database-locking-and-isolation" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1231,7 +1275,7 @@
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
+      </section></div><div id="topic-simulator-database-locking-and-isolation">
         <div class="simulator-card" id="sim-mvcc">
           <div class="simulator-card__header">
             <div class="simulator-card__title">MVCC and Isolation Levels (PostgreSQL)</div>
@@ -1255,15 +1299,15 @@
           <div class="sim-verdict" id="mv-verdict"></div>
           <div class="simulator-card__label" style="margin-top: var(--space-4)">What each level does (each script run to the end)</div>
           <div class="sim-grid-wrap"><table class="sim-grid" id="mv-matrix"></table></div>
-        </div>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+        </div></div>
+        <div class="takeaways" id="topic-takeaways-database-locking-and-isolation">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">SQL isolation levels trade off concurrency throughput against anomaly prevention.</div><div class="takeaways__item">PostgreSQL Read Committed generates a new snapshot for each query statement; Repeatable Read holds a single snapshot for the entire transaction.</div><div class="takeaways__item">Write Skew occurs under Repeatable Read when disjoint updates violate cross-row constraints; Serializable isolation or explicit locking (SELECT ... FOR UPDATE) is required.</div>
           </div>
         </div>
       <div class="lesson-builds lesson-challenges">
-        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        <h2 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h2>
         
           <a class="lesson-builds__item" href="/challenges/cascading-deadlock-depletion/" data-nav="challenges" data-challenge="cascading-deadlock-depletion">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1275,7 +1319,7 @@
           </a>
       </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://www.microsoft.com/en-us/research/publication/a-critique-of-ansi-sql-isolation-levels/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Berenson et al.: A Critique of ANSI SQL Isolation Levels</a><a class="further-reading__link" href="https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Daniel Abadi: Consistency Tradeoffs in Modern Distributed Database System Design (IEEE Computer, 2012)</a>
           </div>
@@ -1288,10 +1332,10 @@
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="database-locking-and-isolation" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="database-locking-and-isolation" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Database%20locking%20and%20isolation&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Database%20locking%20and%20isolation%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fdatabase-locking-and-isolation%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1304,9 +1348,88 @@
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/mvcc/" data-nav="topic" data-slug="mvcc">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">MVCC</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Under the Hood: Concurrency Anomalies &amp; Isolation Levels</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">The Concurrency Anomaly Hierarchy</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Under the Hood: The Four Real-World Anomalies</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Worked example: the lost update and three fixes</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-database-locking-and-isolation">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-simulator-database-locking-and-isolation">Interactive simulator</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-database-locking-and-isolation">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 2.1</span>
+            <span>0/13 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/database-locking-and-isolation/" data-share-title="Database locking and isolation — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1314,7 +1437,7 @@
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1368,7 +1491,7 @@
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1378,8 +1501,8 @@
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-data.js?v=accc3870f9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1387,30 +1510,9 @@
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Database locking and isolation",
-  "description": "Picture a shared Google Doc where many people edit at once. The weakest setting lets you see someone's half-typed sentence they might delete a dirty read.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/database-locking-and-isolation/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

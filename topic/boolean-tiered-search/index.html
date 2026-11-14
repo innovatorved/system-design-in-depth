@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Boolean and tiered search — System Design In Depth</title>
   <meta name="description" content="Imagine hiring. You first filter candidates with hard rules: must know Go AND must be in Europe AND NOT a current employee. Learn system design patterns and.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Boolean and tiered search — System Design In Depth">
   <meta property="og:description" content="Imagine hiring. You first filter candidates with hard rules: must know Go AND must be in Europe AND NOT a current employee. Learn system design patterns and.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/boolean-tiered-search/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-boolean-tiered-search.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Boolean and tiered search — System Design In Depth">
   <meta name="twitter:description" content="Imagine hiring. You first filter candidates with hard rules: must know Go AND must be in Europe AND NOT a current employee. Learn system design patterns and.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-boolean-tiered-search.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/boolean-tiered-search/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Boolean and tiered search",
+  "description": "Imagine hiring. You first filter candidates with hard rules: must know Go AND must be in Europe AND NOT a current employee. Learn system design patterns and.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-boolean-tiered-search.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/boolean-tiered-search/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="boolean-tiered-search">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,65 @@
         <span class="breadcrumbs__current">Boolean and tiered search</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">search</span>
         </div>
-        <h1 class="lesson-header__title">Boolean and tiered search</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Boolean and tiered search</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 3 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 5.4: Information Retrieval & Search Engines</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="boolean-tiered-search">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-search-retrieval" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/boolean-tiered-search/" data-share-title="Boolean and tiered search — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;TIN_02pJU-Y&quot;,&quot;title&quot;:&quot;7 5 The Boolean Retrieval Model 14 06&quot;,&quot;channel&quot;:&quot;From Languages to Information&quot;,&quot;why&quot;:&quot;Manning explains Boolean retrieval, AND/OR/NOT evaluation over postings and query optimisation by document frequency, exactly this unit’s mechanics.&quot;,&quot;length&quot;:&quot;14:06&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Imagine hiring. You first filter candidates with hard rules: must know Go AND must be in Europe AND NOT a current employee. That is Boolean retrieval: a yes/no gate. Then, to save interviewer time, you look at the pile of "top university, strong referrals" CVs first and only dig into the rest if that pile has too few matches. That is a tiered index.</p> <p><strong>Mental model:</strong> Boolean clauses decide <em>which documents are eligible</em>; tiers decide <em>which eligible documents you look at first</em>. Tiers are a speed optimisation, never a change to the eligibility rules.</p></p>
+<ul>
+<li><strong>Trap:</strong> letting a quality tier relax a MUST clause or an access-control filter. Security and correctness filters apply in every tier.</li>
+<li><strong>Trap:</strong> evaluating <code>NOT</code> by materialising the complement set. Engines instead skip excluded IDs during the merge.</li>
+<li><strong>Trap:</strong> assuming tier 1 results are the globally best. A tier-2 document with a strong textual match can outrank a tier-1 document; tiering trades a little recall for latency.</li>
+<p></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-boolean-tiered-search">
+        <button class="audio-player__play-btn" id="audio-btn-boolean-tiered-search" data-action="toggle-audio" data-slug="boolean-tiered-search" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-boolean-tiered-search" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-boolean-tiered-search" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-boolean-tiered-search">0:00 / 3:33</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="boolean-tiered-search" id="audio-track-boolean-tiered-search">
+          <div class="audio-player__progress" id="audio-bar-boolean-tiered-search" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="boolean-tiered-search" id="audio-speed-boolean-tiered-search" title="Playback speed">1x</button>
+        <audio id="audio-boolean-tiered-search" src="audio/boolean-tiered-search.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> 7 5 The Boolean Retrieval Model 14 06</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">From Languages to Information · 14:06 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;TIN_02pJU-Y&quot;,&quot;title&quot;:&quot;7 5 The Boolean Retrieval Model 14 06&quot;,&quot;channel&quot;:&quot;From Languages to Information&quot;,&quot;why&quot;:&quot;Manning explains Boolean retrieval, AND/OR/NOT evaluation over postings and query optimisation by document frequency, exactly this unit’s mechanics.&quot;,&quot;length&quot;:&quot;14:06&quot;}">
       <div class="video-embed" id="video-TIN_02pJU-Y"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="TIN_02pJU-Y">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/TIN_02pJU-Y/hqdefault.jpg"
                alt="7 5 The Boolean Retrieval Model 14 06"
@@ -877,6 +943,7 @@
         </a>
       </div>
       <p class="video-embed__why">Manning explains Boolean retrieval, AND/OR/NOT evaluation over postings and query optimisation by document frequency, exactly this unit’s mechanics.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,46 +978,23 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Imagine hiring. You first filter candidates with hard rules: must know Go AND must be in Europe AND NOT a current employee. That is Boolean retrieval: a yes/no gate. Then, to save interviewer time, you look at the pile of "top university, strong referrals" CVs first and only dig into the rest if that pile has too few matches. That is a tiered index.</p> <p><strong>Mental model:</strong> Boolean clauses decide <em>which documents are eligible</em>; tiers decide <em>which eligible documents you look at first</em>. Tiers are a speed optimisation, never a change to the eligibility rules.</p></p>
-<ul>
-<li><strong>Trap:</strong> letting a quality tier relax a MUST clause or an access-control filter. Security and correctness filters apply in every tier.</li>
-<li><strong>Trap:</strong> evaluating <code>NOT</code> by materialising the complement set. Engines instead skip excluded IDs during the merge.</li>
-<li><strong>Trap:</strong> assuming tier 1 results are the globally best. A tier-2 document with a strong textual match can outrank a tier-1 document; tiering trades a little recall for latency.</li>
-<p></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-boolean-tiered-search">
-        <button class="audio-player__play-btn" id="audio-btn-boolean-tiered-search" data-action="toggle-audio" data-slug="boolean-tiered-search" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-boolean-tiered-search" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-boolean-tiered-search" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-boolean-tiered-search">0:00 / 3:33</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="boolean-tiered-search" id="audio-track-boolean-tiered-search">
-          <div class="audio-player__progress" id="audio-bar-boolean-tiered-search" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="boolean-tiered-search" id="audio-speed-boolean-tiered-search" title="Playback speed">1x</button>
-        <audio id="audio-boolean-tiered-search" src="audio/boolean-tiered-search.mp3" preload="metadata"></audio>
-      </div><article class="prose"><h2>Boolean and tiered search</h2>
+      </details><article class="prose"><h2 id="topic-sec-1">Boolean and tiered search</h2>
 <p>A reader searches for <code>cache index</code>, and none of our documents contains both words. Returning nothing is defensible if both words are requirements. Returning separate cache and index lessons is defensible if the reader is exploring a topic. The service needs to choose that behavior explicitly before a score decides which document looks best.</p>
 <p>We'll keep required filters fixed, group strict and partial matches, and use term coverage or proximity when two groups are too coarse.</p>
-<h2>Requirements and preferences</h2>
+<h2 id="topic-sec-2">Requirements and preferences</h2>
 <p><a href="#" data-nav="topic" data-slug="inverted-index-and-posting-lists">The posting-list lesson</a> gave you posting lists and two ways to combine them. Requiring every query term uses their intersection, commonly expressed as AND. Accepting any query term uses their union, expressed as OR. These operators describe a matching condition; they do not measure how useful the resulting documents are.</p>
 <p>An unknown token makes an AND intersection empty because its posting list is empty. An OR union can still contain documents matching the remaining tokens. That difference is often hidden behind a search box, but it changes what a successful response means. The user who typed a precise part number may be poorly served by a result that matches only its accompanying description.</p>
 <p>A condition supplied as a structured filter deserves separate treatment. An allowed-document set represents which documents may be exposed in this exercise. It is chosen test input, not an authentication implementation. Every retrieval tier intersects its candidates with that same set, so relevance fallback cannot turn an excluded document into a permitted one.</p>
 <h3>Which conditions may relax?</h3>
 <p>Treat permissions and explicitly required filters as hard constraints. Treat an exploratory free-text query as a possible source of soft preferences when the interface says broader matches may appear. For a caller using an explicit “all words” search, keep AND semantics unless they request a broader search. A quiet fallback would make the response disagree with the request.</p>
 <p>The alternatives are to return only strict matches, present broad matches separately, or mix all matches under one score. The last option is convenient, but a high score could put a partial match above a complete match unless the ranker also enforces the requirement. Choose separate ordered groups here because the behavior stays inspectable before we introduce numerical ranking.</p>
-<h2>Ordered fallback groups</h2>
+<h2 id="topic-sec-3">Ordered fallback groups</h2>
 <p>A group that runs under a particular matching rule is a tier. Our chosen policy first collects all permitted AND matches as tier zero. It then collects permitted OR matches that have not already appeared as tier one. The displayed response always appends the second tier, even when the first is nonempty; this differs from a policy that broadens only after an empty strict result.</p>
 <p>Within each tier, identifiers sort ascending. A document appears once, under the earliest rule it satisfies. Later scoring may change order within a tier, but it may not move a tier-one document ahead of a tier-zero document under this contract. If the product wants that movement, it has chosen a different contract and should evaluate it as such.</p>
 <p>Choose the default from what the caller asked for:</p>
 <table><thead><tr><th>Caller situation</th><th>Default</th><th>Reason</th></tr></thead><tbody><tr><td>Every submitted word is required</td><td>AND only</td><td>Preserve the requested condition</td></tr><tr><td>Exploring with useful partial matches</td><td>AND tier, then labeled OR tier</td><td>Keep complete matches first</td></tr><tr><td>Any term is independently sufficient</td><td>OR with ranking</td><td>No complete-match priority promised</td></tr></tbody></table>
-<h2>One policy against several queries</h2>
+<h2 id="topic-sec-4">One policy against several queries</h2>
 <p>The allowed set contains <code>d1</code>, <code>d2</code>, <code>d4</code>, <code>d5</code> and <code>d8</code>. Documents <code>d3</code>, <code>d6</code> and <code>d7</code> remain in the corpus but are excluded from this response. The exclusion is deliberately visible so you can follow a broadening attempt without confusing candidate generation with access permission.</p>
 <p>The shared Python replay executes the rules directly against the eight chosen documents. In the capture, each tuple pairs a document identifier with its tier number. Empty input has an explicit empty-result rule, so it does not turn into a request for every permitted document.</p>
 <div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy code-block__run-btn" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg><span>Run in CodeLab</span></button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">python3 public/course-assets/system-design/m16-search.py boolean</code></pre></div>
@@ -962,10 +1006,10 @@ all tiers retain allowed ids: [&#039;d1&#039;, &#039;d2&#039;, &#039;d4&#039;, &
 <p>For <code>cache stores</code>, <code>d1</code> belongs to both raw sets but appears only in tier zero. The second group contains <code>d2</code> and <code>d4</code>; retaining <code>d1</code> again would make a later limit or evaluation count the same document twice. Deduplication belongs before the response is bounded or measured.</p>
 <p>For <code>cache index</code>, the strict group is empty, so every result is a broader match. The response still carries tier one on each identifier. A UI can label that group “Matches some words” instead of presenting it as if every word had matched. The backend has already retained enough information for that explanation.</p>
 <p>For <code>queue cache</code>, broader search still cannot expose the queue documents. Both are outside the allowed set. An empty strict result does not distinguish an absent document from an excluded one, and the public response should not reveal hidden document text to explain the difference. A diagnostic view needs its own access boundary.</p>
-<h2>Work limits and missing answers</h2>
+<h2 id="topic-sec-5">Work limits and missing answers</h2>
 <p>Taking the first few candidates before deduplication can fill the response with repeats. Taking a global score sort after grouping can erase tier priority. The two-tier replay retains the complete small result and therefore avoids both interactions. If you add a limit, apply it to the final deduplicated ordered sequence and document whether a nonempty strict tier may leave space for broader results.</p>
 <p>Choose strict retrieval for explicit requirements, and ordered broader groups for this exploratory course search. Revisit that choice when <a href="#" data-nav="topic" data-slug="search-evaluation-metrics">search evaluation</a> supplies judgments showing which returned documents actually answer the intended question. A larger candidate set can recover a useful document and can also add irrelevant ones; result count alone cannot choose between those effects.</p>
-<h2>More than two tiers</h2>
+<h2 id="topic-sec-6">More than two tiers</h2>
 <p>For a longer query, OR groups very different matches together. A four-term query can use four coverage levels: all four, any three, any two, then any one. Each document belongs to its highest satisfied level and appears once. Repeated query words do not create extra requirements in this chosen policy.</p>
 <p>For <code>database index maps rows</code>, <code>d5</code> contains all four terms. No document contains exactly three. <code>d2</code> contains <code>database</code> and <code>rows</code>, while <code>d8</code> contains only <code>index</code>. The replay's additional coverage example returns the best two documents from those ordered groups:</p>
 <div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy code-block__run-btn" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg><span>Run in CodeLab</span></button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">python3 public/course-assets/system-design/m16-search.py coverage</code></pre></div>
@@ -975,15 +1019,15 @@ limit 2: [(&#039;d5&#039;, 4), (&#039;d2&#039;, 2)]</code></pre></div>
 <p>Here the number is matched-term count, not the earlier zero/one tier label. A real ranker can use BM25 within each coverage level while keeping the level as the primary ordering key. A boost alone does not guarantee that ordering.</p>
 <p>A production query can require a minimum number of optional clauses. For example, Elasticsearch's <code>minimum_should_match</code> controls eligibility; it does not automatically implement this sequence of ranked groups. When combining text clauses with a required filter, set that minimum explicitly if text must match. A bool query with a filter otherwise defaults to zero required <code>should</code> clauses.</p>
 <p>Choose whether to fetch every group or only broaden until the page is full. The replay counts all eligible candidates, sorts and then limits; it does not save retrieval work through early stopping. A staged implementation can reuse postings, exclude seen IDs and stop once enough results are retained. Keep query, filters and ordering stable across pagination so broadening does not introduce repeats or skip earlier groups.</p>
-<h2>Presence, proximity and fields</h2>
+<h2 id="topic-sec-7">Presence, proximity and fields</h2>
 <p>Matching all the words does not mean matching their relationship. <code>cache stores</code> is adjacent in <code>d1</code>; <code>cache copies</code> occurs there with <code>stores</code> between them. Both pass AND. Only the first passes a zero-gap phrase condition. A positional check can require adjacency or allow a defined window, with ordered and unordered windows answering different questions.</p>
 <p>Use phrase or proximity evidence within a tier when nearby words better express the intent. Requiring a phrase is stricter than giving it a ranking preference. Preserve that distinction when broadening: quoted words should not silently become unrelated words anywhere in a document.</p>
 <p>Fields matter too. Requiring all terms in a title differs from allowing one in the title and another in the body. In Elasticsearch, <code>multi_match</code> with <code>best_fields</code> applies AND inside each field. A term-centric query such as <code>combined_fields</code> can match terms spread across compatible fields. Choose the intended rule before tuning title boosts.</p>
 <p>An empty strict result can signal a typo, missing synonym, absent source item, unavailable inventory or indexing lag. Record enough internal diagnostics to distinguish them. Increasing breadth is useful only when the extra documents answer the need. The <a href="#" data-nav="topic" data-slug="query-understanding-pipeline">query-understanding lesson</a> changes which terms are searched; <a href="#" data-nav="topic" data-slug="tf-idf-relevance-scoring">the next lesson</a> orders equally eligible documents with a specified numerical baseline.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
-      <h2>Under the Hood: Multi-Term Boolean Evaluation</h2>
+      <h2 id="topic-sec-8">Under the Hood: Multi-Term Boolean Evaluation</h2>
       <p>When users search for multi-word queries (e.g. <code>"distributed consensus raft"</code>), the search engine parses the query into a boolean expression tree combining <code>MUST</code> (AND), <code>SHOULD</code> (OR), and <code>MUST_NOT</code> (NOT) clauses.</p>
 
-      <h2>A separate optimization: quality-tiered indexes</h2>
+      <h2 id="topic-sec-9">A separate optimization: quality-tiered indexes</h2>
       <p>Some designs use <em>tiers</em> for matching policy: complete AND matches precede broader OR matches. The optimization below is different: it partitions documents by a precomputed quality class to reduce search work. Do not use a quality tier to relax required terms or authorization filters.</p>
       <div class="mermaid">
 flowchart TD
@@ -994,7 +1038,7 @@ flowchart TD
     Tier2Check --> Score
       </div>
 
-      <h2>Under the Hood: Tiered Indexing Mechanics</h2>
+      <h2 id="topic-sec-10">Under the Hood: Tiered Indexing Mechanics</h2>
       <ul>
         <li><strong>Quality Tiers:</strong> Rather than forcing every query to search the entire multi-billion document corpus, documents are partitioned into quality tiers based on static quality scores (PageRank, click popularity, freshness, seller reputation).</li>
         <li><strong>Tier 1 (Hot Core):</strong> Contains top 10% highest-quality documents, stored on ultra-fast NVMe SSDs or pinned in RAM. For many workloads a large share of head queries can be satisfied entirely within Tier 1, but the hit rate is corpus- and product-specific and must be measured.</li>
@@ -1002,7 +1046,7 @@ flowchart TD
       </ul>
     
 <!-- enriched -->
-<h2>Worked example: ordering a three-term AND</h2>
+<h2 id="topic-sec-11">Worked example: ordering a three-term AND</h2>
 <p>Query: <code>distributed AND consensus AND raft</code> on a 100 million document corpus. Document frequencies:</p>
 <table><thead><tr><th>Term</th><th>Postings length</th></tr></thead><tbody>
 <tr><td>distributed</td><td>2,000,000</td></tr>
@@ -1011,9 +1055,9 @@ flowchart TD
 </tbody></table>
 <p><strong>Rarest first:</strong> intersect raft with consensus. A linear merge touches at most 58,000 entries and yields, say, 5,000 documents. Now intersect those 5,000 with distributed. A linear merge would walk 2,005,000 entries, but with skip pointers or galloping search each of the 5,000 probes costs roughly log2 of 2,000,000 divided by 5,000, about 9 steps, so around 45,000 steps. Total: about 100,000 steps.</p>
 <p><strong>Query order:</strong> starting with distributed AND consensus means walking at least 2,050,000 entries before raft is even considered, over 20 times more work for the same answer.</p>
-<h2>Worked example: tier cascade</h2>
+<h2 id="topic-sec-12">Worked example: tier cascade</h2>
 <p>Tier 1 holds the top 10 percent of documents by static quality, 10 million docs, in RAM. The user wants 20 results. If tier 1 returns at least 20 matches for all MUST clauses, stop. If it returns 7, query tier 2 and merge. Because head queries tend to be broad, most of them are satisfied by tier 1, while long-tail queries fall through; the exact hit rate depends on the corpus and should be measured rather than assumed.</p>
-<h2>Trade-offs</h2>
+<h2 id="topic-sec-13">Trade-offs</h2>
 <table><thead><tr><th>Technique</th><th>Speeds up</th><th>Costs</th></tr></thead><tbody>
 <tr><td>Rarest-first ordering</td><td>AND queries</td><td>Needs document frequency stats, which are cheap</td></tr>
 <tr><td>Skip pointers or block skipping</td><td>Short list vs long list merges</td><td>Extra index space; little gain for equal-length lists</td></tr>
@@ -1021,7 +1065,7 @@ flowchart TD
 <tr><td>Early termination on impact-ordered postings</td><td>Top-K ranking</td><td>Harder updates; scores must be precomputable</td></tr>
 </tbody></table>
 <p>Lucene implements AND as a conjunction that leads with the lowest-cost iterator and advances the others to its current doc ID, which is the rarest-first strategy in code form. Web engines historically used tiered indexes keyed on PageRank-like static scores.</p>
-</div></div></article>
+</div></div></article><div id="check-slider-boolean-tiered-search">
       <section class="check-slider" data-slug="boolean-tiered-search" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1293,15 +1337,15 @@ flowchart TD
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-boolean-tiered-search">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Tiered indexes partition documents into quality tiers based on static authority and popularity signals.</div><div class="takeaways__item">A measured workload may terminate many queries in a high-quality tier; latency and coverage must be evaluated rather than assumed.</div><div class="takeaways__item">Lower tiers are evaluated lazily only when high-tier matching yields insufficient candidates.</div>
           </div>
         </div>
       <div class="lesson-builds">
-        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
+        <h2 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h2>
         
           <a class="lesson-builds__item" href="/build/tiny-search-engine/" data-action="navigate-build" data-build-id="tiny-search-engine">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1313,7 +1357,7 @@ flowchart TD
           </a>
       </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://nlp.stanford.edu/IR-book/html/htmledition/tiered-indexes-1.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Manning et al.: Tiered Indexes and Champion Lists</a><a class="further-reading__link" href="https://dl.acm.org/doi/10.1145/956863.956944" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Broder et al.: Efficient Query Evaluation Using a Two-Level Retrieval Process (CIKM, 2003)</a><a class="further-reading__link" href="https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-bool-query" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Elasticsearch Reference: Boolean Query</a>
           </div>
@@ -1326,10 +1370,10 @@ flowchart TD
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="boolean-tiered-search" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="boolean-tiered-search" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Boolean%20and%20tiered%20search&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Boolean%20and%20tiered%20search%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fboolean-tiered-search%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1342,9 +1386,120 @@ flowchart TD
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/tf-idf-relevance-scoring/" data-nav="topic" data-slug="tf-idf-relevance-scoring">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">TF-IDF relevance scoring</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Boolean and tiered search</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Requirements and preferences</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Ordered fallback groups</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">One policy against several queries</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Work limits and missing answers</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">More than two tiers</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Presence, proximity and fields</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-8">Under the Hood: Multi-Term Boolean Evaluation</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-9">A separate optimization: quality-tiered indexes</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-10">Under the Hood: Tiered Indexing Mechanics</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-11">Worked example: ordering a three-term AND</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-12">Worked example: tier cascade</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-13">Trade-offs</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-boolean-tiered-search">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-boolean-tiered-search">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 5.4</span>
+            <span>0/17 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/boolean-tiered-search/" data-share-title="Boolean and tiered search — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1352,7 +1507,7 @@ flowchart TD
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1406,7 +1561,7 @@ flowchart TD
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1415,8 +1570,8 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1424,30 +1579,9 @@ flowchart TD
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Boolean and tiered search",
-  "description": "Imagine hiring. You first filter candidates with hard rules: must know Go AND must be in Europe AND NOT a current employee. Learn system design patterns and.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/boolean-tiered-search/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

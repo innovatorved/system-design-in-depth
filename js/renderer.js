@@ -162,31 +162,38 @@ window.Renderer = (() => {
   }
 
   /**
-   * Render the Course Overview (home page)
+   * Decorate prose <h2> headings with deterministic anchor IDs and return TOC list
+   */
+  function decorateProseHeadings(proseHtml) {
+    const headings = [];
+    let idx = 0;
+    const htmlWithIds = String(proseHtml || '').replace(/<h2(\s[^>]*)?>([\s\S]*?)<\/h2>/gi, (full, attrs = '', inner) => {
+      idx += 1;
+      const plain = inner.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
+      const existingIdMatch = attrs.match(/\bid=["']([^"']+)["']/i);
+      const secId = existingIdMatch ? existingIdMatch[1] : `topic-sec-${idx}`;
+      if (plain) {
+        headings.push({ id: secId, title: plain, num: idx });
+      }
+      if (existingIdMatch) return full;
+      return `<h2${attrs} id="${secId}">${inner}</h2>`;
+    });
+    return { htmlWithIds, headings };
+  }
+
+  /**
+   * Render the Course Overview (home page fallback)
    */
   function renderOverview() {
     const data = window.CURRICULUM_DATA;
     if (!data) return '<p>Loading curriculum data...</p>';
 
-    const stats = data.stats;
-    const pct = window.Progress.getPercentage();
-    const streak = window.Progress.getStreak ? window.Progress.getStreak().current : 0;
-    const projects = window.PROJECTS_DATA || [];
-    const pinnedProjects = projects.filter(p => p.pinned);
-
     let html = `
       <div class="hero">
-        <div class="hero__eyebrow">System Design Course</div>
         <h1 class="hero__title">System Design In Depth</h1>
-        <p class="hero__subtitle">Deep notes, case studies, YouTube tutorials, and from-scratch implementations for senior engineering practice.</p>
-        <div class="hero__stats">
-          <div><div class="hero__stat-value">${stats.tracks || 6}</div><div class="hero__stat-label">Tracks</div></div>
-          <div><div class="hero__stat-value">${stats.units}</div><div class="hero__stat-label">Topics</div></div>
-          <div><div class="hero__stat-value">${pct}%</div><div class="hero__stat-label">Complete</div></div>
-          <div><div class="hero__stat-value" style="color: ${streak > 0 ? '#f97316' : 'inherit'};">${streak} 🔥</div><div class="hero__stat-label">Day Streak</div></div>
-        </div>
+        <p class="hero__subtitle">Deep notes, case studies, reference lectures, and from-scratch implementations for distributed systems engineering.</p>
         <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-          <a href="#/glossary" class="btn btn--sm btn--primary">📖 Glossary</a>
+          <a href="/glossary/" class="btn btn--sm btn--primary" data-nav="glossary">Glossary</a>
         </div>
       </div>`;
 
@@ -272,8 +279,6 @@ window.Renderer = (() => {
       const archiveScript = document.createElement('script');
       archiveScript.src = 'data/archive/' + slug + '.js' + (window.ASSET_VERSION ? '?v=' + window.ASSET_VERSION : '');
       archiveScript.onload = () => {
-        // Re-render once archive content is available (only if the learner is still on this lesson),
-        // then restore what the first render wired up: simulator, diagrams, audio.
         const reader = document.getElementById('reader');
         if (!reader || decodeURIComponent(location.hash) !== '#topic/' + slug) return;
         const sim = window.Simulators?.getSimulatorForUnit?.(slug)?.sim;
@@ -287,9 +292,11 @@ window.Renderer = (() => {
     }
 
     const reviewDate = formatReviewDate(unit.archive?.updated);
+    const canonicalLessonUrl = `https://system-design-in-depth.vedgupta.in/topic/${escapeHtml(slug)}/`;
+    const shareIconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
 
-    // Build header
-    let html = `
+    // Build header & main article column
+    let articleCol = `
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep">${icons.chevronRight}</span>
@@ -298,12 +305,12 @@ window.Renderer = (() => {
         <span class="breadcrumbs__current">${unit.title}</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--${kindClass}">${unit.kind}</span>
           ${unit.archive?.tags?.map(t => ' <span class="tag">' + t + '</span>').join('') || ''}
         </div>
-        <h1 class="lesson-header__title">${unit.title}</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">${unit.title}</h1>
         <div class="lesson-header__meta">
           ${(() => {
             const words = unit.archive?.wordCount || (archiveContent?.content ? archiveContent.content.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).length : (moduleContent?.content ? moduleContent.content.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).length : 0));
@@ -312,34 +319,32 @@ window.Renderer = (() => {
           <span class="lesson-header__meta-item">${icons.book} Module ${mod.number}: ${mod.title}</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date">${icons.calendar} Updated ${reviewDate}</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle${isCompleted ? ' completed' : ''}" data-action="toggle-complete" data-slug="${slug}">
             ${isCompleted ? icons.check + ' Completed' : icons.circle + ' Mark Complete'}
           </button>
           <a href="#cheatsheet/${mod.id}" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="${canonicalLessonUrl}" data-share-title="${escapeHtml(unit.title)} — System Design In Depth" title="Share link to this lesson">
+            ${shareIconSvg}
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
       </div>`;
 
-    // Video embed (from module content)
-    if (moduleContent?.video?.youtubeId) {
-      html += renderVideoEmbed(moduleContent.video);
-      html += renderMoreVideos(moduleContent.videos);
-    }
-
     // Intuition-first primer (plain-language mental model before the deep dive)
     if (moduleContent?.intuition) {
-      html += `
+      articleCol += `
         <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
           <div class="intuition__body">${convertMarkdownToHTML(moduleContent.intuition)}</div>
         </aside>`;
     }
 
     // Audio player
     const initialDuration = unit.archive?.audioDuration || unit.audioDuration || '--:--';
-    html += `
+    articleCol += `
       <div class="audio-player" id="audio-player-${slug}">
         <button class="audio-player__play-btn" id="audio-btn-${slug}" data-action="toggle-audio" data-slug="${slug}" aria-label="Play audio" title="Play audio">
           <svg id="audio-play-icon-${slug}" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -357,53 +362,62 @@ window.Renderer = (() => {
         <audio id="audio-${slug}" src="audio/${slug}.mp3" preload="metadata"></audio>
       </div>`;
 
-    // Content
-    html += '<article class="prose">';
-
-    if (archiveContent && archiveContent.trim().length > 100) {
-      // Use authentic markdown from curriculum
-      html += convertMarkdownToHTML(archiveContent);
-      // If module content has complementary details (e.g. diagrams or breakdown), augment smoothly
-      const isPlaceholder = moduleContent?.content?.includes('This topic is covered in depth in the curriculum archive');
-      if (moduleContent?.content && !isPlaceholder && !archiveContent.includes('Real-World Usage')) {
-        html += '<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);">';
-        html += '<div class="lesson-deep-dive">' + moduleContent.content + '</div>';
-      }
-    } else if (moduleContent?.content) {
-      // Use comprehensive generated module content
-      html += moduleContent.content;
-    } else {
-      // Fallback
-      html += renderFallbackContent(unit, mod);
+    // Video embed (from module content, tucked cleanly inside disclosure)
+    if (moduleContent?.video?.youtubeId) {
+      articleCol += renderVideoEmbed(moduleContent.video, moduleContent.videos);
     }
 
-    html += '</article>';
+    // Content
+    let rawArticleHtml = '';
+
+    if (archiveContent && archiveContent.trim().length > 100) {
+      rawArticleHtml += convertMarkdownToHTML(archiveContent);
+      const isPlaceholder = moduleContent?.content?.includes('This topic is covered in depth in the curriculum archive');
+      if (moduleContent?.content && !isPlaceholder && !archiveContent.includes('Real-World Usage')) {
+        rawArticleHtml += '<hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);">';
+        rawArticleHtml += '<div class="lesson-deep-dive">' + moduleContent.content + '</div>';
+      }
+    } else if (moduleContent?.content) {
+      rawArticleHtml += moduleContent.content;
+    } else {
+      rawArticleHtml += renderFallbackContent(unit, mod);
+    }
+
+    const { htmlWithIds, headings } = decorateProseHeadings(rawArticleHtml);
+    articleCol += '<article class="prose">' + htmlWithIds + '</article>';
 
     // Check yourself: unified slider with Concept Checks, Napkin Math (numeric), and Staff Trade-Off Matrix (tradeoff)
-    if (window.Quiz?.renderCheckSlider) html += window.Quiz.renderCheckSlider(slug);
+    const quizHtml = window.Quiz?.renderCheckSlider ? window.Quiz.renderCheckSlider(slug) : '';
+    const hasQuiz = Boolean(quizHtml && quizHtml.trim());
+    if (hasQuiz) {
+      articleCol += `<div id="check-slider-${slug}">${quizHtml}</div>`;
+    }
 
     // Interactive Visual Simulator (if applicable for unit)
+    let simHtml = '';
     if (window.Simulators && window.Simulators.getSimulatorForUnit) {
       const simData = window.Simulators.getSimulatorForUnit(slug);
       if (simData) {
-        html += simData.html;
+        simHtml = `<div id="topic-simulator-${slug}">${simData.html}</div>`;
       } else if (window.SIMULATOR_SCRIPT_MAP?.[slug]) {
-        html += `<div class="sim-card-placeholder" data-sim-slug="${slug}"></div>`;
+        simHtml = `<div class="sim-card-placeholder" id="topic-simulator-${slug}" data-sim-slug="${slug}"></div>`;
       }
     } else if (window.SIMULATOR_SCRIPT_MAP?.[slug]) {
-      html += `<div class="sim-card-placeholder" data-sim-slug="${slug}"></div>`;
+      simHtml = `<div class="sim-card-placeholder" id="topic-simulator-${slug}" data-sim-slug="${slug}"></div>`;
     }
+    if (simHtml) articleCol += simHtml;
 
     // Interactive Practice / Challenge Exercise
     if (window.Exercises && window.Exercises.renderExercise) {
-      html += window.Exercises.renderExercise(slug, unit.title);
+      articleCol += window.Exercises.renderExercise(slug, unit.title);
     }
 
     // Key takeaways
-    if (moduleContent?.keyTakeaways?.length) {
-      html += `
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+    const hasTakeaways = Boolean(moduleContent?.keyTakeaways?.length);
+    if (hasTakeaways) {
+      articleCol += `
+        <div class="takeaways" id="topic-takeaways-${slug}">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             ${moduleContent.keyTakeaways.map(t => '<div class="takeaways__item">' + t + '</div>').join('')}
           </div>
@@ -411,23 +425,24 @@ window.Renderer = (() => {
     }
 
     // From-scratch builds, incident challenges, and architecture blueprints for this lesson
-    html += renderLessonBuilds(slug);
-    html += renderLessonChallenges(slug);
-    html += renderLessonBlueprints(slug);
+    const buildsHtml = renderLessonBuilds(slug);
+    const challengesHtml = renderLessonChallenges(slug);
+    const blueprintsHtml = renderLessonBlueprints(slug);
+    articleCol += buildsHtml + challengesHtml + blueprintsHtml;
 
     // Further reading
     if (moduleContent?.furtherReading?.length) {
-      html += `
+      articleCol += `
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             ${moduleContent.furtherReading.map(r => '<a class="further-reading__link" href="' + r.url + '" target="_blank" rel="noopener">' + icons.link + ' ' + r.title + '</a>').join('')}
           </div>
         </div>`;
     } else if (unit.archive?.sources?.length) {
-      html += `
+      articleCol += `
         <div class="further-reading">
-          <h3 class="further-reading__title">Sources</h3>
+          <h2 class="further-reading__title">Sources</h2>
           <div class="further-reading__list">
             ${unit.archive.sources.filter(s => s.startsWith('http')).map(s => '<a class="further-reading__link" href="' + s + '" target="_blank" rel="noopener">' + icons.link + ' ' + s.replace(/https?:\/\//, '').split('/').slice(0, 2).join('/') + '</a>').join('')}
           </div>
@@ -435,12 +450,59 @@ window.Renderer = (() => {
     }
 
     // Was this helpful / Report issue feedback bar
-    html += renderLessonFeedback(slug, unit);
+    articleCol += renderLessonFeedback(slug, unit);
 
     // Prev/Next navigation
-    html += renderLessonNav(slug, mod, part);
+    articleCol += renderLessonNav(slug, mod, part);
 
-    return html;
+    const rawModProg = window.Progress?.getModuleProgress
+      ? window.Progress.getModuleProgress(mod.id)
+      : { completed: 0, total: mod.units.length };
+    const modTotal = rawModProg.total || (mod.units ? mod.units.length : 10);
+    const modCompleted = rawModProg.completed || 0;
+    const modPct = modTotal > 0 ? Math.round((modCompleted / modTotal) * 100) : 0;
+
+    const tocEntries = [];
+    if (moduleContent?.intuition) tocEntries.push({ id: 'sec-intuition', label: 'Intuition first' });
+    headings.forEach(h => {
+      tocEntries.push({ id: h.id, label: h.title.replace(/^\d+\.\s*/, '') });
+    });
+    if (hasQuiz) tocEntries.push({ id: `check-slider-${slug}`, label: 'Check yourself' });
+    if (simHtml) tocEntries.push({ id: `topic-simulator-${slug}`, label: 'Interactive simulator' });
+    if (hasTakeaways) tocEntries.push({ id: `topic-takeaways-${slug}`, label: 'Key takeaways' });
+
+    const tocAside = `
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        ${tocEntries.length ? `
+          <ul class="ds-toc__list">
+            ${tocEntries.map((item, idx) => `
+              <li>
+                <a class="ds-toc__link${idx === 0 ? ' is-active' : ''}" href="#${escapeHtml(item.id)}">${escapeHtml(item.label)}</a>
+              </li>
+            `).join('')}
+          </ul>
+        ` : ''}
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module ${escapeHtml(String(mod.number))}</span>
+            <span>${modCompleted}/${modTotal} done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:${modPct}%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="${canonicalLessonUrl}" data-share-title="${escapeHtml(unit.title)} — System Design In Depth">
+            ${shareIconSvg}
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>`;
+
+    return `
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">${articleCol}</div>
+        ${tocAside}
+      </div>`;
   }
 
   // Order build files: README first, then implementation, demo, tests
@@ -467,7 +529,7 @@ window.Renderer = (() => {
     if (!builds.length) return '';
     return `
       <div class="lesson-builds">
-        <h3 class="lesson-builds__title">${icons.code} Build it from scratch — Interactive Lab &amp; Guide</h3>
+        <h2 class="lesson-builds__title">${icons.code} Build it from scratch — Interactive Lab &amp; Guide</h2>
         ${builds.map(([id, b]) => {
           const prog = window.Progress?.getBuildProgress ? window.Progress.getBuildProgress(id) : null;
           const stepCount = prog?.completedSteps?.length || 0;
@@ -500,7 +562,7 @@ window.Renderer = (() => {
     if (!challenges.length) return '';
     return `
       <div class="lesson-builds lesson-challenges">
-        <h3 class="lesson-builds__title">${icons.target} Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        <h2 class="lesson-builds__title">${icons.target} Debug This in Production — Incident Simulator &amp; Code Hotfix</h2>
         ${challenges.map(c => `
           <a class="lesson-builds__item" href="/challenges/${c.id}/" data-nav="challenges" data-challenge="${c.id}">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -522,7 +584,7 @@ window.Renderer = (() => {
     if (!bps.length) return '';
     return `
       <div class="lesson-builds lesson-blueprints">
-        <h3 class="lesson-builds__title">${icons.globe} Interactive Architecture Blueprint — Capacity Sandbox</h3>
+        <h2 class="lesson-builds__title">${icons.globe} Interactive Architecture Blueprint — Capacity Sandbox</h2>
         ${bps.map(bp => `
           <a class="lesson-builds__item" href="/sandbox/?blueprint=${bp.id}" data-nav="sandbox" data-blueprint="${bp.id}">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -550,8 +612,6 @@ window.Renderer = (() => {
     const files = orderedBuildFiles(build.files);
     const lessons = [build.primarySlug, ...(build.relatedSlugs || [])].filter(Boolean)
       .map(s => ({ slug: s, title: findUnitTitle(s) })).filter(l => l.title);
-    const demoFile = files.find(([f]) => /(^|\/)demo\.js$/i.test(f))?.[0];
-    const testFile = files.find(([f]) => /(^|\/)test\.js$/i.test(f))?.[0];
 
     let completedIds = [];
     try {
@@ -567,25 +627,33 @@ window.Renderer = (() => {
     const progressPct = Math.min(100, Math.round((completedIds.length / Math.max(1, totalSteps)) * 100));
     const difficulty = guided?.difficulty || 'Intermediate';
     const estMinutes = guided?.estimatedMinutes || 25;
+    const canonicalBuildUrl = `https://system-design-in-depth.vedgupta.in/build/${escapeHtml(buildId)}/`;
+    const shareIconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
 
     let html = `
       <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="#" data-nav="home">Home</a>
+        <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep">${icons.chevronRight}</span>
         <span class="breadcrumbs__current">${escapeHtml(build.title || buildId)}</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--build">${icons.code} From-Scratch Build</span>
         </div>
-        <h1 class="lesson-header__title">${escapeHtml(build.title || buildId.replace(/-/g, ' '))}</h1>
-        ${build.summary ? `<p class="build-summary">${escapeHtml(build.summary)}</p>` : ''}
+        <h1 class="ds-lesson-hero__title lesson-header__title">${escapeHtml(build.title || buildId.replace(/-/g, ' '))}</h1>
+        ${build.summary ? `<p class="build-summary ds-lesson-hero__promise">${escapeHtml(build.summary)}</p>` : ''}
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item">${icons.clock} ~${estMinutes} min</span>
           <span class="lesson-header__meta-item">${icons.code} ${escapeHtml(difficulty)}</span>
           ${lessons.length ? `<span class="lesson-header__meta-item">${icons.book} Lesson${lessons.length > 1 ? 's' : ''}: ${lessons.map(l =>
-            `<a href="#" data-nav="topic" data-slug="${l.slug}">${escapeHtml(l.title)}</a>`).join(', ')}</span>` : ''}
+            `<a href="/topic/${escapeHtml(l.slug)}/" data-nav="topic" data-slug="${escapeHtml(l.slug)}">${escapeHtml(l.title)}</a>`).join(', ')}</span>` : ''}
+        </div>
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="${canonicalBuildUrl}" data-share-title="${escapeHtml(build.title || buildId)} — System Design In Depth" title="Share link to this build lab">
+            ${shareIconSvg}
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
       </div>
 
@@ -663,11 +731,27 @@ window.Renderer = (() => {
 
 
   /**
-   * Render YouTube video embed (lazy-loaded)
+   * Render YouTube video embed (lazy-loaded inside collapsible disclosure)
    */
-  function renderVideoEmbed(video) {
+  function renderVideoEmbed(video, extraVideos) {
     if (!video?.youtubeId) return '';
-    return `<div class="video-main" data-video="${escapeHtml(JSON.stringify(video))}">${renderMainVideoInner(video, false)}</div>`;
+    const ch = String(video.channel || 'Reference Lecture').trim();
+    const len = video.length || video.duration || '';
+    const moreCount = Array.isArray(extraVideos) ? extraVideos.filter(v => v?.youtubeId).length : 0;
+    return `
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> ${escapeHtml(video.title || '')}</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">${escapeHtml(ch)}${len ? ' · ' + escapeHtml(len) : ''}${moreCount ? ` +${moreCount}` : ''} ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="${escapeHtml(JSON.stringify({ ...video, channel: ch }))}">${renderMainVideoInner({ ...video, channel: ch }, false)}</div>
+          ${renderMoreVideos(extraVideos)}
+        </div>
+      </details>`;
   }
 
   // Player + caption for the main video; autoplay loads the iframe straight away (used when swapping in)
@@ -803,10 +887,10 @@ window.Renderer = (() => {
     // Phase 2: Process block-level markdown syntax (code blocks & inline code are safely extracted)
     html = html
       // GitHub alerts / blockquote callouts
-      .replace(/^>\s*\[!NOTE\]\s*(.*)$/gm, '<div class="callout callout--note"><div class="callout__title">ℹ️ Note</div><p>$1</p></div>')
-      .replace(/^>\s*\[!TIP\]\s*(.*)$/gm, '<div class="callout callout--tip"><div class="callout__title">💡 Tip</div><p>$1</p></div>')
-      .replace(/^>\s*\[!WARNING\]\s*(.*)$/gm, '<div class="callout callout--warn"><div class="callout__title">⚠️ Warning</div><p>$1</p></div>')
-      .replace(/^>\s*\[!IMPORTANT\]\s*(.*)$/gm, '<div class="callout callout--danger"><div class="callout__title">❗ Important</div><p>$1</p></div>')
+      .replace(/^>\s*\[!NOTE\]\s*(.*)$/gm, '<div class="callout callout--note"><div class="callout__title">Note</div><p>$1</p></div>')
+      .replace(/^>\s*\[!TIP\]\s*(.*)$/gm, '<div class="callout callout--tip"><div class="callout__title">Tip</div><p>$1</p></div>')
+      .replace(/^>\s*\[!WARNING\]\s*(.*)$/gm, '<div class="callout callout--warn"><div class="callout__title">Warning</div><p>$1</p></div>')
+      .replace(/^>\s*\[!IMPORTANT\]\s*(.*)$/gm, '<div class="callout callout--danger"><div class="callout__title">Important</div><p>$1</p></div>')
       .replace(/^>\s*(.*)$/gm, '<blockquote><p>$1</p></blockquote>')
       // Headers
       .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
@@ -958,7 +1042,7 @@ window.Renderer = (() => {
 
     html += `
       <div class="callout callout--note">
-        <div class="callout__title">📚 Content Loading</div>
+        <div class="callout__title">Content Loading</div>
         <p>Detailed content for this topic is being prepared. In the meantime, explore the module overview and related topics in Module ${mod.number}: ${mod.title}.</p>
       </div>`;
 
@@ -982,10 +1066,10 @@ window.Renderer = (() => {
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="${slug}" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="${slug}" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="${issueUrl}" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               ${icons.github} Report an issue
@@ -1302,15 +1386,15 @@ window.Renderer = (() => {
         <span class="breadcrumbs__current">Projects</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--build">${icons.code} Open Source</span>
           <span class="tag">${projects.length} Repos</span>
         </div>
-        <h1 class="lesson-header__title">System Design Projects &amp; Architecture Case Studies</h1>
-        <div class="lesson-header__actions" style="margin-top: var(--space-3); display: flex; gap: var(--space-3); flex-wrap: wrap;">
+        <h1 class="ds-lesson-hero__title lesson-header__title">System Design Projects &amp; Architecture Case Studies</h1>
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="margin-top: var(--space-3); display: flex; gap: var(--space-3); flex-wrap: wrap;">
           <a href="/" data-nav="home" class="btn btn--sm btn--secondary">← Back to Curriculum</a>
-          <a href="https://code-lab-3dr.pages.dev" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--primary">${icons.code} Launch CodeLab Cloud IDE</a>
+          <a href="https://code-lab.vedgupta.in/" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--primary">${icons.code} Launch CodeLab Cloud IDE</a>
         </div>
       </div>
 
@@ -1338,15 +1422,15 @@ window.Renderer = (() => {
         <span class="breadcrumbs__current">Glossary</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">Reference</span>
           <span class="tag">${glossary.length} Terms</span>
         </div>
-        <h1 class="lesson-header__title">System Design Glossary</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">System Design Glossary</h1>
         <p class="hero__subtitle" style="margin-top:0.5rem;">Essential distributed systems, database, networking, and architecture definitions.</p>
         <div style="margin-top:1rem;">
-          <input type="text" id="glossary-filter" data-action="filter-glossary" placeholder="Filter terms (e.g. cache, consensus, replication)..." style="width:100%; max-width:400px; padding:0.5rem 0.75rem; background:var(--bg-surface,#222); border:1px solid var(--border-color,#333); border-radius:6px; color:inherit; font-size:13px;">
+          <input type="text" id="glossary-filter" data-action="filter-glossary" placeholder="Filter terms (e.g. cache, consensus, replication)..." style="width:100%; max-width:400px; padding:0.5rem 0.75rem; background:var(--surface); border:1px solid var(--border-strong); border-radius:6px; color:inherit; font-size:13px;">
         </div>
       </div>
 
@@ -1355,12 +1439,12 @@ window.Renderer = (() => {
 
     for (const item of glossary) {
       html += `
-        <div class="glossary-item" style="padding:1rem; border:1px solid var(--border-color,#333); border-radius:6px; background:var(--bg-card,#191a1c);">
+        <div class="glossary-item" style="padding:1rem; border:1px solid var(--border); border-radius:6px; background:var(--surface);">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
-            <strong style="font-size:15px; color:var(--fg,#fff);">${escapeHtml(item.term)}</strong>
+            <strong style="font-size:15px; color:var(--fg);">${escapeHtml(item.term)}</strong>
             <span class="badge badge--secondary" style="font-size:11px;">${escapeHtml(item.cat || 'General')}</span>
           </div>
-          <p style="margin:0.25rem 0 0; font-size:13px; color:var(--fg-muted,#aaa); line-height:1.5;">${escapeHtml(item.def)}</p>
+          <p style="margin:0.25rem 0 0; font-size:13px; color:var(--fg-muted); line-height:1.5;">${escapeHtml(item.def)}</p>
         </div>
       `;
     }
@@ -1396,21 +1480,21 @@ window.Renderer = (() => {
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep">${icons.chevronRight}</span>
-        <a href="#topic/${targetMod.units[0]?.slug}">Module ${targetMod.number}</a>
+        <a href="/topic/${targetMod.units[0]?.slug}/" data-nav="topic" data-slug="${targetMod.units[0]?.slug}">Module ${targetMod.number}</a>
         <span class="breadcrumbs__sep">${icons.chevronRight}</span>
         <span class="breadcrumbs__current">Cheat Sheet</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">Module ${targetMod.number}</span>
           <span class="tag">Printable</span>
         </div>
-        <h1 class="lesson-header__title">${targetMod.title} — Cheat Sheet</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">${targetMod.title} — Cheat Sheet</h1>
         <p class="hero__subtitle" style="margin-top:0.5rem;">${targetMod.summary}</p>
-        <div class="lesson-header__actions" style="margin-top:1rem;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="margin-top:1rem;">
           <button class="btn btn--sm btn--primary" data-action="window-print">
-            🖨️ Print / Save as PDF
+            Print / Save as PDF
           </button>
         </div>
       </div>
@@ -1422,14 +1506,14 @@ window.Renderer = (() => {
       const c = modContent[unit.slug];
       const takeaways = c?.keyTakeaways || [];
       html += `
-        <div style="padding:1.25rem; border:1px solid var(--border-color,#333); border-radius:8px; background:var(--bg-card,#191a1c);">
+        <div style="padding:1.25rem; border:1px solid var(--border); border-radius:8px; background:var(--surface);">
           <h3 style="font-size:16px; margin:0 0 0.5rem; display:flex; justify-content:space-between;">
             <span>${unit.title}</span>
-            <a href="#topic/${unit.slug}" style="font-size:12px; color:var(--accent,#6366f1); text-decoration:none;">View Lesson →</a>
+            <a href="/topic/${unit.slug}/" data-nav="topic" data-slug="${unit.slug}" style="font-size:12px; color:var(--accent); text-decoration:none;">View Lesson →</a>
           </h3>
           ${takeaways.length ? `
-            <div style="font-size:12px; font-weight:700; color:var(--fg-muted,#888); margin-bottom:0.25rem;">KEY TAKEAWAYS:</div>
-            <ul style="margin:0; padding-left:1.25rem; font-size:13px; color:var(--fg-muted,#ccc); line-height:1.5;">
+            <div style="font-size:12px; font-weight:700; color:var(--fg-muted); margin-bottom:0.25rem;">KEY TAKEAWAYS:</div>
+            <ul style="margin:0; padding-left:1.25rem; font-size:13px; color:var(--fg-muted); line-height:1.5;">
               ${takeaways.map(t => `<li style="margin-bottom:0.25rem;">${escapeHtml(t)}</li>`).join('')}
             </ul>
           ` : '<p style="font-size:12px; color:var(--fg-muted);">Deep unit content available in lesson.</p>'}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>API design contracts — System Design In Depth</title>
   <meta name="description" content="An API is like the shape of an electrical socket. Once millions of plugs are made for it, you can add a USB port beside it, but you cannot move the pins.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="API design contracts — System Design In Depth">
   <meta property="og:description" content="An API is like the shape of an electrical socket. Once millions of plugs are made for it, you can add a USB port beside it, but you cannot move the pins.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/api-design-contracts/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-api-design-contracts.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="API design contracts — System Design In Depth">
   <meta name="twitter:description" content="An API is like the shape of an electrical socket. Once millions of plugs are made for it, you can add a USB port beside it, but you cannot move the pins.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-api-design-contracts.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/api-design-contracts/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "API design contracts",
+  "description": "An API is like the shape of an electrical socket. Once millions of plugs are made for it, you can add a USB port beside it, but you cannot move the pins.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-api-design-contracts.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/api-design-contracts/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="api-design-contracts">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,66 @@
         <span class="breadcrumbs__current">API design contracts</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">api</span> <span class="tag">contracts</span>
         </div>
-        <h1 class="lesson-header__title">API design contracts</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">API design contracts</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 3.1: Network Protocols & Service Communication</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="api-design-contracts">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-apis-services" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/api-design-contracts/" data-share-title="API design contracts — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;IEe-5VOv0Js&quot;,&quot;title&quot;:&quot;The principles behind great API design | Stripe Sessions 2019&quot;,&quot;channel&quot;:&quot;Stripe&quot;,&quot;why&quot;:&quot;Stripe, whose API is widely treated as the reference for evolvable public contracts, explains how they design resources, keep backward compatibility and version without breaking existing integrations.&quot;,&quot;length&quot;:&quot;30:26&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>An API is like the shape of an electrical socket. Once millions of plugs are made for it, you can add a USB port beside it, but you cannot move the pins. Clients you do not control, such as old mobile app versions and partners' scripts, will keep using the old shape for years.</p> <p><strong>Mental model:</strong> <em>a contract is everything a client can observe and rely on</em>: field names and types, status codes, error format, ordering, pagination, retry safety and timing. Additive changes are usually safe; removing, renaming or changing meaning breaks someone.</p></p>
+<ul>
+<li><strong>Silent meaning changes:</strong> keeping the field <code>amount</code> but switching it from dollars to cents breaks clients without any schema error.</li>
+<li><strong>Unsafe retries:</strong> a <code>POST /payments</code> that times out cannot be safely retried unless the API accepts an idempotency key.</li>
+<li><strong>Ad hoc errors:</strong> returning 200 with <code>{"error": ...}</code> or free-text messages forces fragile client parsing; use proper status codes and one structured error format.</li>
+<li><strong>Unbounded lists:</strong> list endpoints without pagination work in testing and fail in production.</li>
+<p></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-api-design-contracts">
+        <button class="audio-player__play-btn" id="audio-btn-api-design-contracts" data-action="toggle-audio" data-slug="api-design-contracts" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-api-design-contracts" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-api-design-contracts" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-api-design-contracts">0:00 / 3:42</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="api-design-contracts" id="audio-track-api-design-contracts">
+          <div class="audio-player__progress" id="audio-bar-api-design-contracts" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="api-design-contracts" id="audio-speed-api-design-contracts" title="Playback speed">1x</button>
+        <audio id="audio-api-design-contracts" src="audio/api-design-contracts.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> The principles behind great API design | Stripe Sessions 2019</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Stripe · 30:26 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;IEe-5VOv0Js&quot;,&quot;title&quot;:&quot;The principles behind great API design | Stripe Sessions 2019&quot;,&quot;channel&quot;:&quot;Stripe&quot;,&quot;why&quot;:&quot;Stripe, whose API is widely treated as the reference for evolvable public contracts, explains how they design resources, keep backward compatibility and version without breaking existing integrations.&quot;,&quot;length&quot;:&quot;30:26&quot;}">
       <div class="video-embed" id="video-IEe-5VOv0Js"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="IEe-5VOv0Js">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/IEe-5VOv0Js/hqdefault.jpg"
                alt="The principles behind great API design | Stripe Sessions 2019"
@@ -877,6 +944,7 @@
         </a>
       </div>
       <p class="video-embed__why">Stripe, whose API is widely treated as the reference for evolvable public contracts, explains how they design resources, keep backward compatibility and version without breaking existing integrations.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,36 +979,12 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>An API is like the shape of an electrical socket. Once millions of plugs are made for it, you can add a USB port beside it, but you cannot move the pins. Clients you do not control, such as old mobile app versions and partners' scripts, will keep using the old shape for years.</p> <p><strong>Mental model:</strong> <em>a contract is everything a client can observe and rely on</em>: field names and types, status codes, error format, ordering, pagination, retry safety and timing. Additive changes are usually safe; removing, renaming or changing meaning breaks someone.</p></p>
-<ul>
-<li><strong>Silent meaning changes:</strong> keeping the field <code>amount</code> but switching it from dollars to cents breaks clients without any schema error.</li>
-<li><strong>Unsafe retries:</strong> a <code>POST /payments</code> that times out cannot be safely retried unless the API accepts an idempotency key.</li>
-<li><strong>Ad hoc errors:</strong> returning 200 with <code>{"error": ...}</code> or free-text messages forces fragile client parsing; use proper status codes and one structured error format.</li>
-<li><strong>Unbounded lists:</strong> list endpoints without pagination work in testing and fail in production.</li>
-<p></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-api-design-contracts">
-        <button class="audio-player__play-btn" id="audio-btn-api-design-contracts" data-action="toggle-audio" data-slug="api-design-contracts" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-api-design-contracts" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-api-design-contracts" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-api-design-contracts">0:00 / 3:42</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="api-design-contracts" id="audio-track-api-design-contracts">
-          <div class="audio-player__progress" id="audio-bar-api-design-contracts" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="api-design-contracts" id="audio-speed-api-design-contracts" title="Playback speed">1x</button>
-        <audio id="audio-api-design-contracts" src="audio/api-design-contracts.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>Under the Hood: The API as a Long-Lived Network Contract</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">Under the Hood: The API as a Long-Lived Network Contract</h2>
       <p>An API contract is not merely a collection of JSON payloads and HTTP routes; it is a long-lived interface boundary between independent deployment lifecycles. It can evolve through additive, backward-compatible changes, but existing behaviour must not break. In distributed systems, breaking changes deployed to an API immediately cascade into client crashes, silent data corruption, or catastrophic transaction drops.</p>
 
-      <h2>The Life of an API Contract Across Lifecycles</h2>
+      <h2 id="topic-sec-2">The Life of an API Contract Across Lifecycles</h2>
       <div class="mermaid">
 flowchart TD
     ClientApp["Mobile / Browser Client (v1.2.0)"] -->|"POST /v1/orders (Strict Schema)"| APIGateway["API Gateway & Validation Filter"]
@@ -951,7 +995,7 @@ flowchart TD
     Service -->|"Idempotent Execution with Lock"| DB[("Orders DB")]
       </div>
 
-      <h2>Core Elements of Production-Grade API Contracts</h2>
+      <h2 id="topic-sec-3">Core Elements of Production-Grade API Contracts</h2>
       <h3>1. Idempotency Key Semantics</h3>
       <p>Network timeouts leave callers in an ambiguous state: did the server crash before executing the mutation, or was the response lost in flight? Non-idempotent mutating endpoints (typically <code>POST</code>, and <code>PATCH</code> when it is not naturally idempotent) should accept an <code>Idempotency-Key</code> header, an IETF draft (draft-ietf-httpapi-idempotency-key-header) popularised by Stripe. The server records the key alongside the HTTP response within a single atomic database transaction. Retried requests with the identical key and a matching request body bypass business logic and replay the cached HTTP response; reusing a key with a different body is rejected as an error.</p>
 
@@ -962,12 +1006,12 @@ flowchart TD
       <p>APIs should return uniform machine-readable error responses containing a <code>type</code> URI, human-readable <code>title</code>, HTTP <code>status</code>, granular <code>detail</code>, and a correlation <code>instance</code> trace ID to eliminate ambiguous ad-hoc client parsing.</p>
     
 <!-- enriched -->
-<h2>Worked example: evolving a create-link endpoint</h2>
+<h2 id="topic-sec-4">Worked example: evolving a create-link endpoint</h2>
 <p>Version 1 of the shortener API is <code>POST /v1/links</code> with body <code>{"url": "https://example.com/a"}</code> returning <code>201 Created</code> and <code>{"code": "Ab3xY9", "url": "..."}</code>.</p>
 <p><strong>Safe change:</strong> add an optional <code>expires_at</code> request field and a new <code>created_at</code> response field. Old clients ignore <code>created_at</code> (if they are tolerant readers) and never send <code>expires_at</code>, so their behaviour is unchanged.</p>
 <p><strong>Breaking changes:</strong> renaming <code>url</code> to <code>destination</code>, making <code>expires_at</code> required, changing the code length that clients validate with a regex, or returning 200 instead of 201. Each needs either a new version or a migration period where both forms are accepted.</p>
 <p><strong>Retry safety:</strong> the client sends <code>Idempotency-Key: 5f2c...</code>. The server stores the key, a hash of the request body and the final response in the same transaction as the link insert. A retry with the same key and body returns the stored response; the same key with a different body returns an error (for example 422) so accidental key reuse is detected. Keys expire after a retention window, for example 24 hours at Stripe.</p>
-<h2>Compatibility rules at a glance</h2>
+<h2 id="topic-sec-5">Compatibility rules at a glance</h2>
 <table>
 <thead><tr><th>Change</th><th>Usually safe?</th><th>Notes</th></tr></thead>
 <tbody>
@@ -980,20 +1024,20 @@ flowchart TD
 <tr><td>Tighten validation</td><td>No</td><td>Previously accepted requests start failing</td></tr>
 </tbody>
 </table>
-<h2>Standard building blocks</h2>
+<h2 id="topic-sec-6">Standard building blocks</h2>
 <ul>
 <li><strong>Errors:</strong> RFC 9457 Problem Details (which obsoletes RFC 7807) defines a JSON error body with <code>type</code>, <code>title</code>, <code>status</code>, <code>detail</code> and <code>instance</code>.</li>
 <li><strong>Deprecation:</strong> the <code>Sunset</code> header (RFC 8594) announces when a resource will stop working; the <code>Deprecation</code> header (RFC 9745) signals that it is deprecated now.</li>
 <li><strong>Idempotency:</strong> the <code>Idempotency-Key</code> header is an IETF draft, popularised by Stripe; many providers implement it.</li>
 <li><strong>Versioning:</strong> URL versions (<code>/v1</code>) are simple and visible; Stripe uses dated versions pinned per account with a request header to override, translating responses between versions internally.</li>
 </ul>
-<h2>Failure modes</h2>
+<h2 id="topic-sec-7">Failure modes</h2>
 <ul>
 <li>Idempotency record written outside the business transaction: a crash between the two lets a retry perform the action twice.</li>
 <li>Concurrent retries with the same key both running: lock on the key or insert it first with an in-progress status.</li>
 <li>Deprecation announced but never measured: log which clients still call old fields before removing them.</li>
 </ul>
-</div></article>
+</div></article><div id="check-slider-api-design-contracts">
       <section class="check-slider" data-slug="api-design-contracts" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1265,15 +1309,15 @@ flowchart TD
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-api-design-contracts">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">API contracts are long-lived boundaries that evolve additively; changing an existing field breaks older mobile and third-party clients.</div><div class="takeaways__item">Idempotency keys allow safe client retries by caching transaction outcomes and replaying responses.</div><div class="takeaways__item">Use RFC 9457 Problem Details and RFC 8594 Sunset headers for predictable error handling and deprecations.</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://stripe.com/blog/idempotency" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Stripe: Designing Robust and Predictable APIs with Idempotency</a><a class="further-reading__link" href="https://www.rfc-editor.org/rfc/rfc9457" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> RFC 9457: Problem Details for HTTP APIs</a>
           </div>
@@ -1286,10 +1330,10 @@ flowchart TD
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="api-design-contracts" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="api-design-contracts" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20API%20design%20contracts&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20API%20design%20contracts%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fapi-design-contracts%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1302,9 +1346,96 @@ flowchart TD
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/service-to-service-communication/" data-nav="topic" data-slug="service-to-service-communication">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Service-to-service communication</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Under the Hood: The API as a Long-Lived Network Contract</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">The Life of an API Contract Across Lifecycles</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Core Elements of Production-Grade API Contracts</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Worked example: evolving a create-link endpoint</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Compatibility rules at a glance</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Standard building blocks</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Failure modes</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-api-design-contracts">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-api-design-contracts">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 3.1</span>
+            <span>0/13 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/api-design-contracts/" data-share-title="API design contracts — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1312,7 +1443,7 @@ flowchart TD
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1366,7 +1497,7 @@ flowchart TD
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1375,8 +1506,8 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1384,30 +1515,9 @@ flowchart TD
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "API design contracts",
-  "description": "An API is like the shape of an electrical socket. Once millions of plugs are made for it, you can add a USB port beside it, but you cannot move the pins.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/api-design-contracts/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

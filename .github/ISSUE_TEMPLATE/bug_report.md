@@ -1,33 +1,22 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-title: ''
+about: Report a broken simulator, build lab, layout glitch, or routing issue
+title: "[Bug] "
 labels: bug
-assignees: ''
-
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## What happened?
+A concise description of the bug.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+## Steps to reproduce
+1. Go to `https://system-design-in-depth.vedgupta.in/...`
+2. Click / adjust ...
+3. Observe ...
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Expected behavior
+What should have happened instead.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
-**Environment (please complete the following information):**
- - OS: [e.g. Mac, Windows, Linux]
- - Browser: [e.g. Chrome, Safari, Firefox]
- - Version: [e.g. 22]
- - Access Method: [file:// protocol or HTTP server]
-
-**Additional context**
-Add any other context about the problem here.
+## Environment
+- Browser & version:
+- OS & viewport (desktop / mobile):
+- Theme (`light` / `dark`):

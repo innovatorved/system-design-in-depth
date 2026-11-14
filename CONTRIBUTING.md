@@ -1,36 +1,56 @@
-# Contributing to System Design In-Depth
+# Contributing to System Design In Depth
 
-Welcome! System Design In-Depth is a zero-build vanilla JS learning platform designed to be explored directly from the file system.
+Thank you for helping improve **System Design In Depth**! Whether you are fixing a formula, clarifying a distributed protocol edge case, improving simulator accessibility, or adding a primary-source citation, contributions are very welcome.
 
-## Prerequisites
-- A modern web browser
-- A text editor
-- (Optional but recommended) Node.js for running validation scripts
+---
 
-## Running Locally
-Since this project uses no build tools or bundlers, running it locally is incredibly simple:
-1. Clone the repository.
-2. Open `index.html` directly in your browser (`file://` protocol), OR serve the directory with any basic static HTTP server (e.g., `python -m http.server`, `npx serve`).
+## Ways to Contribute
 
-## Content Contribution Guidelines
-If you are contributing content (modules, units):
-- **Voice and Depth:** Match the existing voice and technical depth.
-- **Unit Requirements:** Every unit needs substantial content, 3-5 key takeaways, and 2-4 further reading items.
-- **Validation:** Always run `node tools/validate.js` locally before submitting to ensure data integrity.
+1. **Fix factual inaccuracies or typos** in `data/content/*.js`, `data/archive/*.js`, or `data/questions/*.js`.
+2. **Improve visual simulators or exercises** in `js/simulators*.js` and `js/exercises.js`.
+3. **Refine from-scratch build labs** in `data/implementations_code.js` and `data/guided_labs.js`.
+4. **Enhance UI/UX, performance, and keyboard/screen-reader accessibility** following [`DESIGN.md`](DESIGN.md).
 
-## Code Contribution Guidelines
-If you are contributing to the platform code:
-- **No Build Step:** No bundlers, compilers, or npm runtime dependencies.
-- **Tech Stack:** Vanilla HTML/CSS/JS, ES2020.
-- **Modules:** Use IIFE modules assigned to `window.*`.
-- **Data Files:** Must be plain `.js` files that assign to window globals (e.g., `window.DATA_NAME = ...`). This ensures they work via `file://` protocol without CORS issues.
-- **State:** State persists only in `localStorage`.
-- **Cache-busting:** After changing any JS, CSS or data file, run `node tools/stamp-assets.js`. It rewrites the `?v=<hash>` on every script/stylesheet tag in `index.html` and `projects/index.html`. `_headers` caches those files as immutable for a year, so an unstamped change would not reach returning visitors. The validator fails if stamps are stale.
+Please read [`docs/editorial-policy.md`](docs/editorial-policy.md) before submitting curriculum prose: all technical claims must be grounded in primary papers, RFCs, textbooks, or public engineering postmortems.
 
-## PR Checklist
-Before submitting a Pull Request, ensure:
-- [ ] `node tools/stamp-assets.js` has been run after your last JS/CSS/data change
-- [ ] `node tools/validate.js` exits 0 without errors
-- [ ] No new runtime dependencies were introduced
-- [ ] Tested and working in a browser from the `file://` protocol
-- [ ] Content matches the voice/depth of existing units
+---
+
+## Local Workflow
+
+1. **Fork and clone** the repository:
+   ```bash
+   git clone https://github.com/<your-username>/system-design-in-depth.git
+   cd system-design-in-depth
+   ```
+2. **Preview locally** with any static server:
+   ```bash
+   npm run serve
+   # Open http://localhost:8000
+   ```
+3. **Regenerate static pages and asset hashes** whenever you edit HTML, CSS, JS, or curriculum data:
+   ```bash
+   npm run prerender
+   npm run build
+   ```
+   *(Note: `npm run prerender` automatically re-runs `tools/stamp-assets.js` so all `?v=` hashes stay synchronized.)*
+4. **Run the quality gates** before opening a pull request:
+   ```bash
+   npm test
+   npm run stamp:check
+   ```
+
+Both commands must exit with `0 errors` and `0 stale files`.
+
+---
+
+## Design & Accessibility Standards
+
+- Use semantic design tokens from `design-system/tokens.css` and `css/variables.css` — never hardcode `#000000` dark surfaces or raw hex colors inside components.
+- Verify layouts in both **Light (`Warm Neutral Paper #F7F7F5`)** and **Dark (`Neutral Charcoal #0F0F10`)** themes at desktop (`1440px`) and mobile (`390px`) widths.
+- Do not use decorative emojis as UI chrome; use crisp inline SVG icons with `aria-hidden="true"` and explicit accessible labels on interactive controls.
+
+---
+
+## Licensing of Contributions
+
+By submitting a pull request, you agree that your code contributions are licensed under the [MIT License](LICENSE) and your curriculum/documentation contributions are licensed under [CC BY 4.0](LICENSE).

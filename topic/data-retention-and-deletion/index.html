@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Data retention, deletion, and privacy — System Design In Depth</title>
   <meta name="description" content="Deleting a user from a distributed system is like trying to get a rumour forgotten. Deleting it from the one person who first heard it is easy.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Data retention, deletion, and privacy — System Design In Depth">
   <meta property="og:description" content="Deleting a user from a distributed system is like trying to get a rumour forgotten. Deleting it from the one person who first heard it is easy.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/data-retention-and-deletion/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-data-retention-and-deletion.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Data retention, deletion, and privacy — System Design In Depth">
   <meta name="twitter:description" content="Deleting a user from a distributed system is like trying to get a rumour forgotten. Deleting it from the one person who first heard it is easy.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-data-retention-and-deletion.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/data-retention-and-deletion/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Data retention, deletion, and privacy",
+  "description": "Deleting a user from a distributed system is like trying to get a rumour forgotten. Deleting it from the one person who first heard it is easy.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-data-retention-and-deletion.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/data-retention-and-deletion/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="data-retention-and-deletion">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Data retention, deletion, and privacy</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">deletion</span> <span class="tag">privacy</span>
         </div>
-        <h1 class="lesson-header__title">Data retention, deletion, and privacy</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Data retention, deletion, and privacy</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 5 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 5.1: Production Reliability, SLOs & Resilience</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 18, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="data-retention-and-deletion">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-reliability-ops" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/data-retention-and-deletion/" data-share-title="Data retention, deletion, and privacy — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;9r1WbIIPp94&quot;,&quot;title&quot;:&quot;PEPR 2021: Session 4.1 - Deletion Framework: How Facebook Upholds its Commitments To Data Deletion&quot;,&quot;channel&quot;:&quot;FutureofPrivacy&quot;,&quot;why&quot;:&quot;Meta engineers describe DELF, their production system for deleting data reliably across many data stores. It is a direct match for the distributed deletion problem in the lesson.&quot;,&quot;length&quot;:&quot;20:12&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Deleting a user from a distributed system is like trying to get a rumour forgotten. Deleting it from the one person who first heard it is easy. Finding every friend, group chat and notebook it spread to is the hard part. The practical approach is to <strong>know in advance where it will spread</strong> (a data inventory), to have each place <strong>subscribe to a "forget this" announcement</strong>, and, for records that cannot be changed, to <strong>write them in a code whose key you can burn</strong>.</p><p><strong>Mental model:</strong> deletion is a workflow with an audit trail, not a single SQL statement. It fans out to every copy, retries until each one confirms, and can prove afterwards that it finished.</p><ul><li><strong>Trap: forgetting derived copies.</strong> Search indexes, caches, analytics tables, ML feature stores, logs and exports to vendors all hold copies of personal data.</li><li><strong>Trap: treating a soft delete as erasure.</strong> A <code>deleted_at</code> flag hides a row from users, but the personal data is still there. It is a first step before the actual erasure.</li><li><strong>Trap: crypto-shredding with a leaked key.</strong> Destroying the key only works if no plaintext copies and no other key copies exist, including old KMS key versions and cached data keys.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-data-retention-and-deletion">
+        <button class="audio-player__play-btn" id="audio-btn-data-retention-and-deletion" data-action="toggle-audio" data-slug="data-retention-and-deletion" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-data-retention-and-deletion" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-data-retention-and-deletion" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-data-retention-and-deletion">0:00 / 3:08</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="data-retention-and-deletion" id="audio-track-data-retention-and-deletion">
+          <div class="audio-player__progress" id="audio-bar-data-retention-and-deletion" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="data-retention-and-deletion" id="audio-speed-data-retention-and-deletion" title="Playback speed">1x</button>
+        <audio id="audio-data-retention-and-deletion" src="audio/data-retention-and-deletion.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> PEPR 2021: Session 4.1 - Deletion Framework: How Facebook Upholds its Commitments To Data Deletion</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">FutureofPrivacy · 20:12 +1 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;9r1WbIIPp94&quot;,&quot;title&quot;:&quot;PEPR 2021: Session 4.1 - Deletion Framework: How Facebook Upholds its Commitments To Data Deletion&quot;,&quot;channel&quot;:&quot;FutureofPrivacy&quot;,&quot;why&quot;:&quot;Meta engineers describe DELF, their production system for deleting data reliably across many data stores. It is a direct match for the distributed deletion problem in the lesson.&quot;,&quot;length&quot;:&quot;20:12&quot;}">
       <div class="video-embed" id="video-9r1WbIIPp94"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="9r1WbIIPp94">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/9r1WbIIPp94/hqdefault.jpg"
                alt="PEPR 2021: Session 4.1 - Deletion Framework: How Facebook Upholds its Commitments To Data Deletion"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">Meta engineers describe DELF, their production system for deleting data reliably across many data stores. It is a direct match for the distributed deletion problem in the lesson.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -896,30 +958,12 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Deleting a user from a distributed system is like trying to get a rumour forgotten. Deleting it from the one person who first heard it is easy. Finding every friend, group chat and notebook it spread to is the hard part. The practical approach is to <strong>know in advance where it will spread</strong> (a data inventory), to have each place <strong>subscribe to a "forget this" announcement</strong>, and, for records that cannot be changed, to <strong>write them in a code whose key you can burn</strong>.</p><p><strong>Mental model:</strong> deletion is a workflow with an audit trail, not a single SQL statement. It fans out to every copy, retries until each one confirms, and can prove afterwards that it finished.</p><ul><li><strong>Trap: forgetting derived copies.</strong> Search indexes, caches, analytics tables, ML feature stores, logs and exports to vendors all hold copies of personal data.</li><li><strong>Trap: treating a soft delete as erasure.</strong> A <code>deleted_at</code> flag hides a row from users, but the personal data is still there. It is a first step before the actual erasure.</li><li><strong>Trap: crypto-shredding with a leaked key.</strong> Destroying the key only works if no plaintext copies and no other key copies exist, including old KMS key versions and cached data keys.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-data-retention-and-deletion">
-        <button class="audio-player__play-btn" id="audio-btn-data-retention-and-deletion" data-action="toggle-audio" data-slug="data-retention-and-deletion" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-data-retention-and-deletion" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-data-retention-and-deletion" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-data-retention-and-deletion">0:00 / 3:08</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="data-retention-and-deletion" id="audio-track-data-retention-and-deletion">
-          <div class="audio-player__progress" id="audio-bar-data-retention-and-deletion" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="data-retention-and-deletion" id="audio-speed-data-retention-and-deletion" title="Playback speed">1x</button>
-        <audio id="audio-data-retention-and-deletion" src="audio/data-retention-and-deletion.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>Under the Hood: The Distributed Deletion Challenge</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">Under the Hood: The Distributed Deletion Challenge</h2>
       <p>Deleting data in a single SQL table with <code>DELETE FROM users WHERE id = ?</code> is trivial; deleting user data across a distributed system with dozens of microservices, read replicas, search clusters, message queues, and append-only backups is one of the hardest operational challenges in software engineering. Regulatory mandates like GDPR (Right to Erasure) and CCPA require verified permanent erasure within legal windows (GDPR: without undue delay and within one month, extendable by two further months; CCPA: 45 days, extendable once by 45 more).</p>
 
-      <h2>Distributed Deletion Orchestration Pipeline</h2>
+      <h2 id="topic-sec-2">Distributed Deletion Orchestration Pipeline</h2>
       <div class="mermaid">
 sequenceDiagram
     autonumber
@@ -940,7 +984,7 @@ sequenceDiagram
     Orch->>User: 202 Accepted (Audit Receipt Generated)
       </div>
 
-      <h2>Core Production Deletion Mechanics</h2>
+      <h2 id="topic-sec-3">Core Production Deletion Mechanics</h2>
       <h3>1. Tombstones and the Data Resurrection Hazard</h3>
       <p>In distributed LSM-tree and wide-column databases (Cassandra, Bigtable, RocksDB), deletes are not in-place physical overwrites. Instead, the storage engine writes a special marker record called a <strong>Tombstone</strong>. If a node is down during deletion and repairs after the tombstone's Garbage Collection Grace Period (<code>gc_grace_seconds</code>) expires, the resurrected old data is propagated back to healthy nodes as valid state. Production systems strictly coordinate repair intervals to occur well within tombstone expiration limits.</p>
 
@@ -951,8 +995,8 @@ sequenceDiagram
       <p>Data that is not retained cannot be breached. Production systems configure strict Time-To-Live (TTL) policies at the database layer (PostgreSQL partitioned table dropping, DynamoDB TTL attributes, Redis key expirations) to automatically purge ephemeral audit logs, session records, and abandoned shopping carts without manual batch scripts.</p>
     
 <!-- enriched -->
-<h2>Retention schedule: decide the lifetime of data when you create it</h2><table><thead><tr><th>Data class</th><th>Example retention</th><th>Mechanism</th><th>Notes</th></tr></thead><tbody><tr><td>Session tokens</td><td>Hours to 30 days</td><td>Redis TTL, DynamoDB TTL</td><td>DynamoDB TTL deletes are asynchronous and typically happen within a few days of expiry, so filter expired items on read</td></tr><tr><td>Application logs containing personal data</td><td>14 to 30 days</td><td>Index lifecycle policies, bucket lifecycle rules</td><td>Mask or hash identifiers at ingestion where possible</td></tr><tr><td>Analytics events</td><td>13 months, then aggregate</td><td>Dropping date partitions</td><td><code>DROP PARTITION</code> is instant; a row-by-row <code>DELETE</code> on billions of rows is not</td></tr><tr><td>Financial records</td><td>Often 7 or more years (jurisdiction-specific)</td><td>WORM storage</td><td>Legal holds and retention obligations can override an erasure request for specific fields</td></tr><tr><td>Backups</td><td>30 to 35 days</td><td>Expiry plus crypto-shredding</td><td>Tell users that data in backups expires within the stated window</td></tr></tbody></table><h2>Worked example: an erasure request across 7 systems</h2><p>A user's erasure request is published as a <code>user.erased</code> event. Each system that holds user data registers a deletion handler and must report completion:</p><ul><li>Primary database: hard delete, or anonymise rows that must be kept for referential integrity (orders become "deleted user").</li><li>Search index: delete by <code>user_id</code>. Segment merges physically remove the documents later.</li><li>Cache: invalidate keys, or wait out a short TTL.</li><li>Data warehouse: rewrite the affected partitions, or use table-format deletes (Iceberg or Delta) followed by compaction and snapshot expiry. Old snapshots still contain the data until they expire.</li><li>Object storage: delete the objects, including <em>all versions</em> if bucket versioning is on.</li><li>Third-party processors: call their deletion APIs and record the confirmation.</li><li>Backups: destroy the user's data key, or let backups age out within the documented window.</li></ul><p>The orchestrator tracks each handler's status and retries failures with backoff. It raises an alert if any handler has not completed by, for example, day 20, which leaves margin before a one-month deadline. Meta's DELF framework goes further: it requires every new data type to declare how it is deleted, and checks for data that was missed.</p><h2>Failure modes</h2><ul><li><strong>Resurrection:</strong> a stale replica, a cache refill from an old snapshot, or a Cassandra node that rejoins after <code>gc_grace_seconds</code> can bring deleted data back. Run repairs within the grace period.</li><li><strong>Orphaned identifiers:</strong> deleting the user row but leaving their ID in event logs can let someone re-identify them by joining with another dataset.</li><li><strong>Deleting audit evidence:</strong> keep a minimal, non-personal record that the deletion happened (a request ID, a timestamp and which systems confirmed), not the data itself.</li></ul>
-</div></article>
+<h2 id="topic-sec-4">Retention schedule: decide the lifetime of data when you create it</h2><table><thead><tr><th>Data class</th><th>Example retention</th><th>Mechanism</th><th>Notes</th></tr></thead><tbody><tr><td>Session tokens</td><td>Hours to 30 days</td><td>Redis TTL, DynamoDB TTL</td><td>DynamoDB TTL deletes are asynchronous and typically happen within a few days of expiry, so filter expired items on read</td></tr><tr><td>Application logs containing personal data</td><td>14 to 30 days</td><td>Index lifecycle policies, bucket lifecycle rules</td><td>Mask or hash identifiers at ingestion where possible</td></tr><tr><td>Analytics events</td><td>13 months, then aggregate</td><td>Dropping date partitions</td><td><code>DROP PARTITION</code> is instant; a row-by-row <code>DELETE</code> on billions of rows is not</td></tr><tr><td>Financial records</td><td>Often 7 or more years (jurisdiction-specific)</td><td>WORM storage</td><td>Legal holds and retention obligations can override an erasure request for specific fields</td></tr><tr><td>Backups</td><td>30 to 35 days</td><td>Expiry plus crypto-shredding</td><td>Tell users that data in backups expires within the stated window</td></tr></tbody></table><h2 id="topic-sec-5">Worked example: an erasure request across 7 systems</h2><p>A user's erasure request is published as a <code>user.erased</code> event. Each system that holds user data registers a deletion handler and must report completion:</p><ul><li>Primary database: hard delete, or anonymise rows that must be kept for referential integrity (orders become "deleted user").</li><li>Search index: delete by <code>user_id</code>. Segment merges physically remove the documents later.</li><li>Cache: invalidate keys, or wait out a short TTL.</li><li>Data warehouse: rewrite the affected partitions, or use table-format deletes (Iceberg or Delta) followed by compaction and snapshot expiry. Old snapshots still contain the data until they expire.</li><li>Object storage: delete the objects, including <em>all versions</em> if bucket versioning is on.</li><li>Third-party processors: call their deletion APIs and record the confirmation.</li><li>Backups: destroy the user's data key, or let backups age out within the documented window.</li></ul><p>The orchestrator tracks each handler's status and retries failures with backoff. It raises an alert if any handler has not completed by, for example, day 20, which leaves margin before a one-month deadline. Meta's DELF framework goes further: it requires every new data type to declare how it is deleted, and checks for data that was missed.</p><h2 id="topic-sec-6">Failure modes</h2><ul><li><strong>Resurrection:</strong> a stale replica, a cache refill from an old snapshot, or a Cassandra node that rejoins after <code>gc_grace_seconds</code> can bring deleted data back. Run repairs within the grace period.</li><li><strong>Orphaned identifiers:</strong> deleting the user row but leaving their ID in event logs can let someone re-identify them by joining with another dataset.</li><li><strong>Deleting audit evidence:</strong> keep a minimal, non-personal record that the deletion happened (a request ID, a timestamp and which systems confirmed), not the data itself.</li></ul>
+</div></article><div id="check-slider-data-retention-and-deletion">
       <section class="check-slider" data-slug="data-retention-and-deletion" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1224,15 +1268,15 @@ sequenceDiagram
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-data-retention-and-deletion">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">In distributed wide-column and LSM storage, deletes write Tombstones; premature tombstone cleanup causes catastrophic data resurrection.</div><div class="takeaways__item">Use Cryptographic Shredding (destroying per-user KMS encryption keys) to achieve instant GDPR erasure across immutable cold backups.</div><div class="takeaways__item">Partition time-series audit tables by month or day so aging data can be dropped instantly via DROP TABLE instead of heavy DELETE scans.</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://cassandra.apache.org/doc/latest/cassandra/managing/operating/compaction/tombstones.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Apache Cassandra Documentation: Tombstones</a><a class="further-reading__link" href="https://csrc.nist.gov/publications/detail/sp/800-88/rev-1/final" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> NIST SP 800-88: Guidelines for Media Sanitization (Cryptographic Erase)</a>
           </div>
@@ -1245,10 +1289,10 @@ sequenceDiagram
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="data-retention-and-deletion" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="data-retention-and-deletion" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Data%20retention%2C%20deletion%2C%20and%20privacy&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Data%20retention%2C%20deletion%2C%20and%20privacy%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fdata-retention-and-deletion%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1261,9 +1305,92 @@ sequenceDiagram
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/security-and-abuse-prevention/" data-nav="topic" data-slug="security-and-abuse-prevention">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Security and abuse prevention</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Under the Hood: The Distributed Deletion Challenge</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Distributed Deletion Orchestration Pipeline</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Core Production Deletion Mechanics</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Retention schedule: decide the lifetime of data when you create it</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Worked example: an erasure request across 7 systems</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Failure modes</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-data-retention-and-deletion">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-data-retention-and-deletion">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 5.1</span>
+            <span>0/13 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/data-retention-and-deletion/" data-share-title="Data retention, deletion, and privacy — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1271,7 +1398,7 @@ sequenceDiagram
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1325,7 +1452,7 @@ sequenceDiagram
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1334,8 +1461,8 @@ sequenceDiagram
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1343,30 +1470,9 @@ sequenceDiagram
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Data retention, deletion, and privacy",
-  "description": "Deleting a user from a distributed system is like trying to get a rumour forgotten. Deleting it from the one person who first heard it is easy.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/data-retention-and-deletion/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

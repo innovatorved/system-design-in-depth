@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Stop words and champion lists — System Design In Depth</title>
   <meta name="description" content="Imagine a shop assistant asked for &quot;the red jacket&quot;. Checking every item in the warehouse tagged &quot;the&quot; would be absurd, so the assistant focuses on &quot;red&quot; and.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Stop words and champion lists — System Design In Depth">
   <meta property="og:description" content="Imagine a shop assistant asked for &quot;the red jacket&quot;. Checking every item in the warehouse tagged &quot;the&quot; would be absurd, so the assistant focuses on &quot;red&quot; and.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/stop-words-and-champion-lists/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-stop-words-and-champion-lists.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Stop words and champion lists — System Design In Depth">
   <meta name="twitter:description" content="Imagine a shop assistant asked for &quot;the red jacket&quot;. Checking every item in the warehouse tagged &quot;the&quot; would be absurd, so the assistant focuses on &quot;red&quot; and.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-stop-words-and-champion-lists.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/stop-words-and-champion-lists/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Stop words and champion lists",
+  "description": "Imagine a shop assistant asked for \"the red jacket\". Checking every item in the warehouse tagged \"the\" would be absurd, so the assistant focuses on \"red\" and.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-stop-words-and-champion-lists.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/stop-words-and-champion-lists/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="stop-words-and-champion-lists">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,61 +870,32 @@
         <span class="breadcrumbs__current">Stop words and champion lists</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">search</span>
         </div>
-        <h1 class="lesson-header__title">Stop words and champion lists</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Stop words and champion lists</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 3 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 5.4: Information Retrieval & Search Engines</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="stop-words-and-champion-lists">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-search-retrieval" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/stop-words-and-champion-lists/" data-share-title="Stop words and champion lists — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;XNxzXQa55jQ&quot;,&quot;title&quot;:&quot;IR Course Lecture 13: Efficient Scoring&quot;,&quot;channel&quot;:&quot;Venkatesh Vinayakarao&quot;,&quot;why&quot;:&quot;Lecture on inexact top-K retrieval: champion lists, index elimination of low-IDF terms, static quality scores and tiered indexes, precisely this unit.&quot;,&quot;length&quot;:&quot;25:19&quot;}">
-      <div class="video-embed" id="video-XNxzXQa55jQ"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="XNxzXQa55jQ">
-          <img class="video-embed__thumb" src="https://img.youtube.com/vi/XNxzXQa55jQ/hqdefault.jpg"
-               alt="IR Course Lecture 13: Efficient Scoring"
-               loading="lazy">
-          <div class="video-embed__play-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
-        </div></div>
-      <div class="video-embed__info">
-        <span class="video-embed__channel">Venkatesh Vinayakarao</span>
-        <span class="video-embed__title">IR Course Lecture 13: Efficient Scoring</span>
-        <a href="https://www.youtube.com/watch?v=XNxzXQa55jQ" target="_blank" rel="noopener noreferrer" style="margin-left:auto; font-size:11px; color:var(--accent,#6366f1); text-decoration:none; display:flex; align-items:center; gap:2px;">
-          Watch on YouTube ↗
-        </a>
-      </div>
-      <p class="video-embed__why">Lecture on inexact top-K retrieval: champion lists, index elimination of low-IDF terms, static quality scores and tiered indexes, precisely this unit.</p></div>
-      <div class="video-more">
-        <h2 class="video-more__heading">More videos on this topic</h2>
-        <div class="video-more__list">
-      <a class="video-more__card" href="https://www.youtube.com/watch?v=eo9tAldtrm8" target="_blank" rel="noopener noreferrer"
-         data-action="play-in-main-video" data-video="{&quot;youtubeId&quot;:&quot;eo9tAldtrm8&quot;,&quot;title&quot;:&quot;IR4.10 Removing stopwords&quot;,&quot;channel&quot;:&quot;Victor Lavrenko&quot;,&quot;role&quot;:&quot;intro&quot;,&quot;why&quot;:&quot;Compact explanation of what stop words are, why they were removed, and the cost of removing them.&quot;,&quot;length&quot;:&quot;3:22&quot;}"
-         title="Play here (Ctrl/⌘-click to open on YouTube)">
-        <span class="video-more__thumb">
-          <img src="https://img.youtube.com/vi/eo9tAldtrm8/mqdefault.jpg" alt="" loading="lazy">
-          <span class="video-more__play"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-          <span class="video-more__len">3:22</span>
-        </span>
-        <span class="video-more__meta">
-          <span class="video-more__role">Quick intro</span>
-          <span class="video-more__title">IR4.10 Removing stopwords</span>
-          <span class="video-more__channel">Victor Lavrenko</span>
-          <span class="video-more__why">Compact explanation of what stop words are, why they were removed, and the cost of removing them.</span>
-        </span>
-      </a></div>
       </div>
         <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
           <div class="intuition__body"><p><p>Imagine a shop assistant asked for "the red jacket". Checking every item in the warehouse tagged "the" would be absurd, so the assistant focuses on "red" and "jacket". And for "jacket", they first check the shortlist of best-sellers by the door before walking into the back room. Stop-word handling and champion lists are those two shortcuts.</p> <p><strong>Mental model:</strong> common words have enormous postings lists but tiny IDF, so they contribute little score at huge cost; champion lists precompute, per term, the few hundred documents most likely to make the top K so most queries never touch the full list.</p></p>
 <ul>
 <li><strong>Trap:</strong> deleting stop words from the index. "The Who", "to be or not to be" and "vitamin A" break. Modern engines keep them and prune at query time.</li>
@@ -920,19 +918,65 @@
         </div>
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="stop-words-and-champion-lists" id="audio-speed-stop-words-and-champion-lists" title="Playback speed">1x</button>
         <audio id="audio-stop-words-and-champion-lists" src="audio/stop-words-and-champion-lists.mp3" preload="metadata"></audio>
-      </div><article class="prose"><h2>Stop words and champion lists</h2>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> IR Course Lecture 13: Efficient Scoring</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Venkatesh Vinayakarao · 25:19 +1 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;XNxzXQa55jQ&quot;,&quot;title&quot;:&quot;IR Course Lecture 13: Efficient Scoring&quot;,&quot;channel&quot;:&quot;Venkatesh Vinayakarao&quot;,&quot;why&quot;:&quot;Lecture on inexact top-K retrieval: champion lists, index elimination of low-IDF terms, static quality scores and tiered indexes, precisely this unit.&quot;,&quot;length&quot;:&quot;25:19&quot;}">
+      <div class="video-embed" id="video-XNxzXQa55jQ"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="XNxzXQa55jQ">
+          <img class="video-embed__thumb" src="https://img.youtube.com/vi/XNxzXQa55jQ/hqdefault.jpg"
+               alt="IR Course Lecture 13: Efficient Scoring"
+               loading="lazy">
+          <div class="video-embed__play-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        </div></div>
+      <div class="video-embed__info">
+        <span class="video-embed__channel">Venkatesh Vinayakarao</span>
+        <span class="video-embed__title">IR Course Lecture 13: Efficient Scoring</span>
+        <a href="https://www.youtube.com/watch?v=XNxzXQa55jQ" target="_blank" rel="noopener noreferrer" style="margin-left:auto; font-size:11px; color:var(--accent,#6366f1); text-decoration:none; display:flex; align-items:center; gap:2px;">
+          Watch on YouTube ↗
+        </a>
+      </div>
+      <p class="video-embed__why">Lecture on inexact top-K retrieval: champion lists, index elimination of low-IDF terms, static quality scores and tiered indexes, precisely this unit.</p></div>
+          
+      <div class="video-more">
+        <h2 class="video-more__heading">More videos on this topic</h2>
+        <div class="video-more__list">
+      <a class="video-more__card" href="https://www.youtube.com/watch?v=eo9tAldtrm8" target="_blank" rel="noopener noreferrer"
+         data-action="play-in-main-video" data-video="{&quot;youtubeId&quot;:&quot;eo9tAldtrm8&quot;,&quot;title&quot;:&quot;IR4.10 Removing stopwords&quot;,&quot;channel&quot;:&quot;Victor Lavrenko&quot;,&quot;role&quot;:&quot;intro&quot;,&quot;why&quot;:&quot;Compact explanation of what stop words are, why they were removed, and the cost of removing them.&quot;,&quot;length&quot;:&quot;3:22&quot;}"
+         title="Play here (Ctrl/⌘-click to open on YouTube)">
+        <span class="video-more__thumb">
+          <img src="https://img.youtube.com/vi/eo9tAldtrm8/mqdefault.jpg" alt="" loading="lazy">
+          <span class="video-more__play"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+          <span class="video-more__len">3:22</span>
+        </span>
+        <span class="video-more__meta">
+          <span class="video-more__role">Quick intro</span>
+          <span class="video-more__title">IR4.10 Removing stopwords</span>
+          <span class="video-more__channel">Victor Lavrenko</span>
+          <span class="video-more__why">Compact explanation of what stop words are, why they were removed, and the cost of removing them.</span>
+        </span>
+      </a></div>
+      </div>
+        </div>
+      </details><article class="prose"><h2 id="topic-sec-1">Stop words and champion lists</h2>
 <p>A scoring function cannot rescue a document that was removed before scoring began. We can reduce search work by omitting common words or retaining only selected candidates for each term, but each shortcut discards information. The useful question is which queries lose an answer when that information disappears.</p>
 <p>We'll compare removing words with capping candidates, then follow how each changes the results.</p>
-<h2>Removing words from the representation</h2>
+<h2 id="topic-sec-2">Removing words from the representation</h2>
 <p><a href="#" data-nav="topic" data-slug="bm25-production-ranking">The BM25 lesson</a> kept every analyzed token and let document frequency influence its weight. Another approach removes selected words entirely. A configured list of words to omit is a stop-word list. Commonness may motivate the choice, but the actual removal is a product and language policy rather than a consequence of the score formula.</p>
 <p>Our experiment chooses exactly <code>a</code>, <code>and</code> and <code>to</code>. They are test inputs, not a recommended English stop list. The unchanged corpus retains them; the replay creates a separate pruned copy so later lessons continue to use the same source texts and statistics.</p>
 <p>Deleting tokens can change more than whether a term is searchable. If the remaining tokens are packed together, their positions change. The original <code>d5</code> text includes <code>keys to rows</code>. A packed pruned representation contains <code>keys rows</code>, so a request for that exact adjacent phrase can match even though the original document did not contain it.</p>
 <p>The posting-list lesson's phrase helper checks adjacent analyzed tokens. In this experiment the stop policy is applied to both document and query text. That lets <code>keys to rows</code> continue to match after both sides lose <code>to</code>, while the distinct literal request <code>keys rows</code> also becomes a match. Preserving the original position gaps would avoid that particular adjacency error, though queries requiring a removed word would still need a representation that retained it.</p>
-<h2>Which common words are expendable?</h2>
+<h2 id="topic-sec-3">Which common words are expendable?</h2>
 <p>Inspect both how widely a term occurs (<code>df / N</code>) and how often it repeats. Define the averaging population: total occurrences divided by all documents differs from the average among matching documents. These are diagnostics, not a universal rule for deleting terms.</p>
 <p>In a database-only catalog, <code>database</code> may occur almost everywhere yet still matter in an exact title. A required word, negation or direction can be essential even when it has little ranking weight. Review representative title and phrase queries before choosing a stop list. Lower weighting retains evidence that deletion removes.</p>
 <p>A configured language list is only a starting policy. Elasticsearch's stop filter allows explicit words, language lists and case handling. Its trailing-token option also matters for completion: removing the word currently being typed can change the offered suggestions. Our experiment does not emulate that analyzer; it deliberately repacks tokens to expose the phrase error.</p>
-<h2>Keeping selected candidates</h2>
+<h2 id="topic-sec-4">Keeping selected candidates</h2>
 <p>There is another way to reduce work without deleting a word: retain a small preselected list of documents for it. Such a retained subset is called a champion list. The subset is chosen before the full query is known. It can be built for any term, not only common words; list sizes can differ by term.</p>
 <p>Our chosen cap is one document per term. Build each list by scoring that single term with our BM25 variant and retaining the highest result, using identifier order for ties. At query time, take the union of the retained lists, then apply the full requested matching condition to those candidates. This is a candidate restriction, not a complete implementation of arbitrary top-result search.</p>
 <p>For <code>database</code>, the equal-length single-term tie retains <code>d2</code> ahead of <code>d5</code>. For <code>index</code>, the shorter document <code>d8</code> wins over <code>d5</code>. The combined query <code>database index</code> therefore begins with only <code>d2</code> and <code>d8</code> available, even though <code>d5</code> contains both terms. A document that is second for each individual term can be the best combined answer.</p>
@@ -946,7 +990,7 @@
     A --> E["No result"]
     Q --> F["Complete posting lists"]
     F --> D["Require both: d5"]</div>
-<h2>The losses in one capture</h2>
+<h2 id="topic-sec-5">The losses in one capture</h2>
 <p>The Python replay performs both transformations from the original corpus. <code>original</code> and <code>pruned</code> label separately analyzed document sets. The champion portion prints complete either-term candidates, retained candidates and the result after requiring both query terms.</p>
 <div class="code-block"><div class="code-block__header"><span class="code-block__lang">bash</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy code-block__run-btn" data-action="run-snippet-codelab" data-lang="bash" title="Execute this snippet in the in-browser Node.js v22 CodeLab IDE"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg><span>Run in CodeLab</span></button><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-bash">python3 public/course-assets/system-design/m16-search.py pruning</code></pre></div>
 <div class="code-block"><div class="code-block__header"><span class="code-block__lang">output</span><div style="display:flex;align-items:center;gap:6px;"><button type="button" class="code-block__copy" data-action="copy-code">Copy</button></div></div><pre><code class="language-output">stop words: [&#039;a&#039;, &#039;and&#039;, &#039;to&#039;]
@@ -958,20 +1002,20 @@ full OR candidates: [&#039;d2&#039;, &#039;d5&#039;, &#039;d8&#039;] capped cand
 full AND: [&#039;d5&#039;] capped then AND: [] missed: [&#039;d5&#039;]</code></pre></div>
 <p>Fifty token occurrences become forty-three under the selected stop policy. That is a count of retained occurrences, not measured index bytes or a latency improvement. The byte layout of a real posting list could include dictionaries, offsets, positions and compression, each with its own cost.</p>
 <p>The champion restriction removes <code>d5</code>, so the required-term check returns nothing. Running the scorer over the retained documents cannot repair that result because the missing identifier never reaches it. Keeping a complete index behind the shortcut would allow a fallback, but that means the complete representation and its maintenance cost still exist.</p>
-<h2>The policy boundary</h2>
+<h2 id="topic-sec-6">The policy boundary</h2>
 <p>For this corpus, retain every token and the complete posting lists. Their counts are small, and the counterexamples give a concrete cost for removing information. If a measured workload later makes common-term traversal expensive, first consider a query-specific policy that preserves required phrases and filters. That lets a broad browsing request accept a shortcut without silently changing exact phrase semantics.</p>
 <p>Choose the shortcut from the kind of answer the caller expects:</p>
 <table><thead><tr><th>Query contract</th><th>Default</th><th>Reason</th></tr></thead><tbody><tr><td>Required words or exact phrase</td><td>Complete retained representation</td><td>Omitted evidence can change eligibility</td></tr><tr><td>Broad exploration with complete fallback</td><td>Try bounded candidates, then complete search</td><td>Recover misses at additional work</td></tr><tr><td>Explicitly approximate suggestions</td><td>Evaluated candidate cap</td><td>The product accepts evaluated coverage loss</td></tr></tbody></table>
 <p>Champion selection can also incorporate a quality or freshness score, but that still chooses candidates before the complete query. Keeping a full fallback costs storage and maintenance; omitting it accepts a loss that must be evaluated.</p>
 <p>Choosing query-specific pruning adds branches that need tests. A rule that ignores <code>to</code> in a broad topic query must not also erase it from an exact title request. Keeping a separate phrase-capable representation is another option, with the cost of another field or index. Choose that complexity only when the query contract and measurements justify it.</p>
-<h2>Evidence before an approximation</h2>
+<h2 id="topic-sec-7">Evidence before an approximation</h2>
 <p>The missed <code>d5</code> is an exact matching failure, which requires no user judgment to detect. Whether dropping a broader result harms the reader is a different question. <a href="#" data-nav="topic" data-slug="search-evaluation-metrics">Search evaluation</a> will label documents against particular information needs and compare what the result list preserves.</p>
 <p>Champion lists also need a publication boundary. Recomputing them after documents change can alter who survives the cap; an outdated champion entry may refer to a removed or now-inaccessible document. <a href="#" data-nav="topic" data-slug="search-index-synchronization">Index synchronization</a> owns that version and deletion work. A preselected list never replaces the access check before exposure.</p>
 <p>The next lesson changes another part of the path: it interprets the caller's words before retrieval. <a href="#" data-nav="topic" data-slug="query-understanding-pipeline">Query understanding</a> makes those transformations visible so that a broader answer can be traced to a chosen rule rather than mistaken for a match to the original request.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
-      <h2>Under the Hood: Optimization Strategies for Massive Corpora</h2>
+      <h2 id="topic-sec-8">Under the Hood: Optimization Strategies for Massive Corpora</h2>
       <p>When searching over billions of documents, postings lists for common words contain hundreds of millions of entries. Search engines employ two contrasting strategies to maximize query throughput without sacrificing accuracy: <strong>Stop Word Handling</strong> and <strong>Champion Lists</strong>.</p>
 
-      <h2>Champion Lists (Fancy Lists) Architecture</h2>
+      <h2 id="topic-sec-9">Champion Lists (Fancy Lists) Architecture</h2>
       <div class="mermaid">
 flowchart TD
     Term["Vocabulary Term: 'database' (Appears in 50,000,000 documents)"] --> Split["Split at Index Time"]
@@ -984,14 +1028,14 @@ flowchart TD
     Check -->|"No"| Fallback["2. Fall back to Full Disk Postings Lists"]
       </div>
 
-      <h2>Under the Hood: The Evolution of Stop Words</h2>
+      <h2 id="topic-sec-10">Under the Hood: The Evolution of Stop Words</h2>
       <ul>
         <li><strong>Historical Approach (Aggressive Removal):</strong> Early search engines stripped all stop words ("the", "to", "and", "or") during indexing to save disk space. <strong>The Failure:</strong> Queries like <em>"To be or not to be"</em> or <em>"The Who"</em> returned zero results or completely corrupted semantics.</li>
         <li><strong>Modern Approach (Common-Grams & WAND):</strong> Modern engines retain all words in the index. Frequent word pairs can be indexed as single tokens (common-grams such as "to_be"), positional indexes answer phrase queries containing common words, and common terms are pruned during query evaluation using dynamic pruning algorithms like <strong>WAND (Weak AND)</strong> and <strong>Block-Max WAND</strong>.</li>
       </ul>
     
 <!-- enriched -->
-<h2>Worked example: the cost of "the"</h2>
+<h2 id="topic-sec-11">Worked example: the cost of "the"</h2>
 <p>In a 1 billion document English web corpus, "the" appears in the large majority of documents. Even at about one byte per compressed posting, walking its list means reading hundreds of megabytes for one query term, yet its IDF is close to zero, so it barely changes the ranking. Meanwhile "raft" might appear in 200,000 documents: a fraction of a megabyte.</p>
 <p>Three ways to handle the query <code>the raft paper</code>:</p>
 <table><thead><tr><th>Approach</th><th>Work</th><th>Risk</th></tr></thead><tbody>
@@ -1000,11 +1044,11 @@ flowchart TD
 <tr><td>Keep it, dynamic pruning such as WAND or Block-Max WAND</td><td>Skips most of the list because its maximum possible score contribution is tiny</td><td>Exact top K preserved; more complex implementation</td></tr>
 <tr><td>Common grams, index "the_who" as one token</td><td>Short list for the phrase</td><td>Larger index; must choose which pairs to index</td></tr>
 </tbody></table>
-<h2>How WAND skips work, in one paragraph</h2>
+<h2 id="topic-sec-12">How WAND skips work, in one paragraph</h2>
 <p>Each term stores an upper bound on its score contribution. Suppose the current 10th best score is 9.0, and the upper bounds are raft 7.0, paper 3.5, the 0.1. A document containing only "the" and "paper" can score at most 3.6, below 9.0, so it cannot enter the top 10. WAND jumps directly to the next document that contains raft, skipping millions of "the" postings. Block-Max WAND stores bounds per block of 128 postings, making the skips even tighter. Lucene has used block-max WAND for top-K disjunctions since version 8.</p>
-<h2>Champion list sizing</h2>
+<h2 id="topic-sec-13">Champion list sizing</h2>
 <p>Choose r, the champion list length per term, larger than K. With r = 1,000 and K = 20, most two-term queries find enough candidates in the union of champion lists; queries that do not fall back to full postings. Larger r means more RAM and better recall; the right value comes from measuring recall at K on a query log against full evaluation.</p>
-</div></div></article>
+</div></div></article><div id="check-slider-stop-words-and-champion-lists">
       <section class="check-slider" data-slug="stop-words-and-champion-lists" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1276,15 +1320,15 @@ flowchart TD
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-stop-words-and-champion-lists">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Champion lists precompute the top R highest-scoring documents per term, answering top-K queries in RAM.</div><div class="takeaways__item">Modern search engines avoid hard stop word deletion to preserve phrase semantics ('The Who').</div><div class="takeaways__item">Block-Max WAND dynamically skips postings blocks whose upper-bound scores cannot beat the current top-K threshold.</div>
           </div>
         </div>
       <div class="lesson-builds">
-        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
+        <h2 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h2>
         
           <a class="lesson-builds__item" href="/build/tiny-search-engine/" data-action="navigate-build" data-build-id="tiny-search-engine">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1296,7 +1340,7 @@ flowchart TD
           </a>
       </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://dl.acm.org/doi/10.1145/2009916.2010048" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Ding & Suel: Faster Top-k Document Retrieval Using Block-Max Indexes</a><a class="further-reading__link" href="https://nlp.stanford.edu/IR-book/html/htmledition/dropping-common-terms-stop-words-1.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Manning et al.: Dropping Common Terms: Stop Words (Stanford IR Book)</a><a class="further-reading__link" href="https://nlp.stanford.edu/IR-book/html/htmledition/champion-lists-1.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Manning et al.: Champion Lists (Stanford IR Book)</a>
           </div>
@@ -1309,10 +1353,10 @@ flowchart TD
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="stop-words-and-champion-lists" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="stop-words-and-champion-lists" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Stop%20words%20and%20champion%20lists&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Stop%20words%20and%20champion%20lists%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fstop-words-and-champion-lists%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1325,9 +1369,120 @@ flowchart TD
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/query-understanding-pipeline/" data-nav="topic" data-slug="query-understanding-pipeline">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Query understanding pipeline</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Stop words and champion lists</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Removing words from the representation</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Which common words are expendable?</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Keeping selected candidates</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">The losses in one capture</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">The policy boundary</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Evidence before an approximation</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-8">Under the Hood: Optimization Strategies for Massive Corpora</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-9">Champion Lists (Fancy Lists) Architecture</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-10">Under the Hood: The Evolution of Stop Words</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-11">Worked example: the cost of &quot;the&quot;</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-12">How WAND skips work, in one paragraph</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-13">Champion list sizing</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-stop-words-and-champion-lists">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-stop-words-and-champion-lists">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 5.4</span>
+            <span>0/17 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/stop-words-and-champion-lists/" data-share-title="Stop words and champion lists — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1335,7 +1490,7 @@ flowchart TD
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1389,7 +1544,7 @@ flowchart TD
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1398,8 +1553,8 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1407,30 +1562,9 @@ flowchart TD
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Stop words and champion lists",
-  "description": "Imagine a shop assistant asked for \"the red jacket\". Checking every item in the warehouse tagged \"the\" would be absurd, so the assistant focuses on \"red\" and.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/stop-words-and-champion-lists/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Flash sale inventory locking — System Design In Depth</title>
   <meta name="description" content="A shop has 1,000 concert tickets and 500,000 people rush the door. If every buyer has to walk to the single manager&#39;s desk to have a ticket crossed off a.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Flash sale inventory locking — System Design In Depth">
   <meta property="og:description" content="A shop has 1,000 concert tickets and 500,000 people rush the door. If every buyer has to walk to the single manager&#39;s desk to have a ticket crossed off a.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/flash-sale-inventory-locking/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-flash-sale-inventory-locking.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Flash sale inventory locking — System Design In Depth">
   <meta name="twitter:description" content="A shop has 1,000 concert tickets and 500,000 people rush the door. If every buyer has to walk to the single manager&#39;s desk to have a ticket crossed off a.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-flash-sale-inventory-locking.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/flash-sale-inventory-locking/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Flash sale inventory locking",
+  "description": "A shop has 1,000 concert tickets and 500,000 people rush the door. If every buyer has to walk to the single manager's desk to have a ticket crossed off a.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-flash-sale-inventory-locking.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/flash-sale-inventory-locking/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="flash-sale-inventory-locking">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Flash sale inventory locking</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">inventory</span> <span class="tag">transactions</span>
         </div>
-        <h1 class="lesson-header__title">Flash sale inventory locking</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Flash sale inventory locking</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 4.2: Asynchronous Workflows & Partitioned Logs</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="flash-sale-inventory-locking">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-async-streams" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/flash-sale-inventory-locking/" data-share-title="Flash sale inventory locking — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;fhdPyoO6aXI&quot;,&quot;title&quot;:&quot;System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer&quot;,&quot;channel&quot;:&quot;Hello Interview&quot;,&quot;why&quot;:&quot;Hello Interview&#039;s Ticketmaster design is the best-explained treatment of reserving scarce inventory under a surge: reservation holds with TTLs, avoiding row-lock contention, virtual waiting rooms and consistency. The current rate-limiter video is off-topic.&quot;,&quot;length&quot;:&quot;58:39&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>A shop has 1,000 concert tickets and 500,000 people rush the door. If every buyer has to walk to the single manager's desk to have a ticket crossed off a ledger (a row lock), the queue stretches round the block and the manager collapses. Instead, you give a greeter at the door a clicker counting down from 1,000. Anyone who gets a click gets a paper voucher and 10 minutes to pay. Everyone else is told "sold out" at the door.</p><p><strong>Mental model:</strong> separate the fast, atomic decision "did you get one?" from the slow, durable work of taking payment and creating the order, and bound how many people reach either stage.</p><ul><li><strong>Check-then-decrement in application code.</strong> Two requests both read stock = 1 and both sell. Use an atomic <code>UPDATE ... WHERE stock &gt; 0</code>, a Redis <code>DECR</code>, or a Lua script.</li><li><strong>Treating Redis as the source of truth.</strong> Redis can lose recent writes on failover. Reconcile against the database and keep a small buffer, or accept rare overselling with a refund policy.</li><li><strong>No reservation expiry.</strong> Abandoned carts lock stock forever. Holds need a TTL and a reliable release.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-flash-sale-inventory-locking">
+        <button class="audio-player__play-btn" id="audio-btn-flash-sale-inventory-locking" data-action="toggle-audio" data-slug="flash-sale-inventory-locking" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-flash-sale-inventory-locking" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-flash-sale-inventory-locking" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-flash-sale-inventory-locking">0:00 / 3:49</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="flash-sale-inventory-locking" id="audio-track-flash-sale-inventory-locking">
+          <div class="audio-player__progress" id="audio-bar-flash-sale-inventory-locking" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="flash-sale-inventory-locking" id="audio-speed-flash-sale-inventory-locking" title="Playback speed">1x</button>
+        <audio id="audio-flash-sale-inventory-locking" src="audio/flash-sale-inventory-locking.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Hello Interview · 58:39 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;fhdPyoO6aXI&quot;,&quot;title&quot;:&quot;System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer&quot;,&quot;channel&quot;:&quot;Hello Interview&quot;,&quot;why&quot;:&quot;Hello Interview&#039;s Ticketmaster design is the best-explained treatment of reserving scarce inventory under a surge: reservation holds with TTLs, avoiding row-lock contention, virtual waiting rooms and consistency. The current rate-limiter video is off-topic.&quot;,&quot;length&quot;:&quot;58:39&quot;}">
       <div class="video-embed" id="video-fhdPyoO6aXI"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="fhdPyoO6aXI">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/fhdPyoO6aXI/hqdefault.jpg"
                alt="System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">Hello Interview&#039;s Ticketmaster design is the best-explained treatment of reserving scarce inventory under a surge: reservation holds with TTLs, avoiding row-lock contention, virtual waiting rooms and consistency. The current rate-limiter video is off-topic.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,27 +973,9 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>A shop has 1,000 concert tickets and 500,000 people rush the door. If every buyer has to walk to the single manager's desk to have a ticket crossed off a ledger (a row lock), the queue stretches round the block and the manager collapses. Instead, you give a greeter at the door a clicker counting down from 1,000. Anyone who gets a click gets a paper voucher and 10 minutes to pay. Everyone else is told "sold out" at the door.</p><p><strong>Mental model:</strong> separate the fast, atomic decision "did you get one?" from the slow, durable work of taking payment and creating the order, and bound how many people reach either stage.</p><ul><li><strong>Check-then-decrement in application code.</strong> Two requests both read stock = 1 and both sell. Use an atomic <code>UPDATE ... WHERE stock &gt; 0</code>, a Redis <code>DECR</code>, or a Lua script.</li><li><strong>Treating Redis as the source of truth.</strong> Redis can lose recent writes on failover. Reconcile against the database and keep a small buffer, or accept rare overselling with a refund policy.</li><li><strong>No reservation expiry.</strong> Abandoned carts lock stock forever. Holds need a TTL and a reliable release.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-flash-sale-inventory-locking">
-        <button class="audio-player__play-btn" id="audio-btn-flash-sale-inventory-locking" data-action="toggle-audio" data-slug="flash-sale-inventory-locking" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-flash-sale-inventory-locking" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-flash-sale-inventory-locking" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-flash-sale-inventory-locking">0:00 / 3:49</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="flash-sale-inventory-locking" id="audio-track-flash-sale-inventory-locking">
-          <div class="audio-player__progress" id="audio-bar-flash-sale-inventory-locking" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="flash-sale-inventory-locking" id="audio-speed-flash-sale-inventory-locking" title="Playback speed">1x</button>
-        <audio id="audio-flash-sale-inventory-locking" src="audio/flash-sale-inventory-locking.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>The Flash Sale Concurrency Challenge</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">The Flash Sale Concurrency Challenge</h2>
       <p>During a mega flash sale (e.g. 1,000 PlayStation 5 consoles offered to 500,000 concurrent shoppers), hundreds of thousands of requests hit the inventory service in the exact same second. Traditional relational database transactions cause catastrophic failures:</p>
       <pre><code>-- THE FLASH SALE KILLER: ROW LOCK CONVOY
 BEGIN TRANSACTION;
@@ -943,7 +987,7 @@ COMMIT;
       </code></pre>
       <p>When 50,000 concurrent database connections attempt to acquire a row lock on item 123, the database connection pool exhausts in milliseconds, lock waits pile up until queries hit lock-wait timeouts, and every other query that needs a connection stalls behind the hot row.</p>
 
-      <h2>The Multi-Layer In-Memory Locking Architecture</h2>
+      <h2 id="topic-sec-2">The Multi-Layer In-Memory Locking Architecture</h2>
       <div class="mermaid">
 flowchart TD
     Traffic["500,000 Concurrent Buyers"] --> RateLimit["1. Nginx Token Bucket Rate Limiter (Drop 80%)"]
@@ -960,7 +1004,7 @@ flowchart TD
     DBWorker --> Postgres[("PostgreSQL Orders DB")]
       </div>
 
-      <h2>Under the Hood: Atomic Redis Lua Script</h2>
+      <h2 id="topic-sec-3">Under the Hood: Atomic Redis Lua Script</h2>
       <p>Redis executes Lua scripts atomically in its single-threaded event loop. No other command can execute between reading the stock and decrementing it, eliminating race conditions with zero database locks:</p>
       <pre><code>-- Keys: 1 = item_stock_key, 2 = user_reservations_set
 -- Args: 1 = user_id
@@ -978,14 +1022,14 @@ return 1 -- Success: stock reserved
       <p><strong>Delayed Release Timer:</strong> If the user does not complete payment within 15 minutes, a delayed scheduler (Redis ZSET) automatically re-increments the Redis stock and invalidates the reservation token.</p>
     
 <!-- enriched -->
-<h2>Worked example: funnel sizing</h2><p>1,000 units, 500,000 users arriving within 10 seconds.</p><ul><li><strong>Edge or waiting room:</strong> admit users at a controlled rate, for example 5,000 per second, and send the rest to a queue page with a position number. This protects everything behind it.</li><li><strong>Reservation step:</strong> an atomic Redis Lua script checks per-user limits and decrements stock. At 5,000 attempts per second, all 1,000 units are reserved within about 0.2 seconds of opening. After that the script just returns SOLD_OUT, at tens of thousands of operations per second on one shard.</li><li><strong>Order persistence:</strong> 1,000 reservations are written to Kafka and then batch-inserted into Postgres. That is trivial load, where 500,000 concurrent <code>SELECT ... FOR UPDATE</code> on one row would have been fatal.</li><li><strong>Payment:</strong> 10-minute holds. If 15 percent abandon, 150 units return to stock at expiry and are re-offered to the waiting room.</li></ul><h2>The atomic reservation (Redis Lua)</h2><pre><code>-- KEYS[1]=stock:{sku1}  KEYS[2]=buyers:{sku1}   ARGV[1]=user_id
+<h2 id="topic-sec-4">Worked example: funnel sizing</h2><p>1,000 units, 500,000 users arriving within 10 seconds.</p><ul><li><strong>Edge or waiting room:</strong> admit users at a controlled rate, for example 5,000 per second, and send the rest to a queue page with a position number. This protects everything behind it.</li><li><strong>Reservation step:</strong> an atomic Redis Lua script checks per-user limits and decrements stock. At 5,000 attempts per second, all 1,000 units are reserved within about 0.2 seconds of opening. After that the script just returns SOLD_OUT, at tens of thousands of operations per second on one shard.</li><li><strong>Order persistence:</strong> 1,000 reservations are written to Kafka and then batch-inserted into Postgres. That is trivial load, where 500,000 concurrent <code>SELECT ... FOR UPDATE</code> on one row would have been fatal.</li><li><strong>Payment:</strong> 10-minute holds. If 15 percent abandon, 150 units return to stock at expiry and are re-offered to the waiting room.</li></ul><h2 id="topic-sec-5">The atomic reservation (Redis Lua)</h2><pre><code>-- KEYS[1]=stock:{sku1}  KEYS[2]=buyers:{sku1}   ARGV[1]=user_id
 if redis.call('SISMEMBER', KEYS[2], ARGV[1]) == 1 then return -2 end
 local s = tonumber(redis.call('GET', KEYS[1]) or '0')
 if s &lt;= 0 then return -1 end
 redis.call('DECR', KEYS[1])
 redis.call('SADD', KEYS[2], ARGV[1])
-return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr><th>Strategy</th><th>Correctness</th><th>Throughput on one SKU</th><th>Complexity</th></tr></thead><tbody><tr><td>SELECT FOR UPDATE then UPDATE</td><td>Strong</td><td>Hundreds per second (serialised on one row)</td><td>Low</td></tr><tr><td>Single atomic UPDATE with WHERE stock &gt; 0</td><td>Strong</td><td>A few thousand per second (still one hot row)</td><td>Low</td></tr><tr><td>Stock split into N bucket rows</td><td>Strong</td><td>N times higher</td><td>Medium: pick buckets, rebalance near zero</td></tr><tr><td>Redis Lua counter plus async DB</td><td>Strong at Redis, with a failover risk</td><td>Tens of thousands per second or more</td><td>Medium: reconciliation</td></tr><tr><td>Pre-generated tokens in a queue</td><td>Strong: each token is claimed once</td><td>High</td><td>Medium</td></tr><tr><td>Waiting room in front of any of the above</td><td>Unchanged</td><td>Protects backends</td><td>Adds a UX component</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Alibaba's Singles' Day</strong> uses layered throttling, cached stock checks, and database hot-row optimisations (queued updates on a hot row in AliSQL).</li><li><strong>Ticketmaster's Smart Queue</strong> and <strong>Cloudflare's Waiting Room</strong> meter admission so that the inventory system only sees a manageable rate.</li><li><strong>Shopify</strong> throttles checkout per shop and load-tests flash-sale merchants ahead of drops.</li></ul>
-</div></article>
+return s - 1</code></pre><h2 id="topic-sec-6">Inventory strategies compared</h2><table><thead><tr><th>Strategy</th><th>Correctness</th><th>Throughput on one SKU</th><th>Complexity</th></tr></thead><tbody><tr><td>SELECT FOR UPDATE then UPDATE</td><td>Strong</td><td>Hundreds per second (serialised on one row)</td><td>Low</td></tr><tr><td>Single atomic UPDATE with WHERE stock &gt; 0</td><td>Strong</td><td>A few thousand per second (still one hot row)</td><td>Low</td></tr><tr><td>Stock split into N bucket rows</td><td>Strong</td><td>N times higher</td><td>Medium: pick buckets, rebalance near zero</td></tr><tr><td>Redis Lua counter plus async DB</td><td>Strong at Redis, with a failover risk</td><td>Tens of thousands per second or more</td><td>Medium: reconciliation</td></tr><tr><td>Pre-generated tokens in a queue</td><td>Strong: each token is claimed once</td><td>High</td><td>Medium</td></tr><tr><td>Waiting room in front of any of the above</td><td>Unchanged</td><td>Protects backends</td><td>Adds a UX component</td></tr></tbody></table><h2 id="topic-sec-7">How real systems do it</h2><ul><li><strong>Alibaba's Singles' Day</strong> uses layered throttling, cached stock checks, and database hot-row optimisations (queued updates on a hot row in AliSQL).</li><li><strong>Ticketmaster's Smart Queue</strong> and <strong>Cloudflare's Waiting Room</strong> meter admission so that the inventory system only sees a manageable rate.</li><li><strong>Shopify</strong> throttles checkout per shop and load-tests flash-sale merchants ahead of drops.</li></ul>
+</div></article><div id="check-slider-flash-sale-inventory-locking">
       <section class="check-slider" data-slug="flash-sale-inventory-locking" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1257,15 +1301,15 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-flash-sale-inventory-locking">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Relational database row-level locking (FOR UPDATE) collapses under flash sales due to thread lock convoys.</div><div class="takeaways__item">In-memory Redis atomic Lua scripts decrement inventory in sub-milliseconds without database contention, but Redis replication is asynchronous, so a failover can lose decrements and oversell unless counts are reconciled against the database.</div><div class="takeaways__item">Successful reservations are queued asynchronously to Kafka for batched database persistence with delayed release timers.</div>
           </div>
         </div>
       <div class="lesson-builds lesson-challenges">
-        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        <h2 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h2>
         
           <a class="lesson-builds__item" href="/challenges/cascading-deadlock-depletion/" data-nav="challenges" data-challenge="cascading-deadlock-depletion">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1277,7 +1321,7 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
           </a>
       </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://www.alibabacloud.com/blog/how-does-alibaba-handle-the-double-11-shopping-festival_595277" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Alibaba Technology: How Taobao Handles Flash Sales at 500k QPS</a><a class="further-reading__link" href="https://redis.io/docs/latest/develop/using-commands/transactions/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Redis Documentation: Transactions (WATCH/MULTI/EXEC)</a><a class="further-reading__link" href="https://www.postgresql.org/docs/current/explicit-locking.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> PostgreSQL Documentation: Explicit Locking (Row-Level Locks)</a>
           </div>
@@ -1290,10 +1334,10 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="flash-sale-inventory-locking" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="flash-sale-inventory-locking" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Flash%20sale%20inventory%20locking&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Flash%20sale%20inventory%20locking%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fflash-sale-inventory-locking%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1306,9 +1350,96 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/counting-at-scale/" data-nav="topic" data-slug="counting-at-scale">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Counting at scale</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">The Flash Sale Concurrency Challenge</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">The Multi-Layer In-Memory Locking Architecture</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Under the Hood: Atomic Redis Lua Script</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Worked example: funnel sizing</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">The atomic reservation (Redis Lua)</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Inventory strategies compared</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">How real systems do it</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-flash-sale-inventory-locking">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-flash-sale-inventory-locking">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 4.2</span>
+            <span>0/10 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/flash-sale-inventory-locking/" data-share-title="Flash sale inventory locking — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1316,7 +1447,7 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1370,7 +1501,7 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1379,8 +1510,8 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1388,30 +1519,9 @@ return s - 1</code></pre><h2>Inventory strategies compared</h2><table><thead><tr
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Flash sale inventory locking",
-  "description": "A shop has 1,000 concert tickets and 500,000 people rush the door. If every buyer has to walk to the single manager's desk to have a ticket crossed off a.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/flash-sale-inventory-locking/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

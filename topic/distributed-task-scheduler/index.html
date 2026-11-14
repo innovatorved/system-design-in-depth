@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Distributed task scheduler — System Design In Depth</title>
   <meta name="description" content="Picture a post office that accepts letters marked &quot;deliver on 3 March&quot;. It files them in pigeonholes by date. Each morning a clerk takes today&#39;s pigeonhole.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Distributed task scheduler — System Design In Depth">
   <meta property="og:description" content="Picture a post office that accepts letters marked &quot;deliver on 3 March&quot;. It files them in pigeonholes by date. Each morning a clerk takes today&#39;s pigeonhole.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/distributed-task-scheduler/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-distributed-task-scheduler.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Distributed task scheduler — System Design In Depth">
   <meta name="twitter:description" content="Picture a post office that accepts letters marked &quot;deliver on 3 March&quot;. It files them in pigeonholes by date. Each morning a clerk takes today&#39;s pigeonhole.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-distributed-task-scheduler.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/distributed-task-scheduler/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Distributed task scheduler",
+  "description": "Picture a post office that accepts letters marked \"deliver on 3 March\". It files them in pigeonholes by date. Each morning a clerk takes today's pigeonhole.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-distributed-task-scheduler.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/distributed-task-scheduler/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="distributed-task-scheduler">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Distributed task scheduler</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">scheduling</span> <span class="tag">workflows</span>
         </div>
-        <h1 class="lesson-header__title">Distributed task scheduler</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Distributed task scheduler</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 4.2: Asynchronous Workflows & Partitioned Logs</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="distributed-task-scheduler">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-async-streams" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/distributed-task-scheduler/" data-share-title="Distributed task scheduler — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;pzDwYHRzEnk&quot;,&quot;title&quot;:&quot;20: Distributed Job Scheduler | Systems Design Interview Questions With Ex-Google SWE&quot;,&quot;channel&quot;:&quot;Jordan has no life&quot;,&quot;why&quot;:&quot;Jordan designs a distributed job scheduler end to end: durable job storage, claiming due jobs without double execution, leases and retries, and partitioning the scheduler. It replaces the current low-view AI-podcast-style video.&quot;,&quot;length&quot;:&quot;30:28&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Picture a post office that accepts letters marked "deliver on 3 March". It files them in pigeonholes by date. Each morning a clerk takes today's pigeonhole, hands the letters to couriers, and ticks each one off only after the courier confirms pickup. If a clerk faints mid-morning, another clerk sees the unticked letters and hands them out again. A few letters might go out twice, but none are lost.</p><p><strong>Mental model:</strong> a scheduler is a durable index sorted by due time, plus a claim protocol (lease, publish, acknowledge) that gives at-least-once execution, plus idempotent workers that make duplicates harmless.</p><ul><li><strong>Deleting a job before its handoff is confirmed.</strong> A crash between delete and publish loses the job forever. Move it to a leased state instead.</li><li><strong>Running one scheduler node.</strong> It is a single point of failure. Partition jobs across schedulers or elect a leader, and fence the old one.</li><li><strong>Firing all "midnight" jobs at 00:00:00.</strong> A million cron jobs at the same instant is a self-inflicted DDoS. Add jitter.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-distributed-task-scheduler">
+        <button class="audio-player__play-btn" id="audio-btn-distributed-task-scheduler" data-action="toggle-audio" data-slug="distributed-task-scheduler" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-distributed-task-scheduler" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-distributed-task-scheduler" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-distributed-task-scheduler">0:00 / 3:40</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="distributed-task-scheduler" id="audio-track-distributed-task-scheduler">
+          <div class="audio-player__progress" id="audio-bar-distributed-task-scheduler" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="distributed-task-scheduler" id="audio-speed-distributed-task-scheduler" title="Playback speed">1x</button>
+        <audio id="audio-distributed-task-scheduler" src="audio/distributed-task-scheduler.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> 20: Distributed Job Scheduler | Systems Design Interview Questions With Ex-Google SWE</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Jordan has no life · 30:28 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;pzDwYHRzEnk&quot;,&quot;title&quot;:&quot;20: Distributed Job Scheduler | Systems Design Interview Questions With Ex-Google SWE&quot;,&quot;channel&quot;:&quot;Jordan has no life&quot;,&quot;why&quot;:&quot;Jordan designs a distributed job scheduler end to end: durable job storage, claiming due jobs without double execution, leases and retries, and partitioning the scheduler. It replaces the current low-view AI-podcast-style video.&quot;,&quot;length&quot;:&quot;30:28&quot;}">
       <div class="video-embed" id="video-pzDwYHRzEnk"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="pzDwYHRzEnk">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/pzDwYHRzEnk/hqdefault.jpg"
                alt="20: Distributed Job Scheduler | Systems Design Interview Questions With Ex-Google SWE"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">Jordan designs a distributed job scheduler end to end: durable job storage, claiming due jobs without double execution, leases and retries, and partitioning the scheduler. It replaces the current low-view AI-podcast-style video.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,30 +973,12 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Picture a post office that accepts letters marked "deliver on 3 March". It files them in pigeonholes by date. Each morning a clerk takes today's pigeonhole, hands the letters to couriers, and ticks each one off only after the courier confirms pickup. If a clerk faints mid-morning, another clerk sees the unticked letters and hands them out again. A few letters might go out twice, but none are lost.</p><p><strong>Mental model:</strong> a scheduler is a durable index sorted by due time, plus a claim protocol (lease, publish, acknowledge) that gives at-least-once execution, plus idempotent workers that make duplicates harmless.</p><ul><li><strong>Deleting a job before its handoff is confirmed.</strong> A crash between delete and publish loses the job forever. Move it to a leased state instead.</li><li><strong>Running one scheduler node.</strong> It is a single point of failure. Partition jobs across schedulers or elect a leader, and fence the old one.</li><li><strong>Firing all "midnight" jobs at 00:00:00.</strong> A million cron jobs at the same instant is a self-inflicted DDoS. Add jitter.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-distributed-task-scheduler">
-        <button class="audio-player__play-btn" id="audio-btn-distributed-task-scheduler" data-action="toggle-audio" data-slug="distributed-task-scheduler" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-distributed-task-scheduler" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-distributed-task-scheduler" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-distributed-task-scheduler">0:00 / 3:40</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="distributed-task-scheduler" id="audio-track-distributed-task-scheduler">
-          <div class="audio-player__progress" id="audio-bar-distributed-task-scheduler" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="distributed-task-scheduler" id="audio-speed-distributed-task-scheduler" title="Playback speed">1x</button>
-        <audio id="audio-distributed-task-scheduler" src="audio/distributed-task-scheduler.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>Under the Hood: High-Throughput Delayed Job Scheduling</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">Under the Hood: High-Throughput Delayed Job Scheduling</h2>
       <p>Scheduling millions of future tasks (e.g. "Send reminder email in 2 hours", "Charge card in 3 days", "Retry webhook in 30 seconds") requires coordinating delayed execution across a distributed cluster without race conditions or dropped jobs.</p>
 
-      <h2>Redis Sorted Set (ZSET) Delayed Scheduler</h2>
+      <h2 id="topic-sec-2">Redis Sorted Set (ZSET) Delayed Scheduler</h2>
       <div class="mermaid">
 flowchart TD
     Client["Application Producer"] -->|"ZADD delayed_jobs &lt;timestamp> &lt;job_id>"| Redis[("Redis Cluster")]
@@ -949,7 +993,7 @@ flowchart TD
     ExecutionQueue --> Workers["Execution Workers"]
       </div>
 
-      <h2>Under the Hood: The Atomic Lua Script Pattern</h2>
+      <h2 id="topic-sec-3">Under the Hood: The Atomic Lua Script Pattern</h2>
       <p>A claim must prevent two schedulers from owning the same attempt without deleting the only durable obligation. Atomically move due IDs from the scheduled set into a leased set whose score is the lease deadline:</p>
       <pre><code>-- Claim due jobs without forgetting them
 local due_jobs = redis.call('ZRANGEBYSCORE', KEYS[1], 0, ARGV[1], 'LIMIT', 0, ARGV[2])
@@ -965,12 +1009,12 @@ return {}
 
       <p>On Redis Cluster, <code>KEYS[1]</code> and <code>KEYS[2]</code> must hash to the same slot, so name them with a hash tag such as <code>{jobs}:scheduled</code> and <code>{jobs}:leased</code>; otherwise the script fails with a CROSSSLOT error.</p><p>After claiming, publish each job with its stable ID. Only clear the lease after the broker confirms acceptance. If the scheduler crashes first, a reaper returns expired leases to the scheduled set. If publication succeeded but its acknowledgement was lost, retry may publish a duplicate, so the execution queue or worker must deduplicate by job ID. Removing a job before this recoverable handoff creates a lost-job window.</p>
 
-      <h2>Hierarchical Hashed Wheel Timers</h2>
+      <h2 id="topic-sec-4">Hierarchical Hashed Wheel Timers</h2>
       <p>For in-process ultra-high-frequency scheduling (sub-millisecond to seconds), distributed databases use the <strong>Hashed Wheel Timer</strong> algorithm (Varghese & Lauck). A circular array of buckets advances like a clock hand and can provide constant-time insertion and tick work under specific implementations. Cancellation cost and worst-case bucket work depend on the data structure and timer distribution; this is an in-process timer, not a durable distributed scheduler.</p>
     
 <!-- enriched -->
-<h2>Worked example: sizing a delayed-job store</h2><p>A reminders product schedules 50 million jobs per day, spread unevenly, with 5 times the average during the evening peak.</p><ul><li>Average rate: 50,000,000 / 86,400 = about 580 jobs due per second. Peak is about 2,900 per second.</li><li>Pending jobs (scheduled up to 7 days ahead): up to about 350 million entries. In a Redis sorted set at about 100 bytes each that is about 35 GB, so shard by job ID hash into, say, 16 sorted sets (about 2.2 GB each), with one scheduler owning each shard.</li><li>Poll loop: each shard's owner runs the claim script every 100 ms with <code>LIMIT 500</code>, a capacity of about 5,000 per second per shard, far above the peak of about 180 per shard.</li><li>Durability: Redis with AOF <code>everysec</code> can lose about a second of new schedules on a crash. For payment retries, keep the source of truth in Postgres or DynamoDB and use Redis only as an index.</li></ul><h2>Implementation options</h2><table><thead><tr><th>Store</th><th>Due-time query</th><th>Claim mechanism</th><th>Durability</th><th>Scale notes</th></tr></thead><tbody><tr><td>Redis sorted set</td><td>ZRANGEBYSCORE</td><td>Lua move to a leased set</td><td>AOF or RDB. Can lose recent writes</td><td>Keep both keys in one slot with a hash tag</td></tr><tr><td>Postgres table plus index on run_at</td><td>WHERE run_at at or before now</td><td>FOR UPDATE SKIP LOCKED</td><td>Strong</td><td>Thousands per second per primary. Watch vacuum</td></tr><tr><td>DynamoDB or Cassandra time buckets</td><td>Partition per minute bucket</td><td>Conditional write on status</td><td>Strong</td><td>Hot bucket risk. Shard buckets</td></tr><tr><td>SQS delay or EventBridge Scheduler</td><td>Managed</td><td>Managed</td><td>Managed</td><td>SQS delays max out at 15 minutes</td></tr><tr><td>Temporal timers</td><td>Durable timers in history</td><td>Workflow task</td><td>Strong</td><td>Built for long-running workflows</td></tr></tbody></table><h2>Correctness checklist</h2><ul><li>Every job has a stable ID, and workers deduplicate on (job ID, scheduled time).</li><li>The reaper returns jobs whose lease has expired to the scheduled state.</li><li>The scheduler owner per shard is fenced (a lease epoch stored with each claim).</li><li>Clock skew: compute "now" on the store where possible (Redis <code>TIME</code>, or <code>now()</code> in the database), not on each client.</li><li>Missed-run policy for recurring jobs after downtime: run once, run all missed, or skip.</li></ul><h2>How real systems do it</h2><ul><li><strong>Airbnb's Dynein</strong> keeps delayed jobs durably in DynamoDB and hands due jobs to SQS for execution. <strong>Slack</strong> rebuilt its job queue by putting Kafka in front of Redis, so that job enqueues survive Redis failures.</li><li><strong>Kafka</strong> uses a hierarchical timing wheel in-process for request timeouts (purgatory). It is not used for durable scheduling.</li></ul>
-</div></article>
+<h2 id="topic-sec-5">Worked example: sizing a delayed-job store</h2><p>A reminders product schedules 50 million jobs per day, spread unevenly, with 5 times the average during the evening peak.</p><ul><li>Average rate: 50,000,000 / 86,400 = about 580 jobs due per second. Peak is about 2,900 per second.</li><li>Pending jobs (scheduled up to 7 days ahead): up to about 350 million entries. In a Redis sorted set at about 100 bytes each that is about 35 GB, so shard by job ID hash into, say, 16 sorted sets (about 2.2 GB each), with one scheduler owning each shard.</li><li>Poll loop: each shard's owner runs the claim script every 100 ms with <code>LIMIT 500</code>, a capacity of about 5,000 per second per shard, far above the peak of about 180 per shard.</li><li>Durability: Redis with AOF <code>everysec</code> can lose about a second of new schedules on a crash. For payment retries, keep the source of truth in Postgres or DynamoDB and use Redis only as an index.</li></ul><h2 id="topic-sec-6">Implementation options</h2><table><thead><tr><th>Store</th><th>Due-time query</th><th>Claim mechanism</th><th>Durability</th><th>Scale notes</th></tr></thead><tbody><tr><td>Redis sorted set</td><td>ZRANGEBYSCORE</td><td>Lua move to a leased set</td><td>AOF or RDB. Can lose recent writes</td><td>Keep both keys in one slot with a hash tag</td></tr><tr><td>Postgres table plus index on run_at</td><td>WHERE run_at at or before now</td><td>FOR UPDATE SKIP LOCKED</td><td>Strong</td><td>Thousands per second per primary. Watch vacuum</td></tr><tr><td>DynamoDB or Cassandra time buckets</td><td>Partition per minute bucket</td><td>Conditional write on status</td><td>Strong</td><td>Hot bucket risk. Shard buckets</td></tr><tr><td>SQS delay or EventBridge Scheduler</td><td>Managed</td><td>Managed</td><td>Managed</td><td>SQS delays max out at 15 minutes</td></tr><tr><td>Temporal timers</td><td>Durable timers in history</td><td>Workflow task</td><td>Strong</td><td>Built for long-running workflows</td></tr></tbody></table><h2 id="topic-sec-7">Correctness checklist</h2><ul><li>Every job has a stable ID, and workers deduplicate on (job ID, scheduled time).</li><li>The reaper returns jobs whose lease has expired to the scheduled state.</li><li>The scheduler owner per shard is fenced (a lease epoch stored with each claim).</li><li>Clock skew: compute "now" on the store where possible (Redis <code>TIME</code>, or <code>now()</code> in the database), not on each client.</li><li>Missed-run policy for recurring jobs after downtime: run once, run all missed, or skip.</li></ul><h2 id="topic-sec-8">How real systems do it</h2><ul><li><strong>Airbnb's Dynein</strong> keeps delayed jobs durably in DynamoDB and hands due jobs to SQS for execution. <strong>Slack</strong> rebuilt its job queue by putting Kafka in front of Redis, so that job enqueues survive Redis failures.</li><li><strong>Kafka</strong> uses a hierarchical timing wheel in-process for request timeouts (purgatory). It is not used for durable scheduling.</li></ul>
+</div></article><div id="check-slider-distributed-task-scheduler">
       <section class="check-slider" data-slug="distributed-task-scheduler" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1242,15 +1286,15 @@ return {}
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-distributed-task-scheduler">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Redis sorted sets (ZSET) store delayed jobs using future Unix execution timestamps as the score.</div><div class="takeaways__item">Atomically moving due jobs into a leased set prevents competing claims without erasing the durable obligation.</div><div class="takeaways__item">Hashed wheel timers efficiently manage many in-memory deadlines, but durable scheduling still needs persisted state and recovery.</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="http://www.cs.columbia.edu/~nahum/w6998/papers/ton97-timing-wheels.pdf" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Varghese & Lauck: Hashed and Hierarchical Timing Wheels</a><a class="further-reading__link" href="https://dropbox.tech/infrastructure/asynchronous-task-scheduling-at-dropbox" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Dropbox Tech: How We Designed Dropbox ATF: An Async Task Framework</a><a class="further-reading__link" href="https://slack.engineering/scaling-slacks-job-queue/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Slack Engineering: Scaling Slack's Job Queue</a>
           </div>
@@ -1263,10 +1307,10 @@ return {}
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="distributed-task-scheduler" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="distributed-task-scheduler" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Distributed%20task%20scheduler&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Distributed%20task%20scheduler%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fdistributed-task-scheduler%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1279,9 +1323,100 @@ return {}
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/postgres-skip-locked-work-queue/" data-nav="topic" data-slug="postgres-skip-locked-work-queue">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Postgres SKIP LOCKED work queue</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Under the Hood: High-Throughput Delayed Job Scheduling</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Redis Sorted Set (ZSET) Delayed Scheduler</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Under the Hood: The Atomic Lua Script Pattern</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Hierarchical Hashed Wheel Timers</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Worked example: sizing a delayed-job store</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Implementation options</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Correctness checklist</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-8">How real systems do it</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-distributed-task-scheduler">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-distributed-task-scheduler">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 4.2</span>
+            <span>0/10 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/distributed-task-scheduler/" data-share-title="Distributed task scheduler — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1289,7 +1424,7 @@ return {}
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1343,7 +1478,7 @@ return {}
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1352,8 +1487,8 @@ return {}
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1361,30 +1496,9 @@ return {}
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Distributed task scheduler",
-  "description": "Picture a post office that accepts letters marked \"deliver on 3 March\". It files them in pigeonholes by date. Each morning a clerk takes today's pigeonhole.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/distributed-task-scheduler/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

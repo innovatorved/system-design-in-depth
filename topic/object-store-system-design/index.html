@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Design: an object store (S3) — System Design In Depth</title>
   <meta name="description" content="An object store works like a huge warehouse with a card catalogue. The catalogue metadata service records, for every item name, its size, checksum, owner and.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Design: an object store (S3) — System Design In Depth">
   <meta property="og:description" content="An object store works like a huge warehouse with a card catalogue. The catalogue metadata service records, for every item name, its size, checksum, owner and.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/object-store-system-design/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-object-store-system-design.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Design: an object store (S3) — System Design In Depth">
   <meta name="twitter:description" content="An object store works like a huge warehouse with a card catalogue. The catalogue metadata service records, for every item name, its size, checksum, owner and.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-object-store-system-design.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/object-store-system-design/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Design: an object store (S3)",
+  "description": "An object store works like a huge warehouse with a card catalogue. The catalogue metadata service records, for every item name, its size, checksum, owner and.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-object-store-system-design.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/object-store-system-design/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="object-store-system-design">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Design: an object store (S3)</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">design</span>
            <span class="tag">system-design</span> <span class="tag">object-storage</span> <span class="tag">design</span>
         </div>
-        <h1 class="lesson-header__title">Design: an object store (S3)</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Design: an object store (S3)</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 6.1: Infrastructure & Core Service Designs</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 18, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="object-store-system-design">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/design-services" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/object-store-system-design/" data-share-title="Design: an object store (S3) — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;zplIwqWBhwg&quot;,&quot;title&quot;:&quot;Amazon S3 (Object Stores) - In Practice | Distributed Systems Deep Dives With Ex-Google SWE&quot;,&quot;channel&quot;:&quot;Jordan has no life&quot;,&quot;why&quot;:&quot;Explains how an S3-like store is built internally: the metadata and data split, chunking, replication vs erasure coding, and consistency. The current video is about using object storage in interviews, not designing one.&quot;,&quot;length&quot;:&quot;17:40&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>An object store works like a huge warehouse with a card catalogue. The <strong>catalogue</strong> (metadata service) records, for every item name, its size, checksum, owner and which shelves hold its pieces. The <strong>shelves</strong> (storage nodes) just hold numbered boxes and have no idea what is in them. To survive a shelf collapsing, you either keep three copies of every box (replication), or you split each item into 8 boxes plus 4 "recovery" boxes on 12 different shelves, so any 8 of them can rebuild the item (erasure coding).</p><p><strong>Mental model:</strong> <em>a small, strongly consistent metadata system in front of a huge, dumb, append-mostly data system</em>. Durability comes from spreading pieces across independent failure domains.</p><ul><li><strong>Trap: erasure coding everything.</strong> Small objects (a few KB) cost more to erasure-code than they save. Pack small objects into large volumes first (Facebook's Haystack, Dropbox's Magic Pocket), or replicate them.</li><li><strong>Trap: ignoring repair traffic.</strong> Rebuilding one lost chunk under an 8+4 code means reading 8 surviving chunks. Durability depends on how <em>quickly</em> you repair before a second or third failure.</li><li><strong>Trap: treating a bucket listing like a directory.</strong> Keys are flat strings. "Folders" are just prefixes, and listing is a range scan on the metadata index.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-object-store-system-design">
+        <button class="audio-player__play-btn" id="audio-btn-object-store-system-design" data-action="toggle-audio" data-slug="object-store-system-design" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-object-store-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-object-store-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-object-store-system-design">0:00 / 3:45</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="object-store-system-design" id="audio-track-object-store-system-design">
+          <div class="audio-player__progress" id="audio-bar-object-store-system-design" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="object-store-system-design" id="audio-speed-object-store-system-design" title="Playback speed">1x</button>
+        <audio id="audio-object-store-system-design" src="audio/object-store-system-design.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> Amazon S3 (Object Stores) - In Practice | Distributed Systems Deep Dives With Ex-Google SWE</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Jordan has no life · 17:40 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;zplIwqWBhwg&quot;,&quot;title&quot;:&quot;Amazon S3 (Object Stores) - In Practice | Distributed Systems Deep Dives With Ex-Google SWE&quot;,&quot;channel&quot;:&quot;Jordan has no life&quot;,&quot;why&quot;:&quot;Explains how an S3-like store is built internally: the metadata and data split, chunking, replication vs erasure coding, and consistency. The current video is about using object storage in interviews, not designing one.&quot;,&quot;length&quot;:&quot;17:40&quot;}">
       <div class="video-embed" id="video-zplIwqWBhwg"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="zplIwqWBhwg">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/zplIwqWBhwg/hqdefault.jpg"
                alt="Amazon S3 (Object Stores) - In Practice | Distributed Systems Deep Dives With Ex-Google SWE"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">Explains how an S3-like store is built internally: the metadata and data split, chunking, replication vs erasure coding, and consistency. The current video is about using object storage in interviews, not designing one.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,30 +973,12 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>An object store works like a huge warehouse with a card catalogue. The <strong>catalogue</strong> (metadata service) records, for every item name, its size, checksum, owner and which shelves hold its pieces. The <strong>shelves</strong> (storage nodes) just hold numbered boxes and have no idea what is in them. To survive a shelf collapsing, you either keep three copies of every box (replication), or you split each item into 8 boxes plus 4 "recovery" boxes on 12 different shelves, so any 8 of them can rebuild the item (erasure coding).</p><p><strong>Mental model:</strong> <em>a small, strongly consistent metadata system in front of a huge, dumb, append-mostly data system</em>. Durability comes from spreading pieces across independent failure domains.</p><ul><li><strong>Trap: erasure coding everything.</strong> Small objects (a few KB) cost more to erasure-code than they save. Pack small objects into large volumes first (Facebook's Haystack, Dropbox's Magic Pocket), or replicate them.</li><li><strong>Trap: ignoring repair traffic.</strong> Rebuilding one lost chunk under an 8+4 code means reading 8 surviving chunks. Durability depends on how <em>quickly</em> you repair before a second or third failure.</li><li><strong>Trap: treating a bucket listing like a directory.</strong> Keys are flat strings. "Folders" are just prefixes, and listing is a range scan on the metadata index.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-object-store-system-design">
-        <button class="audio-player__play-btn" id="audio-btn-object-store-system-design" data-action="toggle-audio" data-slug="object-store-system-design" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-object-store-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-object-store-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-object-store-system-design">0:00 / 3:45</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="object-store-system-design" id="audio-track-object-store-system-design">
-          <div class="audio-player__progress" id="audio-bar-object-store-system-design" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="object-store-system-design" id="audio-speed-object-store-system-design" title="Playback speed">1x</button>
-        <audio id="audio-object-store-system-design" src="audio/object-store-system-design.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>Object Storage vs. Block & File Systems</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">Object Storage vs. Block & File Systems</h2>
       <p>Object storage (like Amazon S3, Google Cloud Storage, or MinIO) is designed for large binary objects such as images, videos, and backups. It generally does not support in-place byte mutation, but many services do allow a key to be replaced or deleted; immutable names, retention controls, or versioning are separate policies. Unlike POSIX file systems, object APIs commonly expose key-oriented operations such as <code>GET</code>, <code>PUT</code>, <code>DELETE</code>, and <code>HEAD</code>.</p>
 
-      <h2>Storage Tiering Architecture</h2>
+      <h2 id="topic-sec-2">Storage Tiering Architecture</h2>
       <div class="mermaid">
 flowchart TD
     Client["HTTP Client"] --> Edge["API & Load Balancer Tier"]
@@ -945,13 +989,13 @@ flowchart TD
     StorageNode --> Disk3[("Disk 3: Erasure Coding Parity")]
       </div>
 
-      <h2>Separation of Metadata and Payload Data</h2>
+      <h2 id="topic-sec-3">Separation of Metadata and Payload Data</h2>
       <ul>
         <li><strong>Metadata Tier:</strong> Stores object key, bucket name, size, ETag/checksum, ownership, and mapping to physical disk blocks. Stored in high-speed distributed KV stores (like Spanner, CockroachDB, or Cassandra).</li>
         <li><strong>Data Storage Tier:</strong> Large object payloads are split into fixed-size chunks (e.g., 64MB or 128MB) and written append-only to storage daemon drives.</li>
       </ul>
 
-      <h2>Durability via Erasure Coding vs. 3x Replication</h2>
+      <h2 id="topic-sec-4">Durability via Erasure Coding vs. 3x Replication</h2>
       <p>Standard 3x replication carries a 200% storage overhead (300GB disk used for 100GB data). Modern object stores implement <strong>Reed-Solomon Erasure Coding</strong> (e.g., 8 + 4 scheme):</p>
       <ul>
         <li>Data is split into 8 data chunks, and 4 parity chunks are generated (total 12 chunks).</li>
@@ -959,7 +1003,7 @@ flowchart TD
       </ul>
     
 <!-- enriched -->
-<h2>Worked example: 3x replication vs RS(8,4)</h2><table><thead><tr><th>Scheme</th><th>Raw storage for 10 PB logical</th><th>Failures tolerated</th><th>Read to repair one lost 20 TB drive</th><th>Read latency</th></tr></thead><tbody><tr><td>3x replication</td><td>30 PB</td><td>2 copies lost</td><td>About 20 TB (copy from one replica)</td><td>Read from 1 node</td></tr><tr><td>Reed-Solomon 8+4</td><td>15 PB</td><td>Any 4 of 12 chunks lost</td><td>About 160 TB (8 chunks per lost chunk)</td><td>Read 8 chunks in parallel; slow nodes add tail latency</td></tr><tr><td>Hybrid (replicate recent objects, erasure-code them after N days)</td><td>Between the two</td><td>Both</td><td>Both</td><td>Fast for new objects</td></tr></tbody></table><p>Saving 15 PB of raw disk is worth millions per year, which is why large stores erasure-code warm and cold data. The extra repair traffic is why codes that reduce repair reads, such as Local Reconstruction Codes used in Azure Storage, exist.</p><h2>Write path</h2><div class="mermaid">sequenceDiagram
+<h2 id="topic-sec-5">Worked example: 3x replication vs RS(8,4)</h2><table><thead><tr><th>Scheme</th><th>Raw storage for 10 PB logical</th><th>Failures tolerated</th><th>Read to repair one lost 20 TB drive</th><th>Read latency</th></tr></thead><tbody><tr><td>3x replication</td><td>30 PB</td><td>2 copies lost</td><td>About 20 TB (copy from one replica)</td><td>Read from 1 node</td></tr><tr><td>Reed-Solomon 8+4</td><td>15 PB</td><td>Any 4 of 12 chunks lost</td><td>About 160 TB (8 chunks per lost chunk)</td><td>Read 8 chunks in parallel; slow nodes add tail latency</td></tr><tr><td>Hybrid (replicate recent objects, erasure-code them after N days)</td><td>Between the two</td><td>Both</td><td>Both</td><td>Fast for new objects</td></tr></tbody></table><p>Saving 15 PB of raw disk is worth millions per year, which is why large stores erasure-code warm and cold data. The extra repair traffic is why codes that reduce repair reads, such as Local Reconstruction Codes used in Azure Storage, exist.</p><h2 id="topic-sec-6">Write path</h2><div class="mermaid">sequenceDiagram
   participant C as Client
   participant F as Front end
   participant M as Metadata service
@@ -969,8 +1013,8 @@ flowchart TD
   D-->>F: Checksums acknowledged
   F->>M: Commit key to chunk map, size and ETag
   M-->>F: Committed, new version is now visible
-  F-->>C: 200 OK with ETag</div><p>The object only becomes visible when the <strong>metadata commit</strong> happens, after the data is durable. That ordering is how S3 provides strong read-after-write consistency, which it has done for all operations since December 2020. A crash before the commit leaves orphaned chunks, which a background garbage collector cleans up.</p><h2>Numbers worth knowing</h2><ul><li>S3 is designed for 99.999999999% (eleven nines) annual durability, and advertises at least 3,500 writes and 5,500 reads per second <em>per prefix</em>, scaling out by adding prefixes.</li><li>Multipart upload: parts of 5 MiB to 5 GiB, at most 10,000 parts, objects up to 5 TiB. Parts upload in parallel and can be retried individually.</li><li>Metadata scale: 100 billion objects at about 300 B of metadata each is about 30 TB. It must be sharded by bucket and key range, which is why listing a prefix is fast but "find all objects larger than X" is not supported natively.</li></ul>
-</div></article>
+  F-->>C: 200 OK with ETag</div><p>The object only becomes visible when the <strong>metadata commit</strong> happens, after the data is durable. That ordering is how S3 provides strong read-after-write consistency, which it has done for all operations since December 2020. A crash before the commit leaves orphaned chunks, which a background garbage collector cleans up.</p><h2 id="topic-sec-7">Numbers worth knowing</h2><ul><li>S3 is designed for 99.999999999% (eleven nines) annual durability, and advertises at least 3,500 writes and 5,500 reads per second <em>per prefix</em>, scaling out by adding prefixes.</li><li>Multipart upload: parts of 5 MiB to 5 GiB, at most 10,000 parts, objects up to 5 TiB. Parts upload in parallel and can be retried individually.</li><li>Metadata scale: 100 billion objects at about 300 B of metadata each is about 30 TB. It must be sharded by bucket and key range, which is why listing a prefix is fast but "find all objects larger than X" is not supported natively.</li></ul>
+</div></article><div id="check-slider-object-store-system-design">
       <section class="check-slider" data-slug="object-store-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1242,15 +1286,15 @@ flowchart TD
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-object-store-system-design">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Decouple metadata management from high-volume binary payload data storage.</div><div class="takeaways__item">Object APIs generally avoid in-place byte mutation, but keys may still be replaced or deleted unless versioning or retention policy prevents it.</div><div class="takeaways__item">Erasure coding reduces storage overhead for a chosen fault tolerance; end-to-end durability also depends on failure-domain placement, checksums, repair speed, and operations.</div><div class="takeaways__item">Multipart uploads allow large files to be uploaded concurrently and resumed seamlessly on network interruptions.</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://min.io/docs/minio/linux/index.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> MinIO High Performance Object Storage Architecture</a><a class="further-reading__link" href="https://docs.ceph.com/en/latest/architecture/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Erasure Coding in Ceph and Distributed Storage</a>
           </div>
@@ -1263,10 +1307,10 @@ flowchart TD
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="object-store-system-design" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="object-store-system-design" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Design%3A%20an%20object%20store%20(S3)&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Design%3A%20an%20object%20store%20(S3)%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fobject-store-system-design%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1279,9 +1323,96 @@ flowchart TD
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/partitioned-log-system-design/" data-nav="topic" data-slug="partitioned-log-system-design">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Design: a Kafka-style log</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Object Storage vs. Block &amp; File Systems</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Storage Tiering Architecture</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Separation of Metadata and Payload Data</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Durability via Erasure Coding vs. 3x Replication</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Worked example: 3x replication vs RS(8,4)</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Write path</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Numbers worth knowing</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-object-store-system-design">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-object-store-system-design">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 6.1</span>
+            <span>0/7 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/object-store-system-design/" data-share-title="Design: an object store (S3) — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1289,7 +1420,7 @@ flowchart TD
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1343,7 +1474,7 @@ flowchart TD
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1352,8 +1483,8 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1361,30 +1492,9 @@ flowchart TD
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Design: an object store (S3)",
-  "description": "An object store works like a huge warehouse with a card catalogue. The catalogue metadata service records, for every item name, its size, checksum, owner and.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/object-store-system-design/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

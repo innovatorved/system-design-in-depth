@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       try { localStorage.setItem('sd-theme', next); } catch {}
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'dark' ? '#000000' : '#ffffff');
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'dark' ? '#0f0f10' : '#f7f7f5');
       syncThemeIcons(next);
     });
   }

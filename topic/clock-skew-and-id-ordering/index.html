@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Clock skew and ID ordering — System Design In Depth</title>
   <meta name="description" content="Imagine two people in different cities each writing the time on letters using their own wristwatches. One watch runs a few seconds fast.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Clock skew and ID ordering — System Design In Depth">
   <meta property="og:description" content="Imagine two people in different cities each writing the time on letters using their own wristwatches. One watch runs a few seconds fast.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/clock-skew-and-id-ordering/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-clock-skew-and-id-ordering.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Clock skew and ID ordering — System Design In Depth">
   <meta name="twitter:description" content="Imagine two people in different cities each writing the time on letters using their own wristwatches. One watch runs a few seconds fast.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-clock-skew-and-id-ordering.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/clock-skew-and-id-ordering/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Clock skew and ID ordering",
+  "description": "Imagine two people in different cities each writing the time on letters using their own wristwatches. One watch runs a few seconds fast.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-clock-skew-and-id-ordering.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/clock-skew-and-id-ordering/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="clock-skew-and-id-ordering">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Clock skew and ID ordering</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">clocks</span> <span class="tag">identifiers</span>
         </div>
-        <h1 class="lesson-header__title">Clock skew and ID ordering</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Clock skew and ID ordering</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 2.2: NoSQL Architectures, Partitioning & IDs</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="clock-skew-and-id-ordering">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-nosql-partitioning" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/clock-skew-and-id-ordering/" data-share-title="Clock skew and ID ordering — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;FQ_2N3AQu0M&quot;,&quot;title&quot;:&quot;Distributed Systems 3.1: Physical time&quot;,&quot;channel&quot;:&quot;Martin Kleppmann&quot;,&quot;why&quot;:&quot;Kleppmann&#039;s Cambridge lecture on quartz drift, UTC, leap seconds and why physical timestamps cannot order events; rigorous and very clear.&quot;,&quot;length&quot;:&quot;20:48&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Imagine two people in different cities each writing the time on letters using their own wristwatches. One watch runs a few seconds fast. A reply can end up stamped <em>earlier</em> than the letter it answers, so sorting letters by their stamps tells a false story. Logical clocks fix this by writing "this is my reply to letter #7" on each letter, so the order comes from cause and effect, not wristwatches.</p><p><strong>Mental model:</strong> physical timestamps are <em>approximately</em> right and can disagree across machines by milliseconds or more, and can even jump backwards. If correctness depends on order, use causality (Lamport or vector clocks, hybrid logical clocks) or bounded uncertainty (TrueTime), not raw wall-clock time.</p><ul><li><strong>Last-write-wins by wall clock:</strong> a node with a fast clock silently wins every conflict, and a correct later write can be discarded.</li><li><strong>Measuring durations with wall time:</strong> use a monotonic clock for timeouts and latency. The wall clock can step.</li><li><strong>Assuming Lamport order equals causality:</strong> L(a) &lt; L(b) does <em>not</em> imply a happened before b. Only vector clocks can detect concurrency.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-clock-skew-and-id-ordering">
+        <button class="audio-player__play-btn" id="audio-btn-clock-skew-and-id-ordering" data-action="toggle-audio" data-slug="clock-skew-and-id-ordering" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-clock-skew-and-id-ordering" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-clock-skew-and-id-ordering" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-clock-skew-and-id-ordering">0:00 / 3:45</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="clock-skew-and-id-ordering" id="audio-track-clock-skew-and-id-ordering">
+          <div class="audio-player__progress" id="audio-bar-clock-skew-and-id-ordering" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="clock-skew-and-id-ordering" id="audio-speed-clock-skew-and-id-ordering" title="Playback speed">1x</button>
+        <audio id="audio-clock-skew-and-id-ordering" src="audio/clock-skew-and-id-ordering.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> Distributed Systems 3.1: Physical time</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Martin Kleppmann · 20:48 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;FQ_2N3AQu0M&quot;,&quot;title&quot;:&quot;Distributed Systems 3.1: Physical time&quot;,&quot;channel&quot;:&quot;Martin Kleppmann&quot;,&quot;why&quot;:&quot;Kleppmann&#039;s Cambridge lecture on quartz drift, UTC, leap seconds and why physical timestamps cannot order events; rigorous and very clear.&quot;,&quot;length&quot;:&quot;20:48&quot;}">
       <div class="video-embed" id="video-FQ_2N3AQu0M"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="FQ_2N3AQu0M">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/FQ_2N3AQu0M/hqdefault.jpg"
                alt="Distributed Systems 3.1: Physical time"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">Kleppmann&#039;s Cambridge lecture on quartz drift, UTC, leap seconds and why physical timestamps cannot order events; rigorous and very clear.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,33 +973,15 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Imagine two people in different cities each writing the time on letters using their own wristwatches. One watch runs a few seconds fast. A reply can end up stamped <em>earlier</em> than the letter it answers, so sorting letters by their stamps tells a false story. Logical clocks fix this by writing "this is my reply to letter #7" on each letter, so the order comes from cause and effect, not wristwatches.</p><p><strong>Mental model:</strong> physical timestamps are <em>approximately</em> right and can disagree across machines by milliseconds or more, and can even jump backwards. If correctness depends on order, use causality (Lamport or vector clocks, hybrid logical clocks) or bounded uncertainty (TrueTime), not raw wall-clock time.</p><ul><li><strong>Last-write-wins by wall clock:</strong> a node with a fast clock silently wins every conflict, and a correct later write can be discarded.</li><li><strong>Measuring durations with wall time:</strong> use a monotonic clock for timeouts and latency. The wall clock can step.</li><li><strong>Assuming Lamport order equals causality:</strong> L(a) &lt; L(b) does <em>not</em> imply a happened before b. Only vector clocks can detect concurrency.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-clock-skew-and-id-ordering">
-        <button class="audio-player__play-btn" id="audio-btn-clock-skew-and-id-ordering" data-action="toggle-audio" data-slug="clock-skew-and-id-ordering" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-clock-skew-and-id-ordering" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-clock-skew-and-id-ordering" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-clock-skew-and-id-ordering">0:00 / 3:45</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="clock-skew-and-id-ordering" id="audio-track-clock-skew-and-id-ordering">
-          <div class="audio-player__progress" id="audio-bar-clock-skew-and-id-ordering" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="clock-skew-and-id-ordering" id="audio-speed-clock-skew-and-id-ordering" title="Playback speed">1x</button>
-        <audio id="audio-clock-skew-and-id-ordering" src="audio/clock-skew-and-id-ordering.mp3" preload="metadata"></audio>
-      </div><article class="prose"><h2>Clock skew and ID ordering</h2>
+      </details><article class="prose"><h2 id="topic-sec-1">Clock skew and ID ordering</h2>
 <p>A time-bearing ID records a clock reading used during generation. Sorting those IDs can help browsing, but it does not establish the order of events across machines.</p>
 <p>Two machines may disagree about the current time. Even when their readings match, worker fields and local counters break ties according to the format rather than the events' relationship.</p>
-<h2>Skew and rollback are different problems</h2>
+<h2 id="topic-sec-2">Skew and rollback are different problems</h2>
 <p>A wall clock reports calendar time, such as Unix milliseconds. The offset between machines' readings at the same instant is commonly called clock skew. Drift and clock corrections can change that offset.</p>
 <p>Rollback is a clock moving behind its own earlier reading. The course Snowflake generator detects this locally. It cannot detect that another machine is twenty milliseconds ahead, and ordinary clock synchronization does not by itself establish a strict event-order guarantee.</p>
 <p>A process pause adds another complication: a process can generate an ID, wait, then store or send its record. Generation time, receipt time and commit time describe different events even without a backward clock adjustment.</p>
-<h2>Follow a request and its reply</h2>
+<h2 id="topic-sec-3">Follow a request and its reply</h2>
 <p>Choose the following exchange. A generates the request's ID at elapsed time 1030; B generates the reply's ID at 1005; A records receipt at 1031. These are chosen readings relative to the course epoch, not measured network times.</p>
 <div class="mermaid">sequenceDiagram
     accTitle: A reply whose clock value is earlier
@@ -959,21 +1003,21 @@ same timestamp: worker 17 emitted first, smaller ID belongs to worker 3
 chosen wall-clock difference: -100
 chosen monotonic-clock difference: 10</code></pre></div>
 <p>Both generators follow their local rules and use distinct worker identities. There is no duplicate: the failure is the interpretation of their numeric order. At an equal timestamp, worker 3 sorts before worker 17 even when worker 17 emitted first, because the worker field precedes the sequence field.</p>
-<h2>Ask which order the product needs</h2>
+<h2 id="topic-sec-4">Ask which order the product needs</h2>
 <table><thead><tr><th>Requirement</th><th>Information or mechanism to use</th></tr></thead><tbody><tr><td>Stable page traversal</td><td>A complete ordering tuple and defined visibility rules</td></tr><tr><td>Show which request produced a reply</td><td>The retained request/reply relationship</td></tr><tr><td>Reject an update based on stale state</td><td>A checked record version or suitable transaction</td></tr><tr><td>Agree on a replicated operation sequence</td><td>The system's agreed log order</td></tr><tr><td>Reject a superseded owner's write</td><td>A fencing token compared with the latest accepted token</td></tr></tbody></table>
 <p>These mechanisms answer different questions. A log position orders entries in that log; it does not automatically order every real-world event. A unique ID can break a query tie without proving causality. Logical clocks preserve specified dependencies, but comparing two scalar clock values does not prove one event caused the other.</p>
 <p>Likewise, a database sequence allocates values before the caller's work finishes. A transaction holding a smaller ID can commit later. If commit order matters, use the database's explicit supported ordering contract instead of treating its primary key as that contract.</p>
-<h2>Measure a local timeout with elapsed time</h2>
+<h2 id="topic-sec-5">Measure a local timeout with elapsed time</h2>
 <p>The replay chooses wall-clock readings of 1000 then 900 milliseconds, yielding a negative difference. Separate increasing readings of 5000 then 5010 yield ten milliseconds. This demonstrates arithmetic under supplied inputs; it does not change the operating system clock.</p>
 <p>Use a monotonic clock for a local timeout budget. Python's <code>time.monotonic()</code> cannot go backward and is unaffected by system-clock updates. Its origin is unspecified: differences are useful, while treating the value as a calendar timestamp is unsupported.</p>
 <p>That clock does not give independently booted machines a shared epoch or restore lost allocator history. Keep local elapsed measurement separate from a timestamp intended for storage or interchange.</p>
 <p>For a mutable record, choosing the update with the largest time-bearing ID makes clock offset part of the conflict policy. A fast clock can make an earlier update defeat a later correction. Use the version or transaction rule the product actually needs, and keep the ID's job limited to identifying the record.</p><hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--divider);"><div class="lesson-deep-dive"><div class="lesson-content">
-      <h2>Why Physical Clocks Lie in Distributed Systems</h2>
+      <h2 id="topic-sec-6">Why Physical Clocks Lie in Distributed Systems</h2>
       <p>Modern computers track physical time using quartz crystal oscillators. Due to temperature fluctuations and voltage noise, quartz crystals drift—commodity oscillators are typically specified at about 10-50 ppm, roughly 1-4 seconds per day if left unsynchronized. Distributed clusters synchronize physical time using <strong>NTP (Network Time Protocol)</strong>. However, because network packets experience asymmetric network delay, NTP synchronization itself carries residual error: from under a millisecond on a well-run datacenter LAN (for example with chrony) to tens of milliseconds or more over the internet. PTP with hardware timestamping reaches microseconds.</p>
       
       <p>Consequently, <strong>physical wall clocks cannot guarantee causality in distributed systems</strong>. If Node A writes record X at physical time t<sub>1</sub>, and sends a message to Node B who writes record Y at physical time t<sub>2</sub>, clock skew can cause t<sub>2</sub> &lt; t<sub>1</sub>. Relying on physical timestamps for Last-Write-Wins (LWW) silently corrupts data.</p>
 
-      <h2>Google Spanner's TrueTime API: Bounding Uncertainty</h2>
+      <h2 id="topic-sec-7">Google Spanner's TrueTime API: Bounding Uncertainty</h2>
       <div class="mermaid">
 flowchart TD
     GPS["GPS Master Receivers in Datacenter"] --> TT["TrueTime API: tt.now()"]
@@ -983,7 +1027,7 @@ flowchart TD
     CommitWait --> GuaranteedOrder["Strict Serializability Across Continents Guaranteed"]
       </div>
 
-      <h2>Under the Hood: Lamport Timestamps & Vector Clocks</h2>
+      <h2 id="topic-sec-8">Under the Hood: Lamport Timestamps & Vector Clocks</h2>
       <h3>1. Lamport Timestamps (Causal Ordering)</h3>
       <p>Each process maintains a single integer counter L. When an event occurs locally, L = L + 1. When sending a message, the process attaches L. When a process receives a message with timestamp L<sub>msg</sub>, it sets its local counter: L = max(L, L<sub>msg</sub>) + 1. If event A caused event B, then L(A) &lt; L(B). However, identical Lamport timestamps do not tell us whether events were concurrent.</p>
 
@@ -995,8 +1039,8 @@ flowchart TD
       </ul>
     
 <!-- enriched -->
-<h2>Worked example: how big is skew, really?</h2><ul><li><strong>Quartz drift:</strong> typical server oscillators are specified at about 10-50 ppm. 20 ppm is 1.7 seconds per day of drift if left unsynchronized, so clocks <em>must</em> be disciplined continuously.</li><li><strong>NTP over the internet:</strong> tens of ms of error is typical. <strong>Within a datacenter</strong> with chrony: often under 1 ms. <strong>PTP with hardware timestamping</strong> (AWS Time Sync, Meta's PTP rollout): microseconds.</li><li><strong>Spanner TrueTime:</strong> the uncertainty epsilon sawtooths between about 1 and 7 ms (average about 4 ms in the 2012 paper). Commit-wait therefore adds a few ms per write.</li></ul><h3>Lamport timestamps step by step</h3><table><thead><tr><th>Event</th><th>Node A clock</th><th>Node B clock</th></tr></thead><tbody><tr><td>A local write</td><td>1</td><td>0</td></tr><tr><td>A sends message (carries 1)</td><td>2</td><td>0</td></tr><tr><td>B local write</td><td>2</td><td>1</td></tr><tr><td>B receives message: max(1, 2) + 1</td><td>2</td><td>3</td></tr><tr><td>B writes reply</td><td>2</td><td>4</td></tr></tbody></table><p>The reply (4) is guaranteed to sort after the original send (2), whatever the wall clocks say. Ties are broken by node ID to produce a total order.</p><h3>Choosing an ordering tool</h3><table><thead><tr><th>Tool</th><th>Size</th><th>Gives you</th><th>Used by</th></tr></thead><tbody><tr><td>Wall clock / Snowflake</td><td>64 bits</td><td>Rough order, human-readable time</td><td>Twitter, Discord IDs</td></tr><tr><td>Lamport clock</td><td>One integer</td><td>Total order consistent with causality</td><td>Consensus logs, simple replication</td></tr><tr><td>Vector clock</td><td>One counter per node</td><td>Detects concurrent (conflicting) writes</td><td>Dynamo, Riak (dotted version vectors)</td></tr><tr><td>Hybrid logical clock</td><td>64 bits (physical + logical)</td><td>Close to wall time and causally consistent</td><td>CockroachDB, YugabyteDB, MongoDB cluster time</td></tr><tr><td>TrueTime</td><td>Interval</td><td>External consistency (real-time order)</td><td>Google Spanner</td></tr></tbody></table><h3>Failure modes</h3><ul><li><strong>Leap seconds and NTP steps:</strong> historical outages (2012 Linux leap-second bug). Use leap smearing (Google, AWS).</li><li><strong>VM pause or live migration:</strong> a process can resume seconds later without noticing. Leases based on local time must account for this, which is the motivation for fencing tokens.</li><li><strong>Cassandra LWW:</strong> writes carry client or coordinator timestamps, so a skewed client can make a delete lose to an older write or vice versa.</li></ul>
-</div></div></article>
+<h2 id="topic-sec-9">Worked example: how big is skew, really?</h2><ul><li><strong>Quartz drift:</strong> typical server oscillators are specified at about 10-50 ppm. 20 ppm is 1.7 seconds per day of drift if left unsynchronized, so clocks <em>must</em> be disciplined continuously.</li><li><strong>NTP over the internet:</strong> tens of ms of error is typical. <strong>Within a datacenter</strong> with chrony: often under 1 ms. <strong>PTP with hardware timestamping</strong> (AWS Time Sync, Meta's PTP rollout): microseconds.</li><li><strong>Spanner TrueTime:</strong> the uncertainty epsilon sawtooths between about 1 and 7 ms (average about 4 ms in the 2012 paper). Commit-wait therefore adds a few ms per write.</li></ul><h3>Lamport timestamps step by step</h3><table><thead><tr><th>Event</th><th>Node A clock</th><th>Node B clock</th></tr></thead><tbody><tr><td>A local write</td><td>1</td><td>0</td></tr><tr><td>A sends message (carries 1)</td><td>2</td><td>0</td></tr><tr><td>B local write</td><td>2</td><td>1</td></tr><tr><td>B receives message: max(1, 2) + 1</td><td>2</td><td>3</td></tr><tr><td>B writes reply</td><td>2</td><td>4</td></tr></tbody></table><p>The reply (4) is guaranteed to sort after the original send (2), whatever the wall clocks say. Ties are broken by node ID to produce a total order.</p><h3>Choosing an ordering tool</h3><table><thead><tr><th>Tool</th><th>Size</th><th>Gives you</th><th>Used by</th></tr></thead><tbody><tr><td>Wall clock / Snowflake</td><td>64 bits</td><td>Rough order, human-readable time</td><td>Twitter, Discord IDs</td></tr><tr><td>Lamport clock</td><td>One integer</td><td>Total order consistent with causality</td><td>Consensus logs, simple replication</td></tr><tr><td>Vector clock</td><td>One counter per node</td><td>Detects concurrent (conflicting) writes</td><td>Dynamo, Riak (dotted version vectors)</td></tr><tr><td>Hybrid logical clock</td><td>64 bits (physical + logical)</td><td>Close to wall time and causally consistent</td><td>CockroachDB, YugabyteDB, MongoDB cluster time</td></tr><tr><td>TrueTime</td><td>Interval</td><td>External consistency (real-time order)</td><td>Google Spanner</td></tr></tbody></table><h3>Failure modes</h3><ul><li><strong>Leap seconds and NTP steps:</strong> historical outages (2012 Linux leap-second bug). Use leap smearing (Google, AWS).</li><li><strong>VM pause or live migration:</strong> a process can resume seconds later without noticing. Leases based on local time must account for this, which is the motivation for fencing tokens.</li><li><strong>Cassandra LWW:</strong> writes carry client or coordinator timestamps, so a skewed client can make a delete lose to an older write or vice versa.</li></ul>
+</div></div></article><div id="check-slider-clock-skew-and-id-ordering">
       <section class="check-slider" data-slug="clock-skew-and-id-ordering" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1268,7 +1312,7 @@ flowchart TD
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
+      </section></div><div id="topic-simulator-clock-skew-and-id-ordering">
         <div class="simulator-card" id="sim-vc">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Vector Clocks vs Lamport Clocks</div>
@@ -1307,15 +1351,15 @@ flowchart TD
             <label>with <select class="simulator-card__input sim-select" id="vc-b"></select></label>
           </div>
           <div class="sim-verdict" id="vc-verdict">Create a few events, then pick two to compare.</div>
-        </div>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+        </div></div>
+        <div class="takeaways" id="topic-takeaways-clock-skew-and-id-ordering">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Physical wall clocks experience drift and NTP network latency, making physical timestamps unsafe for distributed causality.</div><div class="takeaways__item">Google Spanner uses GPS and atomic clocks to bound uncertainty (ε typically 1-7 ms) and enforces commit waits.</div><div class="takeaways__item">Vector clocks track causality across distributed nodes, exposing concurrent write conflicts for explicit reconciliation.</div>
           </div>
         </div>
       <div class="lesson-builds">
-        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
+        <h2 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h2>
         
           <a class="lesson-builds__item" href="/build/snowflake-id-generator/" data-action="navigate-build" data-build-id="snowflake-id-generator">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1327,7 +1371,7 @@ flowchart TD
           </a>
       </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://lamport.azurewebsites.net/pubs/time-clocks.pdf" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Leslie Lamport: Time, Clocks, and the Ordering of Events in a Distributed System (1978)</a><a class="further-reading__link" href="https://research.google/pubs/spanner-googles-globally-distributed-database/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Google Spanner: TrueTime and External Consistency</a>
           </div>
@@ -1340,10 +1384,10 @@ flowchart TD
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="clock-skew-and-id-ordering" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="clock-skew-and-id-ordering" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Clock%20skew%20and%20ID%20ordering&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Clock%20skew%20and%20ID%20ordering%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fclock-skew-and-id-ordering%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1356,9 +1400,108 @@ flowchart TD
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/keyset-pagination/" data-nav="topic" data-slug="keyset-pagination">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Keyset pagination</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Clock skew and ID ordering</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Skew and rollback are different problems</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Follow a request and its reply</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Ask which order the product needs</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Measure a local timeout with elapsed time</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Why Physical Clocks Lie in Distributed Systems</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Google Spanner&#039;s TrueTime API: Bounding Uncertainty</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-8">Under the Hood: Lamport Timestamps &amp; Vector Clocks</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-9">Worked example: how big is skew, really?</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-clock-skew-and-id-ordering">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-simulator-clock-skew-and-id-ordering">Interactive simulator</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-clock-skew-and-id-ordering">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 2.2</span>
+            <span>0/14 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/clock-skew-and-id-ordering/" data-share-title="Clock skew and ID ordering — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1366,7 +1509,7 @@ flowchart TD
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1420,7 +1563,7 @@ flowchart TD
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1430,8 +1573,8 @@ flowchart TD
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-distributed.js?v=30d663cc4e"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1439,30 +1582,9 @@ flowchart TD
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Clock skew and ID ordering",
-  "description": "Imagine two people in different cities each writing the time on letters using their own wristwatches. One watch runs a few seconds fast.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/clock-skew-and-id-ordering/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

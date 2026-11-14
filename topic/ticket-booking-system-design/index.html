@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Design: a ticket booking system — System Design In Depth</title>
   <meta name="description" content="Picture a theatre box office on the morning a hit show goes on sale. A queue outside the waiting room lets people in a few at a time, so the counter is not.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Design: a ticket booking system — System Design In Depth">
   <meta property="og:description" content="Picture a theatre box office on the morning a hit show goes on sale. A queue outside the waiting room lets people in a few at a time, so the counter is not.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/ticket-booking-system-design/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-ticket-booking-system-design.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Design: a ticket booking system — System Design In Depth">
   <meta name="twitter:description" content="Picture a theatre box office on the morning a hit show goes on sale. A queue outside the waiting room lets people in a few at a time, so the counter is not.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-ticket-booking-system-design.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/ticket-booking-system-design/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Design: a ticket booking system",
+  "description": "Picture a theatre box office on the morning a hit show goes on sale. A queue outside the waiting room lets people in a few at a time, so the counter is not.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-ticket-booking-system-design.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/ticket-booking-system-design/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="ticket-booking-system-design">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Design: a ticket booking system</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">design</span>
            <span class="tag">system-design</span> <span class="tag">booking</span> <span class="tag">workflows</span>
         </div>
-        <h1 class="lesson-header__title">Design: a ticket booking system</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Design: a ticket booking system</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 6.2: Interactive Product System Designs</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 18, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="ticket-booking-system-design">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/design-products" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/ticket-booking-system-design/" data-share-title="Design: a ticket booking system — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;fhdPyoO6aXI&quot;,&quot;title&quot;:&quot;System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer&quot;,&quot;channel&quot;:&quot;Hello Interview&quot;,&quot;why&quot;:&quot;The best-known walkthrough of this exact problem: seat holds with TTLs, preventing double booking, a virtual waiting room and search. It follows the lesson&#039;s structure closely.&quot;,&quot;length&quot;:&quot;58:39&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Picture a theatre box office on the morning a hit show goes on sale. A <strong>queue outside</strong> (the waiting room) lets people in a few at a time, so the counter is not mobbed. At the counter, the clerk <strong>puts a "held" card on your seat</strong> for 10 minutes while you get your wallet out (the hold with a TTL). The ledger only marks a seat as sold if the card still has <em>your</em> name on it and has not expired (the conditional update).</p><p><strong>Mental model:</strong> <em>the seat row in an ACID database is the single source of truth. Every state change is a compare-and-set on that row.</em> Caches and queues around it absorb load, but they never decide who gets a seat.</p><ul><li><strong>Trap: checking availability, then booking, in two steps.</strong> Two buyers both see "available" and both book. The check and the write must be one atomic statement or one transaction.</li><li><strong>Trap: using a Redis TTL as the only hold.</strong> If Redis evicts or expires the key while the database still says held (or the other way round), the two disagree. Store the expiry in the database row.</li><li><strong>Trap: forgetting that payment is asynchronous.</strong> A payment can succeed after the hold expired. You need an explicit refund path, not an assumption that the timing always works out.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-ticket-booking-system-design">
+        <button class="audio-player__play-btn" id="audio-btn-ticket-booking-system-design" data-action="toggle-audio" data-slug="ticket-booking-system-design" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-ticket-booking-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-ticket-booking-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-ticket-booking-system-design">0:00 / 3:30</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="ticket-booking-system-design" id="audio-track-ticket-booking-system-design">
+          <div class="audio-player__progress" id="audio-bar-ticket-booking-system-design" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="ticket-booking-system-design" id="audio-speed-ticket-booking-system-design" title="Playback speed">1x</button>
+        <audio id="audio-ticket-booking-system-design" src="audio/ticket-booking-system-design.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Hello Interview · 58:39 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;fhdPyoO6aXI&quot;,&quot;title&quot;:&quot;System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer&quot;,&quot;channel&quot;:&quot;Hello Interview&quot;,&quot;why&quot;:&quot;The best-known walkthrough of this exact problem: seat holds with TTLs, preventing double booking, a virtual waiting room and search. It follows the lesson&#039;s structure closely.&quot;,&quot;length&quot;:&quot;58:39&quot;}">
       <div class="video-embed" id="video-fhdPyoO6aXI"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="fhdPyoO6aXI">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/fhdPyoO6aXI/hqdefault.jpg"
                alt="System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">The best-known walkthrough of this exact problem: seat holds with TTLs, preventing double booking, a virtual waiting room and search. It follows the lesson&#039;s structure closely.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,30 +973,12 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Picture a theatre box office on the morning a hit show goes on sale. A <strong>queue outside</strong> (the waiting room) lets people in a few at a time, so the counter is not mobbed. At the counter, the clerk <strong>puts a "held" card on your seat</strong> for 10 minutes while you get your wallet out (the hold with a TTL). The ledger only marks a seat as sold if the card still has <em>your</em> name on it and has not expired (the conditional update).</p><p><strong>Mental model:</strong> <em>the seat row in an ACID database is the single source of truth. Every state change is a compare-and-set on that row.</em> Caches and queues around it absorb load, but they never decide who gets a seat.</p><ul><li><strong>Trap: checking availability, then booking, in two steps.</strong> Two buyers both see "available" and both book. The check and the write must be one atomic statement or one transaction.</li><li><strong>Trap: using a Redis TTL as the only hold.</strong> If Redis evicts or expires the key while the database still says held (or the other way round), the two disagree. Store the expiry in the database row.</li><li><strong>Trap: forgetting that payment is asynchronous.</strong> A payment can succeed after the hold expired. You need an explicit refund path, not an assumption that the timing always works out.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-ticket-booking-system-design">
-        <button class="audio-player__play-btn" id="audio-btn-ticket-booking-system-design" data-action="toggle-audio" data-slug="ticket-booking-system-design" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-ticket-booking-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-ticket-booking-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-ticket-booking-system-design">0:00 / 3:30</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="ticket-booking-system-design" id="audio-track-ticket-booking-system-design">
-          <div class="audio-player__progress" id="audio-bar-ticket-booking-system-design" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="ticket-booking-system-design" id="audio-speed-ticket-booking-system-design" title="Playback speed">1x</button>
-        <audio id="audio-ticket-booking-system-design" src="audio/ticket-booking-system-design.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>The Core Challenge: Concurrency & Hot Spots</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">The Core Challenge: Concurrency & Hot Spots</h2>
       <p>Designing a high-concurrency ticket reservation platform like Ticketmaster or BookMyShow revolves around a single critical invariant: <strong>a seat must never be double-booked</strong>, even when hundreds of thousands of users attempt to purchase tickets for the same concert within seconds. At the same time, holding a seat during checkout requires a temporary reservation with an automatic timeout if payment is not completed.</p>
 
-      <h2>Reservation State Lifecycle</h2>
+      <h2 id="topic-sec-2">Reservation State Lifecycle</h2>
       <div class="mermaid">
 stateDiagram-v2
     [*] --> Available: Event Announced
@@ -944,7 +988,7 @@ stateDiagram-v2
     Booked --> [*]
       </div>
 
-      <h2>Architectural Strategy</h2>
+      <h2 id="topic-sec-3">Architectural Strategy</h2>
       <ul>
         <li><strong>Distributed Virtual Waiting Room:</strong> When traffic exceeds venue capacity, users are assigned a position in a distributed queue (using Cloudflare Waiting Room or Redis sorted sets) before accessing the seat selection map.</li>
         <li><strong>Temporary Seat Hold:</strong> Give each hold a unique token, owner, and authoritative expiry. Redis may accelerate reads or expiry notifications, but a separately expiring Redis key must not be the only proof that SQL is allowed to book the seat.</li>
@@ -956,12 +1000,12 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
         <li><strong>Read Scaling with In-Memory Caches:</strong> High-volume reads of the seating chart are served from Redis bitsets or memory-cached floor plans, while write traffic routes directly through the transactional reservation service.</li>
       </ul>
 
-      <h2>Payment Reconciliation & Webhook Callbacks</h2>
+      <h2 id="topic-sec-4">Payment Reconciliation & Webhook Callbacks</h2>
       <p>Payment processing is asynchronous, so signed callbacks can be duplicated, delayed, or reordered. If buyer A's hold expires, buyer B may acquire the seat before A's success callback arrives. The callback must idempotently attempt the token-bound booking transition; if it loses, record the payment as unmatched and run an explicit void/refund workflow with reconciliation rather than issuing two tickets or assuming an immediate refund always succeeds.</p>
     
 <!-- enriched -->
-<h2>Worked example: a 50,000-seat stadium on-sale</h2><ul><li>2 million fans arrive in the first 5 minutes. Without a waiting room, seat-map requests peak at hundreds of thousands per second, on data that changes every second.</li><li>The waiting room admits 3,000 users per minute. If an average buyer takes 6 minutes, about 18,000 people are in checkout at once, a load the reservation database can easily handle.</li><li>Holds last 10 minutes. With 50,000 seats and roughly 1 in 4 holds abandoned, expired holds release seats continuously, so the seat map must refresh often (poll every few seconds, or push updates to open sessions).</li><li>Contention is highest on the best seats. The conditional <code>UPDATE ... WHERE status = 'AVAILABLE'</code> returns 0 rows for everyone except the winner, who gets the seat. Everyone else is told immediately to choose another seat.</li></ul><h2>Concurrency options</h2><table><thead><tr><th>Technique</th><th>How it works</th><th>Strength</th><th>Weakness</th></tr></thead><tbody><tr><td>Conditional update / optimistic version</td><td><code>UPDATE ... WHERE status = 'AVAILABLE' AND version = v</code></td><td>No lock held while the user thinks; scales well</td><td>Losers must retry or pick again</td></tr><tr><td>Pessimistic row lock</td><td><code>SELECT ... FOR UPDATE</code> inside a short transaction</td><td>Simple reasoning</td><td>Lock waits pile up on hot rows; never hold it across user think time</td></tr><tr><td>Distributed lock (Redis, ZooKeeper)</td><td>Lock per seat, then write to the DB</td><td>Offloads contention from the DB</td><td>Needs fencing tokens; the lock and the DB can disagree</td></tr><tr><td>Serialised per-event queue</td><td>One consumer per event partition processes seat requests in order</td><td>No races by construction</td><td>Throughput limited by one partition; adds latency</td></tr></tbody></table><h2>General admission is a counter, not seats</h2><p>For standing-room tickets, inventory is a number: <code>UPDATE inventory SET remaining = remaining - :n WHERE event_id = :e AND remaining &gt;= :n</code>. A single counter row becomes a hotspot at thousands of updates per second. Split it into, say, 20 sub-counters of 2,500 tickets each, pick one at random, and fall back to the others when it runs out. This is the same idea as sharded counters.</p><h2>Fairness and bots</h2><ul><li>Randomise positions for everyone who arrives before the on-sale time, so refreshing early gives no advantage. Ticketmaster and Cloudflare Waiting Room both do this.</li><li>Limit tickets per account and per payment card, and require verified accounts for high-demand events (Ticketmaster Verified Fan).</li><li>Issue signed, expiring entry tokens from the waiting room, so bots cannot skip the queue by calling the checkout API directly.</li></ul>
-</div></article>
+<h2 id="topic-sec-5">Worked example: a 50,000-seat stadium on-sale</h2><ul><li>2 million fans arrive in the first 5 minutes. Without a waiting room, seat-map requests peak at hundreds of thousands per second, on data that changes every second.</li><li>The waiting room admits 3,000 users per minute. If an average buyer takes 6 minutes, about 18,000 people are in checkout at once, a load the reservation database can easily handle.</li><li>Holds last 10 minutes. With 50,000 seats and roughly 1 in 4 holds abandoned, expired holds release seats continuously, so the seat map must refresh often (poll every few seconds, or push updates to open sessions).</li><li>Contention is highest on the best seats. The conditional <code>UPDATE ... WHERE status = 'AVAILABLE'</code> returns 0 rows for everyone except the winner, who gets the seat. Everyone else is told immediately to choose another seat.</li></ul><h2 id="topic-sec-6">Concurrency options</h2><table><thead><tr><th>Technique</th><th>How it works</th><th>Strength</th><th>Weakness</th></tr></thead><tbody><tr><td>Conditional update / optimistic version</td><td><code>UPDATE ... WHERE status = 'AVAILABLE' AND version = v</code></td><td>No lock held while the user thinks; scales well</td><td>Losers must retry or pick again</td></tr><tr><td>Pessimistic row lock</td><td><code>SELECT ... FOR UPDATE</code> inside a short transaction</td><td>Simple reasoning</td><td>Lock waits pile up on hot rows; never hold it across user think time</td></tr><tr><td>Distributed lock (Redis, ZooKeeper)</td><td>Lock per seat, then write to the DB</td><td>Offloads contention from the DB</td><td>Needs fencing tokens; the lock and the DB can disagree</td></tr><tr><td>Serialised per-event queue</td><td>One consumer per event partition processes seat requests in order</td><td>No races by construction</td><td>Throughput limited by one partition; adds latency</td></tr></tbody></table><h2 id="topic-sec-7">General admission is a counter, not seats</h2><p>For standing-room tickets, inventory is a number: <code>UPDATE inventory SET remaining = remaining - :n WHERE event_id = :e AND remaining &gt;= :n</code>. A single counter row becomes a hotspot at thousands of updates per second. Split it into, say, 20 sub-counters of 2,500 tickets each, pick one at random, and fall back to the others when it runs out. This is the same idea as sharded counters.</p><h2 id="topic-sec-8">Fairness and bots</h2><ul><li>Randomise positions for everyone who arrives before the on-sale time, so refreshing early gives no advantage. Ticketmaster and Cloudflare Waiting Room both do this.</li><li>Limit tickets per account and per payment card, and require verified accounts for high-demand events (Ticketmaster Verified Fan).</li><li>Issue signed, expiring entry tokens from the waiting room, so bots cannot skip the queue by calling the checkout API directly.</li></ul>
+</div></article><div id="check-slider-ticket-booking-system-design">
       <section class="check-slider" data-slug="ticket-booking-system-design" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1233,15 +1277,15 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-ticket-booking-system-design">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Keep hold token, owner, and expiry in the authoritative conditional booking transition; use Redis only as a cache or accelerator unless it shares that authority safely.</div><div class="takeaways__item">Deploy a virtual waiting room in front of checkout to flatten extreme traffic spikes.</div><div class="takeaways__item">Use optimistic locking or atomic compare-and-swap to prevent race conditions during seat claims.</div><div class="takeaways__item">Implement automated reconciliation for out-of-order or delayed payment gateway callbacks.</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://martinfowler.com/eaaCatalog/optimisticOfflineLock.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Martin Fowler: Optimistic Offline Lock Pattern</a><a class="further-reading__link" href="https://aws.amazon.com/blogs/architecture/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> High-concurrency ticket booking architecture patterns</a>
           </div>
@@ -1254,10 +1298,10 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="ticket-booking-system-design" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="ticket-booking-system-design" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Design%3A%20a%20ticket%20booking%20system&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Design%3A%20a%20ticket%20booking%20system%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fticket-booking-system-design%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1270,9 +1314,100 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/payment-system-design/" data-nav="topic" data-slug="payment-system-design">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Design: a payment system</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">The Core Challenge: Concurrency &amp; Hot Spots</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Reservation State Lifecycle</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Architectural Strategy</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Payment Reconciliation &amp; Webhook Callbacks</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Worked example: a 50,000-seat stadium on-sale</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Concurrency options</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">General admission is a counter, not seats</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-8">Fairness and bots</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-ticket-booking-system-design">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-ticket-booking-system-design">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 6.2</span>
+            <span>0/8 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/ticket-booking-system-design/" data-share-title="Design: a ticket booking system — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1280,7 +1415,7 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1334,7 +1469,7 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1343,8 +1478,8 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1352,30 +1487,9 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Design: a ticket booking system",
-  "description": "Picture a theatre box office on the morning a hit show goes on sale. A queue outside the waiting room lets people in a few at a time, so the counter is not.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/ticket-booking-system-design/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

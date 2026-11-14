@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Search index sharding — System Design In Depth</title>
   <meta name="description" content="Picture a library that outgrew one building. Option one: split the books across branches, each with its own complete card catalogue.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Search index sharding — System Design In Depth">
   <meta property="og:description" content="Picture a library that outgrew one building. Option one: split the books across branches, each with its own complete card catalogue.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/search-index-sharding/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-search-index-sharding.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Search index sharding — System Design In Depth">
   <meta name="twitter:description" content="Picture a library that outgrew one building. Option one: split the books across branches, each with its own complete card catalogue.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-search-index-sharding.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/search-index-sharding/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Search index sharding",
+  "description": "Picture a library that outgrew one building. Option one: split the books across branches, each with its own complete card catalogue.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-search-index-sharding.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/search-index-sharding/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="search-index-sharding">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,65 @@
         <span class="breadcrumbs__current">Search index sharding</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">search</span> <span class="tag">partitioning</span>
         </div>
-        <h1 class="lesson-header__title">Search index sharding</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Search index sharding</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 3 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 5.4: Information Retrieval & Search Engines</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="search-index-sharding">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-search-retrieval" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/search-index-sharding/" data-share-title="Search index sharding — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;eQ3eNd5WbH8&quot;,&quot;title&quot;:&quot;How indexes work in Distributed Databases, their trade-offs, and challenges&quot;,&quot;channel&quot;:&quot;Arpit Bhayani&quot;,&quot;why&quot;:&quot;Explains local (document-partitioned) vs global (term-partitioned) indexes and their scatter-gather and write costs, the central trade-off of this unit.&quot;,&quot;length&quot;:&quot;16:21&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Picture a library that outgrew one building. Option one: split the books across branches, each with its own complete card catalogue. To find everything on "Raft", you phone every branch and merge their answers. Option two: split the catalogue alphabetically, A to G in one branch. Now a single-word lookup hits one branch, but adding a new book means updating many branches.</p> <p><strong>Mental model:</strong> <em>document partitioning</em> makes writes local and reads scatter-gather; <em>term partitioning</em> makes single-term reads local and writes scatter. Nearly every production search engine chooses document partitioning.</p></p>
+<ul>
+<li><strong>Trap:</strong> over-sharding. Thousands of tiny shards waste heap and make every query fan out further. Aim for shards in the tens of gigabytes.</li>
+<li><strong>Trap:</strong> ignoring tail latency. A query is as slow as its slowest shard.</li>
+<li><strong>Trap:</strong> deep pagination. Page 1,000 forces every shard to return its top 10,000; use search_after or a scroll-style cursor instead.</li>
+<p></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-search-index-sharding">
+        <button class="audio-player__play-btn" id="audio-btn-search-index-sharding" data-action="toggle-audio" data-slug="search-index-sharding" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-search-index-sharding" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-search-index-sharding" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-search-index-sharding">0:00 / 3:27</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="search-index-sharding" id="audio-track-search-index-sharding">
+          <div class="audio-player__progress" id="audio-bar-search-index-sharding" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="search-index-sharding" id="audio-speed-search-index-sharding" title="Playback speed">1x</button>
+        <audio id="audio-search-index-sharding" src="audio/search-index-sharding.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> How indexes work in Distributed Databases, their trade-offs, and challenges</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Arpit Bhayani · 16:21 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;eQ3eNd5WbH8&quot;,&quot;title&quot;:&quot;How indexes work in Distributed Databases, their trade-offs, and challenges&quot;,&quot;channel&quot;:&quot;Arpit Bhayani&quot;,&quot;why&quot;:&quot;Explains local (document-partitioned) vs global (term-partitioned) indexes and their scatter-gather and write costs, the central trade-off of this unit.&quot;,&quot;length&quot;:&quot;16:21&quot;}">
       <div class="video-embed" id="video-eQ3eNd5WbH8"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="eQ3eNd5WbH8">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/eQ3eNd5WbH8/hqdefault.jpg"
                alt="How indexes work in Distributed Databases, their trade-offs, and challenges"
@@ -877,6 +943,7 @@
         </a>
       </div>
       <p class="video-embed__why">Explains local (document-partitioned) vs global (term-partitioned) indexes and their scatter-gather and write costs, the central trade-off of this unit.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,35 +978,12 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Picture a library that outgrew one building. Option one: split the books across branches, each with its own complete card catalogue. To find everything on "Raft", you phone every branch and merge their answers. Option two: split the catalogue alphabetically, A to G in one branch. Now a single-word lookup hits one branch, but adding a new book means updating many branches.</p> <p><strong>Mental model:</strong> <em>document partitioning</em> makes writes local and reads scatter-gather; <em>term partitioning</em> makes single-term reads local and writes scatter. Nearly every production search engine chooses document partitioning.</p></p>
-<ul>
-<li><strong>Trap:</strong> over-sharding. Thousands of tiny shards waste heap and make every query fan out further. Aim for shards in the tens of gigabytes.</li>
-<li><strong>Trap:</strong> ignoring tail latency. A query is as slow as its slowest shard.</li>
-<li><strong>Trap:</strong> deep pagination. Page 1,000 forces every shard to return its top 10,000; use search_after or a scroll-style cursor instead.</li>
-<p></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-search-index-sharding">
-        <button class="audio-player__play-btn" id="audio-btn-search-index-sharding" data-action="toggle-audio" data-slug="search-index-sharding" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-search-index-sharding" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-search-index-sharding" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-search-index-sharding">0:00 / 3:27</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="search-index-sharding" id="audio-track-search-index-sharding">
-          <div class="audio-player__progress" id="audio-bar-search-index-sharding" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="search-index-sharding" id="audio-speed-search-index-sharding" title="Playback speed">1x</button>
-        <audio id="audio-search-index-sharding" src="audio/search-index-sharding.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>Under the Hood: Distributing Inverted Indexes Across Clusters</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">Under the Hood: Distributing Inverted Indexes Across Clusters</h2>
       <p>When an index grows to hundreds of gigabytes or billions of documents, it must be partitioned across multiple machines. In search systems, partitioning is called <strong>Sharding</strong>. Each Elasticsearch shard is a fully functional, self-contained Apache Lucene instance.</p>
 
-      <h2>Document-Based Sharding: Scatter-Gather Flow</h2>
+      <h2 id="topic-sec-2">Document-Based Sharding: Scatter-Gather Flow</h2>
       <div class="mermaid">
 flowchart TD
     Client["Client: Search('shoes', size=10)"] --> Coord["Coordinating Node (Envoy / ES Node)"]
@@ -955,7 +999,7 @@ flowchart TD
     Fetch --> Client
       </div>
 
-      <h2>Document Partitioning vs Term Partitioning</h2>
+      <h2 id="topic-sec-3">Document Partitioning vs Term Partitioning</h2>
       <table>
         <thead>
           <tr><th>Strategy</th><th>Document Partitioning (Scatter-Gather)</th><th>Term Partitioning</th></tr>
@@ -969,25 +1013,25 @@ flowchart TD
       <p><strong>Custom Routing for Multi-Tenancy:</strong> In SaaS platforms, querying every shard for a single customer is wasteful. Setting <code>routing=tenant_id</code> forces all documents belonging to tenant 42 into a single shard, converting a global scatter-gather into a single-shard targeted seek.</p>
     
 <!-- enriched -->
-<h2>Worked example: sizing a cluster</h2>
+<h2 id="topic-sec-4">Worked example: sizing a cluster</h2>
 <p>You must index 2 billion documents averaging 1.5 KB of indexed data each: about 3 TB of primary data.</p>
 <ul>
 <li>Elastic's guidance is shards of roughly 10 to 50 GB. At about 40 GB per shard, 3 TB needs about 75 shards; choose 80 primaries.</li>
 <li>One replica each gives 160 shards, which spreads well over, say, 20 data nodes at 8 shards per node.</li>
 <li>Primary shard count is fixed at index creation, so plan for growth, or use time-based indices, rollover, or the split API.</li>
 </ul>
-<h2>Worked example: why fan-out hurts the tail</h2>
+<h2 id="topic-sec-5">Worked example: why fan-out hurts the tail</h2>
 <p>If each shard independently exceeds its own p99 latency 1 percent of the time, a query touching 80 shards waits on at least one slow shard with probability 1 minus 0.99 to the power 80, about 55 percent. So the per-shard p99 becomes roughly your median. Mitigations: fewer, larger shards; adaptive replica selection, which Elasticsearch enables by default; hedged requests; and routing to reduce fan-out.</p>
-<h2>Worked example: deep pagination</h2>
+<h2 id="topic-sec-6">Worked example: deep pagination</h2>
 <p>Request <code>from=10000, size=10</code> over 80 shards. Each shard must return its top 10,010 hits, and the coordinator merges 800,800 entries to keep 10. Elasticsearch caps this with <code>index.max_result_window</code>, 10,000 by default. <code>search_after</code> avoids it by passing the last sort key, so each shard returns only 10.</p>
-<h2>Routing trade-offs</h2>
+<h2 id="topic-sec-7">Routing trade-offs</h2>
 <table><thead><tr><th>Routing</th><th>Query fan-out</th><th>Risk</th></tr></thead><tbody>
 <tr><td>Hash of document ID, the default</td><td>All shards</td><td>Even load, but every query scatters</td></tr>
 <tr><td>Custom routing by tenant ID</td><td>One shard per tenant</td><td>A huge tenant creates a hot shard; mitigate with routing partitions spanning several shards</td></tr>
 <tr><td>Index per tenant or per time window</td><td>Only relevant indices</td><td>Too many small indices; cluster state overhead</td></tr>
 </tbody></table>
 <p><strong>Scoring subtlety:</strong> each shard computes IDF from its own documents, so small or skewed shards can rank the same document differently. The DFS query-then-fetch mode gathers global term statistics first, at the cost of an extra round trip.</p>
-</div></article>
+</div></article><div id="check-slider-search-index-sharding">
       <section class="check-slider" data-slug="search-index-sharding" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1259,15 +1303,15 @@ flowchart TD
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </section></div>
+        <div class="takeaways" id="topic-takeaways-search-index-sharding">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Elasticsearch uses Document Partitioning where each shard is a standalone Lucene index.</div><div class="takeaways__item">Queries execute via a two-phase Query-Then-Fetch scatter-gather coordination across all shards.</div><div class="takeaways__item">Custom routing keys isolate tenant data to specific shards, eliminating cluster-wide scatter-gather overhead.</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://www.elastic.co/docs/deploy-manage/production-guidance/optimize-performance/size-shards" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Elastic Docs: Size Your Shards</a><a class="further-reading__link" href="https://www.elastic.co/docs/deploy-manage/distributed-architecture/clusters-nodes-shards" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Elastic Docs: Clusters, Nodes, and Shards</a><a class="further-reading__link" href="https://www.usenix.org/legacy/events/osdi04/tech/full_papers/dean/dean.pdf" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Dean & Ghemawat: MapReduce: Simplified Data Processing on Large Clusters (USENIX OSDI, 2004)</a>
           </div>
@@ -1280,10 +1324,10 @@ flowchart TD
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="search-index-sharding" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="search-index-sharding" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Search%20index%20sharding&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Search%20index%20sharding%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fsearch-index-sharding%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1296,9 +1340,96 @@ flowchart TD
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/crawler-and-indexing-pipeline/" data-nav="topic" data-slug="crawler-and-indexing-pipeline">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Crawler and indexing pipeline</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Under the Hood: Distributing Inverted Indexes Across Clusters</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Document-Based Sharding: Scatter-Gather Flow</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Document Partitioning vs Term Partitioning</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Worked example: sizing a cluster</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Worked example: why fan-out hurts the tail</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Worked example: deep pagination</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Routing trade-offs</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-search-index-sharding">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-search-index-sharding">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 5.4</span>
+            <span>0/17 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/search-index-sharding/" data-share-title="Search index sharding — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1306,7 +1437,7 @@ flowchart TD
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1360,7 +1491,7 @@ flowchart TD
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1369,8 +1500,8 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1378,30 +1509,9 @@ flowchart TD
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Search index sharding",
-  "description": "Picture a library that outgrew one building. Option one: split the books across branches, each with its own complete card catalogue.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/search-index-sharding/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

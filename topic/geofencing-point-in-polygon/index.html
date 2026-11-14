@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Geofencing: point in polygon — System Design In Depth</title>
   <meta name="description" content="Airport security has two stages: a quick glance at your boarding pass at the building entrance, then a precise check at the gate. Learn system design.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Geofencing: point in polygon — System Design In Depth">
   <meta property="og:description" content="Airport security has two stages: a quick glance at your boarding pass at the building entrance, then a precise check at the gate. Learn system design.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/geofencing-point-in-polygon/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-geofencing-point-in-polygon.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Geofencing: point in polygon — System Design In Depth">
   <meta name="twitter:description" content="Airport security has two stages: a quick glance at your boarding pass at the building entrance, then a precise check at the gate. Learn system design.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-geofencing-point-in-polygon.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/geofencing-point-in-polygon/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Geofencing: point in polygon",
+  "description": "Airport security has two stages: a quick glance at your boarding pass at the building entrance, then a precise check at the gate. Learn system design.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-geofencing-point-in-polygon.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/geofencing-point-in-polygon/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="geofencing-point-in-polygon">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Geofencing: point in polygon</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">geospatial</span> <span class="tag">geometry</span>
         </div>
-        <h1 class="lesson-header__title">Geofencing: point in polygon</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Geofencing: point in polygon</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 5.3: Geospatial Indexing & Proximity Search</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 18, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="geofencing-point-in-polygon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-geo-matching" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/geofencing-point-in-polygon/" data-share-title="Geofencing: point in polygon — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;dQXdSxn7d1g&quot;,&quot;title&quot;:&quot;Proximity Search &amp; Geospatial Indexes Explained&quot;,&quot;channel&quot;:&quot;Hello Interview&quot;,&quot;why&quot;:&quot;No strong dedicated geofencing video exists; this is the clearest explanation of the bounding-box and R-tree candidate filtering that makes geofencing scale, before the exact point-in-polygon test.&quot;,&quot;length&quot;:&quot;17:07&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Airport security has two stages: a quick glance at your boarding pass at the building entrance, then a precise check at the gate. Geofencing works the same way: a cheap bounding-box or cell lookup throws away almost every polygon, and only the few survivors get the precise point-in-polygon test.</p><p><strong>Mental model:</strong> geofencing is a stream join between moving points and a slowly changing set of polygons; index the polygons, test candidates exactly, and turn membership changes into enter and exit events with debouncing.</p><ul><li><strong>Emitting an event on every fix.</strong> GPS jitter near a boundary flips inside and outside every second; require hysteresis (a buffer distance) or several consecutive fixes.</li><li><strong>Forgetting state.</strong> "Enter" means "inside now and not inside before", so you must persist the last membership per device and polygon version.</li><li><strong>Ignoring polygon edits.</strong> When a zone changes, devices already inside or near it must be re-evaluated, or you will miss or duplicate events.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-geofencing-point-in-polygon">
+        <button class="audio-player__play-btn" id="audio-btn-geofencing-point-in-polygon" data-action="toggle-audio" data-slug="geofencing-point-in-polygon" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-geofencing-point-in-polygon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-geofencing-point-in-polygon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-geofencing-point-in-polygon">0:00 / 3:44</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="geofencing-point-in-polygon" id="audio-track-geofencing-point-in-polygon">
+          <div class="audio-player__progress" id="audio-bar-geofencing-point-in-polygon" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="geofencing-point-in-polygon" id="audio-speed-geofencing-point-in-polygon" title="Playback speed">1x</button>
+        <audio id="audio-geofencing-point-in-polygon" src="audio/geofencing-point-in-polygon.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> Proximity Search &amp; Geospatial Indexes Explained</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Hello Interview · 17:07 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;dQXdSxn7d1g&quot;,&quot;title&quot;:&quot;Proximity Search &amp; Geospatial Indexes Explained&quot;,&quot;channel&quot;:&quot;Hello Interview&quot;,&quot;why&quot;:&quot;No strong dedicated geofencing video exists; this is the clearest explanation of the bounding-box and R-tree candidate filtering that makes geofencing scale, before the exact point-in-polygon test.&quot;,&quot;length&quot;:&quot;17:07&quot;}">
       <div class="video-embed" id="video-dQXdSxn7d1g"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="dQXdSxn7d1g">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/dQXdSxn7d1g/hqdefault.jpg"
                alt="Proximity Search &amp; Geospatial Indexes Explained"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">No strong dedicated geofencing video exists; this is the clearest explanation of the bounding-box and R-tree candidate filtering that makes geofencing scale, before the exact point-in-polygon test.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,27 +973,9 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Airport security has two stages: a quick glance at your boarding pass at the building entrance, then a precise check at the gate. Geofencing works the same way: a cheap bounding-box or cell lookup throws away almost every polygon, and only the few survivors get the precise point-in-polygon test.</p><p><strong>Mental model:</strong> geofencing is a stream join between moving points and a slowly changing set of polygons; index the polygons, test candidates exactly, and turn membership changes into enter and exit events with debouncing.</p><ul><li><strong>Emitting an event on every fix.</strong> GPS jitter near a boundary flips inside and outside every second; require hysteresis (a buffer distance) or several consecutive fixes.</li><li><strong>Forgetting state.</strong> "Enter" means "inside now and not inside before", so you must persist the last membership per device and polygon version.</li><li><strong>Ignoring polygon edits.</strong> When a zone changes, devices already inside or near it must be re-evaluated, or you will miss or duplicate events.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-geofencing-point-in-polygon">
-        <button class="audio-player__play-btn" id="audio-btn-geofencing-point-in-polygon" data-action="toggle-audio" data-slug="geofencing-point-in-polygon" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-geofencing-point-in-polygon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-geofencing-point-in-polygon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-geofencing-point-in-polygon">0:00 / 3:44</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="geofencing-point-in-polygon" id="audio-track-geofencing-point-in-polygon">
-          <div class="audio-player__progress" id="audio-bar-geofencing-point-in-polygon" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="geofencing-point-in-polygon" id="audio-speed-geofencing-point-in-polygon" title="Playback speed">1x</button>
-        <audio id="audio-geofencing-point-in-polygon" src="audio/geofencing-point-in-polygon.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>Geofencing and the Point-in-Polygon Problem</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">Geofencing and the Point-in-Polygon Problem</h2>
       <p>Geofencing involves creating virtual boundaries (polygons) around real-world geographical areas. When a user or device enters, exits, or lingers within these boundaries, the system triggers an event. Applications range from targeted advertising and location-based reminders to fleet management and airport surge pricing zones.</p>
       
       <h3>The Core Algorithm</h3>
@@ -950,7 +994,7 @@
       
     
 <!-- enriched -->
-<h2>Worked example: delivery zones</h2><p>Assume 50,000 polygons (delivery zones and airport pickup areas) averaging 200 vertices, and 200,000 location updates per second.</p><ul><li><strong>Naive:</strong> 200,000 x 50,000 = 10 billion polygon tests per second. Impossible.</li><li><strong>R-tree on bounding boxes:</strong> each point overlaps on average about 1.5 polygon bounding boxes. That is 300,000 exact tests per second, each O(V) with 200 edges, about 60 million edge checks per second: a handful of CPU cores.</li><li><strong>H3 pre-classification:</strong> fill each polygon with H3 resolution 9 cells (about 0.1 square km). Cells fully inside the polygon are marked interior, cells crossing the border are marked boundary. A point in an interior cell is inside with no geometry work; only points in boundary cells (often under 10 percent) need the exact test.</li></ul><h2>Indexing strategies</h2><table><thead><tr><th>Strategy</th><th>Lookup</th><th>Update cost when a polygon changes</th><th>Notes</th></tr></thead><tbody><tr><td>Brute force within a city</td><td>Test every polygon in the city</td><td>None</td><td>Uber's early geofence service did this after first finding the city; fine for small counts</td></tr><tr><td>R-tree over bounding boxes (PostGIS GiST)</td><td>O(log n) plus exact tests</td><td>Reinsert one box</td><td>General purpose default</td></tr><tr><td>Cell map (H3 or S2) with interior and boundary cells</td><td>One hash lookup, exact test only on boundary cells</td><td>Recompute the polygon's cells</td><td>Fastest at very high point rates</td></tr><tr><td>Prepared geometry cache</td><td>Exact test in about O(log V) using an edge index</td><td>Rebuild per polygon version</td><td>Helps when polygons have thousands of vertices</td></tr></tbody></table><h2>Event pipeline</h2><div class="mermaid">flowchart LR
+<h2 id="topic-sec-2">Worked example: delivery zones</h2><p>Assume 50,000 polygons (delivery zones and airport pickup areas) averaging 200 vertices, and 200,000 location updates per second.</p><ul><li><strong>Naive:</strong> 200,000 x 50,000 = 10 billion polygon tests per second. Impossible.</li><li><strong>R-tree on bounding boxes:</strong> each point overlaps on average about 1.5 polygon bounding boxes. That is 300,000 exact tests per second, each O(V) with 200 edges, about 60 million edge checks per second: a handful of CPU cores.</li><li><strong>H3 pre-classification:</strong> fill each polygon with H3 resolution 9 cells (about 0.1 square km). Cells fully inside the polygon are marked interior, cells crossing the border are marked boundary. A point in an interior cell is inside with no geometry work; only points in boundary cells (often under 10 percent) need the exact test.</li></ul><h2 id="topic-sec-3">Indexing strategies</h2><table><thead><tr><th>Strategy</th><th>Lookup</th><th>Update cost when a polygon changes</th><th>Notes</th></tr></thead><tbody><tr><td>Brute force within a city</td><td>Test every polygon in the city</td><td>None</td><td>Uber's early geofence service did this after first finding the city; fine for small counts</td></tr><tr><td>R-tree over bounding boxes (PostGIS GiST)</td><td>O(log n) plus exact tests</td><td>Reinsert one box</td><td>General purpose default</td></tr><tr><td>Cell map (H3 or S2) with interior and boundary cells</td><td>One hash lookup, exact test only on boundary cells</td><td>Recompute the polygon's cells</td><td>Fastest at very high point rates</td></tr><tr><td>Prepared geometry cache</td><td>Exact test in about O(log V) using an edge index</td><td>Rebuild per polygon version</td><td>Helps when polygons have thousands of vertices</td></tr></tbody></table><h2 id="topic-sec-4">Event pipeline</h2><div class="mermaid">flowchart LR
     L["Location updates"] --> P["Partition by device id"]
     P --> C["Candidate polygons from index"]
     C --> X["Exact point in polygon test"]
@@ -958,7 +1002,7 @@
     S --> H["Hysteresis and dwell rules"]
     H --> E["Enter or exit event with stable id"]
 </div><ul><li><strong>Hysteresis example:</strong> enter when the point is at least 20 m inside the boundary, exit only when at least 30 m outside, or require 3 consecutive fixes.</li><li><strong>Idempotency:</strong> event ID = hash(device, polygon, polygon_version, transition_sequence), so replay after a crash produces the same ID and consumers deduplicate.</li><li><strong>Partitioning by device</strong> keeps each device's membership state on one worker and preserves ordering of its fixes.</li></ul>
-</div></article>
+</div></article><div id="check-slider-geofencing-point-in-polygon">
       <section class="check-slider" data-slug="geofencing-point-in-polygon" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1230,7 +1274,7 @@
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
+      </section></div><div id="topic-simulator-geofencing-point-in-polygon">
         <div class="simulator-card" id="sim-ray">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Ray Casting: Point in Polygon</div>
@@ -1249,15 +1293,15 @@
           <svg id="rc-svg" viewBox="0 0 480 320" style="width:100%;max-width:640px;height:auto;display:block;cursor:crosshair;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg);margin-bottom:var(--space-3)"></svg>
           <div class="sim-verdict" id="rc-verdict"></div>
           <div class="sim-grid-wrap" style="margin-top:var(--space-3)"><table class="sim-grid" id="rc-edges"></table></div>
-        </div>
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+        </div></div>
+        <div class="takeaways" id="topic-takeaways-geofencing-point-in-polygon">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Geofencing triggers events based on location boundaries.</div><div class="takeaways__item">Use a supported spatial index for bounding-box candidate filtering, then run the exact boundary-aware geometry predicate.</div><div class="takeaways__item">Stream processing engines are ideal for evaluating continuous location updates against geofences.</div>
           </div>
         </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://postgis.net/workshops/postgis-intro/indexing.html" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> PostGIS R-Tree Spatial Indexes</a><a class="further-reading__link" href="https://doi.org/10.1007/978-3-540-77974-2" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> de Berg, Cheong, van Kreveld & Overmars: Computational Geometry: Algorithms and Applications (3rd ed., Springer, 2008)</a>
           </div>
@@ -1270,10 +1314,10 @@
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="geofencing-point-in-polygon" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="geofencing-point-in-polygon" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Geofencing%3A%20point%20in%20polygon&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Geofencing%3A%20point%20in%20polygon%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fgeofencing-point-in-polygon%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1286,9 +1330,88 @@
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/ray-casting-point-in-polygon/" data-nav="topic" data-slug="ray-casting-point-in-polygon">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Ray casting point in polygon</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Geofencing and the Point-in-Polygon Problem</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Worked example: delivery zones</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Indexing strategies</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Event pipeline</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-geofencing-point-in-polygon">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-simulator-geofencing-point-in-polygon">Interactive simulator</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-geofencing-point-in-polygon">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 5.3</span>
+            <span>0/8 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/geofencing-point-in-polygon/" data-share-title="Geofencing: point in polygon — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1296,7 +1419,7 @@
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1350,7 +1473,7 @@
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1360,8 +1483,8 @@
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-data.js?v=accc3870f9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1369,30 +1492,9 @@
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Geofencing: point in polygon",
-  "description": "Airport security has two stages: a quick glance at your boarding pass at the building entrance, then a precise check at the gate. Learn system design.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/geofencing-point-in-polygon/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>

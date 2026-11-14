@@ -118,7 +118,7 @@ window.SIMULATORS = window.SIMULATORS || {};
           countEl.textContent = counts[i];
         }
 
-        alertEl.textContent = overload ? "⚠️ HOT SHARD DETECTED - Overload Risk!" : "";
+        alertEl.textContent = overload ? "HOT SHARD DETECTED — Overload Risk!" : "";
       });
     },
     unmount(root) {}

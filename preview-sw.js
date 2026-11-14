@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * @innovatorved/code-lab v0.3.2 — Standalone Browser Code IDE & Virtual Runtime
+ * @innovatorved/code-lab v0.4.0 — Standalone Browser Code IDE & Virtual Runtime
  * ============================================================
  * Features:
  *   - Sandboxed Web Worker Execution Engine with Multi-Instance Isolation & Watchdog Timer
@@ -575,10 +575,17 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('message', (event) => {
   const data = event && event.data;
   if (!data || data.type !== 'codelab:config') return;
-  // Reject configuration attempts originating from preview tabs/frames themselves.
-  if (event.source && event.source.url && /\/__preview\//.test(event.source.url)) return;
+  // Reject configuration attempts originating from preview tabs/frames or opaque/blob frames.
+  if (event.source && typeof event.source.url === 'string') {
+    if (
+      /\/__preview\//.test(event.source.url) ||
+      /^(?:blob:|data:|about:srcdoc)/i.test(event.source.url)
+    ) {
+      return;
+    }
+  }
   const csp = typeof data.csp === 'string' ? data.csp.trim() : '';
-  if (!csp || csp.length > MAX_CONFIG_LENGTH) return;
+  if (!csp || csp.length > MAX_CONFIG_LENGTH || /[\r\n]/.test(csp)) return;
   configuredCsp = csp;
   // Acknowledge so the host can wait for confirmation before loading a frame.
   try {
@@ -682,7 +689,17 @@ async function proxyVirtualRequest(event, port, targetPath) {
   }
 
   const response = await new Promise((resolve) => {
+    const closePort = () => {
+      try {
+        channel.port1.onmessage = null;
+        if (typeof channel.port1.close === 'function') channel.port1.close();
+      } catch (err) {
+        console.debug('[code-lab] preview-sw: port1.close failed', err);
+      }
+    };
+
     const timer = setTimeout(() => {
+      closePort();
       resolve({
         status: 504,
         statusText: 'Gateway Timeout',
@@ -693,6 +710,7 @@ async function proxyVirtualRequest(event, port, targetPath) {
 
     channel.port1.onmessage = (messageEvent) => {
       clearTimeout(timer);
+      closePort();
       resolve(messageEvent.data);
     };
 
@@ -711,10 +729,21 @@ async function proxyVirtualRequest(event, port, targetPath) {
 
   let responseBody = response && response.body;
   const responseHeaders = new Headers((response && response.headers) || {});
-  const contentType = responseHeaders.get('content-type') || '';
+  const contentType = (responseHeaders.get('content-type') || '').trim();
+  const isHtmlLike = /\b(?:text\/html|application\/xhtml\+xml)\b/i.test(contentType);
+  const isExecutableMarkup =
+    isHtmlLike ||
+    /\b(?:image\/svg\+xml|application\/xml|text\/xml)\b/i.test(contentType) ||
+    !contentType;
 
-  // Decode Uint8Array / ArrayBuffer HTML bodies so head injection always applies.
-  if (/text\/html/i.test(contentType) && responseBody && typeof responseBody !== 'string') {
+  if (!contentType) {
+    responseHeaders.set('Content-Type', 'text/plain; charset=utf-8');
+  }
+  // Prevent MIME-sniffing binary/JSON/text responses into executable HTML/SVG on all responses.
+  responseHeaders.set('X-Content-Type-Options', 'nosniff');
+
+  // Decode Uint8Array / ArrayBuffer HTML/XHTML bodies so head injection always applies.
+  if (isHtmlLike && responseBody && typeof responseBody !== 'string') {
     try {
       if (responseBody instanceof ArrayBuffer || ArrayBuffer.isView(responseBody)) {
         responseBody = new TextDecoder('utf-8').decode(responseBody);
@@ -724,12 +753,16 @@ async function proxyVirtualRequest(event, port, targetPath) {
     }
   }
 
-  // Inject the policy and a <base> so relative asset URLs in HTML responses
+  // Inject the policy and a <base> so relative asset URLs in HTML/XHTML responses
   // resolve under the `/__preview/:port/` namespace rather than the host root.
-  if (/text\/html/i.test(contentType) && typeof responseBody === 'string') {
+  if (isHtmlLike && typeof responseBody === 'string') {
     responseBody = injectPreviewHead(responseBody, port);
+  }
+
+  // Attach Content-Security-Policy to every executable document/markup response
+  // (HTML, XHTML, SVG, XML, and untyped responses) so inline scripts cannot bypass CSP.
+  if (isExecutableMarkup) {
     responseHeaders.set('Content-Security-Policy', previewPolicy());
-    responseHeaders.set('X-Content-Type-Options', 'nosniff');
   }
 
   return new Response(responseBody, {
@@ -761,12 +794,20 @@ self.addEventListener('fetch', (event) => {
 
   // Secondary route: root-relative sub-resources requested by a preview page
   // (e.g. `/app.js` referenced from `/__preview/3000/`) are attributed to the
-  // originating preview tab via the request referrer.
+  // originating preview tab via the request referrer. Top-level navigations are
+  // redirected back under `/__preview/:port/` so no preview document ever runs
+  // at a non-`/__preview/` URL on the host origin.
   const referrer = event.request.referrer || '';
   const refMatch = referrer.match(/\/__preview\/(\d+)/);
   if (refMatch) {
+    const refPort = Number(refMatch[1]);
+    if (event.request.mode === 'navigate') {
+      const redirectUrl = `${url.origin}${PREVIEW_PREFIX}${refPort}${url.pathname}${url.search || ''}`;
+      event.respondWith(Response.redirect(redirectUrl, 302));
+      return;
+    }
     event.respondWith(
-      proxyVirtualRequest(event, Number(refMatch[1]), url.pathname + (url.search || ''))
+      proxyVirtualRequest(event, refPort, url.pathname + (url.search || ''))
     );
   }
 });

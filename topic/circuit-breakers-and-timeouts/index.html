@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="no-shell">
+<html lang="en" data-product="system-design" data-theme="light" class="no-shell">
 <head>
   <meta charset="UTF-8">
   <base href="/">
@@ -7,20 +7,20 @@
   <title>Circuit breakers and timeouts — System Design In Depth</title>
   <meta name="description" content="Your house has a fuse box. When a faulty kettle starts drawing too much current, the breaker trips so the wiring does not catch fire.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f7f7f5">
   
   <!-- Open Graph -->
   <meta property="og:type" content="article">
   <meta property="og:title" content="Circuit breakers and timeouts — System Design In Depth">
   <meta property="og:description" content="Your house has a fuse box. When a faulty kettle starts drawing too much current, the breaker trips so the wiring does not catch fire.">
   <meta property="og:url" content="https://system-design-in-depth.vedgupta.in/topic/circuit-breakers-and-timeouts/">
-  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta property="og:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-circuit-breakers-and-timeouts.png">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Circuit breakers and timeouts — System Design In Depth">
   <meta name="twitter:description" content="Your house has a fuse box. When a faulty kettle starts drawing too much current, the breaker trips so the wiring does not catch fire.">
-  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og-image.png">
+  <meta name="twitter:image" content="https://system-design-in-depth.vedgupta.in/assets/og/topic-circuit-breakers-and-timeouts.png">
   
   <!-- Canonical -->
   <link rel="canonical" href="https://system-design-in-depth.vedgupta.in/topic/circuit-breakers-and-timeouts/">
@@ -28,17 +28,42 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <link rel="preload" href="fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=693f5cccb9">
-  <link rel="stylesheet" href="css/layout.css?v=a384f455dc">
-  <link rel="stylesheet" href="css/components.css?v=7cd1160362">
-  <link rel="stylesheet" href="css/content.css?v=98b657b5e4">
-  <link rel="stylesheet" href="css/landing.css?v=14b77b8c3d">
+  <link rel="stylesheet" href="design-system/tokens.css?v=dee287f0ce">
+  <link rel="stylesheet" href="design-system/components.css?v=606a179125">
+  <link rel="stylesheet" href="css/variables.css?v=45a3580b12">
+  <link rel="stylesheet" href="css/layout.css?v=13092000cd">
+  <link rel="stylesheet" href="css/components.css?v=d3c7f6dade">
+  <link rel="stylesheet" href="css/content.css?v=06faee2c71">
+  <link rel="stylesheet" href="css/landing.css?v=174649f4cb">
 
   <!-- Core scripts: head initializer & asset manifest -->
-  <script src="js/init.js?v=dfdd97c618"></script>
-  <script src="js/manifest.js?v=6aedf81985"></script>
+  <script src="js/init.js?v=be8af42599"></script>
+  <script src="js/manifest.js?v=6f438b0df9"></script>
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Circuit breakers and timeouts",
+  "description": "Your house has a fuse box. When a faulty kettle starts drawing too much current, the breaker trips so the wiring does not catch fire.",
+  "image": "https://system-design-in-depth.vedgupta.in/assets/og/topic-circuit-breakers-and-timeouts.png",
+  "url": "https://system-design-in-depth.vedgupta.in/topic/circuit-breakers-and-timeouts/",
+  "author": {
+    "@type": "Person",
+    "name": "Ved Gupta",
+    "url": "https://vedgupta.in"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "System Design In Depth",
+    "url": "https://system-design-in-depth.vedgupta.in"
+  }
+}
+  </script>
+</head>
 <body>
   <!-- Skip to content -->
   <a href="#main-content" class="skip-link">Skip to content</a>
@@ -93,10 +118,10 @@
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar" aria-label="Course navigation">
-    <nav class="sidebar__tabs" role="tablist">
+    <div class="sidebar__tabs" role="tablist" aria-label="Sidebar sections">
       <button class="sidebar__tab active" data-tab="curriculum" role="tab" aria-selected="true">Curriculum</button>
       <button class="sidebar__tab" data-tab="builds" role="tab" aria-selected="false">20 Builds</button>
-    </nav>
+    </div>
     <div class="sidebar__content" id="sidebar-content">
 <div style="padding:4px 16px 4px;font-size:11px;font-weight:600;color:var(--fg-faint);text-transform:uppercase;letter-spacing:0.05em;">Architectural Foundations &amp; Workload Modeling</div><div class="module-group" data-module="learning-foundations">
         <div class="module-group__header">
@@ -832,9 +857,11 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Main Content -->
-  <main class="main" id="main-content">
+  <main class="main" id="main-content" tabindex="-1">
     <div class="main__content" id="reader" data-prerendered="circuit-breakers-and-timeouts">
 
+      <div class="ds-lesson-shell ds-lesson-shell--with-toc">
+        <div class="ds-lesson-article">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/" data-nav="home">Home</a>
         <span class="breadcrumbs__sep"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
@@ -843,26 +870,60 @@
         <span class="breadcrumbs__current">Circuit breakers and timeouts</span>
       </nav>
 
-      <div class="lesson-header">
+      <div class="lesson-header ds-lesson-hero">
         <div class="lesson-header__badge">
           <span class="lesson-header__kind lesson-header__kind--lesson">lesson</span>
            <span class="tag">system-design</span> <span class="tag">reliability</span> <span class="tag">admission</span>
         </div>
-        <h1 class="lesson-header__title">Circuit breakers and timeouts</h1>
+        <h1 class="ds-lesson-hero__title lesson-header__title">Circuit breakers and timeouts</h1>
         <div class="lesson-header__meta">
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 4 min read</span>
           <span class="lesson-header__meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Module 3.2: Distributed Coordination, Consensus & Leases</span>
           <span class="lesson-header__meta-item" title="Content curriculum review date"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Updated Sep 17, 2026</span>
         </div>
-        <div class="lesson-header__actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <div class="lesson-header__actions ds-lesson-hero__toolbar" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
           <button class="completion-toggle" data-action="toggle-complete" data-slug="circuit-breakers-and-timeouts">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg> Mark Complete
           </button>
           <a href="#cheatsheet/learning-distributed-coordination" class="btn btn--sm btn--outline" title="View printable cheat sheet for this module">
-            📄 Cheat Sheet
+            Cheat Sheet
           </a>
+          <button type="button" class="ds-share-btn" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/circuit-breakers-and-timeouts/" data-share-title="Circuit breakers and timeouts — System Design In Depth" title="Share link to this lesson">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Share</span>
+          </button>
         </div>
-      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;ADHcBxEXvFA&quot;,&quot;title&quot;:&quot;Circuit Breaker Pattern - Fault Tolerant Microservices&quot;,&quot;channel&quot;:&quot;Defog Tech&quot;,&quot;why&quot;:&quot;Defog Tech explains why slow dependencies exhaust thread pools, and how the closed, open and half-open state machine fails fast. The current rate-limiter video is off-topic.&quot;,&quot;length&quot;:&quot;12:19&quot;}">
+      </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Your house has a fuse box. When a faulty kettle starts drawing too much current, the breaker trips so the wiring does not catch fire. Every other appliance loses nothing, and the kettle simply stops working until someone checks it and flips the switch back. A software circuit breaker does the same for a failing dependency: stop calling it, fail fast, and test it again cautiously later.</p><p><strong>Mental model:</strong> timeouts bound how long one call can hurt you, retries recover from blips, and circuit breakers stop you hammering something that is already down.</p><ul><li><strong>Retrying at every layer.</strong> Three layers with three retries each turn one failing call into 27 downstream calls. Retry at one layer, and use a retry budget.</li><li><strong>Setting timeouts larger than the caller's deadline.</strong> A 30-second DB timeout behind a 2-second HTTP deadline means the work continues after nobody is waiting. Propagate deadlines.</li><li><strong>Backoff without jitter.</strong> All clients retry at 100, 200 and 400 ms in lockstep. Full jitter spreads the retries.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-circuit-breakers-and-timeouts">
+        <button class="audio-player__play-btn" id="audio-btn-circuit-breakers-and-timeouts" data-action="toggle-audio" data-slug="circuit-breakers-and-timeouts" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-circuit-breakers-and-timeouts" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-circuit-breakers-and-timeouts" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-circuit-breakers-and-timeouts">0:00 / 3:44</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="circuit-breakers-and-timeouts" id="audio-track-circuit-breakers-and-timeouts">
+          <div class="audio-player__progress" id="audio-bar-circuit-breakers-and-timeouts" style="width: 0%;"></div>
+        </div>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="circuit-breakers-and-timeouts" id="audio-speed-circuit-breakers-and-timeouts" title="Playback speed">1x</button>
+        <audio id="audio-circuit-breakers-and-timeouts" src="audio/circuit-breakers-and-timeouts.mp3" preload="metadata"></audio>
+      </div>
+      <details class="ds-external-lecture">
+        <summary>
+          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> Circuit Breaker Pattern - Fault Tolerant Microservices</span>
+          </span>
+          <span class="ds-pill" style="flex-shrink:0;">Defog Tech · 12:19 +2 ▾</span>
+        </summary>
+        <div style="padding:0 16px 16px;">
+          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;ADHcBxEXvFA&quot;,&quot;title&quot;:&quot;Circuit Breaker Pattern - Fault Tolerant Microservices&quot;,&quot;channel&quot;:&quot;Defog Tech&quot;,&quot;why&quot;:&quot;Defog Tech explains why slow dependencies exhaust thread pools, and how the closed, open and half-open state machine fails fast. The current rate-limiter video is off-topic.&quot;,&quot;length&quot;:&quot;12:19&quot;}">
       <div class="video-embed" id="video-ADHcBxEXvFA"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="ADHcBxEXvFA">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/ADHcBxEXvFA/hqdefault.jpg"
                alt="Circuit Breaker Pattern - Fault Tolerant Microservices"
@@ -877,6 +938,7 @@
         </a>
       </div>
       <p class="video-embed__why">Defog Tech explains why slow dependencies exhaust thread pools, and how the closed, open and half-open state machine fails fast. The current rate-limiter video is off-topic.</p></div>
+          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -911,31 +973,13 @@
         </span>
       </a></div>
       </div>
-        <aside class="intuition">
-          <h3 class="intuition__title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h3>
-          <div class="intuition__body"><p><p>Your house has a fuse box. When a faulty kettle starts drawing too much current, the breaker trips so the wiring does not catch fire. Every other appliance loses nothing, and the kettle simply stops working until someone checks it and flips the switch back. A software circuit breaker does the same for a failing dependency: stop calling it, fail fast, and test it again cautiously later.</p><p><strong>Mental model:</strong> timeouts bound how long one call can hurt you, retries recover from blips, and circuit breakers stop you hammering something that is already down.</p><ul><li><strong>Retrying at every layer.</strong> Three layers with three retries each turn one failing call into 27 downstream calls. Retry at one layer, and use a retry budget.</li><li><strong>Setting timeouts larger than the caller's deadline.</strong> A 30-second DB timeout behind a 2-second HTTP deadline means the work continues after nobody is waiting. Propagate deadlines.</li><li><strong>Backoff without jitter.</strong> All clients retry at 100, 200 and 400 ms in lockstep. Full jitter spreads the retries.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-circuit-breakers-and-timeouts">
-        <button class="audio-player__play-btn" id="audio-btn-circuit-breakers-and-timeouts" data-action="toggle-audio" data-slug="circuit-breakers-and-timeouts" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-circuit-breakers-and-timeouts" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-circuit-breakers-and-timeouts" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-circuit-breakers-and-timeouts">0:00 / 3:44</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="circuit-breakers-and-timeouts" id="audio-track-circuit-breakers-and-timeouts">
-          <div class="audio-player__progress" id="audio-bar-circuit-breakers-and-timeouts" style="width: 0%;"></div>
         </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="circuit-breakers-and-timeouts" id="audio-speed-circuit-breakers-and-timeouts" title="Playback speed">1x</button>
-        <audio id="audio-circuit-breakers-and-timeouts" src="audio/circuit-breakers-and-timeouts.mp3" preload="metadata"></audio>
-      </div><article class="prose"><div class="lesson-content">
-      <h2>Cascading Failures: How a Slow Downstream Kills the Fleet</h2>
+      </details><article class="prose"><div class="lesson-content">
+      <h2 id="topic-sec-1">Cascading Failures: How a Slow Downstream Kills the Fleet</h2>
       <p>In a microservices mesh, a single degraded downstream dependency (e.g., a recommendation engine with latency spiking from 20ms to 5,000ms) is far more dangerous than a completely dead dependency. When a service stalls, upstream callers keep connections and worker threads open while waiting for response timeouts.</p>
       <p>Within seconds, thread pools exhaust across the API gateway and web tiers, causing total application blackout: a <strong>cascading collapse</strong>.</p>
 
-      <h2>Circuit Breaker State Machine Under the Hood</h2>
+      <h2 id="topic-sec-2">Circuit Breaker State Machine Under the Hood</h2>
       <div class="mermaid">
 flowchart TD
     Closed["CLOSED State: Normal Traffic Flow"] -->|"Failure rate exceeds threshold (e.g. > 50% over 10s)"| Open["OPEN State: Fail-Fast immediately without calling downstream"]
@@ -944,7 +988,7 @@ flowchart TD
     HalfOpen -->|"Probe Fails"| Open
       </div>
 
-      <h2>Detailed Circuit Breaker Mechanics</h2>
+      <h2 id="topic-sec-3">Detailed Circuit Breaker Mechanics</h2>
       <h3>1. Closed State</h3>
       <p>All traffic flows through to the downstream service. The circuit breaker monitors responses in a sliding ring-buffer window (e.g., the last 100 requests). If the percentage of slow calls (latency > threshold) or HTTP 5xx errors exceeds the error rate threshold (typically 50%), the breaker trips to <strong>Open</strong>.</p>
 
@@ -954,7 +998,7 @@ flowchart TD
       <h3>3. Half-Open State</h3>
       <p>After a configured sleep window (e.g., 15 seconds), the breaker transitions to Half-Open. It permits a small number of trial requests (e.g., 5 probe requests). How the trial results are judged depends on the implementation: some breakers reopen on the first failed probe, while Resilience4j applies the failure-rate (and slow-call-rate) threshold to the permitted half-open calls, closing if the rate is below the threshold and reopening for another sleep interval otherwise.</p>
 
-      <h2>Exponential Backoff with Full Jitter Formula</h2>
+      <h2 id="topic-sec-4">Exponential Backoff with Full Jitter Formula</h2>
       <p>When clients retry failed requests simultaneously, they synchronize into devastating periodic retry waves (resonance). Clients must apply <strong>Exponential Backoff with Full Jitter</strong>:</p>
       <pre><code>// Exponential Backoff with Full Jitter (AWS Recommended)
 function getBackoffTime(attempt, base = 100, cap = 10000) {
@@ -964,8 +1008,8 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
       </code></pre>
     
 <!-- enriched -->
-<h2>Worked example: why slow is worse than dead</h2><p>An API tier has 200 worker threads per instance and handles 1,000 rps per instance. Each request calls a recommendations service, normally in 20 ms.</p><ul><li><strong>Recommendations dead</strong> (connection refused in 1 ms): threads are freed instantly. The API returns errors or fallbacks, but stays responsive.</li><li><strong>Recommendations slow</strong> (5 s responses, 10 s timeout): by Little's law, concurrent in-flight requests are 1,000 x 5 = 5,000, but only 200 threads exist. The pool is exhausted in 0.2 seconds, and <em>every</em> endpoint on the instance stalls, including ones that never call recommendations.</li><li><strong>With a 150 ms timeout and a breaker:</strong> at most 1,000 x 0.15 = 150 threads are tied up. Once the failure rate crosses 50 percent over a 10-second window, the breaker opens and calls return the fallback in microseconds. Thread use drops to near zero.</li></ul><h2>Choosing timeouts</h2><ul><li>Set the timeout from the dependency's measured p99.9 plus a margin, not a round number. Revisit it when latency changes.</li><li>Use separate connect and read timeouts. Connect should be short, around 100 to 500 ms in a datacentre.</li><li>Propagate a deadline, for example gRPC deadlines, so downstream services stop work when the caller has given up.</li></ul><h2>Resilience patterns compared</h2><table><thead><tr><th>Pattern</th><th>Protects</th><th>Failure it handles</th><th>Risk if misused</th></tr></thead><tbody><tr><td>Timeout</td><td>The caller's threads</td><td>Slow dependency</td><td>Too short a timeout causes false failures</td></tr><tr><td>Retry with backoff and jitter</td><td>Success rate</td><td>Transient errors</td><td>Retry storms, and duplicates if not idempotent</td></tr><tr><td>Retry budget (for example, at most 10 percent extra)</td><td>The dependency</td><td>Retry amplification</td><td>Slightly lower success during blips</td></tr><tr><td>Circuit breaker</td><td>Both sides</td><td>Sustained failure</td><td>Flapping if thresholds are noisy</td></tr><tr><td>Bulkhead (separate pools)</td><td>Other features</td><td>One dependency hogging threads</td><td>Under-used capacity</td></tr><tr><td>Load shedding</td><td>The server itself</td><td>Overload</td><td>Must shed low-priority work first</td></tr></tbody></table><h2>How real systems do it</h2><ul><li><strong>Netflix Hystrix</strong> (now in maintenance) popularised breakers plus bulkheads. <strong>Resilience4j</strong> is the common JVM successor, with count- or time-based sliding windows and a configurable number of half-open trial calls.</li><li><strong>Envoy and Istio</strong> implement breaking as connection and pending-request limits plus outlier detection, which ejects failing hosts, rather than the classic three-state machine.</li><li><strong>AWS SDKs</strong> use exponential backoff with jitter and a client-side retry token bucket (retry quota).</li><li><strong>Google SRE</strong> recommends client-side adaptive throttling: reject locally with probability based on the recent ratio of accepted requests to total requests.</li></ul>
-</div></article>
+<h2 id="topic-sec-5">Worked example: why slow is worse than dead</h2><p>An API tier has 200 worker threads per instance and handles 1,000 rps per instance. Each request calls a recommendations service, normally in 20 ms.</p><ul><li><strong>Recommendations dead</strong> (connection refused in 1 ms): threads are freed instantly. The API returns errors or fallbacks, but stays responsive.</li><li><strong>Recommendations slow</strong> (5 s responses, 10 s timeout): by Little's law, concurrent in-flight requests are 1,000 x 5 = 5,000, but only 200 threads exist. The pool is exhausted in 0.2 seconds, and <em>every</em> endpoint on the instance stalls, including ones that never call recommendations.</li><li><strong>With a 150 ms timeout and a breaker:</strong> at most 1,000 x 0.15 = 150 threads are tied up. Once the failure rate crosses 50 percent over a 10-second window, the breaker opens and calls return the fallback in microseconds. Thread use drops to near zero.</li></ul><h2 id="topic-sec-6">Choosing timeouts</h2><ul><li>Set the timeout from the dependency's measured p99.9 plus a margin, not a round number. Revisit it when latency changes.</li><li>Use separate connect and read timeouts. Connect should be short, around 100 to 500 ms in a datacentre.</li><li>Propagate a deadline, for example gRPC deadlines, so downstream services stop work when the caller has given up.</li></ul><h2 id="topic-sec-7">Resilience patterns compared</h2><table><thead><tr><th>Pattern</th><th>Protects</th><th>Failure it handles</th><th>Risk if misused</th></tr></thead><tbody><tr><td>Timeout</td><td>The caller's threads</td><td>Slow dependency</td><td>Too short a timeout causes false failures</td></tr><tr><td>Retry with backoff and jitter</td><td>Success rate</td><td>Transient errors</td><td>Retry storms, and duplicates if not idempotent</td></tr><tr><td>Retry budget (for example, at most 10 percent extra)</td><td>The dependency</td><td>Retry amplification</td><td>Slightly lower success during blips</td></tr><tr><td>Circuit breaker</td><td>Both sides</td><td>Sustained failure</td><td>Flapping if thresholds are noisy</td></tr><tr><td>Bulkhead (separate pools)</td><td>Other features</td><td>One dependency hogging threads</td><td>Under-used capacity</td></tr><tr><td>Load shedding</td><td>The server itself</td><td>Overload</td><td>Must shed low-priority work first</td></tr></tbody></table><h2 id="topic-sec-8">How real systems do it</h2><ul><li><strong>Netflix Hystrix</strong> (now in maintenance) popularised breakers plus bulkheads. <strong>Resilience4j</strong> is the common JVM successor, with count- or time-based sliding windows and a configurable number of half-open trial calls.</li><li><strong>Envoy and Istio</strong> implement breaking as connection and pending-request limits plus outlier detection, which ejects failing hosts, rather than the classic three-state machine.</li><li><strong>AWS SDKs</strong> use exponential backoff with jitter and a client-side retry token bucket (retry quota).</li><li><strong>Google SRE</strong> recommends client-side adaptive throttling: reject locally with probability based on the recent ratio of accepted requests to total requests.</li></ul>
+</div></article><div id="check-slider-circuit-breakers-and-timeouts">
       <section class="check-slider" data-slug="circuit-breakers-and-timeouts" data-total="5" aria-label="Check yourself">
         <div class="check-slider__head">
           <span class="check-slider__label">Check yourself</span>
@@ -1237,7 +1281,7 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section>
+      </section></div><div id="topic-simulator-circuit-breakers-and-timeouts">
         <div class="simulator-card" id="sim-cb">
           <div class="simulator-card__header">
             <div class="simulator-card__title">Circuit Breaker</div>
@@ -1266,15 +1310,15 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
             Ready.
           </div>
         </div>
-      
-        <div class="takeaways">
-          <h3 class="takeaways__title">Key Takeaways</h3>
+      </div>
+        <div class="takeaways" id="topic-takeaways-circuit-breakers-and-timeouts">
+          <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
             <div class="takeaways__item">Slow dependencies exhaust thread pools faster than dead dependencies, causing catastrophic cascading fleet failure.</div><div class="takeaways__item">Circuit breakers fail fast in Open state, shielding downstream services from traffic while they recover.</div><div class="takeaways__item">Exponential backoff must incorporate Full Jitter to eliminate synchronized retry traffic spikes.</div>
           </div>
         </div>
       <div class="lesson-builds">
-        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h3>
+        <h2 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Build it from scratch — Interactive Lab &amp; Guide</h2>
         
           <a class="lesson-builds__item" href="/build/circuit-breaker/" data-action="navigate-build" data-build-id="circuit-breaker">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1294,7 +1338,7 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
           </a>
       </div>
       <div class="lesson-builds lesson-challenges">
-        <h3 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h3>
+        <h2 class="lesson-builds__title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Debug This in Production — Incident Simulator &amp; Code Hotfix</h2>
         
           <a class="lesson-builds__item" href="/challenges/retry-storm-meltdown/" data-nav="challenges" data-challenge="retry-storm-meltdown">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -1314,7 +1358,7 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
           </a>
       </div>
         <div class="further-reading">
-          <h3 class="further-reading__title">Further Reading</h3>
+          <h2 class="further-reading__title">Further Reading</h2>
           <div class="further-reading__list">
             <a class="further-reading__link" href="https://github.com/Netflix/Hystrix/wiki/How-it-Works" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Netflix Hystrix: Latency and Fault Tolerance Architecture</a><a class="further-reading__link" href="https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> AWS Architecture Blog: Exponential Backoff And Jitter</a>
           </div>
@@ -1327,10 +1371,10 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
           </div>
           <div class="lesson-feedback__actions">
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="circuit-breakers-and-timeouts" data-vote="yes">
-              👍 Helpful
+              Helpful
             </button>
             <button type="button" class="btn btn--sm btn--outline lesson-feedback__btn" data-action="feedback-vote" data-slug="circuit-breakers-and-timeouts" data-vote="no">
-              👎 Needs work
+              Needs work
             </button>
             <a href="https://github.com/innovatorved/system-design-in-depth/issues/new?title=%5BFeedback%5D%20Circuit%20breakers%20and%20timeouts&labels=feedback,curriculum&body=%23%23%23%20Topic%3A%20Circuit%20breakers%20and%20timeouts%0A**URL%3A**%20https%3A%2F%2Fsystem-design-in-depth.vedgupta.in%2Ftopic%2Fcircuit-breakers-and-timeouts%2F%0A%0A%23%23%23%20Feedback%20%2F%20Correction%3A%0A" target="_blank" rel="noopener noreferrer" class="btn btn--sm btn--outline lesson-feedback__btn" title="Open an issue on GitHub">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Report an issue
@@ -1343,9 +1387,104 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
       </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/gossip-protocol/" data-nav="topic" data-slug="gossip-protocol">
         <span class="lesson-nav__label">Next →</span>
         <span class="lesson-nav__title">Gossip protocol</span>
-      </a></div>
+      </a></div></div>
+        
+      <aside class="ds-toc" aria-label="On this page">
+        <div class="ds-toc__heading">On this page</div>
+        
+          <ul class="ds-toc__list">
+            
+              <li>
+                <a class="ds-toc__link is-active" href="#sec-intuition">Intuition first</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-1">Cascading Failures: How a Slow Downstream Kills the Fleet</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-2">Circuit Breaker State Machine Under the Hood</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-3">Detailed Circuit Breaker Mechanics</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-4">Exponential Backoff with Full Jitter Formula</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-5">Worked example: why slow is worse than dead</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-6">Choosing timeouts</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-7">Resilience patterns compared</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-sec-8">How real systems do it</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#check-slider-circuit-breakers-and-timeouts">Check yourself</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-simulator-circuit-breakers-and-timeouts">Interactive simulator</a>
+              </li>
+            
+              <li>
+                <a class="ds-toc__link" href="#topic-takeaways-circuit-breakers-and-timeouts">Key takeaways</a>
+              </li>
+            
+          </ul>
+        
+        <div class="ds-toc__progress-card">
+          <div class="ds-toc__progress-row">
+            <span>Module 3.2</span>
+            <span>0/13 done</span>
+          </div>
+          <div class="ds-toc__progress-bar" aria-hidden="true">
+            <div class="ds-toc__progress-fill" style="width:0%"></div>
+          </div>
+          <button type="button" class="ds-share-btn" style="width:100%;justify-content:center;margin-top:4px;" data-action="share-page" data-share-url="https://system-design-in-depth.vedgupta.in/topic/circuit-breakers-and-timeouts/" data-share-title="Circuit breakers and timeouts — System Design In Depth">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="ds-share-btn__label">Copy lesson link</span>
+          </button>
+        </div>
+      </aside>
+      </div>
     </div>
+    <footer class="ds-footer" aria-label="Site">
+      <div class="ds-footer__inner">
+        <div class="ds-footer__family">
+          <span class="ds-footer__label">In Depth Learning Family</span>
+          <a href="https://system-design-in-depth.vedgupta.in/" class="ds-footer__product is-current">System Design In Depth</a>
+          <a href="https://sql-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">SQL In Depth</a>
+          <a href="https://dsa-in-depth.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">DSA In Depth</a>
+          <a href="https://code-lab.vedgupta.in/" class="ds-footer__product" target="_blank" rel="noopener">CodeLab IDE</a>
+        </div>
+        <div class="ds-footer__links">
+          <a href="/sandbox/" data-nav="sandbox">Sandbox</a>
+          <a href="/roadmap/" data-nav="roadmap">Roadmap</a>
+          <a href="/challenges/" data-nav="challenges">Challenges</a>
+          <a href="/glossary/" data-nav="glossary">Glossary</a>
+          <a href="/projects/">Projects</a>
+          <a href="https://github.com/innovatorved/system-design-in-depth" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="ds-footer__meta">
+          <span>Free &amp; open-source distributed systems textbook by <a href="https://vedgupta.in" target="_blank" rel="noopener">Ved Gupta</a>. Code MIT · Content CC BY 4.0.</span>
+        </div>
+      </div>
+    </footer>
   </main>
+
+  <div class="ds-toast" id="ds-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Search Modal -->
   <div class="search-modal" id="search-modal" role="dialog" aria-label="Search topics" aria-modal="true">
@@ -1353,7 +1492,7 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
     <div class="search-modal__dialog">
       <div class="search-modal__input-wrap">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-modal__input" id="search-input" type="text" placeholder="Search topics and concepts…" autocomplete="off" spellcheck="false">
+        <input class="search-modal__input" id="search-input" type="text" aria-label="Search 200 topics, simulators, and build labs" placeholder="Search 200 topics, simulators, and build labs…" autocomplete="off" spellcheck="false">
       </div>
       <div class="search-modal__results" id="search-results"></div>
       <div class="search-modal__footer">
@@ -1407,7 +1546,7 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
   <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
-  <script type="text/plain" data-defer src="data/projects.js?v=4e9e00f150"></script>
+  <script type="text/plain" data-defer src="data/projects.js?v=a11cd2602b"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
   <!-- App Scripts -->
@@ -1416,9 +1555,9 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/simulators-advanced.js?v=59ca5a9ce9"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=65d6157025"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=d6ea902ce2"></script>
+  <script type="text/plain" data-defer src="js/simulators-advanced.js?v=02e2d93d9c"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1426,30 +1565,9 @@ function getBackoffTime(attempt, base = 100, cap = 10000) {
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=5f49699eaf"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=195293ff52"></script>
 
   <!-- App bootstrap & deferred script loader -->
-  <script src="js/bootstrap.js?v=df2bb60aeb"></script>
+  <script src="js/bootstrap.js?v=34ee525291"></script>
 </body>
 </html>
-
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  "headline": "Circuit breakers and timeouts",
-  "description": "Your house has a fuse box. When a faulty kettle starts drawing too much current, the breaker trips so the wiring does not catch fire.",
-  "url": "https://system-design-in-depth.vedgupta.in/topic/circuit-breakers-and-timeouts/",
-  "author": {
-    "@type": "Person",
-    "name": "Ved Gupta",
-    "url": "https://vedgupta.in"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "System Design In Depth",
-    "url": "https://system-design-in-depth.vedgupta.in"
-  }
-}
-  </script>
-</head>
