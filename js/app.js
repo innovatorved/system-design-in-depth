@@ -23,6 +23,61 @@ window.App = (() => {
   let _toastTimer = null;
   const collapsedModules = new Set();
 
+  function getAllModuleIds() {
+    const ids = [];
+    const data = window.CURRICULUM_DATA;
+    if (!data) return ids;
+    for (const p of data.parts) {
+      for (const m of p.modules) {
+        ids.push(m.id);
+      }
+    }
+    return ids;
+  }
+
+  function syncCollapseModulesBtn() {
+    const labelEl = document.getElementById('sidebar-collapse-modules-label');
+    const btnEl = document.getElementById('sidebar-collapse-modules-btn');
+    if (!labelEl || !btnEl) return;
+    btnEl.style.display = activeTab === 'builds' ? 'none' : '';
+    const allIds = getAllModuleIds();
+    const allCollapsed = allIds.length > 0 && allIds.every(id => collapsedModules.has(id));
+    labelEl.textContent = allCollapsed ? 'Expand' : 'Collapse';
+    btnEl.title = allCollapsed ? 'Expand all modules' : 'Collapse all modules';
+    btnEl.setAttribute('aria-label', allCollapsed ? 'Expand all modules' : 'Collapse all modules');
+  }
+
+  function toggleAllModules() {
+    const allIds = getAllModuleIds();
+    const allCollapsed = allIds.length > 0 && allIds.every(id => collapsedModules.has(id));
+    if (allCollapsed) {
+      collapsedModules.clear();
+      document.querySelectorAll('.module-group').forEach(g => g.classList.remove('collapsed'));
+    } else {
+      allIds.forEach(id => collapsedModules.add(id));
+      document.querySelectorAll('.module-group').forEach(g => g.classList.add('collapsed'));
+    }
+    syncCollapseModulesBtn();
+  }
+
+  function toggleDesktopSidebar(forceCollapsed) {
+    const isOverlaySidebar = window.innerWidth <= 1024 ||
+      document.body.classList.contains('view-landing') ||
+      document.body.classList.contains('view-ecosystem');
+    if (isOverlaySidebar && sidebarOpen) {
+      closeSidebar();
+      return;
+    }
+    const isCollapsed = typeof forceCollapsed === 'boolean'
+      ? forceCollapsed
+      : !document.body.classList.contains('sidebar-collapsed');
+    document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+    const collapseBtn = document.getElementById('sidebar-collapse-btn');
+    const expandBtn = document.getElementById('sidebar-expand-btn');
+    if (collapseBtn) collapseBtn.setAttribute('aria-expanded', String(!isCollapsed));
+    if (expandBtn) expandBtn.setAttribute('aria-expanded', String(!isCollapsed));
+  }
+
   // Helper: find module ID for a given slug
   function getModuleIdForSlug(slug) {
     const data = window.CURRICULUM_DATA;
@@ -975,6 +1030,7 @@ window.App = (() => {
     }
 
     container.innerHTML = html;
+    syncCollapseModulesBtn();
   }
 
   function renderBuildsSidebar(container) {
@@ -1013,6 +1069,7 @@ window.App = (() => {
     }
 
     container.innerHTML = html;
+    syncCollapseModulesBtn();
   }
 
   function updateSidebarActive() {
@@ -1021,9 +1078,15 @@ window.App = (() => {
       const isActive = slug === currentSlug;
       el.classList.toggle('active', isActive);
       if (isActive) {
+        const group = el.closest('.module-group');
+        if (group) {
+          group.classList.remove('collapsed');
+          if (group.dataset.module) collapsedModules.delete(group.dataset.module);
+        }
         el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     });
+    syncCollapseModulesBtn();
   }
 
   function toggleModule(moduleId) {
@@ -1034,6 +1097,7 @@ window.App = (() => {
     }
     const group = document.querySelector(`.module-group[data-module="${moduleId}"]`);
     if (group) group.classList.toggle('collapsed');
+    syncCollapseModulesBtn();
     if (window.Analytics) {
       window.Analytics.trackModuleToggle(moduleId, !collapsedModules.has(moduleId));
     }
@@ -1046,6 +1110,7 @@ window.App = (() => {
       sidebar.classList.add('open');
       sidebarOpen = true;
     }
+    document.getElementById('sidebar-overlay')?.classList.add('open');
   }
 
   function closeSidebar() {
@@ -1054,6 +1119,7 @@ window.App = (() => {
       sidebar.classList.remove('open');
       sidebarOpen = false;
     }
+    document.getElementById('sidebar-overlay')?.classList.remove('open');
   }
 
   // ── Theme ─────────────────────────────────────────────────
@@ -1515,9 +1581,55 @@ window.App = (() => {
     const hamburger = document.getElementById('hamburger-btn');
     if (hamburger) {
       hamburger.addEventListener('click', () => {
+        const body = document.body;
+        const hasDockedSidebar = window.innerWidth > 1024 &&
+          !body.classList.contains('view-landing') &&
+          !body.classList.contains('view-ecosystem');
+        if (hasDockedSidebar && body.classList.contains('sidebar-collapsed')) {
+          toggleDesktopSidebar(false);
+          return;
+        }
         sidebarOpen ? closeSidebar() : openSidebar();
       });
     }
+
+    // Compact collapse/expand all modules button next to Curriculum tab
+    const collapseModulesBtn = document.getElementById('sidebar-collapse-modules-btn');
+    if (collapseModulesBtn) {
+      collapseModulesBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleAllModules();
+      });
+    }
+
+    // Compact sidebar collapse & reopen buttons + '[' keyboard shortcut
+    const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
+    if (sidebarCollapseBtn) {
+      sidebarCollapseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleDesktopSidebar(true);
+      });
+    }
+    const sidebarExpandBtn = document.getElementById('sidebar-expand-btn');
+    if (sidebarExpandBtn) {
+      sidebarExpandBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleDesktopSidebar(false);
+      });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== '[' || e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable || t.closest?.('.cm-editor, code-lab'))) return;
+      const body = document.body;
+      const hasDockedSidebar = window.innerWidth > 1024 &&
+        !body.classList.contains('view-landing') &&
+        !body.classList.contains('view-ecosystem');
+      if (hasDockedSidebar) {
+        e.preventDefault();
+        toggleDesktopSidebar();
+      }
+    });
 
     // Sidebar overlay
     const overlay = document.getElementById('sidebar-overlay');
