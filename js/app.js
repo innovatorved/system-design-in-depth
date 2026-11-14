@@ -36,7 +36,9 @@ window.App = (() => {
       : !document.body.classList.contains('sidebar-collapsed');
     document.body.classList.toggle('sidebar-collapsed', isCollapsed);
     const collapseBtn = document.getElementById('sidebar-collapse-btn');
+    const expandBtn = document.getElementById('sidebar-expand-btn');
     if (collapseBtn) collapseBtn.setAttribute('aria-expanded', String(!isCollapsed));
+    if (expandBtn) expandBtn.setAttribute('aria-expanded', String(!isCollapsed));
   }
 
   // Helper: find module ID for a given slug
@@ -1550,12 +1552,19 @@ window.App = (() => {
       });
     }
 
-    // Minimal sidebar collapse button + '[' keyboard shortcut
+    // Minimal sidebar collapse & reopen buttons + '[' keyboard shortcut
     const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
     if (sidebarCollapseBtn) {
       sidebarCollapseBtn.addEventListener('click', (e) => {
         e.preventDefault();
         toggleDesktopSidebar(true);
+      });
+    }
+    const sidebarExpandBtn = document.getElementById('sidebar-expand-btn');
+    if (sidebarExpandBtn) {
+      sidebarExpandBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleDesktopSidebar(false);
       });
     }
     document.addEventListener('keydown', (e) => {
