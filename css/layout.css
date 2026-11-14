@@ -498,7 +498,12 @@ a.topbar__progress-pill:focus-visible {
   line-height: var(--leading-snug);
 }
 
-/* Desktop collapsed sidebar state */
+/* Desktop & all-route collapsed sidebar state (never in navbar) */
+body.view-landing .sidebar:not(.open) ~ .main .sidebar-reopen-btn,
+body.view-ecosystem .sidebar:not(.open) ~ .main .sidebar-reopen-btn {
+  display: inline-flex;
+}
+
 @media (min-width: 1025px) {
   body.sidebar-collapsed .sidebar {
     transform: translateX(-100%);
@@ -512,8 +517,15 @@ a.topbar__progress-pill:focus-visible {
 }
 
 @media (max-width: 1024px) {
-  .sidebar__collapse-panel-btn {
-    display: none;
+  body:not(.view-landing):not(.view-ecosystem) .sidebar:not(.open) ~ .main .sidebar-reopen-btn {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .sidebar-reopen-btn {
+    top: calc(var(--topbar-h) + 6px);
+    left: 8px;
   }
 }
 
@@ -651,10 +663,6 @@ a.topbar__progress-pill:focus-visible {
 
   .main {
     margin-left: 0;
-  }
-
-  .topbar__hamburger {
-    display: grid;
   }
 
   .topbar__brand {

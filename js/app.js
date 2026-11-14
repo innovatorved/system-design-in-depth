@@ -1070,6 +1070,7 @@ window.App = (() => {
       sidebarOpen = true;
     }
     document.getElementById('sidebar-overlay')?.classList.add('open');
+    document.getElementById('sidebar-expand-btn')?.setAttribute('aria-expanded', 'true');
   }
 
   function closeSidebar() {
@@ -1079,6 +1080,7 @@ window.App = (() => {
       sidebarOpen = false;
     }
     document.getElementById('sidebar-overlay')?.classList.remove('open');
+    document.getElementById('sidebar-expand-btn')?.setAttribute('aria-expanded', 'false');
   }
 
   // ── Theme ─────────────────────────────────────────────────
@@ -1564,6 +1566,10 @@ window.App = (() => {
     if (sidebarExpandBtn) {
       sidebarExpandBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        if (window.innerWidth <= 1024 || document.body.classList.contains('view-landing') || document.body.classList.contains('view-ecosystem')) {
+          openSidebar();
+          return;
+        }
         toggleDesktopSidebar(false);
       });
     }
