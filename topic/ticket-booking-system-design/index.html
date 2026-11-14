@@ -893,37 +893,7 @@
             <span class="ds-share-btn__label">Share</span>
           </button>
         </div>
-      </div>
-        <aside class="intuition">
-          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
-          <div class="intuition__body"><p><p>Picture a theatre box office on the morning a hit show goes on sale. A <strong>queue outside</strong> (the waiting room) lets people in a few at a time, so the counter is not mobbed. At the counter, the clerk <strong>puts a "held" card on your seat</strong> for 10 minutes while you get your wallet out (the hold with a TTL). The ledger only marks a seat as sold if the card still has <em>your</em> name on it and has not expired (the conditional update).</p><p><strong>Mental model:</strong> <em>the seat row in an ACID database is the single source of truth. Every state change is a compare-and-set on that row.</em> Caches and queues around it absorb load, but they never decide who gets a seat.</p><ul><li><strong>Trap: checking availability, then booking, in two steps.</strong> Two buyers both see "available" and both book. The check and the write must be one atomic statement or one transaction.</li><li><strong>Trap: using a Redis TTL as the only hold.</strong> If Redis evicts or expires the key while the database still says held (or the other way round), the two disagree. Store the expiry in the database row.</li><li><strong>Trap: forgetting that payment is asynchronous.</strong> A payment can succeed after the hold expired. You need an explicit refund path, not an assumption that the timing always works out.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-ticket-booking-system-design">
-        <button class="audio-player__play-btn" id="audio-btn-ticket-booking-system-design" data-action="toggle-audio" data-slug="ticket-booking-system-design" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-ticket-booking-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-ticket-booking-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-ticket-booking-system-design">0:00 / 3:30</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="ticket-booking-system-design" id="audio-track-ticket-booking-system-design">
-          <div class="audio-player__progress" id="audio-bar-ticket-booking-system-design" style="width: 0%;"></div>
-        </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="ticket-booking-system-design" id="audio-speed-ticket-booking-system-design" title="Playback speed">1x</button>
-        <audio id="audio-ticket-booking-system-design" src="audio/ticket-booking-system-design.mp3" preload="metadata"></audio>
-      </div>
-      <details class="ds-external-lecture">
-        <summary>
-          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer</span>
-          </span>
-          <span class="ds-pill" style="flex-shrink:0;">Hello Interview · 58:39 +2 ▾</span>
-        </summary>
-        <div style="padding:0 16px 16px;">
-          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;fhdPyoO6aXI&quot;,&quot;title&quot;:&quot;System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer&quot;,&quot;channel&quot;:&quot;Hello Interview&quot;,&quot;why&quot;:&quot;The best-known walkthrough of this exact problem: seat holds with TTLs, preventing double booking, a virtual waiting room and search. It follows the lesson&#039;s structure closely.&quot;,&quot;length&quot;:&quot;58:39&quot;}">
+      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;fhdPyoO6aXI&quot;,&quot;title&quot;:&quot;System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer&quot;,&quot;channel&quot;:&quot;Hello Interview&quot;,&quot;why&quot;:&quot;The best-known walkthrough of this exact problem: seat holds with TTLs, preventing double booking, a virtual waiting room and search. It follows the lesson&#039;s structure closely.&quot;,&quot;length&quot;:&quot;58:39&quot;}">
       <div class="video-embed" id="video-fhdPyoO6aXI"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="fhdPyoO6aXI">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/fhdPyoO6aXI/hqdefault.jpg"
                alt="System Design Interview: Design Ticketmaster w/ a Ex-Meta Staff Engineer"
@@ -938,7 +908,6 @@
         </a>
       </div>
       <p class="video-embed__why">The best-known walkthrough of this exact problem: seat holds with TTLs, preventing double booking, a virtual waiting room and search. It follows the lesson&#039;s structure closely.</p></div>
-          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -973,8 +942,26 @@
         </span>
       </a></div>
       </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Picture a theatre box office on the morning a hit show goes on sale. A <strong>queue outside</strong> (the waiting room) lets people in a few at a time, so the counter is not mobbed. At the counter, the clerk <strong>puts a "held" card on your seat</strong> for 10 minutes while you get your wallet out (the hold with a TTL). The ledger only marks a seat as sold if the card still has <em>your</em> name on it and has not expired (the conditional update).</p><p><strong>Mental model:</strong> <em>the seat row in an ACID database is the single source of truth. Every state change is a compare-and-set on that row.</em> Caches and queues around it absorb load, but they never decide who gets a seat.</p><ul><li><strong>Trap: checking availability, then booking, in two steps.</strong> Two buyers both see "available" and both book. The check and the write must be one atomic statement or one transaction.</li><li><strong>Trap: using a Redis TTL as the only hold.</strong> If Redis evicts or expires the key while the database still says held (or the other way round), the two disagree. Store the expiry in the database row.</li><li><strong>Trap: forgetting that payment is asynchronous.</strong> A payment can succeed after the hold expired. You need an explicit refund path, not an assumption that the timing always works out.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-ticket-booking-system-design">
+        <button class="audio-player__play-btn" id="audio-btn-ticket-booking-system-design" data-action="toggle-audio" data-slug="ticket-booking-system-design" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-ticket-booking-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-ticket-booking-system-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-ticket-booking-system-design">0:00 / 3:30</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="ticket-booking-system-design" id="audio-track-ticket-booking-system-design">
+          <div class="audio-player__progress" id="audio-bar-ticket-booking-system-design" style="width: 0%;"></div>
         </div>
-      </details><article class="prose"><div class="lesson-content">
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="ticket-booking-system-design" id="audio-speed-ticket-booking-system-design" title="Playback speed">1x</button>
+        <audio id="audio-ticket-booking-system-design" src="audio/ticket-booking-system-design.mp3" preload="metadata"></audio>
+      </div><article class="prose"><div class="lesson-content">
       <h2 id="topic-sec-1">The Core Challenge: Concurrency & Hot Spots</h2>
       <p>Designing a high-concurrency ticket reservation platform like Ticketmaster or BookMyShow revolves around a single critical invariant: <strong>a seat must never be double-booked</strong>, even when hundreds of thousands of users attempt to purchase tickets for the same concert within seconds. At the same time, holding a seat during checkout requires a temporary reservation with an automatic timeout if payment is not completed.</p>
 
@@ -1478,7 +1465,7 @@ WHERE seat_id = :seatId AND status = 'HELD' AND hold_token = :holdToken
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=5a5823106d"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>

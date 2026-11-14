@@ -893,37 +893,7 @@
             <span class="ds-share-btn__label">Share</span>
           </button>
         </div>
-      </div>
-        <aside class="intuition">
-          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
-          <div class="intuition__body"><p><p>Five security guards each hold a copy of a sign-in sheet. Redlock says: sign in with at least three guards within a short window and you hold the room. It works well when watches are roughly right and nobody dozes off. But if you fall asleep holding the room, the guards cannot stop you walking in later. Only a door that checks ticket numbers can.</p><p><strong>Mental model:</strong> Redis locks are excellent for avoiding duplicate work. For correctness, the resource must reject stale holders, and Redlock alone cannot give you that.</p><ul><li><strong>Releasing with a plain DEL.</strong> If your lease expired and someone else took the lock, you delete their lock. Release with a compare-and-delete Lua script on your unique value.</li><li><strong>Treating a failover-replicated Redis as safe.</strong> A primary can acknowledge SET NX and then crash before replicating it, so the promoted replica grants the same lock again.</li><li><strong>Believing Redlock produces fencing tokens.</strong> Its random values are not monotonic. Use an etcd revision, a ZooKeeper zxid, or a database sequence.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-redis-redlock-and-fencing-tokens">
-        <button class="audio-player__play-btn" id="audio-btn-redis-redlock-and-fencing-tokens" data-action="toggle-audio" data-slug="redis-redlock-and-fencing-tokens" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-redis-redlock-and-fencing-tokens" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-redis-redlock-and-fencing-tokens" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-redis-redlock-and-fencing-tokens">0:00 / 3:38</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="redis-redlock-and-fencing-tokens" id="audio-track-redis-redlock-and-fencing-tokens">
-          <div class="audio-player__progress" id="audio-bar-redis-redlock-and-fencing-tokens" style="width: 0%;"></div>
-        </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="redis-redlock-and-fencing-tokens" id="audio-speed-redis-redlock-and-fencing-tokens" title="Playback speed">1x</button>
-        <audio id="audio-redis-redlock-and-fencing-tokens" src="audio/redis-redlock-and-fencing-tokens.mp3" preload="metadata"></audio>
-      </div>
-      <details class="ds-external-lecture">
-        <summary>
-          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> How Distributed Lock works | ft Redis | System Design</span>
-          </span>
-          <span class="ds-pill" style="flex-shrink:0;">ByteMonk · 10:24 +2 ▾</span>
-        </summary>
-        <div style="padding:0 16px 16px;">
-          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;qY4MfWv01pI&quot;,&quot;title&quot;:&quot;How Distributed Lock works | ft Redis | System Design&quot;,&quot;channel&quot;:&quot;ByteMonk&quot;,&quot;why&quot;:&quot;ByteMonk builds a Redis lock step by step (SET NX PX, unique value, safe release), then Redlock&#039;s majority approach and its pitfalls. It matches this lesson&#039;s scope.&quot;,&quot;length&quot;:&quot;10:24&quot;}">
+      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;qY4MfWv01pI&quot;,&quot;title&quot;:&quot;How Distributed Lock works | ft Redis | System Design&quot;,&quot;channel&quot;:&quot;ByteMonk&quot;,&quot;why&quot;:&quot;ByteMonk builds a Redis lock step by step (SET NX PX, unique value, safe release), then Redlock&#039;s majority approach and its pitfalls. It matches this lesson&#039;s scope.&quot;,&quot;length&quot;:&quot;10:24&quot;}">
       <div class="video-embed" id="video-qY4MfWv01pI"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="qY4MfWv01pI">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/qY4MfWv01pI/hqdefault.jpg"
                alt="How Distributed Lock works | ft Redis | System Design"
@@ -938,7 +908,6 @@
         </a>
       </div>
       <p class="video-embed__why">ByteMonk builds a Redis lock step by step (SET NX PX, unique value, safe release), then Redlock&#039;s majority approach and its pitfalls. It matches this lesson&#039;s scope.</p></div>
-          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -973,8 +942,26 @@
         </span>
       </a></div>
       </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Five security guards each hold a copy of a sign-in sheet. Redlock says: sign in with at least three guards within a short window and you hold the room. It works well when watches are roughly right and nobody dozes off. But if you fall asleep holding the room, the guards cannot stop you walking in later. Only a door that checks ticket numbers can.</p><p><strong>Mental model:</strong> Redis locks are excellent for avoiding duplicate work. For correctness, the resource must reject stale holders, and Redlock alone cannot give you that.</p><ul><li><strong>Releasing with a plain DEL.</strong> If your lease expired and someone else took the lock, you delete their lock. Release with a compare-and-delete Lua script on your unique value.</li><li><strong>Treating a failover-replicated Redis as safe.</strong> A primary can acknowledge SET NX and then crash before replicating it, so the promoted replica grants the same lock again.</li><li><strong>Believing Redlock produces fencing tokens.</strong> Its random values are not monotonic. Use an etcd revision, a ZooKeeper zxid, or a database sequence.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-redis-redlock-and-fencing-tokens">
+        <button class="audio-player__play-btn" id="audio-btn-redis-redlock-and-fencing-tokens" data-action="toggle-audio" data-slug="redis-redlock-and-fencing-tokens" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-redis-redlock-and-fencing-tokens" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-redis-redlock-and-fencing-tokens" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-redis-redlock-and-fencing-tokens">0:00 / 3:38</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="redis-redlock-and-fencing-tokens" id="audio-track-redis-redlock-and-fencing-tokens">
+          <div class="audio-player__progress" id="audio-bar-redis-redlock-and-fencing-tokens" style="width: 0%;"></div>
         </div>
-      </details><article class="prose"><div class="lesson-content"><h2 id="topic-sec-1">Concrete scenario</h2><p>A duplicate thumbnail is harmless wasted work, while two writers updating an account balance would violate correctness.</p><h2 id="topic-sec-2">Mechanics</h2><p>Redis locks use unique ownership tokens and atomic compare-and-delete release. Redlock seeks a majority of independent Redis instances within a validity window, but elapsed-time assumptions remain. For correctness-critical external writes, use a consensus-backed coordinator and ensure the downstream resource validates a fencing token or conditional version.</p><h2 id="topic-sec-3">Failure mode</h2><p>Etcd or ZooKeeper alone cannot stop a paused former owner from writing to an unrelated database. Redlock also cannot make an external resource reject stale clients unless that resource participates in the protocol.</p><h2 id="topic-sec-4">Trade-off</h2><p>A single Redis lock or Redlock may be adequate for efficiency work. Correctness-critical workflows usually favor durable serialization, conditional database updates, or fenced leases, accepting greater latency and operational cost.</p>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="redis-redlock-and-fencing-tokens" id="audio-speed-redis-redlock-and-fencing-tokens" title="Playback speed">1x</button>
+        <audio id="audio-redis-redlock-and-fencing-tokens" src="audio/redis-redlock-and-fencing-tokens.mp3" preload="metadata"></audio>
+      </div><article class="prose"><div class="lesson-content"><h2 id="topic-sec-1">Concrete scenario</h2><p>A duplicate thumbnail is harmless wasted work, while two writers updating an account balance would violate correctness.</p><h2 id="topic-sec-2">Mechanics</h2><p>Redis locks use unique ownership tokens and atomic compare-and-delete release. Redlock seeks a majority of independent Redis instances within a validity window, but elapsed-time assumptions remain. For correctness-critical external writes, use a consensus-backed coordinator and ensure the downstream resource validates a fencing token or conditional version.</p><h2 id="topic-sec-3">Failure mode</h2><p>Etcd or ZooKeeper alone cannot stop a paused former owner from writing to an unrelated database. Redlock also cannot make an external resource reject stale clients unless that resource participates in the protocol.</p><h2 id="topic-sec-4">Trade-off</h2><p>A single Redis lock or Redlock may be adequate for efficiency work. Correctness-critical workflows usually favor durable serialization, conditional database updates, or fenced leases, accepting greater latency and operational cost.</p>
 <!-- enriched -->
 <h2 id="topic-sec-5">The single-instance Redis lock, done right</h2><pre><code>-- acquire: only if absent, auto-expire after 30s
 SET lock:invoice:42 9f1c-uuid NX PX 30000
@@ -1498,7 +1485,7 @@ end</code></pre><h2 id="topic-sec-6">Worked example: Redlock timing</h2><p>Five 
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=5a5823106d"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>

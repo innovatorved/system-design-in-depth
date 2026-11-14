@@ -893,37 +893,7 @@
             <span class="ds-share-btn__label">Share</span>
           </button>
         </div>
-      </div>
-        <aside class="intuition">
-          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
-          <div class="intuition__body"><p><p>Your phone's contact list answers "who do I know?" instantly. Answering "whose phones have <em>me</em> in their contacts?" would mean checking every phone on earth, unless someone maintains a second list per person. A social graph store is exactly that: two address books per user, one forward and one reverse, kept in agreement.</p><p><strong>Mental model:</strong> a follow is one logical edge stored twice, once sharded by the follower and once sharded by the followee, so both directions are single-shard range reads.</p><ul><li><strong>Assuming a graph database is required.</strong> Follow graphs are mostly one-hop lookups; Twitter's FlockDB and Facebook's TAO are sharded adjacency lists, not traversal engines.</li><li><strong>Writing both directions non-idempotently.</strong> The two copies live on different shards, so the write must be retry-safe and ordered (for example, with a position or timestamp per edge) and repaired asynchronously.</li><li><strong>Forgetting the celebrity shard.</strong> One account with 100 million followers makes its reverse list enormous; sub-shard or page it rather than keeping it in one row range.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-social-graph-follows-and-flockdb">
-        <button class="audio-player__play-btn" id="audio-btn-social-graph-follows-and-flockdb" data-action="toggle-audio" data-slug="social-graph-follows-and-flockdb" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-social-graph-follows-and-flockdb" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-social-graph-follows-and-flockdb" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-social-graph-follows-and-flockdb">0:00 / 3:44</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="social-graph-follows-and-flockdb" id="audio-track-social-graph-follows-and-flockdb">
-          <div class="audio-player__progress" id="audio-bar-social-graph-follows-and-flockdb" style="width: 0%;"></div>
-        </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="social-graph-follows-and-flockdb" id="audio-speed-social-graph-follows-and-flockdb" title="Playback speed">1x</button>
-        <audio id="audio-social-graph-follows-and-flockdb" src="audio/social-graph-follows-and-flockdb.mp3" preload="metadata"></audio>
-      </div>
-      <details class="ds-external-lecture">
-        <summary>
-          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> TAO: Facebook’s Distributed Data Store for the Social Graph</span>
-          </span>
-          <span class="ds-pill" style="flex-shrink:0;">Gaurav Sen · 24:59 +2 ▾</span>
-        </summary>
-        <div style="padding:0 16px 16px;">
-          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;Dg07kVN4U28&quot;,&quot;title&quot;:&quot;TAO: Facebook’s Distributed Data Store for the Social Graph&quot;,&quot;channel&quot;:&quot;Gaurav Sen&quot;,&quot;why&quot;:&quot;Clear, learner-friendly walkthrough of how a production social graph stores directed edges (associations) with inverse edges on sharded MySQL, the same design space as FlockDB.&quot;,&quot;length&quot;:&quot;24:59&quot;}">
+      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;Dg07kVN4U28&quot;,&quot;title&quot;:&quot;TAO: Facebook’s Distributed Data Store for the Social Graph&quot;,&quot;channel&quot;:&quot;Gaurav Sen&quot;,&quot;why&quot;:&quot;Clear, learner-friendly walkthrough of how a production social graph stores directed edges (associations) with inverse edges on sharded MySQL, the same design space as FlockDB.&quot;,&quot;length&quot;:&quot;24:59&quot;}">
       <div class="video-embed" id="video-Dg07kVN4U28"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="Dg07kVN4U28">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/Dg07kVN4U28/hqdefault.jpg"
                alt="TAO: Facebook’s Distributed Data Store for the Social Graph"
@@ -938,7 +908,6 @@
         </a>
       </div>
       <p class="video-embed__why">Clear, learner-friendly walkthrough of how a production social graph stores directed edges (associations) with inverse edges on sharded MySQL, the same design space as FlockDB.</p></div>
-          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -973,8 +942,26 @@
         </span>
       </a></div>
       </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Your phone's contact list answers "who do I know?" instantly. Answering "whose phones have <em>me</em> in their contacts?" would mean checking every phone on earth, unless someone maintains a second list per person. A social graph store is exactly that: two address books per user, one forward and one reverse, kept in agreement.</p><p><strong>Mental model:</strong> a follow is one logical edge stored twice, once sharded by the follower and once sharded by the followee, so both directions are single-shard range reads.</p><ul><li><strong>Assuming a graph database is required.</strong> Follow graphs are mostly one-hop lookups; Twitter's FlockDB and Facebook's TAO are sharded adjacency lists, not traversal engines.</li><li><strong>Writing both directions non-idempotently.</strong> The two copies live on different shards, so the write must be retry-safe and ordered (for example, with a position or timestamp per edge) and repaired asynchronously.</li><li><strong>Forgetting the celebrity shard.</strong> One account with 100 million followers makes its reverse list enormous; sub-shard or page it rather than keeping it in one row range.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-social-graph-follows-and-flockdb">
+        <button class="audio-player__play-btn" id="audio-btn-social-graph-follows-and-flockdb" data-action="toggle-audio" data-slug="social-graph-follows-and-flockdb" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-social-graph-follows-and-flockdb" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-social-graph-follows-and-flockdb" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-social-graph-follows-and-flockdb">0:00 / 3:44</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="social-graph-follows-and-flockdb" id="audio-track-social-graph-follows-and-flockdb">
+          <div class="audio-player__progress" id="audio-bar-social-graph-follows-and-flockdb" style="width: 0%;"></div>
         </div>
-      </details><article class="prose"><h2 id="topic-sec-1">Social graph follows and FlockDB</h2>
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="social-graph-follows-and-flockdb" id="audio-speed-social-graph-follows-and-flockdb" title="Playback speed">1x</button>
+        <audio id="audio-social-graph-follows-and-flockdb" src="audio/social-graph-follows-and-flockdb.mp3" preload="metadata"></audio>
+      </div><article class="prose"><h2 id="topic-sec-1">Social graph follows and FlockDB</h2>
 <p>Ada follows Bo. Opening Ada's following list asks for edges leaving Ada; publishing Bo's post asks for edges entering Bo. The relationship is the same, but the two reads need different access paths.</p>
 <p>Most follow-graph work is shallow: test one relationship, list neighbors, page through followers, or count them. Start with those operations. A graph-shaped data model does not automatically require arbitrary graph traversal.</p>
 <h2 id="topic-sec-2">Store the direction, then the relationship rule</h2>
@@ -1538,7 +1525,7 @@ LIMIT :page_size;</code></pre></div>
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=5a5823106d"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>

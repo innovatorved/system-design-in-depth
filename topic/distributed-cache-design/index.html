@@ -893,37 +893,7 @@
             <span class="ds-share-btn__label">Share</span>
           </button>
         </div>
-      </div>
-        <aside class="intuition">
-          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
-          <div class="intuition__body"><p><p>Picture a library that has outgrown one building. You can hand every patron a map of which branch holds which shelf (Memcached: smart client, dumb servers). Or every branch can know the map and redirect you if you walk into the wrong one (Redis Cluster: the server replies MOVED). Either way the books are split up, and the hard problems are keeping the map current and not sending everyone to one branch.</p><p><strong>Mental model:</strong> a distributed cache is a partitioned in-memory hash map. The design questions are how keys map to nodes, what happens when that mapping changes, and what happens when a node dies.</p><ul><li><strong>Using hash mod N.</strong> Adding one node remaps almost every key and triggers a cold-cache storm. Use consistent hashing or fixed slots.</li><li><strong>Ignoring hot keys.</strong> Sharding spreads keys, not load. A single celebrity key still lands on one node, so you need replicas or a local L1 for it.</li><li><strong>Multi-key operations across slots.</strong> In Redis Cluster, <code>MGET</code> and Lua scripts need every key in the same slot. Use hash tags such as <code>{user:42}</code>.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-distributed-cache-design">
-        <button class="audio-player__play-btn" id="audio-btn-distributed-cache-design" data-action="toggle-audio" data-slug="distributed-cache-design" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-distributed-cache-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-distributed-cache-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-distributed-cache-design">0:00 / 3:56</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="distributed-cache-design" id="audio-track-distributed-cache-design">
-          <div class="audio-player__progress" id="audio-bar-distributed-cache-design" style="width: 0%;"></div>
-        </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="distributed-cache-design" id="audio-speed-distributed-cache-design" title="Playback speed">1x</button>
-        <audio id="audio-distributed-cache-design" src="audio/distributed-cache-design.mp3" preload="metadata"></audio>
-      </div>
-      <details class="ds-external-lecture">
-        <summary>
-          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> NSDI &#039;13 - Scaling Memcache at Facebook</span>
-          </span>
-          <span class="ds-pill" style="flex-shrink:0;">USENIX · 23:18 +2 ▾</span>
-        </summary>
-        <div style="padding:0 16px 16px;">
-          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;m4_7W4XzRgk&quot;,&quot;title&quot;:&quot;NSDI &#039;13 - Scaling Memcache at Facebook&quot;,&quot;channel&quot;:&quot;USENIX&quot;,&quot;why&quot;:&quot;The NSDI 2013 &#039;Scaling Memcache at Facebook&#039; talk is the canonical account of building a distributed cache: consistent hashing, pools, regions, leases, invalidation fan-out and failure handling.&quot;,&quot;length&quot;:&quot;23:18&quot;}">
+      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;m4_7W4XzRgk&quot;,&quot;title&quot;:&quot;NSDI &#039;13 - Scaling Memcache at Facebook&quot;,&quot;channel&quot;:&quot;USENIX&quot;,&quot;why&quot;:&quot;The NSDI 2013 &#039;Scaling Memcache at Facebook&#039; talk is the canonical account of building a distributed cache: consistent hashing, pools, regions, leases, invalidation fan-out and failure handling.&quot;,&quot;length&quot;:&quot;23:18&quot;}">
       <div class="video-embed" id="video-m4_7W4XzRgk"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="m4_7W4XzRgk">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/m4_7W4XzRgk/hqdefault.jpg"
                alt="NSDI &#039;13 - Scaling Memcache at Facebook"
@@ -938,7 +908,6 @@
         </a>
       </div>
       <p class="video-embed__why">The NSDI 2013 &#039;Scaling Memcache at Facebook&#039; talk is the canonical account of building a distributed cache: consistent hashing, pools, regions, leases, invalidation fan-out and failure handling.</p></div>
-          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -973,8 +942,26 @@
         </span>
       </a></div>
       </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Picture a library that has outgrown one building. You can hand every patron a map of which branch holds which shelf (Memcached: smart client, dumb servers). Or every branch can know the map and redirect you if you walk into the wrong one (Redis Cluster: the server replies MOVED). Either way the books are split up, and the hard problems are keeping the map current and not sending everyone to one branch.</p><p><strong>Mental model:</strong> a distributed cache is a partitioned in-memory hash map. The design questions are how keys map to nodes, what happens when that mapping changes, and what happens when a node dies.</p><ul><li><strong>Using hash mod N.</strong> Adding one node remaps almost every key and triggers a cold-cache storm. Use consistent hashing or fixed slots.</li><li><strong>Ignoring hot keys.</strong> Sharding spreads keys, not load. A single celebrity key still lands on one node, so you need replicas or a local L1 for it.</li><li><strong>Multi-key operations across slots.</strong> In Redis Cluster, <code>MGET</code> and Lua scripts need every key in the same slot. Use hash tags such as <code>{user:42}</code>.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-distributed-cache-design">
+        <button class="audio-player__play-btn" id="audio-btn-distributed-cache-design" data-action="toggle-audio" data-slug="distributed-cache-design" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-distributed-cache-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-distributed-cache-design" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-distributed-cache-design">0:00 / 3:56</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="distributed-cache-design" id="audio-track-distributed-cache-design">
+          <div class="audio-player__progress" id="audio-bar-distributed-cache-design" style="width: 0%;"></div>
         </div>
-      </details><article class="prose"><div class="lesson-content">
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="distributed-cache-design" id="audio-speed-distributed-cache-design" title="Playback speed">1x</button>
+        <audio id="audio-distributed-cache-design" src="audio/distributed-cache-design.mp3" preload="metadata"></audio>
+      </div><article class="prose"><div class="lesson-content">
       <h2 id="topic-sec-1">Under the Hood: Redis Cluster vs. Memcached Multi-Node</h2>
       <p>When caching requirements exceed the memory capacity of a single server (typically > 128GB) or require high write availability, the cache must be distributed across a cluster. Two distinct architectural paradigms dominate:</p>
 
@@ -1518,7 +1505,7 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=5a5823106d"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>

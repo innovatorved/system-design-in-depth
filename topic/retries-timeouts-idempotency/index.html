@@ -893,43 +893,7 @@
             <span class="ds-share-btn__label">Share</span>
           </button>
         </div>
-      </div>
-        <aside class="intuition">
-          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
-          <div class="intuition__body"><p><p>You press a lift button and nothing seems to happen, so you press it again, and again. Pressing it more does not make the lift faster, and if a hundred people do it at once the control panel could be overwhelmed. Luckily the lift button is idempotent: pressing it five times calls the lift once.</p> <p><strong>Mental model:</strong> <em>a timeout tells you that you do not know the outcome, not that it failed. Retry only when the operation is idempotent, back off with random jitter so retries do not synchronise, and cap retries so they cannot multiply load during an outage.</em></p></p>
-<ul>
-<li><strong>Retrying non-idempotent writes:</strong> retrying a payment POST without an idempotency key can charge twice.</li>
-<li><strong>Retrying at every layer:</strong> 3 retries at each of 3 layers can turn one user request into 64 calls to the bottom service (4 x 4 x 4).</li>
-<li><strong>Retrying non-retryable errors:</strong> 400 or 403 will fail again; 429 should honour <code>Retry-After</code>.</li>
-<li><strong>Timeouts longer than the caller's:</strong> if the user gives up after 2 s, a 30 s downstream timeout only wastes resources.</li>
-<p></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-retries-timeouts-idempotency">
-        <button class="audio-player__play-btn" id="audio-btn-retries-timeouts-idempotency" data-action="toggle-audio" data-slug="retries-timeouts-idempotency" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-retries-timeouts-idempotency" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-retries-timeouts-idempotency" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-retries-timeouts-idempotency">0:00 / 3:49</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="retries-timeouts-idempotency" id="audio-track-retries-timeouts-idempotency">
-          <div class="audio-player__progress" id="audio-bar-retries-timeouts-idempotency" style="width: 0%;"></div>
-        </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="retries-timeouts-idempotency" id="audio-speed-retries-timeouts-idempotency" title="Playback speed">1x</button>
-        <audio id="audio-retries-timeouts-idempotency" src="audio/retries-timeouts-idempotency.mp3" preload="metadata"></audio>
-      </div>
-      <details class="ds-external-lecture">
-        <summary>
-          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> Thundering Herd Problem and How not to do API retries</span>
-          </span>
-          <span class="ds-pill" style="flex-shrink:0;">Arpit Bhayani · 10:44 +2 ▾</span>
-        </summary>
-        <div style="padding:0 16px 16px;">
-          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;8sTuCPh3s0s&quot;,&quot;title&quot;:&quot;Thundering Herd Problem and How not to do API retries&quot;,&quot;channel&quot;:&quot;Arpit Bhayani&quot;,&quot;why&quot;:&quot;Arpit explains exactly how naive retries synchronise into a thundering herd and how exponential backoff with jitter spreads them out, the central mechanism of this unit.&quot;,&quot;length&quot;:&quot;10:44&quot;}">
+      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;8sTuCPh3s0s&quot;,&quot;title&quot;:&quot;Thundering Herd Problem and How not to do API retries&quot;,&quot;channel&quot;:&quot;Arpit Bhayani&quot;,&quot;why&quot;:&quot;Arpit explains exactly how naive retries synchronise into a thundering herd and how exponential backoff with jitter spreads them out, the central mechanism of this unit.&quot;,&quot;length&quot;:&quot;10:44&quot;}">
       <div class="video-embed" id="video-8sTuCPh3s0s"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="8sTuCPh3s0s">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/8sTuCPh3s0s/hqdefault.jpg"
                alt="Thundering Herd Problem and How not to do API retries"
@@ -944,7 +908,6 @@
         </a>
       </div>
       <p class="video-embed__why">Arpit explains exactly how naive retries synchronise into a thundering herd and how exponential backoff with jitter spreads them out, the central mechanism of this unit.</p></div>
-          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -979,8 +942,32 @@
         </span>
       </a></div>
       </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>You press a lift button and nothing seems to happen, so you press it again, and again. Pressing it more does not make the lift faster, and if a hundred people do it at once the control panel could be overwhelmed. Luckily the lift button is idempotent: pressing it five times calls the lift once.</p> <p><strong>Mental model:</strong> <em>a timeout tells you that you do not know the outcome, not that it failed. Retry only when the operation is idempotent, back off with random jitter so retries do not synchronise, and cap retries so they cannot multiply load during an outage.</em></p></p>
+<ul>
+<li><strong>Retrying non-idempotent writes:</strong> retrying a payment POST without an idempotency key can charge twice.</li>
+<li><strong>Retrying at every layer:</strong> 3 retries at each of 3 layers can turn one user request into 64 calls to the bottom service (4 x 4 x 4).</li>
+<li><strong>Retrying non-retryable errors:</strong> 400 or 403 will fail again; 429 should honour <code>Retry-After</code>.</li>
+<li><strong>Timeouts longer than the caller's:</strong> if the user gives up after 2 s, a 30 s downstream timeout only wastes resources.</li>
+<p></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-retries-timeouts-idempotency">
+        <button class="audio-player__play-btn" id="audio-btn-retries-timeouts-idempotency" data-action="toggle-audio" data-slug="retries-timeouts-idempotency" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-retries-timeouts-idempotency" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-retries-timeouts-idempotency" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-retries-timeouts-idempotency">0:00 / 3:49</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="retries-timeouts-idempotency" id="audio-track-retries-timeouts-idempotency">
+          <div class="audio-player__progress" id="audio-bar-retries-timeouts-idempotency" style="width: 0%;"></div>
         </div>
-      </details><article class="prose"><div class="lesson-content">
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="retries-timeouts-idempotency" id="audio-speed-retries-timeouts-idempotency" title="Playback speed">1x</button>
+        <audio id="audio-retries-timeouts-idempotency" src="audio/retries-timeouts-idempotency.mp3" preload="metadata"></audio>
+      </div><article class="prose"><div class="lesson-content">
       <h2 id="topic-sec-1">Under the Hood: The Retry Storm Catastrophe</h2>
       <p>When a downstream service experiences high load and begins timing out, naive client retry loops with little or no backoff multiply the offered load, a <strong>Retry Storm</strong>. In the worst case, where every attempt fails, 10,000 clients each retrying three times turn 10,000 requests into 40,000; with retries at several layers the multipliers compound (4 × 4 × 4 = 64 for three layers). The extra load raises the failure rate, which triggers more retries: a feedback loop that can keep the service overloaded even after the original trigger is gone.</p>
 
@@ -1633,7 +1620,7 @@ flowchart TD
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
   <script type="text/plain" data-defer src="js/simulators-advanced.js?v=02e2d93d9c"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=5a5823106d"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>

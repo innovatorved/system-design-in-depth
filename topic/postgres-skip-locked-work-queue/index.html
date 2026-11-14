@@ -893,37 +893,7 @@
             <span class="ds-share-btn__label">Share</span>
           </button>
         </div>
-      </div>
-        <aside class="intuition">
-          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
-          <div class="intuition__body"><p><p>Picture a deli counter with numbered tickets on a board. With plain row locks, every worker reaches for ticket 1 and all but one stand there waiting for it. With SKIP LOCKED, a worker who sees ticket 1 already in someone's hand simply takes ticket 2, the next takes ticket 3, and nobody waits.</p><p><strong>Mental model:</strong> <code>SELECT ... FOR UPDATE SKIP LOCKED LIMIT n</code> lets concurrent workers each atomically claim different rows. The job table becomes a transactional queue, and job creation can share a transaction with your business data.</p><ul><li><strong>Holding the transaction open during slow work.</strong> A 10-minute job holding a row lock also holds back vacuum. Claim by updating to <code>running</code> with a lease timestamp, commit, then work.</li><li><strong>Forgetting the partial index.</strong> Without an index on the pending rows, every poll scans completed jobs.</li><li><strong>Tight polling.</strong> 50 workers polling every 10 ms hammer the database. Use <code>LISTEN/NOTIFY</code> to wake workers, with backoff when idle.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-postgres-skip-locked-work-queue">
-        <button class="audio-player__play-btn" id="audio-btn-postgres-skip-locked-work-queue" data-action="toggle-audio" data-slug="postgres-skip-locked-work-queue" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-postgres-skip-locked-work-queue" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-postgres-skip-locked-work-queue" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-postgres-skip-locked-work-queue">0:00 / 3:31</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="postgres-skip-locked-work-queue" id="audio-track-postgres-skip-locked-work-queue">
-          <div class="audio-player__progress" id="audio-bar-postgres-skip-locked-work-queue" style="width: 0%;"></div>
-        </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="postgres-skip-locked-work-queue" id="audio-speed-postgres-skip-locked-work-queue" title="Playback speed">1x</button>
-        <audio id="audio-postgres-skip-locked-work-queue" src="audio/postgres-skip-locked-work-queue.mp3" preload="metadata"></audio>
-      </div>
-      <details class="ds-external-lecture">
-        <summary>
-          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> Queues in PostgreSQL | Citus Con: An Event for Postgres 2022</span>
-          </span>
-          <span class="ds-pill" style="flex-shrink:0;">Microsoft Developer · 29:30 +2 ▾</span>
-        </summary>
-        <div style="padding:0 16px 16px;">
-          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;WIRy1Ws47ic&quot;,&quot;title&quot;:&quot;Queues in PostgreSQL | Citus Con: An Event for Postgres 2022&quot;,&quot;channel&quot;:&quot;Microsoft Developer&quot;,&quot;why&quot;:&quot;A Citus Con talk on building queues in PostgreSQL: SKIP LOCKED claiming, indexing, vacuum and bloat, and throughput limits. It is exactly this lesson, from Postgres practitioners.&quot;,&quot;length&quot;:&quot;29:30&quot;}">
+      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;WIRy1Ws47ic&quot;,&quot;title&quot;:&quot;Queues in PostgreSQL | Citus Con: An Event for Postgres 2022&quot;,&quot;channel&quot;:&quot;Microsoft Developer&quot;,&quot;why&quot;:&quot;A Citus Con talk on building queues in PostgreSQL: SKIP LOCKED claiming, indexing, vacuum and bloat, and throughput limits. It is exactly this lesson, from Postgres practitioners.&quot;,&quot;length&quot;:&quot;29:30&quot;}">
       <div class="video-embed" id="video-WIRy1Ws47ic"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="WIRy1Ws47ic">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/WIRy1Ws47ic/hqdefault.jpg"
                alt="Queues in PostgreSQL | Citus Con: An Event for Postgres 2022"
@@ -938,7 +908,6 @@
         </a>
       </div>
       <p class="video-embed__why">A Citus Con talk on building queues in PostgreSQL: SKIP LOCKED claiming, indexing, vacuum and bloat, and throughput limits. It is exactly this lesson, from Postgres practitioners.</p></div>
-          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -973,8 +942,26 @@
         </span>
       </a></div>
       </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Picture a deli counter with numbered tickets on a board. With plain row locks, every worker reaches for ticket 1 and all but one stand there waiting for it. With SKIP LOCKED, a worker who sees ticket 1 already in someone's hand simply takes ticket 2, the next takes ticket 3, and nobody waits.</p><p><strong>Mental model:</strong> <code>SELECT ... FOR UPDATE SKIP LOCKED LIMIT n</code> lets concurrent workers each atomically claim different rows. The job table becomes a transactional queue, and job creation can share a transaction with your business data.</p><ul><li><strong>Holding the transaction open during slow work.</strong> A 10-minute job holding a row lock also holds back vacuum. Claim by updating to <code>running</code> with a lease timestamp, commit, then work.</li><li><strong>Forgetting the partial index.</strong> Without an index on the pending rows, every poll scans completed jobs.</li><li><strong>Tight polling.</strong> 50 workers polling every 10 ms hammer the database. Use <code>LISTEN/NOTIFY</code> to wake workers, with backoff when idle.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-postgres-skip-locked-work-queue">
+        <button class="audio-player__play-btn" id="audio-btn-postgres-skip-locked-work-queue" data-action="toggle-audio" data-slug="postgres-skip-locked-work-queue" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-postgres-skip-locked-work-queue" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-postgres-skip-locked-work-queue" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-postgres-skip-locked-work-queue">0:00 / 3:31</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="postgres-skip-locked-work-queue" id="audio-track-postgres-skip-locked-work-queue">
+          <div class="audio-player__progress" id="audio-bar-postgres-skip-locked-work-queue" style="width: 0%;"></div>
         </div>
-      </details><article class="prose"><div class="lesson-content">
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="postgres-skip-locked-work-queue" id="audio-speed-postgres-skip-locked-work-queue" title="Playback speed">1x</button>
+        <audio id="audio-postgres-skip-locked-work-queue" src="audio/postgres-skip-locked-work-queue.mp3" preload="metadata"></audio>
+      </div><article class="prose"><div class="lesson-content">
       <h2 id="topic-sec-1">Why Naive SQL Work Queues Collapse</h2>
       <p>For small to medium workloads, standing up dedicated Kafka or RabbitMQ clusters introduces operational complexity. Engineers often attempt to use PostgreSQL as a work queue. Naive implementations collapse under load:</p>
       <ul>
@@ -1529,7 +1516,7 @@ RETURNING j.id, j.payload;</code></pre><p>A reaper periodically runs <code>UPDAT
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=5a5823106d"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>

@@ -893,37 +893,7 @@
             <span class="ds-share-btn__label">Share</span>
           </button>
         </div>
-      </div>
-        <aside class="intuition">
-          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
-          <div class="intuition__body"><p><p>An index is the index at the back of a textbook. To find "photosynthesis" you do not read all 900 pages. You jump to the alphabetized index, get "page 412", and go straight there. The index takes extra pages to print and must be updated in every new edition, but lookups go from "read the book" to "read two pages".</p><p><strong>Mental model:</strong> an index is a <em>sorted copy of some columns plus a pointer to the row</em>. It helps any query that can use that sort order (equality, ranges, ORDER BY, prefix match) and costs extra work on every write.</p><ul><li><strong>Wrong column order in composite indexes:</strong> <code>(tenant_id, created_at)</code> serves "tenant X, newest first" but is little help for "all rows from yesterday across tenants". Put equality columns first and the range or sort column last.</li><li><strong>Indexing low-selectivity columns:</strong> a B-tree on a boolean that is true for 50% of rows is usually ignored by the planner, because a sequential scan is cheaper.</li><li><strong>Wrapping the column in a function:</strong> <code>WHERE lower(email) = ...</code> cannot use a plain index on <code>email</code>. You need an expression index.</li></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-database-indexing">
-        <button class="audio-player__play-btn" id="audio-btn-database-indexing" data-action="toggle-audio" data-slug="database-indexing" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-database-indexing" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-database-indexing" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-database-indexing">0:00 / 3:46</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="database-indexing" id="audio-track-database-indexing">
-          <div class="audio-player__progress" id="audio-bar-database-indexing" style="width: 0%;"></div>
-        </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="database-indexing" id="audio-speed-database-indexing" title="Playback speed">1x</button>
-        <audio id="audio-database-indexing" src="audio/database-indexing.mp3" preload="metadata"></audio>
-      </div>
-      <details class="ds-external-lecture">
-        <summary>
-          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> Database Indexing Explained (with PostgreSQL)</span>
-          </span>
-          <span class="ds-pill" style="flex-shrink:0;">Hussein Nasser · 18:19 +2 ▾</span>
-        </summary>
-        <div style="padding:0 16px 16px;">
-          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;-qNSXK7s7_w&quot;,&quot;title&quot;:&quot;Database Indexing Explained (with PostgreSQL)&quot;,&quot;channel&quot;:&quot;Hussein Nasser&quot;,&quot;why&quot;:&quot;Hands-on in psql with EXPLAIN ANALYZE: seq scan vs index scan vs index-only scan on a real multi-million-row table, exactly this lesson&#039;s material.&quot;,&quot;length&quot;:&quot;18:19&quot;}">
+      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;-qNSXK7s7_w&quot;,&quot;title&quot;:&quot;Database Indexing Explained (with PostgreSQL)&quot;,&quot;channel&quot;:&quot;Hussein Nasser&quot;,&quot;why&quot;:&quot;Hands-on in psql with EXPLAIN ANALYZE: seq scan vs index scan vs index-only scan on a real multi-million-row table, exactly this lesson&#039;s material.&quot;,&quot;length&quot;:&quot;18:19&quot;}">
       <div class="video-embed" id="video--qNSXK7s7_w"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="-qNSXK7s7_w">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/-qNSXK7s7_w/hqdefault.jpg"
                alt="Database Indexing Explained (with PostgreSQL)"
@@ -938,7 +908,6 @@
         </a>
       </div>
       <p class="video-embed__why">Hands-on in psql with EXPLAIN ANALYZE: seq scan vs index scan vs index-only scan on a real multi-million-row table, exactly this lesson&#039;s material.</p></div>
-          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -973,8 +942,26 @@
         </span>
       </a></div>
       </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>An index is the index at the back of a textbook. To find "photosynthesis" you do not read all 900 pages. You jump to the alphabetized index, get "page 412", and go straight there. The index takes extra pages to print and must be updated in every new edition, but lookups go from "read the book" to "read two pages".</p><p><strong>Mental model:</strong> an index is a <em>sorted copy of some columns plus a pointer to the row</em>. It helps any query that can use that sort order (equality, ranges, ORDER BY, prefix match) and costs extra work on every write.</p><ul><li><strong>Wrong column order in composite indexes:</strong> <code>(tenant_id, created_at)</code> serves "tenant X, newest first" but is little help for "all rows from yesterday across tenants". Put equality columns first and the range or sort column last.</li><li><strong>Indexing low-selectivity columns:</strong> a B-tree on a boolean that is true for 50% of rows is usually ignored by the planner, because a sequential scan is cheaper.</li><li><strong>Wrapping the column in a function:</strong> <code>WHERE lower(email) = ...</code> cannot use a plain index on <code>email</code>. You need an expression index.</li></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-database-indexing">
+        <button class="audio-player__play-btn" id="audio-btn-database-indexing" data-action="toggle-audio" data-slug="database-indexing" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-database-indexing" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-database-indexing" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-database-indexing">0:00 / 3:46</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="database-indexing" id="audio-track-database-indexing">
+          <div class="audio-player__progress" id="audio-bar-database-indexing" style="width: 0%;"></div>
         </div>
-      </details><article class="prose"><div class="lesson-content">
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="database-indexing" id="audio-speed-database-indexing" title="Playback speed">1x</button>
+        <audio id="audio-database-indexing" src="audio/database-indexing.mp3" preload="metadata"></audio>
+      </div><article class="prose"><div class="lesson-content">
       <h2 id="topic-sec-1">Under the Hood: How Indexes Direct Disk I/O</h2>
       <p>Without an index, finding a single row in a 50,000,000-record table requires a <strong>Sequential Scan (Seq Scan)</strong>: reading every single disk block into memory (O(N) I/O). An index is an auxiliary data structure stored on disk that maps column values to row locators (in PostgreSQL, physical tuple pointers: <code>ItemPointer</code> / <code>TID: (page_id, offset)</code>; InnoDB secondary indexes store the primary key instead), reducing lookup complexity to O(log N).</p>
 
@@ -1506,7 +1493,7 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=5a5823106d"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>

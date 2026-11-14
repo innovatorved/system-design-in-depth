@@ -893,42 +893,7 @@
             <span class="ds-share-btn__label">Share</span>
           </button>
         </div>
-      </div>
-        <aside class="intuition">
-          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
-          <div class="intuition__body"><p><p>Imagine a stadium turnstile counter. If every fan had to walk to one clerk who updates a single ledger, the queue would stretch for miles. Instead, each gate keeps its own tally and a runner collects the tallies every few minutes. Scaled counting is exactly that: many local tallies, merged in batches.</p> <p><strong>Mental model:</strong> <em>never make every event contend for one row</em>. Absorb events into a durable log, pre-aggregate them in memory or across sharded keys, and apply one combined update per batch, recording which events that update covered so retries do not double count.</p></p>
-<ul>
-<li><strong>Trap:</strong> <code>UPDATE ... SET count = count + 1</code> per event on a viral item. Row lock contention caps throughput and causes timeouts.</li>
-<li><strong>Trap:</strong> assuming the queue gives exactly-once. Kafka delivers at least once to your code; idempotency must be designed in by committing offsets and aggregates together.</li>
-<li><strong>Trap:</strong> forgetting reads. Sharded counters make writes cheap but reads must sum all shards; cache the sum.</li>
-<p></ul></p></div>
-        </aside>
-      <div class="audio-player" id="audio-player-counting-at-scale">
-        <button class="audio-player__play-btn" id="audio-btn-counting-at-scale" data-action="toggle-audio" data-slug="counting-at-scale" aria-label="Play audio" title="Play audio">
-          <svg id="audio-play-icon-counting-at-scale" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-          <svg id="audio-pause-icon-counting-at-scale" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        </button>
-        <span class="audio-player__time" id="audio-time-counting-at-scale">0:00 / 3:41</span>
-        <div class="audio-player__track" data-action="seek-audio" data-slug="counting-at-scale" id="audio-track-counting-at-scale">
-          <div class="audio-player__progress" id="audio-bar-counting-at-scale" style="width: 0%;"></div>
-        </div>
-        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="counting-at-scale" id="audio-speed-counting-at-scale" title="Playback speed">1x</button>
-        <audio id="audio-counting-at-scale" src="audio/counting-at-scale.mp3" preload="metadata"></audio>
-      </div>
-      <details class="ds-external-lecture">
-        <summary>
-          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> Design the Facebook Like Button | Systems Design Questions 3.0 With Ex-Google SWE</span>
-          </span>
-          <span class="ds-pill" style="flex-shrink:0;">Jordan has no life · 17:35 +2 ▾</span>
-        </summary>
-        <div style="padding:0 16px 16px;">
-          <div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;RLdh1vQsVIQ&quot;,&quot;title&quot;:&quot;Design the Facebook Like Button | Systems Design Questions 3.0 With Ex-Google SWE&quot;,&quot;channel&quot;:&quot;Jordan has no life&quot;,&quot;why&quot;:&quot;A focused design of a hot counter: contention on one row, sharded counters, stream aggregation and idempotent batching, exactly this unit.&quot;,&quot;length&quot;:&quot;17:35&quot;}">
+      </div><div class="video-main" data-video="{&quot;youtubeId&quot;:&quot;RLdh1vQsVIQ&quot;,&quot;title&quot;:&quot;Design the Facebook Like Button | Systems Design Questions 3.0 With Ex-Google SWE&quot;,&quot;channel&quot;:&quot;Jordan has no life&quot;,&quot;why&quot;:&quot;A focused design of a hot counter: contention on one row, sharded counters, stream aggregation and idempotent batching, exactly this unit.&quot;,&quot;length&quot;:&quot;17:35&quot;}">
       <div class="video-embed" id="video-RLdh1vQsVIQ"><div class="video-embed__placeholder" data-action="load-youtube" data-video-id="RLdh1vQsVIQ">
           <img class="video-embed__thumb" src="https://img.youtube.com/vi/RLdh1vQsVIQ/hqdefault.jpg"
                alt="Design the Facebook Like Button | Systems Design Questions 3.0 With Ex-Google SWE"
@@ -943,7 +908,6 @@
         </a>
       </div>
       <p class="video-embed__why">A focused design of a hot counter: contention on one row, sharded counters, stream aggregation and idempotent batching, exactly this unit.</p></div>
-          
       <div class="video-more">
         <h2 class="video-more__heading">More videos on this topic</h2>
         <div class="video-more__list">
@@ -978,8 +942,31 @@
         </span>
       </a></div>
       </div>
+        <aside class="intuition">
+          <h2 class="intuition__title" id="sec-intuition"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>Intuition first</h2>
+          <div class="intuition__body"><p><p>Imagine a stadium turnstile counter. If every fan had to walk to one clerk who updates a single ledger, the queue would stretch for miles. Instead, each gate keeps its own tally and a runner collects the tallies every few minutes. Scaled counting is exactly that: many local tallies, merged in batches.</p> <p><strong>Mental model:</strong> <em>never make every event contend for one row</em>. Absorb events into a durable log, pre-aggregate them in memory or across sharded keys, and apply one combined update per batch, recording which events that update covered so retries do not double count.</p></p>
+<ul>
+<li><strong>Trap:</strong> <code>UPDATE ... SET count = count + 1</code> per event on a viral item. Row lock contention caps throughput and causes timeouts.</li>
+<li><strong>Trap:</strong> assuming the queue gives exactly-once. Kafka delivers at least once to your code; idempotency must be designed in by committing offsets and aggregates together.</li>
+<li><strong>Trap:</strong> forgetting reads. Sharded counters make writes cheap but reads must sum all shards; cache the sum.</li>
+<p></ul></p></div>
+        </aside>
+      <div class="audio-player" id="audio-player-counting-at-scale">
+        <button class="audio-player__play-btn" id="audio-btn-counting-at-scale" data-action="toggle-audio" data-slug="counting-at-scale" aria-label="Play audio" title="Play audio">
+          <svg id="audio-play-icon-counting-at-scale" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="audio-pause-icon-counting-at-scale" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <span class="audio-player__time" id="audio-time-counting-at-scale">0:00 / 3:41</span>
+        <div class="audio-player__track" data-action="seek-audio" data-slug="counting-at-scale" id="audio-track-counting-at-scale">
+          <div class="audio-player__progress" id="audio-bar-counting-at-scale" style="width: 0%;"></div>
         </div>
-      </details><article class="prose"><div class="lesson-content">
+        <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="counting-at-scale" id="audio-speed-counting-at-scale" title="Playback speed">1x</button>
+        <audio id="audio-counting-at-scale" src="audio/counting-at-scale.mp3" preload="metadata"></audio>
+      </div><article class="prose"><div class="lesson-content">
       <h2 id="topic-sec-1">The Challenge of Counting at Scale</h2>
       <p>Counting seems simple: <code>UPDATE table SET count = count + 1 WHERE id = 123</code>. However, in a distributed system with millions of events per second, this synchronous, locked approach creates severe bottlenecks. Database row locks lead to contention, timeouts, and system failure.</p>
       
@@ -1477,7 +1464,7 @@
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=dac40447f4"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=5a5823106d"></script>
   <script type="text/plain" data-defer src="js/landing.js?v=e937dd9d63"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>

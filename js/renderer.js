@@ -333,6 +333,12 @@ window.Renderer = (() => {
         </div>
       </div>`;
 
+    // Video embed (from module content)
+    if (moduleContent?.video?.youtubeId) {
+      articleCol += renderVideoEmbed(moduleContent.video);
+      articleCol += renderMoreVideos(moduleContent.videos);
+    }
+
     // Intuition-first primer (plain-language mental model before the deep dive)
     if (moduleContent?.intuition) {
       articleCol += `
@@ -361,11 +367,6 @@ window.Renderer = (() => {
         <button class="audio-player__speed-btn" data-action="cycle-audio-speed" data-slug="${slug}" id="audio-speed-${slug}" title="Playback speed">1x</button>
         <audio id="audio-${slug}" src="audio/${slug}.mp3" preload="metadata"></audio>
       </div>`;
-
-    // Video embed (from module content, tucked cleanly inside disclosure)
-    if (moduleContent?.video?.youtubeId) {
-      articleCol += renderVideoEmbed(moduleContent.video, moduleContent.videos);
-    }
 
     // Content
     let rawArticleHtml = '';
@@ -731,27 +732,11 @@ window.Renderer = (() => {
 
 
   /**
-   * Render YouTube video embed (lazy-loaded inside collapsible disclosure)
+   * Render YouTube video embed (lazy-loaded)
    */
-  function renderVideoEmbed(video, extraVideos) {
+  function renderVideoEmbed(video) {
     if (!video?.youtubeId) return '';
-    const ch = String(video.channel || 'Reference Lecture').trim();
-    const len = video.length || video.duration || '';
-    const moreCount = Array.isArray(extraVideos) ? extraVideos.filter(v => v?.youtubeId).length : 0;
-    return `
-      <details class="ds-external-lecture">
-        <summary>
-          <span style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);flex-shrink:0;" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong>Reference Lecture:</strong> ${escapeHtml(video.title || '')}</span>
-          </span>
-          <span class="ds-pill" style="flex-shrink:0;">${escapeHtml(ch)}${len ? ' · ' + escapeHtml(len) : ''}${moreCount ? ` +${moreCount}` : ''} ▾</span>
-        </summary>
-        <div style="padding:0 16px 16px;">
-          <div class="video-main" data-video="${escapeHtml(JSON.stringify({ ...video, channel: ch }))}">${renderMainVideoInner({ ...video, channel: ch }, false)}</div>
-          ${renderMoreVideos(extraVideos)}
-        </div>
-      </details>`;
+    return `<div class="video-main" data-video="${escapeHtml(JSON.stringify(video))}">${renderMainVideoInner(video, false)}</div>`;
   }
 
   // Player + caption for the main video; autoplay loads the iframe straight away (used when swapping in)
