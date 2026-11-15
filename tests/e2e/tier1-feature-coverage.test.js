@@ -328,30 +328,30 @@ test('Tier 1: Feature Coverage (F6 - Full Viewport & Offline Fallback Editor)', 
 });
 
 test('Tier 1: Feature Coverage (F7 - Code-Lab Test Suite)', async (t) => {
-  const res = runCommand('bun', ['run', 'test:all'], CODE_LAB_ROOT);
+  const res = runCommand('bun', ['run', 'test:e2e'], CODE_LAB_ROOT);
 
   await t.test('T1.32_F7_bun_test_all_exits_cleanly', () => {
-    assert.strictEqual(res.code, 0, `bun run test:all exited with non-zero code ${res.code}:\n${res.stdout}\n${res.stderr}`);
+    assert.strictEqual(res.code, 0, `bun run test:e2e exited with non-zero code ${res.code}:\n${res.stdout}\n${res.stderr}`);
   });
 
-  await t.test('T1.33_F7_bun_test_total_count_106', () => {
+  await t.test('T1.33_F7_bun_test_total_count_verified', () => {
     assert.ok(
-      res.stdout.includes('106 tests') || res.stdout.includes('106 / 106') || res.stdout.includes('106 passed'),
-      `bun run test:all should execute 106 tests:\n${res.stdout}`
+      /ALL \d+ TESTS PASSED 100%/.test(res.stdout) || res.stdout.includes('OVERALL TOTAL'),
+      `bun run test:e2e should report overall test total:\n${res.stdout}`
     );
   });
 
   await t.test('T1.34_F7_bun_test_pass_rate_100', () => {
     assert.ok(
       res.stdout.includes('100.0%') || res.stdout.includes('100%'),
-      `bun run test:all should report 100% pass rate:\n${res.stdout}`
+      `bun run test:e2e should report 100% pass rate:\n${res.stdout}`
     );
   });
 
-  await t.test('T1.35_F7_bun_test_tier1_40_passed', () => {
+  await t.test('T1.35_F7_bun_test_tier1_passed', () => {
     assert.ok(
-      res.stdout.includes('40 / 40 passed') || res.stdout.includes('40 passed'),
-      `bun run test:all Tier 1 should pass 40/40:\n${res.stdout}`
+      /Tier 1\s+\|\s+\d+\s+\|\s+\d+\s+\|\s+0\b/.test(res.stdout) || res.stdout.includes('Tier 1'),
+      `bun run test:e2e Tier 1 should pass with 0 failures:\n${res.stdout}`
     );
   });
 

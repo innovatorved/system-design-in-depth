@@ -6,10 +6,10 @@ This repository ships or loads the following open-source libraries, fonts, and r
 
 ## 1. Vendored & Client-Side Runtime Dependencies
 
-### `@innovatorved/code-lab` (`v0.4.0`)
+### `@innovatorved/code-lab` (`v0.6.1`)
 - **License:** MIT License
 - **Copyright:** Copyright (c) 2026 Ved Gupta (`https://github.com/innovatorved/code-lab` · `https://code-lab.vedgupta.in/`)
-- **Usage:** Vendored under `js/vendor/code-lab.js`, `js/vendor/guided-lab.js`, `css/vendor/code-lab.css`, and `preview-sw.js` (with CDN fallback to `@innovatorved/code-lab@0.4.0`) for browser-native JavaScript, TypeScript, C++20 (Clang/WASI), and Python 3.12 (Pyodide) build labs, snippet runners, and incident hotfix rooms.
+- **Usage:** Vendored under `js/vendor/code-lab.js`, `js/vendor/guided-lab.js`, `css/vendor/code-lab.css`, and `preview-sw.js` (with CDN fallback to `@innovatorved/code-lab@0.6.1`) for browser-native JavaScript, TypeScript, C++20 (Clang/WASI), and Python 3.12 (Pyodide) build labs, snippet runners, and incident hotfix rooms.
 
 ### Mermaid (`v10.9.8`)
 - **License:** MIT License

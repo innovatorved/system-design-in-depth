@@ -134,7 +134,7 @@ window.PROJECTS_DATA = [
     name: 'code-lab',
     title: 'code-lab — Browser IDE, POSIX Shell & Node/Bun/C++20 WASI Runtime',
     description: 'Zero-server, browser-native JS/TS/C++20 IDE with public GitHub repository cloning (git clone), a full POSIX shell (pipes, redirects, 67 UNIX coreutils including g++, clang++, hey, chaos, sqlite3, redis-cli), Node.js v22 + Bun v1.1 + Clang/LLVM WebAssembly C++20 runtime, Chaos & Load Engine, and modular Guided Lab extensions.',
-    stars: 'v0.4.0',
+    stars: 'v0.6.1',
     starsCount: 60,
     forks: 0,
     language: 'TypeScript',

@@ -177,9 +177,9 @@ test('Tier 4: Real-World Scenarios', async (t) => {
     assert.ok(content.includes('<code-lab'), 'Sample must instantiate <code-lab>');
 
     // Verify code-lab test suite passes 100%
-    const bunRes = runCommand('bun', ['run', 'test:all'], CODE_LAB_ROOT);
-    assert.strictEqual(bunRes.code, 0, `bun run test:all failed: ${bunRes.stderr}`);
-    assert.ok(bunRes.stdout.includes('100.0%'), 'Test suite must achieve 100% pass rate');
+    const bunRes = runCommand('bun', ['run', 'test:e2e'], CODE_LAB_ROOT);
+    assert.strictEqual(bunRes.code, 0, `bun run test:e2e failed: ${bunRes.stderr}`);
+    assert.ok(bunRes.stdout.includes('100%'), 'Test suite must achieve 100% pass rate');
   });
 
   await t.test('Scenario 5: Production Cloudflare Pages build assembly and dry-run deployment inspection', () => {

@@ -1,11 +1,11 @@
 /**
  * ============================================================
- * @innovatorved/code-lab v0.4.0 — Standalone Browser Code IDE & Virtual Runtime
+ * @innovatorved/code-lab v0.6.1 — Standalone Browser Code IDE & Virtual Runtime
  * ============================================================
  * Features:
  *   - Sandboxed Web Worker Execution Engine with Multi-Instance Isolation & Watchdog Timer
  *   - First-Class Node.js and Bun Runtimes (Bun.serve, bun:test, bun:sqlite, Bun.*)
- *   - Full POSIX Shell AST & 71 UNIX Coreutils (pipes, redirects, globs, env vars, git & git clone)
+ *   - Full POSIX Shell AST & 73 UNIX Coreutils (pipes, redirects, globs, env vars, git & git clone)
  *   - Interactive PTY Terminal Emulator with inline prompt, Tab completion & ANSI colors
  *   - Persistent HTTP/TCP Servers, CLI curl & Live Port/HTTP Preview
  *   - Modular VS Code Workbench: File Tree, Tabs, Command Palette, Diff Viewer
@@ -15,180 +15,7 @@
  * ============================================================
  */
 
-var CodeLabCsp = (() => {
-  var __defProp = Object.defineProperty;
-  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-  var __getOwnPropNames = Object.getOwnPropertyNames;
-  var __hasOwnProp = Object.prototype.hasOwnProperty;
-  var __export = (target, all) => {
-    for (var name in all)
-      __defProp(target, name, { get: all[name], enumerable: true });
-  };
-  var __copyProps = (to, from, except, desc) => {
-    if (from && typeof from === "object" || typeof from === "function") {
-      for (let key of __getOwnPropNames(from))
-        if (!__hasOwnProp.call(to, key) && key !== except)
-          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-    }
-    return to;
-  };
-  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-  // src/csp.ts
-  var csp_exports = {};
-  __export(csp_exports, {
-    PREVIEW_SHIM_MARKER: () => PREVIEW_SHIM_MARKER,
-    buildPreviewPolicy: () => buildPreviewPolicy,
-    buildPreviewShims: () => buildPreviewShims,
-    default: () => csp_default,
-    describePreviewNetwork: () => describePreviewNetwork,
-    normalizeOrigin: () => normalizeOrigin,
-    normalizePreviewCspConfig: () => normalizePreviewCspConfig
-  });
-  var IMPORT_MAP_CDNS = ["https://cdn.jsdelivr.net", "https://esm.sh"];
-  var FONT_CDNS = ["https://cdn.jsdelivr.net", "https://fonts.gstatic.com"];
-  var PRESETS = {
-    strict: {},
-    balanced: {
-      scriptSrc: IMPORT_MAP_CDNS.slice(),
-      styleSrc: ["https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
-      fontSrc: FONT_CDNS.slice(),
-      connectSrc: IMPORT_MAP_CDNS.slice(),
-      imgSrc: ["https://cdn.jsdelivr.net"]
-    }
-  };
-  var SOURCE_KEYS = [
-    "scriptSrc",
-    "styleSrc",
-    "imgSrc",
-    "fontSrc",
-    "connectSrc",
-    "mediaSrc",
-    "workerSrc",
-    "frameSrc"
-  ];
-  var MAX_SOURCES = 64;
-  var MAX_SOURCE_LENGTH = 512;
-  var PREVIEW_SHIM_MARKER = "data-codelab-preview-shims";
-  function normalizeOrigin(raw) {
-    if (raw === null || raw === void 0 || raw === "") return null;
-    try {
-      const parsed = new URL(String(raw));
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
-      return parsed.origin;
-    } catch (_) {
-      return null;
-    }
-  }
-  function normalizeMode(raw) {
-    if (raw === "strict" || raw === "custom") return raw;
-    return "balanced";
-  }
-  var ALLOWED_KEYWORDS = [
-    "'self'",
-    "'none'",
-    "'unsafe-inline'",
-    "'unsafe-eval'",
-    "'wasm-unsafe-eval'",
-    "'strict-dynamic'",
-    "'unsafe-hashes'"
-  ];
-  var SOURCE_PATTERN = /^(?:https?:\/\/[A-Za-z0-9._~%-]+(?::\d{1,5})?(?:\/[^\s;,'"]*)?|data:|blob:|filesystem:)$/;
-  function isSafeSource(source) {
-    return ALLOWED_KEYWORDS.indexOf(source) !== -1 || SOURCE_PATTERN.test(source);
-  }
-  function cleanSources(raw) {
-    if (!Array.isArray(raw)) return [];
-    const out = [];
-    for (const value of raw.slice(0, MAX_SOURCES)) {
-      if (typeof value !== "string") continue;
-      const source = value.trim();
-      if (!source || source.length > MAX_SOURCE_LENGTH) continue;
-      if (!isSafeSource(source)) continue;
-      if (out.indexOf(source) === -1) out.push(source);
-    }
-    return out;
-  }
-  function unique(...lists) {
-    const out = [];
-    for (const list of lists) {
-      if (!list) continue;
-      for (const value of list) {
-        if (value && out.indexOf(value) === -1) out.push(value);
-      }
-    }
-    return out;
-  }
-  function normalizePreviewCspConfig(raw) {
-    if (typeof raw === "string") return { mode: normalizeMode(raw), allow: {} };
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-      return { mode: "balanced", allow: {} };
-    }
-    const input = raw;
-    const nested = input.allow;
-    const sources = nested && typeof nested === "object" && !Array.isArray(nested) ? nested : input;
-    const allow = {};
-    for (const key of SOURCE_KEYS) {
-      const list = cleanSources(sources[key]);
-      if (list.length) allow[key] = list;
-    }
-    return { mode: normalizeMode(input.mode), allow };
-  }
-  function sourcesFor(mode, allow, key) {
-    const preset = mode === "custom" ? {} : PRESETS[mode];
-    return unique(preset[key], cleanSources(allow[key]));
-  }
-  function buildPreviewPolicy(options = {}) {
-    const mode = normalizeMode(options.mode);
-    const allow = options;
-    const host = normalizeOrigin(options.hostOrigin);
-    const self = host || "'self'";
-    const directive = (name, parts) => `${name} ${unique(parts).join(" ")}`;
-    const script = () => [self, "data:", "blob:", "'unsafe-inline'", "'unsafe-eval'"].concat(sourcesFor(mode, allow, "scriptSrc"));
-    const style = () => [self, "'unsafe-inline'"].concat(sourcesFor(mode, allow, "styleSrc"));
-    const withData = (key) => [self, "data:", "blob:"].concat(sourcesFor(mode, allow, key));
-    return [
-      directive("default-src", [self, "data:", "blob:"]),
-      directive("base-uri", [self]),
-      "object-src 'none'",
-      directive("script-src", script()),
-      directive("style-src", style()),
-      directive("img-src", withData("imgSrc")),
-      directive("font-src", [self, "data:"].concat(sourcesFor(mode, allow, "fontSrc"))),
-      directive("connect-src", withData("connectSrc")),
-      directive("media-src", withData("mediaSrc")),
-      directive("worker-src", [self, "blob:"].concat(sourcesFor(mode, allow, "workerSrc"))),
-      directive("frame-src", withData("frameSrc")),
-      directive("form-action", [self]),
-      directive("frame-ancestors", (() => {
-        const rawFa = typeof options.frameAncestors === "string" ? options.frameAncestors.trim() : "";
-        if (!rawFa) return ["'self'"];
-        const tokens = cleanSources(rawFa.split(/\s+/));
-        return tokens.length > 0 ? tokens : ["'self'"];
-      })())
-    ].join("; ");
-  }
-  function describePreviewNetwork(config) {
-    const normalized = normalizePreviewCspConfig(config);
-    if (normalized.mode === "strict") return [];
-    const preset = normalized.mode === "custom" ? {} : PRESETS[normalized.mode];
-    const hosts = [];
-    for (const key of ["scriptSrc", "connectSrc", "imgSrc", "styleSrc", "fontSrc"]) {
-      for (const source of unique(preset[key], normalized.allow[key])) {
-        if (!/^https?:\/\//i.test(source)) continue;
-        let host;
-        try {
-          host = new URL(source).host;
-        } catch (_) {
-          continue;
-        }
-        if (hosts.indexOf(host) === -1) hosts.push(host);
-      }
-    }
-    return hosts;
-  }
-  function buildPreviewShims() {
-    return `<script ${PREVIEW_SHIM_MARKER}>
+var CodeLabCsp=(()=>{var u=Object.defineProperty;var O=Object.getOwnPropertyDescriptor;var C=Object.getOwnPropertyNames;var P=Object.prototype.hasOwnProperty;var E=(e,t)=>{for(var r in t)u(e,r,{get:t[r],enumerable:!0})},A=(e,t,r,n)=>{if(t&&typeof t=="object"||typeof t=="function")for(let o of C(t))!P.call(e,o)&&o!==r&&u(e,o,{get:()=>t[o],enumerable:!(n=O(t,o))||n.enumerable});return e};var I=e=>A(u({},"__esModule",{value:!0}),e);var L={};E(L,{PREVIEW_SHIM_MARKER:()=>f,buildPreviewPolicy:()=>S,buildPreviewShims:()=>k,default:()=>U,describePreviewNetwork:()=>x,normalizeOrigin:()=>v,normalizePreviewCspConfig:()=>m});var y=["https://cdn.jsdelivr.net","https://esm.sh"],j=["https://cdn.jsdelivr.net","https://fonts.gstatic.com"],b={strict:{},balanced:{scriptSrc:y.slice(),styleSrc:["https://cdn.jsdelivr.net","https://fonts.googleapis.com"],fontSrc:j.slice(),connectSrc:y.slice(),imgSrc:["https://cdn.jsdelivr.net"]}},R=["scriptSrc","styleSrc","imgSrc","fontSrc","connectSrc","mediaSrc","workerSrc","frameSrc"],_=64,N=512,f="data-codelab-preview-shims";function v(e){if(e==null||e==="")return null;try{let t=new URL(String(e));return t.protocol!=="http:"&&t.protocol!=="https:"?null:t.origin}catch{return null}}function p(e){return e==="strict"||e==="custom"?e:"balanced"}var T=["'self'","'none'","'unsafe-inline'","'unsafe-eval'","'wasm-unsafe-eval'","'strict-dynamic'","'unsafe-hashes'"],H=/^(?:https?:\/\/[A-Za-z0-9._~%-]+(?::\d{1,5})?(?:\/[^\s;,'"]*)?|data:|blob:|filesystem:)$/;function M(e){return T.indexOf(e)!==-1||H.test(e)}function g(e){if(!Array.isArray(e))return[];let t=[];for(let r of e.slice(0,_)){if(typeof r!="string")continue;let n=r.trim();!n||n.length>N||M(n)&&t.indexOf(n)===-1&&t.push(n)}return t}function h(...e){let t=[];for(let r of e)if(r)for(let n of r)n&&t.indexOf(n)===-1&&t.push(n);return t}function m(e){if(typeof e=="string")return{mode:p(e),allow:{}};if(!e||typeof e!="object"||Array.isArray(e))return{mode:"balanced",allow:{}};let t=e,r=t.allow,n=r&&typeof r=="object"&&!Array.isArray(r)?r:t,o={};for(let i of R){let a=g(n[i]);a.length&&(o[i]=a)}return{mode:p(t.mode),allow:o}}function c(e,t,r){let n=e==="custom"?{}:b[e];return h(n[r],g(t[r]))}function S(e={}){let t=p(e.mode),r=e,o=v(e.hostOrigin)||"'self'",i=(s,d)=>`${s} ${h(d).join(" ")}`,a=()=>[o,"data:","blob:","'unsafe-inline'","'unsafe-eval'"].concat(c(t,r,"scriptSrc")),w=()=>[o,"'unsafe-inline'"].concat(c(t,r,"styleSrc")),l=s=>[o,"data:","blob:"].concat(c(t,r,s));return[i("default-src",[o,"data:","blob:"]),i("base-uri",[o]),"object-src 'none'",i("script-src",a()),i("style-src",w()),i("img-src",l("imgSrc")),i("font-src",[o,"data:"].concat(c(t,r,"fontSrc"))),i("connect-src",l("connectSrc")),i("media-src",l("mediaSrc")),i("worker-src",[o,"blob:"].concat(c(t,r,"workerSrc"))),i("frame-src",l("frameSrc")),i("form-action",[o]),i("frame-ancestors",(()=>{let s=typeof e.frameAncestors=="string"?e.frameAncestors.trim():"";if(!s)return["'self'"];let d=g(s.split(/\s+/));return d.length>0?d:["'self'"]})())].join("; ")}function x(e){let t=m(e);if(t.mode==="strict")return[];let r=t.mode==="custom"?{}:b[t.mode],n=[];for(let o of["scriptSrc","connectSrc","imgSrc","styleSrc","fontSrc"])for(let i of h(r[o],t.allow[o])){if(!/^https?:\/\//i.test(i))continue;let a;try{a=new URL(i).host}catch{continue}n.indexOf(a)===-1&&n.push(a)}return n}function k(){return`<script ${f}>
 (function () {
   'use strict';
   function memoryStorage() {
@@ -502,18 +329,7 @@ var CodeLabCsp = (() => {
     });
   } catch (e) { void e; }
 })();
-<\/script>`;
-  }
-  var csp_default = {
-    buildPreviewPolicy,
-    buildPreviewShims,
-    describePreviewNetwork,
-    normalizePreviewCspConfig,
-    normalizeOrigin,
-    PREVIEW_SHIM_MARKER
-  };
-  return __toCommonJS(csp_exports);
-})();
+<\/script>`}var U={buildPreviewPolicy:S,buildPreviewShims:k,describePreviewNetwork:x,normalizePreviewCspConfig:m,normalizeOrigin:v,PREVIEW_SHIM_MARKER:f};return I(L);})();
 
 /**
  * @innovatorved/code-lab — Web Preview Virtual Loopback Service Worker (Milestone 3)
