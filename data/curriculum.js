@@ -2,8 +2,8 @@
 window.CURRICULUM_DATA = {
   "stats": {
     "tracks": 6,
-    "units": 200,
-    "lessons": 165,
+    "units": 201,
+    "lessons": 166,
     "systems": 35,
     "builds": 15
   },
@@ -3071,6 +3071,39 @@ window.CURRICULUM_DATA = {
                 "mermaidCount": 1,
                 "content": "# Caching layers\n\nA cache keeps an answer so the next request can avoid some work: reading a database row, calling another service, resizing an image or recomputing a report. The useful question is which work a hit removes. That determines where the copy belongs.\n\nWe’ll compare the places a cache can live, follow a read that fills one, and distinguish a database’s page cache from a disposable SQL table.\n\n## Keep the source separate\n\nSuppose a catalog service copies product `p7` into a cache. Finding a usable copy is a **hit**; finding none is a **miss**. The product database remains the source of truth. Losing the cached copy should leave somewhere to recover the answer.\n\n![A source ledger retains product p7 while an arrow labeled copy points to a separate cache card held by a reader.](/course-assets/system-design/illustrations/cache-copy.webp)\n\nThat makes the copy replaceable, but does not make its contents permanently correct. If the product changes, the old copy needs a rule for when readers must stop using it. Name the allowed staleness before choosing a cache lifetime.\n\nThe key must distinguish answers that are different. A public product description might use its product ID and locale. An account’s private report also needs its account boundary; a report-name-only key could expose one customer’s data to another.\n\n## Choose the work to avoid\n\nThese layers are alternatives you can combine when each earns its place. They are not a checklist of infrastructure every request should traverse.\n\n| Placement | A hit can avoid | What needs care |\n| --- | --- | --- |\n| Client | Fetching or recomputing local data | Stale state and switching accounts |\n| CDN | Sending a reusable public response from the origin | Invalidation and personalized responses |\n| Gateway or reverse proxy | Running the application for a reusable response | Authorization and correct request matching |\n| API process memory | A repeated lookup or computation | Separate copies and fills in every instance |\n| API disk | Regenerating a larger artifact | Space limits and cleanup across deployments |\n| Redis or Memcached | Repeated source lookups across instances | Network delay, outages and invalidation |\n| Database buffer pool | Reading database pages from storage | Engine-specific memory management |\n| Materialized view | Repeating a join or aggregation | Refresh cost and out-of-date results |\n\nA buffer-pool hit still leaves the database executing the query. A cached query result can avoid that execution. A reusable HTTP response can skip the application entirely. Each moves the boundary of work saved, and therefore the behavior being skipped.\n\nFor example, our [[wiki/url-shortener-system-design|shortener design]] records every accepted redirect reaching the application. Caching its destination lookup preserves that write. Reusing a whole redirect before it reaches the application would bypass it.\n\nAn HTTP cache also needs the response’s reuse rules, not just a URL lookup. A response that varies by a request header needs matching variants; private and public answers must not become interchangeable.\n\n## Follow a cache-aside read\n\nWith **cache-aside**, the application checks the cache, reads the source on a miss and saves the result for another request. This diagram follows a successful lookup of an existing product. It omits authorization and error handling to isolate the fill.\n\n```mermaid\nsequenceDiagram\n    accTitle: Filling a product cache on a miss\n    accDescr: The application misses in the cache, reads product p7 from the database, and stores a copy. The database remains the source of truth.\n    participant A as Application\n    participant C as Cache\n    participant D as Product database\n    A->>C: Get p7\n    C-->>A: Miss\n    A->>D: Read p7\n    D-->>A: Product\n    A->>C: Store product copy\n    C-->>A: Stored\n```\n\nA process-local map avoids a network exchange. A shared cache lets different application instances reuse the same fill and can outlive an application restart. Shared ownership adds a dependency, so choose it when that reuse is worth the cost.\n\nFor changing data, you might delete a copy after a source update, give it a time limit, or update it through the write path. Writing both stores does not by itself make them atomic: a failure or concurrent fill can leave them disagreeing. The concurrency lesson follows that race.\n\n## A SQL-shaped cache\n\nMySQL’s `MEMORY` engine offers a transient table with SQL access. It can suit a disposable derived dataset when retaining an existing schema and query shape simplifies the application. The [MEMORY engine recording](/system/archive/caching-layers?recording=sd-60) explores this option.\n\nIn MySQL 8.4, the rows disappear on server restart while the table definition survives. This differs from InnoDB’s buffer pool, which holds pages belonging to durable tables. A materialized view is different again: it stores a query’s results until refreshed.\n\n`MEMORY` lacks transactions, uses table-level locks and cannot store `TEXT` or `BLOB` columns. Even `VARCHAR` occupies a fixed-length row representation. Table size is bounded by configured memory limits; extra rows do not automatically spill to disk.\n\nSQL reuse can be convenient, but these restrictions may cost more than they save. Compare the actual queries and schema with InnoDB or direct key access before assuming an in-memory table will be faster.\n\nFor any placement, measure the avoided operation, miss cost and total response time. A high hit ratio helps only if it removes meaningful work and the answers remain usable.\n",
                 "wordCount": 876
+              }
+            },
+            {
+              "slug": "edge-caching-and-page-load-times",
+              "title": "Edge caching and page load times",
+              "kind": "lesson",
+              "archive": {
+                "slug": "edge-caching-and-page-load-times",
+                "file": "edge-caching-and-page-load-times.md",
+                "title": "Edge caching and page load times",
+                "displayTitle": "Edge caching and page load times",
+                "type": "lesson",
+                "tags": [
+                  "system-design",
+                  "caching",
+                  "cdn",
+                  "edge",
+                  "latency",
+                  "web-performance"
+                ],
+                "sources": [
+                  "https://www.rfc-editor.org/rfc/rfc9111.html",
+                  "https://web.dev/articles/optimize-lcp",
+                  "https://developers.cloudflare.com/cache/how-to/tiered-cache/",
+                  "[[wiki/caching-layers]]",
+                  "[[wiki/tail-latency]]"
+                ],
+                "created": "2026-11-20",
+                "updated": "2026-11-20",
+                "excerpt": "How caching at global edge PoPs collapses round-trip times, TCP/TLS handshakes, TTFB, FCP, and LCP for users thousands of kilometers away from your origin.",
+                "mermaidCount": 0,
+                "content": "",
+                "wordCount": 980
               }
             },
             {

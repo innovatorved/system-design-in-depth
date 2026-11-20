@@ -713,3 +713,122 @@ window.QUESTION_BANK["cache-availability-and-database-fallback"] = [
     ]
   }
 ];
+
+window.QUESTION_BANK["edge-caching-and-page-load-times"] = [
+  {
+    "id": "edge-caching-and-page-load-times-c1",
+    "type": "mcq",
+    "difficulty": "recall",
+    "title": "Why Edge PoPs Still Help on a Cache MISS",
+    "section": "What Edge Caching Actually Moves Closer to the User",
+    "prompt": "A user in Sydney requests an uncached HTML page (cold cache MISS) from an origin in Virginia behind a global Anycast CDN. Why is TTFB still significantly lower than connecting directly to Virginia?",
+    "options": [
+      "The CDN compresses the speed of light in fiber cables between Sydney and Virginia",
+      "TCP and TLS handshakes terminate locally at the Sydney PoP, and the PoP forwards the request over a warm, persistent keep-alive connection to Virginia",
+      "A cache MISS skips TLS encryption between the edge PoP and the origin server",
+      "The browser caches the DNS response for 365 days whenever a CDN is present"
+    ],
+    "answer": 1,
+    "explanation": "Direct-to-origin pays multiple transoceanic RTTs for TCP + TLS + HTTP. An Anycast Edge PoP terminates TCP and TLS in ~12ms locally and reuses pre-warmed Edge-to-Origin connections, saving two full ocean round trips even on a cold MISS.",
+    "tags": [
+      "edge-caching-and-page-load-times",
+      "recall",
+      "inline"
+    ]
+  },
+  {
+    "id": "edge-caching-and-page-load-times-c2",
+    "type": "mcq",
+    "difficulty": "apply",
+    "title": "Controlling Browser vs CDN TTL with SWR",
+    "section": "What Edge Caching Actually Moves Closer to the User",
+    "prompt": "You want a public product page to be served from CDN edge PoPs for 60 seconds, immediately serve stale content for up to 5 minutes while refreshing in the background, and never get stuck in a user's browser cache after an emergency purge. Which header achieves this?",
+    "options": [
+      "Cache-Control: private, max-age=300",
+      "Cache-Control: public, max-age=31536000, immutable",
+      "Cache-Control: public, max-age=0, s-maxage=60, stale-while-revalidate=300",
+      "Cache-Control: no-store, must-revalidate"
+    ],
+    "answer": 2,
+    "explanation": "max-age=0 keeps the browser from serving stale HTML without checking the edge; s-maxage=60 caches at shared CDN PoPs for 60s; stale-while-revalidate=300 lets the PoP return the expired HTML instantaneously while asynchronously revalidating from the origin.",
+    "tags": [
+      "edge-caching-and-page-load-times",
+      "apply",
+      "inline"
+    ]
+  },
+  {
+    "id": "edge-caching-and-page-load-times-c3",
+    "type": "mcq",
+    "difficulty": "staff",
+    "title": "Why Hit Ratio Collapsed After a Marketing Launch",
+    "section": "Production Failure Modes",
+    "prompt": "After a global ad campaign launches, your CDN cache hit ratio drops from 94% to 18% and origin CPU spikes, even though traffic is going to the same 20 landing pages. What is the most likely root cause?",
+    "options": [
+      "HTTP/3 QUIC disables edge caching for HTML responses",
+      "Unique marketing query parameters (utm_source, gclid, fbclid) or Vary: User-Agent are included in the CDN cache key, fragmenting each page into thousands of distinct cache entries",
+      "Origin Shielding increases the number of PoPs that talk to the origin",
+      "stale-while-revalidate causes every request to bypass the cache"
+    ],
+    "answer": 1,
+    "explanation": "By default, many CDNs include the full query string in the cache key. Unique click-tracking parameters (fbclid, gclid) or high-cardinality Vary headers like User-Agent turn one popular URL into thousands of cold cache keys. Strip tracking parameters from the cache key at the edge.",
+    "tags": [
+      "edge-caching-and-page-load-times",
+      "staff",
+      "inline"
+    ]
+  },
+  {
+    "id": "edge-caching-and-page-load-times-n1",
+    "topic": "edge-caching-and-page-load-times",
+    "type": "numeric",
+    "difficulty": "apply",
+    "title": "Napkin Math: Transoceanic TTFB Before Edge Caching",
+    "scenario": "A user in Sydney connects directly to an origin in Virginia over HTTP/2 (TCP + TLS 1.3). The network RTT between Sydney and Virginia is 240 ms, DNS takes 20 ms, and origin SSR rendering takes 100 ms.",
+    "prompt": "Approximately what is the HTML Time to First Byte (TTFB) in milliseconds (DNS + 1 RTT TCP + 1 RTT TLS + 1 RTT HTTP + SSR)?",
+    "question": "Approximately what is the HTML Time to First Byte (TTFB) in milliseconds (DNS + 1 RTT TCP + 1 RTT TLS + 1 RTT HTTP + SSR)?",
+    "unit": "ms",
+    "answer": 840,
+    "tolerance": 0.1,
+    "hint": "TTFB = DNS (20) + TCP (240) + TLS (240) + HTTP RTT (240) + Origin SSR (100).",
+    "explanation": "20 ms (DNS) + 240 ms (TCP) + 240 ms (TLS 1.3) + 240 ms (HTTP request/response) + 100 ms (origin SSR) = 840 ms TTFB before the browser even starts parsing HTML or fetching CSS and hero images.",
+    "tags": [
+      "edge-caching-and-page-load-times",
+      "numeric",
+      "latency"
+    ]
+  },
+  {
+    "id": "edge-caching-and-page-load-times-t1",
+    "topic": "edge-caching-and-page-load-times",
+    "type": "tradeoff",
+    "difficulty": "staff",
+    "title": "Trade-Off Matrix: Edge Caching a Product Page with Personalized Cart State",
+    "scenario": "Your global e-commerce product page has 2M daily visitors across Asia, Europe, and the US, hosted in us-east-1. 95% of the page (photos, description, reviews, price) is identical for everyone, but the top-right header displays the signed-in user's cart item count.",
+    "prompt": "Which architecture delivers sub-200ms LCP globally without leaking one user's cart count to another?",
+    "question": "Which architecture delivers sub-200ms LCP globally without leaking one user's cart count to another?",
+    "options": [
+      "Cache the full personalized HTML page with Cache-Control: public, s-maxage=300 and ignore cookies",
+      "Serve the public product HTML shell from Edge PoPs (s-maxage + stale-while-revalidate + cache-tag purge on price change), and fetch the tiny personalized cart badge asynchronously from a private API or Edge Worker",
+      "Disable edge caching for HTML completely and force every visitor worldwide to hit us-east-1 for HTML"
+    ],
+    "correctOption": 1,
+    "reasons": [
+      "Caching personalized HTML in a shared CDN PoP safely isolates each user automatically",
+      "Splitting the cacheable public shell from the tiny private cart island lets 95%+ of the page paint instantaneously from the local PoP while keeping user-specific state strictly private",
+      "HTML TTFB has no impact on LCP as long as product images are cached on a CDN"
+    ],
+    "correctReason": 1,
+    "answer": {
+      "option": 1,
+      "reason": 1
+    },
+    "hint": "Never cache private user state in a shared PoP, but don't throw away edge HTML caching for the 95% public shell either.",
+    "explanation": "Caching the public product HTML shell at the edge with tag-based purging and hydrating the tiny personalized cart island keeps LCP under 200ms worldwide with zero risk of cross-user data leaks.",
+    "tags": [
+      "edge-caching-and-page-load-times",
+      "tradeoff",
+      "staff"
+    ]
+  }
+];

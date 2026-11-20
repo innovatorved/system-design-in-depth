@@ -35,13 +35,13 @@
   <link rel="stylesheet" href="design-system/components.css?v=606a179125">
   <link rel="stylesheet" href="css/variables.css?v=58074e99d7">
   <link rel="stylesheet" href="css/layout.css?v=44573b8172">
-  <link rel="stylesheet" href="css/components.css?v=1f9e61803c">
+  <link rel="stylesheet" href="css/components.css?v=3c3eec65c0">
   <link rel="stylesheet" href="css/content.css?v=c40a7aea42">
   <link rel="stylesheet" href="css/landing.css?v=f2fcd03e84">
 
   <!-- Core scripts: head initializer & asset manifest -->
   <script src="js/init.js?v=be8af42599"></script>
-  <script src="js/manifest.js?v=f9dc851c0a"></script>
+  <script src="js/manifest.js?v=8b4c86f355"></script>
 
   <script type="application/ld+json">
 {
@@ -433,6 +433,9 @@
         <div class="module-group__units"><a class="unit-item active" data-slug="caching-layers" href="/topic/caching-layers/">
           <span class="unit-item__status unit-item__status--active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg></span>
           <span class="unit-item__title">Caching layers</span>
+        </a><a class="unit-item" data-slug="edge-caching-and-page-load-times" href="/topic/edge-caching-and-page-load-times/">
+          <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="unit-item__title">Edge caching and page load times</span>
         </a><a class="unit-item" data-slug="distributed-cache-design" href="/topic/distributed-cache-design/">
           <span class="unit-item__status unit-item__status--pending"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg></span>
           <span class="unit-item__title">Distributed cache design</span>
@@ -1303,7 +1306,392 @@ flowchart TD
           <p class="check-slider__score"></p>
           <button type="button" class="btn btn--sm btn--outline check-slider__retry">Try again</button>
         </div>
-      </section></div>
+      </section></div><div id="topic-simulator-caching-layers">
+        <div class="simulator-card edge-sim" id="sim-edge-caching">
+          <div class="simulator-card__header">
+            <div class="simulator-card__title">
+              <span>Edge Caching &amp; Page Load Time Sandbox</span>
+            </div>
+            <span class="edge-sim__status-pill edge-sim__status-pill--hit" id="ec-cache-pill">Edge PoP: WARM (HIT)</span>
+          </div>
+          <p class="simulator-card__description">
+            Pick a user far from your origin and click <strong>Load Page (A/B Race)</strong> to feel the real-time page load difference. Then try <strong>Purge Edge Cache</strong> (Cold MISS) or <strong>Expire TTL (Trigger SWR)</strong>.
+          </p>
+
+          <div class="edge-sim__controls-grid">
+            <label class="edge-sim__field">
+              <span class="edge-sim__label">USER LOCATION</span>
+              <select class="edge-sim__select" id="ec-city">
+                <option value="ashburn">Ashburn, US</option>
+                <option value="london">London, UK</option>
+                <option value="saopaulo">São Paulo, BR</option>
+                <option value="mumbai" selected>Mumbai, IN</option>
+                <option value="tokyo">Tokyo, JP</option>
+                <option value="sydney">Sydney, AU</option>
+              </select>
+            </label>
+            <label class="edge-sim__field">
+              <span class="edge-sim__label">ORIGIN REGION</span>
+              <select class="edge-sim__select" id="ec-origin">
+                <option value="us-east-1" selected>US-East (Virginia)</option>
+                <option value="eu-central-1">EU-Central (Frankfurt)</option>
+                <option value="ap-northeast-1">AP-Northeast (Tokyo)</option>
+              </select>
+            </label>
+            <label class="edge-sim__field">
+              <span class="edge-sim__label">EDGE STRATEGY</span>
+              <select class="edge-sim__select" id="ec-strategy">
+                <option value="static-only">Static Assets Only</option>
+                <option value="full-edge" selected>Full Edge (HTML + Assets)</option>
+                <option value="shielded">Full Edge + Origin Shield</option>
+              </select>
+            </label>
+            <label class="edge-sim__field">
+              <span class="edge-sim__label">NETWORK PROFILE</span>
+              <select class="edge-sim__select" id="ec-network">
+                <option value="fiber" selected>Fiber (100 Mbps)</option>
+                <option value="fast4g">Fast 4G (20 Mbps)</option>
+                <option value="slow3g">Slow 3G (1.6 Mbps)</option>
+              </select>
+            </label>
+            <label class="edge-sim__field">
+              <span class="edge-sim__label">PROTOCOL</span>
+              <select class="edge-sim__select" id="ec-protocol">
+                <option value="h2" selected>HTTP/2 (TCP + TLS 1.3)</option>
+                <option value="h3">HTTP/3 (QUIC 1-RTT)</option>
+              </select>
+            </label>
+            <label class="edge-sim__field">
+              <span class="edge-sim__label">ORIGIN SSR RENDER: <b id="ec-ssr-val">140</b> ms</span>
+              <input class="edge-sim__range" type="range" id="ec-ssr" min="20" max="400" step="20" value="140">
+            </label>
+          </div>
+
+          <div class="edge-sim__actions">
+            <button type="button" class="btn btn--primary btn--sm" id="ec-run">Load Page (A/B Race)</button>
+            <button type="button" class="btn btn--outline btn--sm" id="ec-purge">Purge Edge Cache</button>
+            <button type="button" class="btn btn--outline btn--sm" id="ec-stale">Expire TTL (Trigger SWR)</button>
+            <label class="edge-sim__speed-toggle">
+              <span>Speed</span>
+              <select class="edge-sim__select edge-sim__select--compact" id="ec-speed" aria-label="Simulation playback speed">
+                <option value="1" selected>1x Real-Time</option>
+                <option value="0.5">0.5x Slow-Mo</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- Panel 1: Clean 2-Lane Network Path Comparison -->
+          <div class="edge-sim__map-wrap" aria-label="Direct origin vs Edge PoP request path comparison">
+            <svg class="edge-sim__map" id="ec-map-svg" viewBox="0 0 660 184" role="img" aria-label="Two-lane network path diagram comparing direct origin requests with edge PoP caching">
+              
+      <!-- Lane 1: Direct to Origin (No CDN) -->
+      <text x="16" y="20" class="edge-sim__lane-heading edge-sim__lane-heading--origin">1. WITHOUT EDGE (DIRECT TO ORIGIN)</text>
+      <text x="644" y="20" text-anchor="end" class="edge-sim__lane-stat edge-sim__lane-stat--origin">LCP 919 ms</text>
+
+      <line x1="122" y1="50" x2="514" y2="50" class="edge-sim__lane-line edge-sim__lane-line--origin"/>
+      <text x="318" y="40" text-anchor="middle" class="edge-sim__lane-note edge-sim__lane-note--origin">12,858 km fiber · 177 ms RTT × 4 sequential trips</text>
+
+      <rect x="16" y="34" width="106" height="32" rx="6" class="edge-sim__box"/>
+      <text x="69" y="48" text-anchor="middle" class="edge-sim__box-title">User: Mumbai</text>
+      <text x="69" y="60" text-anchor="middle" class="edge-sim__box-sub">Fiber</text>
+
+      <rect x="514" y="34" width="130" height="32" rx="6" class="edge-sim__box edge-sim__box--origin"/>
+      <text x="579" y="48" text-anchor="middle" class="edge-sim__box-title">Origin Server</text>
+      <text x="579" y="60" text-anchor="middle" class="edge-sim__box-sub">Virginia (us-east-1)</text>
+
+      <!-- Divider -->
+      <line x1="16" y1="88" x2="644" y2="88" class="edge-sim__lane-divider"/>
+
+      <!-- Lane 2: With Edge Caching -->
+      <text x="16" y="108" class="edge-sim__lane-heading edge-sim__lane-heading--edge">2. WITH EDGE CACHING (HIT)</text>
+      <text x="644" y="108" text-anchor="end" class="edge-sim__lane-stat edge-sim__lane-stat--edge">LCP 139 ms</text>
+
+      <line x1="122" y1="138" x2="196" y2="138" class="edge-sim__lane-line edge-sim__lane-line--edge"/>
+      <text x="159" y="128" text-anchor="middle" class="edge-sim__lane-note edge-sim__lane-note--edge">18 ms</text>
+      <line x1="316" y1="138" x2="514" y2="138" class="edge-sim__lane-line edge-sim__lane-line--idle"/>
+           <text x="415" y="130" text-anchor="middle" class="edge-sim__lane-note">Origin untouched (0 ms WAN)</text>
+
+      <rect x="16" y="122" width="106" height="32" rx="6" class="edge-sim__box"/>
+      <text x="69" y="136" text-anchor="middle" class="edge-sim__box-title">User: Mumbai</text>
+      <text x="69" y="148" text-anchor="middle" class="edge-sim__box-sub">Local Anycast</text>
+
+      <rect x="196" y="122" width="120" height="32" rx="6" class="edge-sim__box edge-sim__box--edge"/>
+      <text x="256" y="136" text-anchor="middle" class="edge-sim__box-title">BOM Edge PoP</text>
+      <text x="256" y="148" text-anchor="middle" class="edge-sim__box-sub">x-cache: HIT</text>
+
+      <rect x="514" y="122" width="130" height="32" rx="6" class="edge-sim__box edge-sim__box--muted"/>
+      <text x="579" y="136" text-anchor="middle" class="edge-sim__box-title">Origin Server</text>
+      <text x="579" y="148" text-anchor="middle" class="edge-sim__box-sub">Idle (Offloaded)</text>
+
+      <text x="16" y="172" class="edge-sim__lane-footnote">Served from local RAM (~3 ms)</text>
+      <g id="ec-map-packets"></g>
+    
+            </svg>
+          </div>
+
+          <!-- Panel 2: Side-by-Side Live Browser Previews ("What the User Actually Feels") -->
+          <div class="edge-sim__browsers">
+            <div class="edge-sim__browser" id="ec-browser-origin">
+              <div class="edge-sim__chrome">
+                <span class="edge-sim__tag edge-sim__tag--origin" id="ec-origin-phase">Origin Direct · 919 ms LCP</span>
+                <span class="edge-sim__clock" id="ec-origin-clock">919 ms</span>
+              </div>
+              <div class="edge-sim__viewport is-fcp is-lcp is-ready" id="ec-vp-origin">
+                <div class="edge-sim__blank">
+                  <span class="edge-sim__spinner" aria-hidden="true"></span>
+                  <span class="edge-sim__blank-text">Waiting for origin across ocean…</span>
+                </div>
+                <div class="edge-sim__page">
+                  <div class="edge-sim__p-nav">
+                    <span class="edge-sim__p-brand">ACME STORE</span>
+                    <span class="edge-sim__p-links"><span>Catalog</span><span>Cart (2)</span></span>
+                  </div>
+                  <div class="edge-sim__p-body">
+                    <div class="edge-sim__p-hero">
+                      <div class="edge-sim__p-hero-art">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                        <span>Hero Image</span>
+                      </div>
+                    </div>
+                    <div class="edge-sim__p-copy">
+                      <div class="edge-sim__p-title">Mechanical Keyboard Pro</div>
+                      <div class="edge-sim__p-sub">In stock · Ships today</div>
+                      <div class="edge-sim__p-cta">Add to Cart · $189</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="edge-sim__browser edge-sim__browser--edge" id="ec-browser-edge">
+              <div class="edge-sim__chrome">
+                <span class="edge-sim__tag edge-sim__tag--edge" id="ec-edge-phase">Edge HIT · 139 ms LCP</span>
+                <span class="edge-sim__clock" id="ec-edge-clock">139 ms</span>
+              </div>
+              <div class="edge-sim__viewport is-fcp is-lcp is-ready" id="ec-vp-edge">
+                <div class="edge-sim__blank">
+                  <span class="edge-sim__spinner" aria-hidden="true"></span>
+                  <span class="edge-sim__blank-text">Connecting to nearest PoP…</span>
+                </div>
+                <div class="edge-sim__page">
+                  <div class="edge-sim__p-nav">
+                    <span class="edge-sim__p-brand">ACME STORE</span>
+                    <span class="edge-sim__p-links"><span>Catalog</span><span>Cart (2)</span></span>
+                  </div>
+                  <div class="edge-sim__p-body">
+                    <div class="edge-sim__p-hero">
+                      <div class="edge-sim__p-hero-art">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                        <span>Hero Image</span>
+                      </div>
+                    </div>
+                    <div class="edge-sim__p-copy">
+                      <div class="edge-sim__p-title">Mechanical Keyboard Pro</div>
+                      <div class="edge-sim__p-sub">In stock · Ships today</div>
+                      <div class="edge-sim__p-cta">Add to Cart · $189</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 3: Core Web Vitals & System Metrics Strip -->
+          <div class="edge-sim__metrics" id="ec-metrics">
+      <div class="edge-sim__metric-card">
+        <div class="edge-sim__metric-label">HTML TTFB</div>
+        <div class="edge-sim__metric-row">
+          <span class="edge-sim__metric-val edge-sim__metric-val--edge">64 ms</span>
+          <span class="edge-sim__metric-vs">vs 687 ms</span>
+        </div>
+        <div class="edge-sim__cwv-row">
+          <span class="edge-sim__cwv edge-sim__cwv--good">Edge: Good</span>
+          <span class="edge-sim__cwv edge-sim__cwv--good">Origin: Good</span>
+        </div>
+      </div>
+      <div class="edge-sim__metric-card">
+        <div class="edge-sim__metric-label">First Contentful Paint</div>
+        <div class="edge-sim__metric-row">
+          <span class="edge-sim__metric-val edge-sim__metric-val--edge">120 ms</span>
+          <span class="edge-sim__metric-vs">vs 900 ms</span>
+        </div>
+        <div class="edge-sim__cwv-row">
+          <span class="edge-sim__cwv edge-sim__cwv--good">Edge: Good</span>
+          <span class="edge-sim__cwv edge-sim__cwv--good">Origin: Good</span>
+        </div>
+      </div>
+      <div class="edge-sim__metric-card">
+        <div class="edge-sim__metric-label">Largest Contentful Paint</div>
+        <div class="edge-sim__metric-row">
+          <span class="edge-sim__metric-val edge-sim__metric-val--edge">139 ms</span>
+          <span class="edge-sim__metric-vs">vs 919 ms</span>
+        </div>
+        <div class="edge-sim__cwv-row">
+          <span class="edge-sim__cwv edge-sim__cwv--good">Edge: Good</span>
+          <span class="edge-sim__cwv edge-sim__cwv--good">Origin: Good</span>
+        </div>
+      </div>
+      <div class="edge-sim__metric-card">
+        <div class="edge-sim__metric-label">User-Perceived Speedup</div>
+        <div class="edge-sim__metric-row">
+          <span class="edge-sim__metric-val edge-sim__metric-val--edge">6.6× faster</span>
+          <span class="edge-sim__metric-vs">-780 ms LCP</span>
+        </div>
+        <div class="edge-sim__cwv-row">
+          <span class="edge-sim__cwv edge-sim__cwv--good">Origin Offload: 100%</span>
+          <span class="edge-sim__cwv edge-sim__cwv--info">HIT</span>
+        </div>
+      </div>
+    </div>
+
+          <!-- Panel 4: DevTools Network Waterfall -->
+          <div class="edge-sim__waterfall-section">
+            <div class="edge-sim__waterfall-head">
+              <span class="edge-sim__label">NETWORK WATERFALL COMPARISON</span>
+              <div class="edge-sim__wf-tabs" role="tablist" aria-label="Waterfall view selector">
+                <button type="button" class="edge-sim__wf-tab is-active" role="tab" aria-selected="true" data-wf="both">Side-by-Side</button>
+                <button type="button" class="edge-sim__wf-tab" role="tab" aria-selected="false" data-wf="edge">Edge Only</button>
+                <button type="button" class="edge-sim__wf-tab" role="tab" aria-selected="false" data-wf="origin">Origin Only</button>
+              </div>
+            </div>
+            <div class="edge-sim__waterfalls" id="ec-waterfalls">
+      <div class="edge-sim__wf-panel">
+        <div class="edge-sim__wf-title">
+          <span>Direct Origin (Virginia (us-east-1))</span>
+          <span class="edge-sim__wf-total">919 ms total</span>
+        </div>
+        <div class="edge-sim__wf-rows">
+          
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">DNS Lookup</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--bypass">BYPASS</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--dns" style="left:0.00%;width:1.80%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">16 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">TCP Handshake</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--origin">ORIGIN</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--tcp" style="left:1.74%;width:19.26%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">177 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">TLS 1.3</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--origin">ORIGIN</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--tls" style="left:21.00%;width:19.26%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">177 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">HTML Document</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--origin">ORIGIN</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--html" style="left:40.26%;width:34.71%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">319 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">Critical CSS</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--origin">ORIGIN</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--css" style="left:76.28%;width:19.70%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">181 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">Hero Image</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--origin">ORIGIN</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--img" style="left:76.28%;width:21.33%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">196 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">App Bundle JS</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--origin">ORIGIN</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--js" style="left:76.28%;width:20.46%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">188 ms</span>
+              </div>
+        </div>
+      </div>
+    
+      <div class="edge-sim__wf-panel">
+        <div class="edge-sim__wf-title">
+          <span>Edge Path (BOM PoP)</span>
+          <span class="edge-sim__wf-total">139 ms total</span>
+        </div>
+        <div class="edge-sim__wf-rows">
+          
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">Anycast DNS</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--pop">POP</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--dns" style="left:0.00%;width:1.80%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">7 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">TCP (Edge PoP)</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--pop">POP</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--tcp" style="left:0.76%;width:1.96%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">18 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">TLS 1.3 (PoP)</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--pop">POP</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--tls" style="left:2.72%;width:1.96%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">18 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">HTML Document</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--hit">HIT</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--html" style="left:4.68%;width:2.50%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">23 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">Critical CSS</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--hit">HIT</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--css" style="left:8.49%;width:2.61%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">24 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">Hero Image</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--hit">HIT</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--img" style="left:8.49%;width:4.24%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">39 ms</span>
+              </div>
+              <div class="edge-sim__wf-row">
+                <span class="edge-sim__wf-name">App Bundle JS</span>
+                <span class="edge-sim__wf-badge edge-sim__wf-badge--hit">HIT</span>
+                <div class="edge-sim__wf-track">
+                  <div class="edge-sim__wf-bar edge-sim__wf-bar--js" style="left:8.49%;width:3.37%;"></div>
+                </div>
+                <span class="edge-sim__wf-ms">31 ms</span>
+              </div>
+        </div>
+      </div>
+    </div>
+          </div>
+
+          <div class="sim-verdict" id="ec-verdict">From Mumbai, IN to US-East (Virginia) (12,858 km), direct origin requests pay ~177 ms per round trip across TCP, TLS, HTML, and subresources (LCP 919 ms). Serving from the BOM Edge PoP collapses LCP to 139 ms (6.6× faster).</div>
+        </div>
+      </div>
         <div class="takeaways" id="topic-takeaways-caching-layers">
           <h2 class="takeaways__title">Key Takeaways</h2>
           <div class="takeaways__list">
@@ -1377,9 +1765,9 @@ flowchart TD
       </div><div class="lesson-nav"><a class="lesson-nav__link" href="/topic/distributed-hash-tables/" data-nav="topic" data-slug="distributed-hash-tables">
         <span class="lesson-nav__label">← Previous</span>
         <span class="lesson-nav__title">Distributed hash tables</span>
-      </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/distributed-cache-design/" data-nav="topic" data-slug="distributed-cache-design">
+      </a><a class="lesson-nav__link lesson-nav__link--next" href="/topic/edge-caching-and-page-load-times/" data-nav="topic" data-slug="edge-caching-and-page-load-times">
         <span class="lesson-nav__label">Next →</span>
-        <span class="lesson-nav__title">Distributed cache design</span>
+        <span class="lesson-nav__title">Edge caching and page load times</span>
       </a></div></div>
         
       <aside class="ds-toc" aria-label="On this page">
@@ -1444,6 +1832,10 @@ flowchart TD
               </li>
             
               <li>
+                <a class="ds-toc__link" href="#topic-simulator-caching-layers">Interactive simulator</a>
+              </li>
+            
+              <li>
                 <a class="ds-toc__link" href="#topic-takeaways-caching-layers">Key takeaways</a>
               </li>
             
@@ -1452,7 +1844,7 @@ flowchart TD
         <div class="ds-toc__progress-card">
           <div class="ds-toc__progress-row">
             <span>Module 4.1</span>
-            <span>0/6 done</span>
+            <span>0/7 done</span>
           </div>
           <div class="ds-toc__progress-bar" aria-hidden="true">
             <div class="ds-toc__progress-fill" style="width:0%"></div>
@@ -1546,11 +1938,11 @@ flowchart TD
   </div>
 
   <!-- Data Scripts -->
-  <script type="text/plain" data-defer src="data/curriculum.js?v=be371d2fb3"></script>
+  <script type="text/plain" data-defer src="data/curriculum.js?v=f31b027b7f"></script>
   <script type="text/plain" data-defer src="data/roadmap.js?v=ffa1467561"></script>
   <script type="text/plain" data-defer src="data/challenges.js?v=1a3e513e27"></script>
   <script type="text/plain" data-defer src="data/srs-cards.js?v=5c13690dc2"></script>
-  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=5e129de6e5"></script>
+  <script type="text/plain" data-defer src="data/whiteboard-blueprints.js?v=cc44708d92"></script>
   <script type="text/plain" data-defer src="data/projects.js?v=b5f8575911"></script>
   <script type="text/plain" data-defer src="data/glossary.js?v=81c87d4aae"></script>
 
@@ -1560,8 +1952,9 @@ flowchart TD
   <script type="text/plain" data-defer src="js/progress.js?v=20e4822556"></script>
   <script type="text/plain" data-defer src="js/search.js?v=7aea429593"></script>
   <script type="text/plain" data-defer src="js/exercises.js?v=e1072f91b6"></script>
-  <script type="text/plain" data-defer src="js/renderer.js?v=5a5823106d"></script>
-  <script type="text/plain" data-defer src="js/landing.js?v=62e550e748"></script>
+  <script type="text/plain" data-defer src="js/simulators-edge.js?v=a21fc7cabc"></script>
+  <script type="text/plain" data-defer src="js/renderer.js?v=ec78df30be"></script>
+  <script type="text/plain" data-defer src="js/landing.js?v=fcc93ade0a"></script>
   
   <script type="text/plain" data-defer src="js/quiz.js?v=d5b3f5cfd5"></script>
   <script type="text/plain" data-defer src="js/roadmap.js?v=a94cb50935"></script>
@@ -1569,7 +1962,7 @@ flowchart TD
   <script type="text/plain" data-defer src="js/dashboard.js?v=c1b30c1df3"></script>
   <script type="text/plain" data-defer src="js/sandbox.js?v=b45d88ff03"></script>
   
-  <script type="text/plain" data-defer src="js/app.js?v=ad970e177b"></script>
+  <script type="text/plain" data-defer src="js/app.js?v=f8f85c2915"></script>
 
   <!-- App bootstrap & deferred script loader -->
   <script src="js/bootstrap.js?v=34ee525291"></script>

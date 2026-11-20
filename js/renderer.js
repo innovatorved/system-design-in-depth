@@ -112,7 +112,9 @@ window.SIMULATOR_SCRIPT_MAP = {
   "ray-casting-point-in-polygon": "js/simulators-data.js",
   "geofencing-point-in-polygon": "js/simulators-data.js",
   "database-wal-and-recovery": "js/simulators-data.js",
-  "disaster-recovery": "js/simulators-data.js"
+  "disaster-recovery": "js/simulators-data.js",
+  "edge-caching-and-page-load-times": "js/simulators-edge.js",
+  "caching-layers": "js/simulators-edge.js"
 };
 
 window.Renderer = (() => {

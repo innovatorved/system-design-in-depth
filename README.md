@@ -11,7 +11,7 @@ An open-source, interactive curriculum for learning system design, storage engin
 
 System design resources often fall into two extremes: surface-level interview templates ("put Redis in front of Postgres, add Kafka") or dense primary papers scattered across conference proceedings.
 
-**System Design In Depth** connects those two worlds. Every unit starts from system invariants and hardware constraints, pairs prose and 200 architecture diagrams with 469 curated YouTube videos and audio narration, and lets you test your mental model directly in 32 interactive visual simulators, 12 production incident war-rooms, and 20 browser-native from-scratch builds.
+**System Design In Depth** connects those two worlds. Every unit starts from system invariants and hardware constraints, pairs prose and 201 architecture diagrams with 470 curated YouTube videos and audio narration, and lets you test your mental model directly in 33 interactive visual simulators, 12 production incident war-rooms, and 20 browser-native from-scratch builds.
 
 - **Static & dependency-free shell** — Plain HTML, CSS, and vanilla JavaScript. Serve the repo folder with any static file server and everything works.
 - **Interactive systems labs in the browser** — Powered by [`@innovatorved/code-lab`](https://github.com/innovatorved/code-lab) (`v0.7.0`, [live Cloud IDE](https://code-lab.vedgupta.in/)), giving every `/build/<slug>/` lab and incident hotfix a local Web Worker runtime (Node.js v22, Bun v1.1, C++20 Clang/WASI, and POSIX shell).
@@ -23,21 +23,21 @@ System design resources often fall into two extremes: surface-level interview te
 
 | Surface | Scope |
 |---|---|
-| **Curriculum (`/topic/<slug>/`)** | **6 tracks · 18 modules · 200 units** with intuition primers, 200 architecture diagrams, 469 curated YouTube videos, precomputed MP3 narration, and 1,000 practice questions (Concept MCQs, Napkin Math, and Staff Trade-Off Matrices). |
-| **Visual Simulators** | **32 interactive sandboxes** covering Raft elections, `(N, R, W)` quorums, LSM vs B-Tree amplification, MVCC snapshot isolation, XFetch cache stampedes, consistent hashing rings, circuit breakers, and SLO burn rates. |
+| **Curriculum (`/topic/<slug>/`)** | **6 tracks · 18 modules · 201 units** with intuition primers, 201 architecture diagrams, 470 curated YouTube videos, precomputed MP3 narration, and 1,005 practice questions (Concept MCQs, Napkin Math, and Staff Trade-Off Matrices). |
+| **Visual Simulators** | **33 interactive sandboxes** covering edge caching & page load times, Raft elections, `(N, R, W)` quorums, LSM vs B-Tree amplification, MVCC snapshot isolation, XFetch cache stampedes, consistent hashing rings, circuit breakers, and SLO burn rates. |
 | **From-Scratch Builds (`/build/<id>/`)** | **20 guided implementations** in JavaScript, TypeScript, and C++20 — including an L7 Load Balancer, Raft Consensus, LSM-Tree KV Store, Write-Ahead Log, Mini-Kafka Log, Outbox CDC Relay, Singleflight Coalescer, and SWIM Gossip. |
 | **Incident Challenges (`/challenges/`)** | **12 SEV-1 production outages** where you inspect telemetry, tune live system knobs to restore SLOs, and verify a code-level hotfix in CodeLab. |
-| **Architecture Sandbox (`/sandbox/`)** | Multi-tab topology whiteboard with **10 reference blueprints**, live read/write QPS & storage envelope math, and automated Architecture Rubric Audits. |
+| **Architecture Sandbox (`/sandbox/`)** | Multi-tab topology whiteboard with **11 reference blueprints**, live read/write QPS & storage envelope math, and automated Architecture Rubric Audits. |
 | **Roadmap & Study Hub (`/roadmap/`, `/dashboard/`)** | **34-node prerequisite DAG**, **5 role learning paths**, SM-2 spaced-repetition flashcards, local notes, and a `1 ns = 1 s` humanized latency & capacity toolkit. |
 
 ---
 
-## Curriculum Tracks (6 Tracks · 18 Modules · 200 Units)
+## Curriculum Tracks (6 Tracks · 18 Modules · 201 Units)
 
 1. **Architectural Foundations & Workload Modeling (13 units)** — Requirements clarification, invariants, back-of-the-envelope capacity planning, event loops vs thread pools, and monolith boundaries.
 2. **Data Architecture, Storage Engines & State Persistence (47 units)** — B-Trees, LSM-Trees, Bitcask, WAL & ARIES crash recovery, MVCC isolation anomalies, sharding, consistent hashing, Snowflake IDs, and S3-style blob storage.
 3. **Distributed Systems, Consensus & Coordination (26 units)** — TCP/UDP/gRPC, physical & logical clocks, replication, CAP & PACELC, Raft consensus, leases, fencing tokens, and SWIM gossip.
-4. **Asynchronous Execution, Queues & Real-Time Processing (39 units)** — Caching tiers, XFetch stampede defense, task queues, partitioned logs (Kafka internals), HyperLogLog, Count-Min Sketch, t-digest, and WebSockets/SSE.
+4. **Asynchronous Execution, Queues & Real-Time Processing (40 units)** — Caching tiers, edge caching & page load times, XFetch stampede defense, task queues, partitioned logs (Kafka internals), HyperLogLog, Count-Min Sketch, t-digest, and WebSockets/SSE.
 5. **Production Operations, Resilience & System Hardening (49 units)** — Circuit breakers, load shedding, retry storms, SLO error budgets, zero-downtime migrations, geospatial indexing (Geohash/H3/S2), and BM25/vector search.
 6. **Systems Design Labs & Architectural Evolution (26 units)** — End-to-end service architectures and reconstructions of public postmortems (Amazon Dynamo, Discord, Stripe, Instagram, GitLab).
 

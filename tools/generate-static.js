@@ -171,7 +171,8 @@ const simulatorFiles = [
   'js/simulators-advanced.js',
   'js/simulators-distributed.js',
   'js/simulators-ops.js',
-  'js/simulators-data.js'
+  'js/simulators-data.js',
+  'js/simulators-edge.js'
 ];
 
 const slugToSimFile = {};

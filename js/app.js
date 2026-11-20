@@ -586,31 +586,39 @@ window.App = (() => {
         }
         
         const handleSimulator = () => {
+          let simData = null;
           if (window.Simulators && window.Simulators.getSimulatorForUnit) {
-            const simData = window.Simulators.getSimulatorForUnit(currentSlug);
-            if (simData && simData.sim) {
-              try {
-                const placeholder = reader.querySelector(`.sim-card-placeholder[data-sim-slug="${currentSlug}"]`);
-                if (placeholder) {
-                  const wrapper = document.createElement('div');
-                  wrapper.innerHTML = simData.html;
-                  placeholder.replaceWith(wrapper.firstElementChild || wrapper);
-                } else {
-                  const existingSim = reader.querySelector('.sim-card');
-                  if (!existingSim && simData.html) {
-                    const hook = reader.querySelector('.lesson__body') || reader.querySelector('.prose') || reader;
-                    if (hook) {
-                      const wrapper = document.createElement('div');
-                      wrapper.innerHTML = simData.html;
-                      hook.appendChild(wrapper.firstElementChild || wrapper);
-                    }
+            simData = window.Simulators.getSimulatorForUnit(currentSlug);
+          } else if (window.SIMULATORS) {
+            const match = Object.values(window.SIMULATORS).find(
+              s => s && Array.isArray(s.slugs) && s.slugs.includes(currentSlug)
+            );
+            if (match) {
+              simData = { sim: match, html: typeof match.render === 'function' ? match.render() : '' };
+            }
+          }
+          if (simData && simData.sim) {
+            try {
+              const placeholder = reader.querySelector(`.sim-card-placeholder[data-sim-slug="${currentSlug}"]`);
+              if (placeholder) {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = simData.html;
+                placeholder.replaceWith(wrapper.firstElementChild || wrapper);
+              } else {
+                const existingSim = reader.querySelector('.sim-card, .simulator-card');
+                if (!existingSim && simData.html) {
+                  const hook = reader.querySelector('.lesson__body') || reader.querySelector('.prose') || reader;
+                  if (hook) {
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = simData.html;
+                    hook.appendChild(wrapper.firstElementChild || wrapper);
                   }
                 }
-                simData.sim.mount(reader);
-                activeSimulator = simData.sim;
-              } catch (err) {
-                console.error('[Simulator mount error]', err);
               }
+              simData.sim.mount(reader);
+              activeSimulator = simData.sim;
+            } catch (err) {
+              console.error('[Simulator mount error]', err);
             }
           }
         };

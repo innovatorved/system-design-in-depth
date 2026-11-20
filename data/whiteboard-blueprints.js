@@ -727,6 +727,56 @@
         { from: 'n-doc-s3', to: 'n-ingest-q', label: 'CDC Document Updated' },
         { from: 'n-ingest-q', to: 'n-vec-db', label: 'Upsert Chunk Embeddings' }
       ]
+    },
+    // 11. Global Edge Caching & Origin Shield
+    {
+      id: 'global-edge-cdn',
+      title: 'Global Edge Caching & Origin Shield',
+      subtitle: 'Anycast PoP TCP/TLS termination, s-maxage + SWR HTML caching, and Regional Origin Shielding',
+      category: 'Edge & Performance',
+      difficulty: 'Intermediate',
+      targetQps: 120000,
+      targetLatencyMs: 25,
+      description: 'Anycast Edge PoPs terminating TCP/TLS locally with s-maxage + stale-while-revalidate HTML caching, Regional Origin Shielding, and tag-based invalidation.',
+      relatedSlugs: ['edge-caching-and-page-load-times', 'caching-layers', 'cache-concurrency-control', 'tail-latency'],
+      requirements: [
+        'Sub-200ms LCP globally for users 10,000+ km from us-east-1 via local Anycast PoPs',
+        'Cache-Control: public, max-age=0, s-maxage=60, stale-while-revalidate=300 for public HTML',
+        'Regional Origin Shield coalescing cold misses so 300 PoPs never stampede the origin DB'
+      ],
+      defaultInputs: {
+        qps: 120000,
+        readWriteRatio: 200,
+        avgReadPayloadBytes: 32768,
+        avgWritePayloadBytes: 1024,
+        cacheHitRate: 0.94,
+        storageRetentionDays: 365,
+        replicationFactor: 3
+      },
+      nodes: [
+        { id: 'n-client', type: 'Client', name: 'Global Users (BOM / SYD / LHR)', x: 50, y: 180, replicas: 1, instances: 1 },
+        { id: 'n-edge-pop', type: 'CDN', name: 'Anycast Edge PoPs (300+ Cities)', x: 240, y: 180, replicas: 12, instances: 12 },
+        { id: 'n-shield', type: 'RedisCache', name: 'Regional Origin Shield (Tiered Cache)', x: 460, y: 180, replicas: 4, instances: 4 },
+        { id: 'n-gateway', type: 'APIGateway', name: 'Origin Ingress & Coalescer', x: 680, y: 180, replicas: 6, instances: 6 },
+        { id: 'n-ssr-app', type: 'Microservice', name: 'SSR & Catalog Origin (us-east-1)', x: 890, y: 110, replicas: 12, instances: 12 },
+        { id: 'n-origin-db', type: 'SQLShard', name: 'Catalog Primary DB (PostgreSQL)', x: 1100, y: 110, replicas: 4, instances: 4 },
+        { id: 'n-blob', type: 'ObjectStorage', name: 'Versioned Static Assets (S3)', x: 890, y: 260, replicas: 2, instances: 2 }
+      ],
+      frames: [
+        { id: 'f-edge-tier', label: 'Global Edge & Tiered Shield Plane', x: 215, y: 115, width: 415, height: 150 },
+        { id: 'f-origin-tier', label: 'Single-Region Origin (us-east-1)', x: 655, y: 55, width: 590, height: 275 }
+      ],
+      notes: [
+        { id: 'note-edge', text: 'Cache-Control: public, max-age=0,\ns-maxage=60, stale-while-revalidate=300\nLocal PoP TCP/TLS + Shield cuts origin load 94%+', x: 50, y: 310 }
+      ],
+      connections: [
+        { from: 'n-client', to: 'n-edge-pop', label: '12ms Local RTT (HTTP/3 + TLS 1.3)' },
+        { from: 'n-edge-pop', to: 'n-shield', label: 'PoP Cold MISS (Warm Keep-Alive)' },
+        { from: 'n-shield', to: 'n-gateway', label: 'Coalesced Shield MISS (1x per Key)' },
+        { from: 'n-gateway', to: 'n-ssr-app', label: 'Dynamic HTML SSR / SWR Refresh' },
+        { from: 'n-ssr-app', to: 'n-origin-db', label: 'Catalog Query' },
+        { from: 'n-gateway', to: 'n-blob', label: 'Immutable Assets (JS/CSS/Images)' }
+      ]
     }
   ];
 

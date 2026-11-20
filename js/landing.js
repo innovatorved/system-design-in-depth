@@ -218,6 +218,7 @@ window.Landing = (() => {
 
   // Live demos: real course simulators, mounted one at a time
   const DEMOS = [
+    { sim: 'edge-caching-lab', label: 'Edge caching & LCP', lesson: 'edge-caching-and-page-load-times' },
     { sim: 'quorum-nrw', label: 'Quorums (N/R/W)', lesson: 'case-amazon-dynamo' },
     { sim: 'lb-algorithms', label: 'Load balancing', lesson: 'load-balancers' },
     { sim: 'raft-election', label: 'Raft election', lesson: 'leader-election' },
@@ -303,7 +304,7 @@ window.Landing = (() => {
         <div class="landing-hero__grid">
           <div class="landing-hero__copy">
             <h1 class="landing-hero__title">System design, from storage engines to global consensus.</h1>
-            <p class="landing-hero__subtitle">An open-source interactive textbook for distributed systems engineering. Model capacity envelopes, step through 32 live protocol simulators, debug production incident war-rooms, and build 20 core services in your browser.</p>
+            <p class="landing-hero__subtitle">An open-source interactive textbook for distributed systems engineering. Model capacity envelopes, step through ${c.simulators} live protocol simulators, debug production incident war-rooms, and build ${c.builds} core services in your browser.</p>
 
             <div class="landing-resume" id="landing-resume"${lastUnit ? '' : ' hidden'}>
               <a class="landing-resume__link" id="landing-resume-link" href="/topic/${esc(lastUnit?.slug || first?.slug || 'requirements-clarification')}/">

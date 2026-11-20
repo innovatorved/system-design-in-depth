@@ -15,7 +15,7 @@ system-design-in-depth/
 │   └── components.css          # .ds-lesson-hero, .ds-toc, .ds-callout, .ds-footer, .ds-toast
 ├── css/                        # Platform layout, lesson typography, simulators & landing workbench
 ├── data/
-│   ├── curriculum.js           # 6 tracks, 18 modules, 200 unit definitions
+│   ├── curriculum.js           # 6 tracks, 18 modules, 201 unit definitions
 │   ├── content/                # Per-module prose, diagrams, takeaways & curated videos
 │   ├── archive/                # Long-form markdown deep dives loaded on demand
 │   ├── questions/              # 1,000 structured questions (MCQ + numeric Napkin Math + Trade-Off)
@@ -33,7 +33,7 @@ system-design-in-depth/
 │   ├── app.js                  # History API router, sidebar state, CodeLab mount & scroll-spy TOC
 │   ├── landing.js              # Split-hero Capacity Workbench + live simulator showcase
 │   ├── renderer.js             # Isomorphic HTML renderer (runs in browser and Node VM for SSG)
-│   ├── simulators*.js          # 32 interactive visual simulators
+│   ├── simulators*.js          # 33 interactive visual simulators
 │   ├── roadmap.js / challenges.js / sandbox.js / dashboard.js / quiz.js / exercises.js
 │   └── vendor/                 # Vendored @innovatorved/code-lab v0.7.0 bundles
 └── tools/
