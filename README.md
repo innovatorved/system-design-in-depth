@@ -14,7 +14,7 @@ System design resources often fall into two extremes: surface-level interview te
 **System Design In Depth** connects those two worlds. Every unit starts from system invariants and hardware constraints, pairs prose and 201 architecture diagrams with 470 curated YouTube videos and audio narration, and lets you test your mental model directly in 33 interactive visual simulators, 12 production incident war-rooms, and 20 browser-native from-scratch builds.
 
 - **Static & dependency-free shell** — Plain HTML, CSS, and vanilla JavaScript. Serve the repo folder with any static file server and everything works.
-- **Interactive systems labs in the browser** — Powered by [`@innovatorved/code-lab`](https://github.com/innovatorved/code-lab) (`v0.7.0`, [live Cloud IDE](https://code-lab.vedgupta.in/)), giving every `/build/<slug>/` lab and incident hotfix a local Web Worker runtime (Node.js v22, Bun v1.1, C++20 Clang/WASI, and POSIX shell).
+- **Interactive systems labs in the browser** — Powered by [`@innovatorved/code-lab`](https://github.com/innovatorved/code-lab) (`v0.7.1`, [live Cloud IDE](https://code-lab.vedgupta.in/)), giving every `/build/<slug>/` lab and incident hotfix a local Web Worker runtime (Node.js v22, Bun v1.1, C++20 Clang/WASI, and POSIX shell).
 - **Permissively open source** — Code under MIT, educational content under CC BY 4.0. No accounts, telemetry walls, or paywalls.
 
 ---

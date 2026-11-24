@@ -35,7 +35,7 @@ system-design-in-depth/
 │   ├── renderer.js             # Isomorphic HTML renderer (runs in browser and Node VM for SSG)
 │   ├── simulators*.js          # 33 interactive visual simulators
 │   ├── roadmap.js / challenges.js / sandbox.js / dashboard.js / quiz.js / exercises.js
-│   └── vendor/                 # Vendored @innovatorved/code-lab v0.7.0 bundles
+│   └── vendor/                 # Vendored @innovatorved/code-lab v0.7.1 bundles
 └── tools/
     ├── stamp-assets.js         # Computes 10-char SHA-1 ?v= query hashes across all HTML files
     ├── generate-static.js      # Isomorphic Node VM pre-renderer + sitemap.xml generator

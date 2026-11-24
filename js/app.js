@@ -865,12 +865,12 @@ window.App = (() => {
           link.onerror = function () {
             this.onerror = null;
             this.crossOrigin = 'anonymous';
-            this.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.7.0/dist/code-lab.css';
+            this.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.7.1/dist/code-lab.css';
           };
           document.head.appendChild(link);
         }
         if (!window.CodeLab) {
-          neededBuildScripts.push(['js/vendor/code-lab.js', 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.7.0/dist/code-lab.js']);
+          neededBuildScripts.push(['js/vendor/code-lab.js', 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.7.1/dist/code-lab.js']);
         }
 
         if (neededBuildScripts.length > 0 && window.loadScript) {
@@ -1980,13 +1980,13 @@ window.App = (() => {
       link.onerror = function () {
         this.onerror = null;
         this.crossOrigin = 'anonymous';
-        this.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.7.0/dist/code-lab.css';
+        this.href = 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.7.1/dist/code-lab.css';
       };
       document.head.appendChild(link);
     }
     if (window.CodeLab) return Promise.resolve(window.CodeLab);
     if (window.loadScript) {
-      return window.loadScript('js/vendor/code-lab.js', 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.7.0/dist/code-lab.js').then(() => window.CodeLab);
+      return window.loadScript('js/vendor/code-lab.js', 'https://cdn.jsdelivr.net/npm/@innovatorved/code-lab@0.7.1/dist/code-lab.js').then(() => window.CodeLab);
     }
     return Promise.resolve(null);
   }
@@ -2026,7 +2026,7 @@ window.App = (() => {
       globalCodeLabInstance = null;
     }
     if (mountEl) {
-      mountEl.innerHTML = '<div style="padding:2rem;color:var(--fg-muted);font-family:var(--font-mono);">Loading @innovatorved/code-lab@0.7.0 IDE...</div>';
+      mountEl.innerHTML = '<div style="padding:2rem;color:var(--fg-muted);font-family:var(--font-mono);">Loading @innovatorved/code-lab@0.7.1 IDE...</div>';
     }
 
     return ensureCodeLabLoaded().then((CodeLab) => {
